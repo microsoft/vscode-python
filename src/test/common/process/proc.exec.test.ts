@@ -171,7 +171,7 @@ suite('ProcessService Observable', () => {
     test('shellExec should be able to run python too', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = '1234';
-        const result = await procService.shellExec(`"${pythonPath}" -c print("${printOutput}")`);
+        const result = await procService.shellExec(`"${pythonPath}" -c "print('${printOutput}')"`);
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         expect(result.stderr).to.equal(undefined, 'stderr not empty');
