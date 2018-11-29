@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+const glob = require("glob");
+const path = require("path");
 const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
 const constants_1 = require("../constants");
 exports.nodeModulesToExternalize = [
@@ -19,7 +21,7 @@ exports.nodeModulesToExternalize = [
     'azure-storage',
     'request',
     'request-progress',
-    'source-map',
+    'source-map-support',
     'file-matcher',
     'diff-match-patch',
     'sudo-prompt',
@@ -37,3 +39,9 @@ function getDefaultPlugins(name) {
     return plugins;
 }
 exports.getDefaultPlugins = getDefaultPlugins;
+function getListOfExistingModulesInOutDir() {
+    const outDir = path.join(constants_1.ExtensionRootDir, 'out', 'client');
+    const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
+    return files.map(filePath => `./${filePath.slice(0, -3)}`);
+}
+exports.getListOfExistingModulesInOutDir = getListOfExistingModulesInOutDir;

@@ -15,7 +15,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         this.pathVariable = pathUtils.getPathVariableName();
     }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
-        const exists = await fs.pathExists(filePath);
+        const exists = filePath.length > 0 ? await fs.pathExists(filePath) : undefined;
         if (!exists) {
             return undefined;
         }
@@ -53,8 +53,9 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return vars;
         }
 
-        if (typeof vars[variableName] === 'string' && vars[variableName].length > 0) {
-            vars[variableName] = vars[variableName] + path.delimiter + valueToAppend;
+        const variable = vars ? vars[variableName] : undefined;
+        if (variable && typeof variable === 'string' && variable.length > 0) {
+            vars[variableName] = variable + path.delimiter + valueToAppend;
         } else {
             vars[variableName] = valueToAppend;
         }

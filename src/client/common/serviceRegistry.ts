@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
@@ -11,10 +10,16 @@ import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { TerminalManager } from './application/terminalManager';
 import {
-    IApplicationEnvironment, IApplicationShell, ICommandManager,
-    IDebugService, IDocumentManager, ITerminalManager, IWorkspaceService
+    IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    ITerminalManager,
+    IWorkspaceService
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
+import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { EditorUtils } from './editor';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
@@ -31,21 +36,32 @@ import { CurrentProcess } from './process/currentProcess';
 import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
-import {
-    CommandPromptAndPowerShell
-} from './terminal/environmentActivationProviders/commandPrompt';
+import { CommandPromptAndPowerShell } from './terminal/environmentActivationProviders/commandPrompt';
 import { PyEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
 import {
     ITerminalActivationCommandProvider,
-    ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory
+    ITerminalActivationHandler,
+    ITerminalActivator,
+    ITerminalHelper,
+    ITerminalServiceFactory
 } from './terminal/types';
 import {
-    IBrowserService, IConfigurationService,
-    ICurrentProcess, IEditorUtils, IExtensions,
-    IFeatureDeprecationManager, IInstaller,
-    ILogger, IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
+    IAsyncDisposableRegistry,
+    IBrowserService,
+    IConfigurationService,
+    ICurrentProcess,
+    IEditorUtils,
+    IExtensions,
+    IFeatureDeprecationManager,
+    IInstaller,
+    ILogger,
+    IPathUtils,
+    IPersistentStateFactory,
+    IRandom,
+    Is64Bit,
+    IsWindows
 } from './types';
 import { Random } from './utils/random';
 
@@ -84,4 +100,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
+
+    serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
 }

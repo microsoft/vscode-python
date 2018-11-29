@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
+import { ContentsManager, Kernel, KernelMessage, ServerConnection, Session, SessionManager, Contents } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -14,122 +14,155 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { TemporaryFile } from '../common/platform/types';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
-import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
-export class JupyterServer implements INotebookServer {
-    public isDisposed: boolean = false;
+export class JupyterServer implements INotebookServer, IDisposable {
+    private connInfo: IConnection | undefined;
+    private kernelSpec: IJupyterKernelSpec | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
+    private contentsManager: ContentsManager | undefined;
+    private notebookFile: Contents.IModel;
     private sessionStartTime: number | undefined;
-    private tempFile: string | undefined;
-    private tempDirList: string[] = [];
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
+    //private notebookFile : TemporaryFile | undefined;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
-        @inject(INotebookProcess) private process: INotebookProcess,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
+        this.disposableRegistry.push(this);
+        this.asyncRegistry.push(this);
     }
 
-    public start = async () : Promise<boolean> => {
+    //public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec) : Promise<void> => {
+        // Save connection information so we can use it later during shutdown
+        this.connInfo = connInfo;
+        this.kernelSpec = kernelSpec;
+        //this.notebookFile = notebookFile;
 
-        if (await this.jupyterExecution.isNotebookSupported()) {
-            // If we're restarting, don't dispose
-            this.isDisposed = false;
+        // First connect to the sesssion manager and find a kernel that matches our
+        // python we're using
+        const serverSettings = ServerConnection.makeSettings(
+            {
+                baseUrl: connInfo.baseUrl,
+                token: connInfo.token,
+                pageUrl: '',
+                // A web socket is required to allow token authentication
+                wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                init: { cache: 'no-store', credentials: 'same-origin' }
+            });
+        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
-            // First generate a temporary notebook. We need this as input to the session
-            // Use a UUID in the path so that we can verify the instance that we have started up
-            this.tempFile = await this.generateTempFile();
-            const uniqueDir = uuid();
-            this.tempFile = path.join(path.dirname(this.tempFile), uniqueDir, path.basename(this.tempFile));
-            await this.fileSystem.createDirectory(path.dirname(this.tempFile));
-            this.tempDirList.push(path.dirname(this.tempFile));
+        // Create a temporary .ipynb file to use
+        this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
+        this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
+        
 
-            // Find our kernel spec name (this will enumerate the spec json files and
-            // create a new spec if none match)
-            let kernelSpec = await this.jupyterExecution.getMatchingKernelSpec();
+        // IANHU: Just for manual testing...REMOTE
+        //connInfo.baseUrl = "http://";
+        //connInfo.token = "";
+        //const myBaseUrl = 'http://IANHULAPTOP2:9999';
 
-            // start our process in the same directory as our ipynb file.
-            await this.process.start(path.dirname(this.tempFile));
+        //const remoteServerSettings = ServerConnection.makeSettings(
+            //{
+                //baseUrl: myBaseUrl,
+                //token: '4ced9d3ffc24e4c839be67766371358105d6a5c09c73951c',
+                //pageUrl: '',
+                //// A web socket is required to allow token authentication
+                //wsUrl: myBaseUrl.replace('http', 'ws'),
+                //init: { cache: 'no-store', credentials: 'same-origin' }
+            //});
+        //this.contentsManager = new ContentsManager({ serverSettings: remoteServerSettings });
+        //const createdFile = await this.contentsManager.newUntitled({type: 'notebook' });
+        //const createdFile2 = await this.contentsManager.newUntitled({type: 'notebook' });
+        //await this.contentsManager.delete(createdFile.path);
+        //await this.contentsManager.delete(createdFile2.path);
 
-            // Wait for connection information. We'll stick that into the options
-            const connInfo = await this.process.waitForConnectionInformation();
+        // Create our session options using this temporary notebook and our connection info
+        const options: Session.IOptions = {
+            //path: notebookFile.filePath,
+            path: this.notebookFile.path,
+            kernelName: kernelSpec ? kernelSpec.name : '',
+            serverSettings: serverSettings
+        };
 
-            // First connect to the sesssion manager and find a kernel that matches our
-            // python we're using
-            const jupyterLab = await import('@jupyterlab/services');
-            const serverSettings = jupyterLab.ServerConnection.makeSettings(
-                {
-                    baseUrl: connInfo.baseUrl,
-                    token: connInfo.token,
-                    pageUrl: '',
-                    // A web socket is required to allow token authentication
-                    wsUrl: connInfo.baseUrl.replace('http', 'ws'),
-                    init: { cache: 'no-store', credentials: 'same-origin' }
-                });
-            this.sessionManager = new jupyterLab.SessionManager({ serverSettings: serverSettings });
+        // Start a new session
+        this.session = await this.sessionManager.startNew(options);
 
-            // If our kernel spec wasn't found (possibly because jupyter kernelspec isn't installed)
-            // attempt to find it with our session manager instead
-            if (!kernelSpec) {
-                kernelSpec = await this.jupyterExecution.getMatchingKernelSpec(this.sessionManager);
-            }
+        // Setup our start time. We reject anything that comes in before this time during execute
+        this.sessionStartTime = Date.now();
 
-            // Create our session options using this temporary notebook and our connection info
-            const options: Session.IOptions = {
-                path: this.tempFile,
-                kernelName: kernelSpec ? kernelSpec.name : '',
-                serverSettings: serverSettings
-            };
+        // Wait for it to be ready
+        await this.session.kernel.ready;
 
-            // Start a new session
-            this.session = await this.sessionManager.startNew(options);
-
-            // Setup our start time. We reject anything that comes in before this time during execute
-            this.sessionStartTime = Date.now();
-
-            // Wait for it to be ready
-            await this.session.kernel.ready;
-
-            // Run our initial setup and plot magics
-            this.initialNotebookSetup();
-
-            return true;
-        } else {
-            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
-        }
+        // Run our initial setup and plot magics
+        this.initialNotebookSetup();
 
     }
 
-    public shutdown = async () : Promise<void> => {
+    public shutdown = () => {
+        this.destroyKernelSpec(); // This is the most important part. We HAVE to get rid of this or it messes up other jupyter notebooks on the same machine.
         if (this.session && this.sessionManager) {
-            await this.sessionManager.shutdownAll();
-            this.session.dispose();
-            this.sessionManager.dispose();
+            try {
+                this.session.shutdown().ignoreErrors();
+                this.session.dispose();
+                this.sessionManager.dispose();
+            } catch {
+                noop();
+            }
             this.session = undefined;
             this.sessionManager = undefined;
         }
-        if (this.process) {
-            this.process.dispose();
+        this.onStatusChangedEvent.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
         }
+        if (this.notebookFile) {
+            //this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
+            //this.notebookFile = undefined;
+            if(this.contentsManager) {
+                this.contentsManager.delete(this.notebookFile.path).then(() => {
+                    if(this.contentsManager){
+                        this.contentsManager.dispose();
+                        this.contentsManager = undefined;
+                    }
+                }).catch((err) => {
+                    // IANHU DONT CHECK IN THIS ON LOCAL BOX ERROR DELETING HERE. DUE TO TEMP FILE?
+                    // module.exports.e.NetworkError: request to http://localhost:8888/api/contents/Untitled.ipynb?1543451587208 failed, reason: connect ECONNREFUSED 127.0.0.1:8888
+//message:"request to http://localhost:8888/api/contents/Untitled.ipynb?1543451587208 failed, reason: connect ECONNREFUSED 127.0.0.1:8888"
+//stack:"n: request to http://localhost:8888/api/contents/Untitled.ipynb?1543451587208 failed, reason: connect ECONNREFUSED 127.0.0.1:8888\n\tat ClientRequest.<anonymous> (D:\vscode-python-ianhu\out\client\node_modules\@jupyterlab\services.js:34:245755)\n\tat emitOne (events.js:116:13)\n\tat ClientRequest.emit (events.js:211:7)\n\tat Socket.socketErrorListener (_http_client.js:387:9)\n\tat emitOne (events.js:116:13)\n\tat Socket.emit (events.js:211:7)\n\tat emitErrorNT (internal/streams/destroy.js:64:8)\n\tat _combinedTickCallback (internal/process/next_tick.js:138:11)\n\tat process._tickCallback (internal/process/next_tick.js:180:9)"
+//__proto__:TypeError {constructor: }
+// This is only locally, it does delete on the remotebox
+                    let testing = 1;
+                });
+            }
+        } else {
+            // Separate code path so we can wait for the then? needed? 
+            if (this.contentsManager) {
+                this.contentsManager.dispose();
+                this.contentsManager = undefined;
+            }
+        }
+    }
 
-        // Delete any temp .pynb directories that we created
-        for (const tempDir of this.tempDirList) {
-            await this.fileSystem.deleteDirectory(tempDir);
-        }
+    public dispose = () : Promise<void> => {
+        // This could be changed to actually wait for shutdown, but do this
+        // for now so we finish quickly.
+        return Promise.resolve(this.shutdown());
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -137,7 +170,7 @@ export class JupyterServer implements INotebookServer {
             await this.session.kernel.ready;
 
             while (this.session.kernel.status !== 'idle') {
-                await this.timeout(10);
+                await this.timeout(0);
             }
         }
     }
@@ -242,21 +275,16 @@ export class JupyterServer implements INotebookServer {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public dispose = async () => {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
-            this.onStatusChangedEvent.dispose();
-            this.shutdown().ignoreErrors();
-        }
-    }
-
     public restartKernel = async () : Promise<void> => {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
             // Restart our kernel
-            await this.forceRestart();
+            await this.session.kernel.restart();
+
+            // Reimplement our magics
+            this.initialNotebookSetup();
 
             return;
         }
@@ -266,26 +294,15 @@ export class JupyterServer implements INotebookServer {
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
 
-        if (this.process) {
-
-            // First we need the python version we're running
-            const pythonVersion = await this.process.waitForPythonVersionString();
-
-            // Pull off the first number. Should be  3 or a 2
-            const first = pythonVersion.substr(0, 1);
+        if (this.connInfo && this.connInfo.pythonMainVersion) {
 
             // Use this to build our metadata object
             const metadata : nbformat.INotebookMetadata = {
-                kernelspec: {
-                    display_name: `Python ${first}`,
-                    language: 'python',
-                    name: `python${first}`
-                },
                 language_info: {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: parseInt(first, 10)
+                        version: this.connInfo.pythonMainVersion
                     }
                 },
                 orig_nbformat : 2,
@@ -293,8 +310,8 @@ export class JupyterServer implements INotebookServer {
                 mimetype: 'text/x-python',
                 name: 'python',
                 npconvert_exporter: 'python',
-                pygments_lexer: `ipython${first}`,
-                version: pythonVersion
+                pygments_lexer: `ipython${this.connInfo.pythonMainVersion}`,
+                version: this.connInfo.pythonMainVersion
             };
 
             // Combine this into a JSON object
@@ -307,12 +324,11 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public launchNotebook = async (file: string) : Promise<boolean> => {
-        if (this.process) {
-            await this.process.spawn(file);
-            return true;
+    private destroyKernelSpec = () => {
+        if (this.kernelSpec) {
+            this.kernelSpec.dispose(); // This should delete any old kernel specs
+            this.kernelSpec = undefined;
         }
-        return false;
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
@@ -327,25 +343,6 @@ export class JupyterServer implements INotebookServer {
             },
             true
         ) : undefined;
-    }
-
-    private forceRestart = async () : Promise<void> => {
-        // Wait for a restart and a timeout. If we timeout, then instead do a
-        // dispose and restart
-        if (this.session) {
-            const result = await Promise.race([this.session.kernel.restart(), this.timeout(5000)]);
-            if (typeof result === 'number') {
-                this.logger.logWarning('Restart of Jupyter Server failed. Forcing a full restart');
-
-                // Then we didn't restart. We timed out. Dispose and restart
-                await this.shutdown();
-                await this.start();
-            } else {
-                // Wait for kernel ready after restart
-                await this.session.kernel.ready;
-                this.initialNotebookSetup();
-            }
-        }
     }
 
     // Set up our initial plotting and imports
@@ -505,7 +502,7 @@ export class JupyterServer implements INotebookServer {
                     subscriber.next(cell);
                 } catch (err) {
                     // If not a restart error, then tell the subscriber
-                    if (startTime > this.sessionStartTime!) {
+                    if (this.sessionStartTime && startTime > this.sessionStartTime) {
                         this.logger.logError(`Error during message ${msg.header.msg_type}`);
                         subscriber.error(err);
                     }
@@ -518,7 +515,7 @@ export class JupyterServer implements INotebookServer {
                 cell.state = error as Error ? CellState.error : CellState.finished;
                 // Only do this if start time is still valid. Dont log an error to the subscriber. Error
                 // state should end up in the cell output.
-                if (startTime > this.sessionStartTime!) {
+                if (this.sessionStartTime && startTime > this.sessionStartTime) {
                     subscriber.next(cell);
                 }
                 subscriber.complete();
@@ -616,15 +613,5 @@ export class JupyterServer implements INotebookServer {
             traceback : msg.content.traceback
         };
         this.addToCellData(cell, output);
-    }
-
-    private async generateTempFile() : Promise<string> {
-        // Create a temp file on disk
-        const file = await this.fileSystem.createTemporaryFile('.ipynb');
-
-        // Save in our list disposable
-        this.disposableRegistry.push(file);
-
-        return file.filePath;
     }
 }

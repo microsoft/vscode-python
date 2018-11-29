@@ -5,13 +5,18 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
+import { noop } from '../../client/common/utils/misc';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { IConnectionInfo, JupyterProcess } from '../../client/datascience/jupyterProcess';
-import { IJupyterExecution, INotebookImporter, INotebookProcess, INotebookServer } from '../../client/datascience/types';
+import { IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
+import {
+    IInterpreterService,
+    IKnownSearchPathsForInterpreters,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
 import { Cell, ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -20,23 +25,24 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
-    let jupyterServer : INotebookServer;
     let ioc: DataScienceIocContainer;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
     });
 
     teardown(async () => {
-        disposables.forEach(disposable => {
+        for (let i = 0; i < disposables.length; i += 1) {
+            const disposable = disposables[i];
             if (disposable) {
-                disposable.dispose();
+                const promise = disposable.dispose() as Promise<any>;
+                if (promise) {
+                    await promise;
+                }
             }
-        });
-        await jupyterServer.shutdown();
+        }
         ioc.dispose();
     });
 
@@ -57,7 +63,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifySimple(code: string, expectedValue: any) : Promise<void> {
+    async function verifySimple(jupyterServer: INotebookServer, code: string, expectedValue: any) : Promise<void> {
         const cells = await jupyterServer.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
@@ -76,7 +82,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifyError(code: string, errorString: string) : Promise<void> {
+    async function verifyError(jupyterServer: INotebookServer, code: string, errorString: string) : Promise<void> {
         const cells = await jupyterServer.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
@@ -89,7 +95,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifyCell(index: number, code: string, mimeType: string, cellType: string, verifyValue : (data: any) => void) : Promise<void> {
+    async function verifyCell(jupyterServer: INotebookServer, index: number, code: string, mimeType: string, cellType: string, verifyValue : (data: any) => void) : Promise<void> {
         // Verify results of an execute
         const cells = await jupyterServer.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
@@ -126,17 +132,17 @@ suite('Jupyter notebook tests', () => {
         runTest('MimeTypes', async () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const server = await jupyterServer.start();
+            const server = await jupyterExecution.startNotebookServer();
             if (!server) {
                 assert.fail('Server not created');
             }
             let statusCount: number = 0;
-            jupyterServer.onStatusChanged((bool: boolean) => {
+            server.onStatusChanged((bool: boolean) => {
                 statusCount += 1;
             });
             for (let i = 0; i < types.length; i += 1) {
                 const prevCount = statusCount;
-                await verifyCell(i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
+                await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
                 if (types[i].cellType !== 'markdown') {
                     assert.ok(statusCount > prevCount, 'Status didnt update');
                 }
@@ -156,44 +162,73 @@ suite('Jupyter notebook tests', () => {
     }
 
     runTest('Creation', async () => {
-        const server = await jupyterServer.start();
+        const server = await jupyterExecution.startNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }
     });
 
     runTest('Failure', async () => {
-        jupyterServer.shutdown().ignoreErrors();
         // Make a dummy class that will fail during launch
-        class FailedProcess extends JupyterProcess {
-            public waitForConnectionInformation() : Promise<IConnectionInfo> {
-                return Promise.reject('Failing');
-            }
-        }
-        ioc.serviceManager.rebind<INotebookProcess>(INotebookProcess, FailedProcess);
-        jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
-        return assertThrows(async () => {
-            await jupyterServer.start();
-        }, 'Server start is not throwing');
-    });
-
-    test('Not installed', async () => {
-        jupyterServer.shutdown().ignoreErrors();
-        // Make a dummy class that will fail during launch
-        class FailedAvailability extends JupyterExecution {
+        class FailedProcess extends JupyterExecution {
             public isNotebookSupported = () : Promise<boolean> => {
                 return Promise.resolve(false);
             }
         }
-        ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedAvailability);
-        jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
+        ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         return assertThrows(async () => {
-            await jupyterServer.start();
+            await jupyterExecution.startNotebookServer();
+        }, 'Server start is not throwing');
+    });
+
+    test('Not installed', async () => {
+        // Rewire our data we use to search for processes
+        class EmptyInterpreterService implements IInterpreterService {
+            public onDidChangeInterpreter(_listener: (e: void) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+                return Promise.resolve([]);
+            }
+            public autoSetInterpreter(): Promise<void> {
+                throw new Error('Method not implemented');
+            }
+            public getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+                return Promise.resolve(undefined);
+            }
+            public getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<PythonInterpreter> {
+                throw new Error('Method not implemented');
+            }
+            public refresh(resource: Uri): Promise<void> {
+                throw new Error('Method not implemented');
+            }
+            public initialize(): void {
+                throw new Error('Method not implemented');
+            }
+            public getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string> {
+                throw new Error('Method not implemented');
+            }
+            public shouldAutoSetInterpreter(): Promise<boolean> {
+                throw new Error('Method not implemented');
+            }
+        }
+        class EmptyPathService implements IKnownSearchPathsForInterpreters {
+            public getSearchPaths() : string [] {
+                return [];
+            }
+        }
+        ioc.serviceManager.rebind<IInterpreterService>(IInterpreterService, EmptyInterpreterService);
+        ioc.serviceManager.rebind<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, EmptyPathService);
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+
+        return assertThrows(async () => {
+            await jupyterExecution.startNotebookServer();
         }, 'Server start is not throwing');
     });
 
     runTest('Export/Import', async () => {
-        const server = await jupyterServer.start();
+        const server = await jupyterExecution.startNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }
@@ -203,7 +238,8 @@ suite('Jupyter notebook tests', () => {
         const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook
-        const notebook = await jupyterServer.translateToNotebook(cells);
+        const notebook = await server.translateToNotebook(cells);
+        assert.ok(notebook, 'Translate to notebook is failing');
 
         // Save to a temp file
         const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
@@ -212,7 +248,10 @@ suite('Jupyter notebook tests', () => {
         try {
             await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
             // Try importing this. This should verify export works and that importing is possible
-            await importer.importFromFile(temp.filePath);
+            const results = await importer.importFromFile(temp.filePath);
+
+            // Make sure we have a cell in our results
+            assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
         } finally {
             importer.dispose();
             temp.dispose();
@@ -220,31 +259,31 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Restart kernel', async () => {
-        const server = await jupyterServer.start();
+        const server = await jupyterExecution.startNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }
 
         // Setup some state and verify output is correct
-        await verifySimple('a=1\r\na', 1);
-        await verifySimple('a+=1\r\na', 2);
-        await verifySimple('a+=4\r\na', 6);
+        await verifySimple(server, 'a=1\r\na', 1);
+        await verifySimple(server, 'a+=1\r\na', 2);
+        await verifySimple(server, 'a+=4\r\na', 6);
 
         console.log('Waiting for idle');
 
         // In unit tests we have to wait for status idle before restarting. Unit tests
         // seem to be timing out if the restart throws any exceptions (even if they're caught)
-        await jupyterServer.waitForIdle();
+        await server.waitForIdle();
 
         console.log('Restarting kernel');
 
-        await jupyterServer.restartKernel();
+        await server.restartKernel();
 
         console.log('Waiting for idle');
-        await jupyterServer.waitForIdle();
+        await server.waitForIdle();
 
         console.log('Verifying restart');
-        await verifyError('a', `name 'a' is not defined`);
+        await verifyError(server, 'a', `name 'a' is not defined`);
     });
 
     testMimeTypes(
@@ -320,5 +359,10 @@ plt.show()`,
     // Test to write after jupyter process abstraction
     // - jupyter not installed
     // - kernel spec not matching
+    // - ipykernel not installed
+    // - kernelspec not installed
+    // - startup / shutdown / restart - make uses same kernelspec. Actually should be in memory already
+    // - Starting with python that doesn't have jupyter and make sure it can switch to one that does
+    // - Starting with python that doesn't have jupyter and make sure the switch still uses a python that's close as the kernel
 
 });

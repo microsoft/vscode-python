@@ -5,9 +5,14 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../constants';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 
 // External callers of localize use these tables to retrieve localized values.
+export namespace Diagnostics {
+    export const warnSourceMaps = localize('diagnostics.warnSourceMaps', 'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.');
+    export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
+}
+
 export namespace LanguageServiceSurveyBanner {
     export const bannerMessage = localize('LanguageServiceSurveyBanner.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?');
     export const bannerLabelYes = localize('LanguageServiceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
@@ -73,6 +78,11 @@ export namespace DataScience {
 
     export const jupyterSelectURILaunchLocal = localize('DataScience.jupyterSelectURILaunchLocal', 'Launch local Jupyter server');
     export const jupyterSelectURISpecifyURI = localize('DataScienece.jupyterSelectURISpecifyURI', 'Type in the URI for the Jupyter server');
+    export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
+    export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
+    //tslint:disable-next-line:no-multiline-string
+    export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.`);
+    export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a Jupyter kernel spec and none are available for use');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
@@ -89,21 +99,21 @@ export function localize(key: string, defValue: string) {
     };
 }
 
-export function getCollection () {
+export function getCollection() {
     // Load the current collection
     if (!loadedCollection || parseLocale() !== loadedLocale) {
         load();
     }
 
     // Combine the default and loaded collections
-    return {...defaultCollection, ...loadedCollection};
+    return { ...defaultCollection, ...loadedCollection };
 }
 
 export function getAskedForCollection() {
     return askedForCollection;
 }
 
-function parseLocale() : string {
+function parseLocale(): string {
     // Attempt to load from the vscode locale. If not there, use english
     const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';

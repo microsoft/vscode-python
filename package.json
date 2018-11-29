@@ -827,6 +827,12 @@
             "type": "object",
             "title": "Python Configuration",
             "properties": {
+                "python.diagnostics.sourceMapsEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable source map support for meaningful strack traces in error logs.",
+                    "scope": "application"
+                },
                 "python.autoComplete.addBrackets": {
                     "type": "boolean",
                     "default": false,
@@ -1825,7 +1831,7 @@
         "download": "^7.0.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
-        "event-stream": "^3.3.4",
+        "event-stream": "3.3.4",
         "file-loader": "^2.0.0",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
@@ -1872,7 +1878,7 @@
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
-        "vscode": "^1.1.21",
+        "vscode": "^1.1.22",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",
         "webpack-bundle-analyzer": "^3.0.3",
