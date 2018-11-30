@@ -15,7 +15,6 @@ CODING_STANDARDS.md
 CONTRIBUTING.md
 CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
-functionalTestRequirements.txt
 gulpfile.js
 package.datascience-ui.dependencies.json
 package-lock.json

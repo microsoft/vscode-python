@@ -59,7 +59,7 @@ install:
   - npm run clean
   - npx gulp prePublishNonBundle
   - npx gulp hygiene-modified
-  - python -m pip install --upgrade -r ./build/requirements.txt
+  - python -m pip install --upgrade -r ./build/test-requirements.txt
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
@@ -72,7 +72,7 @@ script:
     fi
   - npm run debugger-coverage
   - if [ $FUNCTIONAL_TEST == "true" ]; then
-        python -m pip install --upgrade -r functionalTestRequirements.txt;
+        python -m pip install --upgrade -r ./build/functional-test-requirements.txt;
         npm run test:functional;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then

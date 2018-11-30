@@ -160,7 +160,7 @@ jobs:
       inputs:
         filename: python
 
-        arguments: '-m pip install --upgrade -r ./build/requirements.txt'
+        arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
 
     - task: CmdLine@1
