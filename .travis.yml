@@ -54,11 +54,11 @@ before_install: |
   npm install -g azure-cli
   export CI_PYTHON_PATH=`which python`
 install:
-  - python -m pip install --upgrade pip
   - travis_wait 5 npm ci
   - npm run clean
   - npx gulp prePublishNonBundle
   - npx gulp hygiene-modified
+  - python -m pip install --upgrade pip
   - python -m pip install --upgrade -r ./build/test-requirements.txt
 
 script:
