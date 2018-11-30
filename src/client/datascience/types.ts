@@ -7,7 +7,6 @@ import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { TemporaryFile } from '../common/platform/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -39,7 +38,7 @@ export interface INotebookServer extends Disposable {
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     waitForIdle() : Promise<void>;
     shutdown();
-    setPythonInfo(version: number, startingDirectory: string);
+    setPythonInfo(version: number);
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');

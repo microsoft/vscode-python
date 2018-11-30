@@ -15,7 +15,7 @@ import { BANNER_NAME_DS_SURVEY, IConfigurationService, IDisposableRegistry, IExt
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry} from '../telemetry';
-import { Commands, EditorContexts, Telemetry } from './constants';
+import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
 @injectable()
 export class DataScience implements IDataScience {
@@ -29,7 +29,6 @@ export class DataScience implements IDataScience {
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell) {
-            // IANHU: Before checkin see if we can @inject these as well
             this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
             this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
@@ -106,7 +105,7 @@ export class DataScience implements IDataScience {
     public async selectJupyterURI(): Promise<void> {
         const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
         const selection = await this.appShell.showQuickPick(quickPickOptions);
-        switch(selection) {
+        switch (selection) {
             case localize.DataScience.jupyterSelectURILaunchLocal():
                 return this.setJupyterURIToLocal();
             break;
@@ -119,11 +118,11 @@ export class DataScience implements IDataScience {
         }
     }
 
-    @captureTelemetry(Telemetry.SetJupyterURIToLocal) 
+    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
-        await this.configuration.updateSetting('dataScience.jupyterServerURI', 'local', undefined, vscode.ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
     }
-     
+
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async selectJupyterLaunchURI(): Promise<void> {
         // First get the proposed URI from the user
@@ -136,7 +135,8 @@ export class DataScience implements IDataScience {
 
     private validateURI = (testURI: string): string | undefined | null => {
         try {
-           new URL(testURI); 
+           // tslint:disable-next-line:no-unused-expression
+           new URL(testURI);
         } catch {
             return localize.DataScience.jupyterSelectURIInvalidURI();
         }

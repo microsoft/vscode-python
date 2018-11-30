@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { ContentsManager, Kernel, KernelMessage, ServerConnection, Session, SessionManager, Contents } from '@jupyterlab/services';
+import { Contents, ContentsManager, Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -14,7 +14,6 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { TemporaryFile } from '../common/platform/types';
 import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -36,7 +35,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
     private sessionStartTime: number | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private pythonMainVersion: number = 0; // Set a non-2 or 3 default for before when we get sys info
-    private startingDirectory: string;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
@@ -68,7 +66,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         // Create a temporary .ipynb file to use
         this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
         this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
-        
+
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
             path: this.notebookFile.path,
@@ -101,29 +99,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
             }); // Sadly looks like node.js version doesn't have .finally yet
         } else {
             this.shutdownSessionAndConnection();
-        }
-    }
-
-    private shutdownSessionAndConnection = () => {
-        if (this.contentsManager) {
-            this.contentsManager.dispose();
-            this.contentsManager = undefined;
-        }
-        if (this.session && this.sessionManager) {
-            try {
-                this.session.shutdown().ignoreErrors();
-                this.session.dispose();
-                this.sessionManager.dispose();
-            } catch {
-                noop();
-            }
-            this.session = undefined;
-            this.sessionManager = undefined;
-        }
-        this.onStatusChangedEvent.dispose();
-        if (this.connInfo) {
-            this.connInfo.dispose(); // This should kill the process that's running
-            this.connInfo = undefined;
         }
     }
 
@@ -293,9 +268,31 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     // When our sys info cell is run we'll use this to tell the server what major version of python we are using
-    public setPythonInfo(version: number, startingDirectory: string) {
+    public setPythonInfo(version: number) {
         this.pythonMainVersion = version;
-        this.startingDirectory = startingDirectory;
+    }
+
+    private shutdownSessionAndConnection = () => {
+        if (this.contentsManager) {
+            this.contentsManager.dispose();
+            this.contentsManager = undefined;
+        }
+        if (this.session && this.sessionManager) {
+            try {
+                this.session.shutdown().ignoreErrors();
+                this.session.dispose();
+                this.sessionManager.dispose();
+            } catch {
+                noop();
+            }
+            this.session = undefined;
+            this.sessionManager = undefined;
+        }
+        this.onStatusChangedEvent.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
+        }
     }
 
     private destroyKernelSpec = () => {

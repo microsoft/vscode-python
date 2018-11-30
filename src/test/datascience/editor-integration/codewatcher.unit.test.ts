@@ -277,7 +277,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         
         //textEditor.setup(te => te.selection = TypeMoq.It.isAny()).verifiable(TypeMoq.Times.once());
         //textEditor.setup(te => te.selection = TypeMoq.It.isAnyObject<Selection>(Selection));
-        // IANHU: Would be good to check that selection was set, but TypeMoq doesn't seem to like
+        // Would be good to check that selection was set, but TypeMoq doesn't seem to like
         // both getting and setting an object property. isAnyObject is not valid for this class
         // and is or isAny overwrite the previous property getter if used. Will verify selection set
         // in functional test

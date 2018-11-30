@@ -23,11 +23,12 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { HistoryMessages, Telemetry } from './constants';
+import { HistoryMessages, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, IConnection, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
+import { CellState, ICell, ICodeCssGenerator, IConnection, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -386,55 +387,67 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server
-        // IANHU: different status for 
-        const status = this.setStatus(localize.DataScience.startingJupyter());
-        try {
-            const settings = this.configuration.getSettings();
-            const serverURI = settings.datascience.jupyterServerURI;
-            let connectionInfo = [undefined, undefined];
-            // IANHU Factor this back into jupyterExecution? Not sure
-            // IANHU pull out constant setting name
-            if (serverURI === 'local') {
+        const settings = this.configuration.getSettings();
+        const serverURI = settings.datascience.jupyterServerURI;
+        let connectionInfo = [undefined, undefined];
+
+        if (serverURI === Settings.JupyterServerLocalLaunch) {
+            // For a local launch scenario start up our notebook server
+            const startingStatus = this.setStatus(localize.DataScience.startingJupyter());
+            try {
                 connectionInfo = await this.jupyterExecution.startNotebookServer();
-            } else {
-                // Generate our connection info and kernel spec here
+            } catch (err) {
+                throw err;
+            } finally {
+                startingStatus.dispose();
+            }
+        } else {
+            // For a remote connection generate connection info and kernel spec here
+            const connectingStatus = this.setStatus(localize.DataScience.connectingToJupyter());
+            let remoteConnectionInfo;
+            let remoteKernelSpec;
+            try {
                 const remoteConnectionInfo = this.createRemoteConnectionInfo(serverURI);
                 const remoteKernelSpec = await this.jupyterExecution.getMatchingKernelSpec(remoteConnectionInfo);
-                // IANHU : CHECKIN Pretty sure this is an error condition if we failed to get a spec here
-                connectionInfo = [remoteConnectionInfo, remoteKernelSpec];
+            } catch (err) {
+                this.applicationShell.showInformationMessage(localize.DataScience.jupyterNotebookConnectFailed().format(serverURI));
+                throw err;
+            } finally {
+                connectingStatus.dispose();
             }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(connectionInfo[0], connectionInfo[1]);
+            connectionInfo = [remoteConnectionInfo, remoteKernelSpec];
+        }
 
-            // If this is a restart, show our restart info
-            if (restart) {
-                await this.addRestartSysInfo();
-            }
+        const connectingStatus = this.setStatus(localize.DataScience.connectingToJupyter());
+        try {
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(connectionInfo[0], connectionInfo[1]);
         } catch (err) {
             throw err;
         } finally {
-            if (status) {
-                status.dispose();
-            }
+            connectingStatus.dispose();
+        }
+
+        // If this is a restart, show our restart info
+        if (restart) {
+            await this.addRestartSysInfo();
         }
     }
 
+    // Create connection information to connect to a remote machine instead of a locally launched server
     private createRemoteConnectionInfo = (connectionURI: string): IConnection => {
         let url: URL;
         try {
             url = new URL(connectionURI);
         } catch (err) {
-            // IANHU we should have parsed this before, need a check here?
+            // This should already have been parsed when set, so just throw if it's not right here
             throw err;
         }
 
-        // IANHU Missing token + main version need to resolve here
-        const connection: IConnection = { 
+        return {
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
-            dispose: () => {}
+            dispose: noop
         };
-
-        return connection;
     }
 
     private extractStreamOutput(cell: ICell) : string {
@@ -467,18 +480,15 @@ export class History implements IWebPanelMessageListener, IHistory {
         const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, 'foo.py', 0);
         // tslint:disable-next-line:no-multiline-string
         const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, 'foo.py', 0);
-        // tslint:disable-next-line:no-multiline-string
-        const startingDirectoryCells = await this.jupyterServer.execute(`pwd()`, 'foo.py', 0);
 
         // Both should have streamed output
         const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
         const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
         const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
-        const startingDirectory = startingDirectoryCells.length > 0 ? this.extractStreamOutput(startingDirectoryCells[0]).trimQuotes() : '';
 
         // Tell the server what version of python we are using here
         const majorVersionString = version.substr(0, version.indexOf('.'));
-        this.jupyterServer.setPythonInfo(Number(majorVersionString), startingDirectory);
+        this.jupyterServer.setPythonInfo(Number(majorVersionString));
 
         // Both should influence our ignore count. We don't want them to count against execution
         this.ignoreCount = this.ignoreCount + 4;

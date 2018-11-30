@@ -4,11 +4,12 @@
 import { Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode-jsonrpc';
 
-import { IFileSystem, TemporaryFile } from '../common/platform/types';
+import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
 import {
     ExecutionResult,
     IProcessService,
@@ -200,7 +201,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             return result;
         } catch (err) {
             // Something else went wrong
-            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(err));
+            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl));
         }
     }
 
@@ -213,13 +214,12 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         // Now actually launch it
         try {
-            // First generate a temporary notebook. We need this as input to the session
-
-            // IANHU: Check before submit, do we just need a path here to see if our server is started?
-            const tempFile = await this.generateTempFile();
+            // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
+            const tempDir = await this.generateTempDir();
+            this.disposableRegistry.push(tempDir);
 
             // Use this temp file to generate a list of args for our command
-            const args: string [] = ['--no-browser', `--notebook-dir=${path.dirname(tempFile.filePath)}`];
+            const args: string [] = ['--no-browser', `--notebook-dir=${tempDir.path}`];
 
             // Before starting the notebook process, make sure we generate a kernel spec
             let kernelSpec = await this.getMatchingKernelSpec();
@@ -229,9 +229,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // Wait for the connection information on this result
             const connection = await JupyterConnection.waitForConnection(
-                tempFile.filePath, this.getJupyterServerInfo, launchResult, this.serviceContainer);
+                tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer);
 
-            // IANHU: Should this actually be happening in the connection function?
             // If the kernel spec didn't match, then try with our current process instead
             if (!kernelSpec) {
                 kernelSpec = await this.getMatchingKernelSpec(connection);
@@ -276,6 +275,30 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             this.logger.logInformation(result.stderr);
         }
         return result.stdout;
+    }
+
+    public async getMatchingKernelSpec(connection?: IConnection) : Promise<IJupyterKernelSpec | undefined> {
+        // If not using an active connection, check on disk
+        if (!connection) {
+            // Get our best interpreter. We want its python path
+            const bestInterpreter = await this.getUsableJupyterPython();
+
+            // Enumerate our kernel specs that jupyter will know about and see if
+            // one of them already matches based on path
+            if (bestInterpreter && !await this.hasSpecPathMatch(bestInterpreter)) {
+
+                // Nobody matches on path, so generate a new kernel spec
+                if (await this.isKernelCreateSupported()) {
+                    await this.addMatchingSpec(bestInterpreter);
+                }
+            }
+        }
+
+        // Now enumerate them again
+        const enumerator = connection ? () => this.getActiveKernelSpecs(connection) : this.enumerateSpecs;
+
+        // Then find our match
+        return this.findSpecMatch(enumerator);
     }
 
     private getUsableJupyterPythonImpl = async () : Promise<PythonInterpreter | undefined> => {
@@ -399,31 +422,6 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }
     }
 
-    public async getMatchingKernelSpec(connection?: IConnection) : Promise<IJupyterKernelSpec | undefined> {
-
-        // If not using an active connection, check on disk
-        if (!connection) {
-            // Get our best interpreter. We want its python path
-            const bestInterpreter = await this.getUsableJupyterPython();
-
-            // Enumerate our kernel specs that jupyter will know about and see if
-            // one of them already matches based on path
-            if (bestInterpreter && !await this.hasSpecPathMatch(bestInterpreter)) {
-
-                // Nobody matches on path, so generate a new kernel spec
-                if (await this.isKernelCreateSupported()) {
-                    await this.addMatchingSpec(bestInterpreter);
-                }
-            }
-        }
-
-        // Now enumerate them again
-        const enumerator = connection ? () => this.getActiveKernelSpecs(connection) : this.enumerateSpecs;
-
-        // Then find our match
-        return this.findSpecMatch(enumerator);
-    }
-
     private findSpecPath = async (specName: string) : Promise<string | undefined> => {
         // Enumerate all specs and get path for the match
         const specs = await this.enumerateSpecs();
@@ -434,20 +432,12 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return match ? match.specFile : undefined;
     }
 
-    private async generateTempFile() : Promise<TemporaryFile> {
-        // Create a temp file on disk
-        const file = await this.fileSystem.createTemporaryFile('.ipynb');
-
-        // Use a UUID in the path so that we can verify the instance that we have started up
-        const uniqueDir = uuid();
-        const resultDir = path.join(path.dirname(file.filePath), uniqueDir);
-        const resultFile = path.join(resultDir, path.basename(file.filePath));
+    private async generateTempDir() : Promise<TemporaryDirectory> {
+        const resultDir = path.join(os.tmpdir(), uuid());
         await this.fileSystem.createDirectory(resultDir);
-        await this.fileSystem.writeFile(resultFile, {});
 
-        // Create disposable that will delete the directory of the result
         return {
-            filePath: resultFile,
+            path: resultDir,
             dispose: () => {
                 // Try ten times. Process may still be up and running.
                 // We don't want to do async as async dispose means it may never finish and then we don't
@@ -456,7 +446,6 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 while (count < 10) {
                     try {
                         fs.removeSync(resultDir);
-                        file.dispose();
                         count = 10;
                     } catch {
                         count += 1;

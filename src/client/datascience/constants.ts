@@ -66,3 +66,7 @@ export namespace Telemetry {
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
 }
+
+export namespace Settings {
+    export const JupyterServerLocalLaunch = 'local';
+}

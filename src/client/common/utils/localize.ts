@@ -57,7 +57,8 @@ export namespace DataScience {
     export const jupyterLaunchNoURL = localize('DataScience.jupyterLaunchNoURL', 'Failed to find the URL of the launched Jupyter notebook server');
     export const pythonInteractiveHelpLink = localize('DataScience.pythonInteractiveHelpLink', 'See [https://aka.ms/pyaiinstall] for help on installing jupyter.');
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
-    export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter Server');
+    export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
+    export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 
     export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');

@@ -40,6 +40,7 @@ export interface IPlatformService {
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;
+export type TemporaryDirectory = { path: string } & Disposable;
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
