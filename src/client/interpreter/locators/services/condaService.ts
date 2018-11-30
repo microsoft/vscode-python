@@ -68,7 +68,7 @@ export class CondaService implements ICondaService {
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService
     ) {
-        this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged));
+        this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged.bind(this)));
         this.activationProvider = serviceContainer.get<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider,
             this.platform.isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish');
         this.shellType = this.platform.isWindows ? TerminalShellType.commandPrompt : TerminalShellType.bash; // Defaults for Child_Process.exec
@@ -479,7 +479,7 @@ export class CondaService implements ICondaService {
     /**
      * Called when the user changes the current interpreter.
      */
-    private onInterpreterChanged = () : void => {
+    private onInterpreterChanged() : void {
         // Clear our activated environment cache as it can't match the current one anymore
         this.activatedEnvironmentCache = {};
     }
