@@ -200,7 +200,7 @@ gulp.task('webpack', async () => {
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
-const installPythonLibArgs = ['-m', 'pip', '-q', '--disable-pip-version-check', 'install',
+const installPythonLibArgs = ['-m', 'pip', '--disable-pip-version-check', 'install',
     '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps',
     '--upgrade', '-r', 'requirements.txt'];
 gulp.task('installPythonLibs', async () => {

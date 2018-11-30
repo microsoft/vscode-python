@@ -157,7 +157,7 @@ steps:
     inputs:
       filename: python
 
-      arguments: '-m pip -q --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
+      arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
 
 
   - task: Npm@1
