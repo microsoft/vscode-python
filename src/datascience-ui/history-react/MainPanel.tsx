@@ -65,6 +65,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
         const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
         './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
+        const interruptImage = this.props.theme !== 'vscode-dark' ? './images/Interrupt/Interrupt_16x_vscode.svg' :
+        './images/Interrupt/Interrupt_16x_vscode_dark.svg';
 
         const progressBar = this.state.busy && !this.props.ignoreProgress ? <Progress /> : undefined;
 
@@ -84,6 +86,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
                         <RelativeImage class='cell-button-image' path={restartImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
+                        <RelativeImage class='cell-button-image' path={interruptImage}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
                         <RelativeImage class='cell-button-image' path={undoImage}/>
@@ -317,6 +322,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private restartKernel = () => {
         // Send a message to the other side to restart the kernel
         PostOffice.sendMessage({ type: HistoryMessages.RestartKernel, payload: { }});
+    }
+
+    private interruptKernel = () => {
+        // Send a message to the other side to restart the kernel
+        PostOffice.sendMessage({ type: HistoryMessages.Interrupt, payload: { }});
     }
 
     private export = () => {

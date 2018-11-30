@@ -39,6 +39,7 @@ export interface INotebookServer extends Disposable {
     waitForIdle() : Promise<void>;
     shutdown();
     setPythonInfo(version: number);
+    interruptKernel() : Promise<void>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');

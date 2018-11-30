@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.11.0-beta (19 Nov 2018)
+## 2018.11.0 (29 Nov 2018)
 
 ### Thanks
 
@@ -59,23 +59,66 @@ part of!
    ([#2667](https://github.com/Microsoft/vscode-python/issues/2667))
 1. Make diagnostic message actionable when opening a workspace with no currently selected Python interpreter.
    ([#2983](https://github.com/Microsoft/vscode-python/issues/2983))
+1. Expose an API that can be used by other extensions to interact with the Python Extension.
+   ([#3121](https://github.com/Microsoft/vscode-python/issues/3121))
+1. Updated the language server to [0.1.65](https://github.com/Microsoft/python-language-server/releases/tag/2018.11.1):
+   - Improved `formatOnType` so it handles mismatched braces better
+   ([#3482](https://github.com/Microsoft/vscode-python/issues/3482))
 
 ### Fixes
 
+1. Have `ctags` use the `--extras` option instead of `--extra`.
+   (thanks to [Brandy Sandrowicz](https://github.com/bsandrow))
+   ([#793](https://github.com/Microsoft/vscode-python/issues/793))
+1. Always use bundled version of [`ptvsd`](https://github.com/microsoft/ptvsd), unless specified.
+   To use a custom version of `ptvsd` in the debugger, add `customDebugger` into your `launch.json` configuration as follows:
+   ```json
+       "type": "python",
+       "request": "launch",
+       "customDebugger": true
+   ```
+   ([#3283](https://github.com/Microsoft/vscode-python/issues/3283))
 1. Fix problems with virtual environments not matching the loaded python when running cells.
    ([#3294](https://github.com/Microsoft/vscode-python/issues/3294))
+1. Add button for interrupting the jupyter kernel
+   ([#3314](https://github.com/Microsoft/vscode-python/issues/3314))
+1. Auto select `Python Interpreter` prior to validation of interpreters and changes to messages displayed.
+   ([#3326](https://github.com/Microsoft/vscode-python/issues/3326))
+1. Fix Jupyter server connection issues involving IP addresses, base_url, and missing tokens
+   ([#3332](https://github.com/Microsoft/vscode-python/issues/3332))
 1. Make `nbconvert` in a installation not prevent notebooks from starting.
    ([#3343](https://github.com/Microsoft/vscode-python/issues/3343))
+1. Re-run Jupyter notebook setup when the kernel is restarted. This correctly picks up dark color themes for matplotlib.
+   ([#3418](https://github.com/Microsoft/vscode-python/issues/3418))
+1. Update the language server to [0.1.65](https://github.com/Microsoft/python-language-server/releases/tag/2018.11.1):
+   - Fixed `null` reference exception when executing "Find symbol in workspace"
+   - Fixed `null` argument exception that could happen when a function used tuples
+   - Fixed issue when variables in nested list comprehensions were marked as undefined
+   - Fixed exception that could be thrown with certain generic syntax
+   ([#3482](https://github.com/Microsoft/vscode-python/issues/3482))
 
 ### Code Health
 
 1. Added basic integration tests for the new Lanaguage Server.
    ([#2041](https://github.com/Microsoft/vscode-python/issues/2041))
+1. Add smoke tests for the extension.
+   ([#3021](https://github.com/Microsoft/vscode-python/issues/3021))
 1. Improvements to the `webpack configuration` file used to build the Data Science UI components.
    Added pre-build validations to ensure all npm modules used by Data Science UI components are registered.
    ([#3122](https://github.com/Microsoft/vscode-python/issues/3122))
+1. Removed `IsTestExecution` guard from around data science banner calls
+   ([#3246](https://github.com/Microsoft/vscode-python/issues/3246))
+1. Unit tests for `CodeLensProvider` and `CodeWatcher`
+   ([#3264](https://github.com/Microsoft/vscode-python/issues/3264))
 1. Use `EXTENSION_ROOT_DIR` instead of `__dirname` in preparation for bundling of extension.
    ([#3317](https://github.com/Microsoft/vscode-python/issues/3317))
+1. Add YAML file specification for CI builds
+   ([#3350](https://github.com/Microsoft/vscode-python/issues/3350))
+1. Stop running CI tests against the `master` branch of ptvsd.
+   ([#3414](https://github.com/Microsoft/vscode-python/issues/3414))
+1. Be more aggresive in searching for a Python environment that can run Jupyter
+   (make sure to cleanup any kernelspecs that are created during this process).
+   ([#3433](https://github.com/Microsoft/vscode-python/issues/3433))
 
 
 ## 2018.10.1 (09 Nov 2018)

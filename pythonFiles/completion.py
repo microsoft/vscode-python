@@ -1,4 +1,5 @@
 import os
+import os.path
 import io
 import re
 import sys
@@ -635,7 +636,7 @@ if __name__ == '__main__':
             modulesToLoad = sys.argv[3]
     else:
         #release
-        jediPath = os.path.dirname(__file__)
+        jediPath = os.path.join(os.path.dirname(__file__), 'lib', 'python')
         if len(sys.argv) > 1:
             modulesToLoad = sys.argv[1]
 

@@ -23,8 +23,7 @@ const config: Configuration = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts',
-        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
+        extension: './src/client/extension.ts'
     },
     devtool: 'source-map',
     node: {

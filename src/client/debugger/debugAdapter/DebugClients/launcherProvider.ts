@@ -9,7 +9,7 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import { IDebugLauncherScriptProvider, IRemoteDebugLauncherScriptProvider, LocalDebugOptions, RemoteDebugOptions } from '../types';
 
-const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
+const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
 export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions> {
     public getLauncherArgs(options: LocalDebugOptions): string[] {
         const customDebugger = options.customDebugger ? '--custom' : '--default';

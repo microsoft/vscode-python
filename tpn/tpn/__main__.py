@@ -66,7 +66,9 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
     if pypi_path:
         tasks.append(handle_index(pypi, pypi_path, config_projects, cached_projects))
     loop = asyncio.get_event_loop()
+    print()
     gathered = loop.run_until_complete(asyncio.gather(*tasks))
+    print()
     stale = {}
     failures = {}
     for found_projects, found_stale, found_failures in gathered:

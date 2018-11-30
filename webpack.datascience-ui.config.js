@@ -22,7 +22,7 @@ module.exports = {
         fs: 'empty'
     },
     plugins: [
-        new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', baseUrl: path.join(__dirname, 'out', 'dummy'), filename: './datascience-ui/history-react/index.html' }),
+        new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', imageBaseUrl: `${__dirname.replace(/\\/g, '/')}/out/datascience-ui/history-react`, indexUrl: `${__dirname}/out/1`, filename: './datascience-ui/history-react/index.html' }),
         new FixDefaultImportPlugin(),
         new CopyWebpackPlugin([
             { from: './**/*.png', to: '.' },

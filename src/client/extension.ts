@@ -92,7 +92,7 @@ import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegi
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
-let activatedServiceContainer : ServiceContainer | undefined;
+let activatedServiceContainer: ServiceContainer | undefined;
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
@@ -258,6 +258,7 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     // Display progress of interpreter refreshes only after extension has activated.
     serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
+    serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 
     // Get latest interpreter list.
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);

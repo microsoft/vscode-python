@@ -59,8 +59,8 @@ install:
   - npx gulp prePublishNonBundle
   - npx gulp hygiene-modified
   - python -m pip install --upgrade pip
-  - python -m pip install --upgrade -r requirements.txt
-  - python -m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd
+  - python -m pip install --upgrade -r ./build/test-requirements.txt
+  - npx gulp installPythonLibs
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
@@ -73,7 +73,7 @@ script:
     fi
   - npm run debugger-coverage
   - if [ $FUNCTIONAL_TEST == "true" ]; then
-        python -m pip install --upgrade -r functionalTestRequirements.txt;
+        python -m pip install --upgrade -r ./build/functional-test-requirements.txt;
         npm run test:functional;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
@@ -96,19 +96,22 @@ script:
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         vsce package;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-unbundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
-  - if [[ $BUNDLE == "true" ]]; then
+  - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
-    fi
-  - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-bundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         vsce package;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH-unbundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        npm run clean;
+        npm run package;
+        npx gulp clean:cleanExceptTests;
+        npm run testSmoke;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi

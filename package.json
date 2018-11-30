@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.11.0-beta",
-    "languageServerVersion": "0.1.60",
+    "version": "2018.12.0-alpha",
+    "languageServerVersion": "0.1.65",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -88,7 +88,8 @@
         "onCommand:python.discoverTests",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
-        "onCommand:python.datascience.selectjupyteruri"
+        "onCommand:python.datascience.selectjupyteruri",
+        "onCommand:python.python.enableSourceMapSupport"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -111,6 +112,11 @@
             }
         ],
         "commands": [
+            {
+                "command": "python.enableSourceMapSupport",
+                "title": "%python.command.python.enableSourceMapSupport.title%",
+                "category": "Python"
+            },
             {
                 "command": "python.sortImports",
                 "title": "%python.command.python.sortImports.title%",
@@ -1715,7 +1721,6 @@
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
-        "clean:ptvsd": "gulp clean:ptvsd",
         "cover:enable": "gulp cover:enable",
         "debugger-coverage": "gulp debugger-coverage",
         "cover:inlinesource": "gulp inlinesource"

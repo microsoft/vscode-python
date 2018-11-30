@@ -68,11 +68,11 @@ suite('Unit Tests - Debug Launcher', () => {
     function getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
-                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'PythonTools', 'visualstudio_py_testlauncher.py');
+                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
             }
             case 'pytest':
             case 'nosetest': {
-                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'testlauncher.py');
+                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testlauncher.py');
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);

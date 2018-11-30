@@ -40,6 +40,7 @@ export namespace HistoryMessages {
     export const CollapseAll = 'collapse_all';
     export const StartProgress = 'start_progress';
     export const StopProgress = 'stop_progress';
+    export const Interrupt = 'interrupt';
 }
 
 export namespace Telemetry {
@@ -61,6 +62,7 @@ export namespace Telemetry {
     export const SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI';
     export const SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL';
     export const SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED';
+    export const Interrupt = 'DATASCIENCE.INTERRUPT';
 }
 
 export namespace HelpLinks {
