@@ -126,7 +126,7 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async selectJupyterLaunchURI(): Promise<void> {
         // First get the proposed URI from the user
-        const userURI = await this.appShell.showInputBox({prompt: localize.DataScience.jupyterSelectURIPrompt(), placeHolder: 'https://hostname:8080/?token=9cfc2291326e37d861dc8d5bf769cce09e5f9fd9', validateInput: this.validateURI});
+        const userURI = await this.appShell.showInputBox({prompt: localize.DataScience.jupyterSelectURIPrompt(), placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI});
 
         if (userURI) {
             await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
