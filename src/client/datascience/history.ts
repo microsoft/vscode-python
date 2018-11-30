@@ -407,8 +407,8 @@ export class History implements IWebPanelMessageListener, IHistory {
             let remoteConnectionInfo;
             let remoteKernelSpec;
             try {
-                const remoteConnectionInfo = this.createRemoteConnectionInfo(serverURI);
-                const remoteKernelSpec = await this.jupyterExecution.getMatchingKernelSpec(remoteConnectionInfo);
+                remoteConnectionInfo = this.createRemoteConnectionInfo(serverURI);
+                remoteKernelSpec = await this.jupyterExecution.getMatchingKernelSpec(remoteConnectionInfo);
             } catch (err) {
                 this.applicationShell.showInformationMessage(localize.DataScience.jupyterNotebookConnectFailed().format(serverURI));
                 throw err;

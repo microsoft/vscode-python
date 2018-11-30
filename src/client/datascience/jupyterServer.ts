@@ -45,7 +45,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
         this.asyncRegistry.push(this);
     }
 
-    //public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void> => {
     public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
@@ -102,7 +101,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
     }
 
-    public dispose = async () : Promise<void> => {
+    public dispose = () : Promise<void> => {
         // This could be changed to actually wait for shutdown, but do this
         // for now so we finish quickly.
         return Promise.resolve(this.shutdown());

@@ -45,11 +45,9 @@ class MockJupyterServer implements INotebookServer {
     private conninfo : IConnection | undefined;
     private kernelSpec : IJupyterKernelSpec  | undefined;
     private notebookFile : TemporaryFile | undefined;
-    //public connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile): Promise<void> {
     public connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec): Promise<void> {
         this.conninfo = conninfo;
         this.kernelSpec = kernelSpec;
-        //this.notebookFile = notebookFile;
 
         // Validate connection info and kernel spec
         if (conninfo.baseUrl && /[a-z,A-Z,0-9,-,.,_]+/.test(kernelSpec.name)) {
