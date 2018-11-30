@@ -5,8 +5,6 @@ import { parse, SemVer } from 'semver';
 import { Logger } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ExecutionResult, IProcessServiceFactory } from '../../../common/process/types';
-import { Bash } from '../../../common/terminal/environmentActivationProviders/bash';
-import { CommandPromptAndPowerShell } from '../../../common/terminal/environmentActivationProviders/commandPrompt';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
 import { compareVersion } from '../../../common/utils/version';
@@ -71,7 +69,8 @@ export class CondaService implements ICondaService {
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged));
-        this.activationProvider = this.platform.isWindows ? new CommandPromptAndPowerShell(serviceContainer) : new Bash(serviceContainer);
+        this.activationProvider = serviceContainer.get<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider,
+            this.platform.isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish');
         this.shellType = this.platform.isWindows ? TerminalShellType.commandPrompt : TerminalShellType.bash; // Defaults for Child_Process.exec
     }
 
@@ -400,7 +399,7 @@ export class CondaService implements ICondaService {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
         const interpreterDir = interpreter ? path.dirname(interpreter.path) : '';
-        const envName = interpreter && interpreter.envName ? interpreter.envName : 'xxx'; // Prevents non named from being found
+        const envName = interpreter && interpreter.envName ? interpreter.envName : undefined;
         let condaPath = path.join(interpreterDir, condaExe);
         if (await this.fileSystem.fileExists(condaPath)) {
             return condaPath;
@@ -414,7 +413,7 @@ export class CondaService implements ICondaService {
 
         // Might be in a situation where this is not the default python env, but rather one running
         // from a virtualenv
-        const envsPos = interpreterDir.indexOf(path.join('envs', envName));
+        const envsPos = envName ? interpreterDir.indexOf(path.join('envs', envName)) : -1;
         if (envsPos > 0) {
             // This should be where the original python was run from when the environment was created.
             const originalPath = interpreterDir.slice(0, envsPos);

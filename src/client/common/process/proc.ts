@@ -159,6 +159,8 @@ export class ProcessService implements IProcessService {
                 } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
                     reject(new Error(stderr));
                 } else {
+                    // Make sure stderr is undefined if we actually had none. This is checked
+                    // elsewhere because that's how exec behaves.
                     resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
                 }
             });
