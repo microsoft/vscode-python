@@ -106,6 +106,8 @@
     "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
     "DataScience.jupyterSelectURILaunchLocal": "Launch local Jupyter server",
     "DataScience.jupyterSelectURISpecifyURI": "Type in the URI for the Jupyter server",
+    "DataScience.jupyterSelectURIPrompt": "Enter the URI of a Jupyter server",
+    "DataScience.jupyterSelectURIInvalidURI": "Invalid URI specified",
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.jupyterNotebookConnectFailed": "Failed to connect to Jupyter notebook. \r\n{0}",
     "DataScience.notebookVersionFormat": "Jupyter Notebook Version: {0}",

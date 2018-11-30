@@ -229,7 +229,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // Wait for the connection information on this result
             const connection = await JupyterConnection.waitForConnection(
-                tempFile.filePath, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion(), this.serviceContainer);
+                tempFile.filePath, this.getJupyterServerInfo, launchResult, this.serviceContainer);
 
             // IANHU: Should this actually be happening in the connection function?
             // If the kernel spec didn't match, then try with our current process instead
@@ -243,15 +243,6 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             }
 
             return [connection, kernelSpec];
-            // IANHU FAKE REMOTE CONNECTION
-            //const connection: IConnection = { 
-                //baseUrl: 'http://IANHULAPTOP2:9999',
-                //token: '4ced9d3ffc24e4c839be67766371358105d6a5c09c73951c',
-                //pythonMainVersion: 3,
-                //dispose: () => {}
-             //};
-
-
         } catch (err) {
             // Something else went wrong
             throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));

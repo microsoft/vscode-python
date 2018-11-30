@@ -117,7 +117,6 @@ export class DataScience implements IDataScience {
                 // If user cancels quick pick we will get undefined as the selection and fall through here
             break;
         }
-        //const input = await this.appShell.showInputBox();
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal) 
@@ -128,21 +127,21 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async selectJupyterLaunchURI(): Promise<void> {
         // First get the proposed URI from the user
-        const userURI = await this.appShell.showInputBox({prompt: 'Enter the URI of a Jupyter server', placeHolder: 'https://localhost:8080/', validateInput: this.validateURI});
+        const userURI = await this.appShell.showInputBox({prompt: localize.DataScience.jupyterSelectURIPrompt(), placeHolder: 'https://hostname:8080/?token=9cfc2291326e37d861dc8d5bf769cce09e5f9fd9', validateInput: this.validateURI});
 
-        let test = userURI;
-        let testing = test;
+        if (userURI) {
+            await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
+        }
     }
 
     private validateURI = (testURI: string): string | undefined | null => {
-        let parsedURL: URL;
         try {
-           parsedURL = new URL(testURI); 
+           new URL(testURI); 
         } catch {
-            return 'Invalid URL specified';
+            return localize.DataScience.jupyterSelectURIInvalidURI();
         }
 
-        // Per docs, return null when the specified value is valid
+        // Return null tells the dialog that our string is valid
         return null;
     }
 

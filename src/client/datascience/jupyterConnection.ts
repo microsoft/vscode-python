@@ -171,20 +171,17 @@ class JupyterConnectionWaiter {
 export class JupyterConnection implements IConnection {
     public baseUrl: string;
     public token: string;
-    public pythonMainVersion: number;
     private disposable: Disposable | undefined;
-    constructor(baseUrl: string, token: string, pythonMainVersion: number, disposable: Disposable) {
+    constructor(baseUrl: string, token: string, disposable: Disposable) {
         this.baseUrl = baseUrl;
         this.token = token;
         this.disposable = disposable;
-        this.pythonMainVersion = pythonMainVersion;
     }
 
     public static waitForConnection(
         notebookFile: string,
         getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
         notebookExecution : ObservableExecutionResult<string>,
-        pythonVersion: number,
         serviceContainer: IServiceContainer) {
 
         // Create our waiter. It will sit here and wait for the connection information from the jupyter process starting up.
@@ -192,7 +189,7 @@ export class JupyterConnection implements IConnection {
             notebookExecution,
             notebookFile,
             getServerInfo,
-            (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, pythonVersion, processDisposable),
+            (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, processDisposable),
             serviceContainer);
 
         return waiter.waitForConnection();

@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
@@ -391,12 +392,13 @@ export class History implements IWebPanelMessageListener, IHistory {
             const settings = this.configuration.getSettings();
             const serverURI = settings.datascience.jupyterServerURI;
             let connectionInfo = [undefined, undefined];
+            // IANHU Factor this back into jupyterExecution? Not sure
             // IANHU pull out constant setting name
             if (serverURI === 'local') {
                 connectionInfo = await this.jupyterExecution.startNotebookServer();
             } else {
                 // Generate our connection info and kernel spec here
-                const remoteConnectionInfo = this.createConnectionInfo("TESTING");
+                const remoteConnectionInfo = this.createRemoteConnectionInfo(serverURI);
                 const remoteKernelSpec = await this.jupyterExecution.getMatchingKernelSpec(remoteConnectionInfo);
                 // IANHU : CHECKIN Pretty sure this is an error condition if we failed to get a spec here
                 connectionInfo = [remoteConnectionInfo, remoteKernelSpec];
@@ -416,14 +418,19 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private createConnectionInfo = (connectionURL: string): IConnection => {
-        // Fake for now
-        
-        // IANHU FAKE REMOTE CONNECTION
+    private createRemoteConnectionInfo = (connectionURI: string): IConnection => {
+        let url: URL;
+        try {
+            url = new URL(connectionURI);
+        } catch (err) {
+            // IANHU we should have parsed this before, need a check here?
+            throw err;
+        }
+
+        // IANHU Missing token + main version need to resolve here
         const connection: IConnection = { 
-            baseUrl: 'http://IANHULAPTOP2:9999',
-            token: '849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe',
-            pythonMainVersion: 3,
+            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
+            token: `${url.searchParams.get('token')}`,
             dispose: () => {}
         };
 
@@ -460,14 +467,21 @@ export class History implements IWebPanelMessageListener, IHistory {
         const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, 'foo.py', 0);
         // tslint:disable-next-line:no-multiline-string
         const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, 'foo.py', 0);
+        // tslint:disable-next-line:no-multiline-string
+        const startingDirectoryCells = await this.jupyterServer.execute(`pwd()`, 'foo.py', 0);
 
         // Both should have streamed output
         const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
         const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
         const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
+        const startingDirectory = startingDirectoryCells.length > 0 ? this.extractStreamOutput(startingDirectoryCells[0]).trimQuotes() : '';
+
+        // Tell the server what version of python we are using here
+        const majorVersionString = version.substr(0, version.indexOf('.'));
+        this.jupyterServer.setPythonInfo(Number(majorVersionString), startingDirectory);
 
         // Both should influence our ignore count. We don't want them to count against execution
-        this.ignoreCount = this.ignoreCount + 3;
+        this.ignoreCount = this.ignoreCount + 4;
 
         // Combine this data together to make our sys info
         return {

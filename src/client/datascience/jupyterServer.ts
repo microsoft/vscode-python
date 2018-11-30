@@ -35,7 +35,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
     private notebookFile: Contents.IModel;
     private sessionStartTime: number | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
-    //private notebookFile : TemporaryFile | undefined;
+    private pythonMainVersion: number = 0; // Set a non-2 or 3 default for before when we get sys info
+    private startingDirectory: string;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
@@ -51,10 +52,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
-        //this.notebookFile = notebookFile;
 
-        // First connect to the sesssion manager and find a kernel that matches our
-        // python we're using
+        // First connect to the sesssion manager
         const serverSettings = ServerConnection.makeSettings(
             {
                 baseUrl: connInfo.baseUrl,
@@ -70,30 +69,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
         this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
         this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
         
-
-        // IANHU: Just for manual testing...REMOTE
-        //connInfo.baseUrl = "http://";
-        //connInfo.token = "";
-        //const myBaseUrl = 'http://IANHULAPTOP2:9999';
-
-        //const remoteServerSettings = ServerConnection.makeSettings(
-            //{
-                //baseUrl: myBaseUrl,
-                //token: '4ced9d3ffc24e4c839be67766371358105d6a5c09c73951c',
-                //pageUrl: '',
-                //// A web socket is required to allow token authentication
-                //wsUrl: myBaseUrl.replace('http', 'ws'),
-                //init: { cache: 'no-store', credentials: 'same-origin' }
-            //});
-        //this.contentsManager = new ContentsManager({ serverSettings: remoteServerSettings });
-        //const createdFile = await this.contentsManager.newUntitled({type: 'notebook' });
-        //const createdFile2 = await this.contentsManager.newUntitled({type: 'notebook' });
-        //await this.contentsManager.delete(createdFile.path);
-        //await this.contentsManager.delete(createdFile2.path);
-
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
-            //path: notebookFile.filePath,
             path: this.notebookFile.path,
             kernelName: kernelSpec ? kernelSpec.name : '',
             serverSettings: serverSettings
@@ -114,7 +91,24 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     public shutdown = () => {
-        this.destroyKernelSpec(); // This is the most important part. We HAVE to get rid of this or it messes up other jupyter notebooks on the same machine.
+        this.destroyKernelSpec();
+
+        if (this.notebookFile && this.contentsManager) {
+            this.contentsManager.delete(this.notebookFile.path).then(() => {
+                this.shutdownSessionAndConnection();
+            }).catch(() => {
+                this.shutdownSessionAndConnection();
+            }); // Sadly looks like node.js version doesn't have .finally yet
+        } else {
+            this.shutdownSessionAndConnection();
+        }
+    }
+
+    private shutdownSessionAndConnection = () => {
+        if (this.contentsManager) {
+            this.contentsManager.dispose();
+            this.contentsManager = undefined;
+        }
         if (this.session && this.sessionManager) {
             try {
                 this.session.shutdown().ignoreErrors();
@@ -131,35 +125,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
             this.connInfo.dispose(); // This should kill the process that's running
             this.connInfo = undefined;
         }
-        if (this.notebookFile) {
-            //this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
-            //this.notebookFile = undefined;
-            if(this.contentsManager) {
-                this.contentsManager.delete(this.notebookFile.path).then(() => {
-                    if(this.contentsManager){
-                        this.contentsManager.dispose();
-                        this.contentsManager = undefined;
-                    }
-                }).catch((err) => {
-                    // IANHU DONT CHECK IN THIS ON LOCAL BOX ERROR DELETING HERE. DUE TO TEMP FILE?
-                    // module.exports.e.NetworkError: request to http://localhost:8888/api/contents/Untitled.ipynb?1543451587208 failed, reason: connect ECONNREFUSED 127.0.0.1:8888
-//message:"request to http://localhost:8888/api/contents/Untitled.ipynb?1543451587208 failed, reason: connect ECONNREFUSED 127.0.0.1:8888"
-//stack:"n: request to http://localhost:8888/api/contents/Untitled.ipynb?1543451587208 failed, reason: connect ECONNREFUSED 127.0.0.1:8888\n\tat ClientRequest.<anonymous> (D:\vscode-python-ianhu\out\client\node_modules\@jupyterlab\services.js:34:245755)\n\tat emitOne (events.js:116:13)\n\tat ClientRequest.emit (events.js:211:7)\n\tat Socket.socketErrorListener (_http_client.js:387:9)\n\tat emitOne (events.js:116:13)\n\tat Socket.emit (events.js:211:7)\n\tat emitErrorNT (internal/streams/destroy.js:64:8)\n\tat _combinedTickCallback (internal/process/next_tick.js:138:11)\n\tat process._tickCallback (internal/process/next_tick.js:180:9)"
-//__proto__:TypeError {constructor: }
-// This is only locally, it does delete on the remotebox
-                    let testing = 1;
-                });
-            }
-        } else {
-            // Separate code path so we can wait for the then? needed? 
-            if (this.contentsManager) {
-                this.contentsManager.dispose();
-                this.contentsManager = undefined;
-            }
-        }
     }
 
-    public dispose = () : Promise<void> => {
+    public dispose = async () : Promise<void> => {
         // This could be changed to actually wait for shutdown, but do this
         // for now so we finish quickly.
         return Promise.resolve(this.shutdown());
@@ -294,7 +262,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
 
-        if (this.connInfo && this.connInfo.pythonMainVersion) {
+        if (this.connInfo && this.pythonMainVersion) {
 
             // Use this to build our metadata object
             const metadata : nbformat.INotebookMetadata = {
@@ -302,7 +270,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: this.connInfo.pythonMainVersion
+                        version: this.pythonMainVersion
                     }
                 },
                 orig_nbformat : 2,
@@ -310,8 +278,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 mimetype: 'text/x-python',
                 name: 'python',
                 npconvert_exporter: 'python',
-                pygments_lexer: `ipython${this.connInfo.pythonMainVersion}`,
-                version: this.connInfo.pythonMainVersion
+                pygments_lexer: `ipython${this.pythonMainVersion}`,
+                version: this.pythonMainVersion
             };
 
             // Combine this into a JSON object
@@ -322,6 +290,12 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 metadata: metadata
             };
         }
+    }
+
+    // When our sys info cell is run we'll use this to tell the server what major version of python we are using
+    public setPythonInfo(version: number, startingDirectory: string) {
+        this.pythonMainVersion = version;
+        this.startingDirectory = startingDirectory;
     }
 
     private destroyKernelSpec = () => {
