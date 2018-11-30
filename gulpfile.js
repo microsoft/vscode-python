@@ -202,11 +202,31 @@ gulp.task('webpack', async () => {
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
+const installPythonLibArgs = ['-m', 'pip', '-q', '--disable-pip-version-check', 'install',
+    '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps',
+    '--upgrade', '-r', 'requirements.txt'];
+gulp.task('installPythonLibs', async () => {
+    const success = await spawnAsync('python3', installPythonLibArgs)
+        .then(() => true)
+        .catch(ex => {
+            console.error('Failed to install Python Libs using \'python3\'', ex);
+            return false
+        });
+    if (!success) {
+        console.info('Failed to install Python Libs using \'python3\', attempting to install using \'python\'');
+        await spawnAsync('python', installPythonLibArgs)
+            .catch(ex => {
+                console.error('Failed to install Python Libs using \'python\'', ex);
+                return false
+            });
+    }
+});
+
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
         const proc = spawn(command, args, { cwd: __dirname });
         proc.stdout.on('data', data => {
-            // Log output on CI.
+            // Log output on CI (else travis times out when there's not output).
             if (isCI) {
                 console.log(data.toString());
             }

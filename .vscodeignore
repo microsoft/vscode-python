@@ -56,6 +56,9 @@ out/test/**
 out/testMultiRootWkspc/**
 precommit.hook
 pythonFiles/**/*.pyc
+pythonFiles/lib/**/*.dist-info/**
+pythonFiles/lib/**/*.egg-info/**
+pythonFiles/lib/python/bin/**
 requirements.txt
 scripts/**
 src/**

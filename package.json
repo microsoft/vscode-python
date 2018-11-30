@@ -1696,7 +1696,7 @@
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
-        "postinstall": "node ./node_modules/vscode/bin/install",
+        "postinstall": "node ./node_modules/vscode/bin/install && npx gulp installPythonLibs",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "node ./out/test/unittests.js",
         "test:functional": "node ./out/test/functionalTests.js",

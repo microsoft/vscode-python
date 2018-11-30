@@ -54,13 +54,12 @@ before_install: |
   npm install -g azure-cli
   export CI_PYTHON_PATH=`which python`
 install:
+  - python -m pip install --upgrade pip
   - travis_wait 5 npm ci
   - npm run clean
   - npx gulp prePublishNonBundle
   - npx gulp hygiene-modified
-  - python -m pip install --upgrade pip
-  - python -m pip install --upgrade -r requirements.txt
-  - python -m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd
+  - python -m pip install --upgrade -r ./build/requirements.txt
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
