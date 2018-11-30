@@ -22,7 +22,7 @@ const path = require('path');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
-const fs = require('fs');
+const fs = require('fs-extra');
 const fsExtra = require('fs-extra');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
@@ -204,20 +204,21 @@ const installPythonLibArgs = ['-m', 'pip', '--disable-pip-version-check', 'insta
     '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps',
     '--upgrade', '-r', 'requirements.txt'];
 gulp.task('installPythonLibs', async () => {
-    const success = await spawnAsync('python3', installPythonLibArgs)
-        .then(() => true)
-        .catch(ex => {
-            console.error('Failed to install Python Libs using \'python3\'', ex);
-            return false
-        });
-    if (!success) {
-        console.info('Failed to install Python Libs using \'python3\', attempting to install using \'python\'');
-        await spawnAsync('python', installPythonLibArgs)
+    const requirements = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8').split('\n').map(item => item.trim()).filter(item => item.length > 0);
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps'];
+    await Promise.all(requirements.map(async requirement => {
+        const success = await spawnAsync('python3', args.concat(requirement))
+            .then(() => true)
             .catch(ex => {
-                console.error('Failed to install Python Libs using \'python\'', ex);
+                console.error('Failed to install Python Libs using \'python3\'', ex);
                 return false
             });
-    }
+        if (!success) {
+            console.info('Failed to install Python Libs using \'python3\', attempting to install using \'python\'');
+            await spawnAsync('python', args.concat(requirement))
+                .catch(ex => console.error('Failed to install Python Libs using \'python\'', ex));
+        }
+    }));
 });
 
 function spawnAsync(command, args) {

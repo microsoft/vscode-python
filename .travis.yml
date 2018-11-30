@@ -60,7 +60,7 @@ install:
   - npx gulp hygiene-modified
   - python -m pip install --upgrade pip
   - python -m pip install --upgrade -r ./build/test-requirements.txt
-  - python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  - npx gulp installPythonLibs
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
