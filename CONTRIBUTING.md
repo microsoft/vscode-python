@@ -37,8 +37,7 @@ cd vscode-python
 npm install
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
-python -m pip install -r requirements.txt
-python -m pip install -t pythonFiles/experimental/ptvsd ptvsd
+python3 -m pip -q --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 # Specifying the virtual environment simply varies between shells.
 export CI_PYTHON_PATH=`pwd`/.venv/bin/python
 ```

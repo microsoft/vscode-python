@@ -9,7 +9,7 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider, RemoteDebuggerLauncherScriptProvider } from '../../../../client/debugger/debugAdapter/DebugClients/launcherProvider';
 
-const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
+const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
 
 suite('Debugger - Launcher Script Provider', () => {
     test('Ensure launcher script exists', async () => {

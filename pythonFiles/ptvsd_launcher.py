@@ -12,7 +12,7 @@ ptvsdArgs.pop(1)
 
 # Load the debugger package
 try:
-    ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'ptvsd')
+    ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'lib', 'python')
     if useCustomPtvsd:
         sys.path.append(ptvs_lib_path)
     else:

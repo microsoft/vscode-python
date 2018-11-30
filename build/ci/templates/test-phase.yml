@@ -149,7 +149,7 @@ steps:
     inputs:
       filename: python
 
-      arguments: '-m pip install --upgrade -r ./requirements.txt'
+      arguments: '-m pip install --upgrade -r ./build/requirements.txt'
 
 
   - task: CmdLine@1
@@ -157,7 +157,7 @@ steps:
     inputs:
       filename: python
 
-      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd'
+      arguments: '-m pip -q --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
 
 
   - task: Npm@1
