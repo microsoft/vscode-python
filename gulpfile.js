@@ -207,7 +207,7 @@ gulp.task('installPythonLibs', async () => {
     const requirements = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8').split('\n').map(item => item.trim()).filter(item => item.length > 0);
     const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps'];
     await Promise.all(requirements.map(async requirement => {
-        const success = await spawnAsync(procecss.env.CI_PYTHON_PATH || 'python3', args.concat(requirement))
+        const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(requirement))
             .then(() => true)
             .catch(ex => {
                 console.error('Failed to install Python Libs using \'python3\'', ex);
