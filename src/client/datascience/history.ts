@@ -504,12 +504,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
         const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
 
-        // Tell the server what version of python we are using here
-        const majorVersionString = version.substr(0, version.indexOf('.'));
-        this.jupyterServer.setPythonInfo(Number(majorVersionString));
-
         // Both should influence our ignore count. We don't want them to count against execution
-        this.ignoreCount = this.ignoreCount + 4;
+        this.ignoreCount = this.ignoreCount + 3;
 
         // Combine this data together to make our sys info
         return {

@@ -19,7 +19,7 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
-import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, ISysInfo } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -246,8 +246,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
+        const pythonVersion = this.extractPythonMainVersion(cells);
 
-        if (this.connInfo && this.pythonMainVersion) {
+        if (this.connInfo) {
 
             // Use this to build our metadata object
             const metadata : nbformat.INotebookMetadata = {
@@ -255,7 +256,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: this.pythonMainVersion
+                        version: pythonVersion
                     }
                 },
                 orig_nbformat : 2,
@@ -263,8 +264,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 mimetype: 'text/x-python',
                 name: 'python',
                 npconvert_exporter: 'python',
-                pygments_lexer: `ipython${this.pythonMainVersion}`,
-                version: this.pythonMainVersion
+                pygments_lexer: `ipython${pythonVersion}`,
+                version: pythonVersion
             };
 
             // Combine this into a JSON object
@@ -277,9 +278,23 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
     }
 
-    // When our sys info cell is run we'll use this to tell the server what major version of python we are using
-    public setPythonInfo(version: number) {
-        this.pythonMainVersion = version;
+    private extractPythonMainVersion = (cells: ICell[]): number => {
+        let pythonVersion;
+        const sysInfoCells = cells.filter((targetCell: ICell) => {
+           return targetCell.data.cell_type === 'sys_info'; 
+        });
+
+        if (sysInfoCells.length > 0) {
+            const sysInfo = sysInfoCells[0].data as ISysInfo;
+            const fullVersionString = sysInfo.version;
+            if (fullVersionString) {
+                pythonVersion = fullVersionString.substr(0, fullVersionString.indexOf('.'));
+                return Number(pythonVersion);
+            } 
+        }
+
+        this.logger.logInformation("Failed to find python main version from sys_info cell");
+        return 0;
     }
 
     private shutdownSessionAndConnection = () => {

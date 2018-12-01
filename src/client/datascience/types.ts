@@ -38,7 +38,6 @@ export interface INotebookServer extends Disposable {
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     waitForIdle() : Promise<void>;
     shutdown();
-    setPythonInfo(version: number);
     interruptKernel() : Promise<void>;
 }
 
