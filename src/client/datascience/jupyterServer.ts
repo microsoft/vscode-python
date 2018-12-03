@@ -18,6 +18,9 @@ import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } f
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
+import {
+    IInterpreterService
+} from '../interpreter/contracts';
 import { RegExpValues } from './constants';
 import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, ISysInfo } from './types';
 
@@ -34,13 +37,13 @@ export class JupyterServer implements INotebookServer, IDisposable {
     private notebookFile: Contents.IModel;
     private sessionStartTime: number | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
-    private pythonMainVersion: number = 0; // Set a non-2 or 3 default for before when we get sys info
 
     constructor(
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
         this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
     }
@@ -246,7 +249,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
-        const pythonVersion = this.extractPythonMainVersion(cells);
+        const pythonVersion = await this.extractPythonMainVersion(cells);
 
         // Use this to build our metadata object
         const metadata : nbformat.INotebookMetadata = {
@@ -275,10 +278,10 @@ export class JupyterServer implements INotebookServer, IDisposable {
         };
     }
 
-    private extractPythonMainVersion = (cells: ICell[]): number => {
+    private extractPythonMainVersion = async (cells: ICell[]): Promise<number> => {
         let pythonVersion;
         const sysInfoCells = cells.filter((targetCell: ICell) => {
-           return targetCell.data.cell_type === 'sys_info'; 
+           return targetCell.data.cell_type === 'sys_info';
         });
 
         if (sysInfoCells.length > 0) {
@@ -287,11 +290,17 @@ export class JupyterServer implements INotebookServer, IDisposable {
             if (fullVersionString) {
                 pythonVersion = fullVersionString.substr(0, fullVersionString.indexOf('.'));
                 return Number(pythonVersion);
-            } 
+            }
         }
 
-        this.logger.logInformation("Failed to find python main version from sys_info cell");
-        return 0;
+        this.logger.logInformation('Failed to find python main version from sys_info cell');
+        // In this case, let's check the version on the active interpreter
+        const interpreter = await this.interpreterService.getActiveInterpreter();
+        if (interpreter && interpreter.version_info) {
+            return interpreter.version_info[0];
+        } else {
+            return 0;
+        }
     }
 
     private shutdownSessionAndConnection = () => {

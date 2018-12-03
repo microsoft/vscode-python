@@ -24,7 +24,7 @@ import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/t
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { HistoryMessages, Telemetry } from './constants';
+import { HistoryMessages, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 
@@ -404,10 +404,14 @@ export class History implements IWebPanelMessageListener, IHistory {
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
-        const serverURI = settings.datascience.jupyterServerURI;
+        let serverURI = settings.datascience.jupyterServerURI;
 
-        const status = this.setStatus(localize.DataScience.startingJupyter());
+        const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
+            // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
+            if (serverURI === Settings.JupyterServerLocalLaunch) {
+                serverURI = undefined;
+            }
             this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI);
 
             // If this is a restart, show our restart info
