@@ -193,17 +193,20 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     public connectToNotebookServer = async (uri?: string) : Promise<INotebookServer> => {
         let connection: IConnection;
-        let kernelSpec: IJupyterKernelSpec;
+        let kernelSpec: IJupyterKernelSpec | undefined;
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!uri) {
             const launchResults = await this.startNotebookServer();
             if (launchResults) {
                 connection = launchResults.connection;
                 kernelSpec = launchResults.kernelSpec;
+            } else {
+                throw new Error(localize.DataScience.jupyterNotebookFailure().format(''));
             }
         } else {
             // If we have a URI spec up a connection info for it
             connection = this.createRemoteConnectionInfo(uri);
+            kernelSpec = undefined;
         }
 
         try {
@@ -297,7 +300,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         };
     }
 
-    private startNotebookServer = async (): Promise<{connection: IConnection; kernelSpec: IJupyterKernelSpec}> => {
+    private startNotebookServer = async (): Promise<{connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined}> => {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(NotebookCommand);
         if (!notebookCommand) {

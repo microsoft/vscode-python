@@ -27,6 +27,6 @@ suite('History Unit Tests', () => {
         extensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         codeLensProvider = TypeMoq.Mock.ofType<IDataScienceCodeLensProvider>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        dataScience = new DataScience(serviceContainer.object, commandManager.object, disposableRegistry.object, extensionContext.object, codeLensProvider.object, configurationService.object, shell.object); 
+        dataScience = new DataScience(serviceContainer.object, commandManager.object, disposableRegistry.object, extensionContext.object, codeLensProvider.object, configurationService.object, shell.object);
     });
 });

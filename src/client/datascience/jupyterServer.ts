@@ -34,7 +34,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
-    private notebookFile: Contents.IModel;
+    private notebookFile: Contents.IModel | undefined;
     private sessionStartTime: number | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
 

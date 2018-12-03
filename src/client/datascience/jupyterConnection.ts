@@ -26,7 +26,7 @@ export type JupyterServerInfo = {
     secure: boolean;
     token: string;
     url: string;
-}
+};
 
 class JupyterConnectionWaiter {
     private startPromise: Deferred<IConnection>;

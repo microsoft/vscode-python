@@ -404,7 +404,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
-        let serverURI = settings.datascience.jupyterServerURI;
+        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
 
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
