@@ -1727,7 +1727,7 @@
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.5",
+        "lodash": "^4.17.11",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
