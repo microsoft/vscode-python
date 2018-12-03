@@ -248,34 +248,31 @@ export class JupyterServer implements INotebookServer, IDisposable {
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
         const pythonVersion = this.extractPythonMainVersion(cells);
 
-        if (this.connInfo) {
-
-            // Use this to build our metadata object
-            const metadata : nbformat.INotebookMetadata = {
-                language_info: {
-                    name: 'python',
-                    codemirror_mode: {
-                        name: 'ipython',
-                        version: pythonVersion
-                    }
-                },
-                orig_nbformat : 2,
-                file_extension: '.py',
-                mimetype: 'text/x-python',
+        // Use this to build our metadata object
+        const metadata : nbformat.INotebookMetadata = {
+            language_info: {
                 name: 'python',
-                npconvert_exporter: 'python',
-                pygments_lexer: `ipython${pythonVersion}`,
-                version: pythonVersion
-            };
+                codemirror_mode: {
+                    name: 'ipython',
+                    version: pythonVersion
+                }
+            },
+            orig_nbformat : 2,
+            file_extension: '.py',
+            mimetype: 'text/x-python',
+            name: 'python',
+            npconvert_exporter: 'python',
+            pygments_lexer: `ipython${pythonVersion}`,
+            version: pythonVersion
+        };
 
-            // Combine this into a JSON object
-            return {
-                cells: this.pruneCells(cells),
-                nbformat: 4,
-                nbformat_minor: 2,
-                metadata: metadata
-            };
-        }
+        // Combine this into a JSON object
+        return {
+            cells: this.pruneCells(cells),
+            nbformat: 4,
+            nbformat_minor: 2,
+            metadata: metadata
+        };
     }
 
     private extractPythonMainVersion = (cells: ICell[]): number => {
