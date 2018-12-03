@@ -134,8 +134,7 @@ suite('Jupyter notebook tests', () => {
         runTest('MimeTypes', async () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const connInfo = await jupyterExecution.startNotebookServer();
-            const server = await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+            const server = await jupyterExecution.connectToNotebookServer();
             if (!server) {
                 assert.fail('Server not created');
             }
@@ -165,8 +164,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     runTest('Creation', async () => {
-        const connInfo = await jupyterExecution.startNotebookServer();
-        const server = await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+        const server = await jupyterExecution.connectToNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }
@@ -182,8 +180,7 @@ suite('Jupyter notebook tests', () => {
         ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         return assertThrows(async () => {
-            const connInfo = await jupyterExecution.startNotebookServer();
-            await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+            await jupyterExecution.connectToNotebookServer();
         }, 'Server start is not throwing');
     });
 
@@ -228,14 +225,12 @@ suite('Jupyter notebook tests', () => {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
 
         return assertThrows(async () => {
-            const connInfo = await jupyterExecution.startNotebookServer();
-            await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+            await jupyterExecution.connectToNotebookServer();
         }, 'Server start is not throwing');
     });
 
     runTest('Export/Import', async () => {
-        const connInfo = await jupyterExecution.startNotebookServer();
-        const server = await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+        const server = await jupyterExecution.connectToNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }
@@ -266,8 +261,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Restart kernel', async () => {
-        const connInfo = await jupyterExecution.startNotebookServer();
-        const server = await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+        const server = await jupyterExecution.connectToNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }
@@ -295,8 +289,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Interrupt kernel', async () => {
-        const connInfo = await jupyterExecution.startNotebookServer();
-        const server = await jupyterExecution.connectToNotebookServer(connInfo[0], connInfo[1]);
+        const server = await jupyterExecution.connectToNotebookServer();
         if (!server) {
             assert.fail('Server not created');
         }

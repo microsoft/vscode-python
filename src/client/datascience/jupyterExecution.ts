@@ -6,6 +6,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode-jsonrpc';
 
@@ -21,6 +22,7 @@ import {
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { IS_WINDOWS } from '../common/util';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import {
     ICondaService,
@@ -30,6 +32,7 @@ import {
     PythonInterpreter
 } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
+import { Settings } from './constants';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { IConnection, IJupyterExecution, IJupyterKernelSpec, INotebookServer } from './types';
 
@@ -189,46 +192,23 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.isCommandSupported(KernelSpecCommand);
     }
 
-    public connectToNotebookServer = async (connection: IConnection, kernelSpec: IJupyterKernelSpec): Promise<INotebookServer> => {
-        try {
-            // Try to connect to our jupyter process
-            const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
-            this.disposableRegistry.push(result);
-            await result.connect(connection, kernelSpec);
-            return result;
-        } catch (err) {
-            // Something else went wrong
-            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl));
-        }
-    }
-
-    public startNotebookServer = async () : Promise<[IConnection, IJupyterKernelSpec]> => {
-        // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand(NotebookCommand);
-        if (!notebookCommand) {
-            throw new Error(localize.DataScience.jupyterNotSupported());
+    public connectToNotebookServer = async (uri?: string) : Promise<INotebookServer> => {
+        let connection: IConnection;
+        let kernelSpec: IJupyterKernelSpec;
+        // If our uri is undefined or if it's set to local launch we need to launch a server locally
+        if (!uri || uri === Settings.JupyterServerLocalLaunch) {
+            const launchResults = await this.startNotebookServer();
+            if (launchResults) {
+                connection = launchResults[0];
+                kernelSpec = launchResults[1];
+            }
+        } else {
+            // If we have a URI spec up a connection info for it
+            connection = this.createRemoteConnectionInfo(uri);
         }
 
-        // Now actually launch it
         try {
-            // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
-            const tempDir = await this.generateTempDir();
-            this.disposableRegistry.push(tempDir);
-
-            // Use this temp file to generate a list of args for our command
-            const args: string [] = ['--no-browser', `--notebook-dir=${tempDir.path}`];
-
-            // Before starting the notebook process, make sure we generate a kernel spec
-            let kernelSpec = await this.getMatchingKernelSpec();
-
-            // Then use this to launch our notebook process.
-            const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
-
-            // Wait for the connection information on this result
-            const connection = await JupyterConnection.waitForConnection(
-                tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer);
-
-            // If the kernel spec didn't match, then try with our current process instead
+            // If we don't have a kernel spec yet, check using our current connection
             if (!kernelSpec) {
                 kernelSpec = await this.getMatchingKernelSpec(connection);
             }
@@ -238,10 +218,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 throw new Error(localize.DataScience.jupyterKernelSpecNotFound());
             }
 
-            return [connection, kernelSpec];
+            // Try to connect to our jupyter process
+            const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
+            this.disposableRegistry.push(result);
+            await result.connect(connection, kernelSpec);
+            return result;
         } catch (err) {
             // Something else went wrong
-            throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl));
         }
     }
 
@@ -274,7 +258,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return result.stdout;
     }
 
-    public async getMatchingKernelSpec(connection?: IConnection) : Promise<IJupyterKernelSpec | undefined> {
+    private async getMatchingKernelSpec(connection?: IConnection) : Promise<IJupyterKernelSpec | undefined> {
         // If not using an active connection, check on disk
         if (!connection) {
             // Get our best interpreter. We want its python path
@@ -296,6 +280,55 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         // Then find our match
         return this.findSpecMatch(enumerator);
+    }
+
+    private createRemoteConnectionInfo = (uri: string): IConnection => {
+        let url: URL;
+        try {
+            url = new URL(uri);
+        } catch (err) {
+            // This should already have been parsed when set, so just throw if it's not right here
+            throw err;
+        }
+
+        return {
+            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
+            token: `${url.searchParams.get('token')}`,
+            dispose: noop
+        };
+    }
+
+    private startNotebookServer = async () : Promise<[IConnection, IJupyterKernelSpec]> => {
+        // First we find a way to start a notebook server
+        const notebookCommand = await this.findBestCommand(NotebookCommand);
+        if (!notebookCommand) {
+            throw new Error(localize.DataScience.jupyterNotSupported());
+        }
+
+        // Now actually launch it
+        try {
+            // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
+            const tempDir = await this.generateTempDir();
+            this.disposableRegistry.push(tempDir);
+
+            // Use this temp file to generate a list of args for our command
+            const args: string [] = ['--no-browser', `--notebook-dir=${tempDir.path}`];
+
+            // Before starting the notebook process, make sure we generate a kernel spec
+            const kernelSpec = await this.getMatchingKernelSpec();
+
+            // Then use this to launch our notebook process.
+            const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
+
+            // Wait for the connection information on this result
+            const connection = await JupyterConnection.waitForConnection(
+                tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer);
+
+            return [connection, kernelSpec];
+        } catch (err) {
+            // Something else went wrong
+            throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+        }
     }
 
     private getUsableJupyterPythonImpl = async () : Promise<PythonInterpreter | undefined> => {

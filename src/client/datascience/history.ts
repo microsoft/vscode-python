@@ -7,7 +7,6 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
@@ -23,12 +22,11 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { HistoryMessages, Settings, Telemetry } from './constants';
+import { HistoryMessages, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, ICodeCssGenerator, IConnection, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
+import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -407,65 +405,20 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         const serverURI = settings.datascience.jupyterServerURI;
-        let connectionInfo = [undefined, undefined];
 
-        if (serverURI === Settings.JupyterServerLocalLaunch) {
-            // For a local launch scenario start up our notebook server
-            const startingStatus = this.setStatus(localize.DataScience.startingJupyter());
-            try {
-                connectionInfo = await this.jupyterExecution.startNotebookServer();
-            } catch (err) {
-                throw err;
-            } finally {
-                startingStatus.dispose();
-            }
-        } else {
-            // For a remote connection generate connection info and kernel spec here
-            const connectingStatus = this.setStatus(localize.DataScience.connectingToJupyter());
-            let remoteConnectionInfo;
-            let remoteKernelSpec;
-            try {
-                remoteConnectionInfo = this.createRemoteConnectionInfo(serverURI);
-                remoteKernelSpec = await this.jupyterExecution.getMatchingKernelSpec(remoteConnectionInfo);
-            } catch (err) {
-                this.applicationShell.showInformationMessage(localize.DataScience.jupyterNotebookConnectFailed().format(serverURI));
-                throw err;
-            } finally {
-                connectingStatus.dispose();
-            }
-            connectionInfo = [remoteConnectionInfo, remoteKernelSpec];
-        }
-
-        const connectingStatus = this.setStatus(localize.DataScience.connectingToJupyter());
+        const status = this.setStatus(localize.DataScience.startingJupyter());
         try {
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(connectionInfo[0], connectionInfo[1]);
-        } catch (err) {
-            throw err;
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI);
+
+            // If this is a restart, show our restart info
+            if (restart) {
+                await this.addRestartSysInfo();
+            }
         } finally {
-            connectingStatus.dispose();
+            if (status) {
+                status.dispose();
+            }
         }
-
-        // If this is a restart, show our restart info
-        if (restart) {
-            await this.addRestartSysInfo();
-        }
-    }
-
-    // Create connection information to connect to a remote machine instead of a locally launched server
-    private createRemoteConnectionInfo = (connectionURI: string): IConnection => {
-        let url: URL;
-        try {
-            url = new URL(connectionURI);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
-
-        return {
-            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
-            token: `${url.searchParams.get('token')}`,
-            dispose: noop
-        };
     }
 
     private extractStreamOutput(cell: ICell) : string {

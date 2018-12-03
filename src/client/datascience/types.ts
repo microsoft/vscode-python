@@ -46,9 +46,7 @@ export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
     isKernelCreateSupported(): Promise<boolean>;
-    startNotebookServer() : Promise<[IConnection, IJupyterKernelSpec]>;
-    connectToNotebookServer(connection: IConnection, kernelSpec: IJupyterKernelSpec): Promise<INotebookServer>;
-    getMatchingKernelSpec(connection?: IConnection): Promise<IJupyterKernelSpec | undefined>;
+    connectToNotebookServer(uri?: string): Promise<INotebookServer>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython() : Promise<PythonInterpreter | undefined>;
