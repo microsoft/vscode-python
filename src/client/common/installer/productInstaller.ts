@@ -11,7 +11,10 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
-import { IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product, ProductType } from '../types';
+import {
+    IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel,
+    IPersistentStateFactory, ModuleNamePurpose, Product, ProductType
+} from '../types';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IProductPathService, IProductService } from './types';
 
@@ -88,6 +91,38 @@ export abstract class BaseInstaller {
                 .catch(() => false);
         }
     }
+
+    /**
+     * For installers that want to avoid prompting the user over and over, they can make use of a
+     * persisted true/false value representing user responses to 'stop showing this prompt'. This method
+     * gets the persisted value given the installer-defined key.
+     *
+     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
+     * @returns Boolean: The current state of the stored response key given.
+     */
+    public getStoredResponse(key: string): boolean {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
+        return state.value;
+    }
+
+    /**
+     * For installers that want to avoid prompting the user over and over, they can make use of a
+     * persisted true/false value representing user responses to 'stop showing this prompt'. This
+     * method will set that persisted value given the installer-defined key.
+     *
+     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
+     * @param value Boolean value to store for the user - if they choose to not be prompted again for instance.
+     * @returns Boolean: The current state of the stored response key given.
+     */
+    public async setStoredResponse(key: string, value: boolean): Promise<void> {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
+        if (state && state.value !== value) {
+            state.updateValue(value);
+        }
+    }
+
     protected abstract promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
@@ -172,8 +207,14 @@ export class LinterInstaller extends BaseInstaller {
         const install = 'Install';
         const disableAllLinting = 'Disable linting';
         const disableThisLinter = `Disable ${productName}`;
+        const disableInstallPrompt = 'Do not show again';
+        const disableLinterInstallPromptKey = `${productName}_DisableLinterInstallPrompt`;
 
-        const options = [disableThisLinter, disableAllLinting];
+        if (this.getStoredResponse(disableLinterInstallPromptKey) === true) {
+            return InstallerResponse.Ignore;
+        }
+
+        const options = [disableThisLinter, disableAllLinting, disableInstallPrompt];
         let message = `Linter ${productName} is not installed.`;
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, install);
@@ -185,7 +226,11 @@ export class LinterInstaller extends BaseInstaller {
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
             return this.install(product, resource);
+        } else if (response === disableInstallPrompt) {
+            this.setStoredResponse(disableLinterInstallPromptKey, true).ignoreErrors();
+            return InstallerResponse.Ignore;
         }
+
         const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
         if (response === disableAllLinting) {
             await lm.enableLintingAsync(false);
