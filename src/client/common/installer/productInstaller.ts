@@ -119,7 +119,7 @@ export abstract class BaseInstaller {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
         if (state && state.value !== value) {
-            state.updateValue(value);
+            await state.updateValue(value);
         }
     }
 
