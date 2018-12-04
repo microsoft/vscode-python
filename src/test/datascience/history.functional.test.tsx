@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+//tslint:disable:trailing-comma
 import * as assert from 'assert';
 import { mount } from 'enzyme';
 import * as React from 'react';
@@ -11,12 +12,15 @@ import {
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage
+    WebPanelMessage,
 } from '../../client/common/application/types';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { Cell } from '../../datascience-ui/history-react/cell';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
+import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
 
@@ -30,6 +34,7 @@ suite('History output tests', () => {
     let webPanelListener : IWebPanelMessageListener;
     let globalAcquireVsCodeApi : () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
+    let waitingForInfo : Deferred<boolean> | undefined;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -61,6 +66,9 @@ suite('History output tests', () => {
                 postMessage: (msg: any) => {
                     if (webPanelListener) {
                         webPanelListener.onMessage(msg.type, msg.payload);
+                    }
+                    if (waitingForInfo && msg && msg.type === HistoryMessages.SendInfo) {
+                        waitingForInfo.resolve(true);
                     }
                 },
                 // tslint:disable-next-line:no-any no-empty
@@ -96,7 +104,7 @@ suite('History output tests', () => {
             const updatePromise = waitForUpdate(wrapper, MainPanel);
 
             // Send some code to the history and make sure it ends up in the html returned from our render
-            const history = historyProvider.active;
+            const history = historyProvider.getOrCreateActive();
             await history.addCode('a=1\na', 'foo.py', 2);
 
             // Wait for the render to go through
@@ -123,11 +131,11 @@ suite('History output tests', () => {
     test('Dispose test', async () => {
         // tslint:disable-next-line:no-any
         if (await jupyterExecution.isNotebookSupported()) {
-            const history = historyProvider.active;
+            const history = historyProvider.getOrCreateActive();
             await history.show(); // Have to wait for the load to finish
             await history.dispose();
             // tslint:disable-next-line:no-any
-            const h2 = historyProvider.active;
+            const h2 = historyProvider.getOrCreateActive();
             // Check equal and then dispose so the test goes away
             const equal = Object.is(history, h2);
             await h2.show();
@@ -136,7 +144,60 @@ suite('History output tests', () => {
             // tslint:disable-next-line:no-console
             console.log('History test skipped, no Jupyter installed');
         }
-});
+    });
+
+    test('EditorContext test', async () => {
+        // Verify we can send different commands to the UI and it will respond
+        if (await jupyterExecution.isNotebookSupported()) {
+            // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
+            const wrapper = mount(<MainPanel theme='vscode-light' ignoreProgress={true} skipDefault={true} />);
+            const history = historyProvider.getOrCreateActive();
+
+            // Before we have any cells, verify our contexts are not set
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells before starting');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable before starting');
+
+            // Get an update promise so we can wait for the add code
+            const updatePromise = waitForUpdate(wrapper, MainPanel);
+
+            // Send some code to the history
+            await history.addCode('a=1\na', 'foo.py', 2);
+
+            // Wait for the render to go through
+            await updatePromise;
+
+            // Now we should have the 3 editor contexts
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractive), true, 'Should have interactive after starting');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after starting');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after starting');
+
+            // Now send an undo command. This should change the state, so use our waitForInfo promise instead
+            waitingForInfo = createDeferred<boolean>();
+            history.postMessage(HistoryMessages.Undo);
+            await Promise.race([waitingForInfo.promise, sleep(2000)]);
+            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after starting');
+
+            waitingForInfo = createDeferred<boolean>();
+            history.postMessage(HistoryMessages.Redo);
+            await Promise.race([waitingForInfo.promise, sleep(2000)]);
+            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after undo');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after starting');
+
+            waitingForInfo = createDeferred<boolean>();
+            history.postMessage(HistoryMessages.DeleteAllCells);
+            await Promise.race([waitingForInfo.promise, sleep(2000)]);
+            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
+
+        } else {
+            // tslint:disable-next-line:no-console
+            console.log('History test skipped, no Jupyter installed');
+        }
+    });
 
     // Tests to do:
     // 1) Cell output works on different mime types. Could just use a notebook to drive

@@ -12,14 +12,14 @@ import { IHistory, IStatusProvider } from './types';
 class StatusItem implements Disposable {
 
     private deferred : Deferred<void>;
-    private history : IHistory;
+    private history : IHistory | undefined;
     private disposed: boolean = false;
 
-    constructor(title: string, history: IHistory, timeout?: number) {
+    constructor(title: string, history?: IHistory, timeout?: number) {
         this.history = history;
         this.deferred = createDeferred<void>();
 
-        if (this.history !== null) {
+        if (this.history) {
             this.history.postMessage(HistoryMessages.StartProgress, title);
         }
 
@@ -32,8 +32,8 @@ class StatusItem implements Disposable {
     public dispose = () => {
         if (!this.disposed) {
             this.disposed = true;
-            if (this.history !== null) {
-                this.history.postMessage(HistoryMessages.StopProgress);
+            if (this.history) {
+                this.history!.postMessage(HistoryMessages.StopProgress);
             }
             this.deferred.resolve();
         }
@@ -41,6 +41,10 @@ class StatusItem implements Disposable {
 
     public promise = () : Promise<void> => {
         return this.deferred.promise;
+    }
+
+    public reject = () => {
+        this.deferred.reject();
     }
 
 }
@@ -53,22 +57,44 @@ export class StatusProvider implements IStatusProvider {
 
     }
 
-    public set(message: string, history: IHistory, timeout?: number) : Disposable {
+    public set(message: string, history?: IHistory, timeout?: number, cancel?: () => void) : Disposable {
         // Create a StatusItem that will return our promise
         const statusItem = new StatusItem(message, history, timeout);
 
         const progressOptions: ProgressOptions = {
-            location: ProgressLocation.Window,
-            title: message
+            location: cancel ? ProgressLocation.Notification : ProgressLocation.Window,
+            title: message,
+            cancellable: cancel !== undefined
         };
 
         // Set our application shell status with a busy icon
         this.applicationShell.withProgress(
             progressOptions,
-            () => { return statusItem.promise(); }
+            (p, c) =>
+            {
+                if (c && cancel) {
+                    c.onCancellationRequested(() => {
+                        cancel();
+                        statusItem.reject();
+                    });
+                }
+                return statusItem.promise();
+            }
         );
 
         return statusItem;
+    }
+
+    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, history?: IHistory, timeout?: number, cancel?: () => void) : Promise<T> {
+        // Create a status item and wait for our promise to either finish or reject
+        const status = this.set(message, history, timeout, cancel);
+        let result : T;
+        try {
+            result = await promise();
+        } finally {
+            status.dispose();
+        }
+        return result;
     }
 
 }

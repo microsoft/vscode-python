@@ -11,11 +11,24 @@ export namespace Commands {
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
+    export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
+    export const ExportFileAndOutputAsNotebook = 'python.datascience.exportfileandoutputasnotebook';
+    export const UndoCells = 'python.datascience.undocells';
+    export const RedoCells = 'python.datascience.redocells';
+    export const RemoveAllCells = 'python.datascience.removeallcells';
+    export const InterruptKernel = 'python.datascience.interruptkernel';
+    export const RestartKernel = 'python.datascience.restartkernel';
+    export const ExpandAllCells = 'python.datascience.expandallcells';
+    export const CollapseAllCells = 'python.datascience.collapseallcells';
+    export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
 }
 
 export namespace EditorContexts {
     export const HasCodeCells = 'python.datascience.hascodecells';
     export const DataScienceEnabled = 'python.datascience.featureenabled';
+    export const HaveInteractiveCells = 'python.datascience.haveinteractivecells';
+    export const HaveRedoableCells = 'python.datascience.haveredoablecells';
+    export const HaveInteractive = 'python.datascience.haveinteractive';
 }
 
 export namespace RegExpValues {
@@ -41,6 +54,7 @@ export namespace HistoryMessages {
     export const StartProgress = 'start_progress';
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
+    export const SendInfo = 'send_info';
 }
 
 export namespace Telemetry {
@@ -63,6 +77,8 @@ export namespace Telemetry {
     export const SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL';
     export const SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED';
     export const Interrupt = 'DATASCIENCE.INTERRUPT';
+    export const ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE';
+    export const ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT';
 }
 
 export namespace HelpLinks {

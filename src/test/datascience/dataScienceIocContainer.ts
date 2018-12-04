@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 //tslint:disable:trailing-comma
-
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
 
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { PersistentStateFactory } from '../../client/common/persistentState';
@@ -36,7 +39,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     Is64Bit,
-    IsWindows,
+    IsWindows
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -46,6 +49,7 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
+import { JupyterExporter } from '../../client/datascience/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
 import { StatusProvider } from '../../client/datascience/statusProvider';
@@ -54,9 +58,10 @@ import {
     IHistory,
     IHistoryProvider,
     IJupyterExecution,
+    INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
+    IStatusProvider
 } from '../../client/datascience/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
@@ -117,8 +122,13 @@ import {
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { MockCommandManager } from './mockCommandManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
+
+    private commandManager : MockCommandManager = new MockCommandManager();
+    private setContexts : { [name: string] : boolean } = {};
+
     constructor() {
         super();
     }
@@ -130,11 +140,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
+        this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
         this.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
+
+        // Setup our command list
+        this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
+            this.setContexts[name] = value;
+        });
+        this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
         // Also setup a mock execution service and interpreter service
         const logger = TypeMoq.Mock.ofType<ILogger>();
@@ -279,6 +296,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
+    }
+
+    public getContext(name: string) : boolean {
+        if (this.setContexts.hasOwnProperty(name)) {
+            return this.setContexts[name];
+        }
+
+        return false;
     }
 
     private findPythonPath(): string {

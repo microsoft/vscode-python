@@ -1,22 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+
+import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
-import { PYTHON } from '../common/constants';
+import { PYTHON, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import '../common/extensions';
-import { BANNER_NAME_DS_SURVEY, IConfigurationService, IDisposableRegistry, IExtensionContext, IPythonExtensionBanner } from '../common/types';
-import * as localize from '../common/utils/localize';
+import {
+    BANNER_NAME_DS_SURVEY,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IPythonExtensionBanner
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { captureTelemetry} from '../telemetry';
-import { Commands, EditorContexts, Settings, Telemetry } from './constants';
+import { hasCells } from './cellFactory';
+import { Commands, EditorContexts } from './constants';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+
 @injectable()
 export class DataScience implements IDataScience {
     public isDisposed: boolean = false;
@@ -28,6 +34,7 @@ export class DataScience implements IDataScience {
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell) {
             this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
             this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
@@ -46,6 +53,10 @@ export class DataScience implements IDataScience {
         this.onSettingsChanged();
         (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
         this.disposableRegistry.push(this);
+
+        // Listen for active editor changes so we can detect have code cells or not
+        this.disposableRegistry.push(this.documentManager.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor()));
+        this.onChangedActiveTextEditor();
     }
 
     public async dispose() {
@@ -178,5 +189,18 @@ export class DataScience implements IDataScience {
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);
         });
+    }
+
+    private onChangedActiveTextEditor() {
+        // Setup the editor context for the cells
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
+        const activeEditor = this.documentManager.activeTextEditor;
+        if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
+            // Inform the editor context that we have cells, fire and forget is ok on the promise here
+            // as we don't care to wait for this context to be set and we can't do anything if it fails
+            editorContext.set(hasCells(activeEditor.document)).catch();
+        } else {
+            editorContext.set(false).catch();
+        }
     }
 }

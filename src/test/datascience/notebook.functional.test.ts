@@ -2,23 +2,31 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import * as assert from 'assert';
+import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { CellState, IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
+import {
+    CellState,
+    IJupyterExecution,
+    INotebookExporter,
+    INotebookImporter,
+    INotebookServer
+} from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
-import { Cell, ICellViewModel } from '../../datascience-ui/history-react/cell';
+import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -119,7 +127,7 @@ suite('Jupyter notebook tests', () => {
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
             const cell = cells[0].data as nbformat.IMarkdownCell;
-            const outputSource = Cell.concatMultilineString(cell.source);
+            const outputSource = concatMultilineString(cell.source);
             verifyValue(outputSource);
         } else if (cellType === 'error') {
             const cell = cells[0].data as nbformat.ICodeCell;
@@ -240,7 +248,8 @@ suite('Jupyter notebook tests', () => {
         const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook
-        const notebook = await server.translateToNotebook(cells);
+        const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
+        const notebook = await exporter.translateToNotebook(cells);
         assert.ok(notebook, 'Translate to notebook is failing');
 
         // Save to a temp file
@@ -286,6 +295,35 @@ suite('Jupyter notebook tests', () => {
 
         console.log('Verifying restart');
         await verifyError(server, 'a', `name 'a' is not defined`);
+    });
+
+    async function testCancelableMethod<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string) {
+        const timeouts = [100, 200, 300, 1000];
+        for (let i = 0; i < timeouts.length; i += 1) {
+            const tokenSource = new CancellationTokenSource();
+            const val = method(tokenSource.token);
+            setTimeout(() => tokenSource.cancel(), timeouts[i]);
+            await assert.eventually.equal(val, undefined, messageFormat.format(timeouts[i].toString()));
+        }
+    }
+
+    runTest('Cancel execution', async () => {
+
+        // Try different timeouts, canceling after the timeout on each
+        await testCancelableMethod((t: CancellationToken) => jupyterExecution.startNotebookServer(t), 'Cancel did not cancel start after {0}ms');
+
+        // Make sure doing normal start still works
+        const nonCancelSource = new CancellationTokenSource();
+        const server = await jupyterExecution.startNotebookServer(nonCancelSource.token);
+        assert.ok(server, 'Server not found with a cancel token that does not cancel');
+
+        // Make sure can run some code too
+        await verifySimple(server, 'a=1\r\na', 1);
+
+        await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms');
+        await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms');
+        await testCancelableMethod((t: CancellationToken) => jupyterExecution.isKernelCreateSupported(t), 'Cancel did not cancel isKernel after {0}ms');
+        await testCancelableMethod((t: CancellationToken) => jupyterExecution.isImportSupported(t), 'Cancel did not cancel isImport after {0}ms');
     });
 
     runTest('Interrupt kernel', async () => {

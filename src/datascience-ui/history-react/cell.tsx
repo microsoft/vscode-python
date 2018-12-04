@@ -10,6 +10,7 @@ import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
+import { concatMultilineString } from '../../client/datascience/common';
 import { CellState, ICell } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { RelativeImage } from '../react-common/relativeImage';
@@ -39,22 +40,6 @@ export interface ICellViewModel {
 export class Cell extends React.Component<ICellProps> {
     constructor(prop: ICellProps) {
         super(prop);
-    }
-
-    public static concatMultilineString(str : nbformat.MultilineString) : string {
-        if (Array.isArray(str)) {
-            let result = '';
-            for (let i = 0; i < str.length; i += 1) {
-                const s = str[i];
-                if (i < str.length - 1 && !s.endsWith('\n')) {
-                    result = result.concat(`${s}\n`);
-                } else {
-                    result = result.concat(s);
-                }
-            }
-            return result.trim();
-        }
-        return str.toString().trim();
     }
 
     public render() {
@@ -173,7 +158,7 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderMarkdown = (markdown : nbformat.IMarkdownCell) => {
         // React-markdown expects that the source is a string
-        const source = Cell.concatMultilineString(markdown.source);
+        const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
         return <Transform data={source}/>;
@@ -196,7 +181,7 @@ export class Cell extends React.Component<ICellProps> {
                 if (output.data) {
                     let data = output.data[mimetype];
                     if (mimetype === 'text/plain') {
-                        data = Cell.concatMultilineString(data);
+                        data = concatMultilineString(data);
                     }
 
                     // Return the transformed control using the data we massaged
@@ -231,7 +216,7 @@ export class Cell extends React.Component<ICellProps> {
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
             const stream = copy as nbformat.IStream;
-            const text = Cell.concatMultilineString(stream.text);
+            const text = concatMultilineString(stream.text);
             copy.data = {
                 'text/html' : text
             };

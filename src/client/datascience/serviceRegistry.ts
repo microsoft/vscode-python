@@ -10,6 +10,7 @@ import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
 import { JupyterExecution } from './jupyterExecution';
+import { JupyterExporter } from './jupyterExporter';
 import { JupyterImporter } from './jupyterImporter';
 import { JupyterServer } from './jupyterServer';
 import { StatusProvider } from './statusProvider';
@@ -22,6 +23,7 @@ import {
     IHistory,
     IHistoryProvider,
     IJupyterExecution,
+    INotebookExporter,
     INotebookImporter,
     INotebookServer,
     IStatusProvider
@@ -34,6 +36,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
     serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
     serviceManager.add<IHistory>(IHistory, History);
+    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);

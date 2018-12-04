@@ -8,8 +8,9 @@ import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
 import * as uuid from 'uuid/v4';
-import { Disposable } from 'vscode-jsonrpc';
+import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 
+import { Cancellation } from '../common/cancellation';
 import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
 import {
     ExecutionResult,
@@ -163,32 +164,32 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         this.usablePythonInterpreterPromise = undefined;
     }
 
-    public isNotebookSupported = (): Promise<boolean> => {
+    public isNotebookSupported = (cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command notebook
-        return this.isCommandSupported(NotebookCommand);
+        return Cancellation.race(() => this.isCommandSupported(NotebookCommand, cancelToken), cancelToken);
     }
 
-    public getUsableJupyterPython = (): Promise<PythonInterpreter | undefined> => {
+    public getUsableJupyterPython = (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
         // Only try to compute this once.
         if (!this.usablePythonInterpreterPromise) {
-            this.usablePythonInterpreterPromise = this.getUsableJupyterPythonImpl();
+            this.usablePythonInterpreterPromise = Cancellation.race(() => this.getUsableJupyterPythonImpl(cancelToken), cancelToken);
         }
         return this.usablePythonInterpreterPromise;
     }
 
-    public isImportSupported = async (): Promise<boolean> => {
+    public isImportSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command nbconvert
-        return this.isCommandSupported(ConvertCommand);
+        return Cancellation.race(() => this.isCommandSupported(ConvertCommand), cancelToken);
     }
 
-    public isKernelCreateSupported = async (): Promise<boolean> => {
+    public isKernelCreateSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command ipykernel
-        return this.isCommandSupported(KernelCreateCommand);
+        return Cancellation.race(() => this.isCommandSupported(KernelCreateCommand), cancelToken);
     }
 
-    public isKernelSpecSupported = async (): Promise<boolean> => {
+    public isKernelSpecSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command kernelspec
-        return this.isCommandSupported(KernelSpecCommand);
+        return Cancellation.race(() => this.isCommandSupported(KernelSpecCommand), cancelToken);
     }
 
     public connectToNotebookServer = async (uri?: string) : Promise<INotebookServer> => {
@@ -340,14 +341,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         // Make sure somebody is useable for notebooks. Otherwise it doesn't really matter
         // if somebody else can run ipykernel
-        if (!(await this.isNotebookSupported())) {
+        if (!(await this.isNotebookSupported(cancelToken))) {
             return undefined;
         }
 
         // Find the python interpreter that supports ipykernel that is closest
         // to our active interpreter
         const active = await this.interpreterService.getActiveInterpreter();
-        if (active && await this.doesModuleExist(KernelCreateCommand, active)) {
+        if (active && await this.doesModuleExist(KernelCreateCommand, active, cancelToken)) {
             // The active interpreter is good enough. It supports ipykernel
             return active;
         } else if (active && active !== null) {
@@ -361,7 +362,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // Don't check active again
                 if (active !== list[i]) {
                     // First the interpreter has to support ipykernel
-                    if (await this.doesModuleExist(KernelCreateCommand, list[i])) {
+                    if (await this.doesModuleExist(KernelCreateCommand, list[i], cancelToken)) {
                         // This one at least works, give it a point.
                         score += 1;
 
@@ -397,11 +398,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
-    private getJupyterServerInfo = async () : Promise<JupyterServerInfo[] | undefined> => {
+    private getJupyterServerInfo = async (cancelToken?: CancellationToken) : Promise<JupyterServerInfo[] | undefined> => {
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
-        const bestInterpreter = await this.getUsableJupyterPython();
+        const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
         if (bestInterpreter) {
-            const newOptions: SpawnOptions = {mergeStdOutErr: true};
+            const newOptions: SpawnOptions = {mergeStdOutErr: true, token: cancelToken};
             newOptions.env = await this.fixupCondaEnv(newOptions.env, bestInterpreter);
                 const processService = await this.processServiceFactory.create();
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
@@ -491,10 +492,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         };
     }
 
-    private isCommandSupported = async (command: string) : Promise<boolean> => {
+    private isCommandSupported = async (command: string, cancelToken?: CancellationToken) : Promise<boolean> => {
         // See if we can find the command
         try {
-            const result = await this.findBestCommand(command);
+            const result = await this.findBestCommand(command, cancelToken);
             return result !== undefined;
         } catch (err) {
             this.logger.logWarning(err);
@@ -519,10 +520,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return inputEnv;
     }
 
-    private hasSpecPathMatch = async (info: PythonInterpreter | undefined) : Promise<boolean> => {
+    private hasSpecPathMatch = async (info: PythonInterpreter | undefined, cancelToken?: CancellationToken) : Promise<boolean> => {
         if (info) {
             // Enumerate our specs
-            const specs = await this.enumerateSpecs();
+            const specs = await this.enumerateSpecs(cancelToken);
 
             // See if any of their paths match
             return specs.findIndex(s => {
@@ -657,7 +658,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
-    private enumerateSpecs = async () : Promise<(IJupyterKernelSpec | undefined)[]> => {
+    private enumerateSpecs = async (cancelToken?: CancellationToken) : Promise<(IJupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.findBestCommand(KernelSpecCommand);
 
@@ -680,9 +681,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return [];
     }
 
-    private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter) : Promise<JupyterCommand | undefined> => {
+    private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken) : Promise<JupyterCommand | undefined> => {
         // If the module is found on this interpreter, then we found it.
-        if (interpreter && await this.doesModuleExist(command, interpreter)) {
+        if (interpreter && await this.doesModuleExist(command, interpreter, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
             // We need a process service to create a command
             const processService = await this.processServicePromise;
 
@@ -718,8 +719,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.jupyterPath;
     }
 
-    private findPathCommand = async (command: string) : Promise<JupyterCommand | undefined> => {
-        if (await this.doesJupyterCommandExist(command)) {
+    private findPathCommand = async (command: string, cancelToken?: CancellationToken) : Promise<JupyterCommand | undefined> => {
+        if (await this.doesJupyterCommandExist(command, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
             // Search the known paths for jupyter
             const jupyterPath = await this.searchPathsForJupyter();
             if (jupyterPath) {
@@ -739,25 +740,25 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     // - Look for module in current interpreter, if found create something with python path and -m module
     // - Look in other interpreters, if found create something with python path and -m module
     // - Look on path for jupyter, if found create something with jupyter path and args
-    private findBestCommand = async (command: string) : Promise<JupyterCommand | undefined> => {
+    private findBestCommand = async (command: string, cancelToken?: CancellationToken) : Promise<JupyterCommand | undefined> => {
         // See if we already have this command in list
         if (!this.commands.hasOwnProperty(command)) {
             // Not found, try to find it.
 
             // First we look in the current interpreter
             const current = await this.interpreterService.getActiveInterpreter();
-            let found = current ? await this.findInterpreterCommand(command, current) : undefined;
+            let found = current ? await this.findInterpreterCommand(command, current, cancelToken) : undefined;
             if (!found) {
                 // Look through all of our interpreters (minus the active one at the same time)
                 const all = await this.interpreterService.getInterpreters();
-                const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i));
+                const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
                 const foundList = await Promise.all(promises);
                 found = foundList.find(f => f !== undefined);
             }
 
             // If still not found, try looking on the path using jupyter
             if (!found) {
-                found = await this.findPathCommand(command);
+                found = await this.findPathCommand(command, cancelToken);
             }
 
             // If we found a command, save in our dictionary
@@ -770,9 +771,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.commands.hasOwnProperty(command) ? this.commands[command] : undefined;
     }
 
-    private doesModuleExist = async (module: string, interpreter: PythonInterpreter): Promise<boolean> => {
+    private doesModuleExist = async (module: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> => {
         if (interpreter && interpreter !== null) {
-            const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8' };
+            const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
             newOptions.env = await this.fixupCondaEnv(newOptions.env, interpreter);
             const pythonService = await this.executionFactory.create({ pythonPath: interpreter.path });
             try {
@@ -791,8 +792,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }
     }
 
-    private doesJupyterCommandExist = async (command?: string) : Promise<boolean> => {
-        const newOptions : SpawnOptions = {throwOnStdErr: true, encoding: 'utf8'};
+    private doesJupyterCommandExist = async (command?: string, cancelToken?: CancellationToken) : Promise<boolean> => {
+        const newOptions : SpawnOptions = {throwOnStdErr: true, encoding: 'utf8', token: cancelToken};
         const args = command ? [command, '--version'] : ['--version'];
         const processService = await this.processServicePromise;
         try {

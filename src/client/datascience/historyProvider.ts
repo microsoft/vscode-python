@@ -17,7 +17,11 @@ export class HistoryProvider implements IHistoryProvider {
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry) {
     }
 
-    public get active() : IHistory {
+    public getActive() : IHistory | undefined {
+        return this.activeHistory;
+    }
+
+    public getOrCreateActive() : IHistory {
         if (!this.activeHistory) {
             this.activeHistory = this.create();
         }
@@ -25,11 +29,7 @@ export class HistoryProvider implements IHistoryProvider {
         return this.activeHistory;
     }
 
-    public set active(history : IHistory) {
-        this.activeHistory = history;
-    }
-
-    public create = () => {
+    private create = () => {
         const result = this.serviceContainer.get<IHistory>(IHistory);
         const handler = result.closed(this.onHistoryClosed);
         this.disposables.push(result);

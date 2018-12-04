@@ -6,8 +6,9 @@ import './mainPanel.css';
 import { min } from 'lodash';
 import * as React from 'react';
 
+import { concatMultilineString } from '../../client/datascience/common';
 import { HistoryMessages } from '../../client/datascience/constants';
-import { CellState, ICell } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -46,6 +47,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public componentDidUpdate(prevProps, prevState) {
+        this.sendInfo();
         this.scrollToBottom();
     }
 
@@ -127,6 +129,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.getAllCells();
                 return true;
 
+            case HistoryMessages.ExpandAll:
+                this.expandAllSilent();
+                return true;
+
+            case HistoryMessages.CollapseAll:
+                this.collapseAllSilent();
+                return true;
+
+            case HistoryMessages.DeleteAllCells:
+                this.clearAllSilent();
+                return true;
+
+            case HistoryMessages.Redo:
+                this.redo();
+                return true;
+
+            case HistoryMessages.Undo:
+                this.undo();
+                return true;
+
             case HistoryMessages.StartProgress:
                 if (!this.props.ignoreProgress) {
                     this.setState({busy: true});
@@ -152,7 +174,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return cellVM.cell;
         }) ;
 
-        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload : cells});
+        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload: { contents: cells }});
     }
 
     private renderExtraButtons = () => {
@@ -196,7 +218,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private collapseAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
+        this.collapseAllSilent();
+    }
 
+    private collapseAllSilent = () => {
         const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
             if (value.inputBlockOpen) {
                 return this.toggleCellVM(value);
@@ -214,7 +239,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private expandAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
+        this.expandAllSilent();
+    }
 
+    private expandAllSilent = () => {
         const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
             if (!value.inputBlockOpen) {
                 return this.toggleCellVM(value);
@@ -281,7 +309,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private clearAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.DeleteAllCells, payload: { }});
+        this.clearAllSilent();
+    }
 
+    private clearAllSilent = () => {
         // Update our state
         this.setState({
             cellVMs: [],
@@ -411,7 +442,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private extractInputText = (cell: ICell) => {
-        return Cell.concatMultilineString(cell.data.source);
+        return concatMultilineString(cell.data.source);
+    }
+
+    private sendInfo = () => {
+        const info : IHistoryInfo = {
+            cellCount: this.state.cellVMs.length,
+            undoCount: this.state.undoStack.length,
+            redoCount: this.state.redoStack.length
+        };
+        PostOffice.sendMessage({type: HistoryMessages.SendInfo, payload: { info: info }});
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
