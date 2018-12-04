@@ -306,5 +306,13 @@ suite('History command listener', async () => {
         await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
         assert.notExists(lastFileContents, 'Export file was written to');
     });
+    test('Export happens on no file', async () => {
+        createCommandListener(undefined);
+        const doc = await documentManager.openTextDocument('bar.ipynb');
+        await documentManager.showTextDocument(doc);
+        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook);
+        assert.ok(lastFileContents, 'Export file was not written to');
+    });
 
 });

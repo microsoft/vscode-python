@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../common/extensions';
+
 import * as uuid from 'uuid/v4';
 import { Range, TextDocument } from 'vscode';
 
@@ -14,11 +16,11 @@ function appendLineFeed(arr : string[], modifier? : (s : string) => string) {
     });
 }
 
-function generateCodeCell(code: string, file: string, line: number) : ICell {
+function generateCodeCell(code: string[], file: string, line: number) : ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: {
-            source: appendLineFeed(code.split('\n')),
+            source: appendLineFeed(code),
             cell_type: 'code',
             outputs: [],
             metadata: {},
@@ -32,9 +34,9 @@ function generateCodeCell(code: string, file: string, line: number) : ICell {
 
 }
 
-function generateMarkdownCell(code: string, file: string, line: number) : ICell {
+function generateMarkdownCell(code: string[], file: string, line: number) : ICell {
     // Generate markdown by stripping out the comment and markdown header
-    const markdown = appendLineFeed(code.split('\n').slice(1).filter(s => s.includes('#')), s => s.trim().slice(1).trim());
+    const markdown = appendLineFeed(code.slice(1).filter(s => s.includes('#')), s => s.trim().slice(1).trim());
 
     return {
         id: uuid(),
@@ -51,11 +53,8 @@ function generateMarkdownCell(code: string, file: string, line: number) : ICell 
 }
 
 export function generateCells(code: string, file: string, line: number, splitMarkdown?: boolean) : ICell[] {
-    // Replace windows line endings with unix line endings.
-    const copy = code.replace(/\r\n/g, '\n');
-
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
-    const split = copy.split('\n');
+    const split = code.splitLines();
     const firstLine = split[0];
     if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
@@ -63,16 +62,16 @@ export function generateCells(code: string, file: string, line: number, splitMar
         const firstNonMarkdown = splitMarkdown ? split.findIndex((l: string) => l.trim().length > 0 && !l.trim().startsWith('#')) : -1;
         if (firstNonMarkdown >= 0) {
             return [
-                generateMarkdownCell(split.slice(0, firstNonMarkdown).join('\n'), file, line),
-                generateCodeCell(split.slice(firstNonMarkdown).join('\n'), file, line + firstNonMarkdown)
+                generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line),
+                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown)
             ];
         } else {
             // Just a single markdown cell
-            return [generateMarkdownCell(code, file, line)];
+            return [generateMarkdownCell(split, file, line)];
         }
     } else {
         // Just code
-        return [generateCodeCell(code, file, line)];
+        return [generateCodeCell(split, file, line)];
     }
 }
 

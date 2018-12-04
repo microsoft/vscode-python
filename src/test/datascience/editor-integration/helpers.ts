@@ -15,6 +15,8 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
     // Split our string on newline chars
     const inputLines = inputText.split(/\r?\n/);
 
+    document.setup(d => d.languageId).returns(() => 'python');
+
     // First set the metadata
     document.setup(d => d.fileName).returns(() => fileName).verifiable(times);
     document.setup(d => d.version).returns(() => fileVersion).verifiable(times);

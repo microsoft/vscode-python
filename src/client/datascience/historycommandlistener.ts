@@ -67,7 +67,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                 } else {
                     const activeEditor = this.documentManager.activeTextEditor;
                     if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                        await this.exportFileAndOutput(activeEditor.document.fileName);
+                        await this.exportFile(activeEditor.document.fileName);
                     }
                 }
             });
