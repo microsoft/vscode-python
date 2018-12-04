@@ -4,15 +4,17 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 
+import { ILogger } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
-import { ICell, IJupyterExecution, INotebookExporter } from './types';
+import { ICell, IJupyterExecution, INotebookExporter, ISysInfo } from './types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
 
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution) {
+        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
+        @inject(ILogger) private logger: ILogger) {
     }
 
     public dispose() {
@@ -20,8 +22,8 @@ export class JupyterExporter implements INotebookExporter {
     }
 
     public async translateToNotebook(cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> {
-        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-        const pythonNumber = usableInterpreter ? usableInterpreter.version_info[0] : 3;
+        // First compute our python version number
+        const pythonNumber = await this.extractPythonMainVersion(cells);
 
         // Use this to build our metadata object
         const metadata: nbformat.INotebookMetadata = {
@@ -79,5 +81,27 @@ export class JupyterExporter implements INotebookExporter {
         }
 
         return source;
+    }
+
+    private extractPythonMainVersion = async (cells: ICell[]): Promise<number> => {
+        let pythonVersion;
+        const sysInfoCells = cells.filter((targetCell: ICell) => {
+           return targetCell.data.cell_type === 'sys_info';
+        });
+
+        if (sysInfoCells.length > 0) {
+            const sysInfo = sysInfoCells[0].data as ISysInfo;
+            const fullVersionString = sysInfo.version;
+            if (fullVersionString) {
+                pythonVersion = fullVersionString.substr(0, fullVersionString.indexOf('.'));
+                return Number(pythonVersion);
+            }
+        }
+
+        this.logger.logInformation('Failed to find python main version from sys_info cell');
+
+        // In this case, let's check the version on the active interpreter
+        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        return usableInterpreter ? usableInterpreter.version_info[0] : 3;
     }
 }

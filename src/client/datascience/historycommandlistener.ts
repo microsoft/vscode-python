@@ -195,12 +195,12 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         let server: INotebookServer | undefined;
         try {
             // Try starting a server.
-            server = await this.jupyterExecution.startNotebookServer(cancelToken);
+            server = await this.jupyterExecution.connectToNotebookServer(undefined, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
                     const code = document.getText(r.range);
-                    return server!.execute(code, document.fileName, r.range.start.line, cancelToken);
+                    return server ? server.execute(code, document.fileName, r.range.start.line, cancelToken) : [];
                 })));
 
             // Then save them to the file

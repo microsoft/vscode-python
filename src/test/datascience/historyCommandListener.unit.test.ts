@@ -201,7 +201,8 @@ suite('History command listener', async () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
-            enabled: true
+            enabled: true,
+            jupyterServerURI: ''
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -288,7 +289,7 @@ suite('History command listener', async () => {
         createCommandListener(undefined);
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
-        when(jupyterExecution.startNotebookServer(anything())).thenResolve(server.object);
+        when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
         server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny())).returns(() => {
             return Promise.resolve(generateCells('a=1', 'bar.py', 0, false));
         });

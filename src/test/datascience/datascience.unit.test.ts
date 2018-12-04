@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import * as TypeMoq from 'typemoq';
-import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
+
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../client/common/types';
 import { DataScience } from '../../client/datascience/datascience';
 import { IDataScience, IDataScienceCodeLensProvider } from '../../client/datascience/types';
@@ -18,6 +17,7 @@ suite('Data Science Tests', () => {
     let extensionContext: TypeMoq.IMock<IExtensionContext>;
     let codeLensProvider: TypeMoq.IMock<IDataScienceCodeLensProvider>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
+    let documentManager: TypeMoq.IMock<IDocumentManager>;
     let dataScience: IDataScience;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -27,6 +27,15 @@ suite('Data Science Tests', () => {
         extensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         codeLensProvider = TypeMoq.Mock.ofType<IDataScienceCodeLensProvider>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        dataScience = new DataScience(serviceContainer.object, commandManager.object, disposableRegistry.object, extensionContext.object, codeLensProvider.object, configurationService.object, shell.object);
+        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        dataScience = new DataScience(
+            serviceContainer.object,
+            commandManager.object,
+            disposableRegistry.object,
+            extensionContext.object,
+            codeLensProvider.object,
+            configurationService.object,
+            documentManager.object,
+            shell.object);
     });
 });

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { PYTHON, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
@@ -18,9 +18,11 @@ import {
     IExtensionContext,
     IPythonExtensionBanner
 } from '../common/types';
+import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
+import { captureTelemetry } from '../telemetry';
 import { hasCells } from './cellFactory';
-import { Commands, EditorContexts } from './constants';
+import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
 
 @injectable()

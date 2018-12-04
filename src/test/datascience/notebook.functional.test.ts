@@ -310,11 +310,11 @@ suite('Jupyter notebook tests', () => {
     runTest('Cancel execution', async () => {
 
         // Try different timeouts, canceling after the timeout on each
-        await testCancelableMethod((t: CancellationToken) => jupyterExecution.startNotebookServer(t), 'Cancel did not cancel start after {0}ms');
+        await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, t), 'Cancel did not cancel start after {0}ms');
 
         // Make sure doing normal start still works
         const nonCancelSource = new CancellationTokenSource();
-        const server = await jupyterExecution.startNotebookServer(nonCancelSource.token);
+        const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
         assert.ok(server, 'Server not found with a cancel token that does not cancel');
 
         // Make sure can run some code too

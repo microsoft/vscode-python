@@ -4,7 +4,15 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Contents, ContentsManager, Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import {
+    Contents,
+    ContentsManager,
+    Kernel,
+    KernelMessage,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -15,18 +23,13 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../common/application/types';
 import { Cancellation, CancellationError } from '../common/cancellation';
-import { TemporaryFile } from '../common/platform/types';
 import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import {
-    IInterpreterService
-} from '../interpreter/contracts';
-import { RegExpValues } from './constants';
-import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, ISysInfo } from './types';
 import { generateCells } from './cellFactory';
 import { concatMultilineString } from './common';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -46,13 +49,12 @@ export class JupyterServer implements INotebookServer, IDisposable {
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
         this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec) : Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
@@ -249,7 +251,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
         return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
     }
-
 
     private shutdownSessionAndConnection = () => {
         if (this.contentsManager) {
