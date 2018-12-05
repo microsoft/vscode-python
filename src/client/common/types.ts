@@ -9,7 +9,6 @@ export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
-export const Is64Bit = Symbol('Is64Bit');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
 export const IMemento = Symbol('IGlobalMemento');

@@ -8,7 +8,7 @@ import { coerce, SemVer } from 'semver';
 import { traceDecorators, traceError } from '../logger';
 import { OSDistro, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
-import { IS_64_BIT, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
+import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { IPlatformService } from './types';
 
 @injectable()
@@ -76,7 +76,9 @@ export class PlatformService implements IPlatformService {
         return this.osType === OSType.Linux;
     }
     public get is64bit(): boolean {
-        return IS_64_BIT;
+        // tslint:disable-next-line:no-require-imports
+        const arch = require('arch') as typeof import('arch');
+        return arch() === 'x64';
     }
 }
 

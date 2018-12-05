@@ -6,7 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
-import { IS_64_BIT, IS_WINDOWS } from '../client/common/platform/constants';
+import { IS_WINDOWS } from '../client/common/platform/constants';
 import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
@@ -19,7 +19,7 @@ import { PythonToolExecutionService } from '../client/common/process/pythonToolS
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
 import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
-import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, Is64Bit, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
+import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
@@ -109,7 +109,6 @@ export class IocContainer {
 
     public registerMockProcess() {
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
-        this.serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
 
         this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);

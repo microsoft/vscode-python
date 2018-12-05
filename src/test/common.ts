@@ -4,6 +4,7 @@
 
 // tslint:disable:no-console no-require-imports no-var-requires
 
+import * as arch from 'arch';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -16,6 +17,7 @@ import { OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
+
 const StreamZip = require('node-stream-zip');
 
 export { sleep } from './core';
@@ -26,6 +28,8 @@ const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 't
 export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
+
+export const IS_64_BIT = arch() === 'x64';
 
 export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.lintOnSave' |

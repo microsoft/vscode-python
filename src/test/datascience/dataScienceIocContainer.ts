@@ -17,7 +17,7 @@ import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegi
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { PersistentStateFactory } from '../../client/common/persistentState';
-import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
 import { IPlatformService, IRegistry } from '../../client/common/platform/types';
@@ -39,7 +39,6 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    Is64Bit,
     IsWindows,
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
@@ -266,7 +265,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, envVarsProvider.object);
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
-        this.serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
 
         this.serviceManager.add<IInterpreterWatcher>(IInterpreterWatcher, WorkspaceVirtualEnvWatcherService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);

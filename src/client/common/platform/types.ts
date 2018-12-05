@@ -7,16 +7,6 @@ import { SemVer } from 'semver';
 import { Disposable } from 'vscode';
 import { Architecture, OSDistro, OSType } from '../utils/platform';
 
-export const IPlatformInfo = Symbol('IPlatformInfo');
-export interface IPlatformInfo {
-    readonly type: OSType;
-    readonly architecture: Architecture;
-    readonly version: SemVer;
-    readonly distro: OSDistro;
-
-    matchPlatform(names: string): boolean;
-}
-
 export enum RegistryHive {
     HKCU, HKLM
 }
