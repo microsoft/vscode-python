@@ -308,8 +308,12 @@ suite('Jupyter notebook tests', () => {
             const tokenSource = new CancellationTokenSource();
             const promise = method(tokenSource.token);
             setTimeout(() => tokenSource.cancel(), timeouts[i]);
-            const val = await promise;
-            assert.notOk(val, messageFormat.format(timeouts[i].toString()));
+            try {
+                await promise;
+                assert.fail(messageFormat.format(timeouts[i].toString()));
+            } catch {
+                noop();
+            }
         }
     }
 

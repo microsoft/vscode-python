@@ -27,7 +27,7 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
@@ -102,24 +102,23 @@ class MockJupyterServer implements INotebookServer {
     }
 }
 
-class DisposableRegistry implements IDisposableRegistry {
+class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistry {
     private disposables: Disposable[] = [];
 
     public push = (disposable: Disposable): void => {
         this.disposables.push(disposable);
     }
 
-    public dispose = () => {
+    public dispose = () : Promise<void> => {
         for (let i = 0; i < this.disposables.length; i += 1) {
             const disposable = this.disposables[i];
             if (disposable) {
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    throw new Error('Dispose is returning a promise.');
-                }
+                disposable.dispose();
             }
         }
         this.disposables = [];
+
+        return Promise.resolve();
     }
 
 }
@@ -200,7 +199,7 @@ suite('Jupyter Execution', async () => {
     });
 
     function cleanupDisposables() {
-        disposableRegistry.dispose();
+        disposableRegistry.dispose().ignoreErrors();
     }
 
     class FunctionMatcher extends Matcher {
@@ -437,6 +436,7 @@ suite('Jupyter Execution', async () => {
             filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
+        when(fileSystem.createDirectory(anything())).thenResolve();
         when(fileSystem.deleteDirectory(anything())).thenResolve();
 
         return new JupyterExecution(
@@ -446,6 +446,7 @@ suite('Jupyter Execution', async () => {
             instance(processServiceFactory),
             instance(knownSearchPaths),
             instance(logger),
+            disposableRegistry,
             disposableRegistry,
             instance(fileSystem),
             instance(serviceContainer));

@@ -20,7 +20,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../common/process/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../common/types';
 import { IS_WINDOWS } from '../common/util';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -154,6 +154,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
                 @inject(ILogger) private logger: ILogger,
                 @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+                @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
                 @inject(IFileSystem) private fileSystem: IFileSystem,
                 @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
@@ -339,6 +340,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // Then use this to launch our notebook process.
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken});
+
+            // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
+            if (launchResult) {
+                this.asyncRegistry.push({ dispose : () => Promise.resolve(launchResult.dispose()) });
+            }
 
             // Wait for the connection information on this result
             const connection = await JupyterConnection.waitForConnection(
