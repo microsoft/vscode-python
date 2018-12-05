@@ -33,10 +33,10 @@ import {
     PythonInterpreter
 } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
-import { IConnection, IJupyterExecution, IJupyterKernelSpec, INotebookServer } from './types';
 import { captureTelemetry } from '../telemetry';
 import { Telemetry } from './constants';
+import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
+import { IConnection, IJupyterExecution, IJupyterKernelSpec, INotebookServer } from './types';
 
 const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
 const NotebookCommand = 'notebook';

@@ -54,12 +54,12 @@ export class History implements IWebPanelMessageListener, IHistory {
     private addedSysInfo: boolean = false;
     private ignoreCount: number = 0;
     private waitingForExportCells : boolean = false;
+    private jupyterServer: INotebookServer | undefined;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(INotebookServer) private jupyterServer: INotebookServer,
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
@@ -283,14 +283,16 @@ export class History implements IWebPanelMessageListener, IHistory {
                     const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), this);
 
                     // Then restart the kernel. When that finishes, add our sys info again
-                    this.jupyterServer.restartKernel()
-                        .then(() => {
-                            this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
-                        })
-                        .catch(err => {
-                            this.logger.logError(err);
-                            status.dispose();
-                        });
+                    if (this.jupyterServer) {
+                        this.jupyterServer.restartKernel()
+                            .then(() => {
+                                this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
+                            })
+                            .catch(err => {
+                                this.logger.logError(err);
+                                status.dispose();
+                            });
+                    }
                     this.restartingKernel = false;
                 } else {
                     this.restartingKernel = false;
@@ -495,7 +497,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        let useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+        const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
@@ -537,40 +539,42 @@ export class History implements IWebPanelMessageListener, IHistory {
         return result;
     }
 
-    private generateSysInfoCell = async (message: string) : Promise<ICell> => {
+    private generateSysInfoCell = async (message: string) : Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
-        // tslint:disable-next-line:no-multiline-string
-        const versionCells = await this.jupyterServer.execute(`import sys\r\nsys.version`, 'foo.py', 0);
-        // tslint:disable-next-line:no-multiline-string
-        const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, 'foo.py', 0);
-        // tslint:disable-next-line:no-multiline-string
-        const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, 'foo.py', 0);
+        if (this.jupyterServer) {
+            // tslint:disable-next-line:no-multiline-string
+            const versionCells = await this.jupyterServer.execute(`import sys\r\nsys.version`, 'foo.py', 0);
+            // tslint:disable-next-line:no-multiline-string
+            const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, 'foo.py', 0);
+            // tslint:disable-next-line:no-multiline-string
+            const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, 'foo.py', 0);
 
-        // Both should have streamed output
-        const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
-        const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
-        const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
+            // Both should have streamed output
+            const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
+            const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
+            const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
 
-        // Both should influence our ignore count. We don't want them to count against execution
-        this.ignoreCount = this.ignoreCount + 3;
+            // Both should influence our ignore count. We don't want them to count against execution
+            this.ignoreCount = this.ignoreCount + 3;
 
-        // Combine this data together to make our sys info
-        return {
-            data: {
-                cell_type : 'sys_info',
-                message: message,
-                version: version,
-                notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
-                path: pythonPath,
-                metadata : {},
-                source : []
-            },
-            id: uuid(),
-            file: '',
-            line: 0,
-            state: CellState.finished
-        };
+            // Combine this data together to make our sys info
+            return {
+                data: {
+                    cell_type: 'sys_info',
+                    message: message,
+                    version: version,
+                    notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
+                    path: pythonPath,
+                    metadata: {},
+                    source: []
+                },
+                id: uuid(),
+                file: '',
+                line: 0,
+                state: CellState.finished
+            };
+        }
     }
 
     private addInitialSysInfo = async () : Promise<void> => {
@@ -595,7 +599,9 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             // Generate a new sys info cell and send it to the web panel.
             const sysInfo = await this.generateSysInfoCell(message);
-            this.onAddCodeEvent([sysInfo]);
+            if (sysInfo) {
+                this.onAddCodeEvent([sysInfo]);
+            }
         }
     }
 

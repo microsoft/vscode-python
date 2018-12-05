@@ -11,8 +11,8 @@ import { IConfigurationService, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
-import { IConnection } from './types';
 import { JupyterConnectError } from './jupyterConnectError';
+import { IConnection } from './types';
 
 const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
 const ForbiddenPatternRegEx = /Forbidden/;

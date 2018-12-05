@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
@@ -30,7 +31,6 @@ import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { IPythonExecutionService, IPythonExecutionFactory, IProcessServiceFactory } from '../../client/common/process/types';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console
 suite('Jupyter notebook tests', () => {
@@ -76,8 +76,8 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifySimple(jupyterServer: INotebookServer, code: string, expectedValue: any) : Promise<void> {
-        const cells = await jupyterServer.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+    async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any) : Promise<void> {
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -95,8 +95,8 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifyError(jupyterServer: INotebookServer, code: string, errorString: string) : Promise<void> {
-        const cells = await jupyterServer.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+    async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string) : Promise<void> {
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -108,9 +108,9 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifyCell(jupyterServer: INotebookServer, index: number, code: string, mimeType: string, cellType: string, verifyValue : (data: any) => void) : Promise<void> {
+    async function verifyCell(jupyterServer: INotebookServer | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue : (data: any) => void) : Promise<void> {
         // Verify results of an execute
-        const cells = await jupyterServer.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
         if (cellType === 'code') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -150,14 +150,16 @@ suite('Jupyter notebook tests', () => {
                 assert.fail('Server not created');
             }
             let statusCount: number = 0;
-            server.onStatusChanged((bool: boolean) => {
-                statusCount += 1;
-            });
-            for (let i = 0; i < types.length; i += 1) {
-                const prevCount = statusCount;
-                await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
-                if (types[i].cellType !== 'markdown') {
-                    assert.ok(statusCount > prevCount, 'Status didnt update');
+            if (server) {
+                server.onStatusChanged((bool: boolean) => {
+                    statusCount += 1;
+                });
+                for (let i = 0; i < types.length; i += 1) {
+                    const prevCount = statusCount;
+                    await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
+                    if (types[i].cellType !== 'markdown') {
+                        assert.ok(statusCount > prevCount, 'Status didnt update');
+                    }
                 }
             }
         });
@@ -287,14 +289,14 @@ suite('Jupyter notebook tests', () => {
 
         // In unit tests we have to wait for status idle before restarting. Unit tests
         // seem to be timing out if the restart throws any exceptions (even if they're caught)
-        await server.waitForIdle();
+        await server!.waitForIdle();
 
         console.log('Restarting kernel');
 
-        await server.restartKernel();
+        await server!.restartKernel();
 
         console.log('Waiting for idle');
-        await server.waitForIdle();
+        await server!.waitForIdle();
 
         console.log('Verifying restart');
         await verifyError(server, 'a', `name 'a' is not defined`);
@@ -340,7 +342,7 @@ suite('Jupyter notebook tests', () => {
         let finishedBefore = false;
         let finishedPromise = createDeferred();
         let outputPromise = createDeferred();
-        let observable = server.executeObservable('import time\r\nwhile(1):\r\n  time.sleep(.1)\r\n  print(".")', 'foo.py', 0);
+        let observable = server!.executeObservable('import time\r\nwhile(1):\r\n  time.sleep(.1)\r\n  print(".")', 'foo.py', 0);
         observable.subscribe(c => {
             const cell = c[0].data as nbformat.ICodeCell;
             if (!outputPromise.completed && cell && cell.outputs.length > 0) {
@@ -357,7 +359,7 @@ suite('Jupyter notebook tests', () => {
 
         // Then interrupt
         interrupted = true;
-        await server.interruptKernel();
+        await server!.interruptKernel();
 
         // Then we should get our finish
         await Promise.race([finishedPromise.promise, sleep(5000)]);
@@ -369,7 +371,7 @@ suite('Jupyter notebook tests', () => {
         interrupted = false;
         finishedPromise = createDeferred();
         outputPromise = createDeferred();
-        observable = server.executeObservable('import time\r\ntime.sleep(4)', 'foo.py', 0);
+        observable = server!.executeObservable('import time\r\ntime.sleep(4)', 'foo.py', 0);
         observable.subscribe(c => {
             if (!outputPromise.completed) {
                 outputPromise.resolve();
@@ -385,7 +387,7 @@ suite('Jupyter notebook tests', () => {
 
         // Then interrupt
         interrupted = true;
-        await server.interruptKernel();
+        await server!.interruptKernel();
 
         // Then we should get our finish
         await Promise.race([finishedPromise.promise, sleep(5000)]);
@@ -459,14 +461,15 @@ plt.show()`,
 
         // Manually generate an invalid jupyter config
         const procService = await processFactory.create();
-        const results = await procService.exec(usable.path, ['jupyter', 'notebook', '--generate-config', '-y']);
+        assert.ok(procService, 'Can not get a process service');
+        const results = await procService!.exec(usable!.path, ['jupyter', 'notebook', '--generate-config', '-y']);
 
         // Results should have our path to the config.
         const match = /^.*\s+(.*jupyter_notebook_config.py)\s+.*$/m.exec(results.stdout);
-        assert.ok(match && match != null && match.length > 0, 'Jupyter is not outputting the path to the config');
-        const configPath = match[1];
-        const fs = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-        await fs.writeFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
+        assert.ok(match && match !== null && match.length > 0, 'Jupyter is not outputting the path to the config');
+        const configPath = match !== null ? match[1] : '';
+        const filesystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
+        await filesystem.writeFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
     }
 
     runTest('Non default config fails', async () => {

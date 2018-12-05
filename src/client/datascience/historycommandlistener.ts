@@ -195,7 +195,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         let server: INotebookServer | undefined;
         try {
             const settings = this.configuration.getSettings();
-            let useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+            const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
             // Try starting a server.
             server = await this.jupyterExecution.connectToNotebookServer(undefined, useDefaultConfig, cancelToken);

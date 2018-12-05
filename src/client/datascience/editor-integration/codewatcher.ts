@@ -12,7 +12,6 @@ import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyterInstallError';
 import { ICodeWatcher, IHistoryProvider } from '../types';
-import { JupyterConnectError } from '../jupyterConnectError';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
