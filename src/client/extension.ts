@@ -5,9 +5,10 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
+const showStatsInStdOut = true; // REMOVE THIS PRIOR TO MERGE
 const durations: { [key: string]: number } = {};
 import { StopWatch } from './common/utils/stopWatch';
-// Do not move this linne of code (used to measure extension load times).
+// Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 import { Container } from 'inversify';
 import {
@@ -122,7 +123,15 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
-    await activationService.activate();
+    // language server activation does not need to be awaited, allow it to initialize in the
+    activationService.activate()
+        .then(
+            () => standardOutputChannel.appendLine('Language server started successfully.'),
+            (rejectedReason) => standardOutputChannel.appendLine(`Language Server startup failed. Reason: ${rejectedReason}`)
+        )
+        .catch(
+            (exceptionReason) => standardOutputChannel.appendLine(`Language Server startup exception raised: ${exceptionReason}`)
+        ).ignoreErrors();
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
@@ -292,6 +301,10 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
 
         const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
+        if (showStatsInStdOut === true) {
+            const stdOut = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+            stdOut.appendLine(`Extension startup duration [start = ${durations.startActivateTime}, end = ${durations.endActivateTime}] = ${durations.endActivateTime - durations.startActivateTime}`);
+        }
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);
     }
