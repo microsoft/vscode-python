@@ -177,7 +177,14 @@ suite('History output tests', () => {
             history.postMessage(HistoryMessages.Undo);
             await Promise.race([waitingForInfo.promise, sleep(2000)]);
             assert.ok(waitingForInfo.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after undo as there are two cells');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after starting');
+
+            waitingForInfo = createDeferred<boolean>();
+            history.postMessage(HistoryMessages.Undo);
+            await Promise.race([waitingForInfo.promise, sleep(2000)]);
+            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after second undo');
             assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after starting');
 
             waitingForInfo = createDeferred<boolean>();

@@ -54,7 +54,7 @@ function generateMarkdownCell(code: string[], file: string, line: number) : ICel
 
 export function generateCells(code: string, file: string, line: number, splitMarkdown?: boolean) : ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
-    const split = code.splitLines();
+    const split = code.splitLines({trim: false});
     const firstLine = split[0];
     if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin

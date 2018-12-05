@@ -242,9 +242,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
     public interruptKernel = () : Promise<void> => {
         if (this.session && this.session.kernel) {
-            // Update our start time so we don't keep sending responses
-            this.sessionStartTime = Date.now();
-
             // Interrupt whatever is happening
             return this.session.kernel.interrupt();
         }
@@ -385,7 +382,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
                         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                             this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
                         } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg, cell);
                         } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                             this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
                         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
@@ -402,7 +399,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
                         }
 
                         // Show our update if any new output
-                        subscriber.next(cell);
+                        if (this.sessionStartTime && startTime > this.sessionStartTime) {
+                            subscriber.next(cell);
+                        }
                     } catch (err) {
                         // If not a restart error, then tell the subscriber
                         if (this.sessionStartTime && startTime > this.sessionStartTime) {
@@ -475,11 +474,17 @@ export class JupyterServer implements INotebookServer, IDisposable {
         cell.data.execution_count = msg.content.execution_count;
     }
 
-    private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, cell: ICell) {
         if (msg.content.execution_state === 'busy') {
             this.onStatusChangedEvent.fire(true);
         } else {
             this.onStatusChangedEvent.fire(false);
+        }
+
+        // Status change to idle generally means we finished. Not sure how to
+        // make sure of this. Maybe only bother if an in
+        if (msg.content.execution_state === 'idle' && cell.state !== CellState.error) {
+            cell.state = CellState.finished;
         }
     }
 

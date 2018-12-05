@@ -306,9 +306,10 @@ suite('Jupyter notebook tests', () => {
         const timeouts = [100, 200, 300, 1000];
         for (let i = 0; i < timeouts.length; i += 1) {
             const tokenSource = new CancellationTokenSource();
-            const val = method(tokenSource.token);
+            const promise = method(tokenSource.token);
             setTimeout(() => tokenSource.cancel(), timeouts[i]);
-            await assert.eventually.equal(val, undefined, messageFormat.format(timeouts[i].toString()));
+            const val = await promise;
+            assert.notOk(val, messageFormat.format(timeouts[i].toString()));
         }
     }
 
@@ -342,13 +343,33 @@ suite('Jupyter notebook tests', () => {
         let finishedBefore = false;
         let finishedPromise = createDeferred();
         let outputPromise = createDeferred();
-        let observable = server!.executeObservable('import time\r\nwhile(1):\r\n  time.sleep(.1)\r\n  print(".")', 'foo.py', 0);
+        let observable = server!.executeObservable(`
+import signal
+import _thread
+import time
+
+keep_going = True
+def handler(signum, frame):
+  global keep_going
+  print('signal')
+  keep_going = False
+
+signal.signal(signal.SIGINT, handler)
+
+while keep_going:
+  print(".")
+  time.sleep(.1)`, 'foo.py', 0);
+
         observable.subscribe(c => {
             const cell = c[0].data as nbformat.ICodeCell;
             if (!outputPromise.completed && cell && cell.outputs.length > 0) {
                 outputPromise.resolve();
             }
             if (c.length > 0 && c[0].state === CellState.error) {
+                finishedBefore = !interrupted;
+                finishedPromise.resolve();
+            }
+            if (c.length > 0 && c[0].state === CellState.finished) {
                 finishedBefore = !interrupted;
                 finishedPromise.resolve();
             }
@@ -455,14 +476,29 @@ plt.show()`,
         ]
     );
 
+    async function getNotebookCapableInterpreter() : Promise<PythonInterpreter | undefined> {
+        const is = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const list = await is.getInterpreters();
+        const procService = await processFactory.create();
+        if (procService) {
+            for (let i = 0; i < list.length; i += 1) {
+                const result = await procService.exec(list[i].path, ['-m', 'jupyter', 'notebook', '--version'], {env: process.env});
+                if (!result.stderr) {
+                    return list[i];
+                }
+            }
+        }
+        return undefined;
+    }
+
     async function generateNonDefaultConfig() {
-        const usable = await jupyterExecution.getUsableJupyterPython();
+        const usable = await getNotebookCapableInterpreter();
         assert.ok(usable, 'Cant find jupyter enabled python');
 
         // Manually generate an invalid jupyter config
         const procService = await processFactory.create();
         assert.ok(procService, 'Can not get a process service');
-        const results = await procService!.exec(usable!.path, ['jupyter', 'notebook', '--generate-config', '-y']);
+        const results = await procService!.exec(usable!.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {env: process.env});
 
         // Results should have our path to the config.
         const match = /^.*\s+(.*jupyter_notebook_config.py)\s+.*$/m.exec(results.stdout);
@@ -474,7 +510,12 @@ plt.show()`,
 
     runTest('Non default config fails', async () => {
         await generateNonDefaultConfig();
-        chai.assert.isRejected(jupyterExecution.connectToNotebookServer(undefined, false), 'Should not be able to connect to notebook server with bad config');
+        try {
+            await jupyterExecution.connectToNotebookServer(undefined, false);
+            assert.fail('Should not be able to connect to notebook server with bad config');
+        } catch {
+            noop();
+        }
     });
 
     runTest('Non default config does not mess up default config', async () => {
