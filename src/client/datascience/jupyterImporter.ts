@@ -64,9 +64,8 @@ export class JupyterImporter implements INotebookImporter {
             //return this.jupyterExecution.importNotebook(file, template);
             // IANHU: check to return back the promise here instead of await
             let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
-            if(directoryChange) {
+            if (directoryChange) {
                 return this.addDirectoryChange(fileOutput, directoryChange);
-                //return fileOutput;
             } else {
                 return fileOutput;
             }
@@ -98,6 +97,7 @@ except:
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
     // IANHU: Unit test here
+    // IANHU: combine with export version? It's similar
     private calculateDirectoryChange = (notebookFile: string): string => {
         let directoryChange: string;
         const notebookFilePath = path.dirname(notebookFile);

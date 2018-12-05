@@ -387,6 +387,11 @@ export class History implements IWebPanelMessageListener, IHistory {
     private exportToFile = async (cells: ICell[], file : string) => {
         // Take the list of cells, convert them to a notebook json format and write to disk
         if (this.jupyterServer) {
+            const settings = this.configuration.getSettings();
+            if (settings.datascience.changeDirOnImportExport) {
+                cells = this.addDirectoryChangeCell(cells, file); 
+            }
+
             const notebook = await this.jupyterServer.translateToNotebook(cells);
 
             try {
@@ -402,6 +407,62 @@ export class History implements IWebPanelMessageListener, IHistory {
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
             }
 
+        }
+    }
+
+    // IANHU: combine with import version
+    private calculateDirectoryChange = (notebookFile: string): string => {
+        let directoryChange: string;
+        const notebookFilePath = path.dirname(notebookFile);
+        // First see if we have a workspace open, this only works if we have a workspace root to be relative to
+        if (workspace && workspace.workspaceFolders.length > 0) {
+            const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+
+            // Make sure that we have everything that we need here
+            // IANHU: Absolute checks needed?
+            if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                //directoryChange = path.relative(workspacePath, notebookFilePath);
+                directoryChange = path.relative(notebookFilePath, workspacePath);
+            }
+        }
+
+
+        return directoryChange;
+    }
+
+    // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
+    private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
+        const changeDirectory = this.calculateDirectoryChange(file);
+
+        if (changeDirectory) {
+            // IANHU: Pull out as constant? Combine with import?
+            const exportChangeDirectory = `# Change directory to VSCode workspace root so that relative path loads work correctly. 
+# Turn this addition off with the DataSciece.changeDirOnImportExport setting
+try:
+    import os
+    os.chdir(os.path.join(os.getcwd(), '${changeDirectory}'))
+    print(os.getcwd())
+except:
+    pass
+`
+            // IANHU: file and line?
+            const cell: ICell = {
+                data: {
+                    source: exportChangeDirectory,
+                    cell_type: 'code',
+                    outputs: [],
+                    metadata: {},
+                    execution_count: 0
+                },
+                id: uuid(),
+                file: '',
+                line: 0,
+                state: CellState.finished
+            };
+
+            return [cell,...cells];
+        } else {
+            return cells;
         }
     }
 
