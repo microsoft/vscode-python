@@ -8,6 +8,7 @@ import { SemVer } from 'semver';
 import { traceDecorators, traceError } from '../../logger';
 import { IPlatformService } from '../../platform/types';
 import { OSDistro } from '../../utils/platform';
+import { parseVersion } from '../../utils/version';
 import { IOSDotNetCompatibilityService } from '../types';
 
 // Versions on https://github.com/dotnet/core/blob/master/release-notes/2.1/2.1-supported-os.md
@@ -43,7 +44,7 @@ export class LinuxDotNetCompatibilityService implements IOSDotNetCompatibilitySe
 
     @traceDecorators.verbose('Checking support of Linux Distro Version')
     private async checkIfVersionsAreSupported(version: SemVer, minimumSupportedVersions: string[]): Promise<boolean> {
-        if (!Array.isArray(minimumSupportedVersions) || minimumSupportedVersions.length) {
+        if (!Array.isArray(minimumSupportedVersions) || minimumSupportedVersions.length === 0) {
             return false;
         }
         if (minimumSupportedVersions.length === 1) {
@@ -55,9 +56,9 @@ export class LinuxDotNetCompatibilityService implements IOSDotNetCompatibilitySe
         // Check if OS version is greater than the max of the versions provided, if yes, the allow it.
         // E.g. if versions 18.0, 16.0, 14.0 are supported by .NET core
         // Then we assume 19, 20 are supported as well.
-        const sorted = minimumSupportedVersions.slice().map(ver => new SemVer(ver));
+        const sorted = minimumSupportedVersions.slice().map(ver => parseVersion(ver)!);
         sorted.sort((a, b) => a.compare(b));
-        if (version.compare(sorted[0]) >= 0) {
+        if (version.compare(sorted[sorted.length - 1]) >= 0) {
             return true;
         }
 

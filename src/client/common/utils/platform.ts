@@ -19,7 +19,7 @@ export enum OSDistro {
     // linux:
     Ubuntu = 'Ubuntu',
     Debian = 'Debian',
-    RHEL = 'REHL',
+    RHEL = 'RHEL',
     Fedora = 'Fedora',
     Alpine = 'Alpine',
     CentOS = 'CentOS',
