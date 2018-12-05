@@ -35,8 +35,7 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         const plaform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         switch (plaform.osType) {
             case OSType.Windows: {
-                const is64Bit = plaform.is64bit;
-                return PackageNames[is64Bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit];
+                return PackageNames[plaform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit];
             }
             case OSType.OSX: {
                 return PackageNames[PlatformName.Mac64Bit];

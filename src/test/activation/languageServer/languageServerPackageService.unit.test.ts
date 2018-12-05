@@ -41,7 +41,7 @@ suite('Language Server Package Service', () => {
         const bitness = is64Bit ? '64bit' : '32bit';
         test(`Get Package name for Windows (${bitness})`, async () => {
             platform.setup(p => p.osType).returns(() => OSType.Windows);
-            platform.setup(p => p.is64bit).returns(() => true);
+            platform.setup(p => p.is64bit).returns(() => is64Bit);
             const expectedName = is64Bit ? `${downloadBaseFileName}-${PlatformName.Windows64Bit}` : `${downloadBaseFileName}-${PlatformName.Windows32Bit}`;
 
             const name = lsPackageService.getNugetPackageName();

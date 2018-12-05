@@ -91,7 +91,7 @@ suite('PlatformService', () => {
         const info = osType === OSType.Linux ? await getLinuxDistro() : [OSDistro.Unknown, undefined];
         const expectedDistro = info[0];
         const svc = new PlatformService();
-        const result = await svc.getVersion();
+        const result = await svc.getOSDistro();
 
         expect(result).to.be.equal(expectedDistro, 'invalid value');
     });
