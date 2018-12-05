@@ -24,13 +24,14 @@ export interface IDataScienceCommandListener {
 export interface IConnection extends Disposable {
     baseUrl: string;
     token: string;
+    localLaunch: boolean;
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec) : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, workingDir?: string) : Promise<void>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
@@ -46,7 +47,7 @@ export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
     isKernelCreateSupported(): Promise<boolean>;
-    connectToNotebookServer(uri?: string): Promise<INotebookServer>;
+    connectToNotebookServer(uri?: string, workingDir?: string): Promise<INotebookServer>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython() : Promise<PythonInterpreter | undefined>;

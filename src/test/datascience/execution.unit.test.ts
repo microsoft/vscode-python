@@ -419,7 +419,8 @@ suite('Jupyter Execution', async () => {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
             enabled: true,
-            jupyterServerURI: 'local'
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE'
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning

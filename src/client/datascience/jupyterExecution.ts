@@ -191,7 +191,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.isCommandSupported(KernelSpecCommand);
     }
 
-    public connectToNotebookServer = async (uri?: string) : Promise<INotebookServer> => {
+    public connectToNotebookServer = async (uri?: string, workingDir?: string) : Promise<INotebookServer> => {
         let connection: IConnection;
         let kernelSpec: IJupyterKernelSpec | undefined;
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
@@ -223,7 +223,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             // Try to connect to our jupyter process
             const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
             this.disposableRegistry.push(result);
-            await result.connect(connection, kernelSpec);
+            // IANHU: put workingDir into connection info? Not really part of the connection info
+            await result.connect(connection, kernelSpec, workingDir);
             return result;
         } catch (err) {
             // Something else went wrong
@@ -296,6 +297,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return {
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
+            localLaunch: false,
             dispose: noop
         };
     }

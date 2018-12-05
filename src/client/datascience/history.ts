@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn, workspace } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import {
@@ -27,6 +27,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
+import { anyOfClass } from 'ts-mockito';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -100,7 +101,9 @@ export class History implements IWebPanelMessageListener, IHistory {
             await this.show();
 
             // Add our sys info if necessary
-            await this.addInitialSysInfo();
+            //await this.addInitialSysInfo();
+            await this.initialKernelSetup();
+
 
             if (this.jupyterServer) {
                 // Attempt to evaluate this cell in the jupyter notebook
@@ -329,7 +332,8 @@ export class History implements IWebPanelMessageListener, IHistory {
                     // Then restart the kernel. When that finishes, add our sys info again
                     this.jupyterServer.restartKernel()
                         .then(() => {
-                            this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
+                            this.restartKernelSetup();
+                            //this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
                         })
                         .catch(err => {
                             this.logger.logError(err);
@@ -405,18 +409,42 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
+        let workingDir: string;
 
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
             // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
             if (serverURI === Settings.JupyterServerLocalLaunch) {
                 serverURI = undefined;
+
+                // For a local launch calculate the working directory that we should switch into
+                const settings = this.configuration.getSettings();
+                const fileRoot = settings.datascience.notebookFileRoot;
+                // IANHU: Remove constant and refactor this out into a sub-function
+                if (fileRoot) {
+                    if(fileRoot === 'WORKSPACE') {
+                        if (workspace.workspaceFolders.length > 0) {
+                            const filePath = workspace.workspaceFolders[0].uri.fsPath;
+                            workingDir = filePath;
+                        }
+                    } else {
+                       if (path.isAbsolute(fileRoot)) {
+                            workingDir = fileRoot;
+                       } else {
+                            if (workspace.workspaceFolders.length > 0) {
+                                const filePath = workspace.workspaceFolders[0].uri.fsPath;
+                                workingDir = path.join(filePath, fileRoot);
+                            }
+                       }
+                    }
+                }
             }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI);
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {
-                await this.addRestartSysInfo();
+                await this.restartKernelSetup();
+                //await this.addRestartSysInfo();
             }
         } finally {
             if (status) {
@@ -482,6 +510,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         };
     }
 
+    // Run when we initially connect to the server
+    private initialKernelSetup = async () : Promise<void> => {
+        await this.addInitialSysInfo();
+    }
+
     private addInitialSysInfo = async () : Promise<void> => {
         // Message depends upon if ipykernel is supported or not.
         if (!(await this.jupyterExecution.isKernelCreateSupported())) {
@@ -489,6 +522,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
 
         return this.addSysInfo(localize.DataScience.pythonVersionHeader());
+    }
+
+    // Run after we restart and reconnect to our server
+    private restartKernelSetup = async (): Promise<void> => {
+        await this.addRestartSysInfo();
     }
 
     private addRestartSysInfo = () : Promise<void> => {

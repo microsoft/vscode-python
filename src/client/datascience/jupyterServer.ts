@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger, IConfigurationService } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -31,6 +31,7 @@ import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, ISy
 export class JupyterServer implements INotebookServer, IDisposable {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
+    private workingDir: string | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
@@ -43,15 +44,17 @@ export class JupyterServer implements INotebookServer, IDisposable {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IConfigurationService) private configuration: IConfigurationService) {
         this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec) : Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, workingDir?: string) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
+        this.workingDir = workingDir;
 
         // First connect to the sesssion manager
         const serverSettings = ServerConnection.makeSettings(
@@ -86,7 +89,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         await this.session.kernel.ready;
 
         // Run our initial setup and plot magics
-        this.initialNotebookSetup();
+        await this.initialNotebookSetup();
 
     }
 
@@ -227,8 +230,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
             // Restart our kernel
             await this.session.kernel.restart();
 
-            // Reimplement our magics
-            this.initialNotebookSetup();
+            // Rerun our initial setup for the notebook
+            await this.initialNotebookSetup();
 
             return;
         }
@@ -348,7 +351,12 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     // Set up our initial plotting and imports
-    private initialNotebookSetup = () => {
+    private initialNotebookSetup = async () => {
+        // When we start our notebook initial, change to our workspace or user specified root directory
+        if (this.connInfo && this.connInfo.localLaunch && this.workingDir) {
+            await this.changeDirectoryIfPossible(this.workingDir);
+        }
+        
         // Check for dark theme, if so set matplot lib to use dark_background settings
         let darkTheme: boolean = false;
         const workbench = this.workspaceService.getConfiguration('workbench');
@@ -360,7 +368,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
 
         this.executeSilently(
-            `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+            `%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
         ).ignoreErrors();
     }
 
@@ -460,10 +468,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
         });
     }
 
-    private changeDirectoryIfPossible = async (file: string, line: number) : Promise<void> => {
-        if (line >= 0 && await fs.pathExists(file)) {
-            const dir = path.dirname(file);
-            await this.executeSilently(`%cd "${dir}"`);
+    private changeDirectoryIfPossible = async (directory: string) : Promise<void> => {
+        if(this.connInfo.localLaunch && await fs.pathExists(directory)) {
+            await this.executeSilently(`%cd "${directory}`);
         }
     }
 
@@ -568,14 +575,15 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
             // Attempt to change to the current directory. When that finishes
             // send our real request
-            this.changeDirectoryIfPossible(file, line)
-                .then(() => {
-                    this.handleCodeRequest(subscriber, startTime, cell, code);
-                })
-                .catch(() => {
-                    // Ignore errors if they occur. Just execute normally
-                    this.handleCodeRequest(subscriber, startTime, cell, code);
-                });
+            //this.changeDirectoryIfPossible(file, line)
+                //.then(() => {
+                    //this.handleCodeRequest(subscriber, startTime, cell, code);
+                //})
+                //.catch(() => {
+                    //// Ignore errors if they occur. Just execute normally
+                    //this.handleCodeRequest(subscriber, startTime, cell, code);
+                //});
+            this.handleCodeRequest(subscriber, startTime, cell, code);
         });
     }
 
