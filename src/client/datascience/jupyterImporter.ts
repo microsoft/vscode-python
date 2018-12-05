@@ -56,13 +56,11 @@ export class JupyterImporter implements INotebookImporter {
         const settings = this.configuration.getSettings();
         let directoryChange: string;
         if (settings.datascience.changeDirOnImportExport) {
-           directoryChange = this.calculateDirectoryChange(file); 
+           directoryChange = JupyterImporter.calculateDirectoryChange(file, true); 
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            //return this.jupyterExecution.importNotebook(file, template);
-            // IANHU: check to return back the promise here instead of await
             let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
             if (directoryChange) {
                 return this.addDirectoryChange(fileOutput, directoryChange);
@@ -80,8 +78,6 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        // IANHU: Pull out this as constant
-        // IANHU: Newlines per OS?
         const newCode = `#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataSciece.changeDirOnImportExport setting
 import os
 try:
@@ -97,8 +93,7 @@ except:
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
     // IANHU: Unit test here
-    // IANHU: combine with export version? It's similar
-    private calculateDirectoryChange = (notebookFile: string): string => {
+    public static calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
         let directoryChange: string;
         const notebookFilePath = path.dirname(notebookFile);
         // First see if we have a workspace open, this only works if we have a workspace root to be relative to
@@ -106,14 +101,22 @@ except:
             const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 
             // Make sure that we have everything that we need here
-            // IANHU: Absolute checks needed?
             if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
-                directoryChange = path.relative(workspacePath, notebookFilePath);
+                if (workspaceRelative) {
+                    directoryChange = path.relative(workspacePath, notebookFilePath);
+                } else {
+                    directoryChange = path.relative(notebookFilePath, workspacePath);
+                }
             }
         }
 
-
-        return directoryChange;
+        // If path.relative can't calculate a relative path, then it just returns the full second path
+        // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
+        if (!path.isAbsolute(directoryChange)) {
+            return directoryChange;
+        } else {
+            return undefined;
+        }
     }
 
     private createTemplateFile = async () : Promise<string> => {

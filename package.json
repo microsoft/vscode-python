@@ -898,8 +898,8 @@
                 },
                 "python.dataScience.notebookFileRoot": {
                     "type": "string",
-                    "default": "WORKSPACE",
-                    "description": "Set the root directory for loading files for the Python Interactive window. 'WORKSPACE' to use the VSCode workspace root.",
+                    "default": "${workspaceFolder}",
+                    "description": "Set the root directory for loading files for the Python Interactive window.",
                     "scope": "resource"
                 },
                 "python.dataScience.changeDirOnImportExport": {

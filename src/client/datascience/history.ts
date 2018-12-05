@@ -26,6 +26,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
+import { JupyterImporter } from './jupyterImporter';
 import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 import { anyOfClass } from 'ts-mockito';
 
@@ -101,9 +102,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             await this.show();
 
             // Add our sys info if necessary
-            //await this.addInitialSysInfo();
-            await this.initialKernelSetup();
-
+            await this.addInitialSysInfo();
 
             if (this.jupyterServer) {
                 // Attempt to evaluate this cell in the jupyter notebook
@@ -332,8 +331,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                     // Then restart the kernel. When that finishes, add our sys info again
                     this.jupyterServer.restartKernel()
                         .then(() => {
-                            this.restartKernelSetup();
-                            //this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
+                            this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
                         })
                         .catch(err => {
                             this.logger.logError(err);
@@ -410,32 +408,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    // IANHU: combine with import version
-    private calculateDirectoryChange = (notebookFile: string): string => {
-        let directoryChange: string;
-        const notebookFilePath = path.dirname(notebookFile);
-        // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-        if (workspace && workspace.workspaceFolders.length > 0) {
-            const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-
-            // Make sure that we have everything that we need here
-            // IANHU: Absolute checks needed?
-            if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
-                //directoryChange = path.relative(workspacePath, notebookFilePath);
-                directoryChange = path.relative(notebookFilePath, workspacePath);
-            }
-        }
-
-
-        return directoryChange;
-    }
-
     // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
     private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
-        const changeDirectory = this.calculateDirectoryChange(file);
+        const changeDirectory = JupyterImporter.calculateDirectoryChange(file, false);
 
         if (changeDirectory) {
-            // IANHU: Pull out as constant? Combine with import?
             const exportChangeDirectory = `# Change directory to VSCode workspace root so that relative path loads work correctly. 
 # Turn this addition off with the DataSciece.changeDirOnImportExport setting
 try:
@@ -443,9 +420,9 @@ try:
     os.chdir(os.path.join(os.getcwd(), '${changeDirectory}'))
     print(os.getcwd())
 except:
+    # No failure for attempted directory switch
     pass
 `
-            // IANHU: file and line?
             const cell: ICell = {
                 data: {
                     source: exportChangeDirectory,
@@ -478,44 +455,42 @@ except:
             if (serverURI === Settings.JupyterServerLocalLaunch) {
                 serverURI = undefined;
 
-                // For a local launch calculate the working directory that we should switch into
-                const settings = this.configuration.getSettings();
-                const fileRoot = settings.datascience.notebookFileRoot;
-                // IANHU: Remove constant and refactor this out into a sub-function
-                if (fileRoot) {
-                    if(fileRoot === 'WORKSPACE') {
-                        if (workspace && workspace.workspaceFolders.length > 0) {
-                            const filePath = workspace.workspaceFolders[0].uri.fsPath;
-                            workingDir = filePath;
-                        } else {
-                            // We don't have a path from the settings and we don't have a current workspace
-                            // so instead just use the location of the file 
-                            // IANHU: pass in the indicator here to use file path. Just undefined?
-                        }
-                    } else {
-                       if (path.isAbsolute(fileRoot)) {
-                            workingDir = fileRoot;
-                       } else {
-                            if (workspace.workspaceFolders.length > 0) {
-                                const filePath = workspace.workspaceFolders[0].uri.fsPath;
-                                workingDir = path.join(filePath, fileRoot);
-                            }
-                       }
-                    }
-                }
+                workingDir = this.calculateWorkingDirectory();
             }
             this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {
-                await this.restartKernelSetup();
-                //await this.addRestartSysInfo();
+                await this.addRestartSysInfo();
             }
         } finally {
             if (status) {
                 status.dispose();
             }
         }
+    }
+
+    // Calculate the working directory that we should move into when starting up our Jupyter server locally
+    private calculateWorkingDirectory = (): string =>
+    {
+        let workingDir: string;
+        // For a local launch calculate the working directory that we should switch into
+        const settings = this.configuration.getSettings();
+        const fileRoot = settings.datascience.notebookFileRoot;
+
+        // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
+        // so only do this setting if we actually have a valid workspace open
+        if (fileRoot && workspace.workspaceFolders) {
+            if (path.isAbsolute(fileRoot)) {
+                workingDir = fileRoot;
+            } else {
+                if (workspace.workspaceFolders.length > 0) {
+                    const filePath = workspace.workspaceFolders[0].uri.fsPath;
+                    workingDir = path.join(filePath, fileRoot);
+                }
+            }
+        }
+        return workingDir;
     }
 
     private extractStreamOutput(cell: ICell) : string {
@@ -575,11 +550,6 @@ except:
         };
     }
 
-    // Run when we initially connect to the server
-    private initialKernelSetup = async () : Promise<void> => {
-        await this.addInitialSysInfo();
-    }
-
     private addInitialSysInfo = async () : Promise<void> => {
         // Message depends upon if ipykernel is supported or not.
         if (!(await this.jupyterExecution.isKernelCreateSupported())) {
@@ -587,11 +557,6 @@ except:
         }
 
         return this.addSysInfo(localize.DataScience.pythonVersionHeader());
-    }
-
-    // Run after we restart and reconnect to our server
-    private restartKernelSetup = async (): Promise<void> => {
-        await this.addRestartSysInfo();
     }
 
     private addRestartSysInfo = () : Promise<void> => {
