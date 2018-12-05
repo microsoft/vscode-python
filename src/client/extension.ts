@@ -32,6 +32,7 @@ import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -227,6 +228,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 
     activationRegisterTypes(serviceManager);
     commonRegisterTypes(serviceManager);
+    registerDotNetTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);

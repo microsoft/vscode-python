@@ -8,9 +8,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IPathUtils } from '../../../client/common/types';
-import { isWindows } from '../../../client/common/utils/platform';
+import { OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { getOSType } from '../../common';
 
 use(chaiAsPromised);
 
@@ -21,7 +22,7 @@ suite('Environment Variables Service', () => {
     let pathUtils: IPathUtils;
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
-        pathUtils = new PathUtils(isWindows());
+        pathUtils = new PathUtils(getOSType() === OSType.Windows);
         variablesService = new EnvironmentVariablesService(pathUtils);
     });
 

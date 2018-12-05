@@ -7,11 +7,11 @@ import { inject, injectable } from 'inversify';
 import { parse, SemVer } from 'semver';
 import { IApplicationEnvironment } from '../../common/application/types';
 import { PVSC_EXTENSION_ID } from '../../common/constants';
-import { traceVerbose } from '../../common/logger';
+import { traceDecorators, traceVerbose } from '../../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../../common/nuget/types';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../../common/types';
-import { Architecture, OSType } from '../../common/utils/platform';
+import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { PlatformName } from '../platformData';
 import { ILanguageServerPackageService } from '../types';
@@ -33,9 +33,9 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) { }
     public getNugetPackageName(): string {
         const plaform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-        switch (plaform.info.type) {
+        switch (plaform.osType) {
             case OSType.Windows: {
-                const is64Bit = plaform.info.architecture === Architecture.x64;
+                const is64Bit = plaform.is64bit;
                 return PackageNames[is64Bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit];
             }
             case OSType.OSX: {
@@ -47,7 +47,7 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         }
     }
 
-    @traceVerbose('Get latest language server nuget package version')
+    @traceDecorators.verbose('Get latest language server nuget package version')
     public async getLatestNugetPackageVersion(): Promise<NugetPackage> {
         const downloadChannel = this.getLanguageServerDownloadChannel();
         const nugetRepo = this.serviceContainer.get<INugetRepository>(INugetRepository, downloadChannel);

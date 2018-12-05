@@ -81,13 +81,28 @@ function returnValueToLogString(returnValue: any): string {
 }
 
 export function traceVerbose(message: string) {
-    return trace(message, LogOptions.Arguments | LogOptions.ReturnValue);
+    new Logger().logInformation(message);
 }
 export function traceError(message: string, ex?: Error) {
-    return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Error);
+    new Logger().logError(message, ex);
 }
 export function traceInfo(message: string) {
-    return trace(message);
+    new Logger().logInformation(message);
+}
+
+export namespace traceDecorators {
+    export function verbose(message: string) {
+        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue);
+    }
+    export function error(message: string, ex?: Error) {
+        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Error);
+    }
+    export function info(message: string) {
+        return trace(message);
+    }
+    export function warn(message: string) {
+        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Warning);
+    }
 }
 function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any

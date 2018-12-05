@@ -12,6 +12,7 @@ import { ExtensionActivationService } from '../../client/activation/activationSe
 import {
     ExtensionActivators, FolderVersionPair,
     IExtensionActivationService, IExtensionActivator,
+    ILanguageServerCompatibilityService,
     ILanguageServerFolderService
 } from '../../client/activation/types';
 import {
@@ -23,9 +24,7 @@ import {
     IConfigurationService, IDisposableRegistry,
     IOutputChannel, IPythonSettings
 } from '../../client/common/types';
-import { Info as PlatformInfo } from '../../client/common/utils/platform';
 import { IServiceContainer } from '../../client/ioc/types';
-import * as testOSInfos from '../common/utils/platform.unit.test';
 
 suite('Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
@@ -36,6 +35,7 @@ suite('Activation - ActivationService', () => {
             let cmdManager: TypeMoq.IMock<ICommandManager>;
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let platformService: TypeMoq.IMock<IPlatformService>;
+            let lanagueServerSupportedService: TypeMoq.IMock<ILanguageServerCompatibilityService>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -49,7 +49,7 @@ suite('Activation - ActivationService', () => {
                     path: '',
                     version: new SemVer('1.2.3')
                 };
-
+                lanagueServerSupportedService = TypeMoq.Mock.ofType<ILanguageServerCompatibilityService>();
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -85,53 +85,36 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.verifyAll();
             }
 
-            const supportedTests: [string, PlatformInfo][] = [
-                ['win10', testOSInfos.WIN_10],
-                ['win7', testOSInfos.WIN_7],
-                ['high sierra', testOSInfos.MAC_HIGH_SIERRA],
-                ['sierra', testOSInfos.MAC_SIERRA],
-                ['ubuntu 18.04', testOSInfos.UBUNTU_BIONIC],
-                ['ubuntu 14.04', testOSInfos.UBUNTU_PRECISE],
-                ['fedora 24', testOSInfos.FEDORA],
-                ['arch', testOSInfos.ARCH]
-            ];
-            for (const [osID, info] of supportedTests) {
-                test(`LS is supported (${osID})`, async () => {
-                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                    platformService.setup(p => p.info).returns(() => info);
-                    const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                    const activationService = new ExtensionActivationService(serviceContainer.object);
-
-                    await testActivation(activationService, activator, true);
-                });
-            }
-
-            const unsupportedTests: [string, PlatformInfo][] = [
-                ['winXP', testOSInfos.WIN_XP],
-                ['el capitan', testOSInfos.MAC_EL_CAPITAN]
-            ];
-            for (const [osID, info] of unsupportedTests) {
-                test(`LS is not supported (${osID})`, async () => {
-                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                    platformService.setup(p => p.info).returns(() => info);
-                    const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                    const activationService = new ExtensionActivationService(serviceContainer.object);
-
-                    await testActivation(activationService, activator, false);
-                });
-            }
-
-            test('Activatory must be activated', async () => {
+            test('LS is supported', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+
+                await testActivation(activationService, activator, true);
+            });
+            test('LS is not supported', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(false));
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+
+                await testActivation(activationService, activator, false);
+            });
+
+            test('Activatory must be activated', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
 
                 await testActivation(activationService, activator);
             });
             test('Activatory must be deactivated', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
 
                 await testActivation(activationService, activator);
 
@@ -143,6 +126,7 @@ suite('Activation - ActivationService', () => {
                 activator.verifyAll();
             });
             test('Prompt user to reload VS Code and reload, when setting is toggled', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
                 let jediIsEnabledValueInSetting = jediIsEnabled;
                 workspaceService
@@ -153,7 +137,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -177,6 +161,7 @@ suite('Activation - ActivationService', () => {
                 cmdManager.verifyAll();
             });
             test('Prompt user to reload VS Code and do not reload, when setting is toggled', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
                 let jediIsEnabledValueInSetting = jediIsEnabled;
                 workspaceService
@@ -187,7 +172,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -211,6 +196,7 @@ suite('Activation - ActivationService', () => {
                 cmdManager.verifyAll();
             });
             test('Do not prompt user to reload VS Code when setting is not toggled', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -220,7 +206,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -243,6 +229,7 @@ suite('Activation - ActivationService', () => {
                 cmdManager.verifyAll();
             });
             test('Do not prompt user to reload VS Code when setting is not changed', async () => {
+                lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -252,7 +239,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);

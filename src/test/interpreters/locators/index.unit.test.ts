@@ -11,14 +11,13 @@ import { Uri } from 'vscode';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { Architecture, Info as PlatformInfo, OSType } from '../../../client/common/utils/platform';
+import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL_VIRTUAL_ENV_SERVICE, IInterpreterLocatorHelper, IInterpreterLocatorService, InterpreterType, KNOWN_PATH_SERVICE, PIPENV_SERVICE, PythonInterpreter, WINDOWS_REGISTRY_SERVICE, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let info: PlatformInfo;
     let platformSvc: TypeMoq.IMock<IPlatformService>;
     let helper: TypeMoq.IMock<IInterpreterLocatorHelper>;
     let locator: IInterpreterLocatorService;
@@ -43,8 +42,7 @@ suite('Interpreters - Locators Index', () => {
                 if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
                 }
-                info = new PlatformInfo(osType.value);
-                platformSvc.setup(p => p.info).returns(() => info);
+                platformSvc.setup(p => p.osType).returns(() => osType.value);
                 platformSvc.setup(p => p.isWindows).returns(() => osType.value === OSType.Windows);
                 platformSvc.setup(p => p.isLinux).returns(() => osType.value === OSType.Linux);
                 platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
@@ -101,8 +99,7 @@ suite('Interpreters - Locators Index', () => {
                 if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
                 }
-                info = new PlatformInfo(osType.value);
-                platformSvc.setup(p => p.info).returns(() => info);
+                platformSvc.setup(p => p.osType).returns(() => osType.value);
                 platformSvc.setup(p => p.isWindows).returns(() => osType.value === OSType.Windows);
                 platformSvc.setup(p => p.isLinux).returns(() => osType.value === OSType.Linux);
                 platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);

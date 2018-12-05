@@ -3,7 +3,7 @@
 
 import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
-import * as semver from 'semver';
+import { SemVer } from 'semver';
 import { Disposable } from 'vscode';
 import { Architecture, OSDistro, OSType } from '../utils/platform';
 
@@ -11,7 +11,7 @@ export const IPlatformInfo = Symbol('IPlatformInfo');
 export interface IPlatformInfo {
     readonly type: OSType;
     readonly architecture: Architecture;
-    readonly version: semver.SemVer;
+    readonly version: SemVer;
     readonly distro: OSDistro;
 
     matchPlatform(names: string): boolean;
@@ -29,15 +29,17 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
-    readonly info: IPlatformInfo;
+    readonly osType: OSType;
     readonly pathVariableName: 'Path' | 'PATH';
-    readonly virtualEnvBinName: 'bin' | 'scripts';
+    readonly virtualEnvBinName: 'bin' | 'Scripts';
 
     // convenience methods
     readonly isWindows: boolean;
     readonly isMac: boolean;
     readonly isLinux: boolean;
     readonly is64bit: boolean;
+    getOSDistro(): Promise<OSDistro>;
+    getVersion(): Promise<SemVer>;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;

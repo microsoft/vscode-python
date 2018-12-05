@@ -58,3 +58,7 @@ export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
 export interface IDownloadChannelRule {
   shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean>;
 }
+export const ILanguageServerCompatibilityService = Symbol('ILanguageServerCompatibilityService');
+export interface ILanguageServerCompatibilityService {
+  isSupported(): Promise<boolean>;
+}

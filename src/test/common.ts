@@ -172,14 +172,25 @@ function getPythonPath(): string {
  * @return true if the current OS matches one from the list, false otherwise.
  */
 export function isOs(...OSes: OSType[]): boolean {
-    const platform = require('../client/common/utils/platform') as typeof import('../client/common/utils/platform');
     // get current OS
-    const currentOS: OSType = platform.getOSType();
+    const currentOS: OSType = getOSType();
     // compare and return
     if (OSes.indexOf(currentOS) === -1) {
         return false;
     }
     return true;
+}
+
+export function getOSType(platform: string = process.platform): OSType {
+    if (/^win/.test(platform)) {
+        return OSType.Windows;
+    } else if (/^darwin/.test(platform)) {
+        return OSType.OSX;
+    } else if (/^linux/.test(platform)) {
+        return OSType.Linux;
+    } else {
+        return OSType.Unknown;
+    }
 }
 
 /**

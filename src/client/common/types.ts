@@ -144,7 +144,7 @@ export interface IPythonSettings {
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
-    readonly datascience : IDataScienceSettings;
+    readonly datascience: IDataScienceSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -360,11 +360,11 @@ export interface IEditorUtils {
 }
 
 export interface IDisposable {
-    dispose() : Promise<void> | undefined;
+    dispose(): Promise<void> | undefined;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry {
-    dispose() : Promise<void>;
-    push(disposable : IDisposable);
+    dispose(): Promise<void>;
+    push(disposable: IDisposable);
 }
