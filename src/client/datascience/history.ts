@@ -495,6 +495,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
+        let useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
@@ -502,7 +503,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             if (serverURI === Settings.JupyterServerLocalLaunch) {
                 serverURI = undefined;
             }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI);
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, useDefaultConfig);
 
             // If this is a restart, show our restart info
             if (restart) {

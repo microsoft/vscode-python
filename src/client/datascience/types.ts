@@ -45,7 +45,7 @@ export interface IJupyterExecution {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(uri?: string, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined>;
+    connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;

@@ -35,6 +35,8 @@ import {
 import { IServiceContainer } from '../ioc/types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { IConnection, IJupyterExecution, IJupyterKernelSpec, INotebookServer } from './types';
+import { captureTelemetry } from '../telemetry';
+import { Telemetry } from './constants';
 
 const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
 const NotebookCommand = 'notebook';
@@ -192,7 +194,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return Cancellation.race(() => this.isCommandSupported(KernelSpecCommand), cancelToken);
     }
 
-    public connectToNotebookServer = (uri?: string, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined> => {
+    public connectToNotebookServer = (uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined> => {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let connection: IConnection;
@@ -306,7 +308,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         };
     }
 
-    private startNotebookServer = async (cancelToken?: CancellationToken): Promise<{connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined}> => {
+    @captureTelemetry(Telemetry.StartJupyter)
+    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined}> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(NotebookCommand, cancelToken);
         if (!notebookCommand) {
@@ -319,8 +322,17 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const tempDir = await this.generateTempDir();
             this.disposableRegistry.push(tempDir);
 
-            // Use this temp file to generate a list of args for our command
-            const args: string [] = ['--no-browser', `--notebook-dir=${tempDir.path}`];
+            // In the temp dir, create an empty config python file. This is the same
+            // as starting jupyter with all of the defaults.
+            const configFile = useDefaultConfig ? path.join(tempDir.path, 'jupyter_notebook_config.py') : undefined;
+            if (configFile) {
+                await this.fileSystem.writeFile(configFile, {});
+            }
+
+            // Use this temp file and config file to generate a list of args for our command
+            const args: string [] = useDefaultConfig ?
+                ['--no-browser', `--notebook-dir=${tempDir.path}`, `--config=${configFile}`] :
+                ['--no-browser', `--notebook-dir=${tempDir.path}`];
 
             // Before starting the notebook process, make sure we generate a kernel spec
             const kernelSpec = await this.getMatchingKernelSpec();

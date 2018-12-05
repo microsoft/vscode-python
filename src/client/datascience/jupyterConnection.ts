@@ -12,6 +12,7 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { IConnection } from './types';
+import { JupyterConnectError } from './jupyterConnectError';
 
 const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
 const ForbiddenPatternRegEx = /Forbidden/;
@@ -40,6 +41,7 @@ class JupyterConnectionWaiter {
     private createConnection : (b: string, t: string, p: Disposable) => IConnection;
     private launchResult : ObservableExecutionResult<string>;
     private cancelToken : CancellationToken | undefined;
+    private stderr: string[] = [];
 
     constructor(
         launchResult : ObservableExecutionResult<string>,
@@ -78,6 +80,7 @@ class JupyterConnectionWaiter {
         // Listen on stderr for its connection information
         launchResult.out.subscribe((output : Output<string>) => {
             if (output.source === 'stderr') {
+                this.stderr.push(output.out);
                 this.extractConnectionInformation(output.out);
             } else {
                 this.output(output.out);
@@ -127,7 +130,7 @@ class JupyterConnectionWaiter {
                 url = new URL(urlMatch[0]);
             } catch (err) {
                 // Failed to parse the url either via server infos or the string
-                this.rejectStartPromise(new Error(localize.DataScience.jupyterLaunchNoURL()));
+                this.rejectStartPromise(localize.DataScience.jupyterLaunchNoURL());
                 return;
             }
 
@@ -152,13 +155,13 @@ class JupyterConnectionWaiter {
         // Look for 'Forbidden' in the result
         const forbiddenMatch = ForbiddenPatternRegEx.exec(data);
         if (forbiddenMatch && this.startPromise && !this.startPromise.resolved) {
-            this.rejectStartPromise(new Error(data.toString('utf8')));
+            this.rejectStartPromise(data.toString('utf8'));
         }
     }
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.rejectStartPromise(new Error(localize.DataScience.jupyterLaunchTimedOut()));
+            this.rejectStartPromise(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
 
@@ -168,9 +171,9 @@ class JupyterConnectionWaiter {
     }
 
     // tslint:disable-next-line:no-any
-    private rejectStartPromise = (reason?: any) => {
+    private rejectStartPromise = (message: string) => {
         clearTimeout(this.launchTimeout);
-        this.startPromise.reject(reason);
+        this.startPromise.reject(new JupyterConnectError(message, this.stderr.join('\n')));
     }
 
 }

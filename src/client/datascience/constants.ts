@@ -79,6 +79,7 @@ export namespace Telemetry {
     export const Interrupt = 'DATASCIENCE.INTERRUPT';
     export const ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE';
     export const ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT';
+    export const StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST';
 }
 
 export namespace HelpLinks {

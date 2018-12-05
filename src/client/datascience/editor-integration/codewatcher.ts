@@ -12,6 +12,7 @@ import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyterInstallError';
 import { ICodeWatcher, IHistoryProvider } from '../types';
+import { JupyterConnectError } from '../jupyterConnectError';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -154,7 +155,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     // tslint:disable-next-line:no-any
     private handleError = (err : any) => {
-        if ((<JupyterInstallError>err).actionTitle !== undefined) {
+        if (err instanceof JupyterInstallError) {
             const jupyterError = err as JupyterInstallError;
 
             // This is a special error that shows a link to open for more help

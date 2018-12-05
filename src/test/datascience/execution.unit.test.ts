@@ -343,7 +343,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupProcessServiceExec(service, workingPython.path, [getServerInfoPath], Promise.resolve({stdout: 'failure to get server infos'}));
         setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-        setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
     function setupMissingKernelProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr? : string[]) {
@@ -351,7 +351,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupProcessServiceExec(service, missingKernelPython.path, [getServerInfoPath], Promise.resolve({stdout: 'failure to get server infos'}));
         setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-        setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
     function setupPathProcessService(jupyterPath: string, service: TypeMoq.IMock<IProcessService>, notebookStdErr? : string[]) {
@@ -360,7 +360,7 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExec(service, jupyterPath, ['--version'], Promise.resolve({ stdout: '1.1.1.1'}));
         setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
         setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
 
         // WE also check for existence with just the key jupyter
         setupProcessServiceExec(service, 'jupyter', ['--version'], Promise.resolve({ stdout: '1.1.1.1'}));
@@ -419,7 +419,8 @@ suite('Jupyter Execution', async () => {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
             enabled: true,
-            jupyterServerURI: 'local'
+            jupyterServerURI: 'local',
+            useDefaultConfigForJupyter: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -458,24 +459,24 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
-        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(undefined, true), 'Should be able to start a server');
     }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(undefined, true), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 
     test('Failing others throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(undefined, true), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 
     test('Slow notebook startups throws exception', async () => {
         const execution = createExecution(workingPython, ['Failure']);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time');
+        await assert.isRejected(execution.connectToNotebookServer(undefined, true), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time\nFailure');
     }).timeout(10000);
 
     test('Other than active works', async () => {
@@ -506,7 +507,7 @@ suite('Jupyter Execution', async () => {
 
     test('Kernelspec is deleted on exit', async () => {
         const execution = createExecution(missingKernelPython);
-        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(undefined, true), 'Should be able to start a server');
         cleanupDisposables();
         const exists = fs.existsSync(workingKernelSpec);
         assert.notOk(exists, 'Temp kernel spec still exists');
@@ -518,6 +519,6 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(undefined, true), 'Should be able to start a server');
     }).timeout(10000);
 });

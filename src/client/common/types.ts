@@ -268,6 +268,7 @@ export interface IDataScienceSettings {
     enabled: boolean;
     jupyterLaunchTimeout: number;
     jupyterServerURI: string;
+    useDefaultConfigForJupyter: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

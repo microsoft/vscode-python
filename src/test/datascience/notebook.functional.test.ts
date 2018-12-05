@@ -30,17 +30,20 @@ import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { IPythonExecutionService, IPythonExecutionFactory, IProcessServiceFactory } from '../../client/common/process/types';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
+    let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
     });
 
     teardown(async () => {
@@ -142,7 +145,7 @@ suite('Jupyter notebook tests', () => {
         runTest('MimeTypes', async () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const server = await jupyterExecution.connectToNotebookServer();
+            const server = await jupyterExecution.connectToNotebookServer(undefined, true);
             if (!server) {
                 assert.fail('Server not created');
             }
@@ -172,7 +175,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     runTest('Creation', async () => {
-        const server = await jupyterExecution.connectToNotebookServer();
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
         if (!server) {
             assert.fail('Server not created');
         }
@@ -188,7 +191,7 @@ suite('Jupyter notebook tests', () => {
         ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         return assertThrows(async () => {
-            await jupyterExecution.connectToNotebookServer();
+            await jupyterExecution.connectToNotebookServer(undefined, true);
         }, 'Server start is not throwing');
     });
 
@@ -233,12 +236,12 @@ suite('Jupyter notebook tests', () => {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
 
         return assertThrows(async () => {
-            await jupyterExecution.connectToNotebookServer();
+            await jupyterExecution.connectToNotebookServer(undefined, true);
         }, 'Server start is not throwing');
     });
 
     runTest('Export/Import', async () => {
-        const server = await jupyterExecution.connectToNotebookServer();
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
         if (!server) {
             assert.fail('Server not created');
         }
@@ -270,7 +273,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Restart kernel', async () => {
-        const server = await jupyterExecution.connectToNotebookServer();
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
         if (!server) {
             assert.fail('Server not created');
         }
@@ -327,7 +330,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Interrupt kernel', async () => {
-        const server = await jupyterExecution.connectToNotebookServer();
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
         if (!server) {
             assert.fail('Server not created');
         }
@@ -449,6 +452,35 @@ plt.show()`,
             }
         ]
     );
+
+    async function generateNonDefaultConfig() {
+        const usable = await jupyterExecution.getUsableJupyterPython();
+        assert.ok(usable, 'Cant find jupyter enabled python');
+
+        // Manually generate an invalid jupyter config
+        const procService = await processFactory.create();
+        const results = await procService.exec(usable.path, ['jupyter', 'notebook', '--generate-config', '-y']);
+
+        // Results should have our path to the config.
+        const match = /^.*\s+(.*jupyter_notebook_config.py)\s+.*$/m.exec(results.stdout);
+        assert.ok(match && match != null && match.length > 0, 'Jupyter is not outputting the path to the config');
+        const configPath = match[1];
+        const fs = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
+        await fs.writeFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
+    }
+
+    runTest('Non default config fails', async () => {
+        await generateNonDefaultConfig();
+        chai.assert.isRejected(jupyterExecution.connectToNotebookServer(undefined, false), 'Should not be able to connect to notebook server with bad config');
+    });
+
+    runTest('Non default config does not mess up default config', async () => {
+        await generateNonDefaultConfig();
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
+        assert.ok(server, 'Never connected to a default server with a bad default config');
+
+        await verifySimple(server, 'a=1\r\na', 1);
+    });
 
     // Tests that should be running:
     // - Creation
