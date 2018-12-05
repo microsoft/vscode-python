@@ -1026,8 +1026,8 @@
                 },
                 "python.dataScience.useDefaultConfigForJupyter": {
                     "type": "boolean",
-                    "default": "true",
-                    "description": "When running jupyter locally, create a default empty Jupyter config for the Python Interactive window",
+                    "default": true,
+                    "description": "When running Jupyter locally, create a default empty Jupyter config for the Python Interactive window",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
