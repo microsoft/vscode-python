@@ -202,7 +202,8 @@ suite('History command listener', async () => {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
             enabled: true,
-            jupyterServerURI: ''
+            jupyterServerURI: '',
+            useDefaultConfigForJupyter: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

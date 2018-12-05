@@ -202,7 +202,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // If our uri is undefined or if it's set to local launch we need to launch a server locally
             if (!uri) {
-                const launchResults = await this.startNotebookServer(cancelToken);
+                const launchResults = await this.startNotebookServer(useDefaultConfig, cancelToken);
                 if (launchResults) {
                     connection = launchResults.connection;
                     kernelSpec = launchResults.kernelSpec;

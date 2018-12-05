@@ -194,8 +194,11 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private async exportCellsWithOutput(ranges: {range: Range; title: string}[], document: TextDocument, file: string, cancelToken: CancellationToken) : Promise<void> {
         let server: INotebookServer | undefined;
         try {
+            const settings = this.configuration.getSettings();
+            let useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+
             // Try starting a server.
-            server = await this.jupyterExecution.connectToNotebookServer(undefined, cancelToken);
+            server = await this.jupyterExecution.connectToNotebookServer(undefined, useDefaultConfig, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {

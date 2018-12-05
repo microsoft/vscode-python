@@ -86,7 +86,7 @@ export function captureTelemetry(
                     .catch(ex => {
                         // tslint:disable-next-line:no-any
                         sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties);
-                        return Promise.reject(ex);
+                        return ex;
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
