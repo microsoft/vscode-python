@@ -3,11 +3,13 @@
 'use strict';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
+import { workspace } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
-import { IDisposableRegistry } from '../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -39,6 +41,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution) {
 
         this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -49,9 +52,24 @@ export class JupyterImporter implements INotebookImporter {
     public importFromFile = async (file: string) : Promise<string> => {
         const template = await this.templatePromise;
 
+        // If the user has requested it, add a cd command to the imported file so that relative paths still work
+        const settings = this.configuration.getSettings();
+        let directoryChange: string;
+        if (settings.datascience.changeDirOnImportExport) {
+           directoryChange = this.calculateDirectoryChange(file); 
+        }
+
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            return this.jupyterExecution.importNotebook(file, template);
+            //return this.jupyterExecution.importNotebook(file, template);
+            // IANHU: check to return back the promise here instead of await
+            let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
+            if(directoryChange) {
+                return this.addDirectoryChange(fileOutput, directoryChange);
+                //return fileOutput;
+            } else {
+                return fileOutput;
+            }
         }
 
         throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
@@ -60,6 +78,42 @@ export class JupyterImporter implements INotebookImporter {
     public dispose = () => {
         this.isDisposed = true;
         this.settingsChangedDiposable.dispose();
+    }
+
+    private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
+        // IANHU: Pull out this as constant
+        // IANHU: Newlines per OS?
+        const newCode = `#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataSciece.changeDirOnImportExport setting
+import os
+try:
+    os.chdir(os.path.join(os.getcwd(), '${directoryChange}'))
+    print(os.getcwd())
+except:
+    # No failure for attempted directory switch
+    pass
+`
+
+        return newCode.concat(pythonOutput);
+    }
+
+    // When importing a file, calculate if we can create a %cd so that the relative paths work
+    // IANHU: Unit test here
+    private calculateDirectoryChange = (notebookFile: string): string => {
+        let directoryChange: string;
+        const notebookFilePath = path.dirname(notebookFile);
+        // First see if we have a workspace open, this only works if we have a workspace root to be relative to
+        if (workspace && workspace.workspaceFolders.length > 0) {
+            const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+
+            // Make sure that we have everything that we need here
+            // IANHU: Absolute checks needed?
+            if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                directoryChange = path.relative(workspacePath, notebookFilePath);
+            }
+        }
+
+
+        return directoryChange;
     }
 
     private createTemplateFile = async () : Promise<string> => {

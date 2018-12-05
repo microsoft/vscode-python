@@ -423,9 +423,13 @@ export class History implements IWebPanelMessageListener, IHistory {
                 // IANHU: Remove constant and refactor this out into a sub-function
                 if (fileRoot) {
                     if(fileRoot === 'WORKSPACE') {
-                        if (workspace.workspaceFolders.length > 0) {
+                        if (workspace && workspace.workspaceFolders.length > 0) {
                             const filePath = workspace.workspaceFolders[0].uri.fsPath;
                             workingDir = filePath;
+                        } else {
+                            // We don't have a path from the settings and we don't have a current workspace
+                            // so instead just use the location of the file 
+                            // IANHU: pass in the indicator here to use file path. Just undefined?
                         }
                     } else {
                        if (path.isAbsolute(fileRoot)) {

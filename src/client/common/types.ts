@@ -269,6 +269,7 @@ export interface IDataScienceSettings {
     jupyterLaunchTimeout: number;
     jupyterServerURI: string;
     notebookFileRoot: string;
+    changeDirOnImportExport: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
