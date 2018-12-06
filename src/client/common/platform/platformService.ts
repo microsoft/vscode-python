@@ -40,6 +40,9 @@ export class PlatformService implements IPlatformService {
     }
     @traceDecorators.verbose('Get Platform Version')
     public async getVersion(): Promise<SemVer> {
+        if (this.version) {
+            return this.version;
+        }
         switch (this.osType) {
             case OSType.Windows:
             case OSType.OSX:
@@ -48,17 +51,15 @@ export class PlatformService implements IPlatformService {
                 // Using os.relase() we get the darwin release #.
                 try {
                     const ver = coerce(os.release());
-                    if (!ver) {
-                        throw new Error('Unable to parse version');
+                    if (ver) {
+                        return this.version = ver;
                     }
+                    throw new Error('Unable to parse version');
                 } catch (ex) {
                     traceError(`Failed to parse Version ${os.release()}`, ex);
                     return parseVersion(os.release());
                 }
             default:
-                if (this.version) {
-                    return this.version;
-                }
                 const result = await getLinuxDistro();
                 this.distro = result[0];
                 this.version = result[1];
