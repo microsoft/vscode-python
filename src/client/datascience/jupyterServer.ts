@@ -161,6 +161,14 @@ export class JupyterServer implements INotebookServer, IDisposable {
         return deferred.promise;
     }
 
+    public setInitialDirectory = async (file: string): Promise<void> => {
+        // If we launched local and have no working directory call this on add code to change directory
+        if (!this.workingDir && this.connInfo.localLaunch) {
+            await this.changeDirectoryIfPossible(path.dirname(file));
+            this.workingDir = path.dirname(file);
+        }
+    }
+
     public executeObservable = (code: string, file: string, line: number) : Observable<ICell[]> => {
         // If we have a session, execute the code now.
         if (this.session) {

@@ -27,7 +27,7 @@ import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/t
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, HistoryMessages, Settings, Telemetry } from './constants';
+import { CodeSnippits, EditorContexts, HistoryMessages, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterImporter } from './jupyterImporter';
 import {
@@ -120,6 +120,10 @@ export class History implements IWebPanelMessageListener, IHistory {
             await this.addInitialSysInfo();
 
             if (this.jupyterServer) {
+                // Before we try to execute code make sure that we have an initial directory set
+                // Normally set via the workspace, but we might not have one here if loading a single loose file
+                await this.jupyterServer.setInitialDirectory(file);
+
                 // Attempt to evaluate this cell in the jupyter notebook
                 const observable = this.jupyterServer.executeObservable(code, file, line);
 
@@ -519,16 +523,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         const changeDirectory = JupyterImporter.calculateDirectoryChange(file, false);
 
         if (changeDirectory) {
-            const exportChangeDirectory = `# Change directory to VSCode workspace root so that relative path loads work correctly. 
-# Turn this addition off with the DataSciece.changeDirOnImportExport setting
-try:
-    import os
-    os.chdir(os.path.join(os.getcwd(), '${changeDirectory}'))
-    print(os.getcwd())
-except:
-    # No failure for attempted directory switch
-    pass
-`
+            const exportChangeDirectory = CodeSnippits.ChangeDirectory.format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
             const cell: ICell = {
                 data: {
                     source: exportChangeDirectory,

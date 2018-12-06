@@ -89,3 +89,7 @@ export namespace HelpLinks {
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
 }
+
+export namespace CodeSnippits {
+    export const ChangeDirectory = "{0}import os\r\ntry:\r\n\tos.chdir(os.path.join(os.getcwd(), '{1}'))\r\n\tprint(os.getcwd())\r\nexcept:\r\n\t# No failure for attempted directory switch\r\n\tpass\r\n";
+}

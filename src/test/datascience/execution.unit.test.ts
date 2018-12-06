@@ -77,6 +77,9 @@ class MockJupyterServer implements INotebookServer {
     public waitForIdle(): Promise<void> {
         throw new Error('Method not implemented');
     }
+    public setInitialDirectory(file: string): Promise<void> {
+        throw new Error('Method not implemented');
+    }
     public shutdown() {
         noop();
     }

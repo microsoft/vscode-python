@@ -13,6 +13,7 @@ import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
+import { CodeSnippits } from './constants';
 import { IJupyterExecution, INotebookImporter } from './types';
 
 @injectable()
@@ -78,21 +79,11 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = `#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataSciece.changeDirOnImportExport setting
-import os
-try:
-    os.chdir(os.path.join(os.getcwd(), '${directoryChange}'))
-    print(os.getcwd())
-except:
-    # No failure for attempted directory switch
-    pass
-`
-
+        const newCode = CodeSnippits.ChangeDirectory.format(localize.DataScience.importChangeDirectoryComment(), directoryChange);
         return newCode.concat(pythonOutput);
     }
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
-    // IANHU: Unit test here
     public static calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
         let directoryChange: string;
         const notebookFilePath = path.dirname(notebookFile);
