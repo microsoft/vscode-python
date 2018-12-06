@@ -33,7 +33,7 @@ Press Enter to close. . .''')
             raw_input()
         except NameError:
             input()
-        sys.exit(1)
+        os._exit(1)
 
 
 def run(cwd, testRunner, args):
@@ -53,7 +53,7 @@ def run(cwd, testRunner, args):
         else:
             import nose
             nose.run(argv=args)
-        sys.exit(0)
+        os._exit(0)
     finally:
         pass
 
