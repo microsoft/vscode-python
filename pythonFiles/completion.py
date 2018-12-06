@@ -34,7 +34,7 @@ class JediCompletion(object):
 
     def __init__(self):
         self.default_sys_path = sys.path
-        self.environment = jedi.api.environment.Environment(sys.executable)
+        self.environment = jedi.api.environment.Environment(sys.prefix, sys.executable)
         self._input = io.open(sys.stdin.fileno(), encoding='utf-8')
         if (os.path.sep == '/') and (platform.uname()[2].find('Microsoft') > -1):
             # WSL; does not support UNC paths
