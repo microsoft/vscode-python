@@ -243,7 +243,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Export/Import', async () => {
-        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, 'C:\\testdir');
         if (!server) {
             assert.fail('Server not created');
         }
@@ -254,17 +254,27 @@ suite('Jupyter notebook tests', () => {
 
         // Translate this into a notebook
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
-        const notebook = await exporter.translateToNotebook(cells);
+        const notebook = await exporter.translateToNotebook(cells, 'c:\\newdir');
         assert.ok(notebook, 'Translate to notebook is failing');
+
+        // Make sure we added in our chdir
+        const firstCellText: string = notebook['cells'][0]['source'] as string;
+        assert.ok(firstCellText.includes('os.chdir'));
 
         // Save to a temp file
         const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
         const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
         const temp = await fileSystem.createTemporaryFile('.ipynb');
-        try {
+
+
+
+        try { 
             await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
             // Try importing this. This should verify export works and that importing is possible
             const results = await importer.importFromFile(temp.filePath);
+
+            // Make sure we added a chdir into our results
+            assert.ok(results.includes('os.chdir'));
 
             // Make sure we have a cell in our results
             assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
@@ -432,7 +442,9 @@ a`,
             },
             {
                 code:
-                    `df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+                    `import numpy as np
+import pandas as pd
+df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'code',
@@ -457,7 +469,9 @@ df.head()`,
             {
                 // Test relative directories too.
                 code:
-                    `df = pd.read_csv("./DefaultSalesReport.csv")
+                    `import numpy as np
+import pandas as pd
+df = pd.read_csv("./DefaultSalesReport.csv")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'code',

@@ -66,7 +66,7 @@ export interface INotebookImporter extends Disposable {
 
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
-    translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
+    translateToNotebook(cells: ICell[], directoryChange?: string) : Promise<JSONObject | undefined>;
 }
 
 export const IHistoryProvider = Symbol('IHistoryProvider');

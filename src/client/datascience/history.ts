@@ -482,12 +482,13 @@ export class History implements IWebPanelMessageListener, IHistory {
     private exportToFile = async (cells: ICell[], file : string) => {
         // Take the list of cells, convert them to a notebook json format and write to disk
         if (this.jupyterServer) {
+            let directoryChange;
             const settings = this.configuration.getSettings();
             if (settings.datascience.changeDirOnImportExport) {
-                cells = this.addDirectoryChangeCell(cells, file); 
+                directoryChange = file;
             }
 
-            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
 
             try {
                 // tslint:disable-next-line: no-any
@@ -519,30 +520,30 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
-    private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
-        const changeDirectory = JupyterImporter.calculateDirectoryChange(file, false);
+    //private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
+        //const changeDirectory = JupyterImporter.calculateDirectoryChange(file, false);
 
-        if (changeDirectory) {
-            const exportChangeDirectory = CodeSnippits.ChangeDirectory.format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
-            const cell: ICell = {
-                data: {
-                    source: exportChangeDirectory,
-                    cell_type: 'code',
-                    outputs: [],
-                    metadata: {},
-                    execution_count: 0
-                },
-                id: uuid(),
-                file: '',
-                line: 0,
-                state: CellState.finished
-            };
+        //if (changeDirectory) {
+            //const exportChangeDirectory = CodeSnippits.ChangeDirectory.format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
+            //const cell: ICell = {
+                //data: {
+                    //source: exportChangeDirectory,
+                    //cell_type: 'code',
+                    //outputs: [],
+                    //metadata: {},
+                    //execution_count: 0
+                //},
+                //id: uuid(),
+                //file: '',
+                //line: 0,
+                //state: CellState.finished
+            //};
 
-            return [cell,...cells];
-        } else {
-            return cells;
-        }
-    }
+            //return [cell,...cells];
+        //} else {
+            //return cells;
+        //}
+    //}
 
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server

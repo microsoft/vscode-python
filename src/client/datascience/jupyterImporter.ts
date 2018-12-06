@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { workspace } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
-
+import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
@@ -15,6 +15,7 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { CodeSnippits } from './constants';
 import { IJupyterExecution, INotebookImporter } from './types';
+import { WorkspaceService } from '../common/application/workspace';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -43,7 +44,8 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution) {
+        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
         this.templatePromise = this.createTemplateFile();
@@ -57,7 +59,7 @@ export class JupyterImporter implements INotebookImporter {
         const settings = this.configuration.getSettings();
         let directoryChange: string;
         if (settings.datascience.changeDirOnImportExport) {
-           directoryChange = JupyterImporter.calculateDirectoryChange(file, true); 
+           directoryChange = this.calculateDirectoryChange(file, true); 
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
@@ -84,26 +86,22 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
-    public static calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
+    private calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
         let directoryChange: string;
         const notebookFilePath = path.dirname(notebookFile);
         // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-        if (workspace && workspace.workspaceFolders.length > 0) {
-            const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+        if (this.workspaceService && this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {
+            const workspacePath = this.workspaceService.workspaceFolders[0].uri.fsPath;
 
             // Make sure that we have everything that we need here
             if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
-                if (workspaceRelative) {
-                    directoryChange = path.relative(workspacePath, notebookFilePath);
-                } else {
-                    directoryChange = path.relative(notebookFilePath, workspacePath);
-                }
+                directoryChange = path.relative(workspacePath, notebookFilePath);
             }
         }
 
         // If path.relative can't calculate a relative path, then it just returns the full second path
         // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
-        if (!path.isAbsolute(directoryChange)) {
+        if (directoryChange && !path.isAbsolute(directoryChange)) {
             return directoryChange;
         } else {
             return undefined;

@@ -3,25 +3,35 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
+import * as uuid from 'uuid/v4';
 
+import * as path from 'path';
+import { IWorkspaceService } from '../common/application/types';
 import { ILogger } from '../common/types';
+import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { RegExpValues } from './constants';
-import { ICell, IJupyterExecution, INotebookExporter, ISysInfo } from './types';
+import { CodeSnippits, RegExpValues } from './constants';
+import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from './types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
 
     constructor(
         @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
-        @inject(ILogger) private logger: ILogger) {
+        @inject(ILogger) private logger: ILogger,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
     }
 
     public dispose() {
         noop();
     }
 
-    public async translateToNotebook(cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> {
+    public async translateToNotebook(cells: ICell[], changeDirectory?: string) : Promise<nbformat.INotebookContent | undefined> {
+        // If requested, add in a change directory cell to fix relative paths
+        if (changeDirectory) {
+            cells = this.addDirectoryChangeCell(cells, changeDirectory);
+        }
+
         // First compute our python version number
         const pythonNumber = await this.extractPythonMainVersion(cells);
 
@@ -50,6 +60,54 @@ export class JupyterExporter implements INotebookExporter {
             nbformat_minor: 2,
             metadata: metadata
         };
+    }
+
+    // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
+    private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
+        const changeDirectory = this.calculateDirectoryChange(file, false);
+
+        if (changeDirectory) {
+            const exportChangeDirectory = CodeSnippits.ChangeDirectory.format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
+            const cell: ICell = {
+                data: {
+                    source: exportChangeDirectory,
+                    cell_type: 'code',
+                    outputs: [],
+                    metadata: {},
+                    execution_count: 0
+                },
+                id: uuid(),
+                file: '',
+                line: 0,
+                state: CellState.finished
+            };
+
+            return [cell,...cells];
+        } else {
+            return cells;
+        }
+    }
+
+    private calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
+        let directoryChange: string;
+        const notebookFilePath = path.dirname(notebookFile);
+        // First see if we have a workspace open, this only works if we have a workspace root to be relative to
+        if (this.workspaceService && this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {
+            const workspacePath = this.workspaceService.workspaceFolders[0].uri.fsPath;
+
+            // Make sure that we have everything that we need here
+            if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                directoryChange = path.relative(notebookFilePath, workspacePath);
+            }
+        }
+
+        // If path.relative can't calculate a relative path, then it just returns the full second path
+        // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
+        if (directoryChange && !path.isAbsolute(directoryChange)) {
+            return directoryChange;
+        } else {
+            return undefined;
+        }
     }
 
     private pruneCells = (cells : ICell[]) : nbformat.IBaseCell[] => {
