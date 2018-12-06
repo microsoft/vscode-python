@@ -32,6 +32,16 @@
     "python.command.python.datascience.importnotebook.title": "Import Jupyter Notebook",
     "python.command.python.datascience.importnotebookonfile.title": "Import Jupyter Notebook",
     "python.command.python.enableSourceMapSupport.title": "Enable source map support for extension debugging",
+    "python.command.python.datascience.exportoutputasnotebook.title": "Export Python Interactive window as Jupyter Notebook",
+    "python.command.python.datascience.exportfileasnotebook.title": "Export current Python file as Jupyter Notebook",
+    "python.command.python.datascience.exportfileandoutputasnotebook.title": "Run current Python file and export as Jupyter Notebook",
+    "python.command.python.datascience.undocells.title": "Undo last Python Interactive action",
+    "python.command.python.datascience.redocells.title": "Redo last Python Interactive action",
+    "python.command.python.datascience.removeallcells.title": "Delete all Python Interactive cells",
+    "python.command.python.datascience.interruptkernel.title": "Interrupt iPython Kernel",
+    "python.command.python.datascience.restartkernel.title": "Restart iPython Kernel",
+    "python.command.python.datascience.expandallcells.title": "Expand all Python Interactive cells",
+    "python.command.python.datascience.collapseallcells.title": "Collapse all Python Interactive cells",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "Debug a Python Program with Standard Output",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
@@ -119,5 +129,8 @@
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
     "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
     "diagnostics.enableSourceMapsAndReloadVSC": "Enable and reload Window",
-    "DataScience.interruptKernel": "Interrupt iPython Kernel"
+    "DataScience.interruptKernel": "Interrupt iPython Kernel",
+    "DataScience.exportingFormat" : "Exporting {0}",
+    "DataScience.exportCancel" : "Cancel",
+    "Common.canceled" : "Canceled"
 }

@@ -15,6 +15,10 @@ export namespace Diagnostics {
     export const enableSourceMapsAndReloadVSC = localize('diagnostics.enableSourceMapsAndReloadVSC', 'Enable and reload Window.');
 }
 
+export namespace Common {
+    export const canceled = localize('Common.canceled', 'Canceled');
+}
+
 export namespace LanguageServiceSurveyBanner {
     export const bannerMessage = localize('LanguageServiceSurveyBanner.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?');
     export const bannerLabelYes = localize('LanguageServiceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
@@ -61,6 +65,7 @@ export namespace DataScience {
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
+    export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 
     export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');
@@ -90,6 +95,7 @@ export namespace DataScience {
     export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `iPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
     export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a iPython kernel spec and none are available for use');
     export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt iPython Kernel');
+    export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

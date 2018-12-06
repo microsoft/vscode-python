@@ -120,5 +120,5 @@ async def fill_in_licenses(requested_projects):
                 failures[name] = details
             else:
                 details.license = license_or_exc
-            print(".", end="", flush=True)
+            print("⬡", end="", flush=True)
     return failures

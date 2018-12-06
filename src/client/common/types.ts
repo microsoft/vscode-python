@@ -270,6 +270,7 @@ export interface IDataScienceSettings {
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;
+    useDefaultConfigForJupyter: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

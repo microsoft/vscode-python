@@ -55,7 +55,8 @@ export function sendTelemetryEvent(eventName: string, durationMs?: { [key: strin
 export function captureTelemetry(
     eventName: string,
     properties?: TelemetryProperties,
-    captureDuration: boolean = true
+    captureDuration: boolean = true,
+    failureEventName?: string
 ) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
@@ -84,8 +85,8 @@ export function captureTelemetry(
                     // tslint:disable-next-line:promise-function-async
                     .catch(ex => {
                         // tslint:disable-next-line:no-any
-                        sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
-                        return Promise.reject(ex);
+                        sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties);
+                        return ex;
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);

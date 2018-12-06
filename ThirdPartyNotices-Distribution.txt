@@ -197,7 +197,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 190. labella 1.1.4 (https://registry.npmjs.org/labella/-/labella-1.1.4.tgz)
 191. leaflet 1.3.4 (https://registry.npmjs.org/leaflet/-/leaflet-1.3.4.tgz)
 192. line-by-line 0.1.6 (https://registry.npmjs.org/line-by-line/-/line-by-line-0.1.6.tgz)
-193. lodash 4.17.5 (https://registry.npmjs.org/lodash/-/lodash-4.17.5.tgz)
+193. lodash 4.17.11 (https://registry.npmjs.org/lodash/-/lodash-4.17.11.tgz)
 194. lodash.clonedeep 4.5.0 (https://registry.npmjs.org/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz)
 195. lodash.curry 4.1.1 (https://registry.npmjs.org/lodash.curry/-/lodash.curry-4.1.1.tgz)
 196. lodash.flatten 4.4.0 (https://registry.npmjs.org/lodash.flatten/-/lodash.flatten-4.4.0.tgz)
@@ -6189,7 +6189,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =========================================
 END OF line-by-line NOTICES AND INFORMATION
 
-%% lodash 4.17.5 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/lodash/-/lodash-4.17.5.tgz)
+%% lodash 4.17.11 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/lodash/-/lodash-4.17.11.tgz)
 =========================================
 Copyright JS Foundation and other contributors <https://js.foundation/>
 

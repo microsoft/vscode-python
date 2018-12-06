@@ -4,25 +4,33 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Contents, ContentsManager, Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import {
+    Contents,
+    ContentsManager,
+    Kernel,
+    KernelMessage,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
-import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger, IConfigurationService } from '../common/types';
+import { Cancellation, CancellationError } from '../common/cancellation';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import {
-    IInterpreterService
-} from '../interpreter/contracts';
-import { RegExpValues } from './constants';
-import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, ISysInfo } from './types';
+import { IInterpreterService } from '../interpreter/contracts';
+import { generateCells } from './cellFactory';
+import { concatMultilineString } from './common';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -43,14 +51,14 @@ export class JupyterServer implements INotebookServer, IDisposable {
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private configuration: IConfigurationService) {
+        @inject(IConfigurationService) private configuration: IConfigurationService,
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
         this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, workingDir?: string) : Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
@@ -80,7 +88,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         };
 
         // Start a new session
-        this.session = await this.sessionManager.startNew(options);
+        this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
 
         // Setup our start time. We reject anything that comes in before this time during execute
         this.sessionStartTime = Date.now();
@@ -89,8 +97,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         await this.session.kernel.ready;
 
         // Run our initial setup and plot magics
-        await this.initialNotebookSetup();
-
+        await this.initialNotebookSetup(cancelToken);
     }
 
     public shutdown = () => {
@@ -127,7 +134,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         return Promise.resolve([]);
     }
 
-    public execute(code : string, file: string, line: number) : Promise<ICell[]> {
+    public execute(code : string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -146,6 +153,10 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 deferred.resolve(output);
             });
 
+        if (cancelToken) {
+            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+        }
+
         // Wait for the execution to finish
         return deferred.promise;
     }
@@ -153,31 +164,19 @@ export class JupyterServer implements INotebookServer, IDisposable {
     public executeObservable = (code: string, file: string, line: number) : Observable<ICell[]> => {
         // If we have a session, execute the code now.
         if (this.session) {
+            // Generate our cells ahead of time
+            const cells = generateCells(code, file, line);
 
-            // Replace windows line endings with unix line endings.
-            const copy = code.replace(/\r\n/g, '\n');
-
-            // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
-            const split = copy.split('\n');
-            const firstLine = split[0];
-            if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
-                // We have at least one markdown. We might have to split it if there any lines that don't begin
-                // with #
-                const firstNonMarkdown = split.findIndex((l : string) => l.trim().length > 0 && !l.trim().startsWith('#'));
-                if (firstNonMarkdown >= 0) {
-                    // We need to combine results
-                    return this.combineObservables(
-                        this.executeMarkdownObservable(split.slice(0, firstNonMarkdown).join('\n'), file, line),
-                        this.executeCodeObservable(split.slice(firstNonMarkdown).join('\n'), file, line + firstNonMarkdown));
-                } else {
-                    // Just a normal markdown case
-                    return this.combineObservables(
-                        this.executeMarkdownObservable(copy, file, line));
-                }
-            } else {
-                // Normal code case
+            // Might have more than one (markdown might be split)
+            if (cells.length > 1) {
+                // We need to combine results
                 return this.combineObservables(
-                    this.executeCodeObservable(copy, file, line));
+                    this.executeMarkdownObservable(cells[0]),
+                    this.executeCodeObservable(cells[1]));
+            } else if (cells.length > 0) {
+                // Either markdown or or code
+                return this.combineObservables(
+                    cells[0].data.cell_type === 'code' ? this.executeCodeObservable(cells[0]) : this.executeMarkdownObservable(cells[0]));
             }
         }
 
@@ -188,8 +187,14 @@ export class JupyterServer implements INotebookServer, IDisposable {
         });
     }
 
-    public executeSilently = (code: string) : Promise<void> => {
+    public executeSilently = (code: string, cancelToken?: CancellationToken) : Promise<void> => {
         return new Promise((resolve, reject) => {
+
+            // If we cancel, reject our promise
+            if (cancelToken) {
+                this.disposableRegistry.push(cancelToken.onCancellationRequested(() => reject(new CancellationError())));
+            }
+
             // If we have a session, execute the code now.
             if (this.session) {
                 // Generate a new request and resolve when it's done.
@@ -241,69 +246,11 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
     public interruptKernel = () : Promise<void> => {
         if (this.session && this.session.kernel) {
-            // Update our start time so we don't keep sending responses
-            this.sessionStartTime = Date.now();
-
             // Interrupt whatever is happening
             return this.session.kernel.interrupt();
         }
 
         return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
-    }
-
-    public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
-        const pythonVersion = await this.extractPythonMainVersion(cells);
-
-        // Use this to build our metadata object
-        const metadata : nbformat.INotebookMetadata = {
-            language_info: {
-                name: 'python',
-                codemirror_mode: {
-                    name: 'ipython',
-                    version: pythonVersion
-                }
-            },
-            orig_nbformat : 2,
-            file_extension: '.py',
-            mimetype: 'text/x-python',
-            name: 'python',
-            npconvert_exporter: 'python',
-            pygments_lexer: `ipython${pythonVersion}`,
-            version: pythonVersion
-        };
-
-        // Combine this into a JSON object
-        return {
-            cells: this.pruneCells(cells),
-            nbformat: 4,
-            nbformat_minor: 2,
-            metadata: metadata
-        };
-    }
-
-    private extractPythonMainVersion = async (cells: ICell[]): Promise<number> => {
-        let pythonVersion;
-        const sysInfoCells = cells.filter((targetCell: ICell) => {
-           return targetCell.data.cell_type === 'sys_info';
-        });
-
-        if (sysInfoCells.length > 0) {
-            const sysInfo = sysInfoCells[0].data as ISysInfo;
-            const fullVersionString = sysInfo.version;
-            if (fullVersionString) {
-                pythonVersion = fullVersionString.substr(0, fullVersionString.indexOf('.'));
-                return Number(pythonVersion);
-            }
-        }
-
-        this.logger.logInformation('Failed to find python main version from sys_info cell');
-        // In this case, let's check the version on the active interpreter
-        const interpreter = await this.interpreterService.getActiveInterpreter();
-        if (interpreter && interpreter.version_info) {
-            return interpreter.version_info[0];
-        } else {
-            return 0;
-        }
     }
 
     private shutdownSessionAndConnection = () => {
@@ -351,12 +298,12 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     // Set up our initial plotting and imports
-    private initialNotebookSetup = async () => {
+    private initialNotebookSetup = async (cancelToken?: CancellationToken) => {
         // When we start our notebook initial, change to our workspace or user specified root directory
         if (this.connInfo && this.connInfo.localLaunch && this.workingDir) {
             await this.changeDirectoryIfPossible(this.workingDir);
         }
-        
+
         // Check for dark theme, if so set matplot lib to use dark_background settings
         let darkTheme: boolean = false;
         const workbench = this.workspaceService.getConfiguration('workbench');
@@ -368,43 +315,13 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
 
         this.executeSilently(
-            `%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+            `%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`,
+            cancelToken
         ).ignoreErrors();
     }
 
     private timeout(ms : number) : Promise<number> {
         return new Promise(resolve => setTimeout(resolve, ms, ms));
-    }
-
-    private pruneCells = (cells : ICell[]) : nbformat.IBaseCell[] => {
-        // First filter out sys info cells. Jupyter doesn't understand these
-        return cells.filter(c => c.data.cell_type !== 'sys_info')
-            // Then prune each cell down to just the cell data.
-            .map(this.pruneCell);
-    }
-
-    private pruneCell = (cell : ICell) : nbformat.IBaseCell => {
-        // Remove the #%% of the top of the source if there is any. We don't need
-        // this to end up in the exported ipynb file.
-        const copy = {...cell.data};
-        copy.source = this.pruneSource(cell.data.source);
-        return copy;
-    }
-
-    private pruneSource = (source : nbformat.MultilineString) : nbformat.MultilineString => {
-
-        if (Array.isArray(source) && source.length > 0) {
-            if (RegExpValues.PythonCellMarker.test(source[0])) {
-                return source.slice(1);
-            }
-        } else {
-            const array = source.toString().split('\n').map(s => `${s}\n`);
-            if (array.length > 0 && RegExpValues.PythonCellMarker.test(array[0])) {
-                return array.slice(1);
-            }
-        }
-
-        return source;
     }
 
     private combineObservables = (...args : Observable<ICell>[]) : Observable<ICell[]> => {
@@ -438,31 +355,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
         });
     }
 
-    private appendLineFeed(arr : string[], modifier? : (s : string) => string) {
-        return arr.map((s: string, i: number) => {
-            const out = modifier ? modifier(s) : s;
-            return i === arr.length - 1 ? `${out}` : `${out}\n`;
-        });
-    }
-
-    private executeMarkdownObservable = (code: string, file: string, line: number) : Observable<ICell> => {
-
+    private executeMarkdownObservable = (cell: ICell) : Observable<ICell> => {
+        // Markdown doesn't need any execution
         return new Observable<ICell>(subscriber => {
-            // Generate markdown by stripping out the comment and markdown header
-            const markdown = this.appendLineFeed(code.split('\n').slice(1), s => s.trim().slice(1).trim());
-
-            const cell: ICell = {
-                id: uuid(),
-                file: file,
-                line: line,
-                state: CellState.finished,
-                data : {
-                    cell_type : 'markdown',
-                    source: markdown,
-                    metadata: {}
-                }
-            };
-
             subscriber.next(cell);
             subscriber.complete();
         });
@@ -474,11 +369,11 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
     }
 
-    private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
+    private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell) => {
         // Generate a new request if we still can
         if (this.sessionStartTime && startTime > this.sessionStartTime) {
 
-            const request = this.generateRequest(code, false);
+            const request = this.generateRequest(concatMultilineString(cell.data.source), false);
 
             // tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -495,7 +390,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
                         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                             this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
                         } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg, cell);
                         } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                             this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
                         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
@@ -512,7 +407,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
                         }
 
                         // Show our update if any new output
-                        subscriber.next(cell);
+                        if (this.sessionStartTime && startTime > this.sessionStartTime) {
+                            subscriber.next(cell);
+                        }
                     } catch (err) {
                         // If not a restart error, then tell the subscriber
                         if (this.sessionStartTime && startTime > this.sessionStartTime) {
@@ -549,23 +446,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
     }
 
-    private executeCodeObservable(code: string, file: string, line: number) : Observable<ICell> {
+    private executeCodeObservable(cell: ICell) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
-            // Start out empty;
-            const cell: ICell = {
-                data: {
-                    source: this.appendLineFeed(code.split('\n')),
-                    cell_type: 'code',
-                    outputs: [],
-                    metadata: {},
-                    execution_count: 0
-                },
-                id: uuid(),
-                file: file,
-                line: line,
-                state: CellState.init
-            };
-
             // Keep track of when we started.
             const startTime = Date.now();
 
@@ -575,15 +457,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
             // Attempt to change to the current directory. When that finishes
             // send our real request
-            //this.changeDirectoryIfPossible(file, line)
-                //.then(() => {
-                    //this.handleCodeRequest(subscriber, startTime, cell, code);
-                //})
-                //.catch(() => {
-                    //// Ignore errors if they occur. Just execute normally
-                    //this.handleCodeRequest(subscriber, startTime, cell, code);
-                //});
-            this.handleCodeRequest(subscriber, startTime, cell, code);
+            this.handleCodeRequest(subscriber, startTime, cell);
         });
     }
 
@@ -601,11 +475,17 @@ export class JupyterServer implements INotebookServer, IDisposable {
         cell.data.execution_count = msg.content.execution_count;
     }
 
-    private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, cell: ICell) {
         if (msg.content.execution_state === 'busy') {
             this.onStatusChangedEvent.fire(true);
         } else {
             this.onStatusChangedEvent.fire(false);
+        }
+
+        // Status change to idle generally means we finished. Not sure how to
+        // make sure of this. Maybe only bother if an in
+        if (msg.content.execution_state === 'idle' && cell.state !== CellState.error) {
+            cell.state = CellState.finished;
         }
     }
 

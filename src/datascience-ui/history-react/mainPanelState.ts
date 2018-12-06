@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { nbformat } from '@jupyterlab/coreutils';
+
+import { concatMultilineString } from '../../client/datascience/common';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
-import { Cell, ICellViewModel } from './cell';
+import { ICellViewModel } from './cell';
 
 export interface IMainPanelState {
     cellVMs: ICellViewModel[];
@@ -35,7 +35,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
         source = source.slice(1);
     }
 
-    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(source) : '';
+    const inputText = inputCell.data.cell_type === 'code' ? concatMultilineString(source) : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }

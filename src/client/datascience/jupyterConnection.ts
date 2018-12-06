@@ -2,14 +2,16 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
-import { Disposable } from 'vscode-jsonrpc';
+import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 
+import { CancellationError } from '../common/cancellation';
 import { IFileSystem } from '../common/platform/types';
 import { ObservableExecutionResult, Output } from '../common/process/types';
 import { IConfigurationService, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
+import { JupyterConnectError } from './jupyterConnectError';
 import { IConnection } from './types';
 
 const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
@@ -35,22 +37,31 @@ class JupyterConnectionWaiter {
     private logger: ILogger;
     private fileSystem: IFileSystem;
     private notebook_dir: string;
-    private getServerInfo : () => Promise<JupyterServerInfo[] | undefined>;
+    private getServerInfo : (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>;
     private createConnection : (b: string, t: string, p: Disposable) => IConnection;
     private launchResult : ObservableExecutionResult<string>;
+    private cancelToken : CancellationToken | undefined;
+    private stderr: string[] = [];
 
     constructor(
         launchResult : ObservableExecutionResult<string>,
         notebookFile: string,
-        getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
+        getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         createConnection: (b: string, t: string, p: Disposable) => IConnection,
-        serviceContainer: IServiceContainer) {
+        serviceContainer: IServiceContainer,
+        cancelToken?: CancellationToken) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.logger = serviceContainer.get<ILogger>(ILogger);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
         this.getServerInfo = getServerInfo;
         this.createConnection = createConnection;
         this.launchResult = launchResult;
+        this.cancelToken = cancelToken;
+
+        // Cancel our start promise if a cancellation occurs
+        if (cancelToken) {
+            cancelToken.onCancellationRequested(() => this.startPromise.reject(new CancellationError()));
+        }
 
         // Compute our notebook dir
         this.notebook_dir = path.dirname(notebookFile);
@@ -69,12 +80,12 @@ class JupyterConnectionWaiter {
         // Listen on stderr for its connection information
         launchResult.out.subscribe((output : Output<string>) => {
             if (output.source === 'stderr') {
+                this.stderr.push(output.out);
                 this.extractConnectionInformation(output.out);
             } else {
                 this.output(output.out);
             }
         });
-
     }
 
     public waitForConnection() : Promise<IConnection> {
@@ -119,7 +130,7 @@ class JupyterConnectionWaiter {
                 url = new URL(urlMatch[0]);
             } catch (err) {
                 // Failed to parse the url either via server infos or the string
-                this.rejectStartPromise(new Error(localize.DataScience.jupyterLaunchNoURL()));
+                this.rejectStartPromise(localize.DataScience.jupyterLaunchNoURL());
                 return;
             }
 
@@ -136,7 +147,7 @@ class JupyterConnectionWaiter {
 
         if (httpMatch && this.notebook_dir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
             // .then so that we can keep from pushing aync up to the subscribed observable function
-            this.getServerInfo().then(serverInfos => {
+            this.getServerInfo(this.cancelToken).then(serverInfos => {
                 this.getJupyterURL(serverInfos, data);
             }).ignoreErrors();
         }
@@ -144,13 +155,13 @@ class JupyterConnectionWaiter {
         // Look for 'Forbidden' in the result
         const forbiddenMatch = ForbiddenPatternRegEx.exec(data);
         if (forbiddenMatch && this.startPromise && !this.startPromise.resolved) {
-            this.rejectStartPromise(new Error(data.toString('utf8')));
+            this.rejectStartPromise(data.toString('utf8'));
         }
     }
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.rejectStartPromise(new Error(localize.DataScience.jupyterLaunchTimedOut()));
+            this.rejectStartPromise(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
 
@@ -160,9 +171,9 @@ class JupyterConnectionWaiter {
     }
 
     // tslint:disable-next-line:no-any
-    private rejectStartPromise = (reason?: any) => {
+    private rejectStartPromise = (message: string) => {
         clearTimeout(this.launchTimeout);
-        this.startPromise.reject(reason);
+        this.startPromise.reject(new JupyterConnectError(message, this.stderr.join('\n')));
     }
 
 }
@@ -182,9 +193,10 @@ export class JupyterConnection implements IConnection {
 
     public static waitForConnection(
         notebookFile: string,
-        getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
+        getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         notebookExecution : ObservableExecutionResult<string>,
-        serviceContainer: IServiceContainer) {
+        serviceContainer: IServiceContainer,
+        cancelToken?: CancellationToken) {
 
         // Create our waiter. It will sit here and wait for the connection information from the jupyter process starting up.
         const waiter = new JupyterConnectionWaiter(
@@ -192,7 +204,8 @@ export class JupyterConnection implements IConnection {
             notebookFile,
             getServerInfo,
             (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, processDisposable),
-            serviceContainer);
+            serviceContainer,
+            cancelToken);
 
         return waiter.waitForConnection();
     }
