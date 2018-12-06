@@ -30,12 +30,12 @@ export const PackageNames = {
 export class LanguageServerPackageService implements ILanguageServerPackageService {
     public maxMajorVersion: number = maxMajorVersion;
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) { }
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(IPlatformService) private readonly platform: IPlatformService) { }
     public getNugetPackageName(): string {
-        const plaform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-        switch (plaform.osType) {
+        switch (this.platform.osType) {
             case OSType.Windows: {
-                return PackageNames[plaform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit];
+                return PackageNames[this.platform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit];
             }
             case OSType.OSX: {
                 return PackageNames[PlatformName.Mac64Bit];

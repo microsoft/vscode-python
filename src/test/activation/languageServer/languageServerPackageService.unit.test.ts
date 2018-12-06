@@ -20,7 +20,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
 const downloadBaseFileName = 'Python-Language-Server';
 
-suite('Language Server Package Service', () => {
+suite('Languagex', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
     let lsPackageService: LanguageServerPackageService;
@@ -28,9 +28,8 @@ suite('Language Server Package Service', () => {
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object);
+        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
         lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
     function setMinVersionOfLs(version: string) {

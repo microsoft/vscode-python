@@ -11,7 +11,7 @@ import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { OSDistro } from '../../../../client/common/utils/platform';
 import { parseVersion } from '../../../../client/common/utils/version';
 
-suite('DOT.NETx', () => {
+suite('DOT.NET', () => {
     suite('Linux', () => {
         async function testSupport(distro: OSDistro, expectedValueForIsSupported: boolean, version?: string) {
             const platformService = mock(PlatformService);
