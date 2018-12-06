@@ -13,7 +13,6 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
@@ -30,6 +29,13 @@ export const rootWorkspaceUri = getWorkspaceRoot();
 export const PYTHON_PATH = getPythonPath();
 
 export const IS_64_BIT = arch() === 'x64';
+
+export enum OSType {
+    Unknown = 'Unknown',
+    Windows = 'Windows',
+    OSX = 'OSX',
+    Linux = 'Linux'
+}
 
 export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.lintOnSave' |
