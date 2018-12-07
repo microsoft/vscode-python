@@ -145,7 +145,8 @@ suite('Jupyter notebook tests', () => {
         runTest('MimeTypes', async () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const server = await jupyterExecution.connectToNotebookServer(undefined, true);
+            const mimeTestDir = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience');
+            const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, mimeTestDir);
             if (!server) {
                 assert.fail('Server not created');
             }
@@ -243,7 +244,8 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Export/Import', async () => {
-        const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, 'C:\\testdir');
+        const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience','WorkspaceDir');
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, testFolderPath);
         if (!server) {
             assert.fail('Server not created');
         }
@@ -254,7 +256,8 @@ suite('Jupyter notebook tests', () => {
 
         // Translate this into a notebook
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
-        const notebook = await exporter.translateToNotebook(cells, 'c:\\newdir');
+        const newFolderPath = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience','WorkspaceDir','WorkspaceSubDir','foo.ipynb');
+        const notebook = await exporter.translateToNotebook(cells, newFolderPath);
         assert.ok(notebook, 'Translate to notebook is failing');
 
         // Make sure we added in our chdir
@@ -265,8 +268,6 @@ suite('Jupyter notebook tests', () => {
         const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
         const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
         const temp = await fileSystem.createTemporaryFile('.ipynb');
-
-
 
         try { 
             await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
@@ -347,7 +348,8 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Interrupt kernel', async () => {
-        const server = await jupyterExecution.connectToNotebookServer(undefined, true);
+        const interrTestDir = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience');
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, interrTestDir);
         if (!server) {
             assert.fail('Server not created');
         }
@@ -442,6 +444,14 @@ a`,
             },
             {
                 code:
+                    `df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df.head()`,
+                mimeType: 'text/html',
+                cellType: 'error',
+                verifyValue: (d) => assert.equal(d, `module 'pandas' has no attribute 'read'`, 'Unexpected error result')
+            },
+            {
+                code:
                     `import numpy as np
 import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -449,14 +459,6 @@ df.head()`,
                 mimeType: 'text/html',
                 cellType: 'code',
                 verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
-            },
-            {
-                code:
-                    `df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
-df.head()`,
-                mimeType: 'text/html',
-                cellType: 'error',
-                verifyValue: (d) => assert.equal(d, `module 'pandas' has no attribute 'read'`, 'Unexpected error result')
             },
             {
                 code:

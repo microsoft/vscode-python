@@ -373,7 +373,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
     private changeDirectoryIfPossible = async (directory: string) : Promise<void> => {
         if(this.connInfo.localLaunch && await fs.pathExists(directory)) {
-            await this.executeSilently(`%cd "${directory}`);
+            await this.executeSilently(`%cd "${directory}"`);
         }
     }
 

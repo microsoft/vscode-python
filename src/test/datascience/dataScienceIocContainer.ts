@@ -15,6 +15,7 @@ import {
 } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
+import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -204,13 +205,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         workspaceService.setup(w => w.createFileSystemWatcher(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
             return new MockFileSystemWatcher();
         });
-        //workspaceService
-        //.setup(w => w.hasWorkspaceFolders)
-        //.returns(() => false);
         workspaceService
         .setup(w => w.hasWorkspaceFolders)
         .returns(() => true);
-        const workspaceFolder = this.createMoqWorkspaceFolder('C:\\testdir');
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience','WorkspaceDir');
+        const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         workspaceService
         .setup(w => w.workspaceFolders)
         .returns(() => [workspaceFolder]);
