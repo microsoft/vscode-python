@@ -583,11 +583,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const spec = specs[i];
             let score = 0;
 
-            if (spec && spec.path.length > 0 && info && spec.path === info.path) {
+            if (spec && spec.path && spec.path.length > 0 && info && spec.path === info.path) {
                 // Path match
                 score += 10;
             }
-            if (spec && spec.language.toLocaleLowerCase() === 'python') {
+            if (spec && spec.language && spec.language.toLocaleLowerCase() === 'python') {
                 // Language match
                 score += 1;
 
@@ -610,7 +610,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                             }
                         }
                     }
-                } else if (info && info.version_info && spec && spec.path.toLocaleLowerCase() === 'python') {
+                } else if (info && info.version_info && spec && spec.path && spec.path.toLocaleLowerCase() === 'python') {
                     // This should be our current python.
 
                     // Search for a digit on the end of the name. It should match our major version
