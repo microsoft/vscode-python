@@ -208,7 +208,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         workspaceService
         .setup(w => w.hasWorkspaceFolders)
         .returns(() => true);
-        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir');
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         workspaceService
         .setup(w => w.workspaceFolders)

@@ -3,6 +3,7 @@
 'use strict';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
 import { Disposable } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../common/application/types';
@@ -79,7 +80,7 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = CodeSnippits.ChangeDirectory.format(localize.DataScience.importChangeDirectoryComment(), directoryChange);
+        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.importChangeDirectoryComment(), directoryChange);
         return newCode.concat(pythonOutput);
     }
 
@@ -88,8 +89,8 @@ export class JupyterImporter implements INotebookImporter {
         let directoryChange: string | undefined;
         const notebookFilePath = path.dirname(notebookFile);
         // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-        if (this.workspaceService && this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {
-            const workspacePath = this.workspaceService.workspaceFolders[0].uri.fsPath;
+        if (this.workspaceService.hasWorkspaceFolders) {
+            const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
 
             // Make sure that we have everything that we need here
             if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {

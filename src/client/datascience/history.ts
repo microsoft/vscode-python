@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn, workspace } from 'vscode';
+import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import {
@@ -17,7 +17,8 @@ import {
     IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
-    IWebPanelProvider
+    IWebPanelProvider,
+    IWorkspaceService
 } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
@@ -69,7 +70,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(INotebookExporter) private jupyterExporter: INotebookExporter) {
+        @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         // Sign up for configuration changes
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -121,7 +123,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             if (this.jupyterServer) {
                 // Before we try to execute code make sure that we have an initial directory set
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
-                await this.jupyterServer.setInitialDirectory(file);
+                await this.jupyterServer.setInitialDirectory(path.dirname(file));
 
                 // Attempt to evaluate this cell in the jupyter notebook
                 const observable = this.jupyterServer.executeObservable(code, file, line);
@@ -491,30 +493,17 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             try {
                 // tslint:disable-next-line: no-any
-                await fs.writeFile(file, JSON.stringify(notebook), {encoding: 'utf8', flag: 'w'});
+                await this.fileSystem.writeFile(file, JSON.stringify(notebook), {encoding: 'utf8', flag: 'w'});
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str : string | undefined) => {
-                    if (str && file && this.jupyterServer) {
+                    if (str && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
                         this.jupyterExecution.spawnNotebook(file).ignoreErrors();
                     }
                 });
             } catch (exc) {
+                this.logger.logError('Error in exporting notebook file');
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
             }
-
-            try {
-                // tslint:disable-next-line: no-any
-                await fs.writeFile(file, JSON.stringify(notebook), { encoding: 'utf8', flag: 'w' });
-                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
-                    if (str && file && this.jupyterServer) {
-                        // If the user wants to, open the notebook they just generated.
-                        this.jupyterExecution.spawnNotebook(file).ignoreErrors();
-                    }
-                });
-            } catch (exc) {
-                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
-            }
-
         }
     }
 
@@ -530,7 +519,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             if (serverURI === Settings.JupyterServerLocalLaunch) {
                 serverURI = undefined;
 
-                workingDir = this.calculateWorkingDirectory();
+                workingDir = await this.calculateWorkingDirectory();
             }
             this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, useDefaultConfig, undefined, workingDir);
 
@@ -546,7 +535,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     // Calculate the working directory that we should move into when starting up our Jupyter server locally
-    private calculateWorkingDirectory = (): string | undefined =>
+    private calculateWorkingDirectory = async (): Promise<string | undefined> =>
     {
         let workingDir: string | undefined;
         // For a local launch calculate the working directory that we should switch into
@@ -555,14 +544,26 @@ export class History implements IWebPanelMessageListener, IHistory {
 
         // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
         // so only do this setting if we actually have a valid workspace open
-        if (fileRoot && workspace.workspaceFolders) {
+        if (fileRoot && this.workspaceService.hasWorkspaceFolders) {
+            const workspaceFolderPath = this.workspaceService.workspaceFolders![0].uri.fsPath;
             if (path.isAbsolute(fileRoot)) {
-                workingDir = fileRoot;
-            } else {
-                if (workspace.workspaceFolders.length > 0) {
-                    const filePath = workspace.workspaceFolders[0].uri.fsPath;
-                    workingDir = path.join(filePath, fileRoot);
+                if (await this.fileSystem.directoryExists(fileRoot)) {
+                    // User setting is absolute and exists, use it
+                    workingDir = fileRoot;
+                } else {
+                    // User setting is absolute and doesn't exist, use workspace
+                    workingDir = workspaceFolderPath;
                 }
+            } else {
+               // fileRoot is a relative path, combine it with the workspace folder
+               const combinedPath = path.join(workspaceFolderPath, fileRoot);
+               if (await this.fileSystem.directoryExists(combinedPath)) {
+                   // combined path exists, use it
+                   workingDir = combinedPath;
+               } else {
+                   // Combined path doesn't exist, use workspace
+                   workingDir = workspaceFolderPath;
+               }
             }
         }
         return workingDir;

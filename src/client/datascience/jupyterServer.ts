@@ -15,7 +15,6 @@ import {
 } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as vscode from 'vscode';
@@ -158,11 +157,11 @@ export class JupyterServer implements INotebookServer, IDisposable {
         return deferred.promise;
     }
 
-    public setInitialDirectory = async (file: string): Promise<void> => {
+    public setInitialDirectory = async (directory: string): Promise<void> => {
         // If we launched local and have no working directory call this on add code to change directory
         if (!this.workingDir && this.connInfo && this.connInfo.localLaunch) {
-            await this.changeDirectoryIfPossible(path.dirname(file));
-            this.workingDir = path.dirname(file);
+            await this.changeDirectoryIfPossible(directory);
+            this.workingDir = directory;
         }
     }
 

@@ -39,7 +39,7 @@ export interface INotebookServer extends Disposable {
     waitForIdle() : Promise<void>;
     shutdown();
     interruptKernel() : Promise<void>;
-    setInitialDirectory(file: string): Promise<void>;
+    setInitialDirectory(directory: string): Promise<void>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');

@@ -230,7 +230,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // Try to connect to our jupyter process
                 const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
                 this.disposableRegistry.push(result);
-                await result.connect(connection, kernelSpec, undefined, workingDir);
+                await result.connect(connection, kernelSpec, cancelToken, workingDir);
                 return result;
             } catch (err) {
                 // Something else went wrong

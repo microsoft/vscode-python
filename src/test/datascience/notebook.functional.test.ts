@@ -244,14 +244,14 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Export/Import', async () => {
-        const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir');
+        const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, testFolderPath);
         if (!server) {
             assert.fail('Server not created');
         }
 
         // Get a bunch of test cells (use our test cells from the react controls)
-        const testState = generateTestState(id => { return; });
+        const testState = generateTestState(id => { return; }, testFolderPath);
         const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook
@@ -449,11 +449,14 @@ a`,
             },
             {
                 code:
-                    `df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+                    `import numpy as np
+import pandas as pd
+df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'error',
-                verifyValue: (d) => assert.equal(d, `module 'pandas' has no attribute 'read'`, 'Unexpected error result')
+                // tslint:disable-next-line:quotemark
+                verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
             },
             {
                 code:
