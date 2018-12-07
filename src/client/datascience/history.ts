@@ -518,32 +518,6 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
-    //private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
-        //const changeDirectory = JupyterImporter.calculateDirectoryChange(file, false);
-
-        //if (changeDirectory) {
-            //const exportChangeDirectory = CodeSnippits.ChangeDirectory.format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
-            //const cell: ICell = {
-                //data: {
-                    //source: exportChangeDirectory,
-                    //cell_type: 'code',
-                    //outputs: [],
-                    //metadata: {},
-                    //execution_count: 0
-                //},
-                //id: uuid(),
-                //file: '',
-                //line: 0,
-                //state: CellState.finished
-            //};
-
-            //return [cell,...cells];
-        //} else {
-            //return cells;
-        //}
-    //}
-
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
