@@ -23,11 +23,10 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../common/application/types';
 import { Cancellation, CancellationError } from '../common/cancellation';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { IInterpreterService } from '../interpreter/contracts';
 import { generateCells } from './cellFactory';
 import { concatMultilineString } from './common';
 import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
@@ -51,8 +50,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
         this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
@@ -372,7 +369,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     private changeDirectoryIfPossible = async (directory: string) : Promise<void> => {
-        if(this.connInfo.localLaunch && await fs.pathExists(directory)) {
+        if (this.connInfo && this.connInfo.localLaunch && await fs.pathExists(directory)) {
             await this.executeSilently(`%cd "${directory}"`);
         }
     }

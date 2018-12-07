@@ -145,7 +145,7 @@ suite('Jupyter notebook tests', () => {
         runTest('MimeTypes', async () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const mimeTestDir = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience');
+            const mimeTestDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
             const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, mimeTestDir);
             if (!server) {
                 assert.fail('Server not created');
@@ -244,7 +244,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Export/Import', async () => {
-        const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience','WorkspaceDir');
+        const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir');
         const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, testFolderPath);
         if (!server) {
             assert.fail('Server not created');
@@ -256,20 +256,25 @@ suite('Jupyter notebook tests', () => {
 
         // Translate this into a notebook
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
-        const newFolderPath = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience','WorkspaceDir','WorkspaceSubDir','foo.ipynb');
+        const newFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir', 'WorkspaceSubDir', 'foo.ipynb');
         const notebook = await exporter.translateToNotebook(cells, newFolderPath);
         assert.ok(notebook, 'Translate to notebook is failing');
 
         // Make sure we added in our chdir
-        const firstCellText: string = notebook['cells'][0]['source'] as string;
-        assert.ok(firstCellText.includes('os.chdir'));
+        if (notebook) {
+            const nbcells = notebook['cells'];
+            if (nbcells) {
+                const firstCellText: string = nbcells[0]['source'] as string;
+                assert.ok(firstCellText.includes('os.chdir'));
+            }
+        }
 
         // Save to a temp file
         const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
         const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
         const temp = await fileSystem.createTemporaryFile('.ipynb');
 
-        try { 
+        try {
             await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
             // Try importing this. This should verify export works and that importing is possible
             const results = await importer.importFromFile(temp.filePath);
@@ -348,7 +353,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Interrupt kernel', async () => {
-        const interrTestDir = path.join(EXTENSION_ROOT_DIR, 'src','test','datascience');
+        const interrTestDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, interrTestDir);
         if (!server) {
             assert.fail('Server not created');

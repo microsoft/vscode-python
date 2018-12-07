@@ -27,9 +27,8 @@ import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/t
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { CodeSnippits, EditorContexts, HistoryMessages, Settings, Telemetry } from './constants';
+import { EditorContexts, HistoryMessages, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
-import { JupyterImporter } from './jupyterImporter';
 import {
     CellState,
     ICell,
@@ -549,7 +548,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        let workingDir: string;
+        let workingDir: string | undefined;
         const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
@@ -573,9 +572,9 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     // Calculate the working directory that we should move into when starting up our Jupyter server locally
-    private calculateWorkingDirectory = (): string =>
+    private calculateWorkingDirectory = (): string | undefined =>
     {
-        let workingDir: string;
+        let workingDir: string | undefined;
         // For a local launch calculate the working directory that we should switch into
         const settings = this.configuration.getSettings();
         const fileRoot = settings.datascience.notebookFileRoot;

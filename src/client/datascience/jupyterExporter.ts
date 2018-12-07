@@ -64,7 +64,7 @@ export class JupyterExporter implements INotebookExporter {
 
     // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
     private addDirectoryChangeCell = (cells: ICell[], file: string): ICell[] => {
-        const changeDirectory = this.calculateDirectoryChange(file, false);
+        const changeDirectory = this.calculateDirectoryChange(file);
 
         if (changeDirectory) {
             const exportChangeDirectory = CodeSnippits.ChangeDirectory.format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
@@ -82,14 +82,14 @@ export class JupyterExporter implements INotebookExporter {
                 state: CellState.finished
             };
 
-            return [cell,...cells];
+            return [cell, ...cells];
         } else {
             return cells;
         }
     }
 
-    private calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
-        let directoryChange: string;
+    private calculateDirectoryChange = (notebookFile: string): string | undefined => {
+        let directoryChange: string | undefined;
         const notebookFilePath = path.dirname(notebookFile);
         // First see if we have a workspace open, this only works if we have a workspace root to be relative to
         if (this.workspaceService && this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {

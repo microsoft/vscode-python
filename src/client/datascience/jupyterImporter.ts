@@ -4,7 +4,6 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { workspace } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
@@ -15,7 +14,6 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { CodeSnippits } from './constants';
 import { IJupyterExecution, INotebookImporter } from './types';
-import { WorkspaceService } from '../common/application/workspace';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -57,14 +55,14 @@ export class JupyterImporter implements INotebookImporter {
 
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
-        let directoryChange: string;
+        let directoryChange: string | undefined;
         if (settings.datascience.changeDirOnImportExport) {
-           directoryChange = this.calculateDirectoryChange(file, true); 
+           directoryChange = this.calculateDirectoryChange(file);
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
+            const fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
             if (directoryChange) {
                 return this.addDirectoryChange(fileOutput, directoryChange);
             } else {
@@ -86,8 +84,8 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
-    private calculateDirectoryChange = (notebookFile: string, workspaceRelative: boolean): string => {
-        let directoryChange: string;
+    private calculateDirectoryChange = (notebookFile: string): string | undefined => {
+        let directoryChange: string | undefined;
         const notebookFilePath = path.dirname(notebookFile);
         // First see if we have a workspace open, this only works if we have a workspace root to be relative to
         if (this.workspaceService && this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length > 0) {
