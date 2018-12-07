@@ -93,7 +93,7 @@ export class JupyterExporter implements INotebookExporter {
     }
 
     // When we export we want to our change directory back to the first real file that we saw run from any workspace folder
-    private firstWorkspaceFile = async (cells: ICell[]): Promise<string | undefined> => {
+    private firstWorkspaceFolder = async (cells: ICell[]): Promise<string | undefined> => {
         for (const cell of cells) {
            const filename = cell.file;
 
@@ -117,7 +117,7 @@ export class JupyterExporter implements INotebookExporter {
         const notebookFilePath = path.dirname(notebookFile);
         // First see if we have a workspace open, this only works if we have a workspace root to be relative to
         if (this.workspaceService.hasWorkspaceFolders) {
-            const workspacePath = await this.firstWorkspaceFile(cells);
+            const workspacePath = await this.firstWorkspaceFolder(cells);
 
             // Make sure that we have everything that we need here
             if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
