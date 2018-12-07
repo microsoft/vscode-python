@@ -1,18 +1,14 @@
 parameters:
   name: 'VirtualEnv_Tests_Windows_py37'
-  PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
-  PoolName: 'Hosted VS2017'
-  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
-  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
-  MOCHA_REPORTER_JUNIT: true
-  RunHygiene: true
-  UploadBinary: false
   AzureStorageAccountName: 'vscodepythonci'
   AzureStorageContainerName: 'vscode-python-ci'
+  PoolName: 'Hosted VS2017'
   EnvironmentExecutableFolder: 'Scripts'
-  DIRECTORY_FOR_VIRTUAL_ENVS: './envPaths.json'
+  ENV_PATHS_LOCATION: './src/tmp/envPaths.json'
+  TEST_FILES_SUFFIX: 'testvirtualenvs'
+  TestSuiteName: 'testSingleWorkspace'
 
 jobs:
 - job: ${{ parameters.name }}
@@ -25,17 +21,12 @@ jobs:
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
-    mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
-    MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
-    MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
-    MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
-    runHygiene: ${{ parameters.RunHygiene }}
-    uploadBinary: ${{ parameters.UploadBinary }}
     azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
     azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
-    plaform: ${{ parameters.Platform }}
     environmentExecutableFolder: ${{ parameters.EnvironmentExecutableFolder }}
-    DIRECTORY_FOR_VIRTUAL_ENVS: ${{ parameters.DIRECTORY_FOR_VIRTUAL_ENVS }}
+    ENV_PATHS_LOCATION: ${{ parameters.ENV_PATHS_LOCATION }}
+    TEST_FILES_SUFFIX: ${{ parameters.TEST_FILES_SUFFIX }}
+    TestSuiteName: ${{ parameters.TestSuiteName }}
 
   steps:
     - bash: echo REQUESTED VARIABLE VALUES
@@ -93,31 +84,11 @@ jobs:
 
 
     - bash: |
-       echo "#Adds the virtual environment's executable path to json file
-
-       import json,sys
-       import os.path
-       key = sys.argv[1]
-
-       if os.path.isfile('$(DIRECTORY_FOR_VIRTUAL_ENVS)'):
-           with open('$(DIRECTORY_FOR_VIRTUAL_ENVS)', 'r') as read_file:
-               data = json.load(read_file)
-       else:
-           with open('$(DIRECTORY_FOR_VIRTUAL_ENVS)', 'w+') as read_file:
-               data = {}
-       with open('$(DIRECTORY_FOR_VIRTUAL_ENVS)', 'w') as outfile:
-           data[key] = sys.executable
-           json.dump(data, outfile, sort_keys=True, indent=4)" > addEnvPath.py
-
-      displayName: 'Create Environment paths adder'
-
-
-    - bash: |
        pip install pipenv
 
-       pipenv run python addEnvPath.py pipenv
+       pipenv run python ./build/ci/addEnvPath.py pipenvPath
 
-       cat $(DIRECTORY_FOR_VIRTUAL_ENVS)
+       cat $(ENV_PATHS_LOCATION)
 
       displayName: 'Create pipenv environment'
 
@@ -125,9 +96,9 @@ jobs:
     - bash: |
        python -m venv .venv
 
-       .venv/$(environmentExecutableFolder)/python addEnvPath.py venv
+       .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py venvPath
 
-       cat $(DIRECTORY_FOR_VIRTUAL_ENVS)
+       cat $(ENV_PATHS_LOCATION)
 
       displayName: 'Create venv environment'
 
@@ -137,25 +108,56 @@ jobs:
 
        python -m virtualenv .virtualenv
 
-       .virtualenv/$(environmentExecutableFolder)/python addEnvPath.py virtualenv
+       .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py virtualEnvPath
 
-       cat $(DIRECTORY_FOR_VIRTUAL_ENVS)
+       cat $(ENV_PATHS_LOCATION)
 
       displayName: 'Create virtualenv environment'
 
 
-    - task: CondaEnvironment@1
-      displayName: 'Create conda environment '
+    # - task: CondaEnvironment@1
+    #   displayName: 'Create conda environment '
+    #   inputs:
+    #     packageSpecs: 'python=3.7'
+
+
+    # - bash: |
+    #    python ./build/ci/addEnvPath.py conda
+
+    #    source deactivate
+
+    #    cat $(ENV_PATHS_LOCATION)
+
+    #   displayName: 'Save conda environment executable'
+
+
+    - task: Npm@1
+      displayName: 'update npm'
       inputs:
-        packageSpecs: 'python=3.7'
+        command: custom
+
+        verbose: true
+
+        customCommand: 'install -g npm@$(NpmVersion)'
 
 
-    - bash: |
-       python addEnvPath.py conda
+    - task: Npm@1
+      displayName: 'npm ci'
+      inputs:
+        command: custom
 
-       source deactivate
+        verbose: true
 
-       cat $(DIRECTORY_FOR_VIRTUAL_ENVS)
+        customCommand: ci
 
-      displayName: 'Save conda environment executable'
+
+    - task: Npm@1
+      displayName: 'run $(TestSuiteName)'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: 'run $(TestSuiteName)'
+
 

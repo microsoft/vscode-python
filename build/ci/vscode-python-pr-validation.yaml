@@ -23,13 +23,13 @@ jobs:
     PythonVersion: '3.7'
     NodeVersion: '8.11.2'
     NpmVersion: 'latest'
-    PoolName: 'Hosted VS2017'
-    UploadBinary: true
-    Platform: 'Windows'
     AzureStorageAccountName: 'vscodepythonci'
     AzureStorageContainerName: 'vscode-python-ci'
+    PoolName: 'Hosted VS2017'
     EnvironmentExecutableFolder: 'Scripts'
-    DIRECTORY_FOR_VIRTUAL_ENVS: './envPaths.json'
+    ENV_PATHS_LOCATION: './src/tmp/envPaths.json'
+    TEST_FILES_SUFFIX: 'testvirtualenvs.ts'
+    TestSuiteName: 'testSingleWorkspace'
 
 
 - job: 'System_Test_macOS'
