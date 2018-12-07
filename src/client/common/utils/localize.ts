@@ -97,7 +97,10 @@ export namespace DataScience {
     export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `iPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
     export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a iPython kernel spec and none are available for use');
     export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt iPython Kernel');
+    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting iPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
+    export const restartKernelAfterInterruptMessage = localize('DataScience.restartKernelAfterInterruptMessage', 'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.');
+    export const pythonInterruptFailedHeader = localize('DataScience.pythonInterruptFailedHeader', 'Keyboard interrupt crashed the kernel. Kernel restarted.');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

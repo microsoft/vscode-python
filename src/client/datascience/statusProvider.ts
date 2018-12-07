@@ -7,21 +7,18 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { HistoryMessages } from './constants';
-import { IHistory, IStatusProvider } from './types';
+import { IHistory, IStatusProvider, IHistoryProvider } from './types';
+import { max } from 'lodash';
 
 class StatusItem implements Disposable {
 
     private deferred : Deferred<void>;
-    private history : IHistory | undefined;
     private disposed: boolean = false;
+    private disposeCallback: () => void;
 
-    constructor(title: string, history?: IHistory, timeout?: number) {
-        this.history = history;
+    constructor(title: string, disposeCallback: () => void, timeout?: number) {
         this.deferred = createDeferred<void>();
-
-        if (this.history) {
-            this.history.postMessage(HistoryMessages.StartProgress, title);
-        }
+        this.disposeCallback = disposeCallback;
 
         // A timeout is possible too. Auto dispose if that's the case
         if (timeout) {
@@ -32,10 +29,10 @@ class StatusItem implements Disposable {
     public dispose = () => {
         if (!this.disposed) {
             this.disposed = true;
-            if (this.history) {
-                this.history!.postMessage(HistoryMessages.StopProgress);
+            this.disposeCallback();
+            if (!this.deferred.completed) {
+                this.deferred.resolve();
             }
-            this.deferred.resolve();
         }
     }
 
@@ -45,21 +42,26 @@ class StatusItem implements Disposable {
 
     public reject = () => {
         this.deferred.reject();
+        this.dispose();
     }
 
 }
 
 @injectable()
 export class StatusProvider implements IStatusProvider {
+    private statusCount : number = 0;
 
     constructor(
-        @inject(IApplicationShell) private applicationShell: IApplicationShell) {
-
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IHistoryProvider) private historyProvider: IHistoryProvider) {
     }
 
-    public set(message: string, history?: IHistory, timeout?: number, cancel?: () => void) : Disposable {
+    public set(message: string, timeout?: number, cancel?: () => void) : Disposable {
+        // Start our progress
+        this.incrementCount();
+
         // Create a StatusItem that will return our promise
-        const statusItem = new StatusItem(message, history, timeout);
+        const statusItem = new StatusItem(message, () => this.decrementCount(), timeout);
 
         const progressOptions: ProgressOptions = {
             location: cancel ? ProgressLocation.Notification : ProgressLocation.Window,
@@ -85,9 +87,9 @@ export class StatusProvider implements IStatusProvider {
         return statusItem;
     }
 
-    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, history?: IHistory, timeout?: number, cancel?: () => void) : Promise<T> {
+    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, cancel?: () => void) : Promise<T> {
         // Create a status item and wait for our promise to either finish or reject
-        const status = this.set(message, history, timeout, cancel);
+        const status = this.set(message, timeout, cancel);
         let result : T;
         try {
             result = await promise();
@@ -95,6 +97,27 @@ export class StatusProvider implements IStatusProvider {
             status.dispose();
         }
         return result;
+    }
+
+    private incrementCount = () => {
+        if (this.statusCount === 0) {
+            const history = this.historyProvider.getActive();
+            if (history) {
+                history.postMessage(HistoryMessages.StartProgress);
+            }
+        }
+        this.statusCount += 1;
+    }
+
+    private decrementCount = () => {
+        const updatedCount = this.statusCount - 1;
+        if (updatedCount === 0) {
+            const history = this.historyProvider.getActive();
+            if (history) {
+                history.postMessage(HistoryMessages.StopProgress);
+            }
+        }
+        this.statusCount = Math.max(updatedCount, 0);
     }
 
 }

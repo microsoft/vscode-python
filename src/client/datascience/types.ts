@@ -27,6 +27,12 @@ export interface IConnection extends Disposable {
     localLaunch: boolean;
 }
 
+export enum InterruptResult {
+    Success = 0,
+    TimedOut = 1,
+    Restarted = 2,
+}
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
@@ -38,7 +44,7 @@ export interface INotebookServer extends Disposable {
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
     shutdown();
-    interruptKernel() : Promise<void>;
+    interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
 }
 
@@ -160,8 +166,8 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // history window. Dispose of the returned object when done.
-    set(message: string, history?: IHistory, timeout?: number) : Disposable;
+    set(message: string, timeout?: number) : Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, history?: IHistory, timeout?: number, canceled?: () => void) : Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void) : Promise<T>;
 }

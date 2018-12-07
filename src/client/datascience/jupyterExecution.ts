@@ -327,7 +327,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             // as starting jupyter with all of the defaults.
             const configFile = useDefaultConfig ? path.join(tempDir.path, 'jupyter_notebook_config.py') : undefined;
             if (configFile) {
-                await this.fileSystem.writeFile(configFile, {});
+                await this.fileSystem.writeFile(configFile, '');
             }
 
             // Use this temp file and config file to generate a list of args for our command

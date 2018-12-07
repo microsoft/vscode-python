@@ -39,7 +39,8 @@ import {
     IJupyterExecution,
     INotebookExporter,
     INotebookServer,
-    IStatusProvider
+    IStatusProvider,
+    InterruptResult
 } from './types';
 
 @injectable()
@@ -265,8 +266,6 @@ export class History implements IWebPanelMessageListener, IHistory {
     @captureTelemetry(Telemetry.RestartKernel)
     public restartKernel() {
         if (this.jupyterServer && !this.restartingKernel) {
-            this.restartingKernel = true;
-
             // Ask the user if they want us to restart or not.
             const message = localize.DataScience.restartKernelMessage();
             const yes = localize.DataScience.restartKernelMessageYes();
@@ -274,34 +273,10 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             this.applicationShell.showInformationMessage(message, yes, no).then(v => {
                 if (v === yes) {
-                    // First we need to finish all outstanding cells.
-                    this.unfinishedCells.forEach(c => {
-                        c.state = CellState.error;
-                        if (this.webPanel) {
-                            this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
-                        }
-                    });
-                    this.unfinishedCells = [];
-                    this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
-                    this.potentiallyUnfinishedStatus = [];
-
-                    // Set our status
-                    const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), this);
-
-                    // Then restart the kernel. When that finishes, add our sys info again
-                    if (this.jupyterServer) {
-                        this.jupyterServer.restartKernel()
-                            .then(() => {
-                                this.addRestartSysInfo().then(status.dispose()).ignoreErrors();
-                            })
-                            .catch(err => {
-                                this.logger.logError(err);
-                                status.dispose();
-                            });
-                    }
-                    this.restartingKernel = false;
-                } else {
-                    this.restartingKernel = false;
+                    this.restartKernelInternal().catch(e => {
+                        this.applicationShell.showErrorMessage(e);
+                        this.logger.logError(e);
+                    })
                 }
             });
         }
@@ -310,13 +285,67 @@ export class History implements IWebPanelMessageListener, IHistory {
     @captureTelemetry(Telemetry.Interrupt)
     public interruptKernel() {
         if (this.jupyterServer && !this.restartingKernel) {
-            this.jupyterServer.interruptKernel()
-                .then()
+            const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus());
+
+            const settings = this.configuration.getSettings();
+            const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
+
+            this.jupyterServer.interruptKernel(interruptTimeout)
+                .then(result => {
+                    status.dispose();
+                    if (result === InterruptResult.TimedOut) {
+                        const message = localize.DataScience.restartKernelAfterInterruptMessage();
+                        const yes = localize.DataScience.restartKernelMessageYes();
+                        const no = localize.DataScience.restartKernelMessageNo();
+
+                        this.applicationShell.showInformationMessage(message, yes, no).then(v => {
+                            if (v === yes) {
+                                this.restartKernelInternal().catch(e => {
+                                    this.applicationShell.showErrorMessage(e);
+                                    this.logger.logError(e);
+                                });
+                            }
+                        });
+                    } else if (result === InterruptResult.Restarted) {
+                        // Uh-oh, keyboard interrupt crashed the kernel.
+                        this.addInterruptFailedInfo().ignoreErrors();
+                    }
+                })
                 .catch(err => {
+                    status.dispose();
                     this.logger.logError(err);
                 });
         }
     }
+
+    private async restartKernelInternal() : Promise<void> {
+        this.restartingKernel = true;
+
+        // First we need to finish all outstanding cells.
+        this.unfinishedCells.forEach(c => {
+            c.state = CellState.error;
+            if (this.webPanel) {
+                this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
+            }
+        });
+        this.unfinishedCells = [];
+        this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
+        this.potentiallyUnfinishedStatus = [];
+
+        // Set our status
+        const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus());
+
+        try {
+            if (this.jupyterServer) {
+                await this.jupyterServer.restartKernel();
+                await this.addRestartSysInfo();
+            }
+        } finally {
+            status.dispose();
+            this.restartingKernel = false;
+        }
+    }
+
 
     // tslint:disable-next-line:no-any
     private handleReturnAllCells = (payload: any) => {
@@ -351,7 +380,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private setStatus = (message: string) : Disposable => {
-        const result = this.statusProvider.set(message, this);
+        const result = this.statusProvider.set(message);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
     }
@@ -640,6 +669,11 @@ export class History implements IWebPanelMessageListener, IHistory {
     private addRestartSysInfo = () : Promise<void> => {
         this.addedSysInfo = false;
         return this.addSysInfo(localize.DataScience.pythonRestartHeader());
+    }
+
+    private addInterruptFailedInfo = () : Promise<void> => {
+        this.addedSysInfo = false;
+        return this.addSysInfo(localize.DataScience.pythonInterruptFailedHeader());
     }
 
     private addSysInfo = async (message: string) : Promise<void> => {

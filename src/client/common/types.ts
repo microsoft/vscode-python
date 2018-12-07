@@ -266,6 +266,7 @@ export interface IAnalysisSettings {
 export interface IDataScienceSettings {
     allowImportFromNotebook: boolean;
     enabled: boolean;
+    jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
     jupyterServerURI: string;
     notebookFileRoot: string;

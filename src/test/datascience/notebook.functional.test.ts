@@ -11,7 +11,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../client/common/process/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
@@ -20,7 +20,9 @@ import {
     IJupyterExecution,
     INotebookExporter,
     INotebookImporter,
-    INotebookServer
+    INotebookServer,
+    InterruptResult,
+    ICell
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
@@ -38,6 +40,7 @@ suite('Jupyter notebook tests', () => {
     let jupyterExecution: IJupyterExecution;
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
+    let modifiedConfig = false;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -47,6 +50,13 @@ suite('Jupyter notebook tests', () => {
     });
 
     teardown(async () => {
+        if (modifiedConfig) {
+            const python = await getNotebookCapableInterpreter();
+            const procService = await processFactory.create();
+            if (procService && python) {
+                await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {env: process.env});
+            }
+        }
         for (let i = 0; i < disposables.length; i += 1) {
             const disposable = disposables[i];
             if (disposable) {
@@ -57,6 +67,7 @@ suite('Jupyter notebook tests', () => {
             }
         }
         ioc.dispose();
+
     });
 
     function escapePath(p: string) {
@@ -118,7 +129,7 @@ suite('Jupyter notebook tests', () => {
             assert.equal(cell.outputs.length, 1, `${index}: Cell length not correct`);
             const error = cell.outputs[0].evalue;
             if (error) {
-                assert.fail(`${index}: Unexpected error: ${error}`);
+                assert.ok(false, `${index}: Unexpected error: ${error}`);
             }
             const data = cell.outputs[0].data;
             assert.ok(data, `${index}: No data object on the cell`);
@@ -345,43 +356,23 @@ suite('Jupyter notebook tests', () => {
 
         // Make sure can run some code too
         await verifySimple(server, 'a=1\r\na', 1);
+        server
 
         await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms');
         await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms');
         await testCancelableMethod((t: CancellationToken) => jupyterExecution.isKernelCreateSupported(t), 'Cancel did not cancel isKernel after {0}ms');
         await testCancelableMethod((t: CancellationToken) => jupyterExecution.isImportSupported(t), 'Cancel did not cancel isImport after {0}ms');
-    });
+     });
 
-    runTest('Interrupt kernel', async () => {
-        const interrTestDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-        const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, interrTestDir);
-        if (!server) {
-            assert.fail('Server not created');
-        }
-
-        // Start executing something that will never finish
+    async function interruptExecute(server: INotebookServer, code: string, interruptMs: number, sleepMs: number) : Promise<InterruptResult> {
         let interrupted = false;
         let finishedBefore = false;
         let finishedPromise = createDeferred();
         let outputPromise = createDeferred();
-        let observable = server!.executeObservable(`
-import signal
-import _thread
-import time
-
-keep_going = True
-def handler(signum, frame):
-  global keep_going
-  print('signal')
-  keep_going = False
-
-signal.signal(signal.SIGINT, handler)
-
-while keep_going:
-  print(".")
-  time.sleep(.1)`, 'foo.py', 0);
-
+        let observable = server!.executeObservable(code, 'foo.py', 0);
+        let cells : ICell[] = [];
         observable.subscribe(c => {
+            cells = c;
             const cell = c[0].data as nbformat.ICodeCell;
             if (!outputPromise.completed && cell && cell.outputs.length > 0) {
                 outputPromise.resolve();
@@ -396,45 +387,79 @@ while keep_going:
             }
         }, (err) => finishedPromise.reject(err), () => finishedPromise.resolve());
 
-        // Wait for the first output
-        await outputPromise.promise;
+        // Wait for the first output if necessary. We might be trying to interrupt
+        // before we get any output
+        if (interruptMs >= sleepMs) {
+            await outputPromise.promise;
+        }
 
         // Then interrupt
         interrupted = true;
-        await server!.interruptKernel();
+        const result = await server!.interruptKernel(interruptMs);
 
-        // Then we should get our finish
-        await Promise.race([finishedPromise.promise, sleep(5000)]);
-        assert.equal(finishedBefore, false, 'Finished before the interruption');
-        assert.ok(finishedPromise.completed, 'Timed out before interrupt');
+        // Then we should get our finish unless there was a restart
+        if (result != InterruptResult.Restarted) {
+            await Promise.race([finishedPromise.promise, sleep(sleepMs)]);
+            assert.equal(finishedBefore, false, 'Finished before the interruption');
+            assert.ok(finishedPromise.completed, 'Timed out before interrupt');
+        }
+        return result;
+    }
 
-        // Try again with something that doesn't return. However it should timeout before
-        // we get to our own sleep.
-        interrupted = false;
-        finishedPromise = createDeferred();
-        outputPromise = createDeferred();
-        observable = server!.executeObservable('import time\r\ntime.sleep(4)', 'foo.py', 0);
-        observable.subscribe(c => {
-            if (!outputPromise.completed) {
-                outputPromise.resolve();
-            }
-            if (c.length > 0 && c[0].state === CellState.error) {
-                finishedBefore = !interrupted;
-                finishedPromise.resolve();
-            }
-        }, (err) => finishedPromise.reject(err), () => finishedPromise.resolve());
+    runTest('Interrupt kernel', async () => {
+        const interrTestDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+        const server = await jupyterExecution.connectToNotebookServer(undefined, true, undefined, interrTestDir);
+        if (!server) {
+            assert.fail('Server not created');
+        }
 
-        // Wait for the first output
-        await outputPromise.promise;
+        // Try with something we can interrupt
+        let interruptResult = await interruptExecute(server,
+`import signal
+import _thread
+import time
 
-        // Then interrupt
-        interrupted = true;
-        await server!.interruptKernel();
+keep_going = True
+def handler(signum, frame):
+  global keep_going
+  print('signal')
+  keep_going = False
 
-        // Then we should get our finish
-        await Promise.race([finishedPromise.promise, sleep(5000)]);
-        assert.equal(finishedBefore, false, 'Finished before the interruption');
-        assert.ok(finishedPromise.completed, 'Timed out before interrupt');
+signal.signal(signal.SIGINT, handler)
+
+while keep_going:
+  print(".")
+  time.sleep(.1)`, 5000, 5000);
+        assert.equal(interruptResult, InterruptResult.Success, 'Interruptable code did not interrupt');
+
+        // Try again with something that doesn't return. However it should finish before
+        // we get to our own sleep. Note: We need the print so that the test knows something happened.
+        interruptResult = await interruptExecute(server, 'import time\r\ntime.sleep(4)\r\nprint("foo")', 7000, 7000);
+        assert.equal(interruptResult, InterruptResult.Success, 'Interruptable code did not interrupt');
+
+        // Try again with something that doesn't return. Make sure it times out
+        interruptResult = await interruptExecute(server, 'import time\r\ntime.sleep(4)\r\nprint("foo")', 100, 7000);
+        assert.equal(interruptResult, InterruptResult.TimedOut);
+
+        // The tough one, somethign that causes a kernel reset.
+        interruptResult = await interruptExecute(server,
+`import signal
+import time
+import os
+
+keep_going = True
+def handler(signum, frame):
+    global keep_going
+    print('signal')
+    os._exit(-2)
+
+signal.signal(signal.SIGINT, handler)
+
+while keep_going:
+    print(".")
+    time.sleep(.1)`, 15000, 15000);
+    assert.equal(interruptResult, InterruptResult.Restarted);
+
     });
 
     testMimeTypes(
@@ -449,9 +474,8 @@ a`,
             },
             {
                 code:
-                    `import numpy as np
-import pandas as pd
-df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+                    `import pandas as pd
+df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'error',
@@ -460,9 +484,8 @@ df.head()`,
             },
             {
                 code:
-                    `import numpy as np
-import pandas as pd
-df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+                    `import pandas as pd
+df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'code',
@@ -479,8 +502,7 @@ df.head()`,
             {
                 // Test relative directories too.
                 code:
-                    `import numpy as np
-import pandas as pd
+                `import pandas as pd
 df = pd.read_csv("./DefaultSalesReport.csv")
 df.head()`,
                 mimeType: 'text/html',
@@ -534,6 +556,7 @@ plt.show()`,
         const configPath = match !== null ? match[1] : '';
         const filesystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         await filesystem.writeFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
+        modifiedConfig = true;
     }
 
     runTest('Non default config fails', async () => {
