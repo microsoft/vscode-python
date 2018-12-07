@@ -550,7 +550,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // See if any of their paths match
             return specs.findIndex(s => {
-                if (info && s) {
+                if (info && s && s.path) {
                     return this.fileSystem.arePathsSame(s.path, info.path);
                 }
                 return false;
@@ -574,7 +574,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         // For each get its details as we will likely need them
         const specDetails = await Promise.all(specs.map(async s => {
-            if (s && s.path.length > 0 && await fs.pathExists(s.path)) {
+            if (s && s.path && s.path.length > 0 && await fs.pathExists(s.path)) {
                 return this.interpreterService.getInterpreterDetails(s.path);
             }
         }));
@@ -610,7 +610,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                             }
                         }
                     }
-                } else if (info && info.version_info && spec && spec.path && spec.path.toLocaleLowerCase() === 'python') {
+                } else if (info && info.version_info && spec && spec.path && spec.path.toLocaleLowerCase() === 'python' && spec.name) {
                     // This should be our current python.
 
                     // Search for a digit on the end of the name. It should match our major version

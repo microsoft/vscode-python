@@ -52,9 +52,9 @@ export interface IJupyterExecution {
 }
 
 export interface IJupyterKernelSpec extends Disposable {
-    name: string;
-    language: string;
-    path: string;
+    name: string | undefined;
+    language: string | undefined;
+    path: string | undefined;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
