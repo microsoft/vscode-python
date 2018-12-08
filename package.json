@@ -1849,7 +1849,8 @@
         ]
     },
     "scripts": {
-        "package": "gulp clean:cleanExceptTests && gulp prePublishBundle && vsce package",
+        "vscode:prepublish": "gulp clean:cleanExceptTests && gulp prePublishBundle",
+        "package": "vsce package",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
