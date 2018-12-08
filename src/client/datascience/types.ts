@@ -30,7 +30,7 @@ export interface IConnection extends Disposable {
 export enum InterruptResult {
     Success = 0,
     TimedOut = 1,
-    Restarted = 2,
+    Restarted = 2
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -43,7 +43,7 @@ export interface INotebookServer extends Disposable {
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
-    shutdown();
+    shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
 }

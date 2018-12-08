@@ -13,6 +13,7 @@ import {
     Session,
     SessionManager
 } from '@jupyterlab/services';
+import { Slot } from '@phosphor/signaling';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
@@ -24,15 +25,12 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../common/application/types';
 import { Cancellation, CancellationError } from '../common/cancellation';
 import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
-import { createDeferred, sleep, Deferred } from '../common/utils/async';
+import { createDeferred, Deferred, sleep } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { generateCells } from './cellFactory';
 import { concatMultilineString } from './common';
 import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from './types';
-import { resolve } from 'dns';
-import { Exception } from 'typemoq/_all';
-import { Slot } from '@phosphor/signaling';
 
 class CellSubscriber {
     private deferred : Deferred<CellState> = createDeferred<CellState>();
@@ -174,24 +172,24 @@ export class JupyterServer implements INotebookServer, IDisposable {
         await this.initialNotebookSetup(cancelToken);
     }
 
-    public shutdown = () => {
+    public shutdown = async () : Promise<void> => {
+        // Destroy the kernel spec first. It's the key thing to
+        // finish.
         this.destroyKernelSpec();
 
-        if (this.notebookFile && this.contentsManager) {
-            this.contentsManager.delete(this.notebookFile.path).then(() => {
-                this.shutdownSessionAndConnection();
-            }).catch(() => {
-                this.shutdownSessionAndConnection();
-            }); // Sadly looks like node.js version doesn't have .finally yet
-        } else {
-            this.shutdownSessionAndConnection();
+        // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
+        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.local) {
+            try {
+                await this.contentsManager.delete(this.notebookFile.path);
+            } catch {
+                noop();
+            }
         }
+        await this.shutdownSessionAndConnection();
     }
 
     public dispose = () : Promise<void> => {
-        // This could be changed to actually wait for shutdown, but do this
-        // for now so we finish quickly.
-        return Promise.resolve(this.shutdown());
+        return this.shutdown();
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -372,9 +370,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
                     // Indicate we restarted the race below
                     restarted.resolve([]);
 
-                    // Fail all of the pending cell executes. We restarted.
-                    const copyPending = [...this.pendingCellSubscriptions];
-                    copyPending.forEach(c => {
+                    // Fail all of the active (might be new ones) pending cell executes. We restarted.
+                    const newCopyPending = [...this.pendingCellSubscriptions];
+                    newCopyPending.forEach(c => {
                         c.reject();
                     });
                 }
@@ -417,19 +415,23 @@ export class JupyterServer implements INotebookServer, IDisposable {
             }
         }
 
-        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
+        throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    private shutdownSessionAndConnection = () => {
+    private shutdownSessionAndConnection = async () => {
         if (this.contentsManager) {
             this.contentsManager.dispose();
             this.contentsManager = undefined;
         }
-        if (this.session && this.sessionManager) {
+        if (this.session || this.sessionManager) {
             try {
-                this.session.shutdown().ignoreErrors();
-                this.session.dispose();
-                this.sessionManager.dispose();
+                if (this.session) {
+                    await this.session.shutdown();
+                    this.session.dispose();
+                }
+                if (this.sessionManager) {
+                    this.sessionManager.dispose();
+                }
             } catch {
                 noop();
             }
@@ -444,9 +446,13 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     private destroyKernelSpec = () => {
-        if (this.kernelSpec) {
-            this.kernelSpec.dispose(); // This should delete any old kernel specs
-            this.kernelSpec = undefined;
+        try {
+            if (this.kernelSpec) {
+                this.kernelSpec.dispose(); // This should delete any old kernel specs
+                this.kernelSpec = undefined;
+            }
+        } catch {
+            noop();
         }
     }
 
@@ -602,16 +608,13 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
     private executeCodeObservable(cell: ICell) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
-            // Keep track of when we started.
-            const startTime = Date.now();
-
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
 
             // Wrap the subscriber and save it. It is now pending and waiting completion.
             const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
-                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p != self);
+                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
             });
             this.pendingCellSubscriptions.push(cellSubscriber);
 

@@ -7,13 +7,13 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { HistoryMessages } from './constants';
-import { IHistory, IStatusProvider, IHistoryProvider } from './types';
-import { max } from 'lodash';
+import { IHistoryProvider, IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
 
     private deferred : Deferred<void>;
     private disposed: boolean = false;
+    private timeout: NodeJS.Timer | undefined;
     private disposeCallback: () => void;
 
     constructor(title: string, disposeCallback: () => void, timeout?: number) {
@@ -22,13 +22,17 @@ class StatusItem implements Disposable {
 
         // A timeout is possible too. Auto dispose if that's the case
         if (timeout) {
-            setTimeout(this.dispose, timeout);
+            this.timeout = setTimeout(this.dispose, timeout);
         }
     }
 
     public dispose = () => {
         if (!this.disposed) {
             this.disposed = true;
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+                this.timeout = undefined;
+            }
             this.disposeCallback();
             if (!this.deferred.completed) {
                 this.deferred.resolve();

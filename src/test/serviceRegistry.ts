@@ -58,7 +58,11 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
     }
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach(disposable => {
+            if (disposable) {
+                disposable.dispose();
+            }
+        });
     }
 
     public registerCommonTypes(registerFileSystem: boolean = true) {

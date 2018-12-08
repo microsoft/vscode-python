@@ -10,7 +10,7 @@ import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 
-import { Cancellation } from '../common/cancellation';
+import { Cancellation, CancellationError } from '../common/cancellation';
 import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
 import {
     ExecutionResult,
@@ -59,8 +59,13 @@ class JupyterKernelSpec implements IJupyterKernelSpec {
         this.specFile = file;
     }
     public dispose = () => {
-        if (this.specFile && IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
-            fs.removeSync(path.dirname(this.specFile));
+        if (this.specFile &&
+            IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
+            try {
+                fs.removeSync(path.dirname(this.specFile));
+            } catch {
+                noop();
+            }
             this.specFile = undefined;
         }
     }
@@ -145,7 +150,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private processServicePromise: Promise<IProcessService>;
     private commands : {[command: string] : JupyterCommand } = {};
     private jupyterPath : string | undefined;
-    private usablePythonInterpreterPromise : Promise<PythonInterpreter | undefined> | undefined;
+    private usablePythonInterpreter : PythonInterpreter | undefined;
 
     constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
                 @inject(ICondaService) private condaService: ICondaService,
@@ -164,7 +169,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     public dispose = () => {
         // Clear our usableJupyterInterpreter
-        this.usablePythonInterpreterPromise = undefined;
+        this.usablePythonInterpreter = undefined;
+        this.commands = {};
     }
 
     public isNotebookSupported = (cancelToken?: CancellationToken): Promise<boolean> => {
@@ -172,12 +178,12 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return Cancellation.race(() => this.isCommandSupported(NotebookCommand, cancelToken), cancelToken);
     }
 
-    public getUsableJupyterPython = (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
+    public getUsableJupyterPython = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
         // Only try to compute this once.
-        if (!this.usablePythonInterpreterPromise) {
-            this.usablePythonInterpreterPromise = Cancellation.race(() => this.getUsableJupyterPythonImpl(cancelToken), cancelToken);
+        if (!this.usablePythonInterpreter) {
+            this.usablePythonInterpreter = await Cancellation.race(() => this.getUsableJupyterPythonImpl(cancelToken), cancelToken);
         }
-        return this.usablePythonInterpreterPromise;
+        return this.usablePythonInterpreter;
     }
 
     public isImportSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
@@ -208,6 +214,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                     connection = launchResults.connection;
                     kernelSpec = launchResults.kernelSpec;
                 } else {
+                    // Throw a cancellation error if we were canceled.
+                    Cancellation.throwIfCanceled(cancelToken);
+
+                    // Otherwise we can't connect
                     throw new Error(localize.DataScience.jupyterNotebookFailure().format(''));
                 }
             } else {
@@ -328,15 +338,24 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const configFile = useDefaultConfig ? path.join(tempDir.path, 'jupyter_notebook_config.py') : undefined;
             if (configFile) {
                 await this.fileSystem.writeFile(configFile, '');
+                this.logger.logInformation(`Generating custom default config at ${configFile}`);
+            }
+
+            // Create extra args based on if we have a config or not
+            const extraArgs = [];
+            if (useDefaultConfig) {
+                extraArgs.push(`--config=${configFile}`);
+            }
+            // Special check for debugging
+            if (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) {
+                extraArgs.push('--debug');
             }
 
             // Use this temp file and config file to generate a list of args for our command
-            const args: string [] = useDefaultConfig ?
-                ['--no-browser', `--notebook-dir=${tempDir.path}`, `--config=${configFile}`] :
-                ['--no-browser', `--notebook-dir=${tempDir.path}`];
+            const args: string[] = [...['--no-browser', `--notebook-dir=${tempDir.path}`], ...extraArgs];
 
             // Before starting the notebook process, make sure we generate a kernel spec
-            const kernelSpec = await this.getMatchingKernelSpec();
+            const kernelSpec = await this.getMatchingKernelSpec(undefined, cancelToken);
 
             // Then use this to launch our notebook process.
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken});
@@ -355,6 +374,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 kernelSpec: kernelSpec
             };
         } catch (err) {
+            if (err instanceof CancellationError) {
+                throw err;
+            }
+
             // Something else went wrong
             throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
         }
@@ -466,14 +489,24 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 const match = PyKernelOutputRegEx.exec(result.stdout);
                 const diskPath = match && match !== null && match.length > 1 ? path.join(match[1], 'kernel.json') : await this.findSpecPath(name);
 
+                // Make sure we delete this file at some point. When we close VS code is probably good. It will also be destroy when
+                // the kernel spec goes away
+                this.asyncRegistry.push({
+                    dispose: async () => {
+                        try {
+                            fs.removeSync(path.dirname(diskPath));
+                        } catch {
+                            noop();
+                        }
+                    }
+                });
+
                 // If that works, rewrite our active interpreter into the argv
                 if (diskPath && bestInterpreter) {
                     if (await fs.pathExists(diskPath)) {
                         const specModel: Kernel.ISpecModel = await fs.readJSON(diskPath);
                         specModel.argv[0] = bestInterpreter.path;
                         await fs.writeJSON(diskPath, specModel, { flag: 'w', encoding: 'utf8' });
-
-                        // This should automatically cleanup when the kernelspec is used
                     }
                 }
             }
@@ -587,7 +620,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // Path match
                 score += 10;
             }
-            if (spec && spec.language && spec.language.toLocaleLowerCase() === 'python') {
+            if (spec && spec.language.toLocaleLowerCase() === 'python') {
                 // Language match
                 score += 1;
 
