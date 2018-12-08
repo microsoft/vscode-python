@@ -91,6 +91,5 @@ export namespace Settings {
 }
 
 export namespace CodeSnippits {
-    // tslint:disable-next-line:quotemark
-    export const ChangeDirectory = ["{0}import os", "try:", "\tos.chdir(os.path.join(os.getcwd(), '{1}'))", "\tprint(os.getcwd())", "except:", "\tpass", ""];
+    export const ChangeDirectory = ['{0}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{1}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
 }

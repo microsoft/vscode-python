@@ -15,6 +15,7 @@ import {
 } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
+import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as vscode from 'vscode';
@@ -319,7 +320,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
 
         this.executeSilently(
-            `%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`,
+            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${darkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
             cancelToken
         ).ignoreErrors();
     }
