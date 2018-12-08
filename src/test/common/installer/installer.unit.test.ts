@@ -137,7 +137,7 @@ suite('Module Installer only', () => {
                             persistVal.setup(p => p.value).returns(() => false);
                             persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
                             persistentStore.setup(ps =>
-                                ps.createWorkspacePersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                                ps.createGlobalPersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
                             ).returns(() => persistVal.object);
 
                             // Display first prompt.
@@ -180,7 +180,7 @@ suite('Module Installer only', () => {
                                         return Promise.resolve();
                                     }).verifiable(TypeMoq.Times.once());
                                 persistentStore.setup(ps =>
-                                    ps.createWorkspacePersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                                    ps.createGlobalPersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
                                 ).returns(() => {
                                     return persistVal.object;
                                 }).verifiable(TypeMoq.Times.exactly(3));
@@ -237,7 +237,7 @@ suite('Module Installer only', () => {
                                         return Promise.resolve();
                                     });
                                 persistentStore.setup(ps =>
-                                    ps.createWorkspacePersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                                    ps.createGlobalPersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
                                 ).returns(() => {
                                     return persistVal.object;
                                 });
@@ -260,7 +260,7 @@ suite('Module Installer only', () => {
                             persistVal.setup(p => p.value).returns(() => false);
                             persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
                             persistentStore.setup(ps =>
-                                ps.createWorkspacePersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                                ps.createGlobalPersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
                             ).returns(() => persistVal.object);
 
                             await installer.promptToInstall(product.value, resource);
