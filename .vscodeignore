@@ -46,6 +46,7 @@ debug_coverage*/**
 images/**/*.gif
 images/**/*.png
 news/**
+node_modules/**
 obj/**
 out/client/**/*analyzer.html
 out/coverconfig.json

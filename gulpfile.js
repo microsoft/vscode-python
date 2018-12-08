@@ -159,37 +159,6 @@ gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production', '--inline', '--progress']);
 });
 
-gulp.task('updateVSCodeIgnore', (done) => {
-    // Temporary work around, we need to old technique of building extension is still supported.
-    // Once Azure DevOps has been updated, we can hard code this value in `.vscodeignore`
-    fs.appendFileSync(path.join(__dirname, '.vscodeignore'), '\nnode_modules/**');
-    done();
-});
-
-gulp.task('removePrePublishScript', (done) => {
-    // Temporary work around
-    const packageJson = require('./package.json');
-    const scripts = packageJson.scripts;
-    if (scripts['vscode:prepublish']) {
-        scripts['vscode:prepublish_Old'] = scripts['vscode:prepublish'];
-        delete scripts['vscode:prepublish'];
-        fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, undefined, 4));
-    }
-    done();
-});
-
-gulp.task('restorePrePublishScript', (done) => {
-    // Temporary work around
-    const packageJson = require('./package.json');
-    const scripts = packageJson.scripts;
-    if (scripts['vscode:prepublish_Old']) {
-        scripts['vscode:prepublish'] = scripts['vscode:prepublish_Old'];
-        delete scripts['vscode:prepublish_Old'];
-        fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, undefined, 4));
-    }
-    done();
-});
-
 gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--mode', 'production']);
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.sourceMaps.config.js', '--mode', 'production']);
