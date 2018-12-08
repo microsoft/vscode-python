@@ -152,12 +152,18 @@ suite('Module Installer only', () => {
                             app.verifyAll();
                             workspaceService.verifyAll();
                         });
-                        if (productService.getProductType(product.value) === ProductType.Linter) {
+                        if (product.value === Product.pylint) {
                             test(`Ensure the install prompt is not displayed when the user requests it not be shown again, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                 workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                     .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
                                     .verifiable(TypeMoq.Times.exactly(resource ? 2 : 0));
-                                app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                app.setup(a =>
+                                    a.showErrorMessage(
+                                        TypeMoq.It.isAnyString(),
+                                        TypeMoq.It.isValue('Install'),
+                                        TypeMoq.It.isValue(`Disable ${product.name}`),
+                                        TypeMoq.It.isValue('Disable linting'),
+                                        TypeMoq.It.isValue('Do not show again')))
                                     .returns(
                                         async () => {
                                             return 'Do not show again';
@@ -192,6 +198,55 @@ suite('Module Installer only', () => {
                                 workspaceService.verifyAll();
                                 persistentStore.verifyAll();
                                 persistVal.verifyAll();
+                            });
+                        } else if (productService.getProductType(product.value) === ProductType.Linter) {
+                            test(`Ensure the 'do not show again' prompt isn't shown for non-pylint linters, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                                workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                    .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object);
+                                app.setup(a =>
+                                    a.showErrorMessage(
+                                        TypeMoq.It.isAnyString(),
+                                        TypeMoq.It.isValue('Install'),
+                                        TypeMoq.It.isValue(`Disable ${product.name}`),
+                                        TypeMoq.It.isValue('Disable linting')))
+                                    .returns(
+                                        async () => {
+                                            return undefined;
+                                        })
+                                    .verifiable(TypeMoq.Times.once());
+                                app.setup(a =>
+                                    a.showErrorMessage(
+                                        TypeMoq.It.isAnyString(),
+                                        TypeMoq.It.isValue('Install'),
+                                        TypeMoq.It.isValue(`Disable ${product.name}`),
+                                        TypeMoq.It.isValue('Disable linting'),
+                                        TypeMoq.It.isValue('Do not show again')))
+                                    .returns(
+                                        async () => {
+                                            return undefined;
+                                        })
+                                    .verifiable(TypeMoq.Times.never());
+                                const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+                                let mockPersistVal = false;
+                                persistVal.setup(p => p.value).returns(() => {
+                                    return mockPersistVal;
+                                });
+                                persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)))
+                                    .returns(() => {
+                                        mockPersistVal = true;
+                                        return Promise.resolve();
+                                    });
+                                persistentStore.setup(ps =>
+                                    ps.createWorkspacePersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                                ).returns(() => {
+                                    return persistVal.object;
+                                });
+
+                                // Display the prompt.
+                                await installer.promptToInstall(product.value, resource);
+
+                                // we're just ensuring the 'disable pylint' prompt never appears...
+                                app.verifyAll();
                             });
                         }
                         test(`Ensure the prompt is displayed again when previous prompt has been closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {

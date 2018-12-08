@@ -92,37 +92,6 @@ export abstract class BaseInstaller {
         }
     }
 
-    /**
-     * For installers that want to avoid prompting the user over and over, they can make use of a
-     * persisted true/false value representing user responses to 'stop showing this prompt'. This method
-     * gets the persisted value given the installer-defined key.
-     *
-     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
-     * @returns Boolean: The current state of the stored response key given.
-     */
-    public getStoredResponse(key: string): boolean {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
-        return state.value;
-    }
-
-    /**
-     * For installers that want to avoid prompting the user over and over, they can make use of a
-     * persisted true/false value representing user responses to 'stop showing this prompt'. This
-     * method will set that persisted value given the installer-defined key.
-     *
-     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
-     * @param value Boolean value to store for the user - if they choose to not be prompted again for instance.
-     * @returns Boolean: The current state of the stored response key given.
-     */
-    public async setStoredResponse(key: string, value: boolean): Promise<void> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
-        if (state && state.value !== value) {
-            await state.updateValue(value);
-        }
-    }
-
     protected abstract promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
@@ -203,6 +172,8 @@ export class FormatterInstaller extends BaseInstaller {
 
 export class LinterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
+        const isPylint = product === Product.pylint;
+
         const productName = ProductNames.get(product)!;
         const install = 'Install';
         const disableAllLinting = 'Disable linting';
@@ -210,11 +181,12 @@ export class LinterInstaller extends BaseInstaller {
         const disableInstallPrompt = 'Do not show again';
         const disableLinterInstallPromptKey = `${productName}_DisableLinterInstallPrompt`;
 
-        if (this.getStoredResponse(disableLinterInstallPromptKey) === true) {
+        if (isPylint && this.getStoredResponse(disableLinterInstallPromptKey) === true) {
             return InstallerResponse.Ignore;
         }
 
-        const options = [disableThisLinter, disableAllLinting, disableInstallPrompt];
+        const options = isPylint ? [disableThisLinter, disableAllLinting, disableInstallPrompt] : [disableThisLinter, disableAllLinting];
+
         let message = `Linter ${productName} is not installed.`;
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, install);
@@ -227,7 +199,7 @@ export class LinterInstaller extends BaseInstaller {
         if (response === install) {
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
-            this.setStoredResponse(disableLinterInstallPromptKey, true).ignoreErrors();
+            await this.setStoredResponse(disableLinterInstallPromptKey, true);
             return InstallerResponse.Ignore;
         }
 
@@ -240,6 +212,37 @@ export class LinterInstaller extends BaseInstaller {
             return InstallerResponse.Disabled;
         }
         return InstallerResponse.Ignore;
+    }
+
+    /**
+     * For installers that want to avoid prompting the user over and over, they can make use of a
+     * persisted true/false value representing user responses to 'stop showing this prompt'. This method
+     * gets the persisted value given the installer-defined key.
+     *
+     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
+     * @returns Boolean: The current state of the stored response key given.
+     */
+    private getStoredResponse(key: string): boolean {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
+        return state.value;
+    }
+
+    /**
+     * For installers that want to avoid prompting the user over and over, they can make use of a
+     * persisted true/false value representing user responses to 'stop showing this prompt'. This
+     * method will set that persisted value given the installer-defined key.
+     *
+     * @param key Key to use to get a persisted response value, each installer must define this for themselves.
+     * @param value Boolean value to store for the user - if they choose to not be prompted again for instance.
+     * @returns Boolean: The current state of the stored response key given.
+     */
+    private async setStoredResponse(key: string, value: boolean): Promise<void> {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
+        if (state && state.value !== value) {
+            await state.updateValue(value);
+        }
     }
 }
 
