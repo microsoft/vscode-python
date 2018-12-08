@@ -2,14 +2,19 @@
 
 import json,sys
 import os.path
-key = sys.argv[1]
+jsonPath = sys.argv[1]
+key = sys.argv[2]
 
-if os.path.isfile('$(ENV_PATHS_LOCATION)'):
-    with open('$(ENV_PATHS_LOCATION)', 'r') as read_file:
+if os.path.isfile(jsonPath):
+    with open(jsonPath, 'r') as read_file:
         data = json.load(read_file)
 else:
-    with open('$(ENV_PATHS_LOCATION)', 'w+') as read_file:
-        data = {}
-with open('$(ENV_PATHS_LOCATION)', 'w') as outfile:
+    directory = os.path.dirname(jsonPath)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        with open(jsonPath, 'w+') as read_file:
+            data = {}
+    data = {}
+with open(jsonPath, 'w') as outfile:
     data[key] = sys.executable
     json.dump(data, outfile, sort_keys=True, indent=4)

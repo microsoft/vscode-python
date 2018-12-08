@@ -28,7 +28,7 @@ jobs:
     PoolName: 'Hosted VS2017'
     EnvironmentExecutableFolder: 'Scripts'
     ENV_PATHS_LOCATION: './src/tmp/envPaths.json'
-    TEST_FILES_SUFFIX: 'testvirtualenvs.ts'
+    TEST_FILES_SUFFIX: 'testvirtualenvs'
     TestSuiteName: 'testSingleWorkspace'
 
 

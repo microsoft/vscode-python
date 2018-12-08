@@ -14,7 +14,8 @@ import { initialize, initializeTest } from '../../../initialize';
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
     const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
-    const envPathsLocation = ENV_PATHS_LOCATION || path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
+    const envPathsLocation = ENV_PATHS_LOCATION !== undefined ?
+                                path.join(EXTENSION_ROOT_DIR_FOR_TESTS, ENV_PATHS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
     const waitTimeForActivation = 5000;
     type EnvPath = {
         venvPath: string;

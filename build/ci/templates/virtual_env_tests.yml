@@ -86,7 +86,7 @@ jobs:
     - bash: |
        pip install pipenv
 
-       pipenv run python ./build/ci/addEnvPath.py pipenvPath
+       pipenv run python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) pipenvPath
 
        cat $(ENV_PATHS_LOCATION)
 
@@ -96,7 +96,7 @@ jobs:
     - bash: |
        python -m venv .venv
 
-       .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py venvPath
+       .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) venvPath
 
        cat $(ENV_PATHS_LOCATION)
 
@@ -108,7 +108,7 @@ jobs:
 
        python -m virtualenv .virtualenv
 
-       .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py virtualEnvPath
+       .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) virtualEnvPath
 
        cat $(ENV_PATHS_LOCATION)
 
@@ -122,7 +122,7 @@ jobs:
 
 
     # - bash: |
-    #    python ./build/ci/addEnvPath.py conda
+    #    python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) condaPath
 
     #    source deactivate
 
