@@ -1849,7 +1849,7 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "gulp clean:cleanExceptTests && gulp prePublishBundle",
+        "vscode:prepublish": "gulp clean && gulp prePublishBundle",
         "package": "vsce package",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",

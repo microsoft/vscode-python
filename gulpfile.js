@@ -105,7 +105,7 @@ gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 
-gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix'));
+gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix', 'clean:out'));
 
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
