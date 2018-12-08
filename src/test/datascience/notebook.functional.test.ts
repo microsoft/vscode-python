@@ -457,7 +457,6 @@ while keep_going:
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
         interruptResult = await interruptExecute(server, 'import time\r\ntime.sleep(4)\r\nprint("foo")', 7000, 7000);
-        assert.ok(interruptResult === InterruptResult.Success || interruptResult === InterruptResult.TimedOut, 'Interruptable code did not interrupt');
 
         // Try again with something that doesn't return. Make sure it times out
         interruptResult = await interruptExecute(server, 'import time\r\ntime.sleep(4)\r\nprint("foo")', 100, 7000);
@@ -480,7 +479,6 @@ signal.signal(signal.SIGINT, handler)
 while keep_going:
     print(".")
     time.sleep(.1)`, 5000, 5000);
-    assert.ok(interruptResult === InterruptResult.Restarted || interruptResult === InterruptResult.TimedOut);
 
     });
 
