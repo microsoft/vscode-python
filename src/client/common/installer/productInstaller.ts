@@ -224,7 +224,7 @@ export class LinterInstaller extends BaseInstaller {
      */
     private getStoredResponse(key: string): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
+        const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
         return state.value;
     }
 
@@ -239,7 +239,7 @@ export class LinterInstaller extends BaseInstaller {
      */
     private async setStoredResponse(key: string, value: boolean): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createWorkspacePersistentState<boolean | undefined>(key, undefined);
+        const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
         if (state && state.value !== value) {
             await state.updateValue(value);
         }
