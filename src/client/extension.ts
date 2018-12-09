@@ -35,6 +35,7 @@ import { IWorkspaceService } from './common/application/types';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -127,10 +128,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     activationService.activate()
         .then(
             () => standardOutputChannel.appendLine('Language server started successfully.'),
-            (rejectedReason) => standardOutputChannel.appendLine(`Language Server startup failed. Reason: ${rejectedReason}`)
+            (rejectedReason) => traceError(`Language Server startup failed. Reason: ${rejectedReason}`)
         )
         .catch(
-            (exceptionReason) => standardOutputChannel.appendLine(`Language Server startup exception raised: ${exceptionReason}`)
+            (exceptionReason) => traceError(`Language Server startup exception raised: ${exceptionReason}`)
         ).ignoreErrors();
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
