@@ -169,25 +169,16 @@ steps:
 
 
   - task: Npm@1
-    displayName: '[Non-Linux] run $(TestSuiteName)'
-    env:
+    displayName: 'run $(TestSuiteName)'
     inputs:
       command: custom
 
       verbose: true
 
       customCommand: 'run $(TestSuiteName)'
-    condition: and(succeeded(), ne(variables['Platform'], 'Linux'))
-
-  - bash: |
-      npm run $(TestSuiteName)
-
-    displayName: '[Linux] run $(TestSuiteName)'
-    
     env:
       DISPLAY: :10
 
-    condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
   - task: PythonScript@0
     displayName: 'Ensure test results'
