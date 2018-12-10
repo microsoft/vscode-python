@@ -6,6 +6,7 @@ import { TerminalShellType } from '../common/terminal/types';
 import { OSDistro } from '../common/utils/platform';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
+import { PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
@@ -124,11 +125,6 @@ export type ImportNotebook = {
     scope: 'command';
 };
 
-export enum PlatformErrors {
-    FailedToParseVersion = 'FailedToParseVersion',
-    FailedToGetLinuxInfo = 'FailedToGetLinuxInfo',
-    FailedToDetermineOS = 'FailedToDetermineOS'
-}
 export type Platform = {
     distro?: OSDistro;
     failureType?: PlatformErrors;

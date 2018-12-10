@@ -48,3 +48,9 @@ export const PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES = 'PYTHON_LANGUAGE_
 export const DIAGNOSTICS_ACTION = 'DIAGNOSTICS.ACTION';
 export const DIAGNOSTICS_MESSAGE = 'DIAGNOSTICS.MESSAGE';
 export const PLATFORM_INFO = 'PLATFORM.INFO';
+
+export enum PlatformErrors {
+    FailedToParseVersion = 'FailedToParseVersion',
+    FailedToGetLinuxInfo = 'FailedToGetLinuxInfo',
+    FailedToDetermineOS = 'FailedToDetermineOS'
+}
