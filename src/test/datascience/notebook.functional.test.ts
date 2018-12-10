@@ -388,15 +388,10 @@ suite('Jupyter notebook tests', () => {
         let interrupted = false;
         let finishedBefore = false;
         const finishedPromise = createDeferred();
-        const outputPromise = createDeferred();
         const observable = server!.executeObservable(code, 'foo.py', 0);
         let cells : ICell[] = [];
         observable.subscribe(c => {
             cells = c;
-            const cell = c[0].data as nbformat.ICodeCell;
-            if (!outputPromise.completed && cell && cell.outputs.length > 0) {
-                outputPromise.resolve();
-            }
             if (c.length > 0 && c[0].state === CellState.error) {
                 finishedBefore = !interrupted;
                 finishedPromise.resolve();
@@ -406,12 +401,6 @@ suite('Jupyter notebook tests', () => {
                 finishedPromise.resolve();
             }
         }, (err) => finishedPromise.reject(err), () => finishedPromise.resolve());
-
-        // Wait for the first output if necessary. We might be trying to interrupt
-        // before we get any output
-        if (interruptMs >= sleepMs) {
-            await outputPromise.promise;
-        }
 
         // Then interrupt
         interrupted = true;
