@@ -64,6 +64,8 @@ class JupyterKernelSpec implements IJupyterKernelSpec {
             try {
                 fs.removeSync(path.dirname(this.specFile));
             } catch {
+                // There is more than one location for the spec file directory
+                // to be cleaned up. If one fails, the other likely deleted it already.
                 noop();
             }
             this.specFile = undefined;
@@ -346,7 +348,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             if (useDefaultConfig) {
                 extraArgs.push(`--config=${configFile}`);
             }
-            // Special check for debugging
+            // Check for the debug environment variable being set. Setting this
+            // causes Jupyter to output a lot more information about what it's doing
+            // under the covers and can be used to investigate problems with Jupyter.
             if (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) {
                 extraArgs.push('--debug');
             }
