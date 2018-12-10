@@ -5,6 +5,9 @@
 import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
+import { sendTelemetryEvent } from '../../telemetry';
+import { PLATFORM_INFO } from '../../telemetry/constants';
+import { PlatformErrors } from '../../telemetry/types';
 import { traceDecorators, traceError } from '../logger';
 import { OSDistro, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
@@ -52,15 +55,18 @@ export class PlatformService implements IPlatformService {
                 try {
                     const ver = coerce(os.release());
                     if (ver) {
+                        sendTelemetryEvent(PLATFORM_INFO, undefined, { osVersion: `${ver.major}.${ver.minor}.${ver.patch}` });
                         return this.version = ver;
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
+                    sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToParseVersion });
                     traceError(`Failed to parse Version ${os.release()}`, ex);
                     return parseVersion(os.release());
                 }
             default:
                 const result = await getLinuxDistro();
+                sendTelemetryEvent(PLATFORM_INFO, undefined, { distro: result[0], osVersion: `${result[1].major}.${result[1].minor}.${result[1].patch}` });
                 this.distro = result[0];
                 this.version = result[1];
                 return this.version;
@@ -91,6 +97,7 @@ function getOSType(platform: string = process.platform): OSType {
     } else if (/^linux/.test(platform)) {
         return OSType.Linux;
     } else {
+        sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToDetermineOS });
         return OSType.Unknown;
     }
 }
@@ -104,6 +111,7 @@ async function getLinuxDistro(): Promise<[OSDistro, SemVer]> {
         // tslint:disable-next-line:no-any
         getos((exc: Error, info: any) => {
             if (exc) {
+                sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToGetLinuxInfo });
                 return reject(exc);
             }
             distro = getLinuxDistroFromName(info.dist);
