@@ -175,7 +175,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     public shutdown = async () : Promise<void> => {
         // Destroy the kernel spec first. It's the key thing to
         // finish.
-        this.destroyKernelSpec();
+        await this.destroyKernelSpec();
 
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
         if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
@@ -446,15 +446,15 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
     }
 
-    private destroyKernelSpec = () => {
+    private destroyKernelSpec = async () => {
         try {
             if (this.kernelSpec) {
-                this.kernelSpec.dispose(); // This should delete any old kernel specs
-                this.kernelSpec = undefined;
+                await this.kernelSpec.dispose(); // This should delete any old kernel specs
             }
         } catch {
             noop();
         }
+        this.kernelSpec = undefined;
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {

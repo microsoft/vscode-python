@@ -7,6 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
+import { IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -59,7 +60,7 @@ export interface IJupyterExecution {
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
 }
 
-export interface IJupyterKernelSpec extends Disposable {
+export interface IJupyterKernelSpec extends IDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;

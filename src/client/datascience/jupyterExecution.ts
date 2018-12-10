@@ -58,12 +58,16 @@ class JupyterKernelSpec implements IJupyterKernelSpec {
         this.path = specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.specFile = file;
     }
-    public dispose = () => {
+    public dispose = async () => {
         if (this.specFile &&
             IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
             // There is more than one location for the spec file directory
             // to be cleaned up. If one fails, the other likely deleted it already.
-            fs.remove(path.dirname(this.specFile)).ignoreErrors();
+            try {
+                await fs.remove(path.dirname(this.specFile));
+            } catch {
+                noop();
+            }
             this.specFile = undefined;
         }
     }
@@ -493,7 +497,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // the kernel spec goes away
                 this.asyncRegistry.push({
                     dispose: async () => {
-                        fs.remove(path.dirname(diskPath)).ignoreErrors();
+                        try {
+                            await fs.remove(path.dirname(diskPath));
+                        } catch {
+                            noop();
+                        }
                     }
                 });
 
@@ -527,14 +535,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         return {
             path: resultDir,
-            dispose: () => {
+            dispose: async () =>  {
                 // Try ten times. Process may still be up and running.
                 // We don't want to do async as async dispose means it may never finish and then we don't
                 // delete
                 let count = 0;
                 while (count < 10) {
                     try {
-                        fs.removeSync(resultDir);
+                        await fs.remove(resultDir);
                         count = 10;
                     } catch {
                         count += 1;
