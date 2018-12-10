@@ -4,6 +4,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
@@ -23,12 +24,12 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    PythonInterpreter
+    PythonInterpreter,
 } from '../../client/interpreter/contracts';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
@@ -305,9 +306,9 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Setup some state and verify output is correct
-        await verifySimple(server, 'a=1\r\na', 1);
-        await verifySimple(server, 'a+=1\r\na', 2);
-        await verifySimple(server, 'a+=4\r\na', 6);
+        await verifySimple(server, `a=1${os.EOL}a`, 1);
+        await verifySimple(server, `a+=1${os.EOL}a`, 2);
+        await verifySimple(server, `a+=4${os.EOL}a`, 6);
 
         console.log('Waiting for idle');
 
@@ -374,7 +375,7 @@ suite('Jupyter notebook tests', () => {
         assert.ok(server, 'Server not found with a cancel token that does not cancel');
 
         // Make sure can run some code too
-        await verifySimple(server, 'a=1\r\na', 1);
+        await verifySimple(server, `a=1${os.EOL}a`, 1);
 
         // Force a settings changed so that all of the cached data is cleared
         ioc.forceSettingsChanged();
@@ -445,10 +446,10 @@ while keep_going:
 
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
-        interruptResult = await interruptExecute(server, 'import time\r\ntime.sleep(4)\r\nprint("foo")', 7000, 7000);
+        interruptResult = await interruptExecute(server, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 7000, 7000);
 
         // Try again with something that doesn't return. Make sure it times out
-        interruptResult = await interruptExecute(server, 'import time\r\ntime.sleep(4)\r\nprint("foo")', 100, 7000);
+        interruptResult = await interruptExecute(server, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 100, 7000);
         assert.equal(interruptResult, InterruptResult.TimedOut);
 
         // The tough one, somethign that causes a kernel reset.
@@ -583,7 +584,7 @@ plt.show()`,
         const server = await jupyterExecution.connectToNotebookServer(undefined, true);
         assert.ok(server, 'Never connected to a default server with a bad default config');
 
-        await verifySimple(server, 'a=1\r\na', 1);
+        await verifySimple(server, `a=1${os.EOL}a`, 1);
     });
 
     // Tests that should be running:

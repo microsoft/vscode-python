@@ -15,7 +15,6 @@ import { JupyterConnectError } from './jupyterConnectError';
 import { IConnection } from './types';
 
 const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
-// const ForbiddenPatternRegEx = /Forbidden/;
 const HttpPattern = /https?:\/\//;
 
 export type JupyterServerInfo = {
@@ -152,12 +151,8 @@ class JupyterConnectionWaiter {
             }).ignoreErrors();
         }
 
-        // This might be a red herring. Not sure it's actually forbidden to talk to the process.
-        // // Look for 'Forbidden' in the result
-        // const forbiddenMatch = ForbiddenPatternRegEx.exec(data);
-        // if (forbiddenMatch && this.startPromise && !this.startPromise.resolved) {
-        //     this.rejectStartPromise(data.toString('utf8'));
-        // }
+        // Sometimes jupyter will return a 403 error. Not sure why. We used
+        // to fail on this, but it looks like jupyter works with this error in place.
     }
 
     private launchTimedOut = () => {

@@ -314,6 +314,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                 .catch(err => {
                     status.dispose();
                     this.logger.logError(err);
+                    this.applicationShell.showErrorMessage(err);
                 });
         }
     }
