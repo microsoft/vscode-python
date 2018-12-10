@@ -172,6 +172,7 @@ suite('History output tests', () => {
             let count = 0;
             let deferred = createDeferred<boolean>();
             ioc.onContextSet(a => {
+                console.log(`Setting context for ${a.name} to ${a.value}`);
                 count += 1;
                 if (count >= 3) {
                     deferred.resolve();
@@ -185,6 +186,7 @@ suite('History output tests', () => {
             };
 
             // Now send an undo command. This should change the state, so use our waitForInfo promise instead
+            resetWaiting();
             history.postMessage(HistoryMessages.Undo);
             await Promise.race([deferred.promise, sleep(2000)]);
             assert.ok(deferred.resolved, 'Never got update to state');

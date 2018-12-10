@@ -169,7 +169,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         await this.session.kernel.ready;
 
         // Run our initial setup and plot magics
-        await this.initialNotebookSetup(cancelToken);
+        this.initialNotebookSetup(cancelToken);
     }
 
     public shutdown = async () : Promise<void> => {
@@ -178,7 +178,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         this.destroyKernelSpec();
 
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
-        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.local) {
+        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
             try {
                 await this.contentsManager.delete(this.notebookFile.path);
             } catch {
@@ -330,7 +330,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
-            await this.initialNotebookSetup();
+            this.initialNotebookSetup();
 
             return;
         }
@@ -471,7 +471,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     // Set up our initial plotting and imports
-    private initialNotebookSetup = async (cancelToken?: CancellationToken) => {
+    private initialNotebookSetup = (cancelToken?: CancellationToken) => {
         if (this.ranInitialSetup) {
             return;
         }
@@ -479,7 +479,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
         // When we start our notebook initial, change to our workspace or user specified root directory
         if (this.connInfo && this.connInfo.localLaunch && this.workingDir) {
-            await this.changeDirectoryIfPossible(this.workingDir);
+            this.changeDirectoryIfPossible(this.workingDir).ignoreErrors();
         }
 
         // Check for dark theme, if so set matplot lib to use dark_background settings

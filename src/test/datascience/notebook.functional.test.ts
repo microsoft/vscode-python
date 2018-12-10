@@ -258,6 +258,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Export/Import', async () => {
         // Get a bunch of test cells (use our test cells from the react controls)
+        const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const testState = generateTestState(id => { return; }, testFolderPath);
         const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
 
@@ -483,7 +484,7 @@ a`,
             {
                 code:
                     `import pandas as pd
-df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'error',
@@ -493,7 +494,7 @@ df.head()`,
             {
                 code:
                     `import pandas as pd
-df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
                 mimeType: 'text/html',
                 cellType: 'code',
