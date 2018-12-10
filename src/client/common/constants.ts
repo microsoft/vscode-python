@@ -72,7 +72,7 @@ export namespace LinterErrors {
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
 export function isTestExecution(): boolean {
-    return process.env.VSC_PYTHON_CI_TEST === '1';
+    return process.env.VSC_PYTHON_CI_TEST === '1' || isUnitTestExecution();
 }
 
 /**

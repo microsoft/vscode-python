@@ -19,6 +19,8 @@ import {
     IConfigurationService, IDisposableRegistry,
     IOutputChannel, IPythonSettings
 } from '../common/types';
+import { displayProgress } from '../common/utils/decorators';
+import { LanguageService } from '../common/utils/localize';
 import { OSDistro, OSType } from '../common/utils/platform';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
@@ -60,6 +62,7 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
+    @displayProgress(LanguageService.progressActivating())
 
     public async activate(): Promise<void> {
         if (this.currentActivator) {

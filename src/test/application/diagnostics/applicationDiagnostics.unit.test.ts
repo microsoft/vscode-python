@@ -8,8 +8,6 @@
 import * as typemoq from 'typemoq';
 import { DiagnosticSeverity } from 'vscode';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
-import { EnvironmentPathVariableDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/envPathVariable';
-import { InvalidDebuggerTypeDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/invalidDebuggerType';
 import { DiagnosticScope, IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
@@ -32,10 +30,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         outputChannel = typemoq.Mock.ofType<IOutputChannel>();
         logger = typemoq.Mock.ofType<ILogger>();
 
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(IDiagnosticsService), typemoq.It.isValue(EnvironmentPathVariableDiagnosticsServiceId)))
-            .returns(() => envHealthCheck.object);
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(IDiagnosticsService), typemoq.It.isValue(InvalidDebuggerTypeDiagnosticsServiceId)))
-            .returns(() => debuggerTypeCheck.object);
         serviceContainer.setup(d => d.getAll(typemoq.It.isValue(IDiagnosticsService)))
             .returns(() => [envHealthCheck.object, debuggerTypeCheck.object]);
         serviceContainer.setup(d => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
@@ -43,7 +37,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         serviceContainer.setup(d => d.get(typemoq.It.isValue(ILogger)))
             .returns(() => logger.object);
 
-        appDiagnostics = new ApplicationDiagnostics(serviceContainer.object);
+        appDiagnostics = new ApplicationDiagnostics(serviceContainer.object, outputChannel.object);
     });
 
     test('Register should register source maps', () => {

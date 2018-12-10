@@ -19,5 +19,5 @@
 --exclude=Builds
 --exclude=doc
 --fields=Knz
---extras=+f
+--extra=+f
 --append=no
