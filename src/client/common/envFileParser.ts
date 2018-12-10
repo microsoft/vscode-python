@@ -1,9 +1,8 @@
 import * as fs from 'fs-extra';
+import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { EnvironmentVariablesService } from './variables/environment';
 import { EnvironmentVariables } from './variables/types';
-export const IS_WINDOWS = /^win/.test(process.platform);
-
 function parseEnvironmentVariables(contents: string): EnvironmentVariables | undefined {
     if (typeof contents !== 'string' || contents.length === 0) {
         return undefined;

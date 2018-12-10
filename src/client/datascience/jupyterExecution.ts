@@ -11,6 +11,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 
 import { Cancellation, CancellationError } from '../common/cancellation';
+import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
 import {
     ExecutionResult,
@@ -21,7 +22,6 @@ import {
     SpawnOptions
 } from '../common/process/types';
 import { IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../common/types';
-import { IS_WINDOWS } from '../common/util';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../constants';
