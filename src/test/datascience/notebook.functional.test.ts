@@ -24,12 +24,12 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    InterruptResult,
+    InterruptResult
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
