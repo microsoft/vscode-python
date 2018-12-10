@@ -115,20 +115,18 @@ jobs:
       displayName: 'Create virtualenv environment'
 
 
-    # - task: CondaEnvironment@1
-    #   displayName: 'Create conda environment '
-    #   inputs:
-    #     packageSpecs: 'python=3.7'
+    - bash: |
+       echo $(CONDA)
 
+       activate $(CONDA)
 
-    # - bash: |
-    #    python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) condaPath
+       python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) condaPath
 
-    #    source deactivate
+       source deactivate
 
-    #    cat $(ENV_PATHS_LOCATION)
+       cat $(ENV_PATHS_LOCATION)
 
-    #   displayName: 'Save conda environment executable'
+      displayName: 'Save conda environment executable'
 
 
     - task: Npm@1

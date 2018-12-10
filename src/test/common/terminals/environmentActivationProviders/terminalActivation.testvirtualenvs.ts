@@ -18,6 +18,7 @@ suite('Activation of Environments in Terminal', () => {
                                 path.join(EXTENSION_ROOT_DIR_FOR_TESTS, ENV_PATHS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
     const waitTimeForActivation = 5000;
     type EnvPath = {
+        condaPath: string;
         venvPath: string;
         pipenvPath: string;
         virtualEnvPath: string;
@@ -72,5 +73,8 @@ suite('Activation of Environments in Terminal', () => {
     });
     test('Should activate with virtualenv', async () => {
         await testActivation(envPaths.virtualEnvPath);
+    });
+    test('Should activate with conda', async () => {
+        await testActivation(envPaths.condaPath);
     });
 });
