@@ -61,13 +61,9 @@ class JupyterKernelSpec implements IJupyterKernelSpec {
     public dispose = () => {
         if (this.specFile &&
             IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
-            try {
-                fs.removeSync(path.dirname(this.specFile));
-            } catch {
-                // There is more than one location for the spec file directory
-                // to be cleaned up. If one fails, the other likely deleted it already.
-                noop();
-            }
+            // There is more than one location for the spec file directory
+            // to be cleaned up. If one fails, the other likely deleted it already.
+            fs.remove(path.dirname(this.specFile)).ignoreErrors();
             this.specFile = undefined;
         }
     }
@@ -497,11 +493,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // the kernel spec goes away
                 this.asyncRegistry.push({
                     dispose: async () => {
-                        try {
-                            fs.removeSync(path.dirname(diskPath));
-                        } catch {
-                            noop();
-                        }
+                        fs.remove(path.dirname(diskPath)).ignoreErrors();
                     }
                 });
 
