@@ -182,10 +182,12 @@ class JupyterConnectionWaiter {
 export class JupyterConnection implements IConnection {
     public baseUrl: string;
     public token: string;
+    public localLaunch: boolean;
     private disposable: Disposable | undefined;
     constructor(baseUrl: string, token: string, disposable: Disposable) {
         this.baseUrl = baseUrl;
         this.token = token;
+        this.localLaunch = true;
         this.disposable = disposable;
     }
 

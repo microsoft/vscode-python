@@ -15,7 +15,7 @@ import {
 } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as vscode from 'vscode';
@@ -38,6 +38,7 @@ import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } fr
 export class JupyterServer implements INotebookServer, IDisposable {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
+    private workingDir: string | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
@@ -54,10 +55,11 @@ export class JupyterServer implements INotebookServer, IDisposable {
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
+        this.workingDir = workingDir;
 
         // First connect to the sesssion manager
         const serverSettings = ServerConnection.makeSettings(
@@ -92,8 +94,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         await this.session.kernel.ready;
 
         // Run our initial setup and plot magics
-        this.initialNotebookSetup(cancelToken);
-
+        await this.initialNotebookSetup(cancelToken);
     }
 
     public shutdown = () => {
@@ -155,6 +156,14 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
         // Wait for the execution to finish
         return deferred.promise;
+    }
+
+    public setInitialDirectory = async (directory: string): Promise<void> => {
+        // If we launched local and have no working directory call this on add code to change directory
+        if (!this.workingDir && this.connInfo && this.connInfo.localLaunch) {
+            await this.changeDirectoryIfPossible(directory);
+            this.workingDir = directory;
+        }
     }
 
     public executeObservable = (code: string, file: string, line: number) : Observable<ICell[]> => {
@@ -231,8 +240,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
             // Restart our kernel
             await this.session.kernel.restart();
 
-            // Reimplement our magics
-            this.initialNotebookSetup();
+            // Rerun our initial setup for the notebook
+            await this.initialNotebookSetup();
 
             return;
         }
@@ -294,7 +303,12 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     // Set up our initial plotting and imports
-    private initialNotebookSetup = (cancelToken?: CancellationToken) => {
+    private initialNotebookSetup = async (cancelToken?: CancellationToken) => {
+        // When we start our notebook initial, change to our workspace or user specified root directory
+        if (this.connInfo && this.connInfo.localLaunch && this.workingDir) {
+            await this.changeDirectoryIfPossible(this.workingDir);
+        }
+
         // Check for dark theme, if so set matplot lib to use dark_background settings
         let darkTheme: boolean = false;
         const workbench = this.workspaceService.getConfiguration('workbench');
@@ -306,7 +320,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
 
         this.executeSilently(
-            `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`,
+            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${darkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
             cancelToken
         ).ignoreErrors();
     }
@@ -354,10 +368,9 @@ export class JupyterServer implements INotebookServer, IDisposable {
         });
     }
 
-    private changeDirectoryIfPossible = async (file: string, line: number) : Promise<void> => {
-        if (line >= 0 && await fs.pathExists(file)) {
-            const dir = path.dirname(file);
-            await this.executeSilently(`%cd "${dir}"`);
+    private changeDirectoryIfPossible = async (directory: string) : Promise<void> => {
+        if (this.connInfo && this.connInfo.localLaunch && await fs.pathExists(directory)) {
+            await this.executeSilently(`%cd "${directory}"`);
         }
     }
 
@@ -449,14 +462,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
             // Attempt to change to the current directory. When that finishes
             // send our real request
-            this.changeDirectoryIfPossible(cell.file, cell.line)
-                .then(() => {
-                    this.handleCodeRequest(subscriber, startTime, cell);
-                })
-                .catch(() => {
-                    // Ignore errors if they occur. Just execute normally
-                    this.handleCodeRequest(subscriber, startTime, cell);
-                });
+            this.handleCodeRequest(subscriber, startTime, cell);
         });
     }
 

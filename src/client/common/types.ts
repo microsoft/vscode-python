@@ -268,6 +268,8 @@ export interface IDataScienceSettings {
     enabled: boolean;
     jupyterLaunchTimeout: number;
     jupyterServerURI: string;
+    notebookFileRoot: string;
+    changeDirOnImportExport: boolean;
     useDefaultConfigForJupyter: boolean;
 }
 

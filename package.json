@@ -1024,6 +1024,18 @@
                     "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
                     "scope": "resource"
                 },
+                "python.dataScience.notebookFileRoot": {
+                    "type": "string",
+                    "default": "${workspaceFolder}",
+                    "description": "Set the root directory for loading files for the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.changeDirOnImportExport": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When importing or exporting a Jupyter Notebook add a directory change command to allow relative path loading to work.",
+                    "scope": "resource"
+                },
                 "python.dataScience.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,

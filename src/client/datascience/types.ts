@@ -24,13 +24,14 @@ export interface IDataScienceCommandListener {
 export interface IConnection extends Disposable {
     baseUrl: string;
     token: string;
+    localLaunch: boolean;
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
@@ -38,6 +39,7 @@ export interface INotebookServer extends Disposable {
     waitForIdle() : Promise<void>;
     shutdown();
     interruptKernel() : Promise<void>;
+    setInitialDirectory(directory: string): Promise<void>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -45,7 +47,7 @@ export interface IJupyterExecution {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined>;
+    connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
@@ -64,7 +66,7 @@ export interface INotebookImporter extends Disposable {
 
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
-    translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
+    translateToNotebook(cells: ICell[], directoryChange?: string) : Promise<JSONObject | undefined>;
 }
 
 export const IHistoryProvider = Symbol('IHistoryProvider');

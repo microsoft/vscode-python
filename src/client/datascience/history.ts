@@ -17,7 +17,8 @@ import {
     IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
-    IWebPanelProvider
+    IWebPanelProvider,
+    IWorkspaceService
 } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
@@ -69,7 +70,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(INotebookExporter) private jupyterExporter: INotebookExporter) {
+        @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         // Sign up for configuration changes
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -119,6 +121,10 @@ export class History implements IWebPanelMessageListener, IHistory {
             await this.addInitialSysInfo();
 
             if (this.jupyterServer) {
+                // Before we try to execute code make sure that we have an initial directory set
+                // Normally set via the workspace, but we might not have one here if loading a single loose file
+                await this.jupyterServer.setInitialDirectory(path.dirname(file));
+
                 // Attempt to evaluate this cell in the jupyter notebook
                 const observable = this.jupyterServer.executeObservable(code, file, line);
 
@@ -476,36 +482,46 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private exportToFile = async (cells: ICell[], file : string) => {
         // Take the list of cells, convert them to a notebook json format and write to disk
-        const notebook = await this.jupyterExporter.translateToNotebook(cells);
+        if (this.jupyterServer) {
+            let directoryChange;
+            const settings = this.configuration.getSettings();
+            if (settings.datascience.changeDirOnImportExport) {
+                directoryChange = file;
+            }
 
-        try {
-            // tslint:disable-next-line: no-any
-            await fs.writeFile(file, JSON.stringify(notebook), { encoding: 'utf8', flag: 'w' });
-            this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
-                if (str && file && this.jupyterServer) {
-                    // If the user wants to, open the notebook they just generated.
-                    this.jupyterExecution.spawnNotebook(file).ignoreErrors();
-                }
-            });
-        } catch (exc) {
-            this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
+            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
+
+            try {
+                // tslint:disable-next-line: no-any
+                await this.fileSystem.writeFile(file, JSON.stringify(notebook), {encoding: 'utf8', flag: 'w'});
+                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str : string | undefined) => {
+                    if (str && this.jupyterServer) {
+                        // If the user wants to, open the notebook they just generated.
+                        this.jupyterExecution.spawnNotebook(file).ignoreErrors();
+                    }
+                });
+            } catch (exc) {
+                this.logger.logError('Error in exporting notebook file');
+                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
+            }
         }
-
     }
 
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
+        let workingDir: string | undefined;
         const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
             // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
             if (serverURI === Settings.JupyterServerLocalLaunch) {
                 serverURI = undefined;
+
+                workingDir = await this.calculateWorkingDirectory();
             }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, useDefaultConfig);
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, useDefaultConfig, undefined, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {
@@ -516,6 +532,41 @@ export class History implements IWebPanelMessageListener, IHistory {
                 status.dispose();
             }
         }
+    }
+
+    // Calculate the working directory that we should move into when starting up our Jupyter server locally
+    private calculateWorkingDirectory = async (): Promise<string | undefined> =>
+    {
+        let workingDir: string | undefined;
+        // For a local launch calculate the working directory that we should switch into
+        const settings = this.configuration.getSettings();
+        const fileRoot = settings.datascience.notebookFileRoot;
+
+        // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
+        // so only do this setting if we actually have a valid workspace open
+        if (fileRoot && this.workspaceService.hasWorkspaceFolders) {
+            const workspaceFolderPath = this.workspaceService.workspaceFolders![0].uri.fsPath;
+            if (path.isAbsolute(fileRoot)) {
+                if (await this.fileSystem.directoryExists(fileRoot)) {
+                    // User setting is absolute and exists, use it
+                    workingDir = fileRoot;
+                } else {
+                    // User setting is absolute and doesn't exist, use workspace
+                    workingDir = workspaceFolderPath;
+                }
+            } else {
+               // fileRoot is a relative path, combine it with the workspace folder
+               const combinedPath = path.join(workspaceFolderPath, fileRoot);
+               if (await this.fileSystem.directoryExists(combinedPath)) {
+                   // combined path exists, use it
+                   workingDir = combinedPath;
+               } else {
+                   // Combined path doesn't exist, use workspace
+                   workingDir = workspaceFolderPath;
+               }
+            }
+        }
+        return workingDir;
     }
 
     private extractStreamOutput(cell: ICell) : string {

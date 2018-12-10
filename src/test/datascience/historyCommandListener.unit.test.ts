@@ -203,6 +203,8 @@ suite('History command listener', async () => {
             jupyterLaunchTimeout: 10,
             enabled: true,
             jupyterServerURI: '',
+            changeDirOnImportExport: true,
+            notebookFileRoot: 'WORKSPACE',
             useDefaultConfigForJupyter: true
         };
 

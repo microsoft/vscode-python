@@ -5,7 +5,7 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
+import { Disposable, FileSystemWatcher, Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 
 import {
     IApplicationShell,
@@ -15,6 +15,7 @@ import {
 } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
+import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -169,6 +170,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             jupyterLaunchTimeout: 60000,
             enabled: true,
             jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true
         };
 
@@ -204,7 +207,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         workspaceService
         .setup(w => w.hasWorkspaceFolders)
-        .returns(() => false);
+        .returns(() => true);
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+        const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
+        workspaceService
+        .setup(w => w.workspaceFolders)
+        .returns(() => [workspaceFolder]);
         workspaceService.setup(w => w.rootPath).returns(() => '~');
 
         const systemVariables: SystemVariables = new SystemVariables(undefined);
@@ -297,6 +305,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
+    }
+
+    public createMoqWorkspaceFolder(folderPath: string) {
+        const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
+        return folder.object;
     }
 
     public getContext(name: string) : boolean {

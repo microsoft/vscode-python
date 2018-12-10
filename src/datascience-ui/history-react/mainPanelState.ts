@@ -3,6 +3,7 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 
+import * as path from 'path';
 import { concatMultilineString } from '../../client/datascience/common';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
 import { ICellViewModel } from './cell';
@@ -16,9 +17,9 @@ export interface IMainPanelState {
 }
 
 // This function generates test state when running under a browser instead of inside of
-export function generateTestState(inputBlockToggled : (id: string) => void) : IMainPanelState {
+export function generateTestState(inputBlockToggled : (id: string) => void, filePath: string = '') : IMainPanelState {
     return {
-        cellVMs : generateVMs(inputBlockToggled),
+        cellVMs : generateVMs(inputBlockToggled, filePath),
         busy: true,
         skipNextScroll : false,
         undoStack : [],
@@ -49,19 +50,19 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
    };
 }
 
-function generateVMs(inputBlockToggled : (id: string) => void) : ICellViewModel [] {
-    const cells = generateCells();
+function generateVMs(inputBlockToggled : (id: string) => void, filePath: string) : ICellViewModel [] {
+    const cells = generateCells(filePath);
     return cells.map((cell : ICell) => {
         return createCellVM(cell, inputBlockToggled);
     });
 }
 
-function generateCells() : ICell[] {
+function generateCells(filePath: string) : ICell[] {
     const cellData = generateCellData();
     return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo, key : number) => {
         return {
             id : key.toString(),
-            file : 'foo.py',
+            file : path.join(filePath, 'foo.py'),
             line : 1,
             state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
             data : data

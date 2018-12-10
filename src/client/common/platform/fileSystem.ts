@@ -47,8 +47,8 @@ export class FileSystem implements IFileSystem {
         return fs.readFile(filePath).then(buffer => buffer.toString());
     }
 
-    public async writeFile(filePath: string, data: {}): Promise<void> {
-        await fs.writeFile(filePath, data, { encoding: 'utf8' });
+    public async writeFile(filePath: string, data: {}, options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
+        await fs.writeFile(filePath, data, options);
     }
 
     public directoryExists(filePath: string): Promise<boolean> {

@@ -77,6 +77,9 @@ class MockJupyterServer implements INotebookServer {
     public waitForIdle(): Promise<void> {
         throw new Error('Method not implemented');
     }
+    public setInitialDirectory(directory: string): Promise<void> {
+        throw new Error('Method not implemented');
+    }
     public shutdown() {
         noop();
     }
@@ -419,6 +422,8 @@ suite('Jupyter Execution', async () => {
             jupyterLaunchTimeout: 10,
             enabled: true,
             jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true
         };
 

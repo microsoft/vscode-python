@@ -311,7 +311,6 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
     private async importNotebook() : Promise<void> {
-
         const filtersKey = localize.DataScience.importDialogFilter();
         const filtersObject = {};
         filtersObject[filtersKey] = ['ipynb'];
