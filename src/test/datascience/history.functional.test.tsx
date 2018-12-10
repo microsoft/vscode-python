@@ -172,6 +172,7 @@ suite('History output tests', () => {
             let count = 0;
             let deferred = createDeferred<boolean>();
             ioc.onContextSet(a => {
+                // tslint:disable-next-line:no-console
                 console.log(`Setting context for ${a.name} to ${a.value}`);
                 count += 1;
                 if (count >= 3) {
