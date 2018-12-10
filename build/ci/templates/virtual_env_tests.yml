@@ -118,11 +118,7 @@ jobs:
     - bash: |
        echo $(CONDA)
 
-       activate $(CONDA)
-
-       python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) condaPath
-
-       source deactivate
+       C:/Miniconda/python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) condaPath
 
        cat $(ENV_PATHS_LOCATION)
 
