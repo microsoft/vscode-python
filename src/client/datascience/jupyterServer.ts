@@ -381,6 +381,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
 
             // Start our interrupt. If it fails, indicate a restart
             this.session.kernel.interrupt().catch(exc => {
+                this.logger.logWarning(`Error during interrupt: ${exc}`);
                 restarted.resolve([]);
             });
 
