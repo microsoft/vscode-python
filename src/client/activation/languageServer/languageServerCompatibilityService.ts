@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IDotNetCompatibilityService } from '../../common/dotnet/types';
+import { traceError } from '../../common/logger';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED } from '../../telemetry/constants';
 import { ILanguageServerCompatibilityService } from '../types';
@@ -13,8 +14,14 @@ import { ILanguageServerCompatibilityService } from '../types';
 export class LanguageServerCompatibilityService implements ILanguageServerCompatibilityService {
     constructor(@inject(IDotNetCompatibilityService) private readonly dotnetCompatibility: IDotNetCompatibilityService) { }
     public async isSupported(): Promise<boolean> {
-        const supported = await this.dotnetCompatibility.isSupported();
-        sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported });
-        return supported;
+        try {
+            const supported = await this.dotnetCompatibility.isSupported();
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported });
+            return supported;
+        } catch (ex) {
+            traceError('Unable to determine whether LS is supported', ex);
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false, failureType: 'UnknownError' });
+            return false;
+        }
     }
 }

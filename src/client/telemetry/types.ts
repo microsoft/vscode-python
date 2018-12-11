@@ -29,6 +29,7 @@ export type LanguageServerErrorTelemetry = {
 
 export type LanguageServePlatformSupported = {
     supported: boolean;
+    failureType?: 'UnknownError';
 };
 
 export type LinterTrigger = 'auto' | 'save';
