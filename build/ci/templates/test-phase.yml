@@ -214,7 +214,7 @@ steps:
 
       condition: always()
 
-  - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID -F $(Platform)'
+  - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'
     displayName: 'publish codecov'
     continueOnError: true
     condition: always()
