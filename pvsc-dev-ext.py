@@ -65,7 +65,7 @@ def build_typescript(checkout):
 
 def install_PyPI_packages(checkout):
     """Install packages from PyPI."""
-    libs_path = checkout / "pythonFiles" / "libs" / "python"
+    libs_path = checkout / "pythonFiles" / "lib" / "python"
     requirements_path = checkout / "requirements.txt"
     cmd = [
         sys.executable,
