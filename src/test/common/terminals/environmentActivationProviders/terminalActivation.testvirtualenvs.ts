@@ -24,8 +24,12 @@ suite('Activation of Environments in Terminal', () => {
         virtualEnvPath: string;
     };
     let envPaths: EnvPath;
+    let defaultShell;
+    let terminalSettings;
     suiteSetup(async () => {
         envPaths = await fs.readJson(envPathsLocation);
+        terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders[0].uri);
+        defaultShell = terminalSettings.inspect('integrated.shell.windows').globalValue;
         await initialize();
     });
     setup(async () => {
@@ -36,6 +40,7 @@ suite('Activation of Environments in Terminal', () => {
     suiteTeardown(revertSettings);
     async function revertSettings() {
         await updateSetting('terminal.activateEnvironment', undefined , vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+        await terminalSettings.update('integrated.shell.windows', defaultShell, vscode.ConfigurationTarget.Global);
         await restorePythonPathInWorkspaceRoot();
     }
     async function cleanUp() {
@@ -75,6 +80,7 @@ suite('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async () => {
+        await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
         await testActivation(envPaths.condaPath);
     });
 });
