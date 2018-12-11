@@ -8,11 +8,13 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as typemoq from 'typemoq';
+import { Uri } from 'vscode';
 import { InvalidPythonPathInDebuggerService } from '../../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
 import { IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IInvalidPythonPathInDebuggerService } from '../../../../client/application/diagnostics/types';
+import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -23,6 +25,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     let commandFactory: typemoq.IMock<IDiagnosticsCommandFactory>;
     let configService: typemoq.IMock<IConfigurationService>;
     let helper: typemoq.IMock<IInterpreterHelper>;
+    let workspaceService: typemoq.IMock<IWorkspaceService>;
     setup(() => {
         const serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
@@ -37,8 +40,11 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         helper = typemoq.Mock.ofType<IInterpreterHelper>();
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IInterpreterHelper)))
             .returns(() => helper.object);
+        workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
 
-        diagnosticService = new InvalidPythonPathInDebuggerService(serviceContainer.object);
+        diagnosticService = new InvalidPythonPathInDebuggerService(serviceContainer.object, workspaceService.object, commandFactory.object, helper.object, configService.object);
     });
 
     test('Can handle InvalidPythonPathInDebugger diagnostics', async () => {
@@ -104,6 +110,64 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         const valid = await diagnosticService.validatePythonPath(pythonPath);
 
         settings.verifyAll();
+        configService.verifyAll();
+        helper.verifyAll();
+        expect(valid).to.be.equal(true, 'not valid');
+    });
+    test('Ensure ${workspaceFolder} is not expanded when a resource is not passed', async () => {
+        const pythonPath = '${workspaceFolder}/venv/bin/python';
+
+        workspaceService
+            .setup(c => c.getWorkspaceFolder(typemoq.It.isAny()))
+            .returns(() => undefined)
+            .verifiable(typemoq.Times.never());
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isAny()))
+            .returns(() => Promise.resolve({}))
+            .verifiable(typemoq.Times.once());
+
+        await diagnosticService.validatePythonPath(pythonPath);
+
+        configService.verifyAll();
+        helper.verifyAll();
+    });
+    test('Ensure ${workspaceFolder} is expanded', async () => {
+        const pythonPath = '${workspaceFolder}/venv/bin/python';
+
+        const workspaceFolder = { uri: Uri.parse('full/path/to/workspace'), name: '', index: 0 };
+        const expectedPath = `${workspaceFolder.uri.fsPath}/venv/bin/python`;
+
+        workspaceService
+            .setup(c => c.getWorkspaceFolder(typemoq.It.isAny()))
+            .returns(() => workspaceFolder)
+            .verifiable(typemoq.Times.once());
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue(expectedPath)))
+            .returns(() => Promise.resolve({}))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath, Uri.parse('something'));
+
+        configService.verifyAll();
+        helper.verifyAll();
+        expect(valid).to.be.equal(true, 'not valid');
+    });
+    test('Ensure ${env:XYZ123} is expanded', async () => {
+        const pythonPath = '${env:XYZ123}/venv/bin/python';
+
+        process.env.XYZ123 = 'something/else';
+        const expectedPath = `${process.env.XYZ123}/venv/bin/python`;
+        workspaceService
+            .setup(c => c.getWorkspaceFolder(typemoq.It.isAny()))
+            .returns(() => undefined)
+            .verifiable(typemoq.Times.once());
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue(expectedPath)))
+            .returns(() => Promise.resolve({}))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
+
         configService.verifyAll();
         helper.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
