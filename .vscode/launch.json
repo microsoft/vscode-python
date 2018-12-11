@@ -124,7 +124,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep=Module Installer only"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
