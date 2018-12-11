@@ -114,13 +114,14 @@ jobs:
 
       displayName: 'Create virtualenv environment'
 
+    - powershell: |
+       Write-Host $Env:CONDA
 
-    - bash: |
-       echo $(CONDA)
+       $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
 
-       C:/Miniconda/python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) condaPath
+       & $condaPythonPath ./build/ci/addEnvPath.py $Env:ENV_PATHS_LOCATION condaPath
 
-       cat $(ENV_PATHS_LOCATION)
+       Get-Content $Env:ENV_PATHS_LOCATION
 
       displayName: 'Save conda environment executable'
 
