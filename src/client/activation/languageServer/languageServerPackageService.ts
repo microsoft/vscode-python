@@ -67,6 +67,16 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         const isAlphaVersion = this.isAlphaVersionOfExtension();
         return isAlphaVersion ? 'beta' : 'stable';
     }
+    public getLanguageServerDownloadChannelz(): LanguageServerDownloadChannels {
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const settings = configService.getSettings();
+        if (settings.analysis.downloadChannel) {
+            return settings.analysis.downloadChannel;
+        }
+
+        const isAlphaVersion = this.isAlphaVersionOfExtension();
+        return isAlphaVersion ? 'beta' : 'stable';
+    }
     protected getValidPackage(packages: NugetPackage[]): NugetPackage {
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         const validPackages = packages
