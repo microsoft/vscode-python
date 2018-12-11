@@ -21,11 +21,11 @@ If you think a GIF of what is happening would be helpful, consider tools like ht
 - Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX 
 - Relevant/affected Python packages and their versions: XXX
 
-## Actual behavior
+## Expected behaviour
 
 XXX
 
-## Expected  behavior
+## Actual behaviour
 
 XXX
 

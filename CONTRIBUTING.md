@@ -7,7 +7,7 @@
 
 | macOS/Windows CI | Linux CI | Rolling CI (macOS/Windows) | Code Coverage |
 |-|-|-|-|
-|[![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=4) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+|[![Build Status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/vscode-python-ci-pr_validation)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=18) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -37,8 +37,7 @@ cd vscode-python
 npm install
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
-python -m pip install -r requirements.txt
-python -m pip install -t pythonFiles/experimental/ptvsd ptvsd
+python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 # Specifying the virtual environment simply varies between shells.
 export CI_PYTHON_PATH=`pwd`/.venv/bin/python
 ```

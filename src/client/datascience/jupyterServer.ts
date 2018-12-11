@@ -4,132 +4,192 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
+import {
+    Contents,
+    ContentsManager,
+    Kernel,
+    KernelMessage,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
+import { Slot } from '@phosphor/signaling';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
-import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { Cancellation, CancellationError } from '../common/cancellation';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
+import { createDeferred, Deferred, sleep } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { RegExpValues } from './constants';
-import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
+import { noop } from '../common/utils/misc';
+import { generateCells } from './cellFactory';
+import { concatMultilineString } from './common';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from './types';
+
+class CellSubscriber {
+    private deferred : Deferred<CellState> = createDeferred<CellState>();
+    private cellRef: ICell;
+    private subscriber: Subscriber<ICell>;
+    private promiseComplete: (self: CellSubscriber) => void;
+    private startTime: number;
+
+    constructor(cell: ICell, subscriber: Subscriber<ICell>, promiseComplete: (self: CellSubscriber) => void) {
+        this.cellRef = cell;
+        this.subscriber = subscriber;
+        this.promiseComplete = promiseComplete;
+        this.startTime = Date.now();
+    }
+
+    public isValid(sessionStartTime: number | undefined) {
+        return sessionStartTime && this.startTime > sessionStartTime;
+    }
+
+    public next(sessionStartTime:  number | undefined) {
+        // Tell the subscriber first
+        if (this.isValid(sessionStartTime)) {
+            this.subscriber.next(this.cellRef);
+        }
+
+        // Then see if we're finished or not.
+        this.attemptToFinish();
+    }
+
+    // tslint:disable-next-line:no-any
+    public error(sessionStartTime: number | undefined, err: any) {
+        if (this.isValid(sessionStartTime)) {
+            this.subscriber.error(err);
+        }
+    }
+
+    public complete(sessionStartTime: number | undefined) {
+        if (this.isValid(sessionStartTime)) {
+            this.subscriber.next(this.cellRef);
+        }
+        this.subscriber.complete();
+
+        // Then see if we're finished or not.
+        this.attemptToFinish();
+    }
+
+    public reject() {
+        if (!this.deferred.completed) {
+            this.cellRef.state = CellState.error;
+            this.subscriber.next(this.cellRef);
+            this.subscriber.complete();
+            this.deferred.reject();
+            this.promiseComplete(this);
+        }
+    }
+
+    public get promise() : Promise<CellState> {
+        return this.deferred.promise;
+    }
+
+    public get cell() : ICell {
+        return this.cellRef;
+    }
+
+    private attemptToFinish() {
+        if ((!this.deferred.completed) &&
+            (this.cell.state === CellState.finished || this.cell.state === CellState.error)) {
+            this.deferred.resolve(this.cell.state);
+            this.promiseComplete(this);
+        }
+    }
+}
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
-export class JupyterServer implements INotebookServer {
-    public isDisposed: boolean = false;
+export class JupyterServer implements INotebookServer, IDisposable {
+    private connInfo: IConnection | undefined;
+    private kernelSpec: IJupyterKernelSpec | undefined;
+    private workingDir: string | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
+    private contentsManager: ContentsManager | undefined;
+    private notebookFile: Contents.IModel | undefined;
     private sessionStartTime: number | undefined;
-    private tempFile: string | undefined;
-    private tempDirList: string[] = [];
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
+    private pendingCellSubscriptions: CellSubscriber[] = [];
+    private ranInitialSetup = false;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
-        @inject(INotebookProcess) private process: INotebookProcess,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
+        this.disposableRegistry.push(this);
+        this.asyncRegistry.push(this);
     }
 
-    public start = async () : Promise<boolean> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void> => {
+        // Save connection information so we can use it later during shutdown
+        this.connInfo = connInfo;
+        this.kernelSpec = kernelSpec;
+        this.workingDir = workingDir;
 
-        if (await this.jupyterExecution.isNotebookSupported()) {
-            // If we're restarting, don't dispose
-            this.isDisposed = false;
+        // First connect to the sesssion manager
+        const serverSettings = ServerConnection.makeSettings(
+            {
+                baseUrl: connInfo.baseUrl,
+                token: connInfo.token,
+                pageUrl: '',
+                // A web socket is required to allow token authentication
+                wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                init: { cache: 'no-store', credentials: 'same-origin' }
+            });
+        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
-            // First generate a temporary notebook. We need this as input to the session
-            // Use a UUID in the path so that we can verify the instance that we have started up
-            this.tempFile = await this.generateTempFile();
-            const uniqueDir = uuid();
-            this.tempFile = path.join(path.dirname(this.tempFile), uniqueDir, path.basename(this.tempFile));
-            await this.fileSystem.createDirectory(path.dirname(this.tempFile));
-            this.tempDirList.push(path.dirname(this.tempFile));
+        // Create a temporary .ipynb file to use
+        this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
+        this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
 
-            // Find our kernel spec name (this will enumerate the spec json files and
-            // create a new spec if none match)
-            let kernelSpec = await this.jupyterExecution.getMatchingKernelSpec();
+        // Create our session options using this temporary notebook and our connection info
+        const options: Session.IOptions = {
+            path: this.notebookFile.path,
+            kernelName: kernelSpec ? kernelSpec.name : '',
+            serverSettings: serverSettings
+        };
 
-            // start our process in the same directory as our ipynb file.
-            await this.process.start(path.dirname(this.tempFile));
+        // Start a new session
+        this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
 
-            // Wait for connection information. We'll stick that into the options
-            const connInfo = await this.process.waitForConnectionInformation();
+        // Setup our start time. We reject anything that comes in before this time during execute
+        this.sessionStartTime = Date.now();
 
-            // First connect to the sesssion manager and find a kernel that matches our
-            // python we're using
-            const jupyterLab = await import('@jupyterlab/services');
-            const serverSettings = jupyterLab.ServerConnection.makeSettings(
-                {
-                    baseUrl: connInfo.baseUrl,
-                    token: connInfo.token,
-                    pageUrl: '',
-                    // A web socket is required to allow token authentication
-                    wsUrl: connInfo.baseUrl.replace('http', 'ws'),
-                    init: { cache: 'no-store', credentials: 'same-origin' }
-                });
-            this.sessionManager = new jupyterLab.SessionManager({ serverSettings: serverSettings });
+        // Wait for it to be ready
+        await this.session.kernel.ready;
 
-            // If our kernel spec wasn't found (possibly because jupyter kernelspec isn't installed)
-            // attempt to find it with our session manager instead
-            if (!kernelSpec) {
-                kernelSpec = await this.jupyterExecution.getMatchingKernelSpec(this.sessionManager);
-            }
-
-            // Create our session options using this temporary notebook and our connection info
-            const options: Session.IOptions = {
-                path: this.tempFile,
-                kernelName: kernelSpec ? kernelSpec.name : '',
-                serverSettings: serverSettings
-            };
-
-            // Start a new session
-            this.session = await this.sessionManager.startNew(options);
-
-            // Setup our start time. We reject anything that comes in before this time during execute
-            this.sessionStartTime = Date.now();
-
-            // Wait for it to be ready
-            await this.session.kernel.ready;
-
-            // Run our initial setup and plot magics
-            this.initialNotebookSetup();
-
-            return true;
-        } else {
-            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
-        }
-
+        // Run our initial setup and plot magics
+        this.initialNotebookSetup(cancelToken);
     }
 
     public shutdown = async () : Promise<void> => {
-        if (this.session && this.sessionManager) {
-            await this.sessionManager.shutdownAll();
-            this.session.dispose();
-            this.sessionManager.dispose();
-            this.session = undefined;
-            this.sessionManager = undefined;
-        }
-        if (this.process) {
-            this.process.dispose();
-        }
+        // Destroy the kernel spec first. It's the key thing to
+        // finish.
+        await this.destroyKernelSpec();
 
-        // Delete any temp .pynb directories that we created
-        for (const tempDir of this.tempDirList) {
-            await this.fileSystem.deleteDirectory(tempDir);
+        // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
+        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
+            try {
+                await this.contentsManager.delete(this.notebookFile.path);
+            } catch {
+                noop();
+            }
         }
+        await this.shutdownSessionAndConnection();
+    }
+
+    public dispose = () : Promise<void> => {
+        return this.shutdown();
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -137,7 +197,7 @@ export class JupyterServer implements INotebookServer {
             await this.session.kernel.ready;
 
             while (this.session.kernel.status !== 'idle') {
-                await this.timeout(10);
+                await this.timeout(0);
             }
         }
     }
@@ -146,7 +206,10 @@ export class JupyterServer implements INotebookServer {
         return Promise.resolve([]);
     }
 
-    public execute(code : string, file: string, line: number) : Promise<ICell[]> {
+    public execute(code : string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]> {
+        // Do initial setup if necessary
+        this.initialNotebookSetup();
+
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -165,38 +228,41 @@ export class JupyterServer implements INotebookServer {
                 deferred.resolve(output);
             });
 
+        if (cancelToken) {
+            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+        }
+
         // Wait for the execution to finish
         return deferred.promise;
     }
 
+    public setInitialDirectory = async (directory: string): Promise<void> => {
+        // If we launched local and have no working directory call this on add code to change directory
+        if (!this.workingDir && this.connInfo && this.connInfo.localLaunch) {
+            await this.changeDirectoryIfPossible(directory);
+            this.workingDir = directory;
+        }
+    }
+
     public executeObservable = (code: string, file: string, line: number) : Observable<ICell[]> => {
+        // Do initial setup if necessary
+        this.initialNotebookSetup();
+
         // If we have a session, execute the code now.
         if (this.session) {
+            // Generate our cells ahead of time
+            const cells = generateCells(code, file, line);
 
-            // Replace windows line endings with unix line endings.
-            const copy = code.replace(/\r\n/g, '\n');
-
-            // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
-            const split = copy.split('\n');
-            const firstLine = split[0];
-            if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
-                // We have at least one markdown. We might have to split it if there any lines that don't begin
-                // with #
-                const firstNonMarkdown = split.findIndex((l : string) => l.trim().length > 0 && !l.trim().startsWith('#'));
-                if (firstNonMarkdown >= 0) {
-                    // We need to combine results
-                    return this.combineObservables(
-                        this.executeMarkdownObservable(split.slice(0, firstNonMarkdown).join('\n'), file, line),
-                        this.executeCodeObservable(split.slice(firstNonMarkdown).join('\n'), file, line + firstNonMarkdown));
-                } else {
-                    // Just a normal markdown case
-                    return this.combineObservables(
-                        this.executeMarkdownObservable(copy, file, line));
-                }
-            } else {
-                // Normal code case
+            // Might have more than one (markdown might be split)
+            if (cells.length > 1) {
+                // We need to combine results
                 return this.combineObservables(
-                    this.executeCodeObservable(copy, file, line));
+                    this.executeMarkdownObservable(cells[0]),
+                    this.executeCodeObservable(cells[1]));
+            } else if (cells.length > 0) {
+                // Either markdown or or code
+                return this.combineObservables(
+                    cells[0].data.cell_type === 'code' ? this.executeCodeObservable(cells[0]) : this.executeMarkdownObservable(cells[0]));
             }
         }
 
@@ -207,15 +273,23 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    public executeSilently = (code: string) : Promise<void> => {
+    public executeSilently = (code: string, cancelToken?: CancellationToken) : Promise<void> => {
         return new Promise((resolve, reject) => {
+
+            // If we cancel, reject our promise
+            if (cancelToken) {
+                this.disposableRegistry.push(cancelToken.onCancellationRequested(() => reject(new CancellationError())));
+            }
+
+            // Do initial setup if necessary
+            this.initialNotebookSetup();
+
             // If we have a session, execute the code now.
             if (this.session) {
                 // Generate a new request and resolve when it's done.
                 const request = this.generateRequest(code, true);
 
                 if (request) {
-
                     // // For debugging purposes when silently is failing.
                     // request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                     //     try {
@@ -242,21 +316,21 @@ export class JupyterServer implements INotebookServer {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public dispose = async () => {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
-            this.onStatusChangedEvent.dispose();
-            this.shutdown().ignoreErrors();
-        }
-    }
-
     public restartKernel = async () : Promise<void> => {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
+            // Complete all pending as an error. We're restarting
+            const copyPending = [...this.pendingCellSubscriptions];
+            copyPending.forEach(c => c.reject());
+
             // Restart our kernel
-            await this.forceRestart();
+            await this.session.kernel.restart();
+
+            // Rerun our initial setup for the notebook
+            this.ranInitialSetup = false;
+            this.initialNotebookSetup();
 
             return;
         }
@@ -264,55 +338,123 @@ export class JupyterServer implements INotebookServer {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
+    public interruptKernel = async (timeoutMs: number) : Promise<InterruptResult> => {
+        if (this.session && this.session.kernel) {
+            // Keep track of our current time. If our start time gets reset, we
+            // restarted the kernel.
+            const interruptBeginTime = Date.now();
 
-        if (this.process) {
+            // Copy the list of pending cells. If these don't finish before the timeout
+            // then our interrupt didn't work.
+            const copyPending = [...this.pendingCellSubscriptions];
 
-            // First we need the python version we're running
-            const pythonVersion = await this.process.waitForPythonVersionString();
+            // Create a promise that resolves when all of our currently
+            // pending cells finish.
+            const finished = copyPending.length > 0 ?
+                Promise.all(copyPending.map(d => d.promise)) : Promise.resolve([CellState.finished]);
 
-            // Pull off the first number. Should be  3 or a 2
-            const first = pythonVersion.substr(0, 1);
+            // Create a deferred promise that resolves if we have a failure
+            const restarted = createDeferred<CellState[]>();
 
-            // Use this to build our metadata object
-            const metadata : nbformat.INotebookMetadata = {
-                kernelspec: {
-                    display_name: `Python ${first}`,
-                    language: 'python',
-                    name: `python${first}`
-                },
-                language_info: {
-                    name: 'python',
-                    codemirror_mode: {
-                        name: 'ipython',
-                        version: parseInt(first, 10)
-                    }
-                },
-                orig_nbformat : 2,
-                file_extension: '.py',
-                mimetype: 'text/x-python',
-                name: 'python',
-                npconvert_exporter: 'python',
-                pygments_lexer: `ipython${first}`,
-                version: pythonVersion
+            // Listen to status change events so we can tell if we're restarting
+            const statusHandler: Slot<Session.ISession, Kernel.Status> = (s, a) => {
+                if (a === 'starting') {
+                    // We restarted the kernel.
+                    this.sessionStartTime = Date.now();
+                    this.logger.logWarning('Kernel restarting during interrupt');
+
+                    // Indicate we have to redo initial setup. We can't wait for starting though
+                    // because sometimes it doesn't happen
+                    this.ranInitialSetup = false;
+
+                    // Indicate we restarted the race below
+                    restarted.resolve([]);
+
+                    // Fail all of the active (might be new ones) pending cell executes. We restarted.
+                    const newCopyPending = [...this.pendingCellSubscriptions];
+                    newCopyPending.forEach(c => {
+                        c.reject();
+                    });
+                }
             };
+            this.session.statusChanged.connect(statusHandler);
 
-            // Combine this into a JSON object
-            return {
-                cells: this.pruneCells(cells),
-                nbformat: 4,
-                nbformat_minor: 2,
-                metadata: metadata
-            };
+            // Start our interrupt. If it fails, indicate a restart
+            this.session.kernel.interrupt().catch(exc => {
+                this.logger.logWarning(`Error during interrupt: ${exc}`);
+                restarted.resolve([]);
+            });
+
+            try {
+                // Wait for all of the pending cells to finish or the timeout to fire
+                const result = await Promise.race([finished, restarted.promise, sleep(timeoutMs)]);
+                const states = result as CellState[];
+
+                // See if we restarted or not
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                if (states) {
+                    // We got back the pending cells
+                    return InterruptResult.Success;
+                }
+
+                // We timed out. You might think we should stop our pending list, but that's not
+                // up to us. The cells are still executing. The user has to request a restart or try again
+                return InterruptResult.TimedOut;
+            } catch (exc) {
+                // Something failed. See if we restarted or not.
+                if (interruptBeginTime < this.sessionStartTime) {
+                    return InterruptResult.Restarted;
+                }
+
+                // Otherwise a real error occurred.
+                throw exc;
+            } finally {
+                this.session.statusChanged.disconnect(statusHandler);
+            }
+        }
+
+        throw new Error(localize.DataScience.sessionDisposed());
+    }
+
+    private shutdownSessionAndConnection = async () => {
+        if (this.contentsManager) {
+            this.contentsManager.dispose();
+            this.contentsManager = undefined;
+        }
+        if (this.session || this.sessionManager) {
+            try {
+                if (this.session) {
+                    await this.session.shutdown();
+                    this.session.dispose();
+                }
+                if (this.sessionManager) {
+                    this.sessionManager.dispose();
+                }
+            } catch {
+                noop();
+            }
+            this.session = undefined;
+            this.sessionManager = undefined;
+        }
+        this.onStatusChangedEvent.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
         }
     }
 
-    public launchNotebook = async (file: string) : Promise<boolean> => {
-        if (this.process) {
-            await this.process.spawn(file);
-            return true;
+    private destroyKernelSpec = async () => {
+        try {
+            if (this.kernelSpec) {
+                await this.kernelSpec.dispose(); // This should delete any old kernel specs
+            }
+        } catch {
+            noop();
         }
-        return false;
+        this.kernelSpec = undefined;
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
@@ -329,27 +471,18 @@ export class JupyterServer implements INotebookServer {
         ) : undefined;
     }
 
-    private forceRestart = async () : Promise<void> => {
-        // Wait for a restart and a timeout. If we timeout, then instead do a
-        // dispose and restart
-        if (this.session) {
-            const result = await Promise.race([this.session.kernel.restart(), this.timeout(5000)]);
-            if (typeof result === 'number') {
-                this.logger.logWarning('Restart of Jupyter Server failed. Forcing a full restart');
-
-                // Then we didn't restart. We timed out. Dispose and restart
-                await this.shutdown();
-                await this.start();
-            } else {
-                // Wait for kernel ready after restart
-                await this.session.kernel.ready;
-                this.initialNotebookSetup();
-            }
-        }
-    }
-
     // Set up our initial plotting and imports
-    private initialNotebookSetup = () => {
+    private initialNotebookSetup = (cancelToken?: CancellationToken) => {
+        if (this.ranInitialSetup) {
+            return;
+        }
+        this.ranInitialSetup = true;
+
+        // When we start our notebook initial, change to our workspace or user specified root directory
+        if (this.connInfo && this.connInfo.localLaunch && this.workingDir) {
+            this.changeDirectoryIfPossible(this.workingDir).ignoreErrors();
+        }
+
         // Check for dark theme, if so set matplot lib to use dark_background settings
         let darkTheme: boolean = false;
         const workbench = this.workspaceService.getConfiguration('workbench');
@@ -361,43 +494,13 @@ export class JupyterServer implements INotebookServer {
         }
 
         this.executeSilently(
-            `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${darkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+            cancelToken
         ).ignoreErrors();
     }
 
     private timeout(ms : number) : Promise<number> {
         return new Promise(resolve => setTimeout(resolve, ms, ms));
-    }
-
-    private pruneCells = (cells : ICell[]) : nbformat.IBaseCell[] => {
-        // First filter out sys info cells. Jupyter doesn't understand these
-        return cells.filter(c => c.data.cell_type !== 'sys_info')
-            // Then prune each cell down to just the cell data.
-            .map(this.pruneCell);
-    }
-
-    private pruneCell = (cell : ICell) : nbformat.IBaseCell => {
-        // Remove the #%% of the top of the source if there is any. We don't need
-        // this to end up in the exported ipynb file.
-        const copy = {...cell.data};
-        copy.source = this.pruneSource(cell.data.source);
-        return copy;
-    }
-
-    private pruneSource = (source : nbformat.MultilineString) : nbformat.MultilineString => {
-
-        if (Array.isArray(source) && source.length > 0) {
-            if (RegExpValues.PythonCellMarker.test(source[0])) {
-                return source.slice(1);
-            }
-        } else {
-            const array = source.toString().split('\n').map(s => `${s}\n`);
-            if (array.length > 0 && RegExpValues.PythonCellMarker.test(array[0])) {
-                return array.slice(1);
-            }
-        }
-
-        return source;
     }
 
     private combineObservables = (...args : Observable<ICell>[]) : Observable<ICell[]> => {
@@ -431,140 +534,94 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private appendLineFeed(arr : string[], modifier? : (s : string) => string) {
-        return arr.map((s: string, i: number) => {
-            const out = modifier ? modifier(s) : s;
-            return i === arr.length - 1 ? `${out}` : `${out}\n`;
-        });
-    }
-
-    private executeMarkdownObservable = (code: string, file: string, line: number) : Observable<ICell> => {
-
+    private executeMarkdownObservable = (cell: ICell) : Observable<ICell> => {
+        // Markdown doesn't need any execution
         return new Observable<ICell>(subscriber => {
-            // Generate markdown by stripping out the comment and markdown header
-            const markdown = this.appendLineFeed(code.split('\n').slice(1), s => s.trim().slice(1).trim());
-
-            const cell: ICell = {
-                id: uuid(),
-                file: file,
-                line: line,
-                state: CellState.finished,
-                data : {
-                    cell_type : 'markdown',
-                    source: markdown,
-                    metadata: {}
-                }
-            };
-
             subscriber.next(cell);
             subscriber.complete();
         });
     }
 
-    private changeDirectoryIfPossible = async (file: string, line: number) : Promise<void> => {
-        if (line >= 0 && await fs.pathExists(file)) {
-            const dir = path.dirname(file);
-            await this.executeSilently(`%cd "${dir}"`);
+    private changeDirectoryIfPossible = async (directory: string) : Promise<void> => {
+        if (this.connInfo && this.connInfo.localLaunch && await fs.pathExists(directory)) {
+            await this.executeSilently(`%cd "${directory}"`);
         }
     }
 
-    private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
-        // Generate a new request.
-        const request = this.generateRequest(code, false);
-        // tslint:disable-next-line:no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-        // Transition to the busy stage
-        cell.state = CellState.executing;
+    private handleCodeRequest = (subscriber: CellSubscriber) => {
+        // Generate a new request if we still can
+        if (subscriber.isValid(this.sessionStartTime)) {
 
-        // Listen to the reponse messages and update state as we go
-        if (request) {
-            request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                try {
-                    if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                        this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                        this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                        this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                    } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                        this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                        this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                        this.handleError(msg as KernelMessage.IErrorMsg, cell);
-                    } else {
-                        this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), false);
+
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+            // Transition to the busy stage
+            subscriber.cell.state = CellState.executing;
+
+            // Listen to the reponse messages and update state as we go
+            if (request) {
+                request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                    try {
+                        if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                            this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, subscriber.cell);
+                        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+                            this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, subscriber.cell);
+                        } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg, subscriber.cell);
+                        } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                            this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, subscriber.cell);
+                        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                            this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, subscriber.cell);
+                        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                            this.handleError(msg as KernelMessage.IErrorMsg, subscriber.cell);
+                        } else {
+                            this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                        }
+
+                        // Set execution count, all messages should have it
+                        if (msg.content.execution_count) {
+                            subscriber.cell.data.execution_count = msg.content.execution_count as number;
+                        }
+
+                        // Show our update if any new output
+                        subscriber.next(this.sessionStartTime);
+                    } catch (err) {
+                        // If not a restart error, then tell the subscriber
+                        subscriber.error(this.sessionStartTime, err);
                     }
+                };
 
-                    // Set execution count, all messages should have it
-                    if (msg.content.execution_count) {
-                        cell.data.execution_count = msg.content.execution_count as number;
-                    }
-
-                    // Show our update if any new output
-                    subscriber.next(cell);
-                } catch (err) {
-                    // If not a restart error, then tell the subscriber
-                    if (startTime > this.sessionStartTime!) {
-                        this.logger.logError(`Error during message ${msg.header.msg_type}`);
-                        subscriber.error(err);
-                    }
-                }
-            };
-
-            // Create completion and error functions so we can bind our cell object
-            // tslint:disable-next-line:no-any
-            const completion = (error?: any) => {
-                cell.state = error as Error ? CellState.error : CellState.finished;
-                // Only do this if start time is still valid. Dont log an error to the subscriber. Error
-                // state should end up in the cell output.
-                if (startTime > this.sessionStartTime!) {
-                    subscriber.next(cell);
-                }
-                subscriber.complete();
-            };
-
-            // When the request finishes we are done
-            request.done.then(completion).catch(completion);
+                // When the request finishes we are done
+                request.done.then(() => subscriber.complete(this.sessionStartTime)).catch(e => subscriber.error(this.sessionStartTime, e));
+            } else {
+                subscriber.error(this.sessionStartTime, new Error(localize.DataScience.sessionDisposed()));
+            }
         } else {
-            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            // Otherwise just set to an error
+            this.handleInterrupted(subscriber.cell);
+            subscriber.cell.state = CellState.error;
+            subscriber.complete(this.sessionStartTime);
         }
+
     }
 
-    private executeCodeObservable(code: string, file: string, line: number) : Observable<ICell> {
+    private executeCodeObservable(cell: ICell) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
-            // Start out empty;
-            const cell: ICell = {
-                data: {
-                    source: this.appendLineFeed(code.split('\n')),
-                    cell_type: 'code',
-                    outputs: [],
-                    metadata: {},
-                    execution_count: 0
-                },
-                id: uuid(),
-                file: file,
-                line: line,
-                state: CellState.init
-            };
-
-            // Keep track of when we started.
-            const startTime = Date.now();
-
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
 
+            // Wrap the subscriber and save it. It is now pending and waiting completion.
+            const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
+                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+            });
+            this.pendingCellSubscriptions.push(cellSubscriber);
+
             // Attempt to change to the current directory. When that finishes
             // send our real request
-            this.changeDirectoryIfPossible(file, line)
-                .then(() => {
-                    this.handleCodeRequest(subscriber, startTime, cell, code);
-                })
-                .catch(() => {
-                    // Ignore errors if they occur. Just execute normally
-                    this.handleCodeRequest(subscriber, startTime, cell, code);
-                });
+            this.handleCodeRequest(cellSubscriber);
         });
     }
 
@@ -582,11 +639,17 @@ export class JupyterServer implements INotebookServer {
         cell.data.execution_count = msg.content.execution_count;
     }
 
-    private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, cell: ICell) {
         if (msg.content.execution_state === 'busy') {
             this.onStatusChangedEvent.fire(true);
         } else {
             this.onStatusChangedEvent.fire(false);
+        }
+
+        // Status change to idle generally means we finished. Not sure how to
+        // make sure of this. Maybe only bother if an interrupt
+        if (msg.content.execution_state === 'idle' && cell.state !== CellState.error) {
+            cell.state = CellState.finished;
         }
     }
 
@@ -608,6 +671,24 @@ export class JupyterServer implements INotebookServer {
         this.addToCellData(cell, output);
     }
 
+    private handleInterrupted(cell : ICell) {
+        this.handleError({
+            channel: 'iopub',
+            parent_header: {},
+            metadata: {},
+            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error' },
+            content: {
+                ename: 'KeyboardInterrupt',
+                evalue: '',
+                // Does this need to be translated? All depends upon if jupyter does or not
+                traceback: [
+                    '[1;31m---------------------------------------------------------------------------[0m',
+                    '[1;31mKeyboardInterrupt[0m: '
+                ]
+            }
+        }, cell);
+    }
+
     private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
         const output : nbformat.IError = {
             output_type : 'error',
@@ -616,15 +697,6 @@ export class JupyterServer implements INotebookServer {
             traceback : msg.content.traceback
         };
         this.addToCellData(cell, output);
-    }
-
-    private async generateTempFile() : Promise<string> {
-        // Create a temp file on disk
-        const file = await this.fileSystem.createTemporaryFile('.ipynb');
-
-        // Save in our list disposable
-        this.disposableRegistry.push(file);
-
-        return file.filePath;
+        cell.state = CellState.error;
     }
 }

@@ -1,16 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-// tslint:disable:no-any
-
-import { spawn } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
+import * as tk from 'tree-kill';
 import { Disposable } from 'vscode';
+
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
-import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions, StdErrError } from './types';
+import {
+    ExecutionResult,
+    IBufferDecoder,
+    IProcessService,
+    ObservableExecutionResult,
+    Output,
+    ShellOptions,
+    SpawnOptions,
+    StdErrError
+} from './types';
 
+// tslint:disable:no-any
 export class ProcessService implements IProcessService {
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
     public static isAlive(pid: number): boolean {
@@ -29,23 +38,11 @@ export class ProcessService implements IProcessService {
         } catch {
             // Ignore.
         }
-
     }
+
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
-        const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
-        delete options.encoding;
-        const spawnOptions = { ...options };
-        if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
-            const env = this.env ? this.env : process.env;
-            spawnOptions.env = { ...env };
-        }
-
-        // Always ensure we have unbuffered output.
-        spawnOptions.env.PYTHONUNBUFFERED = '1';
-        if (!spawnOptions.env.PYTHONIOENCODING) {
-            spawnOptions.env.PYTHONIOENCODING = 'utf-8';
-        }
-
+        const spawnOptions = this.getDefaultOptions(options);
+        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
 
@@ -90,22 +87,19 @@ export class ProcessService implements IProcessService {
             });
         });
 
-        return { proc, out: output };
+        return {
+            proc,
+            out: output,
+            dispose: () => {
+                if (proc && !proc.killed) {
+                    tk(proc.pid);
+                }
+            }
+        };
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-        const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
-        delete options.encoding;
-        const spawnOptions = { ...options };
-        if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
-            const env = this.env ? this.env : process.env;
-            spawnOptions.env = { ...env };
-        }
-
-        // Always ensure we have unbuffered output.
-        spawnOptions.env.PYTHONUNBUFFERED = '1';
-        if (!spawnOptions.env.PYTHONIOENCODING) {
-            spawnOptions.env.PYTHONIOENCODING = 'utf-8';
-        }
+        const spawnOptions = this.getDefaultOptions(options);
+        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposables: Disposable[] = [];
@@ -155,4 +149,45 @@ export class ProcessService implements IProcessService {
 
         return deferred.promise;
     }
+
+    public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
+        const shellOptions = this.getDefaultOptions(options);
+        return new Promise((resolve, reject) => {
+            exec(command, shellOptions, (e, stdout, stderr) => {
+                if (e && e !== null) {
+                    reject(e);
+                } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
+                    reject(new Error(stderr));
+                } else {
+                    // Make sure stderr is undefined if we actually had none. This is checked
+                    // elsewhere because that's how exec behaves.
+                    resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
+                }
+            });
+        });
+    }
+
+    private getDefaultOptions<T extends (ShellOptions | SpawnOptions)>(options: T) : T {
+        const execOptions = options as SpawnOptions;
+        const defaultOptions = JSON.parse(JSON.stringify(options));
+        if (execOptions)
+        {
+            const encoding = execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING;
+            delete execOptions.encoding;
+            defaultOptions.encoding = encoding;
+        }
+        if (!defaultOptions.env || Object.keys(defaultOptions).length === 0) {
+            const env = this.env ? this.env : process.env;
+            defaultOptions.env = { ...env };
+        }
+
+        // Always ensure we have unbuffered output.
+        defaultOptions.env.PYTHONUNBUFFERED = '1';
+        if (!defaultOptions.env.PYTHONIOENCODING) {
+            defaultOptions.env.PYTHONIOENCODING = 'utf-8';
+        }
+
+        return defaultOptions;
+    }
+
 }

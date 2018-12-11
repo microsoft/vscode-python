@@ -6,18 +6,17 @@
 // tslint:disable:max-func-body-length no-invalid-this no-any
 
 import * as assert from 'assert';
+import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
-import { isWindows, noop } from '../core';
+import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
-const decoratorsPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'definition', 'navigation');
-const fileDefinitions = path.join(decoratorsPath, 'definitions.py');
-const wksPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'exclusions');
-const fileOne = path.join(wksPath, 'one.py');
+const fileDefinitions = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'definitions.py');
 
 suite('Smoke Test: Language Server', function () {
     // Large value to allow for LS to get downloaded.
@@ -79,54 +78,29 @@ suite('Smoke Test: Language Server', function () {
         // In test mode it awaits for the completion before trying
         // to fetch data for completion, hover.etc.
         await vscode.commands.executeCommand('vscode.executeCompletionItemProvider', textDocument.uri, new vscode.Position(0, 0));
-        assert.equal(await isLanguageServerDownloaded(), true, 'Language Server not downloaded');
+        await waitForCondition(isLanguageServerDownloaded, 30_000, 'Language Server not downloaded');
+        // For for LS to get extracted.
+        await sleep(10_000);
         return textDocument;
     }
 
-    const assertFile = (expectedLocation: string, location: vscode.Uri) => {
-        let relLocation = vscode.workspace.asRelativePath(location);
-        let expectedRelLocation = vscode.workspace.asRelativePath(expectedLocation);
-        if (isWindows) {
-            relLocation = relLocation.toUpperCase();
-            expectedRelLocation = expectedRelLocation.toUpperCase();
-        }
-        assert.equal(expectedRelLocation, relLocation, 'Position is in wrong file');
-    };
-
-    const assertRange = (expectedRange: vscode.Range, range: vscode.Range) => {
-        const formatPosition = (position: vscode.Position) => {
-            return `${position.line},${position.character}`;
-        };
-        assert.equal(formatPosition(expectedRange.start), formatPosition(range.start), 'Start position is incorrect');
-        assert.equal(formatPosition(expectedRange.end), formatPosition(range.end), 'End position is incorrect');
-    };
-
     test('Definitions', async () => {
-        const startPosition = new vscode.Position(2, 6);
-        const expectedFiles = [fileDefinitions];
-        const expectedRanges = [new vscode.Range(2, 4, 2, 16)];
+        const startPosition = new vscode.Position(13, 6);
         const textDocument = await openFile(fileDefinitions);
-
-        const locations = await vscode.commands.executeCommand<vscode.Location[]>('vscode.executeDefinitionProvider', textDocument.uri, startPosition);
-        assert.equal(expectedFiles.length, locations!.length, 'Wrong number of results');
-
-        for (let i = 0; i < locations!.length; i += 1) {
-            assertFile(expectedFiles[i], locations![i].uri);
-            assertRange(expectedRanges[i], locations![i].range!);
+        let tested = false;
+        for (let i = 0; i < 5; i += 1) {
+            const locations = await vscode.commands.executeCommand<vscode.Location[]>('vscode.executeDefinitionProvider', textDocument.uri, startPosition);
+            if (locations && locations.length > 0) {
+                expect(locations![0].uri.fsPath).to.contain(path.basename(fileDefinitions));
+                tested = true;
+                break;
+            } else {
+                // Wait for LS to start.
+                await sleep(5_000);
+            }
         }
-    });
-
-    test('Exclude subfolder', async () => {
-        await openFile(fileOne);
-        const diag = vscode.languages.getDiagnostics();
-
-        const main = diag.filter(d => d[0].fsPath.indexOf('one.py') >= 0);
-        assert.equal(main.length > 0, true);
-
-        const subdir1 = diag.filter(d => d[0].fsPath.indexOf('dir1file.py') >= 0);
-        assert.equal(subdir1.length, 0);
-
-        const subdir2 = diag.filter(d => d[0].fsPath.indexOf('dir2file.py') >= 0);
-        assert.equal(subdir2.length, 0);
+        if (!tested) {
+            assert.fail('Failled to test definitions');
+        }
     });
 });

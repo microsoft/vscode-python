@@ -22,7 +22,7 @@ const path = require('path');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
-const fs = require('fs');
+const fs = require('fs-extra');
 const fsExtra = require('fs-extra');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
@@ -106,8 +106,6 @@ gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 
 gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix'));
-
-gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
@@ -194,17 +192,40 @@ gulp.task('restorePrePublishScript', (done) => {
 
 gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--mode', 'production']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.sourceMaps.config.js', '--mode', 'production']);
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.debugadapter.config.js', '--mode', 'production']);
 });
 
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
+const installPythonLibArgs = ['-m', 'pip', '--disable-pip-version-check', 'install',
+    '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps',
+    '--upgrade', '-r', 'requirements.txt'];
+gulp.task('installPythonLibs', async () => {
+    const requirements = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8').split('\n').map(item => item.trim()).filter(item => item.length > 0);
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
+    await Promise.all(requirements.map(async requirement => {
+        const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(requirement))
+            .then(() => true)
+            .catch(ex => {
+                console.error('Failed to install Python Libs using \'python3\'', ex);
+                return false
+            });
+        if (!success) {
+            console.info('Failed to install Python Libs using \'python3\', attempting to install using \'python\'');
+            await spawnAsync('python', args.concat(requirement))
+                .catch(ex => console.error('Failed to install Python Libs using \'python\'', ex));
+        }
+    }));
+});
+
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
         const proc = spawn(command, args, { cwd: __dirname });
         proc.stdout.on('data', data => {
-            // Log output on CI.
+            // Log output on CI (else travis times out when there's not output).
             if (isCI) {
                 console.log(data.toString());
             }

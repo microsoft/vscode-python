@@ -10,6 +10,7 @@ interface ISysInfoProps
 {
     message: string;
     path: string;
+    notebook_version: string;
     version: string;
     theme: string;
 }
@@ -20,7 +21,7 @@ export class SysInfo extends React.Component<ISysInfoProps> {
     }
 
     public render() {
-        const output = `${this.props.message}\r\n${this.props.version}\r\n${this.props.path}`;
+        const output = `${this.props.message}\r\n${this.props.version}\r\n${this.props.path}\r\n${this.props.notebook_version}`;
 
         return (
             <div className='sysinfo-wrapper'>

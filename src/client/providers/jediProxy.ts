@@ -13,6 +13,7 @@ import {
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
+import { IS_WINDOWS } from '../common/platform/constants';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { BANNER_NAME_PROPOSE_LS, ILogger, IPythonExtensionBanner } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
@@ -21,8 +22,6 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { Logger } from './../common/logger';
-
-const IS_WINDOWS = /^win/.test(process.platform);
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -353,10 +352,10 @@ export class JediProxy implements Disposable {
         const result = pythonProcess.execObservable(args, { cwd });
         this.proc = result.proc;
         this.languageServerStarted.resolve();
-        this.proc.on('end', (end) => {
+        this.proc!.on('end', (end) => {
             Logger.error('spawnProcess.end', `End - ${end}`);
         });
-        this.proc.on('error', error => {
+        this.proc!.on('error', error => {
             this.handleError('error', `${error}`);
             this.spawnRetryAttempts += 1;
             if (this.spawnRetryAttempts < 10 && error && error.message &&

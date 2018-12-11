@@ -7,7 +7,7 @@
 #   PythonVersion: '3.7'
 #   NodeVersion: '8.11.2'
 #   NpmVersion: 'latest'
-#   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+#   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
 #   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
 #   MOCHA_REPORTER_JUNIT: true
 #   AzureStorageAccountName: 'vscodepythonartifacts'
@@ -149,7 +149,7 @@ steps:
     inputs:
       filename: python
 
-      arguments: '-m pip install --upgrade -r ./requirements.txt'
+      arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
 
   - task: CmdLine@1
@@ -157,7 +157,15 @@ steps:
     inputs:
       filename: python
 
-      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd'
+      arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
+
+
+  - script: |
+      set -e
+      /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+      disown -ar
+    displayName: 'Start xvfb'
+    condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
 
   - task: Npm@1
@@ -168,6 +176,8 @@ steps:
       verbose: true
 
       customCommand: 'run $(TestSuiteName)'
+    env:
+      DISPLAY: :10
 
 
   - task: PythonScript@0
@@ -202,8 +212,7 @@ steps:
 
       buildConfiguration: '$(TestSuiteName)'
 
-    condition: always()
-
+      condition: always()
 
   - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID -F $(Platform)'
     displayName: 'publish codecov'

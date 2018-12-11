@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-import { ChildProcess, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
+import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
+
 import { ExecutionInfo } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
@@ -18,8 +18,9 @@ export type Output<T extends string | Buffer> = {
     out: T;
 };
 export type ObservableExecutionResult<T extends string | Buffer> = {
-    proc: ChildProcess;
+    proc: ChildProcess | undefined;
     out: Observable<Output<T>>;
+    dispose() : void;
 };
 
 // tslint:disable-next-line:interface-name
@@ -30,6 +31,9 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     throwOnStdErr?: boolean;
 };
 
+// tslint:disable-next-line:interface-name
+export type ShellOptions = ExecOptions & { throwOnStdErr? : boolean };
+
 export type ExecutionResult<T extends string | Buffer> = {
     stdout: T;
     stderr?: T;
@@ -38,6 +42,7 @@ export type ExecutionResult<T extends string | Buffer> = {
 export interface IProcessService {
     execObservable(file: string, args: string[], options?: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
+    shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;
 }
 
 export const IProcessServiceFactory = Symbol('IProcessServiceFactory');

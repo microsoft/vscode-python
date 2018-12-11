@@ -1,5 +1,7 @@
+import { injectable } from 'inversify';
 import { Memento } from 'vscode';
 
+@injectable()
 export class MockMemento implements Memento {
     private map: Map<string, {}> = new Map<string, {}>();
     // tslint:disable-next-line:no-any

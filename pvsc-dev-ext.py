@@ -63,10 +63,26 @@ def build_typescript(checkout):
     run_command(["node", os.fspath(tsc_path), "-p", os.fspath(checkout)], cwd=checkout)
 
 
-def install_ptvsd(checkout):
-    """Install ptvsd from PyPI."""
-    ptvsd_path = checkout / "pythonFiles" / "experimental" / "ptvsd"
-    cmd = [sys.executable, "-m", "pip", "-q", "--disable-pip-version-check", "install", "--target", os.fspath(ptvsd_path), "--upgrade", "ptvsd"]
+def install_libs(checkout):
+    """Install libs from PyPI."""
+    libs_path = checkout / "pythonFiles" / "libs" / "python"
+    cmd = [
+        sys.executable,
+        "-m",
+        "pip",
+        "-q",
+        "--disable-pip-version-check",
+        "install",
+        "--target",
+        os.fspath(libs_path),
+        "--no-cache-dir",
+        "--implementation",
+        "py",
+        "--no-deps",
+        "--upgrade",
+        "-r",
+        "requirements.txt",
+    ]
     run_command(cmd)
 
 
@@ -83,8 +99,8 @@ def build(checkout):
     install_npm_dependencies(checkout)
     print("Building TypeScript files ...")
     build_typescript(checkout)
-    print("Installing ptvsd ...")
-    install_ptvsd(checkout)
+    print("Installing libs ...")
+    install_libs(checkout)
 
 
 def setup(install_type):

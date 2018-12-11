@@ -63,7 +63,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         options.tests.summary.passed = 0;
         options.tests.summary.skipped = 0;
         let failFast = false;
-        const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'PythonTools', 'visualstudio_py_testlauncher.py');
+        const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
         this.server.on('error', (message: string, ...data: string[]) => this.logger.logError(`${message} ${data.join(' ')}`));
         this.server.on('log', noop);
         this.server.on('connect', noop);

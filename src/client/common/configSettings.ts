@@ -10,6 +10,7 @@ import {
 import { sendTelemetryEvent } from '../telemetry';
 import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
+import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -26,8 +27,6 @@ import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
-
-export const IS_WINDOWS = /^win/.test(process.platform);
 
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
@@ -72,8 +71,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
-            const formatOnType = workspace.getConfiguration('editor', resource ? resource : null).get('formatOnType', false);
-            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete.addBrackets });
+            const config = workspace.getConfiguration('editor', resource ? resource : null);
+            const formatOnType = config ? config.get('formatOnType', false) : false;
+            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false });
             sendTelemetryEvent(FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
         // tslint:disable-next-line:no-non-null-assertion
@@ -330,7 +330,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
-
     }
 
     public get pythonPath(): string {
@@ -359,7 +358,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         }));
 
         const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
-        this.update(initialConfig);
+        if (initialConfig) {
+            this.update(initialConfig);
+        }
     }
 }
 
