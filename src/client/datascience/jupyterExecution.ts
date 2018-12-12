@@ -52,7 +52,7 @@ class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
-    constructor(specModel : Kernel.ISpecModel, file?: string) {
+    constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
         this.language = specModel.language;
         this.path = specModel.argv.length > 0 ? specModel.argv[0] : '';
@@ -90,7 +90,7 @@ class JupyterCommand {
         this.interpreterPromise = interpreter.getInterpreterDetails(this.exe).catch(e => undefined);
     }
 
-    public mainVersion = async () : Promise<number> => {
+    public mainVersion = async (): Promise<number> => {
         const interpreter = await this.interpreterPromise;
         if (interpreter) {
             return interpreter.version_info[0];
@@ -100,14 +100,14 @@ class JupyterCommand {
     }
 
     public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
-        const newOptions = {...options};
+        const newOptions = { ...options };
         newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const newArgs = [...this.requiredArgs, ...args];
         return this.launcher.execObservable(this.exe, newArgs, newOptions);
     }
 
     public exec = async (args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> => {
-        const newOptions = {...options};
+        const newOptions = { ...options };
         newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const newArgs = [...this.requiredArgs, ...args];
         return this.launcher.exec(this.exe, newArgs, newOptions);
@@ -132,9 +132,9 @@ class JupyterCommand {
         return inputEnv;
     }
 
-    private execVersion = async () : Promise<number> => {
+    private execVersion = async (): Promise<number> => {
         if (this.launcher) {
-            const output = await this.launcher.exec(this.exe, ['--version'], {throwOnStdErr: false, encoding: 'utf8'});
+            const output = await this.launcher.exec(this.exe, ['--version'], { throwOnStdErr: false, encoding: 'utf8' });
             // First number should be our result
             const matches = /.*(\d+).*/m.exec(output.stdout);
             if (matches && matches.length > 1) {
@@ -150,20 +150,20 @@ class JupyterCommand {
 export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private processServicePromise: Promise<IProcessService>;
-    private commands : {[command: string] : JupyterCommand } = {};
-    private jupyterPath : string | undefined;
-    private usablePythonInterpreter : PythonInterpreter | undefined;
+    private commands: { [command: string]: JupyterCommand } = {};
+    private jupyterPath: string | undefined;
+    private usablePythonInterpreter: PythonInterpreter | undefined;
 
     constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-                @inject(ICondaService) private condaService: ICondaService,
-                @inject(IInterpreterService) private interpreterService: IInterpreterService,
-                @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-                @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
-                @inject(ILogger) private logger: ILogger,
-                @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-                @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
-                @inject(IFileSystem) private fileSystem: IFileSystem,
-                @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        @inject(ICondaService) private condaService: ICondaService,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
+        @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
+        @inject(ILogger) private logger: ILogger,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged));
         this.disposableRegistry.push(this);
@@ -203,7 +203,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return Cancellation.race(() => this.isCommandSupported(KernelSpecCommand), cancelToken);
     }
 
-    public connectToNotebookServer = (uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined> => {
+    public connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let connection: IConnection;
@@ -251,20 +251,20 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }, cancelToken);
     }
 
-    public spawnNotebook = async (file: string) : Promise<void> => {
+    public spawnNotebook = async (file: string): Promise<void> => {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand('notebook');
         if (!notebookCommand) {
             throw new Error(localize.DataScience.jupyterNotSupported());
         }
 
-        const args: string [] = [`--NotebookApp.file_to_run=${file}`];
+        const args: string[] = [`--NotebookApp.file_to_run=${file}`];
 
         // Don't wait for the exec to finish and don't dispose. It's up to the user to kill the process
-        notebookCommand.exec(args, {throwOnStdErr: false, encoding: 'utf8'}).ignoreErrors();
+        notebookCommand.exec(args, { throwOnStdErr: false, encoding: 'utf8' }).ignoreErrors();
     }
 
-    public importNotebook = async (file: string, template: string) : Promise<string> => {
+    public importNotebook = async (file: string, template: string): Promise<string> => {
         // First we find a way to start a nbconvert
         const convert = await this.findBestCommand(ConvertCommand);
         if (!convert) {
@@ -280,7 +280,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return result.stdout;
     }
 
-    private async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken) : Promise<IJupyterKernelSpec | undefined> {
+    private async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         // If not using an active connection, check on disk
         if (!connection) {
             // Get our best interpreter. We want its python path
@@ -322,7 +322,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined}> {
+    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(NotebookCommand, cancelToken);
         if (!notebookCommand) {
@@ -344,7 +344,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             }
 
             // Create extra args based on if we have a config or not
-            const extraArgs = [];
+            const extraArgs: string[] = [];
             if (useDefaultConfig) {
                 extraArgs.push(`--config=${configFile}`);
             }
@@ -362,11 +362,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const kernelSpec = await this.getMatchingKernelSpec(undefined, cancelToken);
 
             // Then use this to launch our notebook process.
-            const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken});
+            const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
             if (launchResult) {
-                this.asyncRegistry.push({ dispose : () => Promise.resolve(launchResult.dispose()) });
+                this.asyncRegistry.push({ dispose: () => Promise.resolve(launchResult.dispose()) });
             }
 
             // Wait for the connection information on this result
@@ -387,7 +387,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }
     }
 
-    private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined> => {
+    private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
 
         // Make sure somebody is useable for notebooks. Otherwise it doesn't really matter
         // if somebody else can run ipykernel
@@ -448,13 +448,13 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
-    private getJupyterServerInfo = async (cancelToken?: CancellationToken) : Promise<JupyterServerInfo[] | undefined> => {
+    private getJupyterServerInfo = async (cancelToken?: CancellationToken): Promise<JupyterServerInfo[] | undefined> => {
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
         if (bestInterpreter) {
-            const newOptions: SpawnOptions = {mergeStdOutErr: true, token: cancelToken};
+            const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
             newOptions.env = await this.fixupCondaEnv(newOptions.env, bestInterpreter);
-                const processService = await this.processServiceFactory.create();
+            const processService = await this.processServiceFactory.create();
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             const serverInfoString = await processService.exec(bestInterpreter.path, [file], newOptions);
 
@@ -471,13 +471,13 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
-    private onSettingsChanged = () : Promise<void> => {
+    private onSettingsChanged = (): Promise<void> => {
         // Do the same thing as dispose so that we regenerate
         // all of our commands
         return Promise.resolve(this.dispose());
     }
 
-    private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken) : Promise<void> {
+    private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {
         const displayName = localize.DataScience.historyTitle();
         const ipykernelCommand = await this.findBestCommand(KernelCreateCommand, cancelToken);
 
@@ -497,6 +497,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // the kernel spec goes away
                 this.asyncRegistry.push({
                     dispose: async () => {
+                        if (!diskPath) {
+                            return;
+                        }
                         try {
                             await fs.remove(path.dirname(diskPath));
                         } catch {
@@ -519,7 +522,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }
     }
 
-    private findSpecPath = async (specName: string, cancelToken?: CancellationToken) : Promise<string | undefined> => {
+    private findSpecPath = async (specName: string, cancelToken?: CancellationToken): Promise<string | undefined> => {
         // Enumerate all specs and get path for the match
         const specs = await this.enumerateSpecs(cancelToken);
         const match = specs.find(s => {
@@ -529,13 +532,13 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return match ? match.specFile : undefined;
     }
 
-    private async generateTempDir() : Promise<TemporaryDirectory> {
+    private async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());
         await this.fileSystem.createDirectory(resultDir);
 
         return {
             path: resultDir,
-            dispose: async () =>  {
+            dispose: async () => {
                 // Try ten times. Process may still be up and running.
                 // We don't want to do async as async dispose means it may never finish and then we don't
                 // delete
@@ -552,7 +555,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         };
     }
 
-    private isCommandSupported = async (command: string, cancelToken?: CancellationToken) : Promise<boolean> => {
+    private isCommandSupported = async (command: string, cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command
         try {
             const result = await this.findBestCommand(command, cancelToken);
@@ -580,7 +583,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return inputEnv;
     }
 
-    private hasSpecPathMatch = async (info: PythonInterpreter | undefined, cancelToken?: CancellationToken) : Promise<boolean> => {
+    private hasSpecPathMatch = async (info: PythonInterpreter | undefined, cancelToken?: CancellationToken): Promise<boolean> => {
         if (info) {
             // Enumerate our specs
             const specs = await this.enumerateSpecs(cancelToken);
@@ -599,12 +602,12 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     //tslint:disable-next-line:cyclomatic-complexity
-    private findSpecMatch = async (enumerator: () => Promise<(IJupyterKernelSpec | undefined)[]>) : Promise<IJupyterKernelSpec | undefined> => {
+    private findSpecMatch = async (enumerator: () => Promise<(IJupyterKernelSpec | undefined)[]>): Promise<IJupyterKernelSpec | undefined> => {
         // Extract our current python information that the user has picked.
         // We'll match against this.
         const info = await this.interpreterService.getActiveInterpreter();
         let bestScore = 0;
-        let bestSpec : IJupyterKernelSpec | undefined;
+        let bestSpec: IJupyterKernelSpec | undefined;
 
         // Then enumerate our specs
         const specs = await enumerator();
@@ -624,7 +627,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // Path match
                 score += 10;
             }
-            if (spec && spec.language.toLocaleLowerCase() === 'python') {
+            if (spec && spec.language && spec.language.toLocaleLowerCase() === 'python') {
                 // Language match
                 score += 1;
 
@@ -677,7 +680,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return bestSpec;
     }
 
-    private getActiveKernelSpecs = async (connection: IConnection) : Promise<IJupyterKernelSpec[]> => {
+    private getActiveKernelSpecs = async (connection: IConnection): Promise<IJupyterKernelSpec[]> => {
         // Use our connection to create a session manager
         const serverSettings = ServerConnection.makeSettings(
             {
@@ -702,7 +705,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         });
     }
 
-    private async readSpec(kernelSpecOutputLine: string) : Promise<JupyterKernelSpec | undefined> {
+    private async readSpec(kernelSpecOutputLine: string): Promise<JupyterKernelSpec | undefined> {
         const match = KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
         if (match && match !== null && match.length > 2) {
             // Second match should be our path to the kernel spec
@@ -718,7 +721,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
-    private enumerateSpecs = async (cancelToken?: CancellationToken) : Promise<(IJupyterKernelSpec | undefined)[]> => {
+    private enumerateSpecs = async (cancelToken?: CancellationToken): Promise<(IJupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.findBestCommand(KernelSpecCommand);
 
@@ -741,7 +744,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return [];
     }
 
-    private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken) : Promise<JupyterCommand | undefined> => {
+    private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<JupyterCommand | undefined> => {
         // If the module is found on this interpreter, then we found it.
         if (interpreter && await this.doesModuleExist(command, interpreter, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
             // We need a process service to create a command
@@ -766,7 +769,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return [] as string[];
     }
 
-    private searchPathsForJupyter = async () : Promise<string | undefined> => {
+    private searchPathsForJupyter = async (): Promise<string | undefined> => {
         if (!this.jupyterPath) {
             const paths = this.knownSearchPaths.getSearchPaths();
             for (let i = 0; i < paths.length && !this.jupyterPath; i += 1) {
@@ -779,7 +782,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.jupyterPath;
     }
 
-    private findPathCommand = async (command: string, cancelToken?: CancellationToken) : Promise<JupyterCommand | undefined> => {
+    private findPathCommand = async (command: string, cancelToken?: CancellationToken): Promise<JupyterCommand | undefined> => {
         if (await this.doesJupyterCommandExist(command, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
             // Search the known paths for jupyter
             const jupyterPath = await this.searchPathsForJupyter();
@@ -800,7 +803,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     // - Look for module in current interpreter, if found create something with python path and -m module
     // - Look in other interpreters, if found create something with python path and -m module
     // - Look on path for jupyter, if found create something with jupyter path and args
-    private findBestCommand = async (command: string, cancelToken?: CancellationToken) : Promise<JupyterCommand | undefined> => {
+    private findBestCommand = async (command: string, cancelToken?: CancellationToken): Promise<JupyterCommand | undefined> => {
         // See if we already have this command in list
         if (!this.commands.hasOwnProperty(command)) {
             // Not found, try to find it.
@@ -852,8 +855,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }
     }
 
-    private doesJupyterCommandExist = async (command?: string, cancelToken?: CancellationToken) : Promise<boolean> => {
-        const newOptions : SpawnOptions = {throwOnStdErr: true, encoding: 'utf8', token: cancelToken};
+    private doesJupyterCommandExist = async (command?: string, cancelToken?: CancellationToken): Promise<boolean> => {
+        const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
         const args = command ? [command, '--version'] : ['--version'];
         const processService = await this.processServicePromise;
         try {
