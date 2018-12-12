@@ -1,12 +1,13 @@
 parameters:
   name: 'VirtualEnv_Tests_Windows_py37'
+  PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
   AzureStorageAccountName: 'vscodepythonci'
   AzureStorageContainerName: 'vscode-python-ci'
   PoolName: 'Hosted VS2017'
   EnvironmentExecutableFolder: 'Scripts'
-  ENV_PATHS_LOCATION: './src/tmp/envPaths.json'
+  PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
   TEST_FILES_SUFFIX: 'testvirtualenvs'
   TestSuiteName: 'testSingleWorkspace'
 
@@ -17,14 +18,13 @@ jobs:
     name: ${{ parameters.PoolName }}
 
   variables:
-    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
     azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
     azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
     environmentExecutableFolder: ${{ parameters.EnvironmentExecutableFolder }}
-    ENV_PATHS_LOCATION: ${{ parameters.ENV_PATHS_LOCATION }}
+    PYTHON_VIRTUAL_ENVS_LOCATION: ${{ parameters.PYTHON_VIRTUAL_ENVS_LOCATION }}
     TEST_FILES_SUFFIX: ${{ parameters.TEST_FILES_SUFFIX }}
     TestSuiteName: ${{ parameters.TestSuiteName }}
 
@@ -77,51 +77,75 @@ jobs:
         cleanDestinationFolder: false
 
 
-    - task: UsePythonVersion@0
-      displayName: 'Use Python 3.7'
+    - task: NodeTool@0
+      displayName: 'Use Node $(nodeVersion)'
       inputs:
-        versionSpec: 3.7
+        versionSpec: '$(nodeVersion)'
+
+
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(pythonVersion)'
+      inputs:
+        versionSpec: '$(pythonVersion)'
+
+
+    - task: CmdLine@1
+      displayName: 'pip install pipenv'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install pipenv'
 
 
     - bash: |
-       pip install pipenv
+       pipenv run python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
 
-       pipenv run python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) pipenvPath
-
-       cat $(ENV_PATHS_LOCATION)
-
-      displayName: 'Create pipenv environment'
+      displayName: 'Create and save pipenv environment'
 
 
-    - bash: |
-       python -m venv .venv
-
-       .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) venvPath
-
-       cat $(ENV_PATHS_LOCATION)
-
+    - task: CmdLine@1
       displayName: 'Create venv environment'
+      inputs:
+        filename: python
+
+        arguments: '-m venv .venv'
 
 
     - bash: |
-       pip install virtualenv
+       .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
 
-       python -m virtualenv .virtualenv
+      displayName: 'Save venv environment executable'
 
-       .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(ENV_PATHS_LOCATION) virtualEnvPath
 
-       cat $(ENV_PATHS_LOCATION)
+    - task: CmdLine@1
+      displayName: 'pip install virtualenv'
+      inputs:
+        filename: python
 
+        arguments: '-m pip install virtualenv'
+
+
+    - task: CmdLine@1
       displayName: 'Create virtualenv environment'
+      inputs:
+        filename: python
+
+        arguments: '-m virtualenv .virtualenv'
+
+
+    - bash: |
+       .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
+
+      displayName: 'Save virtualenv environment executable'
 
     - powershell: |
        Write-Host $Env:CONDA
 
        $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
 
-       & $condaPythonPath ./build/ci/addEnvPath.py $Env:ENV_PATHS_LOCATION condaPath
+       & $condaPythonPath ./build/ci/addEnvPath.py $Env:PYTHON_VIRTUAL_ENVS_LOCATION condaPath
 
-       Get-Content $Env:ENV_PATHS_LOCATION
+       Get-Content $Env:PYTHON_VIRTUAL_ENVS_LOCATION
 
       displayName: 'Save conda environment executable'
 

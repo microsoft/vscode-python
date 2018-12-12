@@ -1,11 +1,13 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 'use strict';
-// tslint:disable:max-func-body-length no-invalid-this no-any
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ENV_PATHS_LOCATION } from '../../../ciConstants';
+import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import { PYTHON_PATH, restorePythonPathInWorkspaceRoot, setPythonPathInWorkspaceRoot, updateSetting, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { sleep } from '../../../core';
@@ -14,8 +16,8 @@ import { initialize, initializeTest } from '../../../initialize';
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
     const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
-    const envPathsLocation = ENV_PATHS_LOCATION !== undefined ?
-                                path.join(EXTENSION_ROOT_DIR_FOR_TESTS, ENV_PATHS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
+    const envsLocation = PYTHON_VIRTUAL_ENVS_LOCATION !== undefined ?
+                                path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
     const waitTimeForActivation = 5000;
     type EnvPath = {
         condaPath: string;
@@ -27,7 +29,7 @@ suite('Activation of Environments in Terminal', () => {
     let defaultShell;
     let terminalSettings;
     suiteSetup(async () => {
-        envPaths = await fs.readJson(envPathsLocation);
+        envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders[0].uri);
         defaultShell = terminalSettings.inspect('integrated.shell.windows').globalValue;
         await initialize();

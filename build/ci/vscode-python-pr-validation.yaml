@@ -27,7 +27,7 @@ jobs:
     AzureStorageContainerName: 'vscode-python-ci'
     PoolName: 'Hosted VS2017'
     EnvironmentExecutableFolder: 'Scripts'
-    ENV_PATHS_LOCATION: './src/tmp/envPaths.json'
+    PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
     TEST_FILES_SUFFIX: 'testvirtualenvs'
     TestSuiteName: 'testSingleWorkspace'
 
