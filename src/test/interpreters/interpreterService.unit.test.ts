@@ -520,6 +520,68 @@ suite('Interpreters service', () => {
         }
     });
 
+    suite('Caching Display name', () => {
+        setup(() => {
+            setupSuite();
+            fileSystem.reset();
+            persistentStateFactory.reset();
+        });
+        test('Return cached display name', async () => {
+            const pythonPath = '1234';
+            const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
+            const fileHash = 'File_Hash';
+            fileSystem
+                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+                .returns(() => Promise.resolve(fileHash))
+                .verifiable(TypeMoq.Times.once());
+            const expectedDisplayName = 'Formatted display name';
+            persistentStateFactory
+                .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    const state = {
+                        updateValue: () => Promise.resolve(),
+                        value: { fileHash, displayName: expectedDisplayName }
+                    };
+                    return state as any;
+                })
+                .verifiable(TypeMoq.Times.once());
+
+            const service = new InterpreterService(serviceContainer);
+            const displayName = await service.getDisplayName(interpreterInfo, undefined);
+
+            expect(displayName).to.equal(expectedDisplayName);
+            fileSystem.verifyAll();
+            persistentStateFactory.verifyAll();
+        });
+        test('Cached display name is not used if file hashes differ', async () => {
+            const pythonPath = '1234';
+            const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
+            const fileHash = 'File_Hash';
+            fileSystem
+                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+                .returns(() => Promise.resolve(fileHash))
+                .verifiable(TypeMoq.Times.once());
+            const expectedDisplayName = 'Formatted display name';
+            persistentStateFactory
+                .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    const state = {
+                        updateValue: () => Promise.resolve(),
+                        value: { fileHash: 'something else', displayName: expectedDisplayName }
+                    };
+                    return state as any;
+                })
+                .verifiable(TypeMoq.Times.once());
+
+            const service = new InterpreterService(serviceContainer);
+            const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
+
+            expect(displayName).to.not.equal(expectedDisplayName);
+            fileSystem.verifyAll();
+            persistentStateFactory.verifyAll();
+        });
+    });
+
     // This is kind of a verbose test, but we need to ensure we have covered all permutations.
     // Also we have special handling for certain types of interpreters.
     suite('Display Format (with all permutations)', () => {

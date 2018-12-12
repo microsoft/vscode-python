@@ -173,11 +173,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @memberof InterpreterService
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
-        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
-        if (store.value) {
-            return store.value;
+        const fileHash = (info.path ? await this.fs.getFileHash(info.path).catch(() => '') : '') || '';
+        const store = this.persistentStateFactory.createGlobalPersistentState<{ fileHash: string; displayName: string }>(`${info.path}${fileHash}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
+        if (store.value && store.value.fileHash === fileHash && store.value.displayName) {
+            return store.value.displayName;
         }
-
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 
@@ -211,7 +211,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         // If dealing with cached entry, then do not store the display name in cache.
         if (!info.cachedEntry) {
-            await store.updateValue(displayName);
+            await store.updateValue({ displayName, fileHash });
         }
 
         return displayName;
