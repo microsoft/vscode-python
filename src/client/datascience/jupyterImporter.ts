@@ -7,6 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { Disposable } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../common/application/types';
+import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
@@ -18,11 +19,11 @@ import { IJupyterExecution, INotebookImporter } from './types';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
-    public isDisposed : boolean = false;
+    public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
     private readonly nbconvertTemplate =
-    // tslint:disable-next-line:no-multiline-string
-`{%- extends 'null.tpl' -%}
+        // tslint:disable-next-line:no-multiline-string
+        `{%- extends 'null.tpl' -%}
 {% block codecell %}
 #%%
 {{ super() }}
@@ -33,9 +34,9 @@ export class JupyterImporter implements INotebookImporter {
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
 
-    private pythonExecutionService : Deferred<IPythonExecutionService> | undefined;
-    private templatePromise : Promise<string>;
-    private settingsChangedDiposable : Disposable;
+    private pythonExecutionService: Deferred<IPythonExecutionService> | undefined;
+    private templatePromise: Promise<string>;
+    private settingsChangedDiposable: Disposable;
 
     constructor(
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
@@ -43,7 +44,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -51,14 +52,14 @@ export class JupyterImporter implements INotebookImporter {
         this.createExecutionServicePromise();
     }
 
-    public importFromFile = async (file: string) : Promise<string> => {
+    public async importFromFile(file: string): Promise<string> {
         const template = await this.templatePromise;
 
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
         if (settings.datascience.changeDirOnImportExport) {
-           directoryChange = this.calculateDirectoryChange(file);
+            directoryChange = this.calculateDirectoryChange(file);
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
@@ -107,7 +108,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private createTemplateFile = async () : Promise<string> => {
+    private createTemplateFile = async (): Promise<string> => {
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.tpl');
 
@@ -131,7 +132,7 @@ export class JupyterImporter implements INotebookImporter {
         this.pythonExecutionService = createDeferred<IPythonExecutionService>();
         this.executionFactory
             .create({})
-            .then((p : IPythonExecutionService) => { if (this.pythonExecutionService) { this.pythonExecutionService.resolve(p); } })
+            .then((p: IPythonExecutionService) => { if (this.pythonExecutionService) { this.pythonExecutionService.resolve(p); } })
             .catch(err => { if (this.pythonExecutionService) { this.pythonExecutionService.reject(err); } });
     }
 }

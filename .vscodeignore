@@ -33,6 +33,7 @@ webpack.datascience-ui.config.js
 .github/**
 .mocha-reporter/**
 .nvm/**
+.nyc_output
 .venv/**
 .vscode/**
 .vscode-test/**
