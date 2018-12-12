@@ -133,7 +133,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-    sendStartupTelemetry(activationDeferred.promise, serviceContainer).ignoreErrors();
+    sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
@@ -279,7 +279,9 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
 }
-async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
+
+// tslint:disable-next-line:no-any
+async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceContainer: IServiceContainer) {
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;
