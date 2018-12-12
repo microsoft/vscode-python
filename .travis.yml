@@ -39,6 +39,10 @@ matrix:
         - os: linux
           python: "3.7-dev"
           env: BUNDLE=true
+    allow_failures:
+        - os: linux
+          python: "3.7-dev"
+          env: FUNCTIONAL_TEST=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -65,7 +69,7 @@ install:
 script:
   - if [ $UNIT_TEST == "true" ]; then
         npm run cover:enable;
-        npm run test:unittests;
+        npm run test:unittests:cover;
     fi
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
         npm run cover:enable;
@@ -74,7 +78,7 @@ script:
   - npm run debugger-coverage
   - if [ $FUNCTIONAL_TEST == "true" ]; then
         python -m pip install --upgrade -r ./build/functional-test-requirements.txt;
-        npm run test:functional;
+        npm run test:functional:cover;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
         npm run cover:enable;
@@ -93,11 +97,6 @@ script:
         python3 -m pip install --upgrade -r tpn/requirements.txt;
         python3 tpn --npm package-lock.json --config tpn/distribution.toml /dev/null;
     fi
-  - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-        npm run clean;
-        vsce package;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-unbundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
-    fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         npm run package;
@@ -107,11 +106,9 @@ script:
     fi
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
-        vsce package;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH-unbundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
-        npm run clean;
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
+  - bash <(curl -s https://codecov.io/bash)

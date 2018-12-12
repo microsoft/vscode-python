@@ -14,7 +14,7 @@ import {
     IWebPanelProvider,
     WebPanelMessage,
 } from '../../client/common/application/types';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { createDeferred } from '../../client/common/utils/async';
 import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { Cell } from '../../datascience-ui/history-react/cell';
@@ -34,7 +34,6 @@ suite('History output tests', () => {
     let webPanelListener : IWebPanelMessageListener;
     let globalAcquireVsCodeApi : () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
-    let waitingForInfo : Deferred<boolean> | undefined;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -66,9 +65,6 @@ suite('History output tests', () => {
                 postMessage: (msg: any) => {
                     if (webPanelListener) {
                         webPanelListener.onMessage(msg.type, msg.payload);
-                    }
-                    if (waitingForInfo && msg && msg.type === HistoryMessages.SendInfo) {
-                        sleep(10).then(waitingForInfo.resolve(true)).ignoreErrors();
                     }
                 },
                 // tslint:disable-next-line:no-any no-empty
@@ -172,32 +168,50 @@ suite('History output tests', () => {
             assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after starting');
             assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after starting');
 
+            // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
+            let count = 0;
+            let deferred = createDeferred<boolean>();
+            ioc.onContextSet(a => {
+                // tslint:disable-next-line:no-console
+                console.log(`Setting context for ${a.name} to ${a.value}`);
+                count += 1;
+                if (count >= 3) {
+                    deferred.resolve();
+                }
+            });
+
+            // Create a method that resets the waiting
+            const resetWaiting = () => {
+                count = 0;
+                deferred = createDeferred<boolean>();
+            };
+
             // Now send an undo command. This should change the state, so use our waitForInfo promise instead
-            waitingForInfo = createDeferred<boolean>();
+            resetWaiting();
             history.postMessage(HistoryMessages.Undo);
-            await Promise.race([waitingForInfo.promise, sleep(2000)]);
-            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            await Promise.race([deferred.promise, sleep(2000)]);
+            assert.ok(deferred.resolved, 'Never got update to state');
             assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after undo as there are two cells');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after starting');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
-            waitingForInfo = createDeferred<boolean>();
+            resetWaiting();
             history.postMessage(HistoryMessages.Undo);
-            await Promise.race([waitingForInfo.promise, sleep(2000)]);
-            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            await Promise.race([deferred.promise, sleep(2000)]);
+            assert.ok(deferred.resolved, 'Never got update to state');
             assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after second undo');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after starting');
+            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after second undo');
 
-            waitingForInfo = createDeferred<boolean>();
+            resetWaiting();
             history.postMessage(HistoryMessages.Redo);
-            await Promise.race([waitingForInfo.promise, sleep(2000)]);
-            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            await Promise.race([deferred.promise, sleep(2000)]);
+            assert.ok(deferred.resolved, 'Never got update to state');
             assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after undo');
             assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after redo');
 
-            waitingForInfo = createDeferred<boolean>();
+            resetWaiting();
             history.postMessage(HistoryMessages.DeleteAllCells);
-            await Promise.race([waitingForInfo.promise, sleep(2000)]);
-            assert.ok(waitingForInfo.resolved, 'Never got update to state');
+            await Promise.race([deferred.promise, sleep(2000)]);
+            assert.ok(deferred.resolved, 'Never got update to state');
             assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
 
         } else {

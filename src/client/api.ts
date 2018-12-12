@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { traceError } from './common/logger';
 import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 
 /*
@@ -31,9 +32,14 @@ export interface IExtensionApi {
     };
 }
 
-export function buildApi(ready: Promise<void>) {
+// tslint:disable-next-line:no-any
+export function buildApi(ready: Promise<any>) {
     return {
-        ready,
+        // 'ready' will propogate the exception, but we must log it here first.
+        ready: ready.catch((ex) => {
+            traceError('Failure during activation.', ex);
+            return Promise.reject(ex);
+        }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
                 return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });

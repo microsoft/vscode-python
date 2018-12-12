@@ -40,7 +40,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
 
             await this.provideLaunchDefaults(workspaceFolder, config);
-            const isValid = await this.validateLaunchConfiguration(config);
+            const isValid = await this.validateLaunchConfiguration(folder, config);
             if (!isValid) {
                 return;
             }
@@ -90,9 +90,9 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         // Pass workspace folder so we can get this when we get debug events firing.
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
     }
-    protected async validateLaunchConfiguration(debugConfiguration: LaunchRequestArguments): Promise<boolean> {
+    protected async validateLaunchConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments): Promise<boolean> {
         const diagnosticService = this.serviceContainer.get<IInvalidPythonPathInDebuggerService>(IDiagnosticsService, InvalidPythonPathInDebuggerServiceId);
-        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath);
+        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath, folder ? folder.uri : undefined);
     }
     private getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {

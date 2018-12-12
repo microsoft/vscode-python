@@ -138,10 +138,10 @@ jobs:
 
         verbose: false
 
-        customCommand: 'run test:unittests'
+        customCommand: 'run test:unittests:cover'
 
 
-    - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID'
+    - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID)'
       displayName: 'publish codecov'
       continueOnError: true
       condition: always()

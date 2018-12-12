@@ -33,6 +33,7 @@ webpack.datascience-ui.config.js
 .github/**
 .mocha-reporter/**
 .nvm/**
+.nyc_output
 .venv/**
 .vscode/**
 .vscode-test/**
@@ -46,6 +47,7 @@ debug_coverage*/**
 images/**/*.gif
 images/**/*.png
 news/**
+node_modules/**
 obj/**
 out/client/**/*analyzer.html
 out/coverconfig.json

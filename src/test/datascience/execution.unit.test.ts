@@ -13,7 +13,7 @@ import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, EventEmitter } from 'vscode';
 
-import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
+import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
@@ -31,20 +31,21 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { ICell, IConnection, IJupyterKernelSpec, INotebookServer } from '../../client/datascience/types';
+import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
 
-    private conninfo : IConnection | undefined;
-    private kernelSpec : IJupyterKernelSpec  | undefined;
-    private notebookFile : TemporaryFile | undefined;
+    private conninfo: IConnection | undefined;
+    private kernelSpec: IJupyterKernelSpec | undefined;
+    private notebookFile: TemporaryFile | undefined;
     public connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec): Promise<void> {
         this.conninfo = conninfo;
         this.kernelSpec = kernelSpec;
@@ -77,21 +78,24 @@ class MockJupyterServer implements INotebookServer {
     public waitForIdle(): Promise<void> {
         throw new Error('Method not implemented');
     }
-    public shutdown() {
-        noop();
+    public setInitialDirectory(directory: string): Promise<void> {
+        throw new Error('Method not implemented');
+    }
+    public async shutdown() {
+        return Promise.resolve();
     }
 
-    public interruptKernel() : Promise<void> {
+    public interruptKernel(timeout: number) : Promise<InterruptResult> {
         throw new Error('Method not implemented');
     }
 
-    public dispose() {
+    public async dispose() : Promise<void> {
         if (this.conninfo) {
             this.conninfo.dispose(); // This should kill the process that's running
             this.conninfo = undefined;
         }
         if (this.kernelSpec) {
-            this.kernelSpec.dispose(); // This destroy any unwanted kernel specs if necessary
+            await this.kernelSpec.dispose(); // This destroy any unwanted kernel specs if necessary
             this.kernelSpec = undefined;
         }
         if (this.notebookFile) {
@@ -109,16 +113,18 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
         this.disposables.push(disposable);
     }
 
-    public dispose = () : Promise<void> => {
+    public dispose = async () : Promise<void> => {
         for (let i = 0; i < this.disposables.length; i += 1) {
             const disposable = this.disposables[i];
             if (disposable) {
-                disposable.dispose();
+                const val = disposable.dispose();
+                if (val instanceof Promise) {
+                    const promise = val as Promise<void>;
+                    await promise;
+                }
             }
         }
         this.disposables = [];
-
-        return Promise.resolve();
     }
 
 }
@@ -136,7 +142,7 @@ suite('Jupyter Execution', async () => {
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const pythonSettings = new PythonSettings();
-    const jupyterOnPath = IS_WINDOWS ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
+    const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
 
     const workingPython: PythonInterpreter = {
@@ -195,11 +201,11 @@ suite('Jupyter Execution', async () => {
     });
 
     teardown(() => {
-        cleanupDisposables();
+        return cleanupDisposables();
     });
 
-    function cleanupDisposables() {
-        disposableRegistry.dispose().ignoreErrors();
+    function cleanupDisposables() : Promise<void> {
+        return disposableRegistry.dispose();
     }
 
     class FunctionMatcher extends Matcher {
@@ -211,13 +217,12 @@ suite('Jupyter Execution', async () => {
         public match(value: Object): boolean {
             return this.func(value);
         }
-        public toString(): string
-        {
+        public toString(): string {
             return 'FunctionMatcher';
         }
     }
 
-    function createTempSpec(pythonPath: string) : string {
+    function createTempSpec(pythonPath: string): string {
         const tempDir = os.tmpdir();
         const subDir = uuid();
         const filePath = path.join(tempDir, subDir, 'kernel.json');
@@ -237,11 +242,11 @@ suite('Jupyter Execution', async () => {
         return filePath;
     }
 
-    function argThat(func: (obj: any) => boolean) : any {
+    function argThat(func: (obj: any) => boolean): any {
         return new FunctionMatcher(func);
     }
 
-    function createTypeMoq<T>(tag: string) : TypeMoq.IMock<T> {
+    function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result = TypeMoq.Mock.ofType<T>();
@@ -250,7 +255,7 @@ suite('Jupyter Execution', async () => {
         return result;
     }
 
-    function argsMatch(matchers: (string | RegExp)[], args: string[]) : boolean {
+    function argsMatch(matchers: (string | RegExp)[], args: string[]): boolean {
         if (matchers.length === args.length) {
             return args.every((s, i) => {
                 const r = matchers[i] as RegExp;
@@ -285,11 +290,11 @@ suite('Jupyter Execution', async () => {
     }
 
     function setupProcessServiceExecObservable(service: TypeMoq.IMock<IProcessService>, file: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
-        const result : ObservableExecutionResult<string> = {
+        const result: ObservableExecutionResult<string> = {
             proc: undefined,
             out: new Observable<Output<string>>(subscriber => {
-                stderr.forEach(s => subscriber.next({ source: 'stderr', out: s}));
-                stdout.forEach(s => subscriber.next({ source: 'stderr', out: s}));
+                stderr.forEach(s => subscriber.next({ source: 'stderr', out: s }));
+                stdout.forEach(s => subscriber.next({ source: 'stderr', out: s }));
             }),
             dispose: () => {
                 noop();
@@ -304,16 +309,16 @@ suite('Jupyter Execution', async () => {
     }
 
     function setupWorkingPythonService(service: TypeMoq.IMock<IPythonExecutionService>) {
-        setupPythonService(service, 'ipykernel', ['--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupPythonService(service, 'jupyter', ['nbconvert', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
+        setupPythonService(service, 'ipykernel', ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupPythonService(service, 'jupyter', ['nbconvert', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(workingPython));
     }
 
     function setupMissingKernelPythonService(service: TypeMoq.IMock<IPythonExecutionService>) {
-        setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
+        setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(missingKernelPython));
     }
 
@@ -325,49 +330,49 @@ suite('Jupyter Execution', async () => {
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(missingNotebookPython));
     }
 
-    function setupWorkingProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr? : string[]) {
+    function setupWorkingProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
         // Don't mind the goofy path here. It's supposed to not find the item. It's just testing the internal regex works
         setupProcessServiceExecWithFunc(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], () => {
             // Return different results after we install our kernel
             if (ipykernelInstallCount > 0) {
-                return Promise.resolve({stdout: `working ${path.dirname(workingKernelSpec)}\r\n 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0`});
+                return Promise.resolve({ stdout: `working ${path.dirname(workingKernelSpec)}\r\n 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0` });
             }
-            return Promise.resolve({stdout: ` 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0`});
+            return Promise.resolve({ stdout: ` 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0` });
         });
-        setupProcessServiceExec(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], Promise.resolve({stdout: `working ${path.dirname(workingKernelSpec)}\r\n 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0`}));
+        setupProcessServiceExec(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], Promise.resolve({ stdout: `working ${path.dirname(workingKernelSpec)}\r\n 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0` }));
         setupProcessServiceExecWithFunc(service, workingPython.path, ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
             ipykernelInstallCount += 1;
-            return Promise.resolve({stdout: `somename ${path.dirname(workingKernelSpec)}`});
+            return Promise.resolve({ stdout: `somename ${path.dirname(workingKernelSpec)}` });
         });
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        setupProcessServiceExec(service, workingPython.path, [getServerInfoPath], Promise.resolve({stdout: 'failure to get server infos'}));
+        setupProcessServiceExec(service, workingPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
         setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
-    function setupMissingKernelProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr? : string[]) {
-        setupProcessServiceExec(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], Promise.resolve({stdout: `working ${path.dirname(workingKernelSpec)}`}));
+    function setupMissingKernelProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
+        setupProcessServiceExec(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], Promise.resolve({ stdout: `working ${path.dirname(workingKernelSpec)}` }));
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        setupProcessServiceExec(service, missingKernelPython.path, [getServerInfoPath], Promise.resolve({stdout: 'failure to get server infos'}));
+        setupProcessServiceExec(service, missingKernelPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
         setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
-    function setupPathProcessService(jupyterPath: string, service: TypeMoq.IMock<IProcessService>, notebookStdErr? : string[]) {
-        setupProcessServiceExec(service, jupyterPath, ['kernelspec', 'list'], Promise.resolve({stdout: `working ${path.dirname(workingKernelSpec)}`}));
+    function setupPathProcessService(jupyterPath: string, service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
+        setupProcessServiceExec(service, jupyterPath, ['kernelspec', 'list'], Promise.resolve({ stdout: `working ${path.dirname(workingKernelSpec)}` }));
         setupProcessServiceExecObservable(service, jupyterPath, ['kernelspec', 'list'], [], []);
-        setupProcessServiceExec(service, jupyterPath, ['--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
+        setupProcessServiceExec(service, jupyterPath, ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
 
         // WE also check for existence with just the key jupyter
-        setupProcessServiceExec(service, 'jupyter', ['--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
-        setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1'}));
+        setupProcessServiceExec(service, 'jupyter', ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
     }
 
-    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr? : string[]) : JupyterExecution {
+    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[]): JupyterExecution {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
@@ -419,7 +424,10 @@ suite('Jupyter Execution', async () => {
             jupyterLaunchTimeout: 10,
             enabled: true,
             jupyterServerURI: 'local',
-            useDefaultConfigForJupyter: true
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -509,7 +517,7 @@ suite('Jupyter Execution', async () => {
     test('Kernelspec is deleted on exit', async () => {
         const execution = createExecution(missingKernelPython);
         await assert.isFulfilled(execution.connectToNotebookServer(undefined, true), 'Should be able to start a server');
-        cleanupDisposables();
+        await cleanupDisposables();
         const exists = fs.existsSync(workingKernelSpec);
         assert.notOk(exists, 'Temp kernel spec still exists');
     }).timeout(10000);

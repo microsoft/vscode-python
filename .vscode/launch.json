@@ -119,12 +119,17 @@
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/out/test/unittests.js",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
+                "./out/test/**/*.unit.test.js",
+                "--require=out/test/unittests.js",
+                "--ui=tdd",
+                "--recursive",
+                "--colors",
                 "timeout=300000",
-                "grep="
+                "--grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
@@ -135,12 +140,17 @@
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/out/test/functionalTests.js",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
+                "./out/test/**/*.functional.test.js",
+                "--require=out/test/unittests.js",
+                "--ui=tdd",
+                "--recursive",
+                "--colors",
                 "timeout=300000",
-                "grep="
+                "--grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

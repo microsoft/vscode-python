@@ -6,10 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { traceVerbose } from '../../common/logger';
+import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { Interpreters } from '../../common/utils/localize';
+import { Common, Interpreters } from '../../common/utils/localize';
 import { IInterpreterLocatorProgressService, InterpreterLocatorProgressHandler } from '../contracts';
 
 @injectable()
@@ -23,13 +23,13 @@ export class InterpreterLocatorProgressStatubarHandler implements InterpreterLoc
         this.progressService.onRefreshing(() => this.showProgress(), this, this.disposables);
         this.progressService.onRefreshed(() => this.hideProgress(), this, this.disposables);
     }
-    @traceVerbose('Display locator refreshing progress')
+    @traceDecorators.verbose('Display locator refreshing progress')
     private showProgress(): void {
         if (!this.deferred) {
             this.createProgress();
         }
     }
-    @traceVerbose('Hide locator refreshing progress')
+    @traceDecorators.verbose('Hide locator refreshing progress')
     private hideProgress(): void {
         if (this.deferred) {
             this.deferred.resolve();
@@ -39,7 +39,7 @@ export class InterpreterLocatorProgressStatubarHandler implements InterpreterLoc
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
-            title: this.isFirstTimeLoadingInterpreters ? Interpreters.loading() : Interpreters.refreshing()
+            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing()
         };
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {

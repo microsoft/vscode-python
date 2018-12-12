@@ -10,6 +10,7 @@ import {
 import { sendTelemetryEvent } from '../telemetry';
 import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
+import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -26,8 +27,6 @@ import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
-
-export const IS_WINDOWS = /^win/.test(process.platform);
 
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {

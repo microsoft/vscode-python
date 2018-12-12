@@ -3,8 +3,10 @@
 'use strict';
 
 import { TerminalShellType } from '../common/terminal/types';
+import { OSDistro } from '../common/utils/platform';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
+import { PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
@@ -23,6 +25,11 @@ export type LanguageServerVersionTelemetry = {
 
 export type LanguageServerErrorTelemetry = {
     error: string;
+};
+
+export type LanguageServePlatformSupported = {
+    supported: boolean;
+    failureType?: 'UnknownError';
 };
 
 export type LinterTrigger = 'auto' | 'save';
@@ -119,6 +126,12 @@ export type ImportNotebook = {
     scope: 'command';
 };
 
+export type Platform = {
+    distro?: OSDistro;
+    failureType?: PlatformErrors;
+    osVersion?: string;
+};
+
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
@@ -134,4 +147,6 @@ export type TelemetryProperties = FormatTelemetry
     | SettingsTelemetry
     | DiagnosticsAction
     | DiagnosticsMessages
-    | ImportNotebook;
+    | ImportNotebook
+    | Platform
+    | LanguageServePlatformSupported;

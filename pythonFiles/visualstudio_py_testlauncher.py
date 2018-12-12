@@ -298,7 +298,7 @@ def main():
                                 if testId.startswith(opts.tests[0]):
                                     suite = cls
                                 if testId == opts.tests[0]:
-                                    tests = m
+                                    tests = unittest.TestSuite([m])
                                     break
                         except Exception as err:
                             errorMessage = traceback.format_exception()

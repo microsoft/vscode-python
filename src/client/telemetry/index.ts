@@ -3,19 +3,37 @@
 
 // tslint:disable-next-line:no-reference
 /// <reference path="./vscode-extension-telemetry.d.ts" />
-import { extensions } from 'vscode';
 // tslint:disable-next-line:import-name
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
 import { TelemetryProperties } from './types';
 
+/**
+ * Checks whether telemetry is supported.
+ * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
+ * Withiin DA, there's a completely different way to send telemetry.
+ * @returns {boolean}
+ */
+function isTelemetrySupported(): boolean {
+    try {
+        // tslint:disable-next-line:no-require-imports
+        const vsc = require('vscode');
+        // tslint:disable-next-line:no-require-imports
+        const reporter = require('vscode-extension-telemetry');
+        return vsc !== undefined && reporter !== undefined;
+    } catch {
+        return false;
+    }
+}
 let telemetryReporter: TelemetryReporter;
 function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
     const extensionId = PVSC_EXTENSION_ID;
+    // tslint:disable-next-line:no-require-imports
+    const extensions = (require('vscode') as typeof import('vscode')).extensions;
     // tslint:disable-next-line:no-non-null-assertion
     const extension = extensions.getExtension(extensionId)!;
     // tslint:disable-next-line:no-unsafe-any
@@ -29,7 +47,7 @@ function getTelemetryReporter() {
 }
 
 export function sendTelemetryEvent(eventName: string, durationMs?: { [key: string]: number } | number, properties?: TelemetryProperties) {
-    if (isTestExecution()) {
+    if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
     const reporter = getTelemetryReporter();
@@ -86,7 +104,7 @@ export function captureTelemetry(
                     .catch(ex => {
                         // tslint:disable-next-line:no-any
                         sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties);
-                        return ex;
+                        return Promise.reject(ex);
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);

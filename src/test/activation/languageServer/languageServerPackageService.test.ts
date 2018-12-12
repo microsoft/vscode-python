@@ -60,7 +60,8 @@ suite('Language Server Package Service', () => {
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         const packageJson = { languageServerVersion: '0.1.0' };
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object);
+        const platform = typeMoq.Mock.ofType<IPlatformService>();
+        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platform.object);
 
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName);
@@ -87,7 +88,8 @@ suite('Language Server Package Service', () => {
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         const packageJson = { languageServerVersion: '0.1.0' };
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object);
+        const platform = typeMoq.Mock.ofType<IPlatformService>();
+        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platform.object);
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName);
 

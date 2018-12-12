@@ -25,7 +25,7 @@ from . import tpnfile
 from . import npm
 
 
-ACCEPTABLE_PURPOSES = frozenset({"explicit", "npm", "pypi"})
+ACCEPTABLE_PURPOSES = frozenset({"explicit", "npm", "PyPI"})
 
 
 async def handle_index(module, raw_path, config_projects, cached_projects, overrides_path=None):

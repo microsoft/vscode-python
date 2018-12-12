@@ -117,13 +117,13 @@ class MockDocumentManager implements IDocumentManager {
 }
 
 class MockStatusProvider implements IStatusProvider {
-    public set(message: string, history?: IHistory, timeout?: number): Disposable {
+    public set(message: string, timeout?: number): Disposable {
         return {
             dispose: noop
         };
     }
 
-    public waitWithStatus<T>(promise: () => Promise<T>, message: string, history?: IHistory, timeout?: number, canceled?: () => void): Promise<T> {
+    public waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T> {
         return promise();
     }
 
@@ -203,7 +203,10 @@ suite('History command listener', async () => {
             jupyterLaunchTimeout: 10,
             enabled: true,
             jupyterServerURI: '',
-            useDefaultConfigForJupyter: true
+            changeDirOnImportExport: true,
+            notebookFileRoot: 'WORKSPACE',
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

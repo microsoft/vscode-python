@@ -44,9 +44,8 @@ function MochaVstsReporter(runner, options) {
   });
 
   runner.on('pending', function(test){
-    skipped++;
-    console.log('%s- %s', indenter, test.title);
-    console.log('##vso[task.logissue type=warning;sourcepath=%s;]SKIPPED TEST %s :: %s', test.file, test.parent.title, test.title);
+      skipped++;
+      console.log('%s- %s', indenter, test.title);
   });
 
   runner.on('fail', function(test, err){

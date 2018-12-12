@@ -13,7 +13,6 @@ import { IApplicationEnvironment } from '../../../client/common/application/type
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
 import { PlatformService } from '../../../client/common/platform/platformService';
-import { IPlatformService } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
@@ -40,11 +39,10 @@ suite('Nuget Azure Storage Repository', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
         const packageJson = { languageServerVersion: '0.1.0' };
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object);
+        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await repo.getPackages(packageName);
 

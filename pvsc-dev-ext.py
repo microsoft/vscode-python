@@ -63,9 +63,10 @@ def build_typescript(checkout):
     run_command(["node", os.fspath(tsc_path), "-p", os.fspath(checkout)], cwd=checkout)
 
 
-def install_libs(checkout):
-    """Install libs from PyPI."""
-    libs_path = checkout / "pythonFiles" / "libs" / "python"
+def install_PyPI_packages(checkout):
+    """Install packages from PyPI."""
+    libs_path = checkout / "pythonFiles" / "lib" / "python"
+    requirements_path = checkout / "requirements.txt"
     cmd = [
         sys.executable,
         "-m",
@@ -81,7 +82,7 @@ def install_libs(checkout):
         "--no-deps",
         "--upgrade",
         "-r",
-        "requirements.txt",
+        os.fspath(requirements_path),
     ]
     run_command(cmd)
 
@@ -99,8 +100,8 @@ def build(checkout):
     install_npm_dependencies(checkout)
     print("Building TypeScript files ...")
     build_typescript(checkout)
-    print("Installing libs ...")
-    install_libs(checkout)
+    print("Installing PyPI packages ...")
+    install_PyPI_packages(checkout)
 
 
 def setup(install_type):

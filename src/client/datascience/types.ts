@@ -7,6 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
+import { IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -24,20 +25,28 @@ export interface IDataScienceCommandListener {
 export interface IConnection extends Disposable {
     baseUrl: string;
     token: string;
+    localLaunch: boolean;
+}
+
+export enum InterruptResult {
+    Success = 0,
+    TimedOut = 1,
+    Restarted = 2
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
-    shutdown();
-    interruptKernel() : Promise<void>;
+    shutdown() : Promise<void>;
+    interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
+    setInitialDirectory(directory: string): Promise<void>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -45,16 +54,16 @@ export interface IJupyterExecution {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined>;
+    connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
 }
 
-export interface IJupyterKernelSpec extends Disposable {
-    name: string;
-    language: string;
-    path: string;
+export interface IJupyterKernelSpec extends IDisposable {
+    name: string | undefined;
+    language: string | undefined;
+    path: string | undefined;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -64,7 +73,7 @@ export interface INotebookImporter extends Disposable {
 
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
-    translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
+    translateToNotebook(cells: ICell[], directoryChange?: string) : Promise<JSONObject | undefined>;
 }
 
 export const IHistoryProvider = Symbol('IHistoryProvider');
@@ -158,8 +167,8 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // history window. Dispose of the returned object when done.
-    set(message: string, history?: IHistory, timeout?: number) : Disposable;
+    set(message: string, timeout?: number) : Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, history?: IHistory, timeout?: number, canceled?: () => void) : Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void) : Promise<T>;
 }

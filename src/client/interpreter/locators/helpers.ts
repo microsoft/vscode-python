@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IS_WINDOWS } from '../../common/util';
 import { fsReaddirAsync } from '../../common/utils/fs';
 import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';

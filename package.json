@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.12.0-alpha",
-    "languageServerVersion": "0.1.65",
+    "version": "2018.12.0-beta",
+    "languageServerVersion": "0.1.72",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -389,12 +389,12 @@
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileasnotebook",
-                    "group": "Python"
+                    "group": "Python2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileandoutputasnotebook",
-                    "group": "Python"
+                    "group": "Python2@2"
                 }
             ],
             "explorer/context": [
@@ -1024,10 +1024,28 @@
                     "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
                     "scope": "resource"
                 },
+                "python.dataScience.notebookFileRoot": {
+                    "type": "string",
+                    "default": "${workspaceFolder}",
+                    "description": "Set the root directory for loading files for the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.changeDirOnImportExport": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When importing or exporting a Jupyter Notebook add a directory change command to allow relative path loading to work.",
+                    "scope": "resource"
+                },
                 "python.dataScience.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,
                     "description": "When running Jupyter locally, create a default empty Jupyter config for the Python Interactive window",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterInterruptTimeout": {
+                    "type": "number",
+                    "default": 10000,
+                    "description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -1837,8 +1855,7 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "gulp checkNativeDependencies && gulp check-datascience-dependencies && gulp compile && webpack",
-        "package": "gulp clean:cleanExceptTests && gulp prePublishBundle && gulp updateVSCodeIgnore && gulp removePrePublishScript && vsce package && gulp restorePrePublishScript",
+        "package": "gulp clean && gulp prePublishBundle && vsce package",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
@@ -1846,8 +1863,10 @@
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "node ./out/test/unittests.js",
-        "test:functional": "node ./out/test/functionalTests.js",
+        "test:unittests": "mocha --opts ./build/.mocha.unittests.opts",
+        "test:unittests:cover": "nyc --nycrc-path ./build/.nycrc npm run test:unittests",
+        "test:functional": "mocha --opts ./build/.mocha.functional.opts",
+        "test:functional:cover": "nyc--nycrc-path ./build/.nycrc npm run test:functional",
         "testDebugger": "node ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
@@ -1875,7 +1894,7 @@
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.5",
+        "lodash": "^4.17.11",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
@@ -1992,6 +2011,7 @@
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
+        "nyc": "^13.1.0",
         "prismjs": "^1.15.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
@@ -2014,7 +2034,7 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.1.3",
+        "typescript": "^3.2.2",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",

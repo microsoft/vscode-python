@@ -160,6 +160,14 @@ steps:
       arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
 
 
+  - script: |
+      set -e
+      /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+      disown -ar
+    displayName: 'Start xvfb'
+    condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
+
+
   - task: Npm@1
     displayName: 'run $(TestSuiteName)'
     inputs:
@@ -168,6 +176,8 @@ steps:
       verbose: true
 
       customCommand: 'run $(TestSuiteName)'
+    env:
+      DISPLAY: :10
 
 
   - task: PythonScript@0
@@ -202,10 +212,9 @@ steps:
 
       buildConfiguration: '$(TestSuiteName)'
 
-    condition: always()
+      condition: always()
 
-
-  - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID -F $(Platform)'
+  - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'
     displayName: 'publish codecov'
     continueOnError: true
     condition: always()

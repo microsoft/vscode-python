@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
+
+import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 
 /**
@@ -23,11 +25,37 @@ export namespace Cancellation {
      */
     export function race<T>(work : (token?: CancellationToken) => Promise<T>, token?: CancellationToken) : Promise<T> {
         if (token) {
-            // Race rejection. This allows the callback to run because the second promise
-            // will be in the promise queue.
-            return Promise.race([work(token), new Promise<T>((resolve, reject) => {
-                token.onCancellationRequested(() => reject(new CancellationError()));
-            })]);
+            // Use a deferred promise. Resolves when the work finishes
+            const deferred = createDeferred<T>();
+
+            // Cancel the deferred promise when the cancellation happens
+            token.onCancellationRequested(() => {
+                if (!deferred.completed) {
+                    deferred.reject(new CancellationError());
+                }
+            });
+
+            // Might already be canceled
+            if (token.isCancellationRequested) {
+                // Just start out as rejected
+                deferred.reject(new CancellationError());
+            } else {
+                // Not canceled yet. When the work finishes
+                // either resolve our promise or cancel.
+                work(token)
+                    .then((v) => {
+                        if (!deferred.completed) {
+                            deferred.resolve(v);
+                        }
+                    })
+                    .catch((e) => {
+                        if (!deferred.completed) {
+                            deferred.reject(e);
+                        }
+                    });
+            }
+
+            return deferred.promise;
         } else {
             // No actual token, just do the original work.
             return work();

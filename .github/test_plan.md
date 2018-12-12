@@ -224,6 +224,31 @@ def foo():pass
 ```python
 import unittest
 
+MODULE_SETUP = False
+
+
+def setUpModule():
+    global MODULE_SETUP
+    MODULE_SETUP = True
+
+
+class PassingSetupTests(unittest.TestCase):
+    CLASS_SETUP = False
+    METHOD_SETUP = False
+
+    @classmethod
+    def setUpClass(cls):
+        cls.CLASS_SETUP = True
+
+    def setUp(self):
+        self.METHOD_SETUP = True
+
+    def test_setup(self):
+        self.assertTrue(MODULE_SETUP)
+        self.assertTrue(self.CLASS_SETUP)
+        self.assertTrue(self.METHOD_SETUP)
+
+
 class PassingTests(unittest.TestCase):
 
     def test_passing(self):
@@ -247,6 +272,7 @@ class FailingTests(unittest.TestCase):
   - [ ] Code lens for a method runs just that test
     - [ ] `Run Test` works
     - [ ] `Debug Test` works
+    - [ ] Module/suite setup methods are also run (run the `test_setup` method to verify)
 
 #### [`pytest`](https://code.visualstudio.com/docs/python/unit-testing#_pytest-configuration-settings)
 ```python
