@@ -35,6 +35,7 @@ export interface IExtensionApi {
 // tslint:disable-next-line:no-any
 export function buildApi(ready: Promise<any>) {
     return {
+        // 'ready' will propogate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
