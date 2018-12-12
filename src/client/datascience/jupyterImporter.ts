@@ -108,7 +108,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private createTemplateFile = async (): Promise<string> => {
+    private async createTemplateFile(): Promise<string> {
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.tpl');
 
