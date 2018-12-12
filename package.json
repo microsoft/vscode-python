@@ -389,12 +389,12 @@
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileasnotebook",
-                    "group": "Python"
+                    "group": "Python2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileandoutputasnotebook",
-                    "group": "Python"
+                    "group": "Python2@2"
                 }
             ],
             "explorer/context": [
