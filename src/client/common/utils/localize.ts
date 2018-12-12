@@ -9,7 +9,6 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
-    export const progress = localize('diagnostics.progress', 'Validating user setup');
     export const warnSourceMaps = localize('diagnostics.warnSourceMaps', 'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.');
     export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
     export const warnBeforeEnablingSourceMaps = localize('diagnostics.warnBeforeEnablingSourceMaps', 'Enabling source map support in the Python Extension will adversely impact performance of the extension.');
