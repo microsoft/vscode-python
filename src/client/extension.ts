@@ -124,15 +124,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
-    // language server activation does not need to be awaited, allow it to initialize in the
-    activationService.activate()
-        .then(
-            () => standardOutputChannel.appendLine('Language server started successfully.'),
-            (rejectedReason) => traceError(`Language Server startup failed. Reason: ${rejectedReason}`)
-        )
-        .catch(
-            (exceptionReason) => traceError(`Language Server startup exception raised: ${exceptionReason}`)
-        ).ignoreErrors();
+    const lsActivationPromise = activationService.activate();
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
@@ -202,7 +194,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationDeferred.promise);
+    const api = buildApi(Promise.all([activationDeferred.promise, lsActivationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable-next-line:no-any
