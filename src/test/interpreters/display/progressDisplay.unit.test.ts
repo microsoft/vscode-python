@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { Interpreters } from '../../../client/common/utils/localize';
+import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
@@ -42,7 +42,7 @@ suite('Interpreters - Display Progress', () => {
         refreshingCallback(undefined);
 
         const options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Interpreters.loading());
+        expect(options.title).to.be.equal(Common.loadingExtension());
     });
 
     test('Display refreshing message when refreshing interpreters for the second time', async () => {
@@ -54,7 +54,7 @@ suite('Interpreters - Display Progress', () => {
         refreshingCallback(undefined);
 
         let options = capture(shell.withProgress as any).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Interpreters.loading());
+        expect(options.title).to.be.equal(Common.loadingExtension());
 
         refreshingCallback(undefined);
 
@@ -74,7 +74,7 @@ suite('Interpreters - Display Progress', () => {
         const callback = capture(shell.withProgress as any).last()[1] as ProgressTask<void>;
         const promise = callback(undefined as any, undefined as any);
 
-        expect(options.title).to.be.equal(Interpreters.loading());
+        expect(options.title).to.be.equal(Common.loadingExtension());
 
         refreshedCallback(undefined);
         // Promise must resolve when refreshed callback is invoked.

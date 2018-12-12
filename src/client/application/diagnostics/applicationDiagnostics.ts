@@ -7,8 +7,6 @@ import { inject, injectable, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { ILogger, IOutputChannel } from '../../common/types';
-import { displayProgress } from '../../common/utils/decorators';
-import { Diagnostics } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './types';
@@ -20,7 +18,6 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
     public register() {
         this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
     }
-    @displayProgress(Diagnostics.progress())
     public async performPreStartupHealthCheck(): Promise<void> {
         const diagnosticsServices = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
         await Promise.all(diagnosticsServices.map(async diagnosticsService => {

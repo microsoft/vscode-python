@@ -138,6 +138,16 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                             await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
                         }
                     }, localize.DataScience.exportingFormat(), file);
+
+                    // When all done, show a notice that it completed.
+                    const openQuestion = localize.DataScience.exportOpenQuestion();
+                    this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
+                        if (str === openQuestion) {
+                            // If the user wants to, open the notebook they just generated.
+                            this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
+                        }
+                    });
+
                 }
             }
         }

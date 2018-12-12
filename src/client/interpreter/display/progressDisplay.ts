@@ -9,7 +9,7 @@ import { IApplicationShell } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { Interpreters } from '../../common/utils/localize';
+import { Common, Interpreters } from '../../common/utils/localize';
 import { IInterpreterLocatorProgressService, InterpreterLocatorProgressHandler } from '../contracts';
 
 @injectable()
@@ -39,7 +39,7 @@ export class InterpreterLocatorProgressStatubarHandler implements InterpreterLoc
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
-            title: this.isFirstTimeLoadingInterpreters ? Interpreters.loading() : Interpreters.refreshing()
+            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing()
         };
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {

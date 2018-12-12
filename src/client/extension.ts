@@ -7,7 +7,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 const durations: { [key: string]: number } = {};
 import { StopWatch } from './common/utils/stopWatch';
-// Do not move this linne of code (used to measure extension load times).
+// Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 import { Container } from 'inversify';
 import {
@@ -21,6 +21,8 @@ import {
     languages,
     Memento,
     OutputChannel,
+    ProgressLocation,
+    ProgressOptions,
     window
 } from 'vscode';
 
@@ -51,6 +53,7 @@ import {
     WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
+import { Common } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
@@ -97,6 +100,7 @@ let activatedServiceContainer: ServiceContainer | undefined;
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
+    displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
@@ -122,7 +126,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
-    await activationService.activate();
+    const lsActivationPromise = activationService.activate();
+    displayProgress(lsActivationPromise);
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
@@ -192,7 +197,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationDeferred.promise);
+    const api = buildApi(Promise.all([activationDeferred.promise, lsActivationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable-next-line:no-any
@@ -211,6 +216,12 @@ export function deactivate(): Thenable<void> {
     }
 
     return Promise.resolve();
+}
+
+// tslint:disable-next-line:no-any
+function displayProgress(promise: Promise<any>) {
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    window.withProgress(progressOptions, () => promise);
 }
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
