@@ -21,6 +21,8 @@ import {
     languages,
     Memento,
     OutputChannel,
+    ProgressLocation,
+    ProgressOptions,
     window
 } from 'vscode';
 
@@ -51,6 +53,7 @@ import {
     WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
+import { Common } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
@@ -97,6 +100,7 @@ let activatedServiceContainer: ServiceContainer | undefined;
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
+    displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
@@ -123,6 +127,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     const lsActivationPromise = activationService.activate();
+    displayProgress(lsActivationPromise);
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
@@ -211,6 +216,12 @@ export function deactivate(): Thenable<void> {
     }
 
     return Promise.resolve();
+}
+
+// tslint:disable-next-line:no-any
+function displayProgress(promise: Promise<any>) {
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    window.withProgress(progressOptions, () => promise);
 }
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
