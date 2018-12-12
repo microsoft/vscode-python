@@ -5,7 +5,6 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
-const showStatsInStdOut = true; // REMOVE THIS PRIOR TO MERGE
 const durations: { [key: string]: number } = {};
 import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
@@ -293,10 +292,6 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
 
         const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
-        if (showStatsInStdOut === true) {
-            const stdOut = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-            stdOut.appendLine(`Extension startup duration [start = ${durations.startActivateTime}, end = ${durations.endActivateTime}] = ${durations.endActivateTime - durations.startActivateTime}`);
-        }
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);
     }
