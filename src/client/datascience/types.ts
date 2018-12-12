@@ -47,6 +47,7 @@ export interface INotebookServer extends Disposable {
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
+    getConnectionInfo(): IConnection | undefined;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -150,12 +151,19 @@ export interface IHistoryInfo {
     redoCount: number;
 }
 
+export enum SysInfoReason {
+    Start,
+    Restart,
+    Interrupt
+}
+
 export interface ISysInfo extends nbformat.IBaseCell {
     cell_type: 'sys_info';
     version: string;
     notebook_version: string;
     path: string;
     message: string;
+    connection: string;
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');

@@ -83,7 +83,8 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
             notebook_version: '(5, 9, 9)',
             source: [],
             metadata: {},
-            message: 'You have this python data:'
+            message: 'You have this python data:',
+            connection: 'https:\\localhost'
         },
         {
             cell_type: 'code',
