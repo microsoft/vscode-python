@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.12.0-beta",
+    "version": "2018.12.0-rc",
     "languageServerVersion": "0.1.72",
     "publisher": "ms-python",
     "author": {
@@ -43,9 +43,6 @@
     "engines": {
         "vscode": "^1.26.0"
     },
-    "recommendations": [
-        "donjayamanne.jupyter"
-    ],
     "keywords": [
         "python",
         "django",
