@@ -5,6 +5,7 @@ parameters:
   NpmVersion: 'latest'
   AzureStorageAccountName: 'vscodepythonci'
   AzureStorageContainerName: 'vscode-python-ci'
+  Platform: 'Windows'
   PoolName: 'Hosted VS2017'
   EnvironmentExecutableFolder: 'Scripts'
   PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
@@ -21,6 +22,7 @@ jobs:
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
+    platform: ${{ parameters.Platform }}
     azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
     azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
     environmentExecutableFolder: ${{ parameters.EnvironmentExecutableFolder }}
@@ -141,7 +143,12 @@ jobs:
     - powershell: |
        Write-Host $Env:CONDA
 
-       $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+       if( $Env:platform -eq 'Linux' ){
+           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $Env:environmentExecutableFolder | Join-Path -ChildPath python
+
+       }else {
+           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+       }
 
        & $condaPythonPath ./build/ci/addEnvPath.py $Env:PYTHON_VIRTUAL_ENVS_LOCATION condaPath
 
