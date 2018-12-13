@@ -128,12 +128,9 @@ jobs:
 
     - powershell: |
        Write-Host $Env:CONDA
-       Write-Host $(platform)
        Write-Host $Env:environmentExecutableFolder
-       Write-Host $environmentExecutableFolder
+       Write-Host $Env:EnvironmentExecutableFolder
        Write-Host $Env:PYTHON_VIRTUAL_ENVS_LOCATION
-       Write-Host '$(environmentExecutableFolder)'
-       Write-Host $(PYTHON_VIRTUAL_ENVS_LOCATION)
        if( '$(platform)' -eq 'Linux' ){
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
 
@@ -143,12 +140,6 @@ jobs:
 
        & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
 
-       Write-Host $Env:$(environmentExecutableFolder)
-       Write-Host $Env:Platform
-       Write-Host $Env:EnvironmentExecutableFolder
-       Write-Host $EnvironmentExecutableFolder
-       Write-Host $(PYTHON_VIRTUAL_ENVS_LOCATION)
-       Get-Content $(PYTHON_VIRTUAL_ENVS_LOCATION)
        Get-Content $Env:PYTHON_VIRTUAL_ENVS_LOCATION
 
       displayName: 'Save conda environment executable'
@@ -172,6 +163,14 @@ jobs:
         verbose: true
 
         customCommand: ci
+
+
+    - script: |
+        set -e
+        /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+        disown -ar
+      displayName: 'Start xvfb'
+      condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
 
     - task: Npm@1
