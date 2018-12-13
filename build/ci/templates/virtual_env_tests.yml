@@ -181,5 +181,7 @@ jobs:
         verbose: true
 
         customCommand: 'run $(TestSuiteName)'
+      env:
+        DISPLAY: :10
 
 
