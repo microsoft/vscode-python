@@ -41,9 +41,14 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider,
-    SysInfoReason
+    IStatusProvider
 } from './types';
+
+export enum SysInfoReason {
+    Start,
+    Restart,
+    Interrupt
+}
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -701,8 +706,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private addSysInfo = async (reason: SysInfoReason) : Promise<void> => {
-        if ((reason === SysInfoReason.Start && !this.addedSysInfo) ||
-              (reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart)) {
+        if (!this.addedSysInfo || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
             this.addedSysInfo = true;
             this.ignoreCount = 0;
 

@@ -151,12 +151,6 @@ export interface IHistoryInfo {
     redoCount: number;
 }
 
-export enum SysInfoReason {
-    Start,
-    Restart,
-    Interrupt
-}
-
 export interface ISysInfo extends nbformat.IBaseCell {
     cell_type: 'sys_info';
     version: string;
