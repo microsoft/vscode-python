@@ -1,17 +1,3 @@
-parameters:
-  name: 'VirtualEnv_Tests_Windows_py37'
-  PythonVersion: '3.7'
-  NodeVersion: '8.11.2'
-  NpmVersion: 'latest'
-  AzureStorageAccountName: 'vscodepythonci'
-  AzureStorageContainerName: 'vscode-python-ci'
-  Platform: 'Windows'
-  PoolName: 'Hosted VS2017'
-  EnvironmentExecutableFolder: 'Scripts'
-  PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-  TEST_FILES_SUFFIX: 'testvirtualenvs'
-  TestSuiteName: 'testSingleWorkspace'
-
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: 'PR_Validate_Windows_py37'
@@ -142,16 +128,27 @@ jobs:
 
     - powershell: |
        Write-Host $Env:CONDA
-
-       if( $Env:platform -eq 'Linux' ){
-           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $Env:environmentExecutableFolder | Join-Path -ChildPath python
+       Write-Host $(platform)
+       Write-Host $Env:environmentExecutableFolder
+       Write-Host $environmentExecutableFolder
+       Write-Host $Env:PYTHON_VIRTUAL_ENVS_LOCATION
+       Write-Host '$(environmentExecutableFolder)'
+       Write-Host $(PYTHON_VIRTUAL_ENVS_LOCATION)
+       if( '$(platform)' -eq 'Linux' ){
+           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
 
        }else {
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
        }
 
-       & $condaPythonPath ./build/ci/addEnvPath.py $Env:PYTHON_VIRTUAL_ENVS_LOCATION condaPath
+       & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
 
+       Write-Host $Env:$(environmentExecutableFolder)
+       Write-Host $Env:Platform
+       Write-Host $Env:EnvironmentExecutableFolder
+       Write-Host $EnvironmentExecutableFolder
+       Write-Host $(PYTHON_VIRTUAL_ENVS_LOCATION)
+       Get-Content $(PYTHON_VIRTUAL_ENVS_LOCATION)
        Get-Content $Env:PYTHON_VIRTUAL_ENVS_LOCATION
 
       displayName: 'Save conda environment executable'
