@@ -34,6 +34,7 @@ import {
     CellState,
     ICell,
     ICodeCssGenerator,
+    IConnection,
     IHistory,
     IHistoryInfo,
     IJupyterExecution,
@@ -42,6 +43,12 @@ import {
     InterruptResult,
     IStatusProvider
 } from './types';
+
+export enum SysInfoReason {
+    Start,
+    Restart,
+    Interrupt
+}
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -119,7 +126,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             await this.show();
 
             // Add our sys info if necessary
-            await this.addInitialSysInfo();
+            await this.addSysInfo(SysInfoReason.Start);
 
             if (this.jupyterServer) {
                 // Before we try to execute code make sure that we have an initial directory set
@@ -308,7 +315,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                         });
                     } else if (result === InterruptResult.Restarted) {
                         // Uh-oh, keyboard interrupt crashed the kernel.
-                        this.addInterruptFailedInfo().ignoreErrors();
+                        this.addSysInfo(SysInfoReason.Interrupt).ignoreErrors();
                     }
                 })
                 .catch(err => {
@@ -339,7 +346,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         try {
             if (this.jupyterServer) {
                 await this.jupyterServer.restartKernel();
-                await this.addRestartSysInfo();
+                await this.addSysInfo(SysInfoReason.Restart);
             }
         } finally {
             status.dispose();
@@ -554,7 +561,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             // If this is a restart, show our restart info
             if (restart) {
-                await this.addRestartSysInfo();
+                await this.addSysInfo(SysInfoReason.Restart);
             }
         } finally {
             if (status) {
@@ -619,10 +626,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         return result;
     }
 
-    private generateSysInfoCell = async (message: string) : Promise<ICell | undefined> => {
+    private generateSysInfoCell = async (reason: SysInfoReason) : Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
         if (this.jupyterServer) {
+            const message = await this.generateSysInfoMessage(reason);
             // tslint:disable-next-line:no-multiline-string
             const versionCells = await this.jupyterServer.execute(`import sys\r\nsys.version`, 'foo.py', 0);
             // tslint:disable-next-line:no-multiline-string
@@ -638,6 +646,12 @@ export class History implements IWebPanelMessageListener, IHistory {
             // Both should influence our ignore count. We don't want them to count against execution
             this.ignoreCount = this.ignoreCount + 3;
 
+            // Connection string only for our initial start, not restart or interrupt
+            let connectionString: string = '';
+            if (reason === SysInfoReason.Start) {
+                connectionString = this.generateConnectionInfoString(this.jupyterServer.getConnectionInfo());
+            }
+
             // Combine this data together to make our sys info
             return {
                 data: {
@@ -646,6 +660,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                     version: version,
                     notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
                     path: pythonPath,
+                    connection: connectionString,
                     metadata: {},
                     source: []
                 },
@@ -657,33 +672,46 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private addInitialSysInfo = async () : Promise<void> => {
-        // Message depends upon if ipykernel is supported or not.
-        if (!(await this.jupyterExecution.isKernelCreateSupported())) {
-            return this.addSysInfo(localize.DataScience.pythonVersionHeaderNoPyKernel());
+    private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
+        switch (reason) {
+            case SysInfoReason.Start:
+                    // Message depends upon if ipykernel is supported or not.
+                    if (!(await this.jupyterExecution.isKernelCreateSupported())) {
+                        return localize.DataScience.pythonVersionHeaderNoPyKernel();
+                    }
+                    return localize.DataScience.pythonVersionHeader();
+                    break;
+            case SysInfoReason.Restart:
+                    return localize.DataScience.pythonRestartHeader();
+                    break;
+            case SysInfoReason.Interrupt:
+                    return localize.DataScience.pythonInterruptFailedHeader();
+                    break;
+            default:
+                    this.logger.logError('Invalid SysInfoReason');
+                    return '';
+                    break;
+        }
+    }
+
+    private generateConnectionInfoString(connInfo: IConnection | undefined): string {
+        if (!connInfo) {
+            return '';
         }
 
-        return this.addSysInfo(localize.DataScience.pythonVersionHeader());
+        const tokenString = connInfo.token.length > 0 ? `?token=${connInfo.token}` : '';
+        const urlString = `${connInfo.baseUrl}${tokenString}`;
+
+        return `${localize.DataScience.sysInfoURILabel()}${urlString}`;
     }
 
-    private addRestartSysInfo = () : Promise<void> => {
-        this.addedSysInfo = false;
-        return this.addSysInfo(localize.DataScience.pythonRestartHeader());
-    }
-
-    private addInterruptFailedInfo = () : Promise<void> => {
-        this.addedSysInfo = false;
-        return this.addSysInfo(localize.DataScience.pythonInterruptFailedHeader());
-    }
-
-    private addSysInfo = async (message: string) : Promise<void> => {
-        // Add our sys info if necessary
-        if (!this.addedSysInfo) {
+    private addSysInfo = async (reason: SysInfoReason) : Promise<void> => {
+        if (!this.addedSysInfo || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
             this.addedSysInfo = true;
             this.ignoreCount = 0;
 
             // Generate a new sys info cell and send it to the web panel.
-            const sysInfo = await this.generateSysInfoCell(message);
+            const sysInfo = await this.generateSysInfoCell(reason);
             if (sysInfo) {
                 this.onAddCodeEvent([sysInfo]);
             }

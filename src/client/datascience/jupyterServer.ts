@@ -405,7 +405,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 return InterruptResult.TimedOut;
             } catch (exc) {
                 // Something failed. See if we restarted or not.
-                if (interruptBeginTime < this.sessionStartTime) {
+                if (this.sessionStartTime && (interruptBeginTime < this.sessionStartTime)) {
                     return InterruptResult.Restarted;
                 }
 
@@ -417,6 +417,18 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
 
         throw new Error(localize.DataScience.sessionDisposed());
+    }
+
+    // Return a copy of the connection information that this server used to connect with
+    public getConnectionInfo(): IConnection | undefined {
+        if (!this.connInfo) {
+            return undefined;
+        }
+
+        // Return a copy with a no-op for dispose
+        return {
+            ...this.connInfo,
+            dispose: noop };
     }
 
     private shutdownSessionAndConnection = async () => {
