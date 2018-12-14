@@ -276,12 +276,6 @@ suite('Linting - General Tests', () => {
         //          - Symptom: lintingEngine::lintOpenPythonFiles returns values *after* command await resolves in lint.tests
         //          - lintOpenPythonFiles returns 3 sets of values, not what I expect (1).
         //          - Haven't yet found a way to await on this properly.
-        const skipped = true;
-        if (skipped) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);

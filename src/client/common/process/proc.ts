@@ -169,7 +169,7 @@ export class ProcessService implements IProcessService {
 
     private getDefaultOptions<T extends (ShellOptions | SpawnOptions)>(options: T) : T {
         const execOptions = options as SpawnOptions;
-        const defaultOptions = JSON.parse(JSON.stringify(options));
+        const defaultOptions = JSON.parse(JSON.stringify(options, (key, value) => key === 'token' ? undefined : value));
         if (execOptions)
         {
             const encoding = execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING;
