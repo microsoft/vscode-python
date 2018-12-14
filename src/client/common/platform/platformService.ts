@@ -109,12 +109,12 @@ async function getLinuxDistro(): Promise<[OSDistro, SemVer]> {
         const getos = require('getos') as typeof import('getos');
         // tslint:disable-next-line:no-any
         getos((exc: Error, info: { dist?: string; release?: string }) => {
-            traceVerbose(`getos result ${info ? JSON.stringify(info) : ''}`);
             if (exc) {
                 traceError('getos failed', exc);
                 sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToGetLinuxInfo });
                 return reject(exc);
             }
+            traceVerbose(`getos result ${info ? JSON.stringify(info) : ''}`);
             try {
                 distro = getLinuxDistroFromName(info.dist!);
             } catch (ex) {
