@@ -20,9 +20,13 @@ export class BaseTerminalActivator implements ITerminalActivator {
         const terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.helper.identifyTerminalShell(shellPath);
 
         const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
+        // tslint:disable-next-line:no-console
+        console.log('Base.ts returned command', activationCommamnds);
         let activated = false;
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
+                // tslint:disable-next-line:no-console
+                console.log('in base.ts', command);
                 terminal.show(preserveFocus);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);

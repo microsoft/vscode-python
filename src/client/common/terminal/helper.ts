@@ -91,6 +91,8 @@ export class TerminalHelper implements ITerminalHelper {
         if (isCondaEnvironment) {
             const condaActivationProvider = new CondaActivationCommandProvider(this.serviceContainer);
             const activationCommands = await condaActivationProvider.getActivationCommands(resource, terminalShellType);
+            // tslint:disable-next-line:no-console
+            console.log('In conda helper.ts', activationCommands);
             if (Array.isArray(activationCommands)) {
                 return activationCommands;
             }
@@ -102,6 +104,8 @@ export class TerminalHelper implements ITerminalHelper {
 
         for (const provider of supportedProviders) {
             const activationCommands = await provider.getActivationCommands(resource, terminalShellType);
+            // tslint:disable-next-line:no-console
+            console.log('In helper.ts', activationCommands);
             if (Array.isArray(activationCommands)) {
                 return activationCommands;
             }
