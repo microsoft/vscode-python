@@ -175,6 +175,7 @@ export class ProcessService implements IProcessService {
             const encoding = execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING;
             delete execOptions.encoding;
             defaultOptions.encoding = encoding;
+            defaultOptions.token = execOptions.token;
         }
         if (!defaultOptions.env || Object.keys(defaultOptions).length === 0) {
             const env = this.env ? this.env : process.env;
