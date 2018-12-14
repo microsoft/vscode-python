@@ -42,7 +42,6 @@ export class ProcessService implements IProcessService {
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
 
@@ -64,7 +63,7 @@ export class ProcessService implements IProcessService {
             }
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
+                const out = this.decoder.decode([data], options.encoding);
                 if (source === 'stderr' && options.throwOnStdErr) {
                     subscriber.error(new StdErrError(out));
                 } else {
@@ -99,7 +98,6 @@ export class ProcessService implements IProcessService {
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposables: Disposable[] = [];
@@ -133,6 +131,7 @@ export class ProcessService implements IProcessService {
             if (deferred.completed) {
                 return;
             }
+            const encoding = options.encoding;
             const stderr: string | undefined = stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
             if (stderr && stderr.length > 0 && options.throwOnStdErr) {
                 deferred.reject(new StdErrError(stderr));
@@ -168,20 +167,21 @@ export class ProcessService implements IProcessService {
     }
 
     private getDefaultOptions<T extends (ShellOptions | SpawnOptions)>(options: T): T {
-        const defaultOptions = { ...options };
+        const defaultOptions = { ...options, env: undefined };
+
         const execOptions = defaultOptions as SpawnOptions;
         if (execOptions) {
-            const encoding = execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING;
-            delete execOptions.encoding;
-            execOptions.encoding = encoding;
+            if (typeof execOptions.encoding !== 'string' || execOptions.encoding.length === 0) {
+                execOptions.encoding = DEFAULT_ENCODING;
+            }
         }
-        if (!defaultOptions.env || Object.keys(defaultOptions.env).length === 0) {
+
+        if (!options.env || Object.keys(options.env).length === 0) {
             const env = this.env ? this.env : process.env;
             defaultOptions.env = { ...env };
         } else {
-            defaultOptions.env = { ...defaultOptions.env };
+            defaultOptions.env = { ...options.env };
         }
-
         // Always ensure we have unbuffered output.
         defaultOptions.env.PYTHONUNBUFFERED = '1';
         if (!defaultOptions.env.PYTHONIOENCODING) {
