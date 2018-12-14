@@ -168,18 +168,20 @@ export class ProcessService implements IProcessService {
     }
 
     private getDefaultOptions<T extends (ShellOptions | SpawnOptions)>(options: T) : T {
-        const execOptions = options as SpawnOptions;
-        const defaultOptions = JSON.parse(JSON.stringify(options, (key, value) => key === 'token' ? undefined : value));
+        const defaultOptions = { ...options };
+        const execOptions = defaultOptions as SpawnOptions;
         if (execOptions)
         {
             const encoding = execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING;
             delete execOptions.encoding;
-            defaultOptions.encoding = encoding;
-            defaultOptions.token = execOptions.token;
+            execOptions.encoding = encoding;
+            execOptions.token = execOptions.token;
         }
-        if (!defaultOptions.env || Object.keys(defaultOptions).length === 0) {
+        if (!defaultOptions.env || Object.keys(defaultOptions.env).length === 0) {
             const env = this.env ? this.env : process.env;
             defaultOptions.env = { ...env };
+        } else {
+            defaultOptions.env = { ...defaultOptions.env };
         }
 
         // Always ensure we have unbuffered output.
