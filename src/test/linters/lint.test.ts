@@ -271,11 +271,6 @@ suite('Linting - General Tests', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Multiple linters', async function () {
-        //      Unreliable test being skipped until we can sort it out.  See gh-2609.
-        //          - Fails about 1/3 of runs on Windows
-        //          - Symptom: lintingEngine::lintOpenPythonFiles returns values *after* command await resolves in lint.tests
-        //          - lintOpenPythonFiles returns 3 sets of values, not what I expect (1).
-        //          - Haven't yet found a way to await on this properly.
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
