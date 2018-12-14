@@ -53,6 +53,9 @@ suite('Activation of Environments in Terminal', () => {
     async function testActivation(envPath){
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPath);
+        const pyPath = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders[0].uri);
+        // tslint:disable-next-line:no-console
+        console.log(`Set pythonPath to ${pyPath.inspect('pythonPath').workspaceFolderValue}`);
         const terminal = vscode.window.createTerminal();
         await sleep(waitTimeForActivation);
         terminal.sendText(`python ${file}`, true);
