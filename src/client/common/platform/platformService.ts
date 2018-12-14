@@ -7,7 +7,7 @@ import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PLATFORM_INFO, PlatformErrors } from '../../telemetry/constants';
-import { traceDecorators, traceError } from '../logger';
+import { traceDecorators, traceError, traceVerbose } from '../logger';
 import { OSDistro, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
@@ -109,6 +109,7 @@ async function getLinuxDistro(): Promise<[OSDistro, SemVer]> {
         const getos = require('getos') as typeof import('getos');
         // tslint:disable-next-line:no-any
         getos((exc: Error, info: { dist?: string; release?: string }) => {
+            traceVerbose(`getos result ${info ? JSON.stringify(info) : ''}`);
             if (exc) {
                 traceError('getos failed', exc);
                 sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToGetLinuxInfo });
