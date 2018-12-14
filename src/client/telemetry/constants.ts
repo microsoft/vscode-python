@@ -52,5 +52,7 @@ export const PLATFORM_INFO = 'PLATFORM.INFO';
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToGetLinuxInfo = 'FailedToGetLinuxInfo',
-    FailedToDetermineOS = 'FailedToDetermineOS'
+    FailedToDetermineOS = 'FailedToDetermineOS',
+    FailedToDetermineDistro = 'FailedToDetermineDistro',
+    FailedToDetermineVersion = 'FailedToDetermineVersion'
 }

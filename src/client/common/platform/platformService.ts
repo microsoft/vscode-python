@@ -108,14 +108,27 @@ async function getLinuxDistro(): Promise<[OSDistro, SemVer]> {
         // tslint:disable-next-line:no-require-imports
         const getos = require('getos') as typeof import('getos');
         // tslint:disable-next-line:no-any
-        getos((exc: Error, info: any) => {
+        getos((exc: Error, info: { dist?: string; release?: string }) => {
             if (exc) {
+                traceError('getos failed', exc);
                 sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToGetLinuxInfo });
                 return reject(exc);
             }
-            distro = getLinuxDistroFromName(info.dist);
-            version = parseVersion(info.release);
-            resolve([distro, version]);
+            try {
+                distro = getLinuxDistroFromName(info.dist!);
+            } catch (ex) {
+                traceError('getLinuxDistroFromName failed in getLinuxDistro', exc);
+                sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToDetermineDistro });
+                return reject(ex);
+            }
+            try {
+                version = parseVersion(info.release!);
+                resolve([distro, version]);
+            } catch (ex) {
+                traceError('parseVersion failed in getLinuxDistro', exc);
+                sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToDetermineVersion });
+                return reject(ex);
+            }
         });
     });
 }
