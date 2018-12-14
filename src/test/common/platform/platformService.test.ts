@@ -60,7 +60,7 @@ suite('PlatformService', () => {
         const svc = new PlatformService();
         const result = svc.is64bit;
 
-        expect(result).to.be.equal(expected, 'invalid value');
+        expect(result).to.be.equal(expected, `Invalid value for arch(). os.arch() reports '${os.arch()}' (looking for 'x64').`);
     });
 
     test('getVersion on Mac/Windows', async function () {
