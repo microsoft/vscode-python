@@ -41,15 +41,6 @@ const config: Configuration = {
                 ]
             },
             {
-                // Do not use __dirname in getos when using require.
-                test: /getos[\\\/]index.js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixGetosRequire.js')
-                    }
-                ]
-            },
-            {
                 test: /\.ts$/,
                 use: [
                     {
@@ -75,7 +66,6 @@ const config: Configuration = {
     ],
     plugins: [
         ...getDefaultPlugins('extension'),
-        new ContextReplacementPlugin(/getos/, /logic\/.*.js/),
         new WrapperPlugin({
             test: /\extension.js$/,
             // Import source map warning file only if source map is enabled.

@@ -3,7 +3,6 @@
 'use strict';
 
 import { TerminalShellType } from '../common/terminal/types';
-import { OSDistro } from '../common/utils/platform';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { PlatformErrors } from './constants';
@@ -127,7 +126,6 @@ export type ImportNotebook = {
 };
 
 export type Platform = {
-    distro?: OSDistro;
     failureType?: PlatformErrors;
     osVersion?: string;
 };

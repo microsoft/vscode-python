@@ -31,15 +31,6 @@ const config = {
                 ]
             },
             {
-                // Do not use __dirname in getos when using require.
-                test: /getos[\\\/]index.js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixGetosRequire.js')
-                    }
-                ]
-            },
-            {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
@@ -55,8 +46,7 @@ const config = {
         'commonjs'
     ],
     plugins: [
-        ...common_1.getDefaultPlugins('extension'),
-        new webpack_1.ContextReplacementPlugin(/getos/, /logic\/.*.js/)
+        ...common_1.getDefaultPlugins('extension')
     ],
     resolve: {
         extensions: ['.ts', '.js'],
