@@ -1,5 +1,15 @@
 # Changelog
 
+## 2018.12.1 (14 Dec 2018)
+
+### Fixes
+
+1. Lowering threshold for Language Server support on a platform.
+   ([#3693](https://github.com/Microsoft/vscode-python/issues/3693))
+1. Fix bug affecting multiple linters used in a workspace.
+   (thanks [Ilia Novoselov](https://github.com/nullie))
+   ([#3700](https://github.com/Microsoft/vscode-python/issues/3700))
+
 ## 2018.12.0 (13 Dec 2018)
 
 ### Thanks
