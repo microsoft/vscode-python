@@ -1326,7 +1326,8 @@
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [
                         "--ignore-missing-imports",
-                        "--follow-imports=silent"
+                        "--follow-imports=silent",
+                        "--show-column-numbers"
                     ],
                     "items": {
                         "type": "string"
