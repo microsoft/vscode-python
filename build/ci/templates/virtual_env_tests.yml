@@ -173,6 +173,16 @@ jobs:
       condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
 
+    - bash: |
+       echo "SHELL: $SHELL, shell: $shell, ARGV[0]: $0, PS1: $PS1, prompt: $prompt"
+
+       if test -z "$(type -p)" ; then echo bash ; else echo sh ; fi
+
+      displayName: 'Echo shell'
+      env:
+        DISPLAY: :10
+
+
     - task: Npm@1
       displayName: 'run $(TestSuiteName)'
       inputs:

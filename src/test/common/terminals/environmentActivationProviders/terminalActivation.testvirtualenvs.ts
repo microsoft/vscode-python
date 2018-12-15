@@ -5,6 +5,7 @@
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
@@ -13,6 +14,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 
+// tslint:disable-next-line:max-func-body-length
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
     const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
@@ -26,12 +28,17 @@ suite('Activation of Environments in Terminal', () => {
         virtualEnvPath: string;
     };
     let envPaths: EnvPath;
-    let defaultShell;
+    const defaultShell = {
+        Windows: '',
+        Linux: '',
+        MacOS: ''
+    };
     let terminalSettings;
     suiteSetup(async () => {
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders[0].uri);
-        defaultShell = terminalSettings.inspect('integrated.shell.windows').globalValue;
+        defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
+        defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
         await initialize();
     });
     setup(async () => {
@@ -42,7 +49,8 @@ suite('Activation of Environments in Terminal', () => {
     suiteTeardown(revertSettings);
     async function revertSettings() {
         await updateSetting('terminal.activateEnvironment', undefined , vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
-        await terminalSettings.update('integrated.shell.windows', defaultShell, vscode.ConfigurationTarget.Global);
+        await terminalSettings.update('integrated.shell.windows', defaultShell.Windows, vscode.ConfigurationTarget.Global);
+        await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await restorePythonPathInWorkspaceRoot();
     }
     async function cleanUp() {
@@ -51,17 +59,43 @@ suite('Activation of Environments in Terminal', () => {
         }
     }
     async function testActivation(envPath){
+        // tslint:disable-next-line:no-console
+        console.log(`start1 ${envPath}`);
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+        // tslint:disable-next-line:no-console
+        console.log('start2');
         await setPythonPathInWorkspaceRoot(envPath);
-        // const pyPath = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders[0].uri);
-        // // tslint:disable-next-line:no-console
-        // console.log(`Set pythonPath to ${pyPath.inspect('pythonPath').workspaceFolderValue}`);
+        // tslint:disable-next-line:no-console
+        console.log('start3');
+        const pyPath = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders[0].uri);
+        // tslint:disable-next-line:no-console
+        console.log(`Set pythonPath to ${pyPath.inspect('pythonPath').workspaceFolderValue}`);
+        if (os.platform() === 'linux'){
+            // tslint:disable-next-line:no-console
+            console.log('OS is linux, updating terminal shell Path');
+            await terminalSettings.update('integrated.shell.linux', '\\bin\\bash', vscode.ConfigurationTarget.Global);
+        }
+        // tslint:disable-next-line:no-console
+        console.log('Create terminal');
         const terminal = vscode.window.createTerminal();
+        // tslint:disable-next-line:no-console
+        console.log('Waiting for activation');
         await sleep(waitTimeForActivation);
+        // tslint:disable-next-line:no-console
+        console.log('Done waiting for activation');
+        // tslint:disable-next-line:no-console
+        console.log('Sending text');
         terminal.sendText(`python ${file}`, true);
+        // tslint:disable-next-line:no-console
+        console.log('Waiting for output');
         await waitForCondition(() => fs.pathExists(outputFile), 5_000, '\'testExecInTerminal.log\' file not created');
+        // tslint:disable-next-line:no-console
+        console.log('Read output file');
         const content = await fs.readFile(outputFile, 'utf-8');
-
+        // tslint:disable-next-line:no-console
+        console.log('Done Reading');
+        // tslint:disable-next-line:no-console
+        console.log('Expect file content: ', content, 'to equal envPath: ', envPath);
         expect(content).to.equal(envPath);
     }
     async function testNonActivation(){

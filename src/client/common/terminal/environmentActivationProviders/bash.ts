@@ -24,11 +24,7 @@ export class Bash extends BaseActivationCommandProvider {
     }
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
-        // tslint:disable-next-line:no-console
-        console.log('In bash.ts', pythonPath, '---', scriptFile, scriptFile.fileToCommandArgument());
         if (!scriptFile) {
-            // tslint:disable-next-line:no-console
-            console.log('I should not be here');
             return;
         }
         return [`source ${scriptFile.fileToCommandArgument()}`];

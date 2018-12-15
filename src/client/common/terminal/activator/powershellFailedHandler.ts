@@ -26,10 +26,6 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         }
         // Check if we can activate in Command Prompt.
         const activationCommands = await this.helper.getEnvironmentActivationCommands(TerminalShellType.commandPrompt, resource);
-        // tslint:disable-next-line:no-console
-        console.log('In powershellFailed.ts');
-        // tslint:disable-next-line:no-console
-        console.log(activationCommands);
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;
         }
