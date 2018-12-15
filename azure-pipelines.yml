@@ -12,3 +12,8 @@ variables:
 steps:
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
+- script: |
+    set -e
+    /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+    disown -ar
+  displayName: 'Start xvfb'
