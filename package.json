@@ -950,7 +950,7 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "Python Configuration",
+            "title": "Python",
             "properties": {
                 "python.diagnostics.sourceMapsEnabled": {
                     "type": "boolean",
