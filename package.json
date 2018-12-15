@@ -1633,7 +1633,7 @@
                 "python.unitTest.nosetestsEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to enable or disable unit testing using nosetests.",
+                    "description": "Enable unit testing using nosetests.",
                     "scope": "resource"
                 },
                 "python.unitTest.nosetestPath": {
@@ -1645,7 +1645,7 @@
                 "python.unitTest.promptToConfigure": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Where to prompt to configure a test framework if potential tests directories are discovered.",
+                    "description": "Prompt to configure a test framework if potential tests directories are discovered.",
                     "scope": "resource"
                 },
                 "python.unitTest.pyTestArgs": {
@@ -1660,7 +1660,7 @@
                 "python.unitTest.pyTestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to enable or disable unit testing using pytest.",
+                    "description": "Enable unit testing using pytest.",
                     "scope": "resource"
                 },
                 "python.unitTest.pyTestPath": {
@@ -1687,13 +1687,13 @@
                 "python.unitTest.unittestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to enable or disable unit testing using unittest.",
+                    "description": "Enable unit testing using unittest.",
                     "scope": "resource"
                 },
                 "python.unitTest.autoTestDiscoverOnSaveEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Whether to enable or disable auto run test discovery when saving a unit test file.",
+                    "description": "Enable auto run test discovery when saving a unit test file.",
                     "scope": "resource"
                 },
                 "python.venvFolders": {
