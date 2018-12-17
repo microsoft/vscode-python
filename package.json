@@ -1860,7 +1860,7 @@
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "mocha --opts ./build/.mocha.unittests.opts --grep='PlatformService'",
+        "test:unittests": "mocha --opts ./build/.mocha.unittests.opts",
         "test:unittests:cover": "nyc --nycrc-path ./build/.nycrc npm run test:unittests",
         "test:functional": "mocha --opts ./build/.mocha.functional.opts",
         "test:functional:cover": "nyc--nycrc-path ./build/.nycrc npm run test:functional",

@@ -53,14 +53,14 @@ suite('PlatformService', () => {
     });
 
     test('is64bit', async () => {
-        let expected = true;
-        if (os.arch() !== 'x64') {
-            expected = false;
-        }
+        // tslint:disable-next-line:no-require-imports
+        const arch = require('arch') as typeof import('arch');
+
+        const hostReports64Bit = arch() === 'x64';
         const svc = new PlatformService();
         const result = svc.is64bit;
 
-        expect(result).to.be.equal(expected, 'invalid value');
+        expect(result).to.be.equal(hostReports64Bit, `arch() reports '${arch()}', PlatformService.is64bit reports ${result}.`);
     });
 
     test('getVersion on Mac/Windows', async function () {

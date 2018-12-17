@@ -271,6 +271,9 @@ suite('Linting - General Tests', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Multiple linters', async function () {
+        // skip this unreliable test: gh 2571 tracking this issue...
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);

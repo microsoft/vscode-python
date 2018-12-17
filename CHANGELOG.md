@@ -1,6 +1,16 @@
 # Changelog
 
-## 2018.12.0-rc (12 Dec 2018)
+## 2018.12.1 (14 Dec 2018)
+
+### Fixes
+
+1. Lowering threshold for Language Server support on a platform.
+   ([#3693](https://github.com/Microsoft/vscode-python/issues/3693))
+1. Fix bug affecting multiple linters used in a workspace.
+   (thanks [Ilia Novoselov](https://github.com/nullie))
+   ([#3700](https://github.com/Microsoft/vscode-python/issues/3700))
+
+## 2018.12.0 (13 Dec 2018)
 
 ### Thanks
 
@@ -55,18 +65,20 @@ part of!
 
 ### Enhancements
 
-1. Load the language server in the background during extension activation.
+1. Load the configured language server in the background during extension activation.
    ([#3020](https://github.com/Microsoft/vscode-python/issues/3020))
 1. Display progress indicator when activating the language server and validating user setup.
    ([#3082](https://github.com/Microsoft/vscode-python/issues/3082))
-1. Allow for connection to a remote Jupyter server.
+1. Allow for connection to a remote `Jupyter` server.
    ([#3316](https://github.com/Microsoft/vscode-python/issues/3316))
-1. Allow users to request the 'Install missing Linter' prompt to not show again for pylint.
+1. Allow users to request the 'Install missing Linter' prompt to not show again for `pylint`.
    ([#3349](https://github.com/Microsoft/vscode-python/issues/3349))
+1. Add the `Jupyter` server URI to the interactive window info cell.
+   ([#3668](https://github.com/Microsoft/vscode-python/issues/3668))
 
 ### Fixes
 
-1. Updated logic used to determine whether the Language Server is supported.
+1. Updated logic used to determine whether the Microsoft Python Language Server is supported.
    ([#2729](https://github.com/Microsoft/vscode-python/issues/2729))
 1. Add export from the Python interactive window as a notebook file.
    ([#3109](https://github.com/Microsoft/vscode-python/issues/3109))
@@ -83,7 +95,7 @@ part of!
    ([#3406](https://github.com/Microsoft/vscode-python/issues/3406))
 1. Run in the workspace directory by default for the interactive window.
    ([#3407](https://github.com/Microsoft/vscode-python/issues/3407))
-1. Create a default config when starting a local `jupyter` server to resolve potential conflicts with user's custom configuration.
+1. Create a default config when starting a local `Jupyter` server to resolve potential conflicts with user's custom configuration.
    ([#3475](https://github.com/Microsoft/vscode-python/issues/3475))
 1. Add support for running Python interactive commands from the command palette.
    ([#3476](https://github.com/Microsoft/vscode-python/issues/3476))
@@ -95,7 +107,7 @@ part of!
    ([#3533](https://github.com/Microsoft/vscode-python/issues/3533))
 1. Fix crash when `kernelspec` is missing path or language.
    ([#3561](https://github.com/Microsoft/vscode-python/issues/3561))
-1. Update the Microsoft Python language server to 0.1.72/[2018.12.1](https://github.com/Microsoft/python-language-server/releases/tag/2018.12.1) ([#3657](https://github.com/Microsoft/vscode-python/issues/3657)):
+1. Update the Microsoft Python Language Server to 0.1.72/[2018.12.1](https://github.com/Microsoft/python-language-server/releases/tag/2018.12.1) ([#3657](https://github.com/Microsoft/vscode-python/issues/3657)):
    * Properly resolve namespace packages and relative imports.
    * `Go to Definition` now supports namespace packages.
    * Fixed `null` reference exceptions.
