@@ -8,9 +8,9 @@ import { WindowsDotNetCompatibilityService } from '../../../../client/common/dot
 
 suite('DOT.NET', () => {
     suite('Windows', () => {
-        test('Windows is Supported', () => {
+        test('Windows is Supported', async () => {
             const service = new WindowsDotNetCompatibilityService();
-            const result = service.isSupported();
+            const result = await service.isSupported();
             expect(result).to.be.equal(true, 'Invalid value');
         });
     });
