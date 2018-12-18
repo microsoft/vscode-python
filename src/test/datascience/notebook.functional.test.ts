@@ -13,7 +13,7 @@ import { CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
@@ -204,7 +204,7 @@ suite('Jupyter notebook tests', () => {
 
         if (procService && python) {
             const connectionFound = createDeferred();
-            const exeResult = await procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], {env: process.env, throwOnStdErr: false});
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], {env: process.env, throwOnStdErr: false});
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -223,9 +223,9 @@ suite('Jupyter notebook tests', () => {
             } else {
                 assert.fail('Failed to get a connection string for the remote server');
             }
-            
+
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer(uri, true);
+            const server = await jupyterExecution.connectToNotebookServer(uri!, true);
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
@@ -471,7 +471,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Try with something we can interrupt
-        let interruptResult = await interruptExecute(server,
+        let interruptResult = await interruptExecute(server!,
 `import signal
 import _thread
 import time
@@ -490,14 +490,14 @@ while keep_going:
 
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
-        interruptResult = await interruptExecute(server, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 7000, 7000);
+        interruptResult = await interruptExecute(server!, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 7000, 7000);
 
         // Try again with something that doesn't return. Make sure it times out
-        interruptResult = await interruptExecute(server, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 100, 7000);
+        interruptResult = await interruptExecute(server!, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 100, 7000);
         assert.equal(interruptResult, InterruptResult.TimedOut);
 
         // The tough one, somethign that causes a kernel reset.
-        interruptResult = await interruptExecute(server,
+        interruptResult = await interruptExecute(server!,
 `import signal
 import time
 import os
