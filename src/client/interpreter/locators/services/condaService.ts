@@ -25,7 +25,13 @@ const untildify: (value: string) => string = require('untildify');
 
 // This glob pattern will match all of the following:
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
-export const CondaLocationsGlob = untildify('~/*conda*/bin/conda');
+// /usr/share/anaconda/bin/conda, /usr/share/anaconda3/bin/conda, /usr/share/miniconda/bin/conda, /usr/share/miniconda3/bin/conda
+
+const condaGlobPathsForLinux = [
+    '/usr/share/*conda*/bin/conda',
+    untildify('~/*conda*/bin/conda')];
+
+export const CondaLocationsGlob = `{${condaGlobPathsForLinux.join(',')}}`;
 
 // ...and for windows, the known default install locations:
 const condaGlobPathsForWindows = [
