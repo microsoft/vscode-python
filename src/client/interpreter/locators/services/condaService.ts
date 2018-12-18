@@ -96,6 +96,8 @@ export class CondaService implements ICondaService {
         }
         // tslint:disable-next-line:no-unnecessary-local-variable
         const condaFile = await this.condaFile!;
+        // tslint:disable-next-line:no-console
+        console.log('condaFile ', condaFile);
         return condaFile!;
     }
 
@@ -435,6 +437,8 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file", if there is one (in known locations).
      */
     private async getCondaFileImpl() {
+        // tslint:disable-next-line:no-console
+        console.log('In getCondaFileImpl()');
         const settings = this.configService.getSettings();
 
         const setting = settings.condaPath;
@@ -442,10 +446,12 @@ export class CondaService implements ICondaService {
             return setting;
         }
 
-        const isAvailable = await this.isCondaInCurrentPath();
-        if (isAvailable) {
-            return 'conda';
-        }
+        // const isAvailable = await this.isCondaInCurrentPath();
+        // if (isAvailable) {
+        //     // tslint:disable-next-line:no-console
+        //     console.log('We found conda in current path');
+        //     return 'conda';
+        // }
         if (this.platform.isWindows && this.registryLookupForConda) {
             const interpreters = await this.registryLookupForConda.getInterpreters();
             const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
@@ -463,6 +469,8 @@ export class CondaService implements ICondaService {
      * Note: For now we simply return the first one found.
      */
     private async getCondaFileFromKnownLocations(): Promise<string> {
+        // tslint:disable-next-line:no-console
+        console.log('Inside getCondaFileFromKnownLocations');
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
         const condaFiles = await this.fileSystem.search(globPattern)
             .catch<string[]>((failReason) => {

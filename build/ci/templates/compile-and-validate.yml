@@ -131,14 +131,14 @@ jobs:
         customCommand: 'run cover:enable'
 
 
-    - task: Npm@1
-      displayName: 'run test:unittests'
-      inputs:
-        command: custom
+    # - task: Npm@1
+    #   displayName: 'run test:unittests'
+    #   inputs:
+    #     command: custom
 
-        verbose: false
+    #     verbose: false
 
-        customCommand: 'run test:unittests:cover'
+    #     customCommand: 'run test:unittests:cover'
 
 
     - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID)'
