@@ -12,8 +12,8 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessServiceFactory } from '../../client/common/process/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { IProcessServiceFactory, Output } from '../../client/common/process/types';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
@@ -197,6 +197,50 @@ suite('Jupyter notebook tests', () => {
             assert.fail('Server not created');
         }
     });
+
+    runTest('Remote', async () => {
+        const python = await getNotebookCapableInterpreter();
+        const procService = await processFactory.create();
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const exeResult = await procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], {env: process.env, throwOnStdErr: false});
+            disposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                const connectionURL = getConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            // Long timeout to give jupyter time to start up and get the connection string
+            await Promise.race([connectionFound.promise, sleep(30000)]);
+            let uri: string;
+            if (connectionFound.completed) {
+                const connString = await connectionFound.promise;
+                uri = connString as string;
+            } else {
+                assert.fail('Failed to get a connection string for the remote server');
+            }
+            
+            // We have a connection string here, so try to connect jupyterExecution to the notebook server
+            const server = await jupyterExecution.connectToNotebookServer(uri, true);
+            if (!server) {
+                assert.fail('Failed to connect to remote server');
+            }
+        }
+    });
+
+    function getConnectionInfo(output: string) : string | undefined {
+        const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+
+        const urlMatch = UrlPatternRegEx.exec(output);
+        if (urlMatch) {
+            return urlMatch[0];
+        }
+        return undefined;
+    }
 
     runTest('Failure', async () => {
         // Make a dummy class that will fail during launch
