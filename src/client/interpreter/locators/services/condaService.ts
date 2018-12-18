@@ -472,6 +472,8 @@ export class CondaService implements ICondaService {
         // tslint:disable-next-line:no-console
         console.log('Inside getCondaFileFromKnownLocations');
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
+        // tslint:disable-next-line:no-console
+        console.log('globPattern', globPattern);
         const condaFiles = await this.fileSystem.search(globPattern)
             .catch<string[]>((failReason) => {
                 Logger.warn(
@@ -480,7 +482,11 @@ export class CondaService implements ICondaService {
                 );
                 return [];
             });
+        // tslint:disable-next-line:no-console
+        console.log('condafiles', condaFiles);
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
+        // tslint:disable-next-line:no-console
+        console.log('validCondaFiles', validCondaFiles);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
 
