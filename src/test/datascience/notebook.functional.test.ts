@@ -214,15 +214,8 @@ suite('Jupyter notebook tests', () => {
                 }
             });
 
-            // Long timeout to give jupyter time to start up and get the connection string
-            await Promise.race([connectionFound.promise, sleep(30000)]);
-            let uri: string;
-            if (connectionFound.completed) {
-                const connString = await connectionFound.promise;
-                uri = connString as string;
-            } else {
-                assert.fail('Failed to get a connection string for the remote server');
-            }
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer(uri!, true);
