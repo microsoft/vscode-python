@@ -73,7 +73,7 @@ suite('Activation of Environments in Terminal', () => {
         if (os.platform() === 'linux'){
             // tslint:disable-next-line:no-console
             console.log('OS is linux, updating terminal shell Path');
-            await terminalSettings.update('integrated.shell.linux', '\\bin\\bash', vscode.ConfigurationTarget.Global);
+            await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
         }
         // tslint:disable-next-line:no-console
         console.log('Create terminal');
