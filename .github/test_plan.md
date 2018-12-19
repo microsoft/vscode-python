@@ -3,7 +3,7 @@
 ## Environment
 
 - OS: XXX (Windows, macOS, latest Ubuntu LTS)
-  - Shell: XXX (Command Prompt, PowerShell, bash, fish)
+  - Shell: XXX (Command Prompt, PowerShell, bash, fish, xonsh)
 - Python
   - Distribution: XXX (CPython, miniconda)
   - Version: XXX (2.7, latest 3.x)
