@@ -19,5 +19,8 @@ else:
             data = {}
     data = {}
 with open(jsonPath, 'w') as outfile:
-    data[key] = sys.executable
+    if key == 'condaExecPath':
+        data[key] = sys.argv[3]
+    else:
+        data[key] = sys.executable
     json.dump(data, outfile, sort_keys=True, indent=4)

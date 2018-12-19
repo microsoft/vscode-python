@@ -133,12 +133,16 @@ jobs:
        Write-Host $Env:PYTHON_VIRTUAL_ENVS_LOCATION
        if( '$(platform)' -eq 'Linux' ){
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
+           $condaExecPath = which conda
 
        }else {
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+           $condaExecPath = which conda
        }
 
        & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
+
+       & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
 
        Get-Content $Env:PYTHON_VIRTUAL_ENVS_LOCATION
 

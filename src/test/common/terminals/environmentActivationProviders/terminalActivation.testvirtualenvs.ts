@@ -24,6 +24,7 @@ suite('Activation of Environments in Terminal', () => {
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
     const waitTimeForActivation = 5000;
     type EnvPath = {
+        condaExecPath: string;
         condaPath: string;
         venvPath: string;
         pipenvPath: string;
@@ -75,6 +76,8 @@ suite('Activation of Environments in Terminal', () => {
         const pyPath = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders[0].uri);
         // tslint:disable-next-line:no-console
         console.log(`Set pythonPath to ${pyPath.inspect('pythonPath').workspaceFolderValue}`);
+        // tslint:disable-next-line:no-console
+        console.log(`Set condaPath to ${pyPath.inspect('condaPath').workspaceFolderValue}`);
         if (os.platform() === 'linux') {
             // tslint:disable-next-line:no-console
             console.log('OS is linux, updating terminal shell Path');
@@ -134,8 +137,7 @@ suite('Activation of Environments in Terminal', () => {
     });
     test('Should activate with conda', async () => {
         await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
-
-        await pythonSettings.update('condaPath', '/opt/python/versions/miniconda3/bin/conda', vscode.ConfigurationTarget.Global);
+        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
         await testActivation(envPaths.condaPath);
     });
 });
