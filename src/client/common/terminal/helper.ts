@@ -25,6 +25,7 @@ const IS_POWERSHELL_CORE = /(pwsh.exe$|pwsh$)/i;
 const IS_FISH = /(fish$)/i;
 const IS_CSHELL = /(csh$)/i;
 const IS_TCSHELL = /(tcsh$)/i;
+const IS_XONSH = /(xonsh$)/i;
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
@@ -42,6 +43,7 @@ export class TerminalHelper implements ITerminalHelper {
         this.detectableShells.set(TerminalShellType.tcshell, IS_TCSHELL);
         this.detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
         this.detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
+        this.detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
     }
     public createTerminal(title?: string): Terminal {
         const terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
