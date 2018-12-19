@@ -53,9 +53,7 @@ export interface ICondaService {
     getInterpreterPath(condaEnvironmentPath: string): string;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined>;
-    // Base Node.js SpawnOptions uses any for environment, so use that here as well
-    // tslint:disable-next-line:no-any
-    getActivatedCondaEnvironment(interpreter: PythonInterpreter, inputEnvironment: any): Promise<any>;
+    getActivatedCondaEnvironment(interpreter: PythonInterpreter, inputEnvironment?: NodeJS.ProcessEnv): Promise<NodeJS.ProcessEnv>;
 }
 
 export enum InterpreterType {

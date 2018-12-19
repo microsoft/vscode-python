@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { ILogger, IOutputChannel } from '../../common/types';
@@ -13,7 +13,8 @@ import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './ty
 
 @injectable()
 export class ApplicationDiagnostics implements IApplicationDiagnostics {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel) { }
     public register() {
         this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
     }
@@ -29,18 +30,17 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
     }
     private log(diagnostics: IDiagnostic[]): void {
         const logger = this.serviceContainer.get<ILogger>(ILogger);
-        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         diagnostics.forEach(item => {
             const message = `Diagnostic Code: ${item.code}, Message: ${item.message}`;
             switch (item.severity) {
                 case DiagnosticSeverity.Error: {
                     logger.logError(message);
-                    outputChannel.appendLine(message);
+                    this.outputChannel.appendLine(message);
                     break;
                 }
                 case DiagnosticSeverity.Warning: {
                     logger.logWarning(message);
-                    outputChannel.appendLine(message);
+                    this.outputChannel.appendLine(message);
                     break;
                 }
                 default: {

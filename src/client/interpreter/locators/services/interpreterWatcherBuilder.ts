@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { traceVerbose } from '../../../common/logger';
+import { traceDecorators } from '../../../common/logger';
 import { createDeferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterWatcher, IInterpreterWatcherBuilder, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../contracts';
@@ -26,7 +26,7 @@ export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) { }
 
-    @traceVerbose('Build the workspace interpreter watcher')
+    @traceDecorators.verbose('Build the workspace interpreter watcher')
     public async getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher> {
         const key = this.getResourceKey(resource);
         if (!this.watchersByResource.has(key)) {

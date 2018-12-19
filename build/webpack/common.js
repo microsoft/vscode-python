@@ -33,7 +33,7 @@ function getDefaultPlugins(name) {
     if (!constants_1.isCI) {
         plugins.push(new webpack_bundle_analyzer_1.BundleAnalyzerPlugin({
             analyzerMode: 'static',
-            reportFilename: `${name}.html`
+            reportFilename: `${name}.analyzer.html`
         }));
     }
     return plugins;

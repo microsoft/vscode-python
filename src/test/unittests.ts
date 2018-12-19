@@ -8,15 +8,33 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-import { extractParams, runTests } from './nonUiTests';
-
 process.env.VSC_PYTHON_CI_TEST = '1';
 process.env.VSC_PYTHON_UNIT_TEST = '1';
 
-// this allows us to run hygiene as a git pre-commit hook or via debugger.
-if (require.main === module) {
-    // When running from debugger, allow custom args.
-    const args = extractParams();
+import { setUpDomEnvironment } from './datascience/reactHelpers';
+import { initialize } from './vscode-mock';
 
-    runTests({ filePattern: '**/**.unit.test.js', grep: args.grep, timeout: args.timeout });
-}
+// Custom module loader so we skip .css files that break non webpack wrapped compiles
+// tslint:disable-next-line:no-var-requires no-require-imports
+const Module = require('module');
+
+// Required for DS functional tests.
+// tslint:disable-next-line:no-function-expression
+(function () {
+    const origRequire = Module.prototype.require;
+    const _require = (context, filepath) => {
+        return origRequire.call(context, filepath);
+    };
+    Module.prototype.require = function (filepath) {
+        if (filepath.endsWith('.css')) {
+            return '';
+        }
+        // tslint:disable-next-line:no-invalid-this
+        return _require(this, filepath);
+    };
+})();
+
+// nteract/transforms-full expects to run in the browser so we have to fake
+// parts of the browser here.
+setUpDomEnvironment();
+initialize();

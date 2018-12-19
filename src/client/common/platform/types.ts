@@ -2,19 +2,10 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as semver from 'semver';
+import * as fsextra from 'fs-extra';
+import { SemVer } from 'semver';
 import { Disposable } from 'vscode';
-import { Architecture, OSDistro, OSType } from '../utils/platform';
-
-export const IPlatformInfo = Symbol('IPlatformInfo');
-export interface IPlatformInfo {
-    readonly type: OSType;
-    readonly architecture: Architecture;
-    readonly version: semver.SemVer;
-    readonly distro: OSDistro;
-
-    matchPlatform(names: string): boolean;
-}
+import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
     HKCU, HKLM
@@ -28,18 +19,20 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
-    readonly info: IPlatformInfo;
+    readonly osType: OSType;
     readonly pathVariableName: 'Path' | 'PATH';
-    readonly virtualEnvBinName: 'bin' | 'scripts';
+    readonly virtualEnvBinName: 'bin' | 'Scripts';
 
     // convenience methods
     readonly isWindows: boolean;
     readonly isMac: boolean;
     readonly isLinux: boolean;
     readonly is64bit: boolean;
+    getVersion(): Promise<SemVer>;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;
+export type TemporaryDirectory = { path: string } & Disposable;
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
@@ -54,7 +47,7 @@ export interface IFileSystem {
     getFiles(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
-    writeFile(filePath: string, data: {}): Promise<void>;
+    writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
     appendFileSync(filename: string, data: {}, encoding: string): void;
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures

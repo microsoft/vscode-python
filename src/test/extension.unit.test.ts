@@ -10,7 +10,7 @@ import * as path from 'path';
 import { buildApi } from '../client/api';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 
-const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
+const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
 
 suite('Extension API Debugger', () => {
     test('Test debug launcher args (no-wait)', async () => {

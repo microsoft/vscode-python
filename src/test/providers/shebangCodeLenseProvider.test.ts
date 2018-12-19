@@ -2,9 +2,10 @@ import * as assert from 'assert';
 import * as child_process from 'child_process';
 import * as path from 'path';
 import { CancellationTokenSource, TextDocument, workspace } from 'vscode';
-import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
+import { PythonSettings } from '../../client/common/configSettings';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
+import { getOSType, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -61,7 +62,7 @@ suite('Shebang detection', () => {
         assert.equal(codeLenses.length, 0, 'CodeLens available even when shebang is invalid');
     });
 
-    if (!IS_WINDOWS) {
+    if (getOSType() !== OSType.Windows) {
         test('A code lens will appear when shebang python uses env and python settings are different', async () => {
             const document = await openFile(fileShebangEnv);
             PythonSettings.getInstance(document.uri).pythonPath = 'p1';

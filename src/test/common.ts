@@ -4,6 +4,7 @@
 
 // tslint:disable:no-console no-require-imports no-var-requires
 
+import * as arch from 'arch';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -12,10 +13,10 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
+
 const StreamZip = require('node-stream-zip');
 
 export { sleep } from './core';
@@ -26,6 +27,15 @@ const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 't
 export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
+
+export const IS_64_BIT = arch() === 'x64';
+
+export enum OSType {
+    Unknown = 'Unknown',
+    Windows = 'Windows',
+    OSX = 'OSX',
+    Linux = 'Linux'
+}
 
 export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.lintOnSave' |
@@ -172,14 +182,25 @@ function getPythonPath(): string {
  * @return true if the current OS matches one from the list, false otherwise.
  */
 export function isOs(...OSes: OSType[]): boolean {
-    const platform = require('../client/common/utils/platform') as typeof import('../client/common/utils/platform');
     // get current OS
-    const currentOS: OSType = platform.getOSType();
+    const currentOS: OSType = getOSType();
     // compare and return
     if (OSes.indexOf(currentOS) === -1) {
         return false;
     }
     return true;
+}
+
+export function getOSType(platform: string = process.platform): OSType {
+    if (/^win/.test(platform)) {
+        return OSType.Windows;
+    } else if (/^darwin/.test(platform)) {
+        return OSType.OSX;
+    } else if (/^linux/.test(platform)) {
+        return OSType.Linux;
+    } else {
+        return OSType.Unknown;
+    }
 }
 
 /**

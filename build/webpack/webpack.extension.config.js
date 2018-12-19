@@ -18,8 +18,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts',
-        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
+        extension: './src/client/extension.ts'
     },
     devtool: 'source-map',
     node: {
@@ -33,15 +32,6 @@ const config = {
                 use: [
                     {
                         loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
-                    }
-                ]
-            },
-            {
-                // Do not use __dirname in getos when using require.
-                test: /getos[\\\/]index.js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixGetosRequire.js')
                     }
                 ]
             },
@@ -71,7 +61,6 @@ const config = {
     ],
     plugins: [
         ...common_1.getDefaultPlugins('extension'),
-        new webpack_1.ContextReplacementPlugin(/getos/, /logic\/.*.js/),
         new WrapperPlugin({
             test: /\extension.js$/,
             // Import source map warning file only if source map is enabled.

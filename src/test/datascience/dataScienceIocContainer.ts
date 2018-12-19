@@ -1,19 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 //tslint:disable:trailing-comma
-
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
+import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
+import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { PersistentStateFactory } from '../../client/common/persistentState';
-import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
 import { IPlatformService, IRegistry } from '../../client/common/platform/types';
@@ -35,7 +39,6 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    Is64Bit,
     IsWindows,
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
@@ -46,6 +49,7 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
+import { JupyterExporter } from '../../client/datascience/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
 import { StatusProvider } from '../../client/datascience/statusProvider';
@@ -54,6 +58,7 @@ import {
     IHistory,
     IHistoryProvider,
     IJupyterExecution,
+    INotebookExporter,
     INotebookImporter,
     INotebookServer,
     IStatusProvider,
@@ -72,6 +77,7 @@ import {
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     ICondaService,
+    IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorHelper,
     IInterpreterLocatorService,
@@ -117,10 +123,21 @@ import {
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { MockCommandManager } from './mockCommandManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
+
+    private pythonSettings: PythonSettings = new PythonSettings();
+    private commandManager : MockCommandManager = new MockCommandManager();
+    private setContexts : { [name: string] : boolean } = {};
+    private contextSetEvent : EventEmitter<{name: string; value: boolean}> = new EventEmitter<{name: string; value: boolean}>();
+
     constructor() {
         super();
+    }
+
+    public get onContextSet() : Event<{name: string; value: boolean}> {
+        return this.contextSetEvent.event;
     }
 
     //tslint:disable:max-func-body-length
@@ -130,11 +147,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
+        this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
         this.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
+
+        // Setup our command list
+        this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
+            this.setContexts[name] = value;
+            this.contextSetEvent.fire({name: name, value: value});
+        });
+        this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
         // Also setup a mock execution service and interpreter service
         const logger = TypeMoq.Mock.ofType<ILogger>();
@@ -143,14 +168,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         const currentProcess = new CurrentProcess();
-        const pythonSettings = new PythonSettings();
 
         // Setup default settings
-        pythonSettings.datascience = {
+        this.pythonSettings.datascience = {
             allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 60000,
-            enabled: true
+            jupyterLaunchTimeout: 20000,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -160,6 +190,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             .returns(() => undefined);
         workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((s, d) => d);
+
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
+        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+
         class MockFileSystemWatcher implements FileSystemWatcher {
             public ignoreCreateEvents: boolean = false;
             public ignoreChangeEvents: boolean = false;
@@ -185,7 +221,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         workspaceService
         .setup(w => w.hasWorkspaceFolders)
-        .returns(() => false);
+        .returns(() => true);
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+        const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
+        workspaceService
+        .setup(w => w.workspaceFolders)
+        .returns(() => [workspaceFolder]);
         workspaceService.setup(w => w.rootPath).returns(() => '~');
 
         const systemVariables: SystemVariables = new SystemVariables(undefined);
@@ -194,10 +235,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Look on the path for python
         const pythonPath = this.findPythonPath();
 
-        pythonSettings.pythonPath = pythonPath;
+        this.pythonSettings.pythonPath = pythonPath;
         const folders = ['Envs', '.virtualenvs'];
-        pythonSettings.venvFolders = folders;
-        pythonSettings.venvPath = path.join('~', 'foo');
+        this.pythonSettings.venvFolders = folders;
+        this.pythonSettings.venvPath = path.join('~', 'foo');
 
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
         condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
@@ -224,7 +265,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, envVarsProvider.object);
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
-        this.serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
 
         this.serviceManager.add<IInterpreterWatcher>(IInterpreterWatcher, WorkspaceVirtualEnvWatcherService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
@@ -249,6 +289,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
         this.serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);
         this.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        this.serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, PythonPathUpdaterService);
@@ -272,12 +313,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
-        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
-        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+        // tslint:disable-next-line:no-empty no-console
+        logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => console.log(m));
 
-        // tslint:disable-next-line:no-empty
-        logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
+        const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        interpreterManager.initialize();
+
+    }
+
+    public createMoqWorkspaceFolder(folderPath: string) {
+        const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
+        return folder.object;
+    }
+
+    public getContext(name: string) : boolean {
+        if (this.setContexts.hasOwnProperty(name)) {
+            return this.setContexts[name];
+        }
+
+        return false;
+    }
+
+    public forceSettingsChanged() {
+        this.pythonSettings.emit('change');
     }
 
     private findPythonPath(): string {

@@ -3,8 +3,8 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IRegistry, RegistryHive } from '../../../common/platform/types';
-import { IPathUtils, Is64Bit } from '../../../common/types';
+import { IPlatformService, IRegistry, RegistryHive } from '../../../common/platform/types';
+import { IPathUtils } from '../../../common/types';
 import { Architecture } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
@@ -31,7 +31,7 @@ type CompanyInterpreter = {
 export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
     constructor(@inject(IRegistry) private registry: IRegistry,
-        @inject(Is64Bit) private is64Bit: boolean,
+        @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
@@ -43,13 +43,13 @@ export class WindowsRegistryService extends CacheableLocatorService {
     }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
-        const hkcuArch = this.is64Bit ? undefined : Architecture.x86;
+        const hkcuArch = this.platform.is64bit ? undefined : Architecture.x86;
         const promises: Promise<CompanyInterpreter[]>[] = [
             this.getCompanies(RegistryHive.HKCU, hkcuArch),
             this.getCompanies(RegistryHive.HKLM, Architecture.x86)
         ];
         // https://github.com/Microsoft/PTVS/blob/ebfc4ca8bab234d453f15ee426af3b208f3c143c/Python/Product/Cookiecutter/Shared/Interpreters/PythonRegistrySearch.cs#L44
-        if (this.is64Bit) {
+        if (this.platform.is64bit) {
             promises.push(this.getCompanies(RegistryHive.HKLM, Architecture.x64));
         }
 

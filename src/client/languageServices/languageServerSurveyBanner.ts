@@ -36,8 +36,8 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
     private isInitialized: boolean = false;
-    private bannerMessage: string = localize.LanguageServiceSurveyBanner.bannerMessage();
-    private bannerLabels: string[] = [localize.LanguageServiceSurveyBanner.bannerLabelYes(), localize.LanguageServiceSurveyBanner.bannerLabelNo()];
+    private bannerMessage: string = localize.LanguageService.bannerMessage();
+    private bannerLabels: string[] = [localize.LanguageService.bannerLabelYes(), localize.LanguageService.bannerLabelNo()];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,

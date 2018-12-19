@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
+import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -82,36 +83,18 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // The order is important because the data sources at the bottom of the list do not contain all,
         //  the information about the interpreters (e.g. type, environment name, etc).
         // This way, the items returned from the top of the list will win, when we combine the items returned.
-        const keys: [string, string][] = [
-            [WINDOWS_REGISTRY_SERVICE, 'win'],
-            [CONDA_ENV_SERVICE, ''],
-            [CONDA_ENV_FILE_SERVICE, ''],
-            [PIPENV_SERVICE, ''],
-            [GLOBAL_VIRTUAL_ENV_SERVICE, ''],
-            [WORKSPACE_VIRTUAL_ENV_SERVICE, ''],
-            [KNOWN_PATH_SERVICE, ''],
-            [CURRENT_PATH_SERVICE, '']
+        const keys: [string, OSType | undefined][] = [
+            [WINDOWS_REGISTRY_SERVICE, OSType.Windows],
+            [CONDA_ENV_SERVICE, undefined],
+            [CONDA_ENV_FILE_SERVICE, undefined],
+            [PIPENV_SERVICE, undefined],
+            [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
+            [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
+            [KNOWN_PATH_SERVICE, undefined],
+            [CURRENT_PATH_SERVICE, undefined]
         ];
-        return getLocators(keys, this.platform, (key) => {
-            return this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, key);
-        });
+        return keys
+            .filter(item => item[1] === undefined || item[1] === this.platform.osType)
+            .map(item => this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, item[0]));
     }
-}
-
-type PlatformName = string;
-
-function getLocators(
-    keys: [string, PlatformName][],
-    platform: IPlatformService,
-    getService: (string) => IInterpreterLocatorService
-): IInterpreterLocatorService[] {
-    const locators: IInterpreterLocatorService[] = [];
-    for (const [key, platformName] of keys) {
-        if (!platform.info.matchPlatform(platformName)) {
-            continue;
-        }
-        const locator = getService(key);
-        locators.push(locator);
-    }
-    return locators;
 }

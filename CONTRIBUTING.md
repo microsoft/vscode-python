@@ -7,7 +7,7 @@
 
 | macOS/Windows CI | Linux CI | Rolling CI (macOS/Windows) | Code Coverage |
 |-|-|-|-|
-|[![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=4) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+|[![Build Status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/vscode-python-ci-pr_validation)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=18) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -37,8 +37,7 @@ cd vscode-python
 npm install
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
-python -m pip install -r requirements.txt
-python -m pip install -t pythonFiles/experimental/ptvsd ptvsd
+python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 # Specifying the virtual environment simply varies between shells.
 export CI_PYTHON_PATH=`pwd`/.venv/bin/python
 ```
@@ -78,7 +77,7 @@ You can also run them from the command-line (after compiling):
 
 ```shell
 npm run test:unittests  # runs all unit tests
-npm run test:unittests grep='<NAME-OF-SUITE>'
+npm run test:unittests -- --grep='<NAME-OF-SUITE>'
 ```
 
 *To run only a specific test suite for unit tests:*
@@ -86,8 +85,8 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 
 ```js
     "args": [
-        "timeout=60000",
-        "grep=[The suite name of your unit test file]"
+        "--timeout=60000",
+        "--grep=[The suite name of your unit test file]"
     ],
 ```
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).

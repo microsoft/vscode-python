@@ -30,7 +30,7 @@ import { HttpClient } from './net/httpClient';
 import { NugetService } from './nuget/nugetService';
 import { INugetService } from './nuget/types';
 import { PersistentStateFactory } from './persistentState';
-import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
+import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { TerminalActivator } from './terminal/activator';
@@ -60,14 +60,12 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IRandom,
-    Is64Bit,
     IsWindows
 } from './types';
 import { Random } from './utils/random';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
-    serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
 
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);

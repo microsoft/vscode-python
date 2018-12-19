@@ -5,9 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { Logger } from '../../../common/logger';
+import { Logger, traceError } from '../../../common/logger';
 import { IConfigurationService } from '../../../common/types';
+import { SystemVariables } from '../../../common/variables/systemVariables';
 import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -32,7 +34,11 @@ const CommandName = 'python.setInterpreter';
 @injectable()
 export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService implements IInvalidPythonPathInDebuggerService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDiagnosticsCommandFactory) private readonly commandFactory: IDiagnosticsCommandFactory,
+        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService) {
         super([DiagnosticCodes.InvalidPythonPathInDebuggerDiagnostic], serviceContainer);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
     }
@@ -45,30 +51,33 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService i
             return;
         }
         const diagnostic = diagnostics[0];
-        const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
                 prompt: 'Select Python Interpreter',
-                command: commandFactory.createCommand(diagnostic, { type: 'executeVSCCommand', options: CommandName })
+                command: this.commandFactory.createCommand(diagnostic, { type: 'executeVSCCommand', options: CommandName })
             }
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });
     }
     public async validatePythonPath(pythonPath?: string, resource?: Uri) {
+        pythonPath = pythonPath ? this.resolveVariables(pythonPath, resource) : undefined;
         // tslint:disable-next-line:no-invalid-template-strings
         if (pythonPath === '${config:python.pythonPath}' || !pythonPath) {
-            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            pythonPath = configService.getSettings(resource).pythonPath;
+            pythonPath = this.configService.getSettings(resource).pythonPath;
         }
-        const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-        if (await helper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
+        if (await this.interpreterHelper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
             return true;
         }
-
+        traceError(`Invalid Python Path '${pythonPath}'`);
         this.handle([new InvalidPythonPathInDebuggerDiagnostic()])
             .catch(ex => Logger.error('Failed to handle invalid python path in debugger', ex))
             .ignoreErrors();
         return false;
+    }
+    protected resolveVariables(pythonPath: string, resource: Uri | undefined): string {
+        const workspaceFolder = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
+        const systemVariables = new SystemVariables(workspaceFolder ? workspaceFolder.uri.fsPath : undefined);
+        return systemVariables.resolveAny(pythonPath);
     }
 }

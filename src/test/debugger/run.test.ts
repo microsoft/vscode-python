@@ -5,10 +5,8 @@
 
 // tslint:disable:no-invalid-this no-require-imports no-require-imports no-var-requires
 
-import { expect } from 'chai';
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/utils/misc';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
@@ -16,8 +14,6 @@ import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/type
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { createDebugAdapter } from './utils';
-
-const isProcessRunning = require('is-running') as (number) => boolean;
 
 const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'debugging');
 const debuggerType = DebuggerTypeName;
@@ -85,36 +81,5 @@ suite('Run without Debugging', () => {
             debugClient.assertOutput('stdout', 'normal output'),
             debugClient.waitForEvent('terminated')
         ]);
-    });
-    test('Should kill python process when ending debug session', async function () {
-        const skipped = true;
-        if (skipped) {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Why was this skipped?  See gh-2308.
-            return this.skip();
-        }
-
-        const processIdOutput = new Promise<number>(resolve => {
-            debugClient.on('output', (event: DebugProtocol.OutputEvent) => {
-                if (event.event === 'output' && event.body.category === 'stdout') {
-                    resolve(parseInt(event.body.output.trim(), 10));
-                }
-            });
-        });
-        await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(buildLaunchArgs('sampleWithSleep.py', false)),
-            debugClient.waitForEvent('initialized'),
-            processIdOutput
-        ]);
-
-        const processId = await processIdOutput;
-        expect(processId).to.be.greaterThan(0, 'Invalid process id');
-
-        await debugClient.stop();
-        await sleep(1000);
-
-        // Confirm the process is dead
-        expect(isProcessRunning(processId)).to.be.equal(false, 'Python program is still alive');
     });
 });
