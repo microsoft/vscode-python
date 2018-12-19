@@ -58,9 +58,9 @@ export class CondaService implements ICondaService {
     private condaFile!: Promise<string | undefined>;
     private isAvailable: boolean | undefined;
     private readonly condaHelper = new CondaHelper();
-    private activatedEnvironmentCache : { [key: string] : NodeJS.ProcessEnv } = {};
-    private activationProvider : ITerminalActivationCommandProvider;
-    private shellType : TerminalShellType;
+    private activatedEnvironmentCache: { [key: string]: NodeJS.ProcessEnv } = {};
+    private activationProvider: ITerminalActivationCommandProvider;
+    private shellType: TerminalShellType;
 
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -288,10 +288,10 @@ export class CondaService implements ICondaService {
         const activateCommands = this.activationProvider.getActivationCommandsForInterpreter ?
             await this.activationProvider.getActivationCommandsForInterpreter(condaPath, this.shellType) :
             this.platform.isWindows ?
-            [`"${path.join(path.dirname(condaPath), 'activate')}"`] :
-            [`. "${path.join(path.dirname(condaPath), 'activate')}"`];
+                [`"${path.join(path.dirname(condaPath), 'activate')}"`] :
+                [`. "${path.join(path.dirname(condaPath), 'activate')}"`];
 
-        const result = {...input};
+        const result = { ...input };
         const processService = await this.processServiceFactory.create();
 
         // Run the activate command collect the environment from it.
@@ -341,7 +341,7 @@ export class CondaService implements ICondaService {
     }
 
     private parseEnvironmentOutput(output: string, result: NodeJS.ProcessEnv) {
-        const lines = output.splitLines({trim: true, removeEmptyEntries: true});
+        const lines = output.splitLines({ trim: true, removeEmptyEntries: true });
         let foundDummyOutput = false;
         for (let i = 0; i < lines.length; i += 1) {
             if (foundDummyOutput) {
@@ -403,7 +403,7 @@ export class CondaService implements ICondaService {
         }
     }
 
-    private async getCondaFileFromInterpreter(interpreter: PythonInterpreter | undefined) : Promise<string | undefined> {
+    private async getCondaFileFromInterpreter(interpreter: PythonInterpreter | undefined): Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
         const interpreterDir = interpreter ? path.dirname(interpreter.path) : '';
@@ -452,12 +452,12 @@ export class CondaService implements ICondaService {
             return setting;
         }
 
-        // const isAvailable = await this.isCondaInCurrentPath();
-        // if (isAvailable) {
-        //     // tslint:disable-next-line:no-console
-        //     console.log('We found conda in current path');
-        //     return 'conda';
-        // }
+        const isAvailable = await this.isCondaInCurrentPath();
+        if (isAvailable) {
+            // tslint:disable-next-line:no-console
+            console.log('We found conda in current path');
+            return 'conda';
+        }
         if (this.platform.isWindows && this.registryLookupForConda) {
             const interpreters = await this.registryLookupForConda.getInterpreters();
             const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
@@ -499,7 +499,7 @@ export class CondaService implements ICondaService {
     /**
      * Called when the user changes the current interpreter.
      */
-    private onInterpreterChanged() : void {
+    private onInterpreterChanged(): void {
         // Clear our activated environment cache as it can't match the current one anymore
         this.activatedEnvironmentCache = {};
     }
