@@ -106,8 +106,6 @@ export class CondaService implements ICondaService {
         }
         // tslint:disable-next-line:no-unnecessary-local-variable
         const condaFile = await this.condaFile!;
-        // tslint:disable-next-line:no-console
-        console.log('condaFile ', condaFile);
         return condaFile!;
     }
 
@@ -459,8 +457,6 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file", if there is one (in known locations).
      */
     private async getCondaFileImpl() {
-        // tslint:disable-next-line:no-console
-        console.log('In getCondaFileImpl()');
         const settings = this.configService.getSettings();
 
         const setting = settings.condaPath;
@@ -470,8 +466,6 @@ export class CondaService implements ICondaService {
 
         const isAvailable = await this.isCondaInCurrentPath();
         if (isAvailable) {
-            // tslint:disable-next-line:no-console
-            console.log('We found conda in current path');
             return 'conda';
         }
         if (this.platform.isWindows && this.registryLookupForConda) {
@@ -491,11 +485,7 @@ export class CondaService implements ICondaService {
      * Note: For now we simply return the first one found.
      */
     private async getCondaFileFromKnownLocations(): Promise<string> {
-        // tslint:disable-next-line:no-console
-        console.log('Inside getCondaFileFromKnownLocations');
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
-        // tslint:disable-next-line:no-console
-        console.log('globPattern', globPattern);
         const condaFiles = await this.fileSystem.search(globPattern)
             .catch<string[]>((failReason) => {
                 Logger.warn(
@@ -504,11 +494,7 @@ export class CondaService implements ICondaService {
                 );
                 return [];
             });
-        // tslint:disable-next-line:no-console
-        console.log('condafiles', condaFiles);
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
-        // tslint:disable-next-line:no-console
-        console.log('validCondaFiles', validCondaFiles);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
 

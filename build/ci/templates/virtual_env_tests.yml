@@ -128,20 +128,16 @@ jobs:
 
     - powershell: |
        Write-Host $Env:CONDA
-       Write-Host $Env:environmentExecutableFolder
-       Write-Host $Env:EnvironmentExecutableFolder
        Write-Host $Env:PYTHON_VIRTUAL_ENVS_LOCATION
-       if( '$(platform)' -eq 'Linux' ){
-           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
-           $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
 
-       } elseif( '$(platform)' -eq 'macOS' ){
-           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
-           $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
-
-       } else {
+       if( '$(platform)' -eq 'Windows' ){
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath conda
+
+       } else{
+           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
+           $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
+
        }
 
        & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
@@ -179,16 +175,6 @@ jobs:
         disown -ar
       displayName: 'Start xvfb'
       condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
-
-
-    - bash: |
-       echo "SHELL: $SHELL, shell: $shell, ARGV[0]: $0, PS1: $PS1, prompt: $prompt"
-
-       if test -z "$(type -p)" ; then echo bash ; else echo sh ; fi
-
-      displayName: 'Echo shell'
-      env:
-        DISPLAY: :10
 
 
     - task: Npm@1

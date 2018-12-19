@@ -17,19 +17,12 @@ export class BaseTerminalActivator implements ITerminalActivator {
         const deferred = createDeferred<boolean>();
         this.activatedTerminals.set(terminal, deferred.promise);
         const shellPath = this.helper.getTerminalShellPath();
-        // // tslint:disable-next-line:no-console
-        // console.log(shellPath);
-        // const shellPath = '/usr/bin/bash';
         const terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.helper.identifyTerminalShell(shellPath);
 
-        // tslint:disable-next-line:no-console
-        console.log('in base.ts, terminalShellType', terminalShellType);
         const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
         let activated = false;
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
-                // tslint:disable-next-line:no-console
-                console.log('in base.ts', command);
                 terminal.show(preserveFocus);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);
