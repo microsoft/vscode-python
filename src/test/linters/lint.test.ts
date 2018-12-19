@@ -269,11 +269,7 @@ suite('Linting - General Tests', () => {
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
-    // tslint:disable-next-line:no-function-expression
-    test('Multiple linters', async function () {
-        // skip this unreliable test: gh 2571 tracking this issue...
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
+    test('Multiple linters', async () => {
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
