@@ -73,6 +73,7 @@ suite('Terminal Environment Activation (bash)', () => {
                                 case TerminalShellType.gitbash:
                                 case TerminalShellType.tcshell:
                                 case TerminalShellType.cshell:
+                                case TerminalShellType.xonsh:
                                 case TerminalShellType.fish: {
                                     expect(supported).to.be.equal(true, `${shellType.name} shell not supported (it should be)`);
                                     break;
