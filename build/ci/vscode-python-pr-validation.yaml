@@ -33,21 +33,36 @@ jobs:
 #     TestSuiteName: 'testSingleWorkspace'
 
 
+# - template: templates/virtual_env_tests.yml
+#   parameters:
+#     name: 'VirtualEnv_Tests_Linux_py37'
+#     PythonVersion: '3.7'
+#     NodeVersion: '8.11.2'
+#     NpmVersion: 'latest'
+#     AzureStorageAccountName: 'vscodepythonci'
+#     AzureStorageContainerName: 'vscode-python-ci'
+#     Platform: 'Linux'
+#     PoolName: 'Hosted Ubuntu 1604'
+#     EnvironmentExecutableFolder: 'bin'
+#     PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+#     TEST_FILES_SUFFIX: 'testvirtualenvs'
+#     TestSuiteName: 'testSingleWorkspace'
+
+
 - template: templates/virtual_env_tests.yml
   parameters:
-    name: 'VirtualEnv_Tests_Linux_py37'
+    name: 'VirtualEnv_Tests_MacOS_py37'
     PythonVersion: '3.7'
     NodeVersion: '8.11.2'
     NpmVersion: 'latest'
     AzureStorageAccountName: 'vscodepythonci'
     AzureStorageContainerName: 'vscode-python-ci'
-    Platform: 'Linux'
-    PoolName: 'Hosted Ubuntu 1604'
+    Platform: 'macOS'
+    PoolName: 'Hosted macOS'
     EnvironmentExecutableFolder: 'bin'
     PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
     TEST_FILES_SUFFIX: 'testvirtualenvs'
     TestSuiteName: 'testSingleWorkspace'
-
 
 # - job: 'System_Test_macOS'
 #   dependsOn: 'PR_Validate_Windows_py37'

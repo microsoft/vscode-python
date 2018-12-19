@@ -135,7 +135,11 @@ jobs:
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
 
-       }else {
+       } elseif( '$(platform)' -eq 'macOS' ){
+           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
+           $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
+
+       } else {
            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath conda
        }
