@@ -16,6 +16,7 @@ import { IProductPathService, IProductService } from '../../client/common/instal
 import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
+import { IS_TRAVIS } from '../ciConstants';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
@@ -269,7 +270,15 @@ suite('Linting - General Tests', () => {
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
-    test('Multiple linters', async () => {
+    test('Multiple linters', async function () {
+        // travis times out with the 25sec limit, but is also going to be retired
+        // in the near future in favour of Azure DevOps pipelines. Since Azure DevOps
+        // seem to not timeout (at least as much), skip this test in Travis.
+        if (IS_TRAVIS) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
