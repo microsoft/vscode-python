@@ -14,13 +14,12 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     constructor(@inject(IPathUtils) pathUtils: IPathUtils) {
         this.pathVariable = pathUtils.getPathVariableName();
     }
-    public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
-        const exists = await fs.pathExists(filePath);
-        if (!exists) {
-            return undefined;
+    public async parseFile(filePath?: string): Promise<EnvironmentVariables | undefined> {
+        if (!filePath || !await fs.pathExists(filePath)) {
+            return;
         }
         if (!fs.lstatSync(filePath).isFile()) {
-            return undefined;
+            return;
         }
         return dotenv.parse(await fs.readFile(filePath));
     }
@@ -53,8 +52,9 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return vars;
         }
 
-        if (typeof vars[variableName] === 'string' && vars[variableName].length > 0) {
-            vars[variableName] = vars[variableName] + path.delimiter + valueToAppend;
+        const variable = vars ? vars[variableName] : undefined;
+        if (variable && typeof variable === 'string' && variable.length > 0) {
+            vars[variableName] = variable + path.delimiter + valueToAppend;
         } else {
             vars[variableName] = valueToAppend;
         }

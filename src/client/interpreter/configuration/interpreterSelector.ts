@@ -4,7 +4,6 @@ import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService
 import * as settings from '../../common/configSettings';
 import { Commands } from '../../common/constants';
 import { IPathUtils } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { IInterpreterComparer, IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
 
@@ -15,29 +14,24 @@ export interface IInterpreterQuickPickItem extends QuickPickItem {
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
     private disposables: Disposable[] = [];
-    private readonly interpreterManager: IInterpreterService;
-    private readonly workspaceService: IWorkspaceService;
-    private readonly applicationShell: IApplicationShell;
-    private readonly documentManager: IDocumentManager;
-    private readonly pathUtils: IPathUtils;
-    private readonly interpreterComparer: IInterpreterComparer;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.applicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
-        this.pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
-        this.interpreterComparer = this.serviceContainer.get<IInterpreterComparer>(IInterpreterComparer);
+    constructor(@inject(IInterpreterService) private readonly interpreterManager: IInterpreterService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IInterpreterComparer) private readonly interpreterComparer: IInterpreterComparer,
+        @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
+        @inject(IShebangCodeLensProvider) private readonly shebangCodeLensProvider: IShebangCodeLensProvider,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
 
     public initialize() {
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-        this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
-        this.disposables.push(commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
+        this.disposables.push(this.commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
+        this.disposables.push(this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
     }
 
     public async getSuggestions(resourceUri?: Uri) {
@@ -45,21 +39,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
     }
-    private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
-        if (!Array.isArray(this.workspaceService.workspaceFolders) || this.workspaceService.workspaceFolders.length === 0) {
-            return undefined;
-        }
-        if (this.workspaceService.workspaceFolders.length === 1) {
-            return { folderUri: this.workspaceService.workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace };
-        }
-
-        // Ok we have multiple interpreters, get the user to pick a folder.
-        const applicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const workspaceFolder = await applicationShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
-        return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
-    }
-
-    private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
+    protected async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
         const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
@@ -70,7 +50,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         };
     }
 
-    private async setInterpreter() {
+    protected async setInterpreter() {
         const setInterpreterGlobally = !Array.isArray(this.workspaceService.workspaceFolders) || this.workspaceService.workspaceFolders.length === 0;
         let configTarget = ConfigurationTarget.Global;
         let wkspace: Uri | undefined;
@@ -93,14 +73,12 @@ export class InterpreterSelector implements IInterpreterSelector {
 
         const selection = await this.applicationShell.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
-            const pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
-            await pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
+            await this.pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
         }
     }
 
-    private async setShebangInterpreter(): Promise<void> {
-        const shebangCodeLensProvider = this.serviceContainer.get<IShebangCodeLensProvider>(IShebangCodeLensProvider);
-        const shebang = await shebangCodeLensProvider.detectShebang(this.documentManager.activeTextEditor!.document);
+    protected async setShebangInterpreter(): Promise<void> {
+        const shebang = await this.shebangCodeLensProvider.detectShebang(this.documentManager.activeTextEditor!.document);
         if (!shebang) {
             return;
         }
@@ -109,17 +87,28 @@ export class InterpreterSelector implements IInterpreterSelector {
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(this.documentManager.activeTextEditor!.document.uri);
         const isWorkspaceChange = Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length === 1;
 
-        const pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
         if (isGlobalChange) {
-            await pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global, 'shebang');
+            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global, 'shebang');
             return;
         }
 
         if (isWorkspaceChange || !workspaceFolder) {
-            await pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', this.workspaceService.workspaceFolders![0].uri);
+            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', this.workspaceService.workspaceFolders![0].uri);
             return;
         }
 
-        await pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, 'shebang', workspaceFolder.uri);
+        await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, 'shebang', workspaceFolder.uri);
+    }
+    private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
+        if (!Array.isArray(this.workspaceService.workspaceFolders) || this.workspaceService.workspaceFolders.length === 0) {
+            return undefined;
+        }
+        if (this.workspaceService.workspaceFolders.length === 1) {
+            return { folderUri: this.workspaceService.workspaceFolders[0].uri, configTarget: ConfigurationTarget.WorkspaceFolder };
+        }
+
+        // Ok we have multiple workspaces, get the user to pick a folder.
+        const workspaceFolder = await this.applicationShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
+        return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
     }
 }

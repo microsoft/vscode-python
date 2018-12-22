@@ -6,6 +6,7 @@ node_modules
 **/.vscode/.ropeproject/**
 **/testFiles/**/.cache/**
 *.noseids
+.nyc_output
 .vscode-test
 __pycache__
 npm-debug.log
@@ -16,6 +17,7 @@ coverage/
 **/.venv*/
 precommit.hook
 pythonFiles/experimental/ptvsd/**
+pythonFiles/lib/**
 debug_coverage*/**
 languageServer/**
 languageServer.*/**

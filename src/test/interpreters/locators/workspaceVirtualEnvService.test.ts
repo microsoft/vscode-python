@@ -5,50 +5,47 @@
 
 // tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
 import { expect } from 'chai';
-import { spawn } from 'child_process';
+import { exec } from 'child_process';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { sleep } from '../../../client/common/utils/async';
+import '../../../client/common/extensions';
 import { IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { deleteFiles, isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri } from '../../common';
+import { deleteFiles, isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { initialize, multirootPath } from '../../initialize';
 
-const timeoutSecs = 120;
+const timeoutMs = 60_000;
 suite('Interpreters - Workspace VirtualEnv Service', function () {
-    this.timeout(timeoutSecs * 1000);
+    this.timeout(timeoutMs);
     this.retries(1);
 
     let locator: IInterpreterLocatorService;
-    const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri;
+    const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri!;
     const workspace4 = Uri.file(path.join(multirootPath, 'workspace4'));
     const venvPrefix = '.venv';
     let serviceContainer: IServiceContainer;
 
     async function waitForInterpreterToBeDetected(envNameToLookFor: string) {
-        for (let i = 0; i < timeoutSecs; i += 1) {
+        const predicate = async () => {
             const items = await locator.getInterpreters(workspaceUri);
-            if (items.some(item => item.envName === envNameToLookFor && !item.cachedEntry)) {
-                return;
-            }
-            await sleep(500);
-        }
-        throw new Error(`${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`);
+            return items.some(item => item.envName === envNameToLookFor && !item.cachedEntry);
+        };
+        await waitForCondition(predicate, timeoutMs, `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`);
     }
     async function createVirtualEnvironment(envSuffix: string) {
         // Ensure env is random to avoid conflicts in tests (currupting test data).
         const envName = `${venvPrefix}${envSuffix}${new Date().getTime().toString()}`;
         return new Promise<string>((resolve, reject) => {
-            const proc = spawn(PYTHON_PATH, ['-m', 'venv', envName], { cwd: workspaceUri.fsPath });
-            let stdErr = '';
-            proc.stderr.on('data', data => stdErr += data.toString());
-            proc.on('exit', () => {
-                if (stdErr.length === 0) {
-                    return resolve(envName);
+            exec(`${PYTHON_PATH.fileToCommandArgument()} -m venv ${envName}`, { cwd: workspaceUri.fsPath }, (ex, _, stderr) => {
+                if (ex) {
+                    return reject(ex);
                 }
-                const err = new Error(`Failed to create Env ${envName}, ${PYTHON_PATH}, Error: ${stdErr.toString()}`);
-                reject(err);
+                if (stderr && stderr.length > 0) {
+                    reject(new Error(`Failed to create Env ${envName}, ${PYTHON_PATH}, Error: ${stderr}`));
+                } else {
+                    resolve(envName);
+                }
             });
         });
     }
@@ -59,10 +56,11 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         }
         serviceContainer = (await initialize()).serviceContainer;
         locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
+        // This test is required, we need to wait for interpreter listing completes,
+        // before proceeding with other tests.
+        await locator.getInterpreters(workspaceUri);
 
         await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
-        // https://github.com/Microsoft/vscode-python/issues/3239
-        this.skip();
     });
 
     suiteTeardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
@@ -70,13 +68,11 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
     test('Detect Virtual Environment', async () => {
         const envName = await createVirtualEnvironment('one');
-
         await waitForInterpreterToBeDetected(envName);
     });
 
     test('Detect a new Virtual Environment', async () => {
         const env1 = await createVirtualEnvironment('first');
-
         await waitForInterpreterToBeDetected(env1);
 
         // Ensure second environment in our workspace folder is detected when created.

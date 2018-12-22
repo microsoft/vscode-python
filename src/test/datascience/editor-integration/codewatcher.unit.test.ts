@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 // tslint:disable:max-func-body-length no-trailing-whitespace no-multiline-string
 // Disable whitespace / multiline as we use that to pass in our fake file strings
+
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Range, Selection, TextDocument, TextEditor, TextLine } from 'vscode';
+import { Range, Selection, TextEditor } from 'vscode';
+
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { ILogger } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
 import { IHistory, IHistoryProvider } from '../../../client/datascience/types';
+import { createDocument } from './helpers';
 
 suite('DataScience Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
@@ -32,12 +34,12 @@ suite('DataScience Code Watcher Unit Tests', () => {
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
 
         // Setup our active history instance
-        historyProvider.setup(h => h.active).returns(() => activeHistory.object);
+        historyProvider.setup(h => h.getOrCreateActive()).returns(() => activeHistory.object);
 
         // Setup our active text editor
         documentManager.setup(dm => dm.activeTextEditor).returns(() => textEditor.object);
 
-        codeWatcher = new CodeWatcher(commandManager.object, appShell.object, logger.object, historyProvider.object, documentManager.object);
+        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, documentManager.object);
     });
 
     test('Add a file with just a #%% mark to a code watcher', () => {
@@ -55,9 +57,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
         expect(codeLenses.length).to.be.equal(2, 'Incorrect count of code lenses');
-        expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        if (codeLenses[0].command) {
+            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        }
         expect(codeLenses[0].range).to.be.deep.equal(new Range(0, 0, 0, 3), 'Run Cell code lens range incorrect');
-        expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
+        if (codeLenses[1].command) {
+            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
+        }
         expect(codeLenses[1].range).to.be.deep.equal(new Range(0, 0, 0, 3), 'Run All Cells code lens range incorrect');
 
         // Verify function calls
@@ -90,10 +96,10 @@ suite('DataScience Code Watcher Unit Tests', () => {
         const inputText =
 `first line
 second line
-        
+
 #%%
 third line
-        
+
 #%%
 fourth line`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
@@ -107,13 +113,21 @@ fourth line`;
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
         expect(codeLenses.length).to.be.equal(4, 'Incorrect count of code lenses');
-        expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 8), 'Run Cell code lens range incorrect');
-        expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 8), 'Run All Cells code lens range incorrect');
-        expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        if (codeLenses[0].command) {
+            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        }
+        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
+        if (codeLenses[1].command) {
+            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
+        }
+        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
+        if (codeLenses[2].command) {
+            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        }
         expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 7, 11), 'Run Cell code lens range incorrect');
-        expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
+        if (codeLenses[3].command) {
+            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
+        }
         expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 7, 11), 'Run All Cells code lens range incorrect');
 
         // Verify function calls
@@ -152,7 +166,7 @@ fourth line`;
     test('Test the RunAllCells command', async () => {
         const fileName = 'test.py';
         const version = 1;
-        const inputText = 
+        const inputText =
 `#%%
 testing1
 #%%
@@ -191,11 +205,11 @@ testing2`; // Command tests override getText, so just need the ranges here
     test('Test the RunCurrentCell command', async () => {
         const fileName = 'test.py';
         const version = 1;
-        const inputText = 
+        const inputText =
 `#%%
 testing1
 #%%
-testing2`; 
+testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         document.setup(d => d.getText(new Range(2, 0, 3, 8))).returns(() => 'testing2').verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -208,10 +222,10 @@ testing2`;
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
-        
+
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
-        
+
         // Try our RunCell command with the first selection point
         await codeWatcher.runCurrentCell();
 
@@ -223,10 +237,10 @@ testing2`;
     test('Test the RunCurrentCell command outside of a cell', async () => {
         const fileName = 'test.py';
         const version = 1;
-        const inputText = 
+        const inputText =
 `testing1
 #%%
-testing2`; 
+testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
 
         codeWatcher.addFile(document.object);
@@ -236,10 +250,10 @@ testing2`;
                                 TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
-        
+
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(0, 0, 0, 0));
-        
+
         // Try our RunCell command with the first selection point
         await codeWatcher.runCurrentCell();
 
@@ -251,7 +265,7 @@ testing2`;
     test('Test the RunCellAndAdvance command with next cell', async () => {
         const fileName = 'test.py';
         const version = 1;
-        const inputText = 
+        const inputText =
 `#%%
 testing1
 #%%
@@ -274,10 +288,10 @@ testing2`; // Command tests override getText, so just need the ranges here
         // For this test we need to set up a document selection point
         const selection = new Selection(0, 0, 0, 0);
         textEditor.setup(te => te.selection).returns(() => selection);
-        
+
         //textEditor.setup(te => te.selection = TypeMoq.It.isAny()).verifiable(TypeMoq.Times.once());
         //textEditor.setup(te => te.selection = TypeMoq.It.isAnyObject<Selection>(Selection));
-        // IANHU: Would be good to check that selection was set, but TypeMoq doesn't seem to like
+        // Would be good to check that selection was set, but TypeMoq doesn't seem to like
         // both getting and setting an object property. isAnyObject is not valid for this class
         // and is or isAny overwrite the previous property getter if used. Will verify selection set
         // in functional test
@@ -300,29 +314,3 @@ testing2`; // Command tests override getText, so just need the ranges here
         document.verifyAll();
     });
 });
-
-// Helper function to create a document and get line count and lines
-function createDocument(inputText: string, fileName: string, fileVersion: number,
-        times: TypeMoq.Times): TypeMoq.IMock<TextDocument> {
-    const document = TypeMoq.Mock.ofType<TextDocument>();
-
-    // Split our string on newline chars
-    const inputLines = inputText.split(/\r?\n/);
-
-    // First set the metadata
-    document.setup(d => d.fileName).returns(() => fileName).verifiable(times);
-    document.setup(d => d.version).returns(() => fileVersion).verifiable(times);
-
-    // Next add the lines in
-    document.setup(d => d.lineCount).returns(() => inputLines.length).verifiable(times);
-
-    inputLines.forEach((line, index) => {
-        const textLine = TypeMoq.Mock.ofType<TextLine>();
-        const testRange = new Range(index, 0, index, line.length);
-        textLine.setup(l => l.text).returns(() => line);
-        textLine.setup(l => l.range).returns(() => testRange);
-        document.setup(d => d.lineAt(TypeMoq.It.isValue(index))).returns(() => textLine.object).verifiable(TypeMoq.Times.atLeastOnce());
-    });
-
-    return document;
-}

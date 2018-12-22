@@ -3,15 +3,14 @@
 
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IPathUtils } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
-import { IInterpreterComparer } from '../../client/interpreter/configuration/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IInterpreterComparer, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
+import { IInterpreterService, InterpreterType, IShebangCodeLensProvider, PythonInterpreter } from '../../client/interpreter/contracts';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,
@@ -39,19 +38,38 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters - selector', () => {
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let commandManager: TypeMoq.IMock<ICommandManager>;
+    let comparer: TypeMoq.IMock<IInterpreterComparer>;
+    let pythonPathUpdater: TypeMoq.IMock<IPythonPathUpdaterServiceManager>;
+    let shebangProvider: TypeMoq.IMock<IShebangCodeLensProvider>;
+
+    class TestInterpreterSelector extends InterpreterSelector {
+        // tslint:disable-next-line:no-unnecessary-override
+        public async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
+            return super.suggestionToQuickPickItem(suggestion, workspaceUri);
+        }
+        // tslint:disable-next-line:no-unnecessary-override
+        public async setInterpreter() {
+            return super.setInterpreter();
+        }
+        // tslint:disable-next-line:no-unnecessary-override
+        public async setShebangInterpreter() {
+            return super.setShebangInterpreter();
+        }
+    }
     setup(() => {
-        const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-        const comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        pythonPathUpdater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
+        shebangProvider = TypeMoq.Mock.ofType<IShebangCodeLensProvider>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
@@ -63,21 +81,13 @@ suite('Interpreters - selector', () => {
             .returns((a: string) => new Promise(resolve => resolve(a)));
 
         comparer.setup(c => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
-
-        serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspace.object);
-        serviceContainer.setup(c => c.get(IApplicationShell)).returns(() => appShell.object);
-        serviceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
-        serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
-        serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(IInterpreterComparer)).returns(() => comparer.object);
-        serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
     });
 
     [true, false].forEach(isWindows => {
-        test(`Suggestions (${isWindows} ? 'Windows' : 'Non-Windows')`, async () => {
-            serviceContainer
-                .setup(c => c.get(IPathUtils))
-                .returns(() => new PathUtils(isWindows));
+        test(`Suggestions (${isWindows ? 'Windows' : 'Non-Windows'})`, async () => {
+            const selector = new InterpreterSelector(interpreterService.object, workspace.object,
+                appShell.object, documentManager.object, new PathUtils(isWindows),
+                comparer.object, pythonPathUpdater.object, shebangProvider.object, commandManager.object);
 
             const initial: PythonInterpreter[] = [
                 { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
@@ -91,7 +101,6 @@ suite('Interpreters - selector', () => {
                 .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const selector = new InterpreterSelector(serviceContainer.object);
             const actual = await selector.getSuggestions();
 
             const expected: InterpreterQuickPickItem[] = [
@@ -111,5 +120,133 @@ suite('Interpreters - selector', () => {
                     `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`);
             }
         });
+    });
+
+    test('Update Global settings when there are no workspaces', async () => {
+        const selector = new TestInterpreterSelector(interpreterService.object, workspace.object,
+            appShell.object, documentManager.object, new PathUtils(false),
+            comparer.object, pythonPathUpdater.object, shebangProvider.object, commandManager.object);
+
+        const selectedItem: IInterpreterQuickPickItem = {
+            description: '', detail: '', label: '',
+            path: 'This is the selected Python path'
+        };
+
+        workspace.setup(w => w.workspaceFolders).returns(() => undefined);
+
+        selector.getSuggestions = () => Promise.resolve([]);
+        appShell.setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(selectedItem))
+            .verifiable(TypeMoq.Times.once());
+        pythonPathUpdater.setup(p => p.updatePythonPath(TypeMoq.It.isValue(selectedItem.path),
+            TypeMoq.It.isValue(ConfigurationTarget.Global),
+            TypeMoq.It.isValue('ui'),
+            TypeMoq.It.isValue(undefined)))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+
+        await selector.setInterpreter();
+
+        appShell.verifyAll();
+        workspace.verifyAll();
+        pythonPathUpdater.verifyAll();
+    });
+    test('Update workspace folder settings when there is one workspace folder', async () => {
+        const selector = new TestInterpreterSelector(interpreterService.object, workspace.object,
+            appShell.object, documentManager.object, new PathUtils(false),
+            comparer.object, pythonPathUpdater.object, shebangProvider.object, commandManager.object);
+
+        const selectedItem: IInterpreterQuickPickItem = {
+            description: '', detail: '', label: '',
+            path: 'This is the selected Python path'
+        };
+
+        const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
+        workspace.setup(w => w.workspaceFolders).returns(() => [folder]);
+
+        selector.getSuggestions = () => Promise.resolve([]);
+        appShell.setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(selectedItem))
+            .verifiable(TypeMoq.Times.once());
+        pythonPathUpdater.setup(p => p.updatePythonPath(TypeMoq.It.isValue(selectedItem.path),
+            TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
+            TypeMoq.It.isValue('ui'),
+            TypeMoq.It.isValue(folder.uri)))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+
+        await selector.setInterpreter();
+
+        appShell.verifyAll();
+        workspace.verifyAll();
+        pythonPathUpdater.verifyAll();
+    });
+    test('Update seleted workspace folder settings when there is more than one workspace folder', async () => {
+        const selector = new TestInterpreterSelector(interpreterService.object, workspace.object,
+            appShell.object, documentManager.object, new PathUtils(false),
+            comparer.object, pythonPathUpdater.object, shebangProvider.object, commandManager.object);
+
+        const selectedItem: IInterpreterQuickPickItem = {
+            description: '', detail: '', label: '',
+            path: 'This is the selected Python path'
+        };
+
+        const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+        const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
+        workspace.setup(w => w.workspaceFolders).returns(() => [folder1, folder2]);
+
+        selector.getSuggestions = () => Promise.resolve([]);
+        appShell.setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(selectedItem))
+            .verifiable(TypeMoq.Times.once());
+        appShell.setup(s => s.showWorkspaceFolderPick(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(folder2))
+            .verifiable(TypeMoq.Times.once());
+        pythonPathUpdater.setup(p => p.updatePythonPath(TypeMoq.It.isValue(selectedItem.path),
+            TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
+            TypeMoq.It.isValue('ui'),
+            TypeMoq.It.isValue(folder2.uri)))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+
+        await selector.setInterpreter();
+
+        appShell.verifyAll();
+        workspace.verifyAll();
+        pythonPathUpdater.verifyAll();
+    });
+    test('Do not update anything when user does not select a workspace folder and there is more than one workspace folder', async () => {
+        const selector = new TestInterpreterSelector(interpreterService.object, workspace.object,
+            appShell.object, documentManager.object, new PathUtils(false),
+            comparer.object, pythonPathUpdater.object, shebangProvider.object, commandManager.object);
+
+        const selectedItem: IInterpreterQuickPickItem = {
+            description: '', detail: '', label: '',
+            path: 'This is the selected Python path'
+        };
+
+        const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+        const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
+        workspace.setup(w => w.workspaceFolders).returns(() => [folder1, folder2]);
+
+        selector.getSuggestions = () => Promise.resolve([]);
+        appShell.setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(selectedItem))
+            .verifiable(TypeMoq.Times.never());
+        appShell.setup(s => s.showWorkspaceFolderPick(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.once());
+        pythonPathUpdater.setup(p => p.updatePythonPath(TypeMoq.It.isAny(),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.never());
+
+        await selector.setInterpreter();
+
+        appShell.verifyAll();
+        workspace.verifyAll();
+        pythonPathUpdater.verifyAll();
     });
 });

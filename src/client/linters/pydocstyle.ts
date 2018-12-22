@@ -3,7 +3,7 @@ import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { IS_WINDOWS } from './../common/util';
+import { IS_WINDOWS } from './../common/platform/constants';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 

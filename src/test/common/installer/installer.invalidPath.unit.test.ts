@@ -13,7 +13,7 @@ import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
-import { Product } from '../../../client/common/types';
+import { IPersistentState, IPersistentStateFactory, Product } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -30,6 +30,8 @@ suite('Module Installer - Invalid Paths', () => {
                 let app: TypeMoq.IMock<IApplicationShell>;
                 let workspaceService: TypeMoq.IMock<IWorkspaceService>;
                 let productPathService: TypeMoq.IMock<IProductPathService>;
+                let persistentState: TypeMoq.IMock<IPersistentStateFactory>;
+
                 setup(() => {
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
@@ -42,6 +44,9 @@ suite('Module Installer - Invalid Paths', () => {
 
                     productPathService = TypeMoq.Mock.ofType<IProductPathService>();
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
+
+                    persistentState = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentState.object);
 
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
@@ -74,7 +79,12 @@ suite('Module Installer - Invalid Paths', () => {
                                 })
                                 .returns(() => Promise.resolve(undefined))
                                 .verifiable(TypeMoq.Times.exactly(1));
-
+                            const persistValue = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+                            persistValue.setup(pv => pv.value).returns(() => false);
+                            persistValue.setup(pv => pv.updateValue(TypeMoq.It.isValue(true)));
+                            persistentState.setup(ps =>
+                                ps.createGlobalPersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                            ).returns(() => persistValue.object);
                             await installer.promptToInstall(product.value, resource);
                             productPathService.verifyAll();
                         });

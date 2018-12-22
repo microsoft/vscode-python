@@ -1,0 +1,5 @@
+./out/test/**/*.unit.test.js
+--require out/test/unittests.js
+--ui tdd
+--recursive
+--colors

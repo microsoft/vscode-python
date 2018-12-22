@@ -30,7 +30,7 @@
 	"python.snippet.launch.externalTerminal.description": "외부 터미널/콘솔에서 Python 프로그램 디버그",
 	"python.snippet.launch.django.label": "Python: Django",
 	"python.snippet.launch.django.description": "Django 응용 프로그램 디버그",
-	"python.snippet.launch.flask.label": "Python: Flask (0.11.x 또는 이후 버전)",
+	"python.snippet.launch.flask.label": "Python: Flask",
 	"python.snippet.launch.flask.description": "Flask 응용 프로그램 디버그",
 	"python.snippet.launch.flaskOld.label": "Python: Flask (0.10.x 또는 이전 버전)",
 	"python.snippet.launch.flaskOld.description": "이전 스타일의 Flask 응용 프로그램 디버그",

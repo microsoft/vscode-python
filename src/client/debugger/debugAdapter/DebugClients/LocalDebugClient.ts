@@ -3,6 +3,7 @@ import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { open } from '../../../common/open';
+import { IS_WINDOWS } from '../../../common/platform/constants';
 import { PathUtils } from '../../../common/platform/pathUtils';
 import { CurrentProcess } from '../../../common/process/currentProcess';
 import { noop } from '../../../common/utils/misc';
@@ -10,7 +11,6 @@ import { EnvironmentVariablesService } from '../../../common/variables/environme
 import { IServiceContainer } from '../../../ioc/types';
 import { LaunchRequestArguments } from '../../types';
 import { IDebugServer } from '../Common/Contracts';
-import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
 import { ILocalDebugLauncherScriptProvider } from '../types';
@@ -40,7 +40,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
 
     public CreateDebugServer(serviceContainer?: IServiceContainer): BaseDebugServer {
-        this.debugServer =  new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
+        this.debugServer = new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
         return this.debugServer;
     }
 

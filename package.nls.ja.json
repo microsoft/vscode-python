@@ -30,7 +30,7 @@
 	"python.snippet.launch.externalTerminal.description": "外部のターミナル/コンソールで Python プログラムをデバッグ",
 	"python.snippet.launch.django.label": "Python: Django",
 	"python.snippet.launch.django.description": "Django アプリケーションをデバッグ",
-	"python.snippet.launch.flask.label": "Python: Flask (0.11.x 以降)",
+	"python.snippet.launch.flask.label": "Python: Flask",
 	"python.snippet.launch.flask.description": "Flask アプリケーションをデバッグ",
 	"python.snippet.launch.flaskOld.label": "Python: Flask (0.10.x 以前)",
 	"python.snippet.launch.flaskOld.description": "旧式の Flask アプリケーションをデバッグ",

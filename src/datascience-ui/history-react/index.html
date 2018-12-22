@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
         <meta name="theme-color" content="#000000">
         <title>React App</title>
-        <base href="<%= htmlWebpackPlugin.options.baseUrl %>">
+        <base href="<%= htmlWebpackPlugin.options.indexUrl %>">
         <style id='default-styles'>
 :root { --background-color: #ffffff;
     --comment-color: green;
@@ -331,8 +331,18 @@
 				background-color: rgba(111, 195, 223, 0.8);
 			}
         </style>
+
     </head>
     <body>
         <div id="root"></div>
+                <script type="text/javascript">
+                    function resolvePath(relativePath) {
+                        if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
+                            return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath.substring(1);
+                        }
+
+                        return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath;
+                    }
+                </script>
     </body>
 </html>

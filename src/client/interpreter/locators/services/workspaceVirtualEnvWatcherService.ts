@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { Logger, traceVerbose } from '../../../common/logger';
+import { Logger, traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
@@ -35,7 +35,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     public dispose() {
         this.clearTimers();
     }
-    @traceVerbose('Register Intepreter Watcher')
+    @traceDecorators.verbose('Register Intepreter Watcher')
     public async register(resource: Uri | undefined): Promise<void> {
         if (this.fsWatchers.length > 0) {
             return;
@@ -56,7 +56,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             this.fsWatchers.push(fsWatcher);
         }
     }
-    @traceVerbose('Intepreter Watcher change handler')
+    @traceDecorators.verbose('Intepreter Watcher change handler')
     protected async createHandler(e: Uri) {
         this.didCreate.fire();
         // On Windows, creation of environments are very slow, hence lets notify again after

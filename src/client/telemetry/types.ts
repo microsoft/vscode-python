@@ -3,8 +3,10 @@
 'use strict';
 
 import { TerminalShellType } from '../common/terminal/types';
+import { DebugConfigurationType } from '../debugger/extension/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
+import { PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
@@ -23,6 +25,11 @@ export type LanguageServerVersionTelemetry = {
 
 export type LanguageServerErrorTelemetry = {
     error: string;
+};
+
+export type LanguageServePlatformSupported = {
+    supported: boolean;
+    failureType?: 'UnknownError';
 };
 
 export type LinterTrigger = 'auto' | 'save';
@@ -57,6 +64,10 @@ export type DebuggerTelemetry = {
     showReturnValue: boolean;
     pyramid: boolean;
     subProcess: boolean;
+    watson: boolean;
+    pyspark: boolean;
+    gevent: boolean;
+    scrapy: boolean;
 };
 export type DebuggerPerformanceTelemetry = {
     duration: number;
@@ -66,7 +77,7 @@ export type TestRunTelemetry = {
     tool: 'nosetest' | 'pytest' | 'unittest';
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
     debugging: boolean;
-    triggeredBy: 'ui' | 'codelens' | 'commandpalette' | 'auto';
+    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto';
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
@@ -85,6 +96,13 @@ export type TerminalTelemetry = {
     triggeredBy?: 'commandpalette';
     pythonVersion?: string;
     interpreterType?: InterpreterType;
+};
+export type DebuggerConfigurationPromtpsTelemetry = {
+    configurationType: DebugConfigurationType;
+    autoDetectedDjangoManagePyPath?: boolean;
+    autoDetectedPyramidIniPath?: boolean;
+    autoDetectedFlaskAppPyPath?: boolean;
+    manuallyEnteredAValue?: boolean;
 };
 export type DiagnosticsAction = {
     /**
@@ -119,6 +137,11 @@ export type ImportNotebook = {
     scope: 'command';
 };
 
+export type Platform = {
+    failureType?: PlatformErrors;
+    osVersion?: string;
+};
+
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
@@ -134,4 +157,7 @@ export type TelemetryProperties = FormatTelemetry
     | SettingsTelemetry
     | DiagnosticsAction
     | DiagnosticsMessages
-    | ImportNotebook;
+    | ImportNotebook
+    | Platform
+    | LanguageServePlatformSupported
+    | DebuggerConfigurationPromtpsTelemetry;

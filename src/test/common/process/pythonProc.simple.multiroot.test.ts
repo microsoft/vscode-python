@@ -13,6 +13,7 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -24,7 +25,6 @@ import {
     IConfigurationService, ICurrentProcess,
     IDisposableRegistry, IPathUtils, IsWindows
 } from '../../../client/common/types';
-import { IS_WINDOWS } from '../../../client/common/util';
 import { OSType } from '../../../client/common/utils/platform';
 import {
     registerTypes as variablesRegisterTypes

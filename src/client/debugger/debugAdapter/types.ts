@@ -9,7 +9,7 @@ import { Disposable } from 'vscode';
 import { Logger } from 'vscode-debugadapter';
 import { Message } from 'vscode-debugadapter/lib/messages';
 
-export type LocalDebugOptions = { port: number; host: string };
+export type LocalDebugOptions = { port: number; host: string; customDebugger?: boolean };
 export type RemoteDebugOptions = LocalDebugOptions & { waitUntilDebuggerAttaches: boolean };
 
 export interface IDebugLauncherScriptProvider<T> {

@@ -1,95 +1,63 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-// Note: This example test is leveraging the Mocha test framework.
-// Please refer to their documentation on https://mochajs.org/ for help.
+'use strict';
 
-import * as assert from 'assert';
+import { expect } from 'chai';
 import * as path from 'path';
-import * as vscode from 'vscode';
+import { CancellationTokenSource, Position, TextDocument, workspace } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { OnEnterFormatter } from '../../client/typeFormatters/onEnterFormatter';
 import { closeActiveWindows, initialize } from '../initialize';
 
-const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
+const formatFilesPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'formatting');
 const unformattedFile = path.join(formatFilesPath, 'fileToFormatOnEnter.py');
 
 suite('Formatting - OnEnter provider', () => {
-    let document: vscode.TextDocument;
-    let editor: vscode.TextEditor;
-
-    suiteSetup(initialize);
-    setup(async () => {
-        document = await vscode.workspace.openTextDocument(unformattedFile);
-        editor = await vscode.window.showTextDocument(document);
+    let document: TextDocument;
+    let formatter: OnEnterFormatter;
+    suiteSetup(async () => {
+        await initialize();
+        document = await workspace.openTextDocument(unformattedFile);
+        formatter = new OnEnterFormatter();
     });
     suiteTeardown(closeActiveWindows);
-    teardown(closeActiveWindows);
 
-    test('Simple statement', async () => {
-        const text = await formatAtPosition(1, 0);
-        assert.equal(text, 'x = 1', 'Line was not formatted');
-    });
+    test('Simple statement', () => testFormattingAtPosition(1, 0, 'x = 1'));
 
-    test('No formatting inside strings', async () => {
-        let text = await formatAtPosition(2, 0);
-        assert.equal(text, '"""x=1', 'Text inside string was formatted');
-        text = await formatAtPosition(3, 0);
-        assert.equal(text, '"""', 'Text inside string was formatted');
-    });
+    test('No formatting inside strings (2)', () => doesNotFormat(2, 0));
 
-    test('Whitespace before comment', async () => {
-        const text = await formatAtPosition(4, 0);
-        assert.equal(text, '  # comment', 'Whitespace before comment was not preserved');
-    });
+    test('No formatting inside strings (3)', () => doesNotFormat(3, 0));
 
-    test('No formatting of comment', async () => {
-        const text = await formatAtPosition(5, 0);
-        assert.equal(text, '# x=1', 'Text inside comment was formatted');
-    });
+    test('Whitespace before comment', () => doesNotFormat(4, 0));
 
-    test('Formatting line ending in comment', async () => {
-        const text = await formatAtPosition(6, 0);
-        assert.equal(text, 'x + 1  # ', 'Line ending in comment was not formatted');
-    });
+    test('No formatting of comment', () => doesNotFormat(5, 0));
 
-    test('Formatting line with @', async () => {
-        const text = await formatAtPosition(7, 0);
-        assert.equal(text, '@x', 'Line with @ was reformatted');
-    });
+    test('Formatting line ending in comment', () => testFormattingAtPosition(6, 0, 'x + 1  # '));
 
-    test('Formatting line with @', async () => {
-        const text = await formatAtPosition(8, 0);
-        assert.equal(text, 'x.y', 'Line ending with period was reformatted');
-    });
+    test('Formatting line with @', () => doesNotFormat(7, 0));
 
-    test('Formatting line with unknown neighboring tokens', async () => {
-        const text = await formatAtPosition(9, 0);
-        assert.equal(text, 'if x <= 1:', 'Line with unknown neighboring tokens was not formatted');
-    });
+    test('Formatting line with @', () => doesNotFormat(8, 0));
 
-    test('Formatting line with unknown neighboring tokens', async () => {
-        const text = await formatAtPosition(10, 0);
-        assert.equal(text, 'if 1 <= x:', 'Line with unknown neighboring tokens was not formatted');
-    });
+    test('Formatting line with unknown neighboring tokens', () => testFormattingAtPosition(9, 0, 'if x <= 1:'));
 
-    test('Formatting method definition with arguments', async () => {
-        const text = await formatAtPosition(11, 0);
-        assert.equal(text, 'def __init__(self, age=23)', 'Method definition with arguments was not formatted');
-    });
+    test('Formatting line with unknown neighboring tokens', () => testFormattingAtPosition(10, 0, 'if 1 <= x:'));
 
-    test('Formatting space after open brace', async () => {
-        const text = await formatAtPosition(12, 0);
-        assert.equal(text, 'while (1)', 'Space after open brace was not formatted');
-    });
+    test('Formatting method definition with arguments', () => testFormattingAtPosition(11, 0, 'def __init__(self, age=23)'));
 
-    test('Formatting line ending in string', async () => {
-        const text = await formatAtPosition(13, 0);
-        assert.equal(text, 'x + """', 'Line ending in multiline string was not formatted');
-    });
+    test('Formatting space after open brace', () => testFormattingAtPosition(12, 0, 'while (1)'));
 
-    async function formatAtPosition(line: number, character: number): Promise<string> {
-        const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>('vscode.executeFormatOnTypeProvider',
-            document.uri, new vscode.Position(line, character), '\n', { insertSpaces: true, tabSize: 2 });
-        if (edits) {
-            await editor.edit(builder => edits.forEach(e => builder.replace(e.range, e.newText)));
-        }
-        return document.lineAt(line - 1).text;
+    test('Formatting line ending in string', () => testFormattingAtPosition(13, 0, 'x + """'));
+
+    function testFormattingAtPosition(line: number, character: number, expectedFormattedString?: string): void {
+        const token = new CancellationTokenSource().token;
+        const edits = formatter.provideOnTypeFormattingEdits(document, new Position(line, character), '\n', { insertSpaces: true, tabSize: 2 }, token);
+        expect(edits).to.be.lengthOf(1);
+        expect(edits[0].newText).to.be.equal(expectedFormattedString);
+    }
+    function doesNotFormat(line: number, character: number): void {
+        const token = new CancellationTokenSource().token;
+        const edits = formatter.provideOnTypeFormattingEdits(document, new Position(line, character), '\n', { insertSpaces: true, tabSize: 2 }, token);
+        expect(edits).to.be.lengthOf(0);
     }
 });

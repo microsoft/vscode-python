@@ -7,11 +7,25 @@ if ((Reflect as any).metadata === undefined) {
 }
 const durations: { [key: string]: number } = {};
 import { StopWatch } from './common/utils/stopWatch';
-// Do not move this linne of code (used to measure extension load times).
+// Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
-
 import { Container } from 'inversify';
-import { CodeActionKind, debug, DebugConfigurationProvider, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
+import {
+    CodeActionKind,
+    debug,
+    DebugConfigurationProvider,
+    Disposable,
+    ExtensionContext,
+    extensions,
+    IndentAction,
+    languages,
+    Memento,
+    OutputChannel,
+    ProgressLocation,
+    ProgressOptions,
+    window
+} from 'vscode';
+
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
 import { buildApi, IExtensionApi } from './api';
@@ -20,17 +34,26 @@ import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { ITerminalHelper } from './common/terminal/types';
 import {
-    GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
-    IExtensionContext, IFeatureDeprecationManager, ILogger,
-    IMemento, IOutputChannel, WORKSPACE_MEMENTO
+    GLOBAL_MEMENTO,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IFeatureDeprecationManager,
+    ILogger,
+    IMemento,
+    IOutputChannel,
+    WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
+import { Common } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
@@ -38,10 +61,16 @@ import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
+import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
-import { ICondaService, IInterpreterLocatorProgressService, IInterpreterService, InterpreterLocatorProgressHandler, PythonInterpreter } from './interpreter/contracts';
+import {
+    ICondaService,
+    IInterpreterLocatorProgressService,
+    IInterpreterService,
+    InterpreterLocatorProgressHandler,
+    PythonInterpreter
+} from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -67,13 +96,16 @@ import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegi
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
+let activatedServiceContainer: ServiceContainer | undefined;
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
+    displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
+    activatedServiceContainer = serviceContainer;
     registerServices(context, serviceManager, serviceContainer);
     initializeServices(context, serviceManager, serviceContainer);
 
@@ -94,13 +126,14 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
-    await activationService.activate();
+    const lsActivationPromise = activationService.activate();
+    displayProgress(lsActivationPromise);
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-    sendStartupTelemetry(activationDeferred.promise, serviceContainer).ignoreErrors();
+    sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
@@ -156,21 +189,39 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
-    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
-        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfig));
+    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
+        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationDeferred.promise);
+    const api = buildApi(Promise.all([activationDeferred.promise, lsActivationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable-next-line:no-any
         (api as any).serviceContainer = serviceContainer;
     }
     return api;
+}
+
+export function deactivate(): Thenable<void> {
+    // Make sure to shutdown anybody who needs it.
+    if (activatedServiceContainer) {
+        const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
+        if (registry) {
+            return registry.dispose();
+        }
+    }
+
+    return Promise.resolve();
+}
+
+// tslint:disable-next-line:no-any
+function displayProgress(promise: Promise<any>) {
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    window.withProgress(progressOptions, () => promise);
 }
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
@@ -188,6 +239,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 
     activationRegisterTypes(serviceManager);
     commonRegisterTypes(serviceManager);
+    registerDotNetTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
@@ -219,6 +271,7 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     // Display progress of interpreter refreshes only after extension has activated.
     serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
+    serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 
     // Get latest interpreter list.
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -226,7 +279,9 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
 }
-async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
+
+// tslint:disable-next-line:no-any
+async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceContainer: IServiceContainer) {
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;

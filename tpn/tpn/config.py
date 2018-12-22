@@ -48,10 +48,12 @@ def get_explicit_entries(config_projects):
     The projects in the returned dict are deleted from config_projects.
 
     """
+    print("Including PyPI projects explicitly from configuration")
     explicit_projects = {
         name: details
         for name, details in config_projects.items()
-        if details.purpose == "explicit"
+        # TODO: Drop "PyPI" once appropriate PyPI support has been added.
+        if details.purpose in {"explicit", "PyPI"}
     }
     for project in explicit_projects:
         del config_projects[project]

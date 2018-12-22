@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { traceError } from './common/logger';
 import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 
 /*
@@ -21,7 +22,7 @@ export interface IExtensionApi {
         /**
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
          * Users can append another array of strings of what they want to execute along with relevant arguments to Python.
-         * E.g `['/Users/..../pythonVSCode/pythonFiles/experimental/ptvsd_launcher.py', '--host', 'localhost', '--port', '57039', '--wait']`
+         * E.g `['/Users/..../pythonVSCode/pythonFiles/ptvsd_launcher.py', '--host', 'localhost', '--port', '57039', '--wait']`
          * @param {string} host
          * @param {number} port
          * @param {boolean} [waitUntilDebuggerAttaches=true]
@@ -31,9 +32,14 @@ export interface IExtensionApi {
     };
 }
 
-export function buildApi(ready: Promise<void>) {
+// tslint:disable-next-line:no-any
+export function buildApi(ready: Promise<any>) {
     return {
-        ready,
+        // 'ready' will propogate the exception, but we must log it here first.
+        ready: ready.catch((ex) => {
+            traceError('Failure during activation.', ex);
+            return Promise.reject(ex);
+        }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
                 return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });

@@ -35,7 +35,7 @@
     "python.snippet.launch.externalTerminal.description": "Depurar una aplicación Python usando una terminal externa",
     "python.snippet.launch.django.label": "Python: Django",
     "python.snippet.launch.django.description": "Depurar una aplicación de Django",
-    "python.snippet.launch.flask.label": "Python: Flask (Versión 0.11.x o posterior)",
+    "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.flask.description": "Depurar una aplicación de Flask",
     "python.snippet.launch.flaskOld.label": "Python: Flask (Versión 0.10.x o anterior)",
     "python.snippet.launch.flaskOld.description": "Depurar una aplicación de Flask de estilo antiguo",

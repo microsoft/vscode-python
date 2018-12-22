@@ -3,12 +3,14 @@
 
 'use strict';
 
-import * as glob from 'glob';
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import * as webpack from 'webpack';
+import { Configuration, ContextReplacementPlugin } from 'webpack';
 import { ExtensionRootDir } from '../constants';
-import { getDefaultPlugins } from './common';
+import { getDefaultPlugins, getListOfExistingModulesInOutDir } from './common';
+
+// tslint:disable-next-line:no-var-requires no-require-imports
+const WrapperPlugin = require('wrapper-webpack-plugin');
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
@@ -16,18 +18,12 @@ const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = getListOfExistingModulesInOutDir();
-function getListOfExistingModulesInOutDir() {
-    const outDir = path.join(ExtensionRootDir, 'out', 'client');
-    const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
-    return files.map(filePath => `./${filePath.slice(0, -3)}`);
-}
 
-const config: webpack.Configuration = {
+const config: Configuration = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts',
-        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
+        extension: './src/client/extension.ts'
     },
     devtool: 'source-map',
     node: {
@@ -37,7 +33,7 @@ const config: webpack.Configuration = {
         rules: [
             {
                 // JupyterServices imports node-fetch using `eval`.
-                test: /@jupyterlab\/services\/.*js$/,
+                test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
                     {
                         loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
@@ -69,7 +65,13 @@ const config: webpack.Configuration = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        ...getDefaultPlugins('extension')
+        ...getDefaultPlugins('extension'),
+        new WrapperPlugin({
+            test: /\extension.js$/,
+            // Import source map warning file only if source map is enabled.
+            // Minimize importing external files.
+            header: '(function(){if (require(\'vscode\').workspace.getConfiguration(\'python.diagnostics\', undefined).get(\'sourceMapsEnabled\', false)) {require(\'./sourceMapSupport\').default(require(\'vscode\'));}})();'
+        })
     ],
     resolve: {
         extensions: ['.ts', '.js'],

@@ -9,6 +9,7 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
+import { traceDecorators } from '../logger';
 import { createDeferred } from '../utils/async';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
@@ -47,8 +48,8 @@ export class FileSystem implements IFileSystem {
         return fs.readFile(filePath).then(buffer => buffer.toString());
     }
 
-    public async writeFile(filePath: string, data: {}): Promise<void> {
-        await fs.writeFile(filePath, data, { encoding: 'utf8' });
+    public async writeFile(filePath: string, data: {}, options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
+        await fs.writeFile(filePath, data, options);
     }
 
     public directoryExists(filePath: string): Promise<boolean> {
@@ -83,6 +84,17 @@ export class FileSystem implements IFileSystem {
                 });
                 resolve(subDirs);
             });
+        });
+    }
+
+    public async getFiles(rootDir: string): Promise<string[]> {
+        const files = await fs.readdir(rootDir);
+        return files.filter(async f => {
+            const fullPath = path.join(rootDir, f);
+            if ((await fs.stat(fullPath)).isFile()) {
+                return true;
+            }
+            return false;
         });
     }
 
@@ -131,6 +143,8 @@ export class FileSystem implements IFileSystem {
         fs.unlink(filename, err => err ? deferred.reject(err) : deferred.resolve());
         return deferred.promise;
     }
+
+    @traceDecorators.error('Failed to get FileHash')
     public getFileHash(filePath: string): Promise<string | undefined> {
         return new Promise<string | undefined>(resolve => {
             fs.lstat(filePath, (err, stats) => {
