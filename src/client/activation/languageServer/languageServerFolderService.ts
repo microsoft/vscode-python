@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { performance } from 'perf_hooks';
 import * as semver from 'semver';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
@@ -22,15 +23,28 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
 
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(): Promise<string> {
-        const currentFolder = await this.getCurrentLanguageServerDirectory();
+
+        const currentFolder = await this.getCurrentLanguageServerDirectory()
+            .then((folderVerPair) => {
+                performance.mark('getCurrentLanguageServerDirectory');
+                return folderVerPair;
+            });
         let serverVersion: NugetPackage | undefined;
 
-        const shouldLookForNewVersion = await this.shouldLookForNewLanguageServer(currentFolder);
+        const shouldLookForNewVersion = await this.shouldLookForNewLanguageServer(currentFolder)
+            .then((shouldLook) => {
+                performance.mark('shouldLookForNewLanguageServer');
+                return shouldLook;
+            });
         if (currentFolder && !shouldLookForNewVersion) {
             return path.basename(currentFolder.path);
         }
 
         serverVersion = await this.getLatestLanguageServerVersion()
+            .then((nugetPkg) => {
+                performance.mark('getLatestLanguageServerVersion');
+                return nugetPkg;
+            })
             .catch(ex => undefined);
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {

@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { performance, PerformanceObserver } from 'perf_hooks';
 import {
     CancellationToken, CompletionContext, OutputChannel, Position,
     TextDocument, Uri
@@ -27,7 +28,6 @@ import {
     IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
@@ -61,7 +61,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private readonly appShell: IApplicationShell;
     private readonly output: OutputChannel;
     private readonly fs: IFileSystem;
-    private readonly sw = new StopWatch();
     private readonly platformData: PlatformData;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
@@ -75,8 +74,10 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
     private surveyBanner: IPythonExtensionBanner;
+    private perfObserver: PerformanceObserver;
     private languageServerFolder!: string;
     private languageServerFolderService: ILanguageServerFolderService;
+    private durations: { [key: string]: number } = {};
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -116,21 +117,90 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     }
 
     public async activate(): Promise<boolean> {
-        this.sw.reset();
-        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
-        const clientOptions = await this.getAnalysisOptions();
+        this.perfObserver = new PerformanceObserver((list, observer) => {
+            list.getEntries().forEach((entry) => {
+                if (this.durations[entry.name] === undefined) {
+                    this.durations[entry.name] = entry.startTime;
+                }
+            });
+            performance.clearMarks();
+            performance.clearMeasures();
+
+        });
+        this.perfObserver.observe({entryTypes: ['mark', 'measure'], buffered: true});
+
+        performance.mark('startingPerfSession');
+
+        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName()
+            .then((lsName) => {
+                performance.mark('getLanguageServerFolderName');
+                return lsName;
+            });
+        const clientOptions = await this.getAnalysisOptions()
+            .then((opts) => {
+                performance.mark('getAnalysisOptions');
+                return opts;
+            });
         if (!clientOptions) {
             return false;
         }
 
         this.startupCompleted.promise.then(() => {
             const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
+            performance.mark('startupCompleted');
             testManagementService.activate()
-                .then(() => testManagementService.activateCodeLenses(new LanguageServerSymbolProvider(this.languageClient!)))
+                .then(() => {
+                    performance.mark('activateTestManagementService');
+                    testManagementService.activateCodeLenses(new LanguageServerSymbolProvider(this.languageClient!))
+                        .then(() => {
+                            performance.mark('activateCodeLenses');
+                            return;
+                        }).catch(ex => {throw ex; });
+                })
                 .catch(ex => this.services.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
         }).ignoreErrors();
 
-        return this.startLanguageServer(clientOptions);
+        return this.startLanguageServer(clientOptions)
+            .then((isActivated) => {
+                // tslint:disable:no-console
+                this.perfObserver.disconnect();
+                delete this.perfObserver;
+
+                console.log('');
+                console.log('# Language Server Timeline:');
+                console.log('===');
+                console.log('');
+                console.log('| Label | Timestamp | Duration (ms) |');
+                console.log('|-|-|-|');
+
+                // tslint:disable:number-literal-format
+                let firstStamp = -1.0;
+                let lastStamp = -1.0;
+                let largestDur = -1.0;
+                let largestDurLabel;
+
+                // tslint:disable:no-for-in forin
+                for (const key in this.durations) {
+                    firstStamp = lastStamp < 0.0 ? this.durations[key] : firstStamp;
+                    const dur = lastStamp >= 0.0 ? this.durations[key] - lastStamp : 0.0;
+                    console.log(`| ${key} | ${this.durations[key]} | ${dur} |`);
+                    lastStamp = this.durations[key];
+                    if (dur > largestDur) {
+                        largestDur = dur;
+                        largestDurLabel = key;
+                    }
+                }
+                // tslint:enable:no-for-in forin
+
+                console.log('');
+                console.log(`Largest Duration item was '${largestDurLabel}' at ${largestDur}ms, or ${largestDur / (lastStamp - firstStamp) * 100.0}% of the total.`);
+                console.log(`Total duration of session: ${lastStamp - firstStamp} ms`);
+                console.log('');
+
+                return isActivated;
+                // tslint:enable:no-console
+                // tslint:enable:number-literal-format
+            });
     }
 
     public async deactivate(): Promise<void> {
@@ -151,19 +221,30 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const settings = this.configuration.getSettings();
         if (!settings.downloadLanguageServer) {
             // Depends on .NET Runtime or SDK. Typically development-only case.
-            this.languageClient = await this.createSimpleLanguageClient(clientOptions);
+            this.languageClient = await this.createSimpleLanguageClient(clientOptions)
+                .then((lsCli) => {
+                    performance.mark('noDownloadCreateSimpleLangClient');
+                    return lsCli;
+                });
             await this.startLanguageClient();
             return true;
         }
 
         const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
-        if (!await this.fs.fileExists(mscorlib)) {
+        if (!await this.fs.fileExists(mscorlib).then((fExist) => {performance.mark('discoverLSFileForDownloading'); return fExist; })) {
             const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
-            await downloader.downloadLanguageServer(this.context);
+            await downloader.downloadLanguageServer(this.context)
+                .then(() => {
+                    performance.mark('downloadLanguageServer');
+                });
         }
 
         const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
-        this.languageClient = await this.createSelfContainedLanguageClient(serverModule, clientOptions);
+        this.languageClient = await this.createSelfContainedLanguageClient(serverModule, clientOptions)
+            .then((lsCli) => {
+                performance.mark('createSelfContainedLanguageClient');
+                return lsCli;
+            });
         try {
             await this.startLanguageClient();
             this.languageClient.onTelemetry(telemetryEvent => {
@@ -179,8 +260,14 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     }
 
     private async startLanguageClient(): Promise<void> {
+        performance.mark('pushLanguageClientAndStart_Begin');
         this.context.subscriptions.push(this.languageClient!.start());
-        await this.serverReady();
+        performance.mark('pushLanguageClientAndStart_Completed');
+        await this.serverReady()
+            .then(() => {
+                performance.mark('serverReadyComplete');
+            });
+
         const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
         const progressReporting = new ProgressReporting(this.languageClient!);
         disposables.push(progressReporting);
@@ -226,7 +313,11 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         try {
             const interpreterDataService = new InterpreterDataService(this.context, this.services);
-            interpreterData = await interpreterDataService.getInterpreterData();
+            interpreterData = await interpreterDataService.getInterpreterData()
+                .then((interpreterInfo) => {
+                    performance.mark('getInterpreterData');
+                    return interpreterInfo;
+                });
         } catch (ex) {
             Logger.error('Unable to determine path to the Python interpreter. IntelliSense will be limited.', ex);
         }
@@ -252,7 +343,11 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             }
         }
         const envVarsProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-        const vars = await envVarsProvider.getEnvironmentVariables();
+        const vars = await envVarsProvider.getEnvironmentVariables()
+            .then((envVars) => {
+                performance.mark('getEnvironmentVariables');
+                return envVars;
+            });
         if (vars.PYTHONPATH && vars.PYTHONPATH.length > 0) {
             const pathUtils = this.services.get<IPathUtils>(IPathUtils);
             const paths = vars.PYTHONPATH.split(pathUtils.delimiter).filter(item => item.trim().length > 0);
@@ -267,6 +362,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const selector = [{ language: PYTHON, scheme: 'file' }];
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths(settings);
+        performance.mark('fixing-up-paths');
 
         // Options to control the language client
         return {
