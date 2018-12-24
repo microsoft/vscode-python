@@ -5,9 +5,9 @@ import * as os from 'os';
 import { OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
-import { ILinterManager } from '../../linters/types';
-import { IApplicationShell, IWorkspaceService, ICommandManager } from '../application/types';
-import { STANDARD_OUTPUT_CHANNEL, Commands } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
+import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
@@ -17,7 +17,6 @@ import {
 } from '../types';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IProductPathService, IProductService } from './types';
-import { sendTelemetryEvent } from '../../telemetry';
 
 export { Product } from '../types';
 
@@ -213,7 +212,7 @@ export class LinterInstaller extends BaseInstaller {
 
         if (response === selectLinter){
             sendTelemetryEvent(
-                `Select Linter`,
+                'Select Linter',
                 undefined
             );
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
