@@ -57,135 +57,135 @@ jobs:
       name: 'show_bld_vars'
 
 
-    - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
-      displayName: 'Component Detection'
+    # - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+    #   displayName: 'Component Detection'
 
-      continueOnError: true
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-
-    - task: NodeTool@0
-      displayName: 'Use Node $(nodeVersion)'
-      inputs:
-        versionSpec: '$(nodeVersion)'
+    #   continueOnError: true
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 
-    - task: UsePythonVersion@0
-      displayName: 'Use Python $(pythonVersion)'
-      inputs:
-        versionSpec: '$(pythonVersion)'
+    # - task: NodeTool@0
+    #   displayName: 'Use Node $(nodeVersion)'
+    #   inputs:
+    #     versionSpec: '$(nodeVersion)'
 
 
-    - task: Npm@1
-      displayName: 'update npm'
-      inputs:
-        command: custom
-
-        verbose: true
-
-        customCommand: 'install -g npm@$(npmVersion)'
+    # - task: UsePythonVersion@0
+    #   displayName: 'Use Python $(pythonVersion)'
+    #   inputs:
+    #     versionSpec: '$(pythonVersion)'
 
 
-    - task: Npm@1
-      displayName: 'npm ci'
-      inputs:
-        command: custom
+    # - task: Npm@1
+    #   displayName: 'update npm'
+    #   inputs:
+    #     command: custom
 
-        verbose: true
+    #     verbose: true
 
-        customCommand: ci
-
-
-    - bash: echo AVAILABLE DEPENDENCY VERSIONS
-
-        echo Node Version = `node -v`
-
-        echo NPM Version = `npm -v`
-
-        echo Python Version = `python --version`
-
-      displayName: 'Show build dependency versions'
-      name: 'show_bld_deps_vers'
+    #     customCommand: 'install -g npm@$(npmVersion)'
 
 
-    - task: Gulp@0
-      displayName: 'gulp prePublishNonBundle'
-      inputs:
-        targets: 'prePublishNonBundle'
+    # - task: Npm@1
+    #   displayName: 'npm ci'
+    #   inputs:
+    #     command: custom
+
+    #     verbose: true
+
+    #     customCommand: ci
 
 
-    - task: Gulp@0
-      displayName: 'gulp code hygiene'
-      inputs:
-        targets: 'hygiene-modified'
-      condition: and(succeeded(), eq(variables['runHygiene'], 'true'))
+    # - bash: echo AVAILABLE DEPENDENCY VERSIONS
+
+    #     echo Node Version = `node -v`
+
+    #     echo NPM Version = `npm -v`
+
+    #     echo Python Version = `python --version`
+
+    #   displayName: 'Show build dependency versions'
+    #   name: 'show_bld_deps_vers'
 
 
-    - task: Npm@1
-      displayName: 'run cover:enable'
-      inputs:
-        command: custom
-
-        verbose: false
-
-        customCommand: 'run cover:enable'
+    # - task: Gulp@0
+    #   displayName: 'gulp prePublishNonBundle'
+    #   inputs:
+    #     targets: 'prePublishNonBundle'
 
 
-    - task: Npm@1
-      displayName: 'run test:unittests'
-      inputs:
-        command: custom
-
-        verbose: false
-
-        customCommand: 'run test:unittests:cover'
+    # - task: Gulp@0
+    #   displayName: 'gulp code hygiene'
+    #   inputs:
+    #     targets: 'hygiene-modified'
+    #   condition: and(succeeded(), eq(variables['runHygiene'], 'true'))
 
 
-    - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID)'
-      displayName: 'publish codecov'
-      continueOnError: true
-      condition: always()
+    # - task: Npm@1
+    #   displayName: 'run cover:enable'
+    #   inputs:
+    #     command: custom
+
+    #     verbose: false
+
+    #     customCommand: 'run cover:enable'
 
 
-    - task: CmdLine@1
-      displayName: 'pip upgrade pip'
-      inputs:
-        filename: python
+    # - task: Npm@1
+    #   displayName: 'run test:unittests'
+    #   inputs:
+    #     command: custom
 
-        arguments: '-m pip install --upgrade pip'
+    #     verbose: false
 
-
-    - task: CmdLine@1
-      displayName: 'pip install test requirements'
-      inputs:
-        filename: python
-
-        arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
+    #     customCommand: 'run test:unittests:cover'
 
 
-    - task: CmdLine@1
-      displayName: 'pip install python packages'
-      inputs:
-        filename: python
-
-        arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
+    # - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID)'
+    #   displayName: 'publish codecov'
+    #   continueOnError: true
+    #   condition: always()
 
 
-    - task: ArchiveFiles@2
-      displayName: 'Capture Binaries'
-      inputs:
-        rootFolderOrFile: out
+    # - task: CmdLine@1
+    #   displayName: 'pip upgrade pip'
+    #   inputs:
+    #     filename: python
 
-        archiveFile: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+    #     arguments: '-m pip install --upgrade pip'
 
 
-    - task: AzureFileCopy@2
-      displayName: 'Upload bin-artifacts to cloud-store'
-      inputs:
-        SourcePath: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
-        azureSubscription: 'dekeeler-ptvsazure-acct-for-dev'
-        Destination: AzureBlob
-        storage: $(azureStorageAcctName)
-        ContainerName: $(azureStorageContainerName)
-        BlobPrefix: '$(Build.BuildNumber)'
-      condition: and(succeeded(), eq(variables['uploadBinary'], 'true'))
+    # - task: CmdLine@1
+    #   displayName: 'pip install test requirements'
+    #   inputs:
+    #     filename: python
+
+    #     arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
+
+
+    # - task: CmdLine@1
+    #   displayName: 'pip install python packages'
+    #   inputs:
+    #     filename: python
+
+    #     arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
+
+
+    # - task: ArchiveFiles@2
+    #   displayName: 'Capture Binaries'
+    #   inputs:
+    #     rootFolderOrFile: out
+
+    #     archiveFile: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+
+
+    # - task: AzureFileCopy@2
+    #   displayName: 'Upload bin-artifacts to cloud-store'
+    #   inputs:
+    #     SourcePath: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+    #     azureSubscription: 'dekeeler-ptvsazure-acct-for-dev'
+    #     Destination: AzureBlob
+    #     storage: $(azureStorageAcctName)
+    #     ContainerName: $(azureStorageContainerName)
+    #     BlobPrefix: '$(Build.BuildNumber)'
+    #   condition: and(succeeded(), eq(variables['uploadBinary'], 'true'))

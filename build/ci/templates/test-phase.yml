@@ -41,180 +41,180 @@ steps:
       PYTHON_VERSION: $(pythonVersion)
 
 
-  - powershell: |
-      New-Item -ItemType directory -Path "$(System.ArtifactsDirectory)/bin-artifacts"
+  # - powershell: |
+  #     New-Item -ItemType directory -Path "$(System.ArtifactsDirectory)/bin-artifacts"
 
-      $buildArtifactUri = "https://$(AzureStorageAccountName).blob.core.windows.net/$(AzureStorageContainerName)/$(Build.BuildNumber)/bin-artifacts.zip"
-      Write-Verbose "Downloading from $buildArtifactUri"
+  #     $buildArtifactUri = "https://$(AzureStorageAccountName).blob.core.windows.net/$(AzureStorageContainerName)/$(Build.BuildNumber)/bin-artifacts.zip"
+  #     Write-Verbose "Downloading from $buildArtifactUri"
 
-      $destination = "$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip"
-      Write-Verbose "Destination file: $destination"
+  #     $destination = "$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip"
+  #     Write-Verbose "Destination file: $destination"
 
-      Invoke-WebRequest -Uri $buildArtifactUri -OutFile $destination -Verbose
+  #     Invoke-WebRequest -Uri $buildArtifactUri -OutFile $destination -Verbose
 
-    displayName: 'Download bin-artifacts from cloud-storage'
+  #   displayName: 'Download bin-artifacts from cloud-storage'
 
 
-  - task: ExtractFiles@1
-    displayName: 'Splat bin-artifacts'
-    inputs:
-      archiveFilePatterns: '$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip'
+  # - task: ExtractFiles@1
+  #   displayName: 'Splat bin-artifacts'
+  #   inputs:
+  #     archiveFilePatterns: '$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip'
 
-      destinationFolder: '$(Build.SourcesDirectory)'
+  #     destinationFolder: '$(Build.SourcesDirectory)'
 
-      cleanDestinationFolder: false
+  #     cleanDestinationFolder: false
 
 
-  - task: NodeTool@0
-    displayName: 'Use Node $(NodeVersion)'
-    inputs:
-      versionSpec: '$(NodeVersion)'
+  # - task: NodeTool@0
+  #   displayName: 'Use Node $(NodeVersion)'
+  #   inputs:
+  #     versionSpec: '$(NodeVersion)'
 
 
-  - task: UsePythonVersion@0
-    displayName: 'Use Python $(PythonVersion)'
-    inputs:
-      versionSpec: '$(PythonVersion)'
+  # - task: UsePythonVersion@0
+  #   displayName: 'Use Python $(PythonVersion)'
+  #   inputs:
+  #     versionSpec: '$(PythonVersion)'
 
 
-  - bash: echo SHOW ACQUIRED PYTHON
+  # - bash: echo SHOW ACQUIRED PYTHON
 
-      echo Python Version = `python --version`
+  #     echo Python Version = `python --version`
 
-      echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
+  #     echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
-    displayName: 'Show Python Version'
-    name: 'show_py_ver'
+  #   displayName: 'Show Python Version'
+  #   name: 'show_py_ver'
 
 
-  - task: PythonScript@0
-    displayName: 'Set CI_PYTHON_PATH'
-    inputs:
-      scriptSource: inline
-      failOnStderr: true
-      script: |
-        from __future__ import print_function
+  # - task: PythonScript@0
+  #   displayName: 'Set CI_PYTHON_PATH'
+  #   inputs:
+  #     scriptSource: inline
+  #     failOnStderr: true
+  #     script: |
+  #       from __future__ import print_function
 
-        import sys
+  #       import sys
 
-        print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
+  #       print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
 
 
-  - task: Npm@1
-    displayName: 'update npm'
-    inputs:
-      command: custom
+  # - task: Npm@1
+  #   displayName: 'update npm'
+  #   inputs:
+  #     command: custom
 
-      verbose: true
+  #     verbose: true
 
-      customCommand: 'install -g npm@$(NpmVersion)'
+  #     customCommand: 'install -g npm@$(NpmVersion)'
 
 
-  - bash: echo AVAILABLE DEPENDENCY VERSIONS
+  # - bash: echo AVAILABLE DEPENDENCY VERSIONS
 
-      echo Node Version = `node -v`
+  #     echo Node Version = `node -v`
 
-      echo NPM Version = `npm -v`
+  #     echo NPM Version = `npm -v`
 
-      echo Python Version = `python --version`
+  #     echo Python Version = `python --version`
 
-      echo CI_PYTHON_PATH = $CI_PYTHON_PATH
+  #     echo CI_PYTHON_PATH = $CI_PYTHON_PATH
 
-      echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
+  #     echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
-    displayName: 'Show build dependency versions'
-    name: 'show_bld_deps_vers'
+  #   displayName: 'Show build dependency versions'
+  #   name: 'show_bld_deps_vers'
 
 
-  - task: Npm@1
-    displayName: 'npm ci'
-    inputs:
-      command: custom
+  # - task: Npm@1
+  #   displayName: 'npm ci'
+  #   inputs:
+  #     command: custom
 
-      verbose: true
+  #     verbose: true
 
-      customCommand: ci
+  #     customCommand: ci
 
 
-  - task: CmdLine@1
-    displayName: 'pip upgrade pip'
-    inputs:
-      filename: python
+  # - task: CmdLine@1
+  #   displayName: 'pip upgrade pip'
+  #   inputs:
+  #     filename: python
 
-      arguments: '-m pip install --upgrade pip'
+  #     arguments: '-m pip install --upgrade pip'
 
 
-  - task: CmdLine@1
-    displayName: 'pip install requirements'
-    inputs:
-      filename: python
+  # - task: CmdLine@1
+  #   displayName: 'pip install requirements'
+  #   inputs:
+  #     filename: python
 
-      arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
+  #     arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
 
-  - task: CmdLine@1
-    displayName: 'pip install ptvsd'
-    inputs:
-      filename: python
+  # - task: CmdLine@1
+  #   displayName: 'pip install ptvsd'
+  #   inputs:
+  #     filename: python
 
-      arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
+  #     arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
 
 
-  - script: |
-      set -e
-      /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
-      disown -ar
-    displayName: 'Start xvfb'
-    condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
+  # - script: |
+  #     set -e
+  #     /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+  #     disown -ar
+  #   displayName: 'Start xvfb'
+  #   condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
 
-  - task: Npm@1
-    displayName: 'run $(TestSuiteName)'
-    inputs:
-      command: custom
+  # - task: Npm@1
+  #   displayName: 'run $(TestSuiteName)'
+  #   inputs:
+  #     command: custom
 
-      verbose: true
+  #     verbose: true
 
-      customCommand: 'run $(TestSuiteName)'
-    env:
-      DISPLAY: :10
+  #     customCommand: 'run $(TestSuiteName)'
+  #   env:
+  #     DISPLAY: :10
 
 
-  - task: PythonScript@0
-    displayName: 'Ensure test results'
-    inputs:
-      scriptSource: inline
-      failOnStderr: true
-      script: |
-        from __future__ import print_function
+  # - task: PythonScript@0
+  #   displayName: 'Ensure test results'
+  #   inputs:
+  #     scriptSource: inline
+  #     failOnStderr: true
+  #     script: |
+  #       from __future__ import print_function
 
-        import os
-        import sys
+  #       import os
+  #       import sys
 
 
-        test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
+  #       test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
 
-        if not os.path.exists(test_logfile):
-            print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
-            print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
+  #       if not os.path.exists(test_logfile):
+  #           print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
+  #           print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
 
 
-  - task: PublishTestResults@2
-    displayName: 'Publish JUnit test results'
-    inputs:
-      testResultsFiles: '**/junit-report.xml'
+  # - task: PublishTestResults@2
+  #   displayName: 'Publish JUnit test results'
+  #   inputs:
+  #     testResultsFiles: '**/junit-report.xml'
 
-      searchFolder: '$(Build.ArtifactStagingDirectory)'
+  #     searchFolder: '$(Build.ArtifactStagingDirectory)'
 
-      testRunTitle: '$(Platform) - $(BuildNumber) $(TestSuiteName)'
+  #     testRunTitle: '$(Platform) - $(BuildNumber) $(TestSuiteName)'
 
-      buildPlatform: '$(Platform)'
+  #     buildPlatform: '$(Platform)'
 
-      buildConfiguration: '$(TestSuiteName)'
+  #     buildConfiguration: '$(TestSuiteName)'
 
-      condition: always()
+  #     condition: always()
 
-  - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'
-    displayName: 'publish codecov'
-    continueOnError: true
-    condition: always()
+  # - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'
+  #   displayName: 'publish codecov'
+  #   continueOnError: true
+  #   condition: always()

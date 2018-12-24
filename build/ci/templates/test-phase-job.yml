@@ -1,0 +1,39 @@
+parameters:
+  name: 'Unit_Test_Run'
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  PoolName: 'Hosted Ubuntu 1604'
+  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+  MOCHA_REPORTER_JUNIT: true
+  UploadBinary: false
+  AzureStorageAccountName: 'vscodepythonci'
+  AzureStorageContainerName: 'vscode-python-ci'
+  TestSuiteName: 'testSingleWorkspace'
+  BuildNumber: '$(Build.BuildNumber)'
+  Platform: 'macOS'
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    name: ${{ parameters.PoolName }}
+
+  variables:
+    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
+    nodeVersion: ${{ parameters.NodeVersion }}
+    npmVersion: ${{ parameters.NpmVersion }}
+    pythonVersion: ${{ parameters.PythonVersion }}
+    mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
+    MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
+    uploadBinary: ${{ parameters.UploadBinary }}
+    azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
+    azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
+    plaform: ${{ parameters.Platform }}
+    testSuiteName: ${{ parameters.TestSuiteName }}
+    buildNumber: ${{ parameters.BuildNumber }}
+
+  steps:
+  - template: templates/test-phase.yml
