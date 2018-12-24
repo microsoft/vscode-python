@@ -4,11 +4,10 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { commands, Position, Range, Selection, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, Uri, window, workspace } from 'vscode';
-import { PythonSettings } from '../../client/common/configSettings';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
-import { isPythonVersion } from '../common';
+import { getExtensionSettings, isPythonVersion } from '../common';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
@@ -55,7 +54,7 @@ suite('Variable Extraction', () => {
     }
 
     async function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
-        const pythonSettings = PythonSettings.getInstance(Uri.file(refactorTargetFile));
+        const pythonSettings = getExtensionSettings(Uri.file(refactorTargetFile));
         const rangeOfTextToExtract = new Range(startPos, endPos);
         const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
 

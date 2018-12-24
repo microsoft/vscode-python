@@ -61,7 +61,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
+import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
@@ -133,7 +133,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-    sendStartupTelemetry(activationDeferred.promise, serviceContainer).ignoreErrors();
+    sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
@@ -189,8 +189,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
-    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
-        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfig));
+    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
+        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
@@ -279,7 +279,9 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
 }
-async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
+
+// tslint:disable-next-line:no-any
+async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceContainer: IServiceContainer) {
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;

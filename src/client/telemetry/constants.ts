@@ -29,6 +29,7 @@ export const EXECUTION_DJANGO = 'EXECUTION_DJANGO';
 export const DEBUGGER = 'DEBUGGER';
 export const DEBUGGER_ATTACH_TO_CHILD_PROCESS = 'DEBUGGER.ATTACH_TO_CHILD_PROCESS';
 export const DEBUGGER_PERFORMANCE = 'DEBUGGER.PERFORMANCE';
+export const DEBUGGER_CONFIGURATION_PROMPTS = 'DEBUGGER.CONFIGURATION.PROMPTS';
 export const UNITTEST_STOP = 'UNITTEST.STOP';
 export const UNITTEST_RUN = 'UNITTEST.RUN';
 export const UNITTEST_DISCOVER = 'UNITTEST.DISCOVER';
@@ -51,6 +52,5 @@ export const PLATFORM_INFO = 'PLATFORM.INFO';
 
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
-    FailedToGetLinuxInfo = 'FailedToGetLinuxInfo',
     FailedToDetermineOS = 'FailedToDetermineOS'
 }

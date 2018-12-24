@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
 import { Disposable } from 'vscode';
-import { Architecture, OSDistro, OSType } from '../utils/platform';
+import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
     HKCU, HKLM
@@ -28,7 +28,6 @@ export interface IPlatformService {
     readonly isMac: boolean;
     readonly isLinux: boolean;
     readonly is64bit: boolean;
-    getOSDistro(): Promise<OSDistro>;
     getVersion(): Promise<SemVer>;
 }
 

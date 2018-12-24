@@ -3,7 +3,7 @@
 'use strict';
 
 import { TerminalShellType } from '../common/terminal/types';
-import { OSDistro } from '../common/utils/platform';
+import { DebugConfigurationType } from '../debugger/extension/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { PlatformErrors } from './constants';
@@ -64,6 +64,10 @@ export type DebuggerTelemetry = {
     showReturnValue: boolean;
     pyramid: boolean;
     subProcess: boolean;
+    watson: boolean;
+    pyspark: boolean;
+    gevent: boolean;
+    scrapy: boolean;
 };
 export type DebuggerPerformanceTelemetry = {
     duration: number;
@@ -73,7 +77,7 @@ export type TestRunTelemetry = {
     tool: 'nosetest' | 'pytest' | 'unittest';
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
     debugging: boolean;
-    triggeredBy: 'ui' | 'codelens' | 'commandpalette' | 'auto';
+    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto';
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
@@ -92,6 +96,13 @@ export type TerminalTelemetry = {
     triggeredBy?: 'commandpalette';
     pythonVersion?: string;
     interpreterType?: InterpreterType;
+};
+export type DebuggerConfigurationPromtpsTelemetry = {
+    configurationType: DebugConfigurationType;
+    autoDetectedDjangoManagePyPath?: boolean;
+    autoDetectedPyramidIniPath?: boolean;
+    autoDetectedFlaskAppPyPath?: boolean;
+    manuallyEnteredAValue?: boolean;
 };
 export type DiagnosticsAction = {
     /**
@@ -127,7 +138,6 @@ export type ImportNotebook = {
 };
 
 export type Platform = {
-    distro?: OSDistro;
     failureType?: PlatformErrors;
     osVersion?: string;
 };
@@ -149,4 +159,5 @@ export type TelemetryProperties = FormatTelemetry
     | DiagnosticsMessages
     | ImportNotebook
     | Platform
-    | LanguageServePlatformSupported;
+    | LanguageServePlatformSupported
+    | DebuggerConfigurationPromtpsTelemetry;

@@ -1,18 +1,21 @@
 import { inject, injectable } from 'inversify';
-import { CancellationToken, CodeLens, Command, Event, Position, Range, TextDocument, Uri, workspace } from 'vscode';
-import * as settings from '../../common/configSettings';
-import { IS_WINDOWS } from '../../common/platform/constants';
+import { CancellationToken, CodeLens, Command, Event, Position, Range, TextDocument, Uri } from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { IServiceContainer } from '../../ioc/types';
+import { IConfigurationService } from '../../common/types';
 import { IShebangCodeLensProvider } from '../contracts';
 
 @injectable()
 export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
-    // tslint:disable-next-line:no-any
-    public onDidChangeCodeLenses: Event<void> = workspace.onDidChangeConfiguration as any as Event<void>;
-    private readonly processServiceFactory: IProcessServiceFactory;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+    public readonly onDidChangeCodeLenses: Event<void>;
+    constructor(@inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService) {
+        // tslint:disable-next-line:no-any
+        this.onDidChangeCodeLenses = workspaceService.onDidChangeConfiguration as any as Event<void>;
+
     }
     public async detectShebang(document: TextDocument): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
@@ -28,14 +31,13 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         const pythonPath = await this.getFullyQualifiedPathToInterpreter(shebang, document.uri);
         return typeof pythonPath === 'string' && pythonPath.length > 0 ? pythonPath : undefined;
     }
-    public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
-        const codeLenses = await this.createShebangCodeLens(document);
-        return Promise.resolve(codeLenses);
+    public async provideCodeLenses(document: TextDocument, _token?: CancellationToken): Promise<CodeLens[]> {
+        return this.createShebangCodeLens(document);
     }
     private async getFullyQualifiedPathToInterpreter(pythonPath: string, resource: Uri) {
         let cmdFile = pythonPath;
         let args = ['-c', 'import sys;print(sys.executable)'];
-        if (pythonPath.indexOf('bin/env ') >= 0 && !IS_WINDOWS) {
+        if (pythonPath.indexOf('bin/env ') >= 0 && !this.platformService.isWindows) {
             // In case we have pythonPath as '/usr/bin/env python'.
             const parts = pythonPath.split(' ').map(part => part.trim()).filter(part => part.length > 0);
             cmdFile = parts.shift()!;
@@ -48,12 +50,10 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     }
     private async createShebangCodeLens(document: TextDocument) {
         const shebang = await this.detectShebang(document);
-        const pythonPath = settings.PythonSettings.getInstance(document.uri).pythonPath;
-        const resolvedPythonPath = await this.getFullyQualifiedPathToInterpreter(pythonPath, document.uri);
-        if (!shebang || shebang === resolvedPythonPath) {
+        const pythonPath = this.configurationService.getSettings(document.uri).pythonPath;
+        if (!shebang || shebang === pythonPath) {
             return [];
         }
-
         const firstLine = document.lineAt(0);
         const startOfShebang = new Position(0, 0);
         const endOfShebang = new Position(0, firstLine.text.length - 1);

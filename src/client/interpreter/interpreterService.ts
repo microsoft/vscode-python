@@ -1,12 +1,14 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
+import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
@@ -126,44 +128,54 @@ export class InterpreterService implements Disposable, IInterpreterService {
             }
         }
 
-        let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
-        fileHash = fileHash ? fileHash : '';
+        const fileHash = await this.fs.getFileHash(pythonPath).catch(() => '') || '';
         const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v5`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }
 
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        const interpreters = await this.getInterpreters(resource);
-        let interpreterInfo = interpreters.find(i => fs.arePathsSame(i.path, pythonPath));
-        if (!interpreterInfo) {
-            const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-            const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-            const [info, type] = await Promise.all([
-                interpreterHelper.getInterpreterInformation(pythonPath),
-                virtualEnvManager.getEnvironmentType(pythonPath)
-            ]);
-            if (!info) {
-                return;
+
+        // Don't want for all interpreters are collected.
+        // Try to collect the infromation manually, that's faster.
+        // Get from which ever comes first.
+        const option1 = (async () => {
+            const result = this.collectInterpreterDetails(pythonPath, resource);
+            await sleep(1000); // let the other option complete within 1s if possible.
+            return result;
+        })();
+
+        // This is the preferred approach, hence the delay in option 1.
+        const option2 = (async () => {
+            const interpreters = await this.getInterpreters(resource);
+            const found = interpreters.find(i => fs.arePathsSame(i.path, pythonPath));
+            if (found) {
+                // Cache the interpreter info, only if we get the data from interpretr list.
+                // tslint:disable-next-line:no-any
+                (found as any).__store = true;
+                return found;
             }
-            const details: Partial<PythonInterpreter> = {
-                ...(info as PythonInterpreter),
-                path: pythonPath,
-                type: type
-            };
+            // Use option1 as a fallback.
+            // tslint:disable-next-line:no-any
+            return option1 as any as PythonInterpreter;
+        })();
 
-            const envName = type === InterpreterType.Unknown ? undefined : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
-            interpreterInfo = {
-                ...(details as PythonInterpreter),
-                envName
-            };
-            interpreterInfo.displayName = await this.getDisplayName(interpreterInfo, resource);
+        const interpreterInfo = await Promise.race([option2, option1]) as PythonInterpreter;
+
+        // tslint:disable-next-line:no-any
+        if (interpreterInfo && (interpreterInfo as any).__store) {
+            await store.updateValue({ ...interpreterInfo, path: pythonPath, fileHash });
+        } else {
+            // If we got information from option1, then when option2 finishes cache it for later use (ignoring erors);
+            option2.then(info => {
+                // tslint:disable-next-line:no-any
+                if (info && (info as any).__store) {
+                    return store.updateValue({ ...info, path: pythonPath, fileHash });
+                }
+            }).ignoreErrors();
         }
-
-        await store.updateValue({ ...interpreterInfo, path: pythonPath, fileHash });
         return interpreterInfo;
     }
-
     /**
      * Gets the display name of an interpreter.
      * The format is `Python <Version> <bitness> (<env name>: <env type>)`
@@ -173,11 +185,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @memberof InterpreterService
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
-        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
-        if (store.value) {
-            return store.value;
+        const fileHash = (info.path ? await this.fs.getFileHash(info.path).catch(() => '') : '') || '';
+        const store = this.persistentStateFactory.createGlobalPersistentState<{ fileHash: string; displayName: string }>(`${info.path}${fileHash}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
+        if (store.value && store.value.fileHash === fileHash && store.value.displayName) {
+            return store.value.displayName;
         }
-
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 
@@ -211,7 +223,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         // If dealing with cached entry, then do not store the display name in cache.
         if (!info.cachedEntry) {
-            await store.updateValue(displayName);
+            await store.updateValue({ displayName, fileHash });
         }
 
         return displayName;
@@ -242,5 +254,29 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
         interpreterDisplay.refresh()
             .catch(ex => console.error('Python Extension: display.refresh', ex));
+    }
+    private async collectInterpreterDetails(pythonPath: string, resource: Uri | undefined) {
+        const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+        const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
+        const [info, type] = await Promise.all([
+            interpreterHelper.getInterpreterInformation(pythonPath),
+            virtualEnvManager.getEnvironmentType(pythonPath)
+        ]);
+        if (!info) {
+            return;
+        }
+        const details: Partial<PythonInterpreter> = {
+            ...(info as PythonInterpreter),
+            path: pythonPath,
+            type: type
+        };
+
+        const envName = type === InterpreterType.Unknown ? undefined : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
+        const pthonInfo = {
+            ...(details as PythonInterpreter),
+            envName
+        };
+        pthonInfo.displayName = await this.getDisplayName(pthonInfo, resource);
+        return pthonInfo;
     }
 }

@@ -32,9 +32,11 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             await this.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
         }
 
-        const generators = await Promise.all(this.tagGenerators.map(async generator => {
-            const tagFileExists = await this.fs.fileExists(generator.tagFilePath);
-            return tagFileExists ? generator : undefined;
+        const generators: Generator[] = [];
+        await Promise.all(this.tagGenerators.map(async generator => {
+            if (await this.fs.fileExists(generator.tagFilePath)) {
+                generators.push(generator);
+            }
         }));
 
         const promises = generators

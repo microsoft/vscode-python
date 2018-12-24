@@ -39,7 +39,7 @@ Output for `Python` in the `Output` panel (`View`→`Output`, change the drop-do
 XXX
 ```   
 
-Output from `Console` under the `Developer Tools` panel (toggle Developer Tools on under `Help`)
+Output from `Console` under the `Developer Tools` panel (toggle Developer Tools on under `Help`; turn on source maps to make any tracebacks be useful by running `Enable source map support for extension debugging`)
 
 ```
 XXX

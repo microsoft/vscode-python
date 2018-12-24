@@ -7,12 +7,14 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import { OSType } from '../../client/common/utils/platform';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
+import { CurrentPathService, PythonInPathCommandProvider } from '../../client/interpreter/locators/services/currentPathService';
+import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -25,6 +27,8 @@ suite('Interpreters CurrentPath Service', () => {
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let currentPathService: CurrentPathService;
     let persistentState: TypeMoq.IMock<IPersistentState<PythonInterpreter[]>>;
+    let platformService: TypeMoq.IMock<IPlatformService>;
+    let pythonInPathCommandProvider: IPythonInPathCommandProvider;
     setup(async () => {
         processService = TypeMoq.Mock.ofType<IProcessService>();
         virtualEnvironmentManager = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
@@ -38,6 +42,7 @@ suite('Interpreters CurrentPath Service', () => {
         persistentState.setup(p => p.value).returns(() => undefined as any);
         persistentState.setup(p => p.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        platformService = TypeMoq.Mock.ofType<IPlatformService>();
         persistentStateFactory.setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => persistentState.object);
         const procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
@@ -48,33 +53,38 @@ suite('Interpreters CurrentPath Service', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configurationService.object);
-
-        currentPathService = new CurrentPathService(interpreterHelper.object, procServiceFactory.object, serviceContainer.object);
+        pythonInPathCommandProvider = new PythonInPathCommandProvider(platformService.object);
+        currentPathService = new CurrentPathService(interpreterHelper.object, procServiceFactory.object,
+            pythonInPathCommandProvider, serviceContainer.object);
     });
 
-    test('Interpreters that do not exist on the file system are not excluded from the list', async () => {
-        // Specific test for 1305
-        const version = 'mockVersion';
-        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
+    [true, false].forEach(isWindows => {
+        test(`Interpreters that do not exist on the file system are not excluded from the list (${isWindows ? 'windows' : 'not windows'})`, async () => {
+            // Specific test for 1305
+            const version = 'mockVersion';
+            platformService.setup(p => p.isWindows).returns(() => isWindows);
+            platformService.setup(p => p.osType).returns(() => isWindows ? OSType.Windows : OSType.Linux);
+            interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
 
-        const execArgs = ['-c', 'import sys;print(sys.executable)'];
-        pythonSettings.setup(p => p.pythonPath).returns(() => 'root:Python');
-        processService.setup(p => p.exec(TypeMoq.It.isValue('root:Python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/root:python' })).verifiable(TypeMoq.Times.once());
-        processService.setup(p => p.exec(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python1' })).verifiable(TypeMoq.Times.once());
-        processService.setup(p => p.exec(TypeMoq.It.isValue('python2'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python2' })).verifiable(TypeMoq.Times.once());
-        processService.setup(p => p.exec(TypeMoq.It.isValue('python3'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python3' })).verifiable(TypeMoq.Times.once());
+            const execArgs = ['-c', 'import sys;print(sys.executable)'];
+            pythonSettings.setup(p => p.pythonPath).returns(() => 'root:Python');
+            processService.setup(p => p.exec(TypeMoq.It.isValue('root:Python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/root:python' })).verifiable(TypeMoq.Times.once());
+            processService.setup(p => p.exec(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python1' })).verifiable(TypeMoq.Times.once());
+            processService.setup(p => p.exec(TypeMoq.It.isValue('python2'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python2' })).verifiable(TypeMoq.Times.once());
+            processService.setup(p => p.exec(TypeMoq.It.isValue('python3'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python3' })).verifiable(TypeMoq.Times.once());
 
-        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/root:python'))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
-        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python1'))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
-        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python2'))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
-        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python3'))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/root:python'))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python1'))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python2'))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python3'))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
-        const interpreters = await currentPathService.getInterpreters();
-        processService.verifyAll();
-        fileSystem.verifyAll();
+            const interpreters = await currentPathService.getInterpreters();
+            processService.verifyAll();
+            fileSystem.verifyAll();
 
-        expect(interpreters).to.be.of.length(2);
-        expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: InterpreterType.Unknown });
-        expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: InterpreterType.Unknown });
+            expect(interpreters).to.be.of.length(2);
+            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: InterpreterType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: InterpreterType.Unknown });
+        });
     });
 });

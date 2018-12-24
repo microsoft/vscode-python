@@ -15,6 +15,8 @@ import { ILintMessage } from './types';
 const pylintrc = 'pylintrc';
 const dotPylintrc = '.pylintrc';
 
+const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>[\\w-]+):(?<message>.*)\\r?(\\n|$)';
+
 export class Pylint extends BaseLinter {
     private fileSystem: IFileSystem;
     private platformService: IPlatformService;
@@ -67,12 +69,12 @@ export class Pylint extends BaseLinter {
             ];
         }
         const args = [
-            '--msg-template=\'{line},{column},{category},{msg_id}:{msg}\'',
+            '--msg-template=\'{line},{column},{category},{symbol}:{msg}\'',
             '--reports=n',
             '--output-format=text',
             uri.fsPath
         ];
-        const messages = await this.run(minArgs.concat(args), document, cancellation);
+        const messages = await this.run(minArgs.concat(args), document, cancellation, REGEX);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.pylintCategorySeverity);
         });

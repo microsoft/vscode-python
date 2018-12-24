@@ -5,7 +5,6 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
 import { PipEnvInstaller } from '../../client/common/installer/pipEnvInstaller';
@@ -25,7 +24,7 @@ import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils
 import { Architecture } from '../../client/common/utils/platform';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { PYTHON_PATH, rootWorkspaceUri } from '../common';
+import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -119,7 +118,7 @@ suite('Module Installer', () => {
             await configService.updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
         }
         async function getCurrentPythonPath(): Promise<string> {
-            const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;
+            const pythonPath = getExtensionSettings(workspaceUri).pythonPath;
             if (path.basename(pythonPath) === pythonPath) {
                 const pythonProc = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: workspaceUri });
                 return pythonProc.getExecutablePath().catch(() => pythonPath);

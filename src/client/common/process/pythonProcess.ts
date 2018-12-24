@@ -7,6 +7,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
+import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
 import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
@@ -33,7 +34,13 @@ export class PythonExecutionService implements IPythonExecutionService {
                     .then(output => output.stdout.trim())
             ]);
 
-            const json = JSON.parse(jsonValue) as { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+            let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+            try {
+                json = JSON.parse(jsonValue);
+            } catch (ex) {
+                traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
+                return;
+            }
             const version_info = json.versionInfo;
             // Exclude PII from `version_info` to ensure we don't send this up via telemetry.
             for (let index = 0; index < 3; index += 1) {
@@ -53,7 +60,7 @@ export class PythonExecutionService implements IPythonExecutionService {
                 sysPrefix: json.sysPrefix
             };
         } catch (ex) {
-            console.error(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
+            traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }
     }
     public async getExecutablePath(): Promise<string> {

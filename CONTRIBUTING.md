@@ -85,7 +85,7 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 
 ```js
     "args": [
-        "timeout=60000",
+        "--timeout=60000",
         "--grep=[The suite name of your unit test file]"
     ],
 ```

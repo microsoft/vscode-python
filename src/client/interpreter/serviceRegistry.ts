@@ -46,7 +46,7 @@ import { InterpreterLocatorProgressService } from './locators/progressService';
 import { CondaEnvFileService } from './locators/services/condaEnvFileService';
 import { CondaEnvService } from './locators/services/condaEnvService';
 import { CondaService } from './locators/services/condaService';
-import { CurrentPathService } from './locators/services/currentPathService';
+import { CurrentPathService, PythonInPathCommandProvider } from './locators/services/currentPathService';
 import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from './locators/services/globalVirtualEnvService';
 import { InterpreterWatcherBuilder } from './locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './locators/services/KnownPathsService';
@@ -54,6 +54,7 @@ import { PipEnvService } from './locators/services/pipEnvService';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './locators/services/workspaceVirtualEnvWatcherService';
+import { IPythonInPathCommandProvider } from './locators/types';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
@@ -64,6 +65,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
+    serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
 
     serviceManager.add<IInterpreterWatcher>(IInterpreterWatcher, WorkspaceVirtualEnvWatcherService, WORKSPACE_VIRTUAL_ENV_SERVICE);
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);

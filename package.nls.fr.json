@@ -34,7 +34,7 @@
     "python.snippet.launch.externalTerminal.description": "Déboguer un programme Python avec une console externe",
     "python.snippet.launch.django.label": "Python : Django",
     "python.snippet.launch.django.description": "Déboguer une application Django",
-    "python.snippet.launch.flask.label": "Python : Flask (0.11.x ou supérieur)",
+    "python.snippet.launch.flask.label": "Python : Flask",
     "python.snippet.launch.flask.description": "Déboguer une application Flask",
     "python.snippet.launch.flaskOld.label": "Python : Flask (0.10.x ou antérieur)",
     "python.snippet.launch.flaskOld.description": "Déboguer une application Flask (0.10.x ou antérieur)",

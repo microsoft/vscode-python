@@ -1,10 +1,10 @@
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { PythonSettings } from '../../client/common/configSettings';
 import { IConfigurationService, IFormattingSettings, Product } from '../../client/common/types';
 import * as EnumEx from '../../client/common/utils/enum';
 import { FormatterHelper } from '../../client/formatters/helper';
 import { FormatterId } from '../../client/formatters/types';
+import { getExtensionSettings } from '../common';
 import { initialize } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -18,7 +18,7 @@ suite('Formatting - Helper', () => {
         ioc = new UnitTestIocContainer();
 
         const config = TypeMoq.Mock.ofType<IConfigurationService>();
-        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => getExtensionSettings(undefined));
 
         ioc.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         formatHelper = new FormatterHelper(ioc.serviceManager);
@@ -32,7 +32,7 @@ suite('Formatting - Helper', () => {
     });
 
     test('Ensure executable is set in Execution Info', async () => {
-        const settings = PythonSettings.getInstance();
+        const settings = getExtensionSettings(undefined);
 
         [Product.autopep8, Product.black, Product.yapf].forEach(formatter => {
             const info = formatHelper.getExecutionInfo(formatter, []);
@@ -44,7 +44,7 @@ suite('Formatting - Helper', () => {
     });
 
     test('Ensure arguments are set in Execution Info', async () => {
-        const settings = PythonSettings.getInstance();
+        const settings = getExtensionSettings(undefined);
         const customArgs = ['1', '2', '3'];
 
         [Product.autopep8, Product.black, Product.yapf].forEach(formatter => {

@@ -13,6 +13,7 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
+import { IPythonSettings } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
@@ -108,6 +109,10 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
+export function getExtensionSettings(resource: Uri | undefined): IPythonSettings {
+    const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
+    return pythonSettings.PythonSettings.getInstance(resource);
+}
 export function retryAsync(wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {

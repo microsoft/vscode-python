@@ -11,13 +11,14 @@
    - [ ] Run [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
    - [ ] Register any Python changes with [OSPO](https://opensource.microsoft.com/)
 - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) and register any changes with OSPO
-- [ ] Open pull request
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
+- [ ] Check that component governance is happy (requires beta PR to have been merged)
 
 
 # Release candidate (Monday before release)
 
 - [ ] Ensure all new features are tracked via telemetry
+- [ ] Announce a code freeze
 - [ ] Create a branch against `master` for a pull request
 - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
 - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date
@@ -36,8 +37,10 @@
 - [ ] Bump the version number to the next release in the `master` branch
   - [ ] `package.json`
   - [ ] `package-lock.json`
+- [ ] Announce the code freeze is over
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
+- [ ] Make sure component governance is happy (requires RC PR to have been merged)
 
 
 # Final (near a VS Code release)
@@ -54,9 +57,10 @@
    - Check that the "Thanks" section is up-to-date
 - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt)
    - [ ] Run [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
-   - [ ] Register any Python changes with [OSPO](https://opensource.microsoft.com/)
+   - [ ] Register any Python changes with component governance
 - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) and register any changes with OSPO
 - [ ] Merge pull request into `release`
+- [ ] Make sure component governance is happy
 
 ## Release
 
@@ -64,11 +68,11 @@
 - [ ] Generate the final `.vsix` file
 - [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
 - [ ] Upload the final `.vsix` file to the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-- [ ] Publish [documentation](https://code.visualstudio.com/docs/python/python-tutorial) [changes](https://github.com/microsoft/vscode-docs/pulls)
+- [ ] Publish [documentation changes](https://github.com/microsoft/vscode-docs/pulls)
 - [ ] Publish the [blog](http://aka.ms/pythonblog) post
 - [ ] Create a [release](https://github.com/Microsoft/vscode-python/releases) on GitHub (which creates an appropriate git tag)
 - [ ] Determine if a hotfix is needed
-- [ ] Merge `release` back into `master` (if necessary; no cherry-picks in `release` means no need to merge)
+- [ ] Merge `release` back into `master`
 
 ## Prep for the _next_ release
 - [ ] Bump the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) number to the next `alpha`
@@ -76,4 +80,4 @@
 
 ## Clean up after _this_ release
 - [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22)
-- [ ] Go through [`needs more info` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22needs+more+info%22+sort%3Aupdated-asc) and close any that have no activity for over a month
+- [ ] Go through [`needs more info` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc) and close any that have no activity for over a month

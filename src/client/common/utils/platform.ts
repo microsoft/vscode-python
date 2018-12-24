@@ -14,18 +14,3 @@ export enum OSType {
     OSX = 'OSX',
     Linux = 'Linux'
 }
-export enum OSDistro {
-    Unknown = 'Unknown',
-    // linux:
-    Ubuntu = 'Ubuntu',
-    Debian = 'Debian',
-    RHEL = 'RHEL',
-    Fedora = 'Fedora',
-    Alpine = 'Alpine',
-    CentOS = 'CentOS',
-    Oracle = 'Oracle',
-    Suse = 'Suse',
-    Gentoo = 'Gentoo',
-    Arch = 'Arch',
-    Mint = 'Mint'
-}

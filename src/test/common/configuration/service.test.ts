@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
-
-import { PythonSettings } from '../../../client/common/configSettings';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposable } from '../../../client/common/types';
+import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
@@ -21,7 +20,7 @@ suite('Configuration Service', () => {
     test('Ensure same instance of settings return',  () => {
         const workspaceUri = workspace.workspaceFolders![0].uri;
         const settings = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
-        const instanceIsSame = settings === PythonSettings.getInstance(workspaceUri);
+        const instanceIsSame = settings === getExtensionSettings(workspaceUri);
         expect(instanceIsSame).to.be.equal(true, 'Incorrect settings');
     });
 

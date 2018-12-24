@@ -149,7 +149,6 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                         })
                         .catch(ex => {
                             writeError(ex);
-                            return Promise.reject(ex);
                         });
                 } else {
                     writeSuccess(result);

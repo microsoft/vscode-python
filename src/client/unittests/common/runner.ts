@@ -1,7 +1,5 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, Uri } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
 import {
@@ -11,7 +9,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
-import { ExecutionInfo, IPythonSettings } from '../../common/types';
+import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
 import { ITestRunner, ITestsHelper, Options, TestProvider } from './types';
@@ -26,7 +24,7 @@ export class TestRunner implements ITestRunner {
 }
 
 export async function run(serviceContainer: IServiceContainer, testProvider: TestProvider, options: Options): Promise<string> {
-    const testExecutablePath = getExecutablePath(testProvider, PythonSettings.getInstance(options.workspaceFolder));
+    const testExecutablePath = getExecutablePath(testProvider, serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(options.workspaceFolder));
     const moduleName = getTestModuleName(testProvider);
     const spawnOptions = options as SpawnOptions;
     let pythonExecutionServicePromise: Promise<IPythonExecutionService>;

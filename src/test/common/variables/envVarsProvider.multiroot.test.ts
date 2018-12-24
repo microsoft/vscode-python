@@ -7,8 +7,10 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
+import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IS_WINDOWS, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
-import { IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
+import { PlatformService } from '../../../client/common/platform/platformService';
+import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
@@ -58,8 +60,8 @@ suite('Multiroot Environment Variables Provider', () => {
         const mockProcess = new MockProcess(mockVariables);
         const variablesService = new EnvironmentVariablesService(pathUtils);
         const disposables = ioc.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        const isWindows = ioc.serviceContainer.get<boolean>(IsWindows);
-        return new EnvironmentVariablesProvider(variablesService, disposables, isWindows, mockProcess);
+        const cfgService = new ConfigurationService();
+        return new EnvironmentVariablesProvider(variablesService, disposables, new PlatformService(), cfgService, mockProcess);
     }
 
     test('Custom variables should not be undefined without an env file', async () => {

@@ -101,6 +101,12 @@ export const IPathUtils = Symbol('IPathUtils');
 export interface IPathUtils {
     readonly delimiter: string;
     readonly home: string;
+    /**
+     * The platform-specific file separator. '\\' or '/'.
+     * @type {string}
+     * @memberof IPathUtils
+     */
+    readonly separator: string;
     getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
     getDisplayName(pathValue: string, cwd?: string): string;

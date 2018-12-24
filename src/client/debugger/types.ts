@@ -58,9 +58,9 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     args: string[];
     cwd?: string;
     debugOptions?: DebugOptions[];
-    env?: Object;
+    env?: { [key: string]: string | undefined };
     envFile: string;
-    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
+    console?: ConsoleType;
 }
 // tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {
@@ -71,3 +71,8 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, IKnownAttachDebugArguments, DebugConfiguration {
     type: typeof DebuggerTypeName;
 }
+
+// tslint:disable-next-line:interface-name
+export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
+
+export type ConsoleType = 'none' | 'integratedTerminal' | 'externalTerminal';

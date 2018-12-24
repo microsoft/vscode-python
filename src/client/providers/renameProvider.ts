@@ -3,10 +3,9 @@ import {
     Position, ProviderResult, RenameProvider,
     TextDocument, window, workspace, WorkspaceEdit
 } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
-import { IInstaller, IOutputChannel, Product } from '../common/types';
+import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { captureTelemetry } from '../telemetry';
@@ -18,8 +17,10 @@ type RenameResponse = {
 
 export class PythonRenameProvider implements RenameProvider {
     private readonly outputChannel: OutputChannel;
+    private readonly configurationService: IConfigurationService;
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     @captureTelemetry(REFACTOR_RENAME)
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
@@ -50,7 +51,7 @@ export class PythonRenameProvider implements RenameProvider {
             workspaceFolder = workspace.workspaceFolders[0];
         }
         const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-        const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
+        const pythonSettings = this.configurationService.getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
         return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {

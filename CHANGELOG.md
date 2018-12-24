@@ -1,6 +1,16 @@
 # Changelog
 
-## 2018.12.0-beta (10 Dec 2018)
+## 2018.12.1 (14 Dec 2018)
+
+### Fixes
+
+1. Lowering threshold for Language Server support on a platform.
+   ([#3693](https://github.com/Microsoft/vscode-python/issues/3693))
+1. Fix bug affecting multiple linters used in a workspace.
+   (thanks [Ilia Novoselov](https://github.com/nullie))
+   ([#3700](https://github.com/Microsoft/vscode-python/issues/3700))
+
+## 2018.12.0 (13 Dec 2018)
 
 ### Thanks
 
@@ -55,41 +65,69 @@ part of!
 
 ### Enhancements
 
+1. Load the configured language server in the background during extension activation.
+   ([#3020](https://github.com/Microsoft/vscode-python/issues/3020))
 1. Display progress indicator when activating the language server and validating user setup.
    ([#3082](https://github.com/Microsoft/vscode-python/issues/3082))
-1. Allow for connection to a remote Jupyter server
+1. Allow for connection to a remote `Jupyter` server.
    ([#3316](https://github.com/Microsoft/vscode-python/issues/3316))
+1. Allow users to request the 'Install missing Linter' prompt to not show again for `pylint`.
+   ([#3349](https://github.com/Microsoft/vscode-python/issues/3349))
+1. Add the `Jupyter` server URI to the interactive window info cell.
+   ([#3668](https://github.com/Microsoft/vscode-python/issues/3668))
 
 ### Fixes
 
-1. Updated logic used to determine whether the Language Server is supported.
+1. Updated logic used to determine whether the Microsoft Python Language Server is supported.
    ([#2729](https://github.com/Microsoft/vscode-python/issues/2729))
-1. Add exporting from a python file (with and without output)
+1. Add export from the Python interactive window as a notebook file.
    ([#3109](https://github.com/Microsoft/vscode-python/issues/3109))
-1. Activate conda prior to running jupyter for the python interactive window.
+1. Fix issue with the `unittest` runner where test suite/module initialization methods were not for a single test method.
+   (thanks [Alex Yu](https://github.com/alexander-yu))
+   ([#3295](https://github.com/Microsoft/vscode-python/issues/3295))
+1. Activate `conda` prior to running `jupyter` for the Python interactive window.
    ([#3341](https://github.com/Microsoft/vscode-python/issues/3341))
 1. Respect value defined for `pylintEnabled` in user `settings.json`.
    ([#3388](https://github.com/Microsoft/vscode-python/issues/3388))
-1. Run in the workspace directory by default for the Interactive Windows. Also when importing or exporting notebook files add a cd command to fix relative paths.
+1. Expand variables in `pythonPath` before validating it.
+   ([#3392](https://github.com/Microsoft/vscode-python/issues/3392))
+1. Clear cached display name of Python if interpreter changes.
+   ([#3406](https://github.com/Microsoft/vscode-python/issues/3406))
+1. Run in the workspace directory by default for the interactive window.
    ([#3407](https://github.com/Microsoft/vscode-python/issues/3407))
-1. Create a default config when starting a local jupyter server to resolve potential conflicts with user's custom configurations.
+1. Create a default config when starting a local `Jupyter` server to resolve potential conflicts with user's custom configuration.
    ([#3475](https://github.com/Microsoft/vscode-python/issues/3475))
-1. Add support for running Python Interactive commands from the command palette
+1. Add support for running Python interactive commands from the command palette.
    ([#3476](https://github.com/Microsoft/vscode-python/issues/3476))
-1. Handle interrupt crashing the kernel and provide a timeout for interrupting in case interrupts are not handled.
+1. Handle interrupts crashing the kernel.
    ([#3511](https://github.com/Microsoft/vscode-python/issues/3511))
-1. Revert ctags argument from `--extras` to `--extra`.
+1. Revert `ctags` argument from `--extras` to `--extra`.
    ([#3517](https://github.com/Microsoft/vscode-python/issues/3517))
-1. Fix problems with jupyter startup related to custom configurations.
+1. Fix problems with `jupyter` startup related to custom configurations.
    ([#3533](https://github.com/Microsoft/vscode-python/issues/3533))
-1. Fix crash when kernelspec is missing path or language
+1. Fix crash when `kernelspec` is missing path or language.
    ([#3561](https://github.com/Microsoft/vscode-python/issues/3561))
+1. Update the Microsoft Python Language Server to 0.1.72/[2018.12.1](https://github.com/Microsoft/python-language-server/releases/tag/2018.12.1) ([#3657](https://github.com/Microsoft/vscode-python/issues/3657)):
+   * Properly resolve namespace packages and relative imports.
+   * `Go to Definition` now supports namespace packages.
+   * Fixed `null` reference exceptions.
+   * Fixed erroneously reporting `None`, `True`, and `False` as undefined.
+
 
 ### Code Health
 
 1. Pin python dependencies bundled with the extension in a `requirements.txt` file.
    ([#2965](https://github.com/Microsoft/vscode-python/issues/2965))
-
+1. Remove scripts that bundled the extension using the old way, without webpack.
+   ([#3479](https://github.com/Microsoft/vscode-python/issues/3479))
+1. Fix environment variable token in Azure DevOps YAML.
+   ([#3630](https://github.com/Microsoft/vscode-python/issues/3630))
+1. Add missing imports and enable functional tests.
+   ([#3649](https://github.com/Microsoft/vscode-python/issues/3649))
+1. Enable code coverage for unit tests and functional tests.
+   ([#3650](https://github.com/Microsoft/vscode-python/issues/3650))
+1. Add logging for improved diagnostics.
+   ([#3460](https://github.com/Microsoft/vscode-python/issues/3460))
 
 ## 2018.11.0 (29 Nov 2018)
 

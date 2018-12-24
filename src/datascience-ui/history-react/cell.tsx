@@ -44,7 +44,7 @@ export class Cell extends React.Component<ICellProps> {
 
     public render() {
         if (this.props.cellVM.cell.data.cell_type === 'sys_info') {
-            return <SysInfo theme={this.props.theme} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
+            return <SysInfo theme={this.props.theme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
         } else {
             return this.renderNormalCell();
         }

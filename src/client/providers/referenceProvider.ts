@@ -30,16 +30,19 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
     }
 
     @captureTelemetry(REFERENCE)
-    public provideReferences(document: vscode.TextDocument, position: vscode.Position, context: vscode.ReferenceContext, token: vscode.CancellationToken): Thenable<vscode.Location[]> {
+    public async provideReferences(document: vscode.TextDocument, position: vscode.Position, _context: vscode.ReferenceContext, token: vscode.CancellationToken): Promise<vscode.Location[] | undefined> {
         const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
-            return Promise.resolve(null);
+            return;
         }
         if (position.character <= 0) {
-            return Promise.resolve(null);
+            return;
         }
 
         const range = document.getWordRangeAtPosition(position);
+        if (!range) {
+            return;
+        }
         const columnIndex = range.isEmpty ? position.character : range.end.character;
         const cmd: proxy.ICommand<proxy.IReferenceResult> = {
             command: proxy.CommandType.Usages,
@@ -52,8 +55,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             cmd.source = document.getText();
         }
 
-        return this.jediFactory.getJediProxyHandler<proxy.IReferenceResult>(document.uri).sendCommand(cmd, token).then(data => {
-            return PythonReferenceProvider.parseData(data);
-        });
+        const data = await this.jediFactory.getJediProxyHandler<proxy.IReferenceResult>(document.uri).sendCommand(cmd, token);
+        return data ? PythonReferenceProvider.parseData(data) : undefined;
     }
 }

@@ -51,7 +51,7 @@ class MockJupyterServer implements INotebookServer {
         this.kernelSpec = kernelSpec;
 
         // Validate connection info and kernel spec
-        if (conninfo.baseUrl && /[a-z,A-Z,0-9,-,.,_]+/.test(kernelSpec.name)) {
+        if (conninfo.baseUrl && kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(kernelSpec.name)) {
             return Promise.resolve();
         }
         return Promise.reject('invalid server startup');
@@ -79,6 +79,9 @@ class MockJupyterServer implements INotebookServer {
         throw new Error('Method not implemented');
     }
     public setInitialDirectory(directory: string): Promise<void> {
+        throw new Error('Method not implemented');
+    }
+    public getConnectionInfo(): IConnection | undefined {
         throw new Error('Method not implemented');
     }
     public async shutdown() {

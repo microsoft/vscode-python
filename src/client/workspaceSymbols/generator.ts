@@ -1,9 +1,9 @@
-import * as fs from 'fs';
 import * as path from 'path';
-import { Disposable, OutputChannel, Uri, window } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
+import { Disposable, OutputChannel, Uri } from 'vscode';
+import { IApplicationShell } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
-import { IPythonSettings } from '../common/types';
+import { IConfigurationService, IPythonSettings } from '../common/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { captureTelemetry } from '../telemetry';
 import { WORKSPACE_SYMBOLS_BUILD } from '../telemetry/constants';
@@ -18,11 +18,15 @@ export class Generator implements Disposable {
     public get enabled(): boolean {
         return this.pythonSettings.workspaceSymbols.enabled;
     }
-    constructor(public readonly workspaceFolder: Uri, private readonly output: OutputChannel,
-        private readonly processServiceFactory: IProcessServiceFactory) {
+    constructor(public readonly workspaceFolder: Uri,
+        private readonly output: OutputChannel,
+        private readonly appShell: IApplicationShell,
+        private readonly fs: IFileSystem,
+        private readonly processServiceFactory: IProcessServiceFactory,
+        configurationService: IConfigurationService) {
         this.disposables = [];
         this.optionsFile = path.join(EXTENSION_ROOT_DIR, 'resources', 'ctagOptions');
-        this.pythonSettings = PythonSettings.getInstance(workspaceFolder);
+        this.pythonSettings = configurationService.getSettings(workspaceFolder);
     }
 
     public dispose() {
@@ -41,11 +45,10 @@ export class Generator implements Disposable {
         return [`--options=${this.optionsFile}`, '--languages=Python'].concat(excludes);
     }
     @captureTelemetry(WORKSPACE_SYMBOLS_BUILD)
-    private generateTags(source: { directory?: string; file?: string }): Promise<void> {
+    private async generateTags(source: { directory?: string; file?: string }): Promise<void> {
         const tagFile = path.normalize(this.pythonSettings.workspaceSymbols.tagFilePath);
         const cmd = this.pythonSettings.workspaceSymbols.ctagsPath;
         const args = this.buildCmdArgs();
-
         let outputFile = tagFile;
         if (source.file && source.file.length > 0) {
             source.directory = path.dirname(source.file);
@@ -55,34 +58,38 @@ export class Generator implements Disposable {
             outputFile = path.basename(outputFile);
         }
         const outputDir = path.dirname(outputFile);
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir);
+        if (!await this.fs.directoryExists(outputDir)) {
+            await this.fs.createDirectory(outputDir);
         }
         args.push('-o', outputFile, '.');
         this.output.appendLine(`${'-'.repeat(10)}Generating Tags${'-'.repeat(10)}`);
         this.output.appendLine(`${cmd} ${args.join(' ')}`);
         const promise = new Promise<void>(async (resolve, reject) => {
-            const processService = await this.processServiceFactory.create();
-            const result = processService.execObservable(cmd, args, { cwd: source.directory });
-            let errorMsg = '';
-            result.out.subscribe(output => {
-                if (output.source === 'stderr') {
-                    errorMsg += output.out;
-                }
-                this.output.append(output.out);
-            },
-                reject,
-                () => {
-                    if (errorMsg.length > 0) {
-                        reject(new Error(errorMsg));
-                    } else {
-                        resolve();
+            try {
+                const processService = await this.processServiceFactory.create();
+                const result = processService.execObservable(cmd, args, { cwd: source.directory });
+                let errorMsg = '';
+                result.out.subscribe(output => {
+                    if (output.source === 'stderr') {
+                        errorMsg += output.out;
                     }
-                });
+                    this.output.append(output.out);
+                },
+                    reject,
+                    () => {
+                        if (errorMsg.length > 0) {
+                            reject(new Error(errorMsg));
+                        } else {
+                            resolve();
+                        }
+                    });
+            } catch (ex) {
+                reject(ex);
+            }
         });
 
-        window.setStatusBarMessage('Generating Tags', promise);
+        this.appShell.setStatusBarMessage('Generating Tags', promise);
 
-        return promise;
+        await promise;
     }
 }

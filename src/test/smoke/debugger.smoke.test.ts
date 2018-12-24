@@ -12,15 +12,17 @@ import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initializeTest } from '../initialize';
+import { initializeSmokeTests } from './common';
 
 suite('Smoke Test: Debug file', function () {
     // Large value to allow for LS to get downloaded.
     this.timeout(4 * 60_000);
 
-    suiteSetup(function () {
+    suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
+        await initializeSmokeTests();
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);

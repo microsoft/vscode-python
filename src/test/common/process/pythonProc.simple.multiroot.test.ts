@@ -11,7 +11,6 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
-import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -33,7 +32,8 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
 import {
-    clearPythonPathInWorkspaceFolder, isOs,
+    clearPythonPathInWorkspaceFolder, getExtensionSettings,
+    isOs,
     isPythonVersion
 } from '../../common';
 import {
@@ -135,7 +135,7 @@ suite('PythonExecutableService', () => {
     });
 
     test('Ensure correct path to executable is returned', async () => {
-        const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
+        const pythonPath = getExtensionSettings(workspace4Path).pythonPath;
         let expectedExecutablePath: string;
         if (await fs.pathExists(pythonPath)) {
             expectedExecutablePath = pythonPath;

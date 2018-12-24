@@ -8,8 +8,10 @@
 import { assert, expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, Position, SignatureHelp,
-    TextDocument, TextLine, Uri } from 'vscode';
+import {
+    CancellationToken, Position, SignatureHelp,
+    TextDocument, TextLine, Uri
+} from 'vscode';
 import { JediFactory } from '../../../client/languageServices/jediProxyFactory';
 import { IArgumentsResult, JediProxyHandler } from '../../../client/providers/jediProxy';
 import { isPositionInsideStringOrComment } from '../../../client/providers/providerUtilities';
@@ -73,7 +75,7 @@ suite('Signature Provider unit tests', () => {
         return pySignatureProvider.provideSignatureHelp(doc.object, position, cancelToken.object);
     }
 
-    function testIsInsideStringOrComment(sourceLine: string, sourcePos: number) : boolean {
+    function testIsInsideStringOrComment(sourceLine: string, sourcePos: number): boolean {
         const textLine: TypeMoq.IMock<TextLine> = TypeMoq.Mock.ofType<TextLine>();
         textLine.setup(t => t.text).returns(() => sourceLine);
         const doc: TypeMoq.IMock<TextDocument> = TypeMoq.Mock.ofType<TextDocument>();

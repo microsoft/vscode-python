@@ -1,13 +1,15 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IFileSystem } from '../../../common/platform/types';
+import { traceError, traceInfo } from '../../../common/logger';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
+import { OSType } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IPythonInPathCommandProvider } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
  * Locates the currently configured Python interpreter.
@@ -22,6 +24,7 @@ export class CurrentPathService extends CacheableLocatorService {
     public constructor(
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IPythonInPathCommandProvider) private readonly pythonCommandProvider: IPythonInPathCommandProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super('CurrentPathService', serviceContainer);
@@ -50,12 +53,10 @@ export class CurrentPathService extends CacheableLocatorService {
      */
     private async suggestionsFromKnownPaths(resource?: Uri) {
         const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
-        const currentPythonInterpreter = this.getInterpreter(configSettings.pythonPath, '').then(interpreter => [interpreter]);
-        const python3 = this.getInterpreter('python3', '').then(interpreter => [interpreter]);
-        const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
-        const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
-        return Promise.all<string[]>([currentPythonInterpreter, python3, python2, python])
-            .then(listOfInterpreters => flatten(listOfInterpreters))
+        const pathsToCheck = [...this.pythonCommandProvider.getCommands(), { command: configSettings.pythonPath }];
+
+        const pythonPaths = Promise.all(pathsToCheck.map(item => this.getInterpreter(item)));
+        return pythonPaths
             .then(interpreters => interpreters.filter(item => item.length > 0))
             // tslint:disable-next-line:promise-function-async
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
@@ -65,15 +66,15 @@ export class CurrentPathService extends CacheableLocatorService {
     /**
      * Return the information about the identified interpreter binary.
      */
-    private async getInterpreterDetails(interpreter: string): Promise<PythonInterpreter | undefined> {
-        return this.helper.getInterpreterInformation(interpreter)
+    private async getInterpreterDetails(pythonPath: string): Promise<PythonInterpreter | undefined> {
+        return this.helper.getInterpreterInformation(pythonPath)
             .then(details => {
                 if (!details) {
                     return;
                 }
                 return {
                     ...(details as PythonInterpreter),
-                    path: interpreter,
+                    path: pythonPath,
                     type: details.type ? details.type : InterpreterType.Unknown
                 };
             });
@@ -82,20 +83,43 @@ export class CurrentPathService extends CacheableLocatorService {
     /**
      * Return the path to the interpreter (or the default if not found).
      */
-    private async getInterpreter(pythonPath: string, defaultValue: string) {
+    private async getInterpreter(options: { command: string; args?: string[] }) {
         try {
             const processService = await this.processServiceFactory.create();
-            return processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], {})
+            const args = Array.isArray(options.args) ? options.args : [];
+            return processService.exec(options.command, args.concat(['-c', 'import sys;print(sys.executable)']), {})
                 .then(output => output.stdout.trim())
                 .then(async value => {
                     if (value.length > 0 && await this.fs.fileExists(value)) {
                         return value;
                     }
-                    return defaultValue;
+                    traceError(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed as file ${value} does not exist`);
+                    return '';
                 })
-                .catch(() => defaultValue);    // Ignore exceptions in getting the executable.
-        } catch {
-            return defaultValue;    // Ignore exceptions in getting the executable.
+                .catch(ex => {
+                    traceInfo(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed`);
+                    return '';
+                });    // Ignore exceptions in getting the executable.
+        } catch (ex) {
+            traceError(`Detection of Python Interpreter for Command ${options.command} failed`, ex);
+            return '';    // Ignore exceptions in getting the executable.
         }
+    }
+}
+
+@injectable()
+export class PythonInPathCommandProvider implements IPythonInPathCommandProvider {
+    constructor(@inject(IPlatformService) private readonly platform: IPlatformService) { }
+    public getCommands(): { command: string; args?: string[] }[] {
+        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python']
+            .map(item => { return { command: item }; });
+        if (this.platform.osType !== OSType.Windows) {
+            return paths;
+        }
+
+        const versions = ['3.7', '3.6', '3', '2'];
+        return paths.concat(versions.map(version => {
+            return { command: 'py', args: [`-${version}`] };
+        }));
     }
 }

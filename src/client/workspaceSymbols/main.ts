@@ -1,11 +1,11 @@
 import { CancellationToken, Disposable, languages, OutputChannel } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
 import {
-    IInstaller, InstallerResponse, IOutputChannel, Product
+    IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Generator } from './generator';
@@ -20,12 +20,18 @@ export class WorkspaceSymbols implements Disposable {
     private commandMgr: ICommandManager;
     private fs: IFileSystem;
     private workspace: IWorkspaceService;
+    private processFactory: IProcessServiceFactory;
+    private appShell: IApplicationShell;
+    private configurationService: IConfigurationService;
 
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.commandMgr = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
         this.registerCommands();
@@ -44,8 +50,7 @@ export class WorkspaceSymbols implements Disposable {
 
         if (Array.isArray(this.workspace.workspaceFolders)) {
             this.workspace.workspaceFolders.forEach(wkSpc => {
-                const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, processServiceFactory));
+                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, this.appShell, this.fs, this.processFactory, this.configurationService));
             });
         }
     }

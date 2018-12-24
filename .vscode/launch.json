@@ -128,7 +128,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "timeout=300000",
+                "--timeout=300000",
                 "--grep="
             ],
             "outFiles": [
@@ -149,7 +149,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "timeout=300000",
+                "--timeout=300000",
                 "--grep="
             ],
             "outFiles": [

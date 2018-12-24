@@ -62,6 +62,7 @@ import {
     IRandom,
     IsWindows
 } from './types';
+import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -100,4 +101,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
+    serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
 }

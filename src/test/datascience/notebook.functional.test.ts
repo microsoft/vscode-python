@@ -12,7 +12,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessServiceFactory } from '../../client/common/process/types';
+import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
@@ -197,6 +197,43 @@ suite('Jupyter notebook tests', () => {
             assert.fail('Server not created');
         }
     });
+
+    runTest('Remote', async () => {
+        const python = await getNotebookCapableInterpreter();
+        const procService = await processFactory.create();
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], {env: process.env, throwOnStdErr: false});
+            disposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                const connectionURL = getConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
+
+            // We have a connection string here, so try to connect jupyterExecution to the notebook server
+            const server = await jupyterExecution.connectToNotebookServer(uri!, true);
+            if (!server) {
+                assert.fail('Failed to connect to remote server');
+            }
+        }
+    });
+
+    function getConnectionInfo(output: string) : string | undefined {
+        const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+
+        const urlMatch = UrlPatternRegEx.exec(output);
+        if (urlMatch) {
+            return urlMatch[0];
+        }
+        return undefined;
+    }
 
     runTest('Failure', async () => {
         // Make a dummy class that will fail during launch
@@ -427,7 +464,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Try with something we can interrupt
-        let interruptResult = await interruptExecute(server,
+        let interruptResult = await interruptExecute(server!,
 `import signal
 import _thread
 import time
@@ -446,14 +483,14 @@ while keep_going:
 
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
-        interruptResult = await interruptExecute(server, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 7000, 7000);
+        interruptResult = await interruptExecute(server!, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 7000, 7000);
 
         // Try again with something that doesn't return. Make sure it times out
-        interruptResult = await interruptExecute(server, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 100, 7000);
+        interruptResult = await interruptExecute(server!, `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`, 100, 7000);
         assert.equal(interruptResult, InterruptResult.TimedOut);
 
         // The tough one, somethign that causes a kernel reset.
-        interruptResult = await interruptExecute(server,
+        interruptResult = await interruptExecute(server!,
 `import signal
 import time
 import os

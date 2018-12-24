@@ -10,16 +10,16 @@ import {
     CancellationToken, CancellationTokenSource, CompletionItemKind,
     Disposable, SymbolKind, Uri
 } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { BANNER_NAME_PROPOSE_LS, ILogger, IPythonExtensionBanner } from '../common/types';
+import { BANNER_NAME_PROPOSE_LS, IConfigurationService, ILogger, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { debounce, swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { Logger } from './../common/logger';
 
@@ -134,7 +134,7 @@ commandNames.set(CommandType.Symbols, 'names');
 
 export class JediProxy implements Disposable {
     private proc?: ChildProcess;
-    private pythonSettings: PythonSettings;
+    private pythonSettings: IPythonSettings;
     private cmdId: number = 0;
     private lastKnownPythonInterpreter: string;
     private previousData = '';
@@ -152,13 +152,17 @@ export class JediProxy implements Disposable {
     private lastCmdIdProcessed?: number;
     private lastCmdIdProcessedForPidUsage?: number;
     private proposeNewLanguageServerPopup: IPythonExtensionBanner;
+    private readonly disposables: Disposable[] = [];
 
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
-        this.pythonSettings = PythonSettings.getInstance(Uri.file(workspacePath));
+        const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.pythonSettings = configurationService.getSettings(Uri.file(workspacePath));
         this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
         this.logger = serviceContainer.get<ILogger>(ILogger);
-        this.pythonSettings.on('change', () => this.pythonSettingsChangeHandler());
+        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const disposable = interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
+        this.disposables.push(disposable);
         this.initialized = createDeferred<void>();
         this.startLanguageServer().then(() => this.initialized.resolve()).ignoreErrors();
 
@@ -172,6 +176,12 @@ export class JediProxy implements Disposable {
     }
 
     public dispose() {
+        while (this.disposables.length > 0) {
+            const disposable = this.disposables.pop();
+            if (disposable) {
+                disposable.dispose();
+            }
+        }
         this.killProcess();
     }
 
@@ -277,7 +287,7 @@ export class JediProxy implements Disposable {
     }
 
     @swallowExceptions('JediProxy')
-    private async pythonSettingsChangeHandler() {
+    private async onDidChangeInterpreter() {
         if (this.lastKnownPythonInterpreter === this.pythonSettings.pythonPath) {
             return;
         }

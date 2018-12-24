@@ -34,7 +34,7 @@
     "python.snippet.launch.externalTerminal.description": "使用外部終端機偵錯 Python 程式",
     "python.snippet.launch.django.label": "Python：Django",
     "python.snippet.launch.django.description": "偵錯 Django 程式",
-    "python.snippet.launch.flask.label": "Python：Flask（0.11.x 或以後）",
+    "python.snippet.launch.flask.label": "Python：Flask",
     "python.snippet.launch.flask.description": "偵錯 Flask 程式",
     "python.snippet.launch.flaskOld.label": "Python：Flask（0.10.x 或之前）",
     "python.snippet.launch.flaskOld.description": "偵錯舊式 Flask 程式",

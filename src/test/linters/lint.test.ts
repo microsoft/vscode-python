@@ -16,6 +16,7 @@ import { IProductPathService, IProductService } from '../../client/common/instal
 import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
+import { IS_TRAVIS } from '../ciConstants';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
@@ -269,15 +270,11 @@ suite('Linting - General Tests', () => {
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
-    // tslint:disable-next-line:no-function-expression
     test('Multiple linters', async function () {
-        //      Unreliable test being skipped until we can sort it out.  See gh-2609.
-        //          - Fails about 1/3 of runs on Windows
-        //          - Symptom: lintingEngine::lintOpenPythonFiles returns values *after* command await resolves in lint.tests
-        //          - lintOpenPythonFiles returns 3 sets of values, not what I expect (1).
-        //          - Haven't yet found a way to await on this properly.
-        const skipped = true;
-        if (skipped) {
+        // travis times out with the 25sec limit, but is also going to be retired
+        // in the near future in favour of Azure DevOps pipelines. Since Azure DevOps
+        // seem to not timeout (at least as much), skip this test in Travis.
+        if (IS_TRAVIS) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }

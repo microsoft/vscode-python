@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import { PythonSettings } from '../common/configSettings';
 import { getTextEditsFromPatch } from '../common/editor';
-import { IInstaller, Product } from '../common/types';
+import { IConfigurationService, IInstaller, Product } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
@@ -49,7 +48,7 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
         workspaceFolder = vscode.workspace.workspaceFolders[0];
     }
     const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-    const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
+    const pythonSettings = serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newvariable${new Date().getMilliseconds().toString()}`;
@@ -72,7 +71,7 @@ export function extractMethod(extensionDir: string, textEditor: vscode.TextEdito
         workspaceFolder = vscode.workspace.workspaceFolders[0];
     }
     const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-    const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
+    const pythonSettings = serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newmethod${new Date().getMilliseconds().toString()}`;
