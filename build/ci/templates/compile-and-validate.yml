@@ -18,7 +18,6 @@ jobs:
   pool: ${{ parameters.pool }}
 
   variables:
-    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
