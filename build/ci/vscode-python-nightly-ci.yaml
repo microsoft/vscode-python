@@ -12,6 +12,16 @@ jobs:
     UploadBinary: true
     Platform: 'Windows'
     PythonVersion: '3.7'
+
+# Begin test phases:
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.7'
     Name: 'SystemTests_Windows_Py37'
 
 - template: templates/test-phase-job.yml
