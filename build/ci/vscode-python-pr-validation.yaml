@@ -18,6 +18,7 @@ jobs:
     pool: 
       name: 'Hosted VS2017'
     Platform: 'Windows'
+    Name: 'SystemTests_Windows_Py37'
 
 - template: templates/test-phase-job.yml
   parameters:
@@ -25,6 +26,7 @@ jobs:
     pool:
       name: 'Hosted Ubuntu 1604'
     Platform: 'Linux'
+    Name: 'SystemTests_Linux_Py37'
 
 - template: templates/test-phase-job.yml
   parameters:
@@ -32,3 +34,5 @@ jobs:
     pool:
       name: 'Hosted macOS'
     Platform: 'macOS'
+    Name: 'SystemTests_macOS_Py37'
+

@@ -13,10 +13,11 @@ parameters:
   BuildNumber: '$(Build.BuildNumber)'
   Platform: 'Linux'
   DependsOn: 'Prebuild'
-  Name: 'SystemTestRun_$(Platform)_Py-$(PythonVersion)'
-
+  Name: 'Cannot_Be_Same'
+  
 jobs:
-- job: ${{ format('{0}_{1}_Py-{2}', parameters.TestSuiteName, parameters.Platform, parameters.PythonVersion) }}
+- job: ${{ parameters.name }}
+  displayName: ${{ format('{0}_{1}_Py-{2}', parameters.TestSuiteName, parameters.Platform, parameters.PythonVersion) }}
   dependsOn: ${{ parameters.DependsOn }} 
   pool:
     ${{ parameters.pool }}
