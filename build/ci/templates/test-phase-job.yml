@@ -12,12 +12,14 @@ parameters:
   AzureStorageContainerName: 'vscode-python-ci'
   TestSuiteName: 'testSingleWorkspace'
   BuildNumber: '$(Build.BuildNumber)'
-  Platform: 'macOS'
+  Platform: 'Linux'
+  DependsOn: 'Prebuild'
 
 jobs:
 - job: ${{ parameters.name }}
+  dependsOn: ${{ parameters.DependsOn }} 
   pool:
-    name: ${{ parameters.PoolName }}
+    ${{ parameters.pool }}
 
   variables:
     # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
@@ -34,6 +36,17 @@ jobs:
     plaform: ${{ parameters.Platform }}
     testSuiteName: ${{ parameters.TestSuiteName }}
     buildNumber: ${{ parameters.BuildNumber }}
+
+  strategy:
+    maxParallel: 3
+    matrix:
+      SingleWorkspace:
+        TestSuiteName: 'testSingleWorkspace'
+      MultiWorkspace:
+        TestSuiteName: 'testMultiWorkspace'
+      Debugger:
+        TestSuiteName: 'testDebugger'
+
 
   steps:
   - template: templates/test-phase.yml

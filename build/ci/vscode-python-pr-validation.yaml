@@ -6,49 +6,29 @@ jobs:
 
 - template: templates/compile-and-validate.yml
   parameters:
-    name: 'PR_Validate_Windows_py37'
-    PoolName: 'Hosted VS2017'
+    name: 'Prebuild'
+    pool:
+      name: 'Hosted VS2017'
     UploadBinary: true
     Platform: 'Windows'
 
 - template: templates/test-phase-job.yml
-  dependsOn: 'PR_Validate_Windows_py37'
-  strategy:
-    maxParallel: 10
-    matrix:
-      SingleWorkspaceMac:
-        PoolName: 'Hosted macOS'
-        TestSuiteName: 'testSingleWorkspace'
-        Platform: 'macOS'
-      MultiWorkspaceMac:
-        PoolName: 'Hosted macOS'
-        TestSuiteName: 'testMultiWorkspace'
-        Platform: 'macOS'
-      DebuggerMac:
-        PoolName: 'Hosted macOS'
-        TestSuiteName: 'testDebugger'
-        Platform: 'macOS'
-      SingleWorkspaceWin:
-        PoolName: 'Hosted VS2017'
-        TestSuiteName: 'testSingleWorkspace'
-        Platform: 'Windows'
-      MultiWorkspaceWin:
-        PoolName: 'Hosted VS2017'
-        TestSuiteName: 'testMultiWorkspace'
-        Platform: 'Windows'
-      DebuggerWin:
-        PoolName: 'Hosted VS2017'
-        TestSuiteName: 'testDebugger'
-        Platform: 'Windows'
-      SingleWorkspaceLinux:
-        PoolName: 'Hosted Ubuntu 1604'
-        TestSuiteName: 'testSingleWorkspace'
-        Platform: 'Linux'
-      MultiWorkspaceLinux:
-        PoolName: 'Hosted Ubuntu 1604'
-        TestSuiteName: 'testMultiWorkspace'
-        Platform: 'Linux'
-      DebuggerLinux:
-        PoolName: 'Hosted Ubuntu 1604'
-        TestSuiteName: 'testDebugger'
-        Platform: 'Linux'
+  parameters:
+    DependsOn: 'Prebuild'
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
