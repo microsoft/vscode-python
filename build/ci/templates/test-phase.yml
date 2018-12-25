@@ -170,6 +170,7 @@ steps:
 
   # - task: Npm@1
   #   displayName: 'run $(TestSuiteName)'
+  #   continueOnError: true
   #   inputs:
   #     command: custom
 
