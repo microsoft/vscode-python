@@ -161,8 +161,7 @@ suite('Module Installer only', () => {
                                     a.showErrorMessage(
                                         TypeMoq.It.isAnyString(),
                                         TypeMoq.It.isValue('Install'),
-                                        TypeMoq.It.isValue(`Disable ${product.name}`),
-                                        TypeMoq.It.isValue('Disable linting'),
+                                        TypeMoq.It.isValue('Select Linter'),
                                         TypeMoq.It.isValue('Do not show again')))
                                     .returns(
                                         async () => {
@@ -207,8 +206,7 @@ suite('Module Installer only', () => {
                                     a.showErrorMessage(
                                         TypeMoq.It.isAnyString(),
                                         TypeMoq.It.isValue('Install'),
-                                        TypeMoq.It.isValue(`Disable ${product.name}`),
-                                        TypeMoq.It.isValue('Disable linting')))
+                                        TypeMoq.It.isValue('Select Linter')))
                                     .returns(
                                         async () => {
                                             return undefined;
@@ -218,8 +216,7 @@ suite('Module Installer only', () => {
                                     a.showErrorMessage(
                                         TypeMoq.It.isAnyString(),
                                         TypeMoq.It.isValue('Install'),
-                                        TypeMoq.It.isValue(`Disable ${product.name}`),
-                                        TypeMoq.It.isValue('Disable linting'),
+                                        TypeMoq.It.isValue('Select Linter'),
                                         TypeMoq.It.isValue('Do not show again')))
                                     .returns(
                                         async () => {
