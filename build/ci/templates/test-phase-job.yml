@@ -1,5 +1,4 @@
 parameters:
-  name: 'Unit_Test_Run'
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
@@ -14,9 +13,10 @@ parameters:
   BuildNumber: '$(Build.BuildNumber)'
   Platform: 'Linux'
   DependsOn: 'Prebuild'
+  Name: 'SystemTestRun_$(Platform)_Py-$(PythonVersion)'
 
 jobs:
-- job: ${{ parameters.name }}
+- job: ${{ format('{0}_{1}_Py-{2}', parameters.TestSuiteName, parameters.Platform, parameters.PythonVersion) }}
   dependsOn: ${{ parameters.DependsOn }} 
   pool:
     ${{ parameters.pool }}
