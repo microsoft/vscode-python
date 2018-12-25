@@ -1,0 +1,127 @@
+resources:
+- repo: self
+  clean: true
+
+jobs:
+
+- template: templates/compile-and-validate.yml
+  parameters:
+    name: 'Prebuild'
+    pool:
+      name: 'Hosted VS2017'
+    UploadBinary: true
+    Platform: 'Windows'
+    PythonVersion: '3.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.6'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.5'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.4'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '2.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.6'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.5'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.4'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '2.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.6'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.5'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.4'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    DependsOn: 'Prebuild'
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '2.7'
+
