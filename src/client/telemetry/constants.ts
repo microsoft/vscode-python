@@ -50,6 +50,12 @@ export const DIAGNOSTICS_ACTION = 'DIAGNOSTICS.ACTION';
 export const DIAGNOSTICS_MESSAGE = 'DIAGNOSTICS.MESSAGE';
 export const PLATFORM_INFO = 'PLATFORM.INFO';
 
+export const DISABLE_LINTING = 'LINTING.DISABLE';
+export const SELECT_LINTER = 'LINTING.SELECT';
+
+export const INSTALL_PRODUCT = 'INSTALL_PRODUCT';
+export const INSTALL_PROMPT_DISABLED = 'INSTALL_PROMPT.DISABLED';
+
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToDetermineOS = 'FailedToDetermineOS'

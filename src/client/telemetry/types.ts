@@ -36,9 +36,9 @@ export type LinterTrigger = 'auto' | 'save';
 
 export type LintingTelemetry = {
     tool: LinterId;
-    hasCustomArgs: boolean;
-    trigger: LinterTrigger;
-    executableSpecified: boolean;
+    hasCustomArgs?: boolean;
+    trigger?: LinterTrigger;
+    executableSpecified?: boolean;
 };
 export type PythonInterpreterTelemetry = {
     trigger: 'ui' | 'shebang' | 'load';

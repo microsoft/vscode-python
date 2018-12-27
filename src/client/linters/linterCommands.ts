@@ -7,7 +7,8 @@ import { IApplicationShell, ICommandManager } from '../common/application/types'
 import { Commands } from '../common/constants';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
-import { ILinterManager, ILintingEngine } from './types';
+import { DISABLE_LINTING, SELECT_LINTER } from '../telemetry/constants';
+import { ILinterManager, ILintingEngine, LinterId } from './types';
 
 export class LinterCommands implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
@@ -56,10 +57,7 @@ export class LinterCommands implements vscode.Disposable {
         if (selection !== undefined) {
             if (selection === 'Disable Linting'){
                 await this.linterManager.enableLintingAsync(false);
-                sendTelemetryEvent(
-                    'Set Linter Commands : Disabled Linter',
-                    undefined
-                );
+                sendTelemetryEvent(DISABLE_LINTING);
             } else{
                 const index = linters.findIndex(x => x.id === selection);
                 if (activeLinters.length > 1) {
@@ -70,10 +68,7 @@ export class LinterCommands implements vscode.Disposable {
                     }
                 }
                 await this.linterManager.setActiveLintersAsync([linters[index].product], this.settingsUri);
-                sendTelemetryEvent(
-                    `Set Linter Commands : Selected ${selection}`,
-                    undefined
-                );
+                sendTelemetryEvent(SELECT_LINTER, undefined, { tool: <LinterId> selection});
             }
         }
     }

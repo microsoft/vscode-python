@@ -5,7 +5,9 @@ import * as os from 'os';
 import { OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
+import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
+import { INSTALL_PRODUCT, INSTALL_PROMPT_DISABLED, SELECT_LINTER } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
@@ -196,25 +198,16 @@ export class LinterInstaller extends BaseInstaller {
 
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
-            sendTelemetryEvent(
-                `Install ${productName}`,
-                undefined
-            );
+            sendTelemetryEvent(INSTALL_PRODUCT, undefined, { tool: <LinterId> productName});
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
-            sendTelemetryEvent(
-                `Disable Linter Install Prompt for ${productName}`,
-                undefined
-            );
+            sendTelemetryEvent(INSTALL_PROMPT_DISABLED, undefined, { tool: <LinterId> productName});
             return InstallerResponse.Ignore;
         }
 
         if (response === selectLinter){
-            sendTelemetryEvent(
-                'Select Linter',
-                undefined
-            );
+            sendTelemetryEvent(SELECT_LINTER);
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             await commandManager.executeCommand(Commands.Set_Linter);
         }
