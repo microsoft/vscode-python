@@ -1,5 +1,6 @@
 import { CancellationToken, DiagnosticCollection, Disposable, OutputChannel, Uri } from 'vscode';
 import { IUnitTestSettings, Product } from '../../common/types';
+import { IPythonUnitTestMessage } from '../types';
 import { CommandSource } from './constants';
 
 export type TestProvider = 'nosetest' | 'pytest' | 'unittest';
@@ -280,3 +281,8 @@ export type PythonVersionInformation = {
     major: number;
     minor: number;
 };
+
+export const ITestMessageService = Symbol('ITestMessageService');
+export interface ITestMessageService {
+    getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]>;
+}

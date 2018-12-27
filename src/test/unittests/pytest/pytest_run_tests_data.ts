@@ -5,7 +5,10 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { TestStatus } from '../../../client/unittests/common/types';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { TestStatus, TestsToRun } from '../../../client/unittests/common/types';
+
+const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 
 export interface ITestDetails {
     className: string;
@@ -380,5 +383,72 @@ export const allTestDetails: ITestDetails[] = [
         sourceTestName: 'test_B',
         imported: false,
         status: TestStatus.Pass
+    }
+];
+
+export interface ITestScenarioDetails {
+    scenarioName: string;
+    discoveryOutput: string;
+    runOutput: string;
+    testsToRun: TestsToRun;
+    testDetails?: ITestDetails[];
+    testSuiteIndex?: number;
+    testFunctionIndex?: number;
+    shouldRunFailed?: boolean;
+    failedRunOutput?: string;
+}
+
+export const testScenarios: ITestScenarioDetails[] = [
+    {
+        scenarioName: 'Run Tests',
+        discoveryOutput: 'one.output',
+        runOutput: 'one.xml',
+        testsToRun: <TestsToRun>undefined,
+        testDetails: allTestDetails.filter(() => {return true; })
+    },
+    {
+        scenarioName: 'Run Specific Test File',
+        discoveryOutput: 'three.output',
+        runOutput: 'three.xml',
+        testsToRun: {
+            testFile: [{
+                fullPath: path.join(UNITTEST_TEST_FILES_PATH, 'tests', 'test_another_pytest.py'),
+                name: 'tests/test_another_pytest.py',
+                nameToRun: 'tests/test_another_pytest.py',
+                xmlName: 'tests/test_another_pytest.py',
+                functions: [],
+                suites: [],
+                time: 0
+            }],
+            testFolder: [],
+            testFunction: [],
+            testSuite: []
+        },
+        testDetails: allTestDetails.filter(td => {return td.fileName === path.join('tests', 'test_another_pytest.py'); })
+    },
+    {
+        scenarioName: 'Run Specific Test Suite',
+        discoveryOutput: 'four.output',
+        runOutput: 'four.xml',
+        testsToRun: <TestsToRun>undefined,
+        testSuiteIndex: 0,
+        testDetails: allTestDetails.filter(td => {return td.className === 'test_root.Test_Root_test1'; })
+    },
+    {
+        scenarioName: 'Run Specific Test Function',
+        discoveryOutput: 'five.output',
+        runOutput: 'five.xml',
+        testsToRun: <TestsToRun>undefined,
+        testFunctionIndex: 0,
+        testDetails: allTestDetails.filter(td => {return td.testName === 'test_Root_A'; })
+    },
+    {
+        scenarioName: 'Run Failed Tests',
+        discoveryOutput: 'two.output',
+        runOutput: 'two.xml',
+        testsToRun: <TestsToRun>undefined,
+        testDetails: allTestDetails.filter(td => {return true; }),
+        shouldRunFailed: true,
+        failedRunOutput: 'two.again.xml'
     }
 ];

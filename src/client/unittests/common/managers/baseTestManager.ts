@@ -1,6 +1,7 @@
 import { CancellationToken, CancellationTokenSource, Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, Disposable, languages, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';
+import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
@@ -248,8 +249,8 @@ export abstract class BaseTestManager implements ITestManager {
                 return Promise.reject<Tests>(reason);
             });
     }
-    public async updateDiagnostics(messages: IPythonUnitTestMessage[]): Promise<void> {
-        await this.stripStaleDiagnostics(messages);
+    public async updateDiagnostics(tests: Tests, messages: IPythonUnitTestMessage[]): Promise<void> {
+        await this.stripStaleDiagnostics(tests, messages);
 
         // Update relevant file diagnostics for tests that have problems.
         const uniqueMsgFiles = messages.reduce((filtered, msg) => {
@@ -258,6 +259,7 @@ export abstract class BaseTestManager implements ITestManager {
             }
             return filtered;
         }, []);
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         for (const msgFile of uniqueMsgFiles) {
             // Check all messages against each test file.
             const fileUri = Uri.file(msgFile);
@@ -273,7 +275,7 @@ export abstract class BaseTestManager implements ITestManager {
                 newDiagnostics.push(diagnostic);
             }
             for (const msg of messages) {
-                if (fileUri.fsPath.indexOf(Uri.file(msg.testFilePath).fsPath) > -1 && msg.status !== TestStatus.Pass) {
+                if (fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) && msg.status !== TestStatus.Pass) {
                     const diagnostic = this.createDiagnostics(msg);
                     newDiagnostics.push(diagnostic);
                 }
@@ -319,20 +321,18 @@ export abstract class BaseTestManager implements ITestManager {
      *
      * @param messages Details about the tests that were just run.
      */
-    private async stripStaleDiagnostics(messages: IPythonUnitTestMessage[]): Promise<void> {
+    private async stripStaleDiagnostics(tests: Tests, messages: IPythonUnitTestMessage[]): Promise<void> {
         this.diagnosticCollection.forEach((diagnosticUri, oldDiagnostics, collection) => {
             const newDiagnostics: Diagnostic[] = [];
             for (const diagnostic of oldDiagnostics) {
-                let matchingMsg: IPythonUnitTestMessage;
-                for (const msg of messages) {
-                    if (msg.nameToRun === diagnostic.code) {
-                        matchingMsg = msg;
-                        break;
-                    }
-                }
+                const matchingMsg = messages.find((msg) => msg.code === diagnostic.code);
                 if (matchingMsg === undefined) {
                     // No matching message was found, so this test was not included in the test run.
-                    newDiagnostics.push(diagnostic);
+                    const matchingTest = tests.testFunctions.find((tf) => tf.testFunction.nameToRun === diagnostic.code);
+                    if (matchingTest !== undefined) {
+                        // Matching test was found, so the diagnostic is still relevant.
+                        newDiagnostics.push(diagnostic);
+                    }
                 }
             }
             // Set the diagnostics for the file.
@@ -343,8 +343,9 @@ export abstract class BaseTestManager implements ITestManager {
     private createDiagnostics(message: IPythonUnitTestMessage): Diagnostic {
         const stackStart = message.locationStack[0];
         const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
-        const severity = this.unitTestDiagnosticService.getSeverity(message.severity);
-        const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix}: ${message.message}`, severity);
+        const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
+        const diagMsg = message.message.split('\n')[0];
+        const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];

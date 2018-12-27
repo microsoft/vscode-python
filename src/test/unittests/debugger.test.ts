@@ -9,10 +9,11 @@ import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/uni
 import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
 import { CANCELLATION_REASON, CommandSource, NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { TestRunner } from '../../client/unittests/common/runner';
-import { ITestDebugLauncher, ITestManagerFactory, ITestRunner, IXUnitParser, TestProvider } from '../../client/unittests/common/types';
+import { ITestDebugLauncher, ITestManagerFactory, ITestMessageService, ITestRunner, IXUnitParser, TestProvider } from '../../client/unittests/common/types';
 import { XUnitParser } from '../../client/unittests/common/xUnitParser';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/unittests/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/unittests/pytest/services/argsService';
+import { TestMessageService } from '../../client/unittests/pytest/services/testMessageService';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelper } from '../../client/unittests/types';
 import { UnitTestHelper } from '../../client/unittests/unittest/helper';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/unittests/unittest/services/argsService';
@@ -81,6 +82,7 @@ suite('Unit Tests - debugging', () => {
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, MockDebugLauncher);
+        ioc.serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
     }
 
     async function testStartingDebugger(testProvider: TestProvider) {

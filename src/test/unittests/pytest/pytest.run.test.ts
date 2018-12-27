@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/unittests/common/services/unitTestDiagnosticService';
@@ -14,77 +15,10 @@ import { rootWorkspaceUri, updateSetting } from '../../common';
 import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
-import { allTestDetails, ITestDetails } from './pytest_run_tests_data';
+import { ITestDetails, ITestScenarioDetails, testScenarios } from './pytest_run_tests_data';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
-
-interface ITestScenarioDetails {
-    scenarioName: string;
-    discoveryOutput: string;
-    runOutput: string;
-    testsToRun: TestsToRun;
-    testDetails?: ITestDetails[];
-    testSuiteIndex?: number;
-    testFunctionIndex?: number;
-    shouldRunFailed?: boolean;
-    failedRunOutput?: string;
-}
-
-const testScenarios: ITestScenarioDetails[] = [
-    {
-        scenarioName: 'Run Tests',
-        discoveryOutput: 'one.output',
-        runOutput: 'one.xml',
-        testsToRun: <TestsToRun>undefined,
-        testDetails: allTestDetails.filter(() => {return true; })
-    },
-    {
-        scenarioName: 'Run Specific Test File',
-        discoveryOutput: 'three.output',
-        runOutput: 'three.xml',
-        testsToRun: {
-            testFile: [{
-                fullPath: path.join(UNITTEST_TEST_FILES_PATH, 'tests', 'test_another_pytest.py'),
-                name: 'tests/test_another_pytest.py',
-                nameToRun: 'tests/test_another_pytest.py',
-                xmlName: 'tests/test_another_pytest.py',
-                functions: [],
-                suites: [],
-                time: 0
-            }],
-            testFolder: [],
-            testFunction: [],
-            testSuite: []
-        },
-        testDetails: allTestDetails.filter(td => {return td.fileName === path.join('tests', 'test_another_pytest.py'); })
-    },
-    {
-        scenarioName: 'Run Specific Test Suite',
-        discoveryOutput: 'four.output',
-        runOutput: 'four.xml',
-        testsToRun: <TestsToRun>undefined,
-        testSuiteIndex: 0,
-        testDetails: allTestDetails.filter(td => {return td.className === 'test_root.Test_Root_test1'; })
-    },
-    {
-        scenarioName: 'Run Specific Test Function',
-        discoveryOutput: 'five.output',
-        runOutput: 'five.xml',
-        testsToRun: <TestsToRun>undefined,
-        testFunctionIndex: 0,
-        testDetails: allTestDetails.filter(td => {return td.testName === 'test_Root_A'; })
-    },
-    {
-        scenarioName: 'Run Failed Tests',
-        discoveryOutput: 'two.output',
-        runOutput: 'two.xml',
-        testsToRun: <TestsToRun>undefined,
-        testDetails: allTestDetails.filter(td => {return true; }),
-        shouldRunFailed: true,
-        failedRunOutput: 'two.again.xml'
-    }
-];
 
 interface IResultsSummaryCount {
     passes: number;
@@ -264,9 +198,10 @@ function getRelevantSkippedIssuesFromTestDetailsForFile(testDetails: ITestDetail
  * @param testFileUri The Uri of the test file that was run.
  * @param testDetails The details of a particular test.
  */
-function getTestFuncFromResultsByTestFileAndName(results: Tests, testFileUri: vscode.Uri, testDetails: ITestDetails): FlattenedTestFunction {
+function getTestFuncFromResultsByTestFileAndName(ioc: UnitTestIocContainer, results: Tests, testFileUri: vscode.Uri, testDetails: ITestDetails): FlattenedTestFunction {
+    const fileSystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
     return results.testFunctions.find(test => {
-        return vscode.Uri.file(test.parentTestFile.fullPath).fsPath === testFileUri.fsPath && test.testFunction.name === testDetails.testName;
+        return fileSystem.arePathsSame(vscode.Uri.file(test.parentTestFile.fullPath).fsPath, testFileUri.fsPath) && test.testFunction.name === testDetails.testName;
     });
 }
 
@@ -287,7 +222,7 @@ async function getExpectedDiagnosticFromTestDetails(testDetails: ITestDetails): 
     }
     const expectedSourceTestFileUri = vscode.Uri.file(expectedSourceTestFilePath);
     const diagMsgPrefix = new UnitTestDiagnosticService().getMessagePrefix(testDetails.status);
-    const expectedDiagMsg = `${diagMsgPrefix}: ${testDetails.message}`;
+    const expectedDiagMsg = `${diagMsgPrefix ? `${diagMsgPrefix}: ` : ''}${testDetails.message}`;
     let expectedDiagRange = testDetails.testDefRange;
     let expectedSeverity = vscode.DiagnosticSeverity.Error;
     if (testDetails.status === TestStatus.Skipped) {
@@ -460,7 +395,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                                     let diagnostic: vscode.Diagnostic;
                                     let expectedDiagnostic: vscode.Diagnostic;
                                     suiteSetup(async () => {
-                                        testFunc = getTestFuncFromResultsByTestFileAndName(results, testFileUri, td)!;
+                                        testFunc = getTestFuncFromResultsByTestFileAndName(ioc, results, testFileUri, td)!;
                                         expectedStatus = (failedRun && td.passOnFailedRun) ? TestStatus.Pass : td.status;
                                     });
                                     suite('TestFunction', async () => {

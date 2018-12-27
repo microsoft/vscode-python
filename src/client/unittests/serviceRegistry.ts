@@ -19,7 +19,7 @@ import { TestFolderGenerationVisitor } from './common/testVisitors/folderGenerat
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
     ITestCollectionStorageService, ITestConfigSettingsService, ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory,
-    ITestResultsService, ITestRunner, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
+    ITestMessageService, ITestResultsService, ITestRunner, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
 } from './common/types';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
@@ -37,6 +37,7 @@ import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from './pytest/services/parserService';
+import { TestMessageService } from './pytest/services/testMessageService';
 import { IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -88,6 +89,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory, TestConfigurationManagerFactory);
 
     serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
+    serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {

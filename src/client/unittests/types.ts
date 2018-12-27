@@ -115,7 +115,6 @@ export interface IPythonUnitTestMessage {
     provider: string;
     traceback?: string;
     testTime: number;
-    nameToRun: string;
     status: TestStatus;
     locationStack?: ILocationStackFrameDetails[];
     testFilePath: string;
@@ -129,7 +128,8 @@ export enum PythonUnitTestMessageSeverity {
 export enum DiagnosticMessageType {
     Error,
     Fail,
-    Skipped
+    Skipped,
+    Pass
 }
 
 export interface ILocationStackFrameDetails {
