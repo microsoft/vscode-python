@@ -5,6 +5,7 @@
 import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
+import { Linters } from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { DISABLE_LINTING, SELECT_LINTER } from '../telemetry/constants';
@@ -61,14 +62,13 @@ export class LinterCommands implements vscode.Disposable {
             } else{
                 const index = linters.findIndex(x => x.id === selection);
                 if (activeLinters.length > 1) {
-                    // tslint:disable-next-line:messages-must-be-localized
-                    const response = await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes', 'No');
+                    const response = await this.appShell.showWarningMessage(Linters.replaceWithSelectedLinter().format(selection), 'Yes', 'No');
                     if (response !== 'Yes') {
                         return;
                     }
                 }
                 await this.linterManager.setActiveLintersAsync([linters[index].product], this.settingsUri);
-                sendTelemetryEvent(SELECT_LINTER, undefined, { tool: <LinterId> selection});
+                sendTelemetryEvent(SELECT_LINTER, undefined, { tool: selection as LinterId});
             }
         }
     }

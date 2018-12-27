@@ -118,7 +118,7 @@ suite('Linting - Linter Selector', () => {
         appShell.setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((s, o) => {
                 suggestions = s as string[];
-                suggestions.splice(0, 1); //Removes 'Disable Linting' option
+                suggestions.shift();    //Removes 'Disable Linting' option
                 options = o as QuickPickOptions;
             })
             .returns(s => new Promise((resolve, reject) => resolve('pylint')));

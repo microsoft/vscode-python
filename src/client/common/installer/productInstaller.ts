@@ -198,11 +198,11 @@ export class LinterInstaller extends BaseInstaller {
 
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
-            sendTelemetryEvent(INSTALL_PRODUCT, undefined, { tool: <LinterId> productName});
+            sendTelemetryEvent(INSTALL_PRODUCT, undefined, { tool: productName as LinterId});
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
-            sendTelemetryEvent(INSTALL_PROMPT_DISABLED, undefined, { tool: <LinterId> productName});
+            sendTelemetryEvent(INSTALL_PROMPT_DISABLED, undefined, { tool: productName as LinterId});
             return InstallerResponse.Ignore;
         }
 
