@@ -49,6 +49,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 case TerminalShellType.powershellCore:
                     return this.getPowershellCommands(envInfo.name, targetShell);
 
+                    case TerminalShellType.bash:
+                    case TerminalShellType.gitbash:
+                        return this.getBashCommands(envInfo.name);
+
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Do we really special-case fish on Windows?
                 case TerminalShellType.fish:
@@ -100,6 +104,16 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         const activate = await this.getWindowsActivateCommand();
         return [
             `${activate} ${envName.toCommandArgument()}`
+        ];
+    }
+
+    public async getBashCommands(
+        envName: string
+    ): Promise<string[] | undefined> {
+
+        const activate = await this.getWindowsActivateCommand();
+        return [
+            `source ${activate} ${envName.toCommandArgument()}`
         ];
     }
 
