@@ -49,9 +49,9 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 case TerminalShellType.powershellCore:
                     return this.getPowershellCommands(envInfo.name, targetShell);
 
-                    case TerminalShellType.bash:
-                    case TerminalShellType.gitbash:
-                        return this.getBashCommands(envInfo.name);
+                case TerminalShellType.bash:
+                case TerminalShellType.gitbash:
+                    return this.getBashCommands(envInfo.name);
 
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Do we really special-case fish on Windows?
