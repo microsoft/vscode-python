@@ -7,7 +7,7 @@ import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { INSTALL_PRODUCT, INSTALL_PROMPT_DISABLED, SELECT_LINTER } from '../../telemetry/constants';
+import { LINTER_NOT_INSTALLED_PROMPT } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
@@ -198,16 +198,16 @@ export class LinterInstaller extends BaseInstaller {
 
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
-            sendTelemetryEvent(INSTALL_PRODUCT, undefined, { tool: productName as LinterId});
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install'});
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
-            sendTelemetryEvent(INSTALL_PROMPT_DISABLED, undefined, { tool: productName as LinterId});
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt'});
             return InstallerResponse.Ignore;
         }
 
         if (response === selectLinter){
-            sendTelemetryEvent(SELECT_LINTER);
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { action: 'select'});
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             await commandManager.executeCommand(Commands.Set_Linter);
         }
