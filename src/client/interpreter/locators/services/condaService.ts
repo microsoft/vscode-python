@@ -28,11 +28,12 @@ const untildify: (value: string) => string = require('untildify');
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
 // /usr/share/anaconda/bin/conda, /usr/share/anaconda3/bin/conda, /usr/share/miniconda/bin/conda, /usr/share/miniconda3/bin/conda
 
-const condaGlobPathsForLinux = [
+const condaGlobPathsForLinuxMac = [
+    '/opt/*conda*/bin/conda',
     '/usr/share/*conda*/bin/conda',
     untildify('~/*conda*/bin/conda')];
 
-export const CondaLocationsGlob = `{${condaGlobPathsForLinux.join(',')}}`;
+export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
 
 // ...and for windows, the known default install locations:
 const condaGlobPathsForWindows = [
