@@ -195,7 +195,6 @@ export class LinterInstaller extends BaseInstaller {
             const executable = this.getExecutableNameFromSettings(product, resource);
             message = `Path to the ${productName} linter is invalid (${executable})`;
         }
-
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
             sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install'});
@@ -222,7 +221,7 @@ export class LinterInstaller extends BaseInstaller {
      * @param key Key to use to get a persisted response value, each installer must define this for themselves.
      * @returns Boolean: The current state of the stored response key given.
      */
-    private getStoredResponse(key: string): boolean {
+    protected getStoredResponse(key: string): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
         return state.value;

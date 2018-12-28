@@ -118,7 +118,6 @@ suite('Linting - Linter Selector', () => {
         appShell.setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((s, o) => {
                 suggestions = s as string[];
-                suggestions.shift();    //Removes 'Disable Linting' option
                 options = o as QuickPickOptions;
             })
             .returns(s => new Promise((resolve, reject) => resolve('pylint')));
@@ -150,8 +149,8 @@ suite('Linting - Linter Selector', () => {
         assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
         assert.notEqual(options!, undefined, 'showQuickPick was not called');
 
-        assert.equal(suggestions.length, linters.length, 'Wrong number of suggestions');
-        assert.deepEqual(suggestions, linters.map(x => x.id).sort(), 'Wrong linters order in suggestions');
+        assert.equal(suggestions.length, linters.length + 1, 'Wrong number of suggestions');
+        assert.deepEqual(suggestions, ['Disable Linting', ...linters.map(x => x.id).sort()], 'Wrong linters order in suggestions');
 
         assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
