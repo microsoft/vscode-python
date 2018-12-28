@@ -6,6 +6,7 @@
 // tslint:disable:no-any max-func-body-length no-invalid-this
 
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -14,7 +15,6 @@ import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pi
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { IInstallationChannelManager, IModuleInstaller } from '../../../client/common/installer/types';
-import { PythonVersionInfo } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ModuleNamePurpose, Product } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
@@ -123,9 +123,9 @@ suite('Module Installer', () => {
                             if (product.value === Product.pylint) {
                                 // tslint:disable-next-line:no-shadowed-variable
                                 generatePythonInterpreterVersions().forEach(interpreterInfo => {
-                                    const majorVersion = interpreterInfo.version_info[0];
+                                    const majorVersion = interpreterInfo.version ? interpreterInfo.version.major : 0;
                                     if (majorVersion === 2) {
-                                        const testTitle = `Ensure install arg is \'pylint<2.0.0\' in ${interpreterInfo.version_info.join('.')}`;
+                                        const testTitle = `Ensure install arg is \'pylint<2.0.0\' in ${interpreterInfo.version ? interpreterInfo.version.raw : ''}`;
                                         if (installerClass === PipInstaller) {
                                             test(testTitle, async () => {
                                                 setActiveInterpreter(interpreterInfo);
@@ -157,7 +157,7 @@ suite('Module Installer', () => {
                                             });
                                         }
                                     } else {
-                                        const testTitle = `Ensure install arg is \'pylint\' in ${interpreterInfo.version_info.join('.')}`;
+                                        const testTitle = `Ensure install arg is \'pylint\' in ${interpreterInfo.version ? interpreterInfo.version.raw : ''}`;
                                         if (installerClass === PipInstaller) {
                                             test(testTitle, async () => {
                                                 setActiveInterpreter(interpreterInfo);
@@ -244,12 +244,12 @@ suite('Module Installer', () => {
 });
 
 function generatePythonInterpreterVersions() {
-    const versions: PythonVersionInfo[] = [[2, 7, 0, 'final'], [3, 4, 0, 'final'], [3, 5, 0, 'final'], [3, 6, 0, 'final'], [3, 7, 0, 'final']];
+    const versions: SemVer[] = ['2.7.0-final', '3.4.0-final', '3.5.0-final', '3.6.0-final', '3.7.0-final'].map(ver => new SemVer(ver));
     return versions.map(version => {
         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
         info.setup((t: any) => t.then).returns(() => undefined);
         info.setup(t => t.type).returns(() => InterpreterType.VirtualEnv);
-        info.setup(t => t.version_info).returns(() => version);
+        info.setup(t => t.version).returns(() => version);
         return info.object;
     });
 }

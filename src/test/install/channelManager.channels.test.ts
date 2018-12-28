@@ -3,6 +3,7 @@
 
 import * as assert from 'assert';
 import { Container } from 'inversify';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { QuickPickOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
@@ -22,8 +23,7 @@ const info: PythonInterpreter = {
     envName: '',
     path: '',
     type: InterpreterType.Unknown,
-    version: '',
-    version_info: [0, 0, 0, 'alpha'],
+    version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
 };

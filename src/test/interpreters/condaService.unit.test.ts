@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
-import { parse } from 'semver';
+import { parse, SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, EventEmitter } from 'vscode';
 
@@ -34,8 +34,7 @@ const info: PythonInterpreter = {
     envName: '',
     path: '',
     type: InterpreterType.Unknown,
-    version: '',
-    version_info: [0, 0, 0, 'alpha'],
+    version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
 };
@@ -55,9 +54,9 @@ suite('Interpreters Conda Service', () => {
     let condaPathSetting: string;
     let disposableRegistry: Disposable[];
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    let mockState : MockState;
-    let terminalProvider : TypeMoq.IMock<ITerminalActivationCommandProvider>;
     let workspaceService : TypeMoq.IMock<IWorkspaceService>;
+    let mockState: MockState;
+    let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
     setup(async () => {
         condaPathSetting = '';
         logger = TypeMoq.Mock.ofType<ILogger>();
@@ -316,9 +315,9 @@ suite('Interpreters Conda Service', () => {
     test('Must use Conda env from Registry to locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments', 'conda', 'Scripts', 'python.exe');
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: condaPythonExePath, companyDisplayName: 'Two 2', version: '1.11.0', type: InterpreterType.Conda },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: new SemVer('1.0.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: condaPythonExePath, companyDisplayName: 'Two 2', version: new SemVer('1.11.0'), type: InterpreterType.Conda },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: new SemVer('2.10.1'), type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ].map(item => {
             return { ...info, ...item };
@@ -337,12 +336,12 @@ suite('Interpreters Conda Service', () => {
     test('Must use Conda env from Registry to latest version of locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments');
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'), companyDisplayName: 'Two 1', version: '1.11.0', type: InterpreterType.Conda },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.11', version: '2.11.0', type: InterpreterType.Conda },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.31', version: '2.31.0', type: InterpreterType.Conda },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.21', version: '2.21.0', type: InterpreterType.Conda },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: new SemVer('1.0.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'), companyDisplayName: 'Two 1', version: new SemVer('1.11.0'), type: InterpreterType.Conda },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.11', version: new SemVer('2.11.0'), type: InterpreterType.Conda },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.31', version: new SemVer('2.31.0'), type: InterpreterType.Conda },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.21', version: new SemVer('2.21.0'), type: InterpreterType.Conda },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: new SemVer('2.10.1'), type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ].map(item => {
             return { ...info, ...item };
@@ -361,12 +360,12 @@ suite('Interpreters Conda Service', () => {
     test('Must use \'conda\' if conda.exe cannot be located using registry entries', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments');
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'), companyDisplayName: 'Two 1', version: '1.11.0', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.11', version: '2.11.0', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.31', version: '2.31.0', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.21', version: '2.21.0', type: InterpreterType.Unknown },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: new SemVer('1.0.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'), companyDisplayName: 'Two 1', version: new SemVer('1.11.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.11', version: new SemVer('2.11.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.31', version: new SemVer('2.31.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'), companyDisplayName: 'Two 2.21', version: new SemVer('2.21.0'), type: InterpreterType.Unknown },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: new SemVer('2.10.1'), type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ].map(item => { return { ...info, ...item }; });
         platformService.setup(p => p.isWindows).returns(() => true);
@@ -564,9 +563,9 @@ suite('Interpreters Conda Service', () => {
     test('Must use Conda env from Registry to locate conda.exe', async () => {
         const condaPythonExePath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments', 'conda', 'Scripts', 'python.exe');
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
-            { displayName: 'Anaconda', path: condaPythonExePath, companyDisplayName: 'Two 2', version: '1.11.0', type: InterpreterType.Unknown },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: new SemVer('1.0.0'), type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: condaPythonExePath, companyDisplayName: 'Two 2', version: new SemVer('1.11.0'), type: InterpreterType.Unknown },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: new SemVer('2.10.1'), type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ].map(item => {
             return { ...info, ...item };
@@ -652,7 +651,7 @@ suite('Interpreters Conda Service', () => {
         await testFailureOfGettingCondaEnvironments(false, true, false, pythonPath);
     });
     test('Create activated conda environment for Windows', async () => {
-        const pythonInterpreter: PythonInterpreter = {...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda', envName: 'Anaconda'};
+        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda', envName: 'Anaconda' };
         const environment: any = { Path: 'C:\\test' };
 
         platformService.setup(p => p.isWindows).returns(() => true);
@@ -667,7 +666,7 @@ suite('Interpreters Conda Service', () => {
         expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Windows CONDA_DEFAULT_ENV Value');
     });
     test('Create activated conda environment for Non-Windows', async () => {
-        const pythonInterpreter: PythonInterpreter = {...info, type: InterpreterType.Conda, envPath: 'usr/Anaconda', envName: 'Anaconda'};
+        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'usr/Anaconda', envName: 'Anaconda' };
         const environment: any = { PATH: 'usr/test' };
 
         platformService.setup(p => p.isWindows).returns(() => false);
@@ -682,19 +681,19 @@ suite('Interpreters Conda Service', () => {
         expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Non-Windows CONDA_DEFAULT_ENV Value');
     });
     test('Create activated conda environment for using shell', async () => {
-        const pythonInterpreter: PythonInterpreter = {...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda\\Foo\\envs\\test', envName: 'Anaconda'};
+        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda\\Foo\\envs\\test', envName: 'Anaconda' };
         const environment: any = { Path: 'C:\\test' };
 
         platformService.setup(p => p.isWindows).returns(() => true);
         fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({stdout: `${CondaGetEnvironmentPrefix}\r\nCONDA_PREFIX=TEST_PREFIX` }));
+        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: `${CondaGetEnvironmentPrefix}\r\nCONDA_PREFIX=TEST_PREFIX` }));
 
         const newEnvironment = await condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
 
         expect(newEnvironment.CONDA_PREFIX).to.be.equal('TEST_PREFIX', 'Incorrect shell exec CONDA_PREFIX Value');
     });
     test('Create activated conda environment for using shell that fails all', async () => {
-        const pythonInterpreter: PythonInterpreter = {...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda\\Foo\\envs\\test', envName: 'Anaconda'};
+        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda\\Foo\\envs\\test', envName: 'Anaconda' };
         const environment: any = { Path: 'C:\\test' };
 
         platformService.setup(p => p.isWindows).returns(() => true);

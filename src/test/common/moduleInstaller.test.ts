@@ -2,6 +2,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
@@ -37,8 +38,7 @@ const info: PythonInterpreter = {
     envName: '',
     path: '',
     type: InterpreterType.Unknown,
-    version: '',
-    version_info: [0, 0, 0, 'alpha'],
+    version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
 };
@@ -162,7 +162,9 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('mock', true));
             const pythonPath = await getCurrentPythonPath();
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ ...info, architecture: Architecture.Unknown, companyDisplayName: '', displayName: '', envName: '', path: pythonPath, type: InterpreterType.Conda, version: '' }]));
+            mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([
+                { ...info, architecture: Architecture.Unknown, companyDisplayName: '', displayName: '', envName: '', path: pythonPath, type: InterpreterType.Conda, version: new SemVer('1.0.0') }
+            ]));
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 

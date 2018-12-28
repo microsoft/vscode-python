@@ -297,10 +297,10 @@ async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceConta
             interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
         ]);
         const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
-        const pythonVersion = interpreter ? interpreter.version_info.join('.') : undefined;
+        const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
         const interpreterType = interpreter ? interpreter.type : undefined;
         const hasPython3 = interpreters
-            .filter(item => item && Array.isArray(item.version_info) ? item.version_info[0] === 3 : false)
+            .filter(item => item && item.version ? item.version.major === 3 : false)
             .length > 0;
 
         const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };

@@ -81,7 +81,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private async sendTelemetry() {
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(this.resource).pythonPath;
         const interpreterInfo = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
-        const pythonVersion = (interpreterInfo && interpreterInfo.version_info) ? interpreterInfo.version_info.join('.') : undefined;
+        const pythonVersion = (interpreterInfo && interpreterInfo.version) ? interpreterInfo.version.raw : undefined;
         const interpreterType = interpreterInfo ? interpreterInfo.type : undefined;
         captureTelemetry(TERMINAL_CREATE, { terminal: this.terminalShellType, pythonVersion, interpreterType });
     }

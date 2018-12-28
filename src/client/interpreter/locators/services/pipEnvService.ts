@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
+import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { ICurrentProcess, ILogger } from '../../../common/types';
@@ -62,6 +63,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         if (!details) {
             return;
         }
+        this._hasInterpreters.resolve(true);
         return {
             ...(details as PythonInterpreter),
             path: interpreterPath,
@@ -86,11 +88,10 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         }
         try {
             const pythonPath = await this.invokePipenv('--py', cwd);
-            // TODO: Why do we need to do this?
-            return pythonPath && await this.fs.fileExists(pythonPath) ? pythonPath : undefined;
+            return (pythonPath && await this.fs.fileExists(pythonPath)) ? pythonPath : undefined;
             // tslint:disable-next-line:no-empty
         } catch (error) {
-            console.error(error);
+            traceError('PipEnv identification failed', error);
             if (ignoreErrors) {
                 return;
             }

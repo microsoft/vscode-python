@@ -19,7 +19,7 @@ import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from
 export class JupyterExporter implements INotebookExporter {
 
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IFileSystem) private fileSystem: IFileSystem) {
@@ -29,7 +29,7 @@ export class JupyterExporter implements INotebookExporter {
         noop();
     }
 
-    public async translateToNotebook(cells: ICell[], changeDirectory?: string) : Promise<nbformat.INotebookContent | undefined> {
+    public async translateToNotebook(cells: ICell[], changeDirectory?: string): Promise<nbformat.INotebookContent | undefined> {
         // If requested, add in a change directory cell to fix relative paths
         if (changeDirectory) {
             cells = await this.addDirectoryChangeCell(cells, changeDirectory);
@@ -95,18 +95,17 @@ export class JupyterExporter implements INotebookExporter {
     // When we export we want to our change directory back to the first real file that we saw run from any workspace folder
     private firstWorkspaceFolder = async (cells: ICell[]): Promise<string | undefined> => {
         for (const cell of cells) {
-           const filename = cell.file;
+            const filename = cell.file;
 
-           // First check that this is an absolute file that exists (we add in temp files to run system cell)
-           if (path.isAbsolute(filename) && await this.fileSystem.fileExists(filename)) {
+            // First check that this is an absolute file that exists (we add in temp files to run system cell)
+            if (path.isAbsolute(filename) && await this.fileSystem.fileExists(filename)) {
                 // We've already check that workspace folders above
                 for (const folder of this.workspaceService.workspaceFolders!) {
-                    if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase()))
-                    {
+                    if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {
                         return folder.uri.fsPath;
                     }
                 }
-           }
+            }
         }
 
         return undefined;
@@ -134,22 +133,22 @@ export class JupyterExporter implements INotebookExporter {
         }
     }
 
-    private pruneCells = (cells : ICell[]) : nbformat.IBaseCell[] => {
+    private pruneCells = (cells: ICell[]): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these
         return cells.filter(c => c.data.cell_type !== 'sys_info')
             // Then prune each cell down to just the cell data.
             .map(this.pruneCell);
     }
 
-    private pruneCell = (cell : ICell) : nbformat.IBaseCell => {
+    private pruneCell = (cell: ICell): nbformat.IBaseCell => {
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
-        const copy = {...cell.data};
+        const copy = { ...cell.data };
         copy.source = this.pruneSource(cell.data.source);
         return copy;
     }
 
-    private pruneSource = (source : nbformat.MultilineString) : nbformat.MultilineString => {
+    private pruneSource = (source: nbformat.MultilineString): nbformat.MultilineString => {
 
         if (Array.isArray(source) && source.length > 0) {
             if (RegExpValues.PythonCellMarker.test(source[0])) {
@@ -168,7 +167,7 @@ export class JupyterExporter implements INotebookExporter {
     private extractPythonMainVersion = async (cells: ICell[]): Promise<number> => {
         let pythonVersion;
         const sysInfoCells = cells.filter((targetCell: ICell) => {
-           return targetCell.data.cell_type === 'sys_info';
+            return targetCell.data.cell_type === 'sys_info';
         });
 
         if (sysInfoCells.length > 0) {
@@ -184,6 +183,6 @@ export class JupyterExporter implements INotebookExporter {
 
         // In this case, let's check the version on the active interpreter
         const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-        return usableInterpreter ? usableInterpreter.version_info[0] : 3;
+        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
     }
 }

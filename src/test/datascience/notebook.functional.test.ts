@@ -56,7 +56,7 @@ suite('Jupyter notebook tests', () => {
             const python = await getNotebookCapableInterpreter();
             const procService = await processFactory.create();
             if (procService && python) {
-                await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {env: process.env});
+                await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
             }
         }
         for (let i = 0; i < disposables.length; i += 1) {
@@ -80,16 +80,16 @@ suite('Jupyter notebook tests', () => {
         return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
     }
 
-    async function assertThrows(func : () => Promise<void>, message: string) {
-        try  {
+    async function assertThrows(func: () => Promise<void>, message: string) {
+        try {
             await func();
             assert.fail(message);
-        // tslint:disable-next-line:no-empty
+            // tslint:disable-next-line:no-empty
         } catch {
         }
     }
 
-    async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any) : Promise<void> {
+    async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any): Promise<void> {
         const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
@@ -108,7 +108,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string) : Promise<void> {
+    async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string): Promise<void> {
         const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
@@ -121,7 +121,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function verifyCell(jupyterServer: INotebookServer | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue : (data: any) => void) : Promise<void> {
+    async function verifyCell(jupyterServer: INotebookServer | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue: (data: any) => void): Promise<void> {
         // Verify results of an execute
         const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
@@ -154,7 +154,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    function testMimeTypes(types : {code: string; mimeType: string; cellType: string; verifyValue(data: any): void}[]) {
+    function testMimeTypes(types: { code: string; mimeType: string; cellType: string; verifyValue(data: any): void }[]) {
         runTest('MimeTypes', async () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
@@ -204,7 +204,7 @@ suite('Jupyter notebook tests', () => {
 
         if (procService && python) {
             const connectionFound = createDeferred();
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], {env: process.env, throwOnStdErr: false});
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], { env: process.env, throwOnStdErr: false });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -225,8 +225,8 @@ suite('Jupyter notebook tests', () => {
         }
     });
 
-    function getConnectionInfo(output: string) : string | undefined {
-        const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    function getConnectionInfo(output: string): string | undefined {
+        const UrlPatternRegEx = /(https?:\/\/[^\s]+)/;
 
         const urlMatch = UrlPatternRegEx.exec(output);
         if (urlMatch) {
@@ -238,7 +238,7 @@ suite('Jupyter notebook tests', () => {
     runTest('Failure', async () => {
         // Make a dummy class that will fail during launch
         class FailedProcess extends JupyterExecution {
-            public isNotebookSupported = () : Promise<boolean> => {
+            public isNotebookSupported = (): Promise<boolean> => {
                 return Promise.resolve(false);
             }
         }
@@ -252,6 +252,9 @@ suite('Jupyter notebook tests', () => {
     test('Not installed', async () => {
         // Rewire our data we use to search for processes
         class EmptyInterpreterService implements IInterpreterService {
+            public get hasInterpreters(): Promise<boolean> {
+                return Promise.resolve(true);
+            }
             public onDidChangeInterpreter(_listener: (e: void) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
@@ -281,7 +284,7 @@ suite('Jupyter notebook tests', () => {
             }
         }
         class EmptyPathService implements IKnownSearchPathsForInterpreters {
-            public getSearchPaths() : string [] {
+            public getSearchPaths(): string[] {
                 return [];
             }
         }
@@ -372,7 +375,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number) : Promise<boolean> {
+    async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
         const disp = setTimeout((s) => {
             tokenSource.cancel();
@@ -393,7 +396,7 @@ suite('Jupyter notebook tests', () => {
         return true;
     }
 
-    async function testCancelableMethod<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, short?: boolean) : Promise<boolean> {
+    async function testCancelableMethod<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, short?: boolean): Promise<boolean> {
         const timeouts = short ? [10, 20, 30, 100] : [100, 200, 300, 1000];
         for (let i = 0; i < timeouts.length; i += 1) {
             await testCancelableCall(method, messageFormat, timeouts[i]);
@@ -421,14 +424,14 @@ suite('Jupyter notebook tests', () => {
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isKernelCreateSupported(t), 'Cancel did not cancel isKernel after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isImportSupported(t), 'Cancel did not cancel isImport after {0}ms', true));
-     });
+    });
 
-    async function interruptExecute(server: INotebookServer, code: string, interruptMs: number, sleepMs: number) : Promise<InterruptResult> {
+    async function interruptExecute(server: INotebookServer, code: string, interruptMs: number, sleepMs: number): Promise<InterruptResult> {
         let interrupted = false;
         let finishedBefore = false;
         const finishedPromise = createDeferred();
         const observable = server!.executeObservable(code, 'foo.py', 0);
-        let cells : ICell[] = [];
+        let cells: ICell[] = [];
         observable.subscribe(c => {
             cells = c;
             if (c.length > 0 && c[0].state === CellState.error) {
@@ -465,7 +468,7 @@ suite('Jupyter notebook tests', () => {
 
         // Try with something we can interrupt
         let interruptResult = await interruptExecute(server!,
-`import signal
+            `import signal
 import _thread
 import time
 
@@ -491,7 +494,7 @@ while keep_going:
 
         // The tough one, somethign that causes a kernel reset.
         interruptResult = await interruptExecute(server!,
-`import signal
+            `import signal
 import time
 import os
 
@@ -549,7 +552,7 @@ df.head()`,
             {
                 // Test relative directories too.
                 code:
-                `import pandas as pd
+                    `import pandas as pd
 df = pd.read_csv("./DefaultSalesReport.csv")
 df.head()`,
                 mimeType: 'text/html',
@@ -573,13 +576,13 @@ plt.show()`,
         ]
     );
 
-    async function getNotebookCapableInterpreter() : Promise<PythonInterpreter | undefined> {
+    async function getNotebookCapableInterpreter(): Promise<PythonInterpreter | undefined> {
         const is = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const list = await is.getInterpreters();
         const procService = await processFactory.create();
         if (procService) {
             for (let i = 0; i < list.length; i += 1) {
-                const result = await procService.exec(list[i].path, ['-m', 'jupyter', 'notebook', '--version'], {env: process.env});
+                const result = await procService.exec(list[i].path, ['-m', 'jupyter', 'notebook', '--version'], { env: process.env });
                 if (!result.stderr) {
                     return list[i];
                 }
@@ -595,7 +598,7 @@ plt.show()`,
         // Manually generate an invalid jupyter config
         const procService = await processFactory.create();
         assert.ok(procService, 'Can not get a process service');
-        const results = await procService!.exec(usable!.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {env: process.env});
+        const results = await procService!.exec(usable!.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
 
         // Results should have our path to the config.
         const match = /^.*\s+(.*jupyter_notebook_config.py)\s+.*$/m.exec(results.stdout);

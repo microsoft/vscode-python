@@ -10,6 +10,7 @@ import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
+import { convertPythonVersionToSemver } from '../utils/version';
 import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
 
 @injectable()
@@ -27,12 +28,8 @@ export class PythonExecutionService implements IPythonExecutionService {
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py');
         try {
-            const [version, jsonValue] = await Promise.all([
-                this.procService.exec(this.pythonPath, ['--version'], { mergeStdOutErr: true })
-                    .then(output => output.stdout.trim()),
-                this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true })
-                    .then(output => output.stdout.trim())
-            ]);
+            const jsonValue = await this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true })
+                .then(output => output.stdout.trim());
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {
@@ -41,22 +38,12 @@ export class PythonExecutionService implements IPythonExecutionService {
                 traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
                 return;
             }
-            const version_info = json.versionInfo;
-            // Exclude PII from `version_info` to ensure we don't send this up via telemetry.
-            for (let index = 0; index < 3; index += 1) {
-                if (typeof version_info[index] !== 'number') {
-                    version_info[index] = 0;
-                }
-            }
-            if (['alpha', 'beta', 'candidate', 'final'].indexOf(version_info[3]) === -1) {
-                version_info[3] = 'unknown';
-            }
+            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
             return {
                 architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
                 path: this.pythonPath,
-                version,
+                version: convertPythonVersionToSemver(versionValue),
                 sysVersion: json.sysVersion,
-                version_info: json.versionInfo,
                 sysPrefix: json.sysPrefix
             };
         } catch (ex) {

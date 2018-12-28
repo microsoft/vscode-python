@@ -92,8 +92,8 @@ class JupyterCommand {
 
     public mainVersion = async (): Promise<number> => {
         const interpreter = await this.interpreterPromise;
-        if (interpreter) {
-            return interpreter.version_info[0];
+        if (interpreter && interpreter.version) {
+            return interpreter.version.major;
         } else {
             return this.execVersion();
         }
@@ -417,14 +417,18 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                         score += 1;
 
                         // Then start matching based on version
-                        if (list[i].version_info[0] === active.version_info[0]) {
-                            score += 32;
-                            if (list[i].version_info[1] === active.version_info[1]) {
-                                score += 16;
-                                if (list[i].version_info[2] === active.version_info[2]) {
-                                    score += 8;
-                                    if (list[i].version_info[3] === active.version_info[3]) {
-                                        score += 4;
+                        const listVersion = list[i].version;
+                        const activeVersion = active.version;
+                        if (listVersion && activeVersion) {
+                            if (listVersion.major === activeVersion.major) {
+                                score += 32;
+                                if (listVersion.minor === activeVersion.minor) {
+                                    score += 16;
+                                    if (listVersion.patch === activeVersion.patch) {
+                                        score += 8;
+                                        if (listVersion.raw === activeVersion.raw) {
+                                            score += 4;
+                                        }
                                     }
                                 }
                             }
@@ -632,25 +636,25 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 score += 1;
 
                 // See if the version is the same
-                if (info && info.version_info && specDetails[i]) {
+                if (info && info.version && specDetails[i]) {
                     const details = specDetails[i];
-                    if (details && details.version_info) {
-                        if (details.version_info[0] === info.version_info[0]) {
+                    if (details && details.version) {
+                        if (details.version.major === info.version.major) {
                             // Major version match
                             score += 4;
 
-                            if (details.version_info[1] === info.version_info[1]) {
+                            if (details.version.minor === info.version.minor) {
                                 // Minor version match
                                 score += 2;
 
-                                if (details.version_info[2] === info.version_info[2]) {
+                                if (details.version.patch === info.version.patch) {
                                     // Minor version match
                                     score += 1;
                                 }
                             }
                         }
                     }
-                } else if (info && info.version_info && spec && spec.path && spec.path.toLocaleLowerCase() === 'python' && spec.name) {
+                } else if (info && info.version && spec && spec.path && spec.path.toLocaleLowerCase() === 'python' && spec.name) {
                     // This should be our current python.
 
                     // Search for a digit on the end of the name. It should match our major version
@@ -658,7 +662,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                     if (match && match !== null && match.length > 0) {
                         // See if the version number matches
                         const nameVersion = parseInt(match[0], 10);
-                        if (nameVersion && nameVersion === info.version_info[0]) {
+                        if (nameVersion && nameVersion === info.version.major) {
                             score += 4;
                         }
                     }

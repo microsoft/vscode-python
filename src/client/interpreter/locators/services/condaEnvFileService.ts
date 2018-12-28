@@ -41,7 +41,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
         return this.getSuggestionsFromConda();
     }
 
@@ -103,6 +103,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             return;
         }
         const envName = details.envName ? details.envName : path.basename(environmentPath);
+        this._hasInterpreters.resolve(true);
         return {
             ...(details as PythonInterpreter),
             path: interpreter,

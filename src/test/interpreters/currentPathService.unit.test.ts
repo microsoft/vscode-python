@@ -6,6 +6,7 @@
 // tslint:disable:max-func-body-length no-any
 
 import { expect } from 'chai';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
@@ -61,7 +62,7 @@ suite('Interpreters CurrentPath Service', () => {
     [true, false].forEach(isWindows => {
         test(`Interpreters that do not exist on the file system are not excluded from the list (${isWindows ? 'windows' : 'not windows'})`, async () => {
             // Specific test for 1305
-            const version = 'mockVersion';
+            const version = new SemVer('1.0.0');
             platformService.setup(p => p.isWindows).returns(() => isWindows);
             platformService.setup(p => p.osType).returns(() => isWindows ? OSType.Windows : OSType.Linux);
             interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));

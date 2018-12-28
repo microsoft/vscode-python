@@ -13,6 +13,7 @@ import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, EventEmitter } from 'vscode';
 
+import { SemVer } from 'semver';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
@@ -150,42 +151,38 @@ suite('Jupyter Execution', async () => {
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
-        version: '3.6.6.6',
+        version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [3, 6, 6, 'final']
+        architecture: Architecture.x64
     };
 
     const missingKernelPython: PythonInterpreter = {
         path: '/foo/baz/python.exe',
-        version: '3.1.1.1',
+        version: new SemVer('3.1.1-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [3, 1, 1, 'final']
+        architecture: Architecture.x64
     };
 
     const missingNotebookPython: PythonInterpreter = {
         path: '/bar/baz/python.exe',
-        version: '2.1.1.1',
+        version: new SemVer('2.1.1-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [2, 1, 1, 'final']
+        architecture: Architecture.x64
     };
 
     const missingNotebookPython2: PythonInterpreter = {
         path: '/two/baz/python.exe',
-        version: '2.1.1.1',
+        version: new SemVer('2.1.1'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [2, 1, 1, 'final']
+        architecture: Architecture.x64
     };
 
     let workingKernelSpec: string;
@@ -512,8 +509,8 @@ suite('Jupyter Execution', async () => {
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
         if (usableInterpreter) { // Linter
             assert.notEqual(usableInterpreter.path, missingKernelPython.path);
-            assert.equal(usableInterpreter.version_info[0], missingKernelPython.version_info[0], 'Found interpreter should match on major');
-            assert.notEqual(usableInterpreter.version_info[1], missingKernelPython.version_info[1], 'Found interpreter should not match on minor');
+            assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
+            assert.notEqual(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should not match on minor');
         }
     }).timeout(10000);
 

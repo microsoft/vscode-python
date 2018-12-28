@@ -16,6 +16,7 @@ import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } fr
 
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
+    protected readonly _hasInterpreters: Deferred<boolean>;
     private readonly promisesPerResource = new Map<string, Deferred<PythonInterpreter[]>>();
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
@@ -23,10 +24,14 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     constructor(@unmanaged() name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
         @unmanaged() private cachePerWorkspace: boolean = false) {
+        this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v2_${name}`;
     }
     public get onLocating(): Event<Promise<PythonInterpreter[]>> {
         return this.locating.event;
+    }
+    public get hasInterpreters(): Promise<boolean> {
+        return this._hasInterpreters.promise;
     }
     public abstract dispose();
     public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
@@ -49,6 +54,10 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
 
             this.locating.fire(deferred.promise);
         }
+        deferred.promise
+            .then(items => this._hasInterpreters.resolve(items.length > 0))
+            .catch(_ => this._hasInterpreters.resolve(false));
+
         if (deferred.completed) {
             return deferred.promise;
         }

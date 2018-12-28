@@ -4,6 +4,7 @@ import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } f
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
+import { SemVer } from 'semver';
 import { ExecutionInfo } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
@@ -20,7 +21,7 @@ export type Output<T extends string | Buffer> = {
 export type ObservableExecutionResult<T extends string | Buffer> = {
     proc: ChildProcess | undefined;
     out: Observable<Output<T>>;
-    dispose() : void;
+    dispose(): void;
 };
 
 // tslint:disable-next-line:interface-name
@@ -32,7 +33,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
 };
 
 // tslint:disable-next-line:interface-name
-export type ShellOptions = ExecOptions & { throwOnStdErr? : boolean };
+export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
 
 export type ExecutionResult<T extends string | Buffer> = {
     stdout: T;
@@ -60,14 +61,12 @@ export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
-// tslint:disable-next-line:interface-name
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
 export type InterpreterInfomation = {
     path: string;
-    version: string;
+    version?: SemVer;
     sysVersion: string;
     architecture: Architecture;
-    version_info: PythonVersionInfo;
     sysPrefix: string;
 };
 export const IPythonExecutionService = Symbol('IPythonExecutionService');

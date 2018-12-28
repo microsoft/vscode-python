@@ -9,7 +9,6 @@ import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ExecutionResult, IProcessServiceFactory } from '../../../common/process/types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
-import { compareVersion } from '../../../common/utils/version';
 import { IServiceContainer } from '../../../ioc/types';
 import {
     CondaInfo,
@@ -397,9 +396,9 @@ export class CondaService implements ICondaService {
      * Return the highest Python version from the given list.
      */
     private getLatestVersion(interpreters: PythonInterpreter[]) {
-        const sortedInterpreters = interpreters.filter(interpreter => interpreter.version && interpreter.version.length > 0);
+        const sortedInterpreters = interpreters.slice();
         // tslint:disable-next-line:no-non-null-assertion
-        sortedInterpreters.sort((a, b) => compareVersion(a.version!, b.version!));
+        sortedInterpreters.sort((a, b) => (a.version && b.version) ? a.version.compare(b.version) : 0);
         if (sortedInterpreters.length > 0) {
             return sortedInterpreters[sortedInterpreters.length - 1];
         }

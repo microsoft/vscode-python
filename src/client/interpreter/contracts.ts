@@ -29,6 +29,7 @@ export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
     readonly onLocating: Event<Promise<PythonInterpreter[]>>;
+    readonly hasInterpreters: Promise<boolean>;
     getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]>;
 }
 
@@ -81,6 +82,7 @@ export type WorkspacePythonPath = {
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
+    hasInterpreters: Promise<boolean>;
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     autoSetInterpreter(): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;

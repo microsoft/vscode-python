@@ -72,6 +72,7 @@ export class CurrentPathService extends CacheableLocatorService {
                 if (!details) {
                     return;
                 }
+                this._hasInterpreters.resolve(true);
                 return {
                     ...(details as PythonInterpreter),
                     path: pythonPath,

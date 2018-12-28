@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -20,8 +21,7 @@ const info: PythonInterpreter = {
     envName: '',
     path: '',
     type: InterpreterType.Unknown,
-    version: '',
-    version_info: [0, 0, 0, 'alpha'],
+    version: new SemVer('1.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
 };

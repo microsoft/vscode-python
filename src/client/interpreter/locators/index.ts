@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import {
@@ -28,9 +29,11 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly disposables: Disposable[] = [];
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
+    private readonly _hasInterpreters: Deferred<boolean>;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
+        this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
@@ -45,6 +48,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      */
     public get onLocating(): Event<Promise<PythonInterpreter[]>> {
         return new EventEmitter<Promise<PythonInterpreter[]>>().event;
+    }
+    public get hasInterpreters(): Promise<boolean> {
+        return this._hasInterpreters.promise;
     }
 
     /**
@@ -65,11 +71,19 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const locators = this.getLocators();
         const promises = locators.map(async provider => provider.getInterpreters(resource));
+        locators.forEach(locator => {
+            locator.hasInterpreters.then(found => {
+                if (found) {
+                    this._hasInterpreters.resolve(true);
+                }
+            }).ignoreErrors();
+        });
         const listOfInterpreters = await Promise.all(promises);
 
         const items = flatten(listOfInterpreters)
             .filter(item => !!item)
             .map(item => item!);
+        this._hasInterpreters.resolve(items.length > 0);
         return this.interpreterLocatorHelper.mergeInterpreters(items);
     }
 
