@@ -14,6 +14,7 @@ try:
     from rope.base import libutils
     from rope.refactor.rename import Rename
     from rope.refactor.extract import ExtractMethod, ExtractVariable
+    from rope.refactor.localtofield import LocalToField
     import rope.base.project
     import rope.base.taskhandle
 except:
@@ -188,6 +189,24 @@ class ExtractMethodRefactor(ExtractVariableRefactor):
                 raise Exception('Unknown Change')
 
 
+class LocalToFieldRefactor(BaseRefactoring):
+
+    def __init__(self, project, resource, name="Local to Field", progressCallback=None, startOffset=None):
+        BaseRefactoring.__init__(self, project, resource,
+                                 name, progressCallback)
+        self.startOffset = startOffset
+
+    def onRefactor(self):
+        field = LocalToField(self.project, self.resource, self.startOffset)
+        changes = field.get_changes(task_handle=self._handle)
+        for item in changes.changes:
+            if isinstance(item, rope.base.change.ChangeContents):
+                self.changes.append(
+                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item)))
+            else:
+                raise Exception('Unknown Change')
+
+
 class RopeRefactoring(object):
 
     def __init__(self):
@@ -245,6 +264,23 @@ class RopeRefactoring(object):
             valueToReturn.append({'diff': change.diff})
         return valueToReturn
 
+    def _localToField(self, filePath, start, indent_size):
+        """
+        Extracts a method
+        """
+        project = rope.base.project.Project(
+            WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False, indent_size=indent_size)
+        resourceToRefactor = libutils.path_to_resource(project, filePath)
+        refactor = LocalToFieldRefactor(
+            project, resourceToRefactor, startOffset=start, similar=True)
+        refactor.refactor()
+        changes = refactor.changes
+        project.close()
+        valueToReturn = []
+        for change in changes:
+            valueToReturn.append({'diff': change.diff})
+        return valueToReturn
+
     def _serialize(self, identifier, results):
         """
         Serializes the refactor results
@@ -281,6 +317,10 @@ class RopeRefactoring(object):
         elif lookup == 'extract_method':
             changes = self._extractMethod(request['file'], int(
                 request['start']), int(request['end']), request['name'], int(request['indent_size']))
+            return self._write_response(self._serialize(request['id'], changes))
+        elif lookup == 'local_to_field':
+            changes = self._extractMethod(request['file'], int(
+                request['start']), int(request['indent_size']))
             return self._write_response(self._serialize(request['id'], changes))
 
     def _write_response(self, response):

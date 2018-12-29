@@ -96,6 +96,24 @@ export class RefactorProxy extends Disposable {
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
+    public localToField<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
+        if (!options) {
+            options = window.activeTextEditor!.options;
+        }
+        // Ensure last line is an empty line
+        if (!document.lineAt(document.lineCount - 1).isEmptyOrWhitespace && range.start.line === document.lineCount - 1) {
+            return Promise.reject<T>('Missing blank line at the end of document (PEP8).');
+        }
+        const command = {
+            lookup: 'local_to_field',
+            file: filePath,
+            start: this.getOffsetAt(document, range.start).toString(),
+            id: '1',
+            name: name,
+            indent_size: options.tabSize
+        };
+        return this.sendCommand<T>(JSON.stringify(command));
+    }
     private sendCommand<T>(command: string, telemetryEvent?: string): Promise<T> {
         return this.initialize(this.pythonSettings.pythonPath).then(() => {
             // tslint:disable-next-line:promise-must-complete

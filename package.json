@@ -172,6 +172,11 @@
                 "category": "Python Refactor"
             },
             {
+                "command": "python.refactorLocalToField",
+                "title": "%python.command.python.refactorLocalToField.title%",
+                "category": "Python Refactor"
+            },
+            {
                 "command": "python.viewTestOutput",
                 "title": "%python.command.python.viewTestOutput.title%",
                 "category": "Python"
@@ -339,6 +344,12 @@
                 {
                     "command": "python.refactorExtractMethod",
                     "title": "Refactor: Extract Method",
+                    "group": "Refactor",
+                    "when": "editorHasSelection && editorLangId == python"
+                },
+                {
+                    "command": "python.refactorLocalToField",
+                    "title": "Refactor: Convert Local to Field",
                     "group": "Refactor",
                     "when": "editorHasSelection && editorLangId == python"
                 },
