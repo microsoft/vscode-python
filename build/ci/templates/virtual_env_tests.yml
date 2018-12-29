@@ -1,15 +1,31 @@
-jobs:
-- job: ${{ parameters.name }}
-  dependsOn: 'PR_Validate_Windows_py37'
+parameters:
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  AzureStorageAccountName: 'vscodepythonci'
+  AzureStorageContainerName: 'vscode-python-ci'
+  Platform: 'macOS'
   pool:
-    name: ${{ parameters.PoolName }}
+    name: 'Hosted macOS'
+  EnvironmentExecutableFolder: 'bin'
+  PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+  TEST_FILES_SUFFIX: 'testvirtualenvs'
+  TestSuiteName: 'testSingleWorkspace'
+  DependsOn: 'Prebuild'
+
+
+jobs:
+- job:
+  displayName: ${{ format('{VirtualEnvTest {1} Py{2}', parameters.Platform, parameters.PythonVersion) }}
+  dependsOn: ${{ parameters.DependsOn }}
+  pool: ${{ parameters.pool }}
 
   variables:
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
     platform: ${{ parameters.Platform }}
-    azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
+    azureStorageAccountName: ${{ parameters.AzureStorageAccountName }}
     azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
     environmentExecutableFolder: ${{ parameters.EnvironmentExecutableFolder }}
     PYTHON_VIRTUAL_ENVS_LOCATION: ${{ parameters.PYTHON_VIRTUAL_ENVS_LOCATION }}
@@ -44,7 +60,7 @@ jobs:
     - powershell: |
         New-Item -ItemType directory -Path "$(System.ArtifactsDirectory)/bin-artifacts"
 
-        $buildArtifactUri = "https://$(azureStorageAcctName).blob.core.windows.net/$(azureStorageContainerName)/$(Build.BuildNumber)/bin-artifacts.zip"
+        $buildArtifactUri = "https://$(azureStorageAccountName).blob.core.windows.net/$(azureStorageContainerName)/$(Build.BuildNumber)/bin-artifacts.zip"
         Write-Verbose "Downloading from $buildArtifactUri"
 
         $destination = "$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip"

@@ -32,13 +32,28 @@ steps:
 
       echo pre-defined Build Number = $BUILD_BUILDNUMBER
 
+      echo platform given is $(Platform), or $(platform), or $PLATFORM_FROM_PARAMS
+
     displayName: 'Show build vars'
-    name: 'bash_tool_show_bld_vars'
     env:
       TEST_SUITE_NAME: $(testSuiteName)
       NODE_VERSION: $(nodeVersion)
       NPM_VERSION: $(npmVersion)
       PYTHON_VERSION: $(pythonVersion)
+      PLATFORM_FROM_PARAMS: ${{ parameters.Platform }}
+
+
+  - bash: |
+
+      printenv
+
+    displayName: 'Bash printenv'
+    
+
+  - powershell: |
+      Get-Variable
+      
+    displayName: 'PS: Show all variables'
 
 
   - powershell: |
@@ -84,7 +99,6 @@ steps:
       echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
     displayName: 'Show Python Version'
-    name: 'show_py_ver'
 
 
   - task: PythonScript@0
@@ -123,7 +137,6 @@ steps:
       echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
     displayName: 'Show build dependency versions'
-    name: 'show_bld_deps_vers'
 
 
   - task: Npm@1
@@ -201,6 +214,7 @@ steps:
 
   - task: PublishTestResults@2
     displayName: 'Publish JUnit test results'
+    condition: always()
     inputs:
       testResultsFiles: '**/junit-report.xml'
 
@@ -212,7 +226,6 @@ steps:
 
       buildConfiguration: '$(TestSuiteName)'
 
-      condition: always()
 
   - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'
     displayName: 'publish codecov'

@@ -1,9 +1,10 @@
 parameters:
-  name: 'Unit_Test_Run'
+  name: 'Prebuild'
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
-  PoolName: 'Hosted Ubuntu 1604'
+  pool:
+    name: 'Hosted Ubuntu 1604'
   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
   MOCHA_REPORTER_JUNIT: true
@@ -14,11 +15,9 @@ parameters:
 
 jobs:
 - job: ${{ parameters.name }}
-  pool:
-    name: ${{ parameters.PoolName }}
+  pool: ${{ parameters.pool }}
 
   variables:
-    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
