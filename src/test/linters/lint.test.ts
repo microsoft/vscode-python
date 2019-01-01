@@ -281,7 +281,7 @@ suite('Linting - General Tests', () => {
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
         await configService.updateSetting('linting.enabled', true, workspaceUri);
-        // await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await configService.updateSetting('linting.pylintEnabled', true, workspaceUri);
         await configService.updateSetting('linting.flake8Enabled', true, workspaceUri);
 
