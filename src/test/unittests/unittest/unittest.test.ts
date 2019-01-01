@@ -5,14 +5,13 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import { OSType } from '../../../client/common/utils/platform';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import {
     ITestManagerFactory, TestFile,
     TestFunction, Tests, TestsToRun
 } from '../../../client/unittests/common/types';
 import {
-    isOs, isPythonVersion,
+    isPythonVersion,
     rootWorkspaceUri, updateSetting
 } from '../../common';
 import { UnitTestIocContainer } from '../serviceRegistry';

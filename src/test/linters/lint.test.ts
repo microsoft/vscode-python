@@ -16,7 +16,6 @@ import { IProductPathService, IProductService } from '../../client/common/instal
 import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { IS_TRAVIS } from '../ciConstants';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';

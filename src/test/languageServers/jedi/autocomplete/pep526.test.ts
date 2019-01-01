@@ -7,8 +7,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
-import { OSType } from '../../../../client/common/utils/platform';
-import { isOs, isPythonVersion, rootWorkspaceUri } from '../../../common';
+import { isPythonVersion } from '../../../common';
 import {
     closeActiveWindows, initialize,
     initializeTest
