@@ -1,0 +1,154 @@
+resources:
+- repo: self
+  clean: true
+
+# No trigger specified here. This is a nightly build only and
+# there isn't a way to specify scheduled builds in YAML at time
+# of writing...
+trigger: none
+
+# Only nightly builds.
+pr: none
+
+jobs:
+
+# Build the extension and run unit tests on it, if successful upload
+# the bits to be used in each subsequent job
+- template: templates/compile-and-validate.yml
+  parameters:
+    name: 'Prebuild'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    UploadBinary: true
+    Platform: 'Linux'
+    PythonVersion: '3.7'
+
+# Begin test phases:
+
+## Virtual Env System Tests
+- template: templates/virtual_env_tests.yml
+  parameters:
+    Platform: 'Windows'
+    pool:
+      name: 'Hosted VS2017'
+
+- template: templates/virtual_env_tests.yml
+  parameters:
+    Platform: 'Linux'
+    EnvironmentExecutableFolder: 'bin'
+    pool:
+      name: 'Hosted Ubuntu 1604'
+
+- template: templates/virtual_env_tests.yml
+  parameters:
+    Platform: 'macOS'
+    EnvironmentExecutableFolder: 'bin'
+    pool:
+      name: 'Hosted macOS'
+
+## System Tests
+- template: templates/test-phase-job.yml
+  parameters:
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.6'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.5'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '3.4'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool: 
+      name: 'Hosted VS2017'
+    Platform: 'Windows'
+    PythonVersion: '2.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.6'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.5'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '3.4'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted Ubuntu 1604'
+    Platform: 'Linux'
+    PythonVersion: '2.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.7'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.6'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.5'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '3.4'
+
+- template: templates/test-phase-job.yml
+  parameters:
+    pool:
+      name: 'Hosted macOS'
+    Platform: 'macOS'
+    PythonVersion: '2.7'
+

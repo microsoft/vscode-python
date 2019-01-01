@@ -1,0 +1,48 @@
+parameters:
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  PoolName: 'Hosted Ubuntu 1604'
+  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+  MOCHA_REPORTER_JUNIT: true
+  UploadBinary: false
+  AzureStorageAccountName: 'vscodepythonci'
+  AzureStorageContainerName: 'vscode-python-ci'
+  BuildNumber: '$(Build.BuildNumber)'
+  Platform: 'Linux'
+  DependsOn: 'Prebuild'
+
+jobs:
+- job:
+  displayName: ${{ format('SystemTest {0} Py{1}', parameters.Platform, parameters.PythonVersion) }}
+  dependsOn: ${{ parameters.DependsOn }} 
+  pool: ${{ parameters.pool }}
+
+  variables:
+    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
+    nodeVersion: ${{ parameters.NodeVersion }}
+    npmVersion: ${{ parameters.NpmVersion }}
+    pythonVersion: ${{ parameters.PythonVersion }}
+    mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
+    MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
+    uploadBinary: ${{ parameters.UploadBinary }}
+    azureStorageAccountName: ${{ parameters.AzureStorageAccountName }}
+    azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
+    platform: ${{ parameters.Platform }}
+    buildNumber: ${{ parameters.BuildNumber }}
+
+  strategy:
+    matrix:
+      SingleWorkspace:
+        TestSuiteName: 'testSingleWorkspace'
+      MultiWorkspace:
+        TestSuiteName: 'testMultiWorkspace'
+      Debugger:
+        TestSuiteName: 'testDebugger'
+
+
+  steps:
+  - template: test-phase.yml

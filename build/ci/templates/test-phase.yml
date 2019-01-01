@@ -14,32 +14,11 @@
 #   AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
 
 steps:
-  - bash: echo REQUESTED VARIABLE VALUES
+  - bash: |
+      printenv
 
-      echo Node Version = $NODE_VERSION
-
-      echo Python Version = $PYTHON_VERSION
-
-      echo NPM Version = $NPM_VERSION
-
-      echo MOCHA_CI_REPORTFILE = $MOCHA_CI_REPORTFILE
-
-      echo MOCHA_CI_REPORTER_ID = $MOCHA_CI_REPORTER_ID
-
-      echo MOCHA_REPORTER_JUNIT = $MOCHA_REPORTER_JUNIT
-
-      echo Test Suite Name = $(TestSuiteName)
-
-      echo pre-defined Build Number = $BUILD_BUILDNUMBER
-
-    displayName: 'Show build vars'
-    name: 'bash_tool_show_bld_vars'
-    env:
-      TEST_SUITE_NAME: $(testSuiteName)
-      NODE_VERSION: $(nodeVersion)
-      NPM_VERSION: $(npmVersion)
-      PYTHON_VERSION: $(pythonVersion)
-
+    displayName: 'Show all env vars'
+    condition: variables['system.debug']
 
   - powershell: |
       New-Item -ItemType directory -Path "$(System.ArtifactsDirectory)/bin-artifacts"
@@ -84,7 +63,6 @@ steps:
       echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
     displayName: 'Show Python Version'
-    name: 'show_py_ver'
 
 
   - task: PythonScript@0
@@ -123,7 +101,6 @@ steps:
       echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
     displayName: 'Show build dependency versions'
-    name: 'show_bld_deps_vers'
 
 
   - task: Npm@1
@@ -201,18 +178,14 @@ steps:
 
   - task: PublishTestResults@2
     displayName: 'Publish JUnit test results'
+    condition: always()
     inputs:
-      testResultsFiles: '**/junit-report.xml'
-
+      testResultsFiles: '$(MOCHA_CI_REPORTFILE)'
       searchFolder: '$(Build.ArtifactStagingDirectory)'
-
-      testRunTitle: '$(Platform) - $(BuildNumber) $(TestSuiteName)'
-
-      buildPlatform: '$(Platform)'
-
+      testRunTitle: '$(Platform) py$(pythonVersion) $(TestSuiteName)'
+      buildPlatform: '$(Platform)-py$(pythonVersion)'
       buildConfiguration: '$(TestSuiteName)'
 
-      condition: always()
 
   - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'
     displayName: 'publish codecov'
