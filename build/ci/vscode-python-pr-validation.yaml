@@ -22,12 +22,14 @@ jobs:
 - template: templates/virtual_env_tests.yml
   parameters:
     Platform: 'Linux'
+    EnvironmentExecutableFolder: 'bin'
     pool:
       name: 'Hosted Ubuntu 1604'
 
 - template: templates/virtual_env_tests.yml
   parameters:
     Platform: 'macOS'
+    EnvironmentExecutableFolder: 'bin'
     pool:
       name: 'Hosted macOS'
 
