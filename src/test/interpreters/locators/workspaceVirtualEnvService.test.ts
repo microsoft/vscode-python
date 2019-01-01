@@ -18,7 +18,7 @@ import { initialize, multirootPath } from '../../initialize';
 const timeoutMs = 60_000;
 suite('Interpreters - Workspace VirtualEnv Service', function () {
     this.timeout(timeoutMs);
-    this.retries(1);
+    this.retries(0);
 
     let locator: IInterpreterLocatorService;
     const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri!;
@@ -28,8 +28,10 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
     async function waitForInterpreterToBeDetected(envNameToLookFor: string) {
         const predicate = async () => {
-            const items = await locator.getInterpreters(workspaceUri);
-            return items.some(item => item.envName === envNameToLookFor && !item.cachedEntry);
+            const items = await locator.getInterpreters(workspaceUri, true);
+            return items.some(item => {
+                return item.envName === envNameToLookFor;
+            });
         };
         await waitForCondition(predicate, timeoutMs, `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`);
     }
@@ -58,13 +60,12 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         // This test is required, we need to wait for interpreter listing completes,
         // before proceeding with other tests.
-        await locator.getInterpreters(workspaceUri);
-
         await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
+        await locator.getInterpreters(workspaceUri);
     });
 
-    suiteTeardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
-    teardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
+    suiteTeardown(async () => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
+    teardown(async () => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
 
     test('Detect Virtual Environment', async () => {
         const envName = await createVirtualEnvironment('one');
