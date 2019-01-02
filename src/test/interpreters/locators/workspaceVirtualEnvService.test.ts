@@ -29,9 +29,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     async function waitForInterpreterToBeDetected(envNameToLookFor: string) {
         const predicate = async () => {
             const items = await locator.getInterpreters(workspaceUri);
-            return items.some(item => {
-                return item.envName === envNameToLookFor;
-            });
+            return items.some(item => item.envName === envNameToLookFor);
         };
         await waitForCondition(predicate, timeoutMs, `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`);
     }
