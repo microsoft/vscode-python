@@ -25,11 +25,12 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
+import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, HistoryMessages, Settings, Telemetry } from './constants';
-import { JupyterInstallError } from './jupyterInstallError';
+import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
     CellState,
     ICell,
@@ -112,6 +113,14 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
+        // Create a deferred object that will wait until the status is disposed
+        const finishedAddingCode = createDeferred<void>();
+        const actualDispose = status.dispose;
+        status.dispose = () => {
+            finishedAddingCode.resolve();
+            actualDispose();
+        };
+
         try {
 
             // Make sure we're loaded first.
@@ -151,6 +160,9 @@ export class History implements IWebPanelMessageListener, IHistory {
                         // Indicate executing until this cell is done.
                         status.dispose();
                     });
+
+                // Wait for the cell to finish
+                await finishedAddingCode.promise;
             }
         } catch (err) {
             status.dispose();

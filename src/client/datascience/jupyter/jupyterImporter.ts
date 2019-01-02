@@ -6,16 +6,15 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Disposable } from 'vscode-jsonrpc';
-import { IWorkspaceService } from '../common/application/types';
-import '../common/extensions';
-import { IFileSystem } from '../common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts';
-import { CodeSnippits } from './constants';
-import { IJupyterExecution, INotebookImporter } from './types';
+import { IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { CodeSnippits } from '../constants';
+import { IJupyterExecution, INotebookImporter } from '../types';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -34,22 +33,15 @@ export class JupyterImporter implements INotebookImporter {
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
 
-    private pythonExecutionService: Deferred<IPythonExecutionService> | undefined;
-    private templatePromise: Promise<string>;
-    private settingsChangedDiposable: Disposable;
-
+    private templatePromise : Promise<string>;
+    
     constructor(
-        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
-
-        this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
         this.templatePromise = this.createTemplateFile();
-        this.createExecutionServicePromise();
     }
 
     public async importFromFile(file: string): Promise<string> {
@@ -77,7 +69,6 @@ export class JupyterImporter implements INotebookImporter {
 
     public dispose = () => {
         this.isDisposed = true;
-        this.settingsChangedDiposable.dispose();
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
@@ -120,19 +111,5 @@ export class JupyterImporter implements INotebookImporter {
 
         // Now we should have a template that will convert
         return file.filePath;
-    }
-
-    private onSettingsChanged = () => {
-        // Recreate our promise for our execution service whenever the settings change
-        this.createExecutionServicePromise();
-    }
-
-    private createExecutionServicePromise = () => {
-        // Create a deferred promise that resolves when we have an execution service
-        this.pythonExecutionService = createDeferred<IPythonExecutionService>();
-        this.executionFactory
-            .create({})
-            .then((p: IPythonExecutionService) => { if (this.pythonExecutionService) { this.pythonExecutionService.resolve(p); } })
-            .catch(err => { if (this.pythonExecutionService) { this.pythonExecutionService.reject(err); } });
     }
 }

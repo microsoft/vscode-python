@@ -1,19 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import {
-    Contents,
-    ContentsManager,
-    Kernel,
-    KernelMessage,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
-import { Slot } from '@phosphor/signaling';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
@@ -22,15 +13,24 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IWorkspaceService } from '../common/application/types';
-import { Cancellation, CancellationError } from '../common/cancellation';
-import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
-import { createDeferred, Deferred, sleep } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { generateCells } from './cellFactory';
-import { concatMultilineString } from './common';
-import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from './types';
+import { IWorkspaceService } from '../../common/application/types';
+import { CancellationError } from '../../common/cancellation';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
+import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
+import { generateCells } from '../cellFactory';
+import { concatMultilineString } from '../common';
+import {
+    CellState,
+    ICell,
+    IConnection,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    IJupyterSessionManager,
+    INotebookServer,
+    InterruptResult
+} from '../types';
 
 class CellSubscriber {
     private deferred : Deferred<CellState> = createDeferred<CellState>();
@@ -109,13 +109,9 @@ class CellSubscriber {
 
 @injectable()
 export class JupyterServer implements INotebookServer, IDisposable {
+    private session: IJupyterSession | undefined;
     private connInfo: IConnection | undefined;
-    private kernelSpec: IJupyterKernelSpec | undefined;
     private workingDir: string | undefined;
-    private session: Session.ISession | undefined;
-    private sessionManager : SessionManager | undefined;
-    private contentsManager: ContentsManager | undefined;
-    private notebookFile: Contents.IModel | undefined;
     private sessionStartTime: number | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private pendingCellSubscriptions: CellSubscriber[] = [];
@@ -125,85 +121,41 @@ export class JupyterServer implements INotebookServer, IDisposable {
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager) {
         this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
     }
 
     public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void> => {
-        // Save connection information so we can use it later during shutdown
+        // Save connection info. Determines if we need to change directory or not
         this.connInfo = connInfo;
-        this.kernelSpec = kernelSpec;
         this.workingDir = workingDir;
 
-        // First connect to the sesssion manager
-        const serverSettings = ServerConnection.makeSettings(
-            {
-                baseUrl: connInfo.baseUrl,
-                token: connInfo.token,
-                pageUrl: '',
-                // A web socket is required to allow token authentication
-                wsUrl: connInfo.baseUrl.replace('http', 'ws'),
-                init: { cache: 'no-store', credentials: 'same-origin' }
-            });
-        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
-
-        // Create a temporary .ipynb file to use
-        this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
-        this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
-
-        // Create our session options using this temporary notebook and our connection info
-        const options: Session.IOptions = {
-            path: this.notebookFile.path,
-            kernelName: kernelSpec ? kernelSpec.name : '',
-            serverSettings: serverSettings
-        };
-
-        // Start a new session
-        this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
+        // Start our session
+        this.session = await this.sessionManager.startNew(connInfo, kernelSpec, cancelToken);
 
         // Setup our start time. We reject anything that comes in before this time during execute
         this.sessionStartTime = Date.now();
 
         // Wait for it to be ready
-        await this.session.kernel.ready;
+        await this.session.waitForIdle();
 
         // Run our initial setup and plot magics
         this.initialNotebookSetup(cancelToken);
     }
 
-    public shutdown = async () : Promise<void> => {
-        // Destroy the kernel spec first. It's the key thing to
-        // finish.
-        await this.destroyKernelSpec();
-
-        // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
-        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
-            try {
-                await this.contentsManager.delete(this.notebookFile.path);
-            } catch {
-                noop();
-            }
-        }
-        await this.shutdownSessionAndConnection();
+    public shutdown() : Promise<void> {
+        return this.session ? this.session.dispose() : Promise.resolve();
     }
 
-    public dispose = () : Promise<void> => {
+    public dispose() : Promise<void> {
+        this.onStatusChangedEvent.dispose();
         return this.shutdown();
     }
 
-    public waitForIdle = async () : Promise<void> => {
-        if (this.session && this.session.kernel) {
-            await this.session.kernel.ready;
-
-            while (this.session.kernel.status !== 'idle') {
-                await this.timeout(0);
-            }
-        }
-    }
-
-    public getCurrentState() : Promise<ICell[]> {
-        return Promise.resolve([]);
+    public waitForIdle() : Promise<void> {
+        return this.session ? this.session.waitForIdle() : Promise.resolve();
     }
 
     public execute(code : string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]> {
@@ -317,7 +269,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     public restartKernel = async () : Promise<void> => {
-        if (this.session && this.session.kernel) {
+        if (this.session) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
@@ -326,7 +278,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
             copyPending.forEach(c => c.reject());
 
             // Restart our kernel
-            await this.session.kernel.restart();
+            await this.session.restart();
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
@@ -339,7 +291,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     public interruptKernel = async (timeoutMs: number) : Promise<InterruptResult> => {
-        if (this.session && this.session.kernel) {
+        if (this.session) {
             // Keep track of our current time. If our start time gets reset, we
             // restarted the kernel.
             const interruptBeginTime = Date.now();
@@ -357,30 +309,28 @@ export class JupyterServer implements INotebookServer, IDisposable {
             const restarted = createDeferred<CellState[]>();
 
             // Listen to status change events so we can tell if we're restarting
-            const statusHandler: Slot<Session.ISession, Kernel.Status> = (s, a) => {
-                if (a === 'starting') {
-                    // We restarted the kernel.
-                    this.sessionStartTime = Date.now();
-                    this.logger.logWarning('Kernel restarting during interrupt');
+            const restartHandler = () => {
+                // We restarted the kernel.
+                this.sessionStartTime = Date.now();
+                this.logger.logWarning('Kernel restarting during interrupt');
 
-                    // Indicate we have to redo initial setup. We can't wait for starting though
-                    // because sometimes it doesn't happen
-                    this.ranInitialSetup = false;
+                // Indicate we have to redo initial setup. We can't wait for starting though
+                // because sometimes it doesn't happen
+                this.ranInitialSetup = false;
 
-                    // Indicate we restarted the race below
-                    restarted.resolve([]);
+                // Indicate we restarted the race below
+                restarted.resolve([]);
 
-                    // Fail all of the active (might be new ones) pending cell executes. We restarted.
-                    const newCopyPending = [...this.pendingCellSubscriptions];
-                    newCopyPending.forEach(c => {
-                        c.reject();
-                    });
-                }
+                // Fail all of the active (might be new ones) pending cell executes. We restarted.
+                const newCopyPending = [...this.pendingCellSubscriptions];
+                newCopyPending.forEach(c => {
+                    c.reject();
+                });
             };
-            this.session.statusChanged.connect(statusHandler);
+            const restartHandlerToken = this.session.onRestarted(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
-            this.session.kernel.interrupt().catch(exc => {
+            this.session.interrupt().catch(exc => {
                 this.logger.logWarning(`Error during interrupt: ${exc}`);
                 restarted.resolve([]);
             });
@@ -412,7 +362,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 // Otherwise a real error occurred.
                 throw exc;
             } finally {
-                this.session.statusChanged.disconnect(statusHandler);
+                restartHandlerToken.dispose();
             }
         }
 
@@ -431,56 +381,25 @@ export class JupyterServer implements INotebookServer, IDisposable {
             dispose: noop };
     }
 
-    private shutdownSessionAndConnection = async () => {
-        if (this.contentsManager) {
-            this.contentsManager.dispose();
-            this.contentsManager = undefined;
-        }
-        if (this.session || this.sessionManager) {
-            try {
-                if (this.session) {
-                    await this.session.shutdown();
-                    this.session.dispose();
-                }
-                if (this.sessionManager) {
-                    this.sessionManager.dispose();
-                }
-            } catch {
-                noop();
-            }
-            this.session = undefined;
-            this.sessionManager = undefined;
-        }
-        this.onStatusChangedEvent.dispose();
-        if (this.connInfo) {
-            this.connInfo.dispose(); // This should kill the process that's running
-            this.connInfo = undefined;
-        }
-    }
-
-    private destroyKernelSpec = async () => {
-        try {
-            if (this.kernelSpec) {
-                await this.kernelSpec.dispose(); // This should delete any old kernel specs
-            }
-        } catch {
-            noop();
-        }
-        this.kernelSpec = undefined;
-    }
-
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
-        return this.session ? this.session.kernel.requestExecute(
-            {
-                // Replace windows line endings with unix line endings.
-                code: code.replace(/\r\n/g, '\n'),
-                stop_on_error: false,
-                allow_stdin: false,
-                silent: silent
-            },
-            true
-        ) : undefined;
+        try {
+            return this.session ? this.session.requestExecute(
+                {
+                    // Replace windows line endings with unix line endings.
+                    code: code.replace(/\r\n/g, '\n'),
+                    stop_on_error: false,
+                    allow_stdin: false,
+                    silent: silent
+                },
+                true
+            ) : undefined;
+        } catch (exc) {
+            // Any errors generating a request should just be logged. User can't do anything about it.
+            this.logger.logError(exc);
+        }
+
+        return undefined;
     }
 
     // Set up our initial plotting and imports
@@ -509,10 +428,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
             `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${darkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
             cancelToken
         ).ignoreErrors();
-    }
-
-    private timeout(ms : number) : Promise<number> {
-        return new Promise(resolve => setTimeout(resolve, ms, ms));
     }
 
     private combineObservables = (...args : Observable<ICell>[]) : Observable<ICell[]> => {

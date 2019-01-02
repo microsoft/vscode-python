@@ -7,9 +7,9 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { JupyterImporter } from '../../client/datascience/jupyterImporter';
-import { JupyterServer } from '../../client/datascience/jupyterServer';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { JupyterServer } from '../../client/datascience/jupyter/jupyterServer';
 import {
     ICodeCssGenerator,
     IHistory,

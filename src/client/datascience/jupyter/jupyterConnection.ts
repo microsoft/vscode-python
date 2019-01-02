@@ -4,15 +4,15 @@
 import * as path from 'path';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 
-import { CancellationError } from '../common/cancellation';
-import { IFileSystem } from '../common/platform/types';
-import { ObservableExecutionResult, Output } from '../common/process/types';
-import { IConfigurationService, ILogger } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { IServiceContainer } from '../ioc/types';
+import { CancellationError } from '../../common/cancellation';
+import { IFileSystem } from '../../common/platform/types';
+import { ObservableExecutionResult, Output } from '../../common/process/types';
+import { IConfigurationService, ILogger } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
+import { IServiceContainer } from '../../ioc/types';
 import { JupyterConnectError } from './jupyterConnectError';
-import { IConnection } from './types';
+import { IConnection } from '../types';
 
 const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
 const HttpPattern = /https?:\/\//;
