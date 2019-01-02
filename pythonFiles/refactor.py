@@ -272,7 +272,7 @@ class RopeRefactoring(object):
             WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False, indent_size=indent_size)
         resourceToRefactor = libutils.path_to_resource(project, filePath)
         refactor = LocalToFieldRefactor(
-            project, resourceToRefactor, startOffset=start, similar=True)
+            project, resourceToRefactor, startOffset=start)
         refactor.refactor()
         changes = refactor.changes
         project.close()
