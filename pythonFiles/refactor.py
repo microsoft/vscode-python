@@ -319,7 +319,7 @@ class RopeRefactoring(object):
                 request['start']), int(request['end']), request['name'], int(request['indent_size']))
             return self._write_response(self._serialize(request['id'], changes))
         elif lookup == 'local_to_field':
-            changes = self._extractMethod(request['file'], int(
+            changes = self._localToField(request['file'], int(
                 request['start']), int(request['indent_size']))
             return self._write_response(self._serialize(request['id'], changes))
 
