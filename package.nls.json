@@ -10,6 +10,7 @@
     "python.command.python.updateSparkLibrary.title": "Update Workspace PySpark Libraries",
     "python.command.python.refactorExtractVariable.title": "Extract Variable",
     "python.command.python.refactorExtractMethod.title": "Extract Method",
+    "python.command.python.refactorLocalToField.title": "Convert Local to Field",
     "python.command.python.viewTestOutput.title": "Show Unit Test Output",
     "python.command.python.selectAndRunTestMethod.title": "Run Unit Test Method ...",
     "python.command.python.selectAndDebugTestMethod.title": "Debug Unit Test Method ...",
