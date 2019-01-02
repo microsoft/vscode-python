@@ -40,6 +40,17 @@ export type LintingTelemetry = {
     trigger: LinterTrigger;
     executableSpecified: boolean;
 };
+
+export type LinterInstallPromptTelemetry = {
+    tool?: LinterId;
+    action: 'select'|'disablePrompt'|'install';
+};
+
+export type LinterSelectionTelemetry = {
+    tool?: LinterId;
+    enabled: boolean;
+};
+
 export type PythonInterpreterTelemetry = {
     trigger: 'ui' | 'shebang' | 'load';
     failed: boolean;
@@ -146,6 +157,8 @@ export type TelemetryProperties = FormatTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
     | LintingTelemetry
+    | LinterInstallPromptTelemetry
+    | LinterSelectionTelemetry
     | EditorLoadTelemetry
     | PythonInterpreterTelemetry
     | CodeExecutionTelemetry

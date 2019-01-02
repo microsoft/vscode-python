@@ -33,6 +33,7 @@ export namespace Interpreters {
 
 export namespace Linters {
     export const installedButNotEnabled = localize('Linter.InstalledButNotEnabled', 'Linter {0} is installed but not enabled.');
+    export const replaceWithSelectedLinter = localize('Linter.replaceWithSelectedLinter', 'Multiple linters are enabled in settings. Replace with \'{0}\'?');
 }
 
 export namespace DataScienceSurveyBanner {

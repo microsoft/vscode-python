@@ -5,9 +5,11 @@ import * as os from 'os';
 import { OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
-import { ILinterManager } from '../../linters/types';
-import { IApplicationShell, IWorkspaceService } from '../application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { LinterId } from '../../linters/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { LINTER_NOT_INSTALLED_PROMPT } from '../../telemetry/constants';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
+import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
@@ -176,16 +178,15 @@ export class LinterInstaller extends BaseInstaller {
 
         const productName = ProductNames.get(product)!;
         const install = 'Install';
-        const disableAllLinting = 'Disable linting';
-        const disableThisLinter = `Disable ${productName}`;
         const disableInstallPrompt = 'Do not show again';
         const disableLinterInstallPromptKey = `${productName}_DisableLinterInstallPrompt`;
+        const selectLinter = 'Select Linter';
 
         if (isPylint && this.getStoredResponse(disableLinterInstallPromptKey) === true) {
             return InstallerResponse.Ignore;
         }
 
-        const options = isPylint ? [disableThisLinter, disableAllLinting, disableInstallPrompt] : [disableThisLinter, disableAllLinting];
+        const options = isPylint ? [selectLinter, disableInstallPrompt] : [selectLinter];
 
         let message = `Linter ${productName} is not installed.`;
         if (this.isExecutableAModule(product, resource)) {
@@ -194,22 +195,20 @@ export class LinterInstaller extends BaseInstaller {
             const executable = this.getExecutableNameFromSettings(product, resource);
             message = `Path to the ${productName} linter is invalid (${executable})`;
         }
-
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install'});
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt'});
             return InstallerResponse.Ignore;
         }
 
-        const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
-        if (response === disableAllLinting) {
-            await lm.enableLintingAsync(false);
-            return InstallerResponse.Disabled;
-        } else if (response === disableThisLinter) {
-            await lm.getLinterInfo(product).enableAsync(false);
-            return InstallerResponse.Disabled;
+        if (response === selectLinter){
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { action: 'select'});
+            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+            await commandManager.executeCommand(Commands.Set_Linter);
         }
         return InstallerResponse.Ignore;
     }
@@ -222,7 +221,7 @@ export class LinterInstaller extends BaseInstaller {
      * @param key Key to use to get a persisted response value, each installer must define this for themselves.
      * @returns Boolean: The current state of the stored response key given.
      */
-    private getStoredResponse(key: string): boolean {
+    protected getStoredResponse(key: string): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
         return state.value;

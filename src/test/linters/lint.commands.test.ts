@@ -149,8 +149,8 @@ suite('Linting - Linter Selector', () => {
         assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
         assert.notEqual(options!, undefined, 'showQuickPick was not called');
 
-        assert.equal(suggestions.length, linters.length, 'Wrong number of suggestions');
-        assert.deepEqual(suggestions, linters.map(x => x.id).sort(), 'Wrong linters order in suggestions');
+        assert.equal(suggestions.length, linters.length + 1, 'Wrong number of suggestions');
+        assert.deepEqual(suggestions, ['Disable Linting', ...linters.map(x => x.id).sort()], 'Wrong linters order in suggestions');
 
         assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
