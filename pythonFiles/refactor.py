@@ -198,7 +198,7 @@ class LocalToFieldRefactor(BaseRefactoring):
 
     def onRefactor(self):
         field = LocalToField(self.project, self.resource, self.startOffset)
-        changes = field.get_changes(task_handle=self._handle)
+        changes = field.get_changes()
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
