@@ -32,7 +32,7 @@ class VSCode(enum.Enum):
 
 def run_command(command, cwd=None):
     """Run the specified command in a subprocess shell."""
-    cmd = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    cmd = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     cmd.check_returncode()
 
 
