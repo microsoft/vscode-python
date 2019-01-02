@@ -4,7 +4,7 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import {
-    ConfigurationTarget, DiagnosticSeverity, Disposable, Uri,
+    ConfigurationChangeEvent, ConfigurationTarget, DiagnosticSeverity, Disposable, Uri,
     workspace, WorkspaceConfiguration
 } from 'vscode';
 import { sendTelemetryEvent } from '../telemetry';
@@ -348,13 +348,16 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         }
     }
     protected initialize(): void {
-        this.disposables.push(workspace.onDidChangeConfiguration(() => {
-            const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
-            this.update(currentConfig);
+        this.disposables.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
+            if (event.affectsConfiguration('python'))
+            {
+                const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
+                this.update(currentConfig);
 
-            // If workspace config changes, then we could have a cascading effect of on change events.
-            // Let's defer the change notification.
-            setTimeout(() => this.emit('change'), 1);
+                // If workspace config changes, then we could have a cascading effect of on change events.
+                // Let's defer the change notification.
+                setTimeout(() => this.emit('change'), 1);
+            }
         }));
 
         const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
