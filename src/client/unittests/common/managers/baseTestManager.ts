@@ -3,6 +3,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
+import { getNamesAndValues } from '../../../common/utils/enum';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
@@ -177,11 +178,13 @@ export abstract class BaseTestManager implements ITestManager {
             Run_Specific_Class: 'false',
             Run_Specific_Function: 'false'
         };
+        //Ensure valid values are sent.
+        const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map(item => item.value);
         const telementryProperties: TestRunTelemetry = {
             tool: this.testProvider,
             scope: 'all',
             debugging: debug === true,
-            triggeredBy: cmdSource,
+            triggerSource: validCmdSourceValues.indexOf(cmdSource) === -1 ? 'commandpalette' : cmdSource,
             failed: false
         };
         if (runFailedTests === true) {

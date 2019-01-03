@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
+import { compare } from 'semver';
 import { ConfigurationTarget } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
-import { IPersistentStateFactory } from '../common/types';
+import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter, WorkspacePythonPath } from './contracts';
 
@@ -26,16 +27,23 @@ export class InterpreterHelper implements IInterpreterHelper {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
-    public getActiveWorkspaceUri(): WorkspacePythonPath | undefined {
+    public getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
-
         if (!workspaceService.hasWorkspaceFolders) {
             return;
         }
         if (Array.isArray(workspaceService.workspaceFolders) && workspaceService.workspaceFolders.length === 1) {
             return { folderUri: workspaceService.workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace };
         }
+
+        if (resource) {
+            const workspaceFolder = workspaceService.getWorkspaceFolder(resource);
+            if (workspaceFolder) {
+                return { configTarget: ConfigurationTarget.WorkspaceFolder, folderUri: workspaceFolder.uri };
+            }
+        }
+        const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+
         if (documentManager.activeTextEditor) {
             const workspaceFolder = workspaceService.getWorkspaceFolder(documentManager.activeTextEditor.document.uri);
             if (workspaceFolder) {
@@ -46,7 +54,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
         let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
         fileHash = fileHash ? fileHash : '';
-        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v2`, undefined, EXPITY_DURATION);
+        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v3`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }
@@ -92,5 +100,16 @@ export class InterpreterHelper implements IInterpreterHelper {
                 return '';
             }
         }
+    }
+    public getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined {
+        if (!Array.isArray(interpreters) || interpreters.length === 0) {
+            return;
+        }
+        if (interpreters.length === 1) {
+            return interpreters[0];
+        }
+        const sorted = interpreters.slice();
+        sorted.sort((a, b) => (a.version && b.version) ? compare(a.version.raw, b.version.raw) : 0);
+        return sorted[sorted.length - 1];
     }
 }

@@ -6,12 +6,12 @@
 import { ChildProcess } from 'child_process';
 import { DebugSession } from 'vscode-debugadapter';
 import { LaunchRequestArguments } from '../../types';
-import { IDebugLauncherScriptProvider } from '../types';
+import { ILocalDebugLauncherScriptProvider } from '../types';
 import { DebugType } from './DebugClient';
 import { LocalDebugClientV2 } from './localDebugClientV2';
 
 export class NonDebugClientV2 extends LocalDebugClientV2 {
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: IDebugLauncherScriptProvider) {
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
 

@@ -15,12 +15,12 @@ import { IApplicationEnvironment } from '../../../client/common/application/type
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService, NugetPackage } from '../../../client/common/nuget/types';
 import { IPlatformService } from '../../../client/common/platform/types';
-import { Architecture, OSType } from '../../../client/common/utils/platform';
+import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 const downloadBaseFileName = 'Python-Language-Server';
 
-suite('Language Server Package Service', () => {
+suite('Languagex', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
     let lsPackageService: LanguageServerPackageService;
@@ -28,9 +28,8 @@ suite('Language Server Package Service', () => {
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object);
+        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
         lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
     function setMinVersionOfLs(version: string) {
@@ -39,12 +38,9 @@ suite('Language Server Package Service', () => {
     }
     [true, false].forEach(is64Bit => {
         const bitness = is64Bit ? '64bit' : '32bit';
-        const architecture = is64Bit ? Architecture.x64 : Architecture.x86;
         test(`Get Package name for Windows (${bitness})`, async () => {
-            platform
-                .setup(p => p.info)
-                .returns(() => { return { type: OSType.Windows, architecture } as any; })
-                .verifiable(typeMoq.Times.atLeastOnce());
+            platform.setup(p => p.osType).returns(() => OSType.Windows);
+            platform.setup(p => p.is64bit).returns(() => is64Bit);
             const expectedName = is64Bit ? `${downloadBaseFileName}-${PlatformName.Windows64Bit}` : `${downloadBaseFileName}-${PlatformName.Windows32Bit}`;
 
             const name = lsPackageService.getNugetPackageName();
@@ -53,10 +49,7 @@ suite('Language Server Package Service', () => {
             expect(name).to.be.equal(expectedName);
         });
         test(`Get Package name for Mac (${bitness})`, async () => {
-            platform
-                .setup(p => p.info)
-                .returns(() => { return { type: OSType.OSX, architecture } as any; })
-                .verifiable(typeMoq.Times.atLeastOnce());
+            platform.setup(p => p.osType).returns(() => OSType.OSX);
             const expectedName = `${downloadBaseFileName}-${PlatformName.Mac64Bit}`;
 
             const name = lsPackageService.getNugetPackageName();
@@ -65,10 +58,7 @@ suite('Language Server Package Service', () => {
             expect(name).to.be.equal(expectedName);
         });
         test(`Get Package name for Linux (${bitness})`, async () => {
-            platform
-                .setup(p => p.info)
-                .returns(() => { return { type: OSType.Linux, architecture } as any; })
-                .verifiable(typeMoq.Times.atLeastOnce());
+            platform.setup(p => p.osType).returns(() => OSType.Linux);
             const expectedName = `${downloadBaseFileName}-${PlatformName.Linux64Bit}`;
 
             const name = lsPackageService.getNugetPackageName();

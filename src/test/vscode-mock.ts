@@ -69,6 +69,7 @@ mockedVSCode.TextEdit = vscodeMocks.vscMockExtHostedTypes.TextEdit;
 mockedVSCode.WorkspaceEdit = vscodeMocks.vscMockExtHostedTypes.WorkspaceEdit;
 mockedVSCode.RelativePattern = vscodeMocks.vscMockExtHostedTypes.RelativePattern;
 mockedVSCode.ProgressLocation = vscodeMocks.vscMockExtHostedTypes.ProgressLocation;
+mockedVSCode.ViewColumn = vscodeMocks.vscMockExtHostedTypes.ViewColumn;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

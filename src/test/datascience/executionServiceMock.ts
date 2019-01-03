@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { SemVer } from 'semver';
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
@@ -10,7 +11,6 @@ import {
     InterpreterInfomation,
     IPythonExecutionService,
     ObservableExecutionResult,
-    PythonVersionInfo,
     SpawnOptions
 } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
@@ -27,11 +27,10 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         return Promise.resolve(
             {
                 path: '',
-                version: '3.6',
+                version: new SemVer('3.6.0-beta'),
                 sysVersion: '1.0',
                 sysPrefix: '1.0',
-                architecture: Architecture.x64,
-                version_info: [ 3, 6, 0, 'beta'] as PythonVersionInfo
+                architecture: Architecture.x64
             });
     }
 

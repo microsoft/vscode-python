@@ -11,8 +11,10 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
-import { PythonSettings } from '../../../client/common/configSettings';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -24,18 +26,20 @@ import {
     IConfigurationService, ICurrentProcess,
     IDisposableRegistry, IPathUtils, IsWindows
 } from '../../../client/common/types';
-import { IS_WINDOWS } from '../../../client/common/util';
 import { OSType } from '../../../client/common/utils/platform';
 import {
     registerTypes as variablesRegisterTypes
 } from '../../../client/common/variables/serviceRegistry';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
 import {
-    clearPythonPathInWorkspaceFolder, isOs,
+    clearPythonPathInWorkspaceFolder, getExtensionSettings,
+    isOs,
     isPythonVersion
 } from '../../common';
+import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import {
     closeActiveWindows, initialize, initializeTest,
     IS_MULTI_ROOT_TEST
@@ -74,8 +78,10 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
+        serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
         serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
-
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
 
@@ -135,7 +141,7 @@ suite('PythonExecutableService', () => {
     });
 
     test('Ensure correct path to executable is returned', async () => {
-        const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
+        const pythonPath = getExtensionSettings(workspace4Path).pythonPath;
         let expectedExecutablePath: string;
         if (await fs.pathExists(pythonPath)) {
             expectedExecutablePath = pythonPath;

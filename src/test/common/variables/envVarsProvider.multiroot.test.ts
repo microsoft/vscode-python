@@ -7,15 +7,18 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
-import { IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
-import { IS_WINDOWS } from '../../../client/common/util';
+import { ConfigurationService } from '../../../client/common/configuration/service';
+import { IS_WINDOWS, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
+import { PlatformService } from '../../../client/common/platform/platformService';
+import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
+import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { clearPythonPathInWorkspaceFolder, updateSetting } from '../../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
+import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
@@ -47,7 +50,7 @@ suite('Multiroot Environment Variables Provider', () => {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await closeActiveWindows();
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -59,8 +62,9 @@ suite('Multiroot Environment Variables Provider', () => {
         const mockProcess = new MockProcess(mockVariables);
         const variablesService = new EnvironmentVariablesService(pathUtils);
         const disposables = ioc.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        const isWindows = ioc.serviceContainer.get<boolean>(IsWindows);
-        return new EnvironmentVariablesProvider(variablesService, disposables, isWindows, mockProcess);
+        ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
+        const cfgService = new ConfigurationService(ioc.serviceContainer);
+        return new EnvironmentVariablesProvider(variablesService, disposables, new PlatformService(), cfgService, mockProcess);
     }
 
     test('Custom variables should not be undefined without an env file', async () => {

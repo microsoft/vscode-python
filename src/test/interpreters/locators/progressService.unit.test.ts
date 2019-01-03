@@ -17,6 +17,9 @@ import { sleep } from '../../core';
 
 suite('Interpreters - Locator Progress', () => {
     class Locator implements IInterpreterLocatorService {
+        public get hasInterpreters(): Promise<boolean> {
+            return Promise.resolve(true);
+        }
         public locatingCallback?: (e: Promise<PythonInterpreter[]>) => any;
         public onLocating(listener: (e: Promise<PythonInterpreter[]>) => any, thisArgs?: any, disposables?: Disposable[]): Disposable {
             this.locatingCallback = listener;

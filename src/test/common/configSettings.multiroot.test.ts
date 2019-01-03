@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { clearPythonPathInWorkspaceFolder } from '../common';
+import { clearPythonPathInWorkspaceFolder, getExtensionSettings } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
@@ -49,7 +49,7 @@ suite('Multiroot Config Settings', () => {
         }
         settings = workspace.getConfiguration('python', workspaceUri);
         PythonSettings.dispose();
-        const cfgSetting = PythonSettings.getInstance(workspaceUri);
+        const cfgSetting = getExtensionSettings(workspaceUri);
         assert.equal(cfgSetting.pythonPath, pythonPath, 'Python Path not inherited from workspace');
     });
 
@@ -61,7 +61,7 @@ suite('Multiroot Config Settings', () => {
         const privatePythonPath = `x${new Date().getTime()}`;
         await settings.update('pythonPath', privatePythonPath, ConfigurationTarget.WorkspaceFolder);
 
-        const cfgSetting = PythonSettings.getInstance(workspaceUri);
+        const cfgSetting = getExtensionSettings(workspaceUri);
         assert.equal(cfgSetting.pythonPath, privatePythonPath, 'Python Path for workspace folder is incorrect');
     });
 
@@ -77,7 +77,7 @@ suite('Multiroot Config Settings', () => {
         await settings.update('pythonPath', undefined, ConfigurationTarget.WorkspaceFolder);
 
         const document = await workspace.openTextDocument(fileToOpen);
-        const cfg = PythonSettings.getInstance(document.uri);
+        const cfg = getExtensionSettings(document.uri);
         assert.equal(cfg.pythonPath, pythonPath, 'Python Path not inherited from workspace');
     });
 
@@ -92,7 +92,7 @@ suite('Multiroot Config Settings', () => {
         await settings.update('pythonPath', privatePythonPath, ConfigurationTarget.WorkspaceFolder);
 
         const document = await workspace.openTextDocument(fileToOpen);
-        const cfg = PythonSettings.getInstance(document.uri);
+        const cfg = getExtensionSettings(document.uri);
         assert.equal(cfg.pythonPath, privatePythonPath, 'Python Path for workspace folder is incorrect');
     });
 
@@ -100,11 +100,11 @@ suite('Multiroot Config Settings', () => {
         const workspaceUri = Uri.file(path.join(multirootPath, 'workspace1'));
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', undefined);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', true);
-        let settings = PythonSettings.getInstance(workspaceUri);
+        let settings = getExtensionSettings(workspaceUri);
         assert.equal(settings.linting.pylintEnabled, true, 'Pylint not enabled when it should be');
 
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', false);
-        settings = PythonSettings.getInstance(workspaceUri);
+        settings = getExtensionSettings(workspaceUri);
         assert.equal(settings.linting.pylintEnabled, false, 'Pylint enabled when it should not be');
     });
 
@@ -114,14 +114,14 @@ suite('Multiroot Config Settings', () => {
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', false);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', true);
 
-        let cfgSetting = PythonSettings.getInstance(workspaceUri);
+        let cfgSetting = getExtensionSettings(workspaceUri);
         assert.equal(cfgSetting.linting.pylintEnabled, false, 'Workspace folder pylint setting is true when it should not be');
         PythonSettings.dispose();
 
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', true);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', false);
 
-        cfgSetting = PythonSettings.getInstance(workspaceUri);
+        cfgSetting = getExtensionSettings(workspaceUri);
         assert.equal(cfgSetting.linting.pylintEnabled, true, 'Workspace folder pylint setting is false when it should not be');
     });
 
@@ -132,14 +132,14 @@ suite('Multiroot Config Settings', () => {
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', false);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', true);
         let document = await workspace.openTextDocument(fileToOpen);
-        let cfg = PythonSettings.getInstance(document.uri);
+        let cfg = getExtensionSettings(document.uri);
         assert.equal(cfg.linting.pylintEnabled, true, 'Pylint should be enabled in workspace');
         PythonSettings.dispose();
 
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', true);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', false);
         document = await workspace.openTextDocument(fileToOpen);
-        cfg = PythonSettings.getInstance(document.uri);
+        cfg = getExtensionSettings(document.uri);
         assert.equal(cfg.linting.pylintEnabled, false, 'Pylint should not be enabled in workspace');
     });
 
@@ -150,14 +150,14 @@ suite('Multiroot Config Settings', () => {
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', false);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', true);
         let document = await workspace.openTextDocument(fileToOpen);
-        let cfg = PythonSettings.getInstance(document.uri);
+        let cfg = getExtensionSettings(document.uri);
         assert.equal(cfg.linting.pylintEnabled, true, 'Pylint should be enabled in workspace');
         PythonSettings.dispose();
 
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.Workspace, 'pylintEnabled', true);
         await enableDisableLinterSetting(workspaceUri, ConfigurationTarget.WorkspaceFolder, 'pylintEnabled', false);
         document = await workspace.openTextDocument(fileToOpen);
-        cfg = PythonSettings.getInstance(document.uri);
+        cfg = getExtensionSettings(document.uri);
         assert.equal(cfg.linting.pylintEnabled, false, 'Pylint should not be enabled in workspace');
     });
 
@@ -167,7 +167,7 @@ suite('Multiroot Config Settings', () => {
         let fileToOpen = path.join(workspace2Uri.fsPath, 'file.py');
 
         let document = await workspace.openTextDocument(fileToOpen);
-        let cfg = PythonSettings.getInstance(document.uri);
+        let cfg = getExtensionSettings(document.uri);
         assert.equal(path.dirname(cfg.workspaceSymbols.tagFilePath), workspace2Uri.fsPath, 'ctags file path for workspace2 is incorrect');
         assert.equal(path.basename(cfg.workspaceSymbols.tagFilePath), 'workspace2.tags.file', 'ctags file name for workspace2 is incorrect');
         PythonSettings.dispose();
@@ -176,7 +176,7 @@ suite('Multiroot Config Settings', () => {
         fileToOpen = path.join(workspace3Uri.fsPath, 'file.py');
 
         document = await workspace.openTextDocument(fileToOpen);
-        cfg = PythonSettings.getInstance(document.uri);
+        cfg = getExtensionSettings(document.uri);
         assert.equal(path.dirname(cfg.workspaceSymbols.tagFilePath), workspace3Uri.fsPath, 'ctags file path for workspace3 is incorrect');
         assert.equal(path.basename(cfg.workspaceSymbols.tagFilePath), 'workspace3.tags.file', 'ctags file name for workspace3 is incorrect');
         PythonSettings.dispose();

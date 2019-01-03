@@ -1,39 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType, window } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType } from 'vscode';
 
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import { ContextKey } from '../../common/contextKey';
+import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, EditorContexts, RegExpValues, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyterInstallError';
+import { generateCellRanges } from '../cellFactory';
+import { Commands, Telemetry } from '../constants';
+import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { ICodeWatcher, IHistoryProvider } from '../types';
 
-export interface ICell {
-    range: Range;
-    title: string;
-}
-
+@injectable()
 export class CodeWatcher implements ICodeWatcher {
     private document?: TextDocument;
     private version: number = -1;
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
-    private historyProvider: IHistoryProvider;
-    private commandManager: ICommandManager;
-    private applicationShell: IApplicationShell;
-    private logger: ILogger;
 
-    constructor(serviceContainer: IServiceContainer, document: TextDocument) {
-        this.historyProvider = serviceContainer.get<IHistoryProvider>(IHistoryProvider);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.logger = serviceContainer.get<ILogger>(ILogger);
+    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
+                @inject(ILogger) private logger: ILogger,
+                @inject(IHistoryProvider) private historyProvider : IHistoryProvider,
+                @inject(IDocumentManager) private documentManager : IDocumentManager) {}
 
+    public addFile(document: TextDocument) {
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated
@@ -41,7 +33,7 @@ export class CodeWatcher implements ICodeWatcher {
         this.version = document.version;
 
         // Get document cells here
-        const cells = this.getCells(document);
+        const cells = generateCellRanges(document);
 
         this.codeLenses = [];
         cells.forEach(cell => {
@@ -74,7 +66,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunAllCells)
     public async runAllCells() {
-        const activeHistory = this.historyProvider.active;
+        const activeHistory = this.historyProvider.getOrCreateActive();
 
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
@@ -92,12 +84,12 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCell)
     public async runCell(range: Range) {
-        const activeHistory = this.historyProvider.active;
+        const activeHistory = this.historyProvider.getOrCreateActive();
         if (this.document) {
             const code = this.document.getText(range);
 
             try {
-                await activeHistory.addCode(code, this.getFileName(), range.start.line, window.activeTextEditor);
+                await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
             } catch (err) {
                 this.handleError(err);
             }
@@ -107,13 +99,13 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCurrentCell)
     public async runCurrentCell() {
-        if (!window.activeTextEditor || !window.activeTextEditor.document) {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
         }
 
         for (const lens of this.codeLenses) {
             // Check to see which RunCell lens range overlaps the current selection start
-            if (lens.range.contains(window.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
+            if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
                 await this.runCell(lens.range);
                 break;
             }
@@ -122,7 +114,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCurrentCellAndAdvance)
     public async runCurrentCellAndAdvance() {
-        if (!window.activeTextEditor || !window.activeTextEditor.document) {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
         }
 
@@ -137,7 +129,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             // Check to see which RunCell lens range overlaps the current selection start
-            if (lens.range.contains(window.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
+            if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
                 currentRunCellLens = lens;
             }
         }
@@ -162,7 +154,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     // tslint:disable-next-line:no-any
     private handleError = (err : any) => {
-        if ((<JupyterInstallError>err).actionTitle !== undefined) {
+        if (err instanceof JupyterInstallError) {
             const jupyterError = err as JupyterInstallError;
 
             // This is a special error that shows a link to open for more help
@@ -183,7 +175,7 @@ export class CodeWatcher implements ICodeWatcher {
     // User has picked run and advance on the last cell of a document
     // Create a new cell at the bottom and put their selection there, ready to type
     private createNewCell(currentRange: Range): Range {
-        const editor = window.activeTextEditor;
+        const editor = this.documentManager.activeTextEditor;
         const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
 
         if (editor) {
@@ -197,49 +189,11 @@ export class CodeWatcher implements ICodeWatcher {
 
     // Advance the cursor to the selected range
     private advanceToRange(targetRange: Range) {
-        const editor = window.activeTextEditor;
+        const editor = this.documentManager.activeTextEditor;
         const newSelection = new Selection(targetRange.start, targetRange.start);
         if (editor) {
             editor.selection = newSelection;
             editor.revealRange(targetRange, TextEditorRevealType.Default);
         }
-    }
-
-    // Implmentation of getCells here based on Don's Jupyter extension work
-    private getCells(document: TextDocument): ICell[] {
-        const cellIdentifier: RegExp = RegExpValues.PythonCellMarker;
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
-
-        const cells: ICell[] = [];
-        for (let index = 0; index < document.lineCount; index += 1) {
-            const line = document.lineAt(index);
-            // clear regex cache
-            cellIdentifier.lastIndex = -1;
-            if (cellIdentifier.test(line.text)) {
-                const results = cellIdentifier.exec(line.text);
-                if (cells.length > 0) {
-                    const previousCell = cells[cells.length - 1];
-                    previousCell.range = new Range(previousCell.range.start, document.lineAt(index - 1).range.end);
-                }
-
-                if (results !== null) {
-                    cells.push({
-                        range: line.range,
-                        title: results.length > 1 ? results[2].trim() : ''
-                    });
-                }
-            }
-        }
-
-        if (cells.length >= 1) {
-            const line = document.lineAt(document.lineCount - 1);
-            const previousCell = cells[cells.length - 1];
-            previousCell.range = new Range(previousCell.range.start, line.range.end);
-        }
-
-        // Inform the editor context that we have cells, fire and forget is ok on the promise here
-        // as we don't care to wait for this context to be set and we can't do anything if it fails
-        editorContext.set(cells.length > 0).catch();
-        return cells;
     }
 }

@@ -3,12 +3,11 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { Position } from 'vscode';
-import { PythonSettings } from '../../client/common/configSettings';
+import { commands, Position, Range, Selection, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, Uri, window, workspace } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractMethod } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
+import { getExtensionSettings } from '../common';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
@@ -23,13 +22,13 @@ interface RenameResponse {
 
 suite('Method Extraction', () => {
     // Hack hac hack
-    const oldExecuteCommand = vscode.commands.executeCommand;
-    const options: vscode.TextEditorOptions = { cursorStyle: vscode.TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: vscode.TextEditorLineNumbersStyle.Off, tabSize: 4 };
+    const oldExecuteCommand = commands.executeCommand;
+    const options: TextEditorOptions = { cursorStyle: TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: TextEditorLineNumbersStyle.Off, tabSize: 4 };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;
     suiteSetup(initialize);
     suiteTeardown(() => {
-        vscode.commands.executeCommand = oldExecuteCommand;
+        commands.executeCommand = oldExecuteCommand;
         return closeActiveWindows();
     });
     setup(async () => {
@@ -37,10 +36,10 @@ suite('Method Extraction', () => {
         refactorTargetFile = path.join(refactorTargetFileDir, `refactor${new Date().getTime()}.py`);
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initializeTest();
-        (<any>vscode).commands.executeCommand = (cmd) => Promise.resolve();
+        (commands as any).executeCommand = (cmd) => Promise.resolve();
     });
     teardown(async () => {
-        vscode.commands.executeCommand = oldExecuteCommand;
+        commands.executeCommand = oldExecuteCommand;
         try {
             await fs.unlink(refactorTargetFile);
         } catch { }
@@ -54,13 +53,13 @@ suite('Method Extraction', () => {
     }
 
     async function testingMethodExtraction(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
-        const pythonSettings = PythonSettings.getInstance(vscode.Uri.file(refactorTargetFile));
-        const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
+        const pythonSettings = getExtensionSettings(Uri.file(refactorTargetFile));
+        const rangeOfTextToExtract = new Range(startPos, endPos);
         const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
 
         // tslint:disable-next-line:no-multiline-string
         const DIFF = `--- a/refactor.py\n+++ b/refactor.py\n@@ -237,9 +237,12 @@\n             try:\n                 self._process_request(self._input.readline())\n             except Exception as ex:\n-                message = ex.message + '  \\n' + traceback.format_exc()\n-                sys.stderr.write(str(len(message)) + ':' + message)\n-                sys.stderr.flush()\n+                self.myNewMethod(ex)\n+\n+    def myNewMethod(self, ex):\n+        message = ex.message + '  \\n' + traceback.format_exc()\n+        sys.stderr.write(str(len(message)) + ':' + message)\n+        sys.stderr.flush()\n \n if __name__ == '__main__':\n     RopeRefactoring().watch()\n`;
-        const mockTextDoc = await vscode.workspace.openTextDocument(refactorTargetFile);
+        const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
         const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
         try {
             const response = await proxy.extractMethod<RenameResponse>(mockTextDoc, 'myNewMethod', refactorTargetFile, rangeOfTextToExtract, options);
@@ -83,26 +82,26 @@ suite('Method Extraction', () => {
     }
 
     test('Extract Method', async () => {
-        const startPos = new vscode.Position(239, 0);
-        const endPos = new vscode.Position(241, 35);
+        const startPos = new Position(239, 0);
+        const endPos = new Position(241, 35);
         await testingMethodExtraction(false, startPos, endPos);
     });
 
     test('Extract Method will fail if complete statements are not selected', async () => {
-        const startPos = new vscode.Position(239, 30);
-        const endPos = new vscode.Position(241, 35);
+        const startPos = new Position(239, 30);
+        const endPos = new Position(241, 35);
         await testingMethodExtraction(true, startPos, endPos);
     });
 
     async function testingMethodExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
         const ch = new MockOutputChannel('Python');
-        const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
+        const rangeOfTextToExtract = new Range(startPos, endPos);
 
-        const textDocument = await vscode.workspace.openTextDocument(refactorTargetFile);
-        const editor = await vscode.window.showTextDocument(textDocument);
+        const textDocument = await workspace.openTextDocument(refactorTargetFile);
+        const editor = await window.showTextDocument(textDocument);
 
-        editor.selections = [new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
-        editor.selection = new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
+        editor.selections = [new Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
+        editor.selection = new Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
 
         try {
             await extractMethod(EXTENSION_DIR, editor, rangeOfTextToExtract, ch, ioc.serviceContainer);
@@ -123,14 +122,14 @@ suite('Method Extraction', () => {
 
     // This test fails on linux (text document not getting updated in time)
     test('Extract Method (end to end)', async () => {
-        const startPos = new vscode.Position(239, 0);
-        const endPos = new vscode.Position(241, 35);
+        const startPos = new Position(239, 0);
+        const endPos = new Position(241, 35);
         await testingMethodExtractionEndToEnd(false, startPos, endPos);
     });
 
     test('Extract Method will fail if complete statements are not selected', async () => {
-        const startPos = new vscode.Position(239, 30);
-        const endPos = new vscode.Position(241, 35);
+        const startPos = new Position(239, 30);
+        const endPos = new Position(241, 35);
         await testingMethodExtractionEndToEnd(true, startPos, endPos);
     });
 });

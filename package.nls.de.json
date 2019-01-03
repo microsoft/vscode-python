@@ -35,7 +35,7 @@
     "python.snippet.launch.externalTerminal.description": "Python-Programm mit externem Terminal/Konsole debuggen",
     "python.snippet.launch.django.label": "Python: Django",
     "python.snippet.launch.django.description": "Django-Anwendung debuggen",
-    "python.snippet.launch.flask.label": "Python: Flask (0.11.x oder neuer)",
+    "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.flask.description": "Flask-Anwendung debuggen",
     "python.snippet.launch.flaskOld.label": "Python: Flask (0.10.x oder früher)",
     "python.snippet.launch.flaskOld.description": "Ältere Flask-Anwendung debuggen",

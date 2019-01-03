@@ -7,9 +7,9 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { PythonVersionInfo } from '../../../client/common/process/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterHelper, IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
@@ -59,8 +59,7 @@ suite('Interpreters - Locators Helper', () => {
                 sysPrefix: name,
                 sysVersion: name,
                 type: InterpreterType.Unknown,
-                version: name,
-                version_info: [0, 0, 0, 'alpha'] as PythonVersionInfo
+                version: new SemVer('0.0.0-alpha')
             };
             interpreters.push(interpreter);
 
@@ -105,8 +104,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type: InterpreterType.Unknown,
-                    version: name,
-                    version_info: [3, parseInt(name.substr(-1), 10), 0, 'final'] as PythonVersionInfo
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);
                 expectedInterpreters.push(interpreter);
@@ -120,8 +118,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type: InterpreterType.Unknown,
-                    version: name,
-                    version_info: [3, parseInt(name.substr(-1), 10), 0, 'final'] as PythonVersionInfo
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
 
                 const duplicateInterpreter = {
@@ -131,8 +128,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type: InterpreterType.Unknown,
-                    version: name,
-                    version_info: interpreter.version_info
+                    version: new SemVer(interpreter.version.raw)
                 };
 
                 interpreters.push(interpreter);
@@ -177,8 +173,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type,
-                    version: name,
-                    version_info: [3, parseInt(name.substr(-1), 10), 0, 'final'] as PythonVersionInfo
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);
 

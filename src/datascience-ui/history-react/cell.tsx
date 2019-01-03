@@ -6,19 +6,21 @@ import './cell.css';
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
-// tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
+import { concatMultilineString } from '../../client/datascience/common';
 import { CellState, ICell } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
-import { RelativeImage } from '../react-common/relativeImage';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
+import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
+import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
 
+// tslint:disable-next-line:match-default-export-name import-name
 interface ICellProps {
     cellVM: ICellViewModel;
     theme: string;
@@ -39,56 +41,12 @@ export class Cell extends React.Component<ICellProps> {
         super(prop);
     }
 
-    public static concatMultilineString(str : nbformat.MultilineString) : string {
-        if (Array.isArray(str)) {
-            let result = '';
-            for (let i = 0; i < str.length; i += 1) {
-                const s = str[i];
-                if (i < str.length - 1 && !s.endsWith('\n')) {
-                    result = result.concat(`${s}\n`);
-                } else {
-                    result = result.concat(s);
-                }
-            }
-            return result.trim();
-        }
-        return str.toString().trim();
-    }
-
     public render() {
-        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
-            './images/Cancel/Cancel_16xMD_vscode_dark.svg';
-        const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
-            './images/GoToSourceCode/GoToSourceCode_16x_vscode_dark.svg';
-
-        return (
-            <div className='cell-wrapper'>
-                <MenuBar theme={this.props.theme}>
-                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
-                        <RelativeImage class='cell-button-image' path={clearButtonImage} />
-                    </CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
-                        <RelativeImage class='cell-button-image' path={gotoSourceImage} />
-                    </CellButton>
-                </MenuBar>
-                <div className='cell-outer'>
-                    <div className='controls-div'>
-                        <div className='controls-flex'>
-                            <ExecutionCount cell={this.props.cellVM.cell} theme={this.props.theme} visible={this.isCodeCell()}/>
-                            <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
-                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
-                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
-                        </div>
-                    </div>
-                    <div className='content-div'>
-                        <div className='cell-result-container'>
-                            {this.renderInputs()}
-                            {this.renderResults()}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+        if (this.props.cellVM.cell.data.cell_type === 'sys_info') {
+            return <SysInfo theme={this.props.theme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
+        } else {
+            return this.renderNormalCell();
+        }
     }
 
     // Public for testing
@@ -129,6 +87,38 @@ export class Cell extends React.Component<ICellProps> {
         return this.props.cellVM.cell.data as nbformat.IMarkdownCell;
     }
 
+    private renderNormalCell() {
+
+        return (
+            <div className='cell-wrapper'>
+                <MenuBar theme={this.props.theme}>
+                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Cancel}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
+                    </CellButton>
+                </MenuBar>
+                <div className='cell-outer'>
+                    <div className='controls-div'>
+                        <div className='controls-flex'>
+                            <ExecutionCount cell={this.props.cellVM.cell} theme={this.props.theme} visible={this.isCodeCell()}/>
+                            <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
+                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
+                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
+                        </div>
+                    </div>
+                    <div className='content-div'>
+                        <div className='cell-result-container'>
+                            {this.renderInputs()}
+                            {this.renderResults()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     private renderInputs = () => {
         if (this.isCodeCell()) {
             // Colorize our text
@@ -163,7 +153,7 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderMarkdown = (markdown : nbformat.IMarkdownCell) => {
         // React-markdown expects that the source is a string
-        const source = Cell.concatMultilineString(markdown.source);
+        const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
         return <Transform data={source}/>;
@@ -186,7 +176,7 @@ export class Cell extends React.Component<ICellProps> {
                 if (output.data) {
                     let data = output.data[mimetype];
                     if (mimetype === 'text/plain') {
-                        data = Cell.concatMultilineString(data);
+                        data = concatMultilineString(data);
                     }
 
                     // Return the transformed control using the data we massaged
@@ -221,7 +211,7 @@ export class Cell extends React.Component<ICellProps> {
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
             const stream = copy as nbformat.IStream;
-            const text = Cell.concatMultilineString(stream.text);
+            const text = concatMultilineString(stream.text);
             copy.data = {
                 'text/html' : text
             };

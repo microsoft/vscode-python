@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import { injectable } from 'inversify';
-import * as xml2js from 'xml2js';
 import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';
 type TestSuiteResult = {
     $: {
@@ -56,7 +55,8 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
             if (err) {
                 return reject(err);
             }
-
+            // tslint:disable-next-line:no-require-imports
+            const xml2js = require('xml2js');
             xml2js.parseString(data, (error, parserResult) => {
                 if (error) {
                     return reject(error);

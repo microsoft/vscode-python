@@ -1,6 +1,7 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { InterpreterInfomation } from '../common/process/types';
+import { Resource } from '../common/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
@@ -29,7 +30,8 @@ export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
     readonly onLocating: Event<Promise<PythonInterpreter[]>>;
-    getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
+    readonly hasInterpreters: Promise<boolean>;
+    getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]>;
 }
 
 export type CondaInfo = {
@@ -53,9 +55,7 @@ export interface ICondaService {
     getInterpreterPath(condaEnvironmentPath: string): string;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined>;
-    // Base Node.js SpawnOptions uses any for environment, so use that here as well
-    // tslint:disable-next-line:no-any
-    getActivatedCondaEnvironment(interpreter: PythonInterpreter, inputEnvironment: any): Promise<any>;
+    getActivatedCondaEnvironment(interpreter: PythonInterpreter, inputEnvironment?: NodeJS.ProcessEnv): Promise<NodeJS.ProcessEnv>;
 }
 
 export enum InterpreterType {
@@ -83,14 +83,13 @@ export type WorkspacePythonPath = {
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
+    hasInterpreters: Promise<boolean>;
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
-    autoSetInterpreter(): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
     refresh(resource: Uri | undefined): Promise<void>;
     initialize(): void;
     getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string>;
-    shouldAutoSetInterpreter(): Promise<boolean>;
 }
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
@@ -105,10 +104,11 @@ export interface IShebangCodeLensProvider extends CodeLensProvider {
 
 export const IInterpreterHelper = Symbol('IInterpreterHelper');
 export interface IInterpreterHelper {
-    getActiveWorkspaceUri(): WorkspacePythonPath | undefined;
+    getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined;
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>>;
     isMacDefaultPythonPath(pythonPath: string): Boolean;
     getInterpreterTypeDisplayName(interpreterType: InterpreterType): string | undefined;
+    getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined;
 }
 
 export const IPipEnvService = Symbol('IPipEnvService');

@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
 import { IConfigurationService } from '../../client/common/types';
 import { PythonFormattingEditProvider } from '../../client/providers/formatProvider';
+import { getExtensionSettings } from '../common';
 import { closeActiveWindows } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -44,7 +44,7 @@ suite('Formating On Save', () => {
         ioc.registerMockProcess();
 
         config = TypeMoq.Mock.ofType<IConfigurationService>();
-        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => getExtensionSettings(undefined));
 
         editorConfig = TypeMoq.Mock.ofType<vscode.WorkspaceConfiguration>();
 

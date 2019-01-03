@@ -59,7 +59,6 @@ export class TerminalHelper implements ITerminalHelper {
     public getTerminalShellPath(): string {
         const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const shellConfig = workspace.getConfiguration('terminal.integrated.shell');
-
         const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
         let osSection = '';
         if (platformService.isWindows) {

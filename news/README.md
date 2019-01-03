@@ -6,6 +6,9 @@ what changed in a release. It also helps tie pull requests back to the
 issue(s) it addresses. Finally, it avoids merge conflicts between pull requests
 which would occur if multiple pull requests tried to edit the changelog.
 
+If a change does not warrant a news entry, the `skip news` label can be added
+to a pull request to signal this fact.
+
 ## Entries
 
 Each news entry is represented by a Markdown file that contains the

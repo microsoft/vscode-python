@@ -4,6 +4,8 @@
 'use strict';
 
 import { IServiceManager } from '../../ioc/types';
+import { IApplicationDiagnostics } from '../types';
+import { ApplicationDiagnostics } from './applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
 import { InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId } from './checks/invalidDebuggerType';
 import { InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId } from './checks/invalidPythonPathInDebugger';
@@ -24,4 +26,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
+    serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
 }

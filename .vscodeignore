@@ -1,4 +1,6 @@
+!out/client/**/*.map
 **/*.map
+*.vsix
 .appveyor.yml
 .editorconfig
 .eslintrc
@@ -13,24 +15,25 @@ CODING_STANDARDS.md
 CONTRIBUTING.md
 CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
-functionalTestRequirements.txt
 gulpfile.js
+package.datascience-ui.dependencies.json
 package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 PYTHON_INTERACTIVE_TROUBLESHOOTING.md
-tsconfig.json
+tsconfig*.json
 tsfmt.json
 tslint.json
 typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-webpack.default.config.js
+webpack.datascience-ui.config.js
 
 .github/**
 .mocha-reporter/**
 .nvm/**
+.nyc_output
 .venv/**
 .vscode/**
 .vscode-test/**
@@ -44,7 +47,9 @@ debug_coverage*/**
 images/**/*.gif
 images/**/*.png
 news/**
+node_modules/**
 obj/**
+out/client/**/*analyzer.html
 out/coverconfig.json
 out/pythonFiles/**
 out/src/**
@@ -52,6 +57,9 @@ out/test/**
 out/testMultiRootWkspc/**
 precommit.hook
 pythonFiles/**/*.pyc
+pythonFiles/lib/**/*.dist-info/**
+pythonFiles/lib/**/*.egg-info/**
+pythonFiles/lib/python/bin/**
 requirements.txt
 scripts/**
 src/**

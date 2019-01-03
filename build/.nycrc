@@ -1,0 +1,20 @@
+{
+    "check-coverage": false,
+    "per-file": true,
+    "include": [
+        "out/client/**/*.js"
+    ],
+    "exclude": [
+        "out/test/*.js",
+        "out/**/*.jsx"
+    ],
+    "reporter": [
+        "lcov",
+        "html"
+    ],
+    "extension": [
+        ".js"
+    ],
+    "cache": true,
+    "all": true
+}

@@ -5,11 +5,10 @@
 
 import * as path from 'path';
 import {
-    ConfigurationTarget, Disposable, ExtensionContext,
-    TextDocument, Uri, workspace
+    ConfigurationChangeEvent, Disposable,
+    ExtensionContext, TextDocument, Uri, workspace
 } from 'vscode';
-import { IDocumentManager } from '../common/application/types';
-import { ConfigSettingMonitor } from '../common/configSettingMonitor';
+import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
@@ -21,13 +20,13 @@ import { ILinterManager, ILintingEngine } from '../linters/types';
 export class LinterProvider implements Disposable {
     private context: ExtensionContext;
     private disposables: Disposable[];
-    private configMonitor: ConfigSettingMonitor;
     private interpreterService: IInterpreterService;
     private documents: IDocumentManager;
     private configuration: IConfigurationService;
     private linterManager: ILinterManager;
     private engine: ILintingEngine;
     private fs: IFileSystem;
+    private readonly workspaceService: IWorkspaceService;
 
     public constructor(context: ExtensionContext, serviceContainer: IServiceContainer) {
         this.context = context;
@@ -39,6 +38,7 @@ export class LinterProvider implements Disposable {
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
 
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
@@ -46,8 +46,8 @@ export class LinterProvider implements Disposable {
         this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
         this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e), this.context.subscriptions);
 
-        this.configMonitor = new ConfigSettingMonitor('linting');
-        this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
+        const disposable = this.workspaceService.onDidChangeConfiguration(this.lintSettingsChangedHandler.bind(this));
+        this.disposables.push(disposable);
 
         // On workspace reopen we don't get `onDocumentOpened` since it is first opened
         // and then the extension is activated. So schedule linting pass now.
@@ -58,22 +58,16 @@ export class LinterProvider implements Disposable {
 
     public dispose() {
         this.disposables.forEach(d => d.dispose());
-        this.configMonitor.dispose();
     }
 
     private isDocumentOpen(uri: Uri): boolean {
         return this.documents.textDocuments.some(document => this.fs.arePathsSame(document.uri.fsPath, uri.fsPath));
     }
 
-    private lintSettingsChangedHandler(configTarget: ConfigurationTarget, wkspaceOrFolder: Uri) {
-        if (configTarget === ConfigurationTarget.Workspace) {
-            this.engine.lintOpenPythonFiles().ignoreErrors();
-            return;
-        }
+    private lintSettingsChangedHandler(e: ConfigurationChangeEvent) {
         // Look for python files that belong to the specified workspace folder.
-        workspace.textDocuments.forEach(async document => {
-            const wkspaceFolder = workspace.getWorkspaceFolder(document.uri);
-            if (wkspaceFolder && wkspaceFolder.uri.fsPath === wkspaceOrFolder.fsPath) {
+        workspace.textDocuments.forEach(document => {
+            if (e.affectsConfiguration('python.linting', document.uri)) {
                 this.engine.lintDocument(document, 'auto').ignoreErrors();
             }
         });

@@ -6,7 +6,7 @@
 //
 // Constants that pertain to CI processes/tests only. No dependencies on vscode!
 //
-
+export const PYTHON_VIRTUAL_ENVS_LOCATION = process.env.PYTHON_VIRTUAL_ENVS_LOCATION;
 export const IS_APPVEYOR = process.env.APPVEYOR === 'true';
 export const IS_TRAVIS = process.env.TRAVIS === 'true';
 export const IS_VSTS = process.env.TF_BUILD !== undefined;

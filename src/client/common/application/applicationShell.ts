@@ -6,7 +6,7 @@
 const opn = require('opn');
 
 import { injectable } from 'inversify';
-import { CancellationToken, Disposable, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { CancellationToken, Disposable, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { IApplicationShell } from './types';
 
 @injectable()
@@ -69,5 +69,11 @@ export class ApplicationShell implements IApplicationShell {
     }
     public withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R> {
         return window.withProgress<R>(options, task);
+    }
+    public createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
+        return window.createQuickPick<T>();
+    }
+    public createInputBox(): InputBox {
+        return window.createInputBox();
     }
 }

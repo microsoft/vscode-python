@@ -196,7 +196,7 @@ class RopeRefactoring(object):
 
     def _rename(self, filePath, start, newName, indent_size):
         """
-        Extracts a variale
+        Renames a variable
         """
         project = rope.base.project.Project(
             WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False, indent_size=indent_size)
@@ -213,7 +213,7 @@ class RopeRefactoring(object):
 
     def _extractVariable(self, filePath, start, end, newName, indent_size):
         """
-        Extracts a variale
+        Extracts a variable
         """
         project = rope.base.project.Project(
             WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False, indent_size=indent_size)

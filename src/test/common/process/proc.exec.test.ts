@@ -6,12 +6,11 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
-import { PythonSettings } from '../../../client/common/configSettings';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { StdErrError } from '../../../client/common/process/types';
 import { OSType } from '../../../client/common/utils/platform';
-import { isOs, isPythonVersion } from '../../common';
+import { getExtensionSettings, isOs, isPythonVersion } from '../../common';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
@@ -20,7 +19,7 @@ use(chaiAsPromised);
 suite('ProcessService Observable', () => {
     let pythonPath: string;
     suiteSetup(() => {
-        pythonPath = PythonSettings.getInstance().pythonPath;
+        pythonPath = getExtensionSettings(undefined).pythonPath;
         return initialize();
     });
     setup(initialize);
@@ -167,5 +166,19 @@ suite('ProcessService Observable', () => {
 
         expect(result.stdout).equals('', 'stdout is invalid');
         expect(result.stderr).equals(undefined, 'stderr is invalid');
+    });
+    test('shellExec should be able to run python too', async () => {
+        const procService = new ProcessService(new BufferDecoder());
+        const printOutput = '1234';
+        const result = await procService.shellExec(`"${pythonPath}" -c "print('${printOutput}')"`);
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stderr).to.equal(undefined, 'stderr not empty');
+        expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
+    });
+    test('shellExec should fail on invalid command', async () => {
+        const procService = new ProcessService(new BufferDecoder());
+        const result = procService.shellExec('invalid command');
+        await expect(result).to.eventually.be.rejectedWith(Error, 'a', 'Expected error to be thrown');
     });
 });

@@ -8,9 +8,6 @@ matrix:
           env: UNIT_TEST=true
         - os: linux
           python: "2.7"
-          env: DEBUGGER_TEST=true
-        - os: linux
-          python: "2.7"
           env: DEBUGGER_TEST_RELEASE=true
         - os: linux
           python: "2.7"
@@ -18,12 +15,6 @@ matrix:
         - os: linux
           python: "2.7"
           env: MULTIROOT_WORKSPACE_TEST=true
-        - os: linux
-          python: "3.6-dev"
-          env: DEBUGGER_TEST=true
-        - os: linux
-          python: "3.6-dev"
-          env: FUNCTIONAL_TEST=true
         - os: linux
           python: "3.6-dev"
           env: DEBUGGER_TEST_RELEASE=true
@@ -38,19 +29,20 @@ matrix:
           env: PERFORMANCE_TEST=true
         - os: linux
           python: "3.7-dev"
-          env: DEBUGGER_TEST=true
-        - os: linux
-          python: "3.7-dev"
           env: DEBUGGER_TEST_RELEASE=true
-        - os: linux
-          python: "3.7-dev"
-          env: LANGUAGE_SERVER_TEST=true
         - os: linux
           python: "3.7-dev"
           env: SINGLE_WORKSPACE_TEST=true
         - os: linux
           python: "3.7-dev"
           env: MULTIROOT_WORKSPACE_TEST=true
+        - os: linux
+          python: "3.7-dev"
+          env: BUNDLE=true
+    allow_failures:
+        - os: linux
+          python: "3.7-dev"
+          env: FUNCTIONAL_TEST=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -68,58 +60,33 @@ before_install: |
 install:
   - travis_wait 5 npm ci
   - npm run clean
-  - npm run vscode:prepublish
+  - npx gulp prePublishNonBundle
   - npx gulp hygiene-modified
-  - python -m pip install --upgrade -r requirements.txt
-  - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
+  - python -m pip install --upgrade pip
+  - python -m pip install --upgrade -r ./build/test-requirements.txt
+  - npx gulp installPythonLibs
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
         npm run cover:enable;
-        npm run test:unittests;
+        npm run test:unittests:cover;
     fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - if [ $DEBUGGER_TEST == "true" ]; then
-        npm run cover:enable;
-        npm run testDebugger --silent;
-    fi
-  - npm run debugger-coverage
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - npm run clean:ptvsd
-  - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir;
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
         npm run cover:enable;
         npm run testDebugger --silent;
     fi
   - npm run debugger-coverage
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
   - if [ $FUNCTIONAL_TEST == "true" ]; then
-        python -m pip install --upgrade -r functionalTestRequirements.txt;
-        npm run test:functional;
-    fi
-  - if [ $LANGUAGE_SERVER_TEST == "true" ]; then
-        npm run cover:enable;
-        npm run testAnalysisEngine --silent;
+        python -m pip install --upgrade -r ./build/functional-test-requirements.txt;
+        npm run test:functional:cover;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
         npm run cover:enable;
         npm run testSingleWorkspace --silent;
     fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
   - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
         npm run cover:enable;
         npm run testMultiWorkspace --silent;
-    fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
     fi
   - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then
         npm run testPerformance --silent;
@@ -130,13 +97,18 @@ script:
         python3 -m pip install --upgrade -r tpn/requirements.txt;
         python3 tpn --npm package-lock.json --config tpn/distribution.toml /dev/null;
     fi
-  - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+  - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
-        vsce package;
+        npm run package;
+        npx gulp clean:cleanExceptTests;
+        npm run testSmoke;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
-  - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+  - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
-        vsce package;
+        npm run package;
+        npx gulp clean:cleanExceptTests;
+        npm run testSmoke;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
+  - bash <(curl -s https://codecov.io/bash)

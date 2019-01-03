@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter } from 'vscode';
-import { traceVerbose } from '../../common/logger';
+import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferredFrom, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -34,21 +34,21 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
             locator.onLocating(this.handleProgress, this, this.disposables);
         });
     }
-    @traceVerbose('Detected refreshing of Interpreters')
+    @traceDecorators.verbose('Detected refreshing of Interpreters')
     private handleProgress(promise: Promise<PythonInterpreter[]>) {
         this.deferreds.push(createDeferredFrom(promise));
         this.notifyRefreshing();
         this.checkProgress();
     }
-    @traceVerbose('All locators have completed locating')
+    @traceDecorators.verbose('All locators have completed locating')
     private notifyCompleted() {
         this.refreshed.fire();
     }
-    @traceVerbose('Notify locators are locating')
+    @traceDecorators.verbose('Notify locators are locating')
     private notifyRefreshing() {
         this.refreshing.fire();
     }
-    @traceVerbose('Checking whether locactors have completed locating')
+    @traceDecorators.verbose('Checking whether locactors have completed locating')
     private checkProgress() {
         if (this.areAllItemsCcomplete()) {
             return this.notifyCompleted();

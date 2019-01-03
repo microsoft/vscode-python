@@ -29,8 +29,8 @@ export class InterpreterComparer implements IInterpreterComparer {
         // * Architecture
         // * Interpreter Type
         // * Environment name
-        if (info.version_info && info.version_info.length > 0) {
-            sortNameParts.push(info.version_info.slice(0, 3).join('.'));
+        if (info.version) {
+            sortNameParts.push(info.version.raw);
         }
         if (info.architecture) {
             sortNameParts.push(getArchitectureDisplayName(info.architecture));

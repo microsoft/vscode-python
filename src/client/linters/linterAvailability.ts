@@ -6,8 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
+import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IConfigurationService, IInstaller, Product } from '../common/types';
+import { Linters } from '../common/utils/localize';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
 @injectable()
@@ -75,7 +77,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         ];
 
         // tslint:disable-next-line:messages-must-be-localized
-        const pick = await this.appShell.showInformationMessage(`Linter ${linterInfo.id} is available but not enabled.`, ...optButtons);
+        const pick = await this.appShell.showInformationMessage(Linters.installedButNotEnabled().format(linterInfo.id), ...optButtons);
         if (pick) {
             await linterInfo.enableAsync(pick.enabled);
             return true;

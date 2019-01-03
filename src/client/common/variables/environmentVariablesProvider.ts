@@ -3,9 +3,8 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri, workspace } from 'vscode';
-import { PythonSettings } from '../configSettings';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../platform/constants';
-import { ICurrentProcess, IDisposableRegistry, IsWindows } from '../types';
+import { IPlatformService } from '../platform/types';
+import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 @injectable()
@@ -15,7 +14,9 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private disposables: Disposable[] = [];
     private changeEventEmitter: EventEmitter<Uri | undefined>;
     constructor(@inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
-        @inject(IDisposableRegistry) disposableRegistry: Disposable[], @inject(IsWindows) private isWidows: boolean,
+        @inject(IDisposableRegistry) disposableRegistry: Disposable[],
+        @inject(IPlatformService) private platformService: IPlatformService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICurrentProcess) private process: ICurrentProcess) {
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();
@@ -32,7 +33,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         });
     }
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        const settings = PythonSettings.getInstance(resource);
+        const settings = this.configurationService.getSettings(resource);
         if (!this.cache.has(settings.envFile)) {
             const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
             this.createFileWatcher(settings.envFile, workspaceFolderUri);
@@ -41,9 +42,14 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
                 mergedVars = {};
             }
             this.envVarsService.mergeVariables(this.process.env, mergedVars!);
-            const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-            this.envVarsService.appendPath(mergedVars!, this.process.env[pathVariable]);
-            this.envVarsService.appendPythonPath(mergedVars!, this.process.env.PYTHONPATH);
+            const pathVariable = this.platformService.pathVariableName;
+            const pathValue = this.process.env[pathVariable];
+            if (pathValue) {
+                this.envVarsService.appendPath(mergedVars!, pathValue);
+            }
+            if (this.process.env.PYTHONPATH) {
+                this.envVarsService.appendPythonPath(mergedVars!, this.process.env.PYTHONPATH);
+            }
             this.cache.set(settings.envFile, mergedVars);
         }
         return this.cache.get(settings.envFile)!;
@@ -61,9 +67,11 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         const envFileWatcher = workspace.createFileSystemWatcher(envFile);
         this.fileWatchers.set(envFile, envFileWatcher);
-        this.disposables.push(envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
-        this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
-        this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+        if (envFileWatcher) {
+            this.disposables.push(envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+            this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+            this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+        }
     }
     private onEnvironmentFileChanged(envFile, workspaceFolderUri?: Uri) {
         this.cache.delete(envFile);

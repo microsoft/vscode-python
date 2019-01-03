@@ -4,11 +4,11 @@
 'use strict';
 
 import { IServiceManager } from '../ioc/types';
-import { ApplicationDiagnostics } from './diagnostics/applicationDiagnostics';
 import { registerTypes as diagnosticsRegisterTypes } from './diagnostics/serviceRegistry';
-import { IApplicationDiagnostics } from './types';
+import { SourceMapSupportService } from './diagnostics/surceMapSupportService';
+import { ISourceMapSupportService } from './diagnostics/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
+    serviceManager.addSingleton<ISourceMapSupportService>(ISourceMapSupportService, SourceMapSupportService);
     diagnosticsRegisterTypes(serviceManager);
 }

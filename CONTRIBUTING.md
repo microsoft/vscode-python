@@ -7,7 +7,7 @@
 
 | macOS/Windows CI | Linux CI | Rolling CI (macOS/Windows) | Code Coverage |
 |-|-|-|-|
-|[![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=4) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+|[![Build Status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/vscode-python-ci-pr_validation)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=18) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -37,8 +37,7 @@ cd vscode-python
 npm install
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
-python -m pip install -r requirements.txt
-python -m pip install -t pythonFiles/experimental/ptvsd ptvsd
+python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 # Specifying the virtual environment simply varies between shells.
 export CI_PYTHON_PATH=`pwd`/.venv/bin/python
 ```
@@ -78,7 +77,7 @@ You can also run them from the command-line (after compiling):
 
 ```shell
 npm run test:unittests  # runs all unit tests
-npm run test:unittests grep='<NAME-OF-SUITE>'
+npm run test:unittests -- --grep='<NAME-OF-SUITE>'
 ```
 
 *To run only a specific test suite for unit tests:*
@@ -86,8 +85,8 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 
 ```js
     "args": [
-        "timeout=60000",
-        "grep=[The suite name of your unit test file]"
+        "--timeout=60000",
+        "--grep=[The suite name of your unit test file]"
     ],
 ```
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
@@ -169,34 +168,36 @@ issues in some way in a timely manner (typically in less than one
 business day, definitely no more than a week). We also answer
 questions that reach us in other ways, e.g. Twitter.
 
-### Iteration/milestone cycle
+For pull requests, we aim to review any externally contributed PR no later
+than the next sprint from when it was submitted (see
+[Release Cycle](#release-cycle) below for our sprint schedule).
 
-The extension aims to do a new release every month. A
+### Release cycle
+
+Planning is done as two week sprints. We start a sprint every other Wednesday.
+You can look at the newest
+[milestone](https://github.com/Microsoft/vscode-python/milestones) to see when
+the current sprint ends. All
+[P0](https://github.com/Microsoft/vscode-python/labels/P0) issues are expected
+to be fixed in the current sprint, else the next release will be blocked.
+[P1](https://github.com/Microsoft/vscode-python/labels/P1) issues are a
+top-priority in a sprint, but if they are not completed they will not
+block a release. All other issues are considered best-effort for that
+sprint.
+
+The extension aims to do a new release every four weeks (two sprints). A
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 is created for each release to help track anything that requires a
-person to do (long term this project aims to automate as much of the
-development process as possible). The current issues being worked on
-for a release are tracked in a
-[milestone](https://github.com/Microsoft/vscode-python/milestones)
-(which is actively updated as plans change). All
-[P0](https://github.com/Microsoft/vscode-python/labels/P0) are expected to
-be fixed in a milestone, else the release will be blocked.
-[P1](https://github.com/Microsoft/vscode-python/labels/P1) issues are a
-top-priority in a milestone, but if they are not completed they will not
-block a milestone. All other issues are considered best-effort for that
-milestone.
-
-The overall schedule is to release the same week as VS Code.
-We do bugfix-only releases between scheduled releases as necessary, but
-otherwise we aim to do one release a month.
+person to do (long-term this project aims to automate as much of the
+development process as possible).
 
 All development is actively done in the `master` branch of the
 repository. It is what allows us to have a
 [development build](#development-build) which is expected to be stable at
-all times. We do keep the most recent release as a branch in case the
-need for a bugfix release arises. But once a new release is made we
-delete the older release branch (all releases are appropriately
-tagged, so no history is lost).
+all times. Once we reach a release candidate, it becomes
+our [release branch](https://github.com/Microsoft/vscode-python/tree/release).
+At that point only what is in the release branch will make it into the next
+release.
 
 ### Issue triaging
 
@@ -239,10 +240,10 @@ auto-updates and thus there is no need to track its version
 number for backwards-compatibility. As such, the major version
 is the current year, the minor version is the month when feature
 freeze was reached, and the micro version is how many releases there
-have been since that feature freeze (starting at 0). For example
+have been in that month (starting at 0). For example
 the release made when we reach feature freeze in July 2018
-would be `2018.7.0`, and if a second release was necessary to fix a
-critical bug it would be `2018.7.1`.
+would be `2018.7.0`, and if there is a second release in that month
+it would be `2018.7.1`.
 
 ## Releasing
 

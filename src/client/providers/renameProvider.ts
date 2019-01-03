@@ -1,27 +1,26 @@
-import * as path from 'path';
 import {
     CancellationToken, OutputChannel,
     Position, ProviderResult, RenameProvider,
     TextDocument, window, workspace, WorkspaceEdit
 } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
-import { IInstaller, IOutputChannel, Product } from '../common/types';
+import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { captureTelemetry } from '../telemetry';
 import { REFACTOR_RENAME } from '../telemetry/constants';
 
-const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
 type RenameResponse = {
     results: [{ diff: string }];
 };
 
 export class PythonRenameProvider implements RenameProvider {
     private readonly outputChannel: OutputChannel;
+    private readonly configurationService: IConfigurationService;
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     @captureTelemetry(REFACTOR_RENAME)
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
@@ -52,9 +51,9 @@ export class PythonRenameProvider implements RenameProvider {
             workspaceFolder = workspace.workspaceFolders[0];
         }
         const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-        const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
+        const pythonSettings = this.configurationService.getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
-        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
+        const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
         return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {
             const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
             return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot);

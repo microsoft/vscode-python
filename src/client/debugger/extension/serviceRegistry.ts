@@ -3,21 +3,39 @@
 
 'use strict';
 
-import { DebugConfigurationProvider } from 'vscode';
 import { IServiceManager } from '../../ioc/types';
+import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebuggerBanner } from './banner';
-import { ConfigurationProviderUtils } from './configProviders/configurationProviderUtils';
-import { PythonV2DebugConfigurationProvider } from './configProviders/pythonV2Provider';
-import { IConfigurationProviderUtils } from './configProviders/types';
+import { ConfigurationProviderUtils } from './configuration/configurationProviderUtils';
+import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
+import { DjangoLaunchDebugConfigurationProvider } from './configuration/providers/djangoLaunch';
+import { FileLaunchDebugConfigurationProvider } from './configuration/providers/fileLaunch';
+import { FlaskLaunchDebugConfigurationProvider } from './configuration/providers/flaskLaunch';
+import { ModuleLaunchDebugConfigurationProvider } from './configuration/providers/moduleLaunch';
+import { DebugConfigurationProviderFactory } from './configuration/providers/providerFactory';
+import { PyramidLaunchDebugConfigurationProvider } from './configuration/providers/pyramidLaunch';
+import { RemoteAttachDebugConfigurationProvider } from './configuration/providers/remoteAttach';
+import { AttachConfigurationResolver } from './configuration/resolvers/attach';
+import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
+import { IConfigurationProviderUtils, IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
-import { IDebugConfigurationProvider, IDebuggerBanner } from './types';
+import { DebugConfigurationType, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<DebugConfigurationProvider>(IDebugConfigurationProvider, PythonV2DebugConfigurationProvider);
+    serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
     serviceManager.addSingleton<IConfigurationProviderUtils>(IConfigurationProviderUtils, ConfigurationProviderUtils);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService);
     serviceManager.addSingleton<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ChildProcessAttachEventHandler);
+    serviceManager.addSingleton<IDebugConfigurationResolver<LaunchRequestArguments>>(IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch');
+    serviceManager.addSingleton<IDebugConfigurationResolver<AttachRequestArguments>>(IDebugConfigurationResolver, AttachConfigurationResolver, 'attach');
+    serviceManager.addSingleton<IDebugConfigurationProviderFactory>(IDebugConfigurationProviderFactory, DebugConfigurationProviderFactory);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, FileLaunchDebugConfigurationProvider, DebugConfigurationType.launchFile);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, DjangoLaunchDebugConfigurationProvider, DebugConfigurationType.launchDjango);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, FlaskLaunchDebugConfigurationProvider, DebugConfigurationType.launchFlask);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid);
 }

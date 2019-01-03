@@ -9,7 +9,7 @@ module.exports = {
     entry: ['babel-polyfill', './src/datascience-ui/history-react/index.tsx'],
     output: {
         path: path.join(__dirname, 'out'),
-        filename: 'index_bundle.js',
+        filename: 'datascience-ui/history-react/index_bundle.js',
         publicPath: './'
     },
 
@@ -22,7 +22,7 @@ module.exports = {
         fs: 'empty'
     },
     plugins: [
-        new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', filename: 'datascience-ui/history-react/index.html' }),
+        new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', imageBaseUrl: `${__dirname.replace(/\\/g, '/')}/out/datascience-ui/history-react`, indexUrl: `${__dirname}/out/1`, filename: './datascience-ui/history-react/index.html' }),
         new FixDefaultImportPlugin(),
         new CopyWebpackPlugin([
             { from: './**/*.png', to: '.' },
@@ -33,7 +33,7 @@ module.exports = {
     ],
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"]
+        extensions: [".ts", ".tsx", ".js", ".json", ".svg"]
     },
 
     module: {
@@ -52,6 +52,12 @@ module.exports = {
                 }
             },
             {
+                test: /\.svg$/,
+                use: [
+                    'svg-inline-loader'
+                ]
+            },
+            {
                 test: /\.css$/,
                 use: [
                     'style-loader',
@@ -63,7 +69,7 @@ module.exports = {
                 include: /node_modules.*remark.*default.*js/,
                 use: [
                     {
-                        loader: path.resolve('./build/datascience/remarkLoader.js'),
+                        loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
                         options: {}
                     }
                 ]
@@ -74,7 +80,7 @@ module.exports = {
                 include: /node_modules.*remark.*/,
                 use: [
                     {
-                        loader: path.resolve('./build/datascience/jsonloader.js'),
+                        loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
                         options: {}
                     }
                 ]

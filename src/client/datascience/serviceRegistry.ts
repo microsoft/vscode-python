@@ -5,24 +5,28 @@ import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
+import { CodeWatcher } from './editor-integration/codewatcher';
 import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
-import { JupyterExecution } from './jupyterExecution';
-import { JupyterImporter } from './jupyterImporter';
-import { JupyterProcess } from './jupyterProcess';
-import { JupyterServer } from './jupyterServer';
+import { JupyterExecution } from './jupyter/jupyterExecution';
+import { JupyterExporter } from './jupyter/jupyterExporter';
+import { JupyterImporter } from './jupyter/jupyterImporter';
+import { JupyterServer } from './jupyter/jupyterServer';
+import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
 import { StatusProvider } from './statusProvider';
 import {
     ICodeCssGenerator,
+    ICodeWatcher,
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IHistory,
     IHistoryProvider,
     IJupyterExecution,
+    IJupyterSessionManager,
+    INotebookExporter,
     INotebookImporter,
-    INotebookProcess,
     INotebookServer,
     IStatusProvider
 } from './types';
@@ -34,9 +38,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
     serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
     serviceManager.add<IHistory>(IHistory, History);
+    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
-    serviceManager.add<INotebookProcess>(INotebookProcess, JupyterProcess);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
+    serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
+    serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
 }

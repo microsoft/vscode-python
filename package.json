@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.11.0-alpha",
-    "languageServerVersion": "0.1.60",
+    "version": "2019.1.0-alpha",
+    "languageServerVersion": "0.1.72",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -43,9 +43,6 @@
     "engines": {
         "vscode": "^1.26.0"
     },
-    "recommendations": [
-        "donjayamanne.jupyter"
-    ],
     "keywords": [
         "python",
         "django",
@@ -62,7 +59,6 @@
     ],
     "activationEvents": [
         "onLanguage:python",
-        "onDebugResolve:python",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
         "onCommand:python.sortImports",
@@ -88,7 +84,11 @@
         "onCommand:python.createTerminal",
         "onCommand:python.discoverTests",
         "onCommand:python.datascience.showhistorypane",
-        "onCommand:python.datascience.importnotebook"
+        "onCommand:python.datascience.importnotebook",
+        "onCommand:python.datascience.selectjupyteruri",
+        "onCommand:python.datascience.exportfileasnotebook",
+        "onCommand:python.datascience.exportfileandoutputasnotebook",
+        "onCommand:python.python.enableSourceMapSupport"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -111,6 +111,11 @@
             }
         ],
         "commands": [
+            {
+                "command": "python.enableSourceMapSupport",
+                "title": "%python.command.python.enableSourceMapSupport.title%",
+                "category": "Python"
+            },
             {
                 "command": "python.sortImports",
                 "title": "%python.command.python.sortImports.title%",
@@ -234,36 +239,87 @@
             {
                 "command": "python.datascience.runcurrentcell",
                 "title": "%python.command.python.datascience.runcurrentcell.title%",
-                "category": "Python",
-                "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                "category": "Python"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
-                "category": "Python",
-                "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                "category": "Python"
             },
             {
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
-                "category": "Python",
-                "when": "python.datascience.featureenabled"
+                "category": "Python"
             },
             {
                 "command": "python.datascience.runallcells",
                 "title": "%python.command.python.datascience.runallcells.title%",
-                "category": "Python",
-                "when": "python.datascience.featureenabled"
+                "category": "Python"
             },
             {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.selectjupyteruri",
+                "title": "%python.command.python.datascience.selectjupyteruri.title%",
                 "category": "Python",
                 "when": "python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.importnotebook",
                 "title": "%python.command.python.datascience.importnotebook.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.exportoutputasnotebook",
+                "title": "%python.command.python.datascience.exportoutputasnotebook.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.exportfileasnotebook",
+                "title": "%python.command.python.datascience.exportfileasnotebook.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.exportfileandoutputasnotebook",
+                "title": "%python.command.python.datascience.exportfileandoutputasnotebook.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.undocells",
+                "title": "%python.command.python.datascience.undocells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.redocells",
+                "title": "%python.command.python.datascience.redocells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.removeallcells",
+                "title": "%python.command.python.datascience.removeallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.interruptkernel",
+                "title": "%python.command.python.datascience.interruptkernel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.restartkernel",
+                "title": "%python.command.python.datascience.restartkernel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.expandallcells",
+                "title": "%python.command.python.datascience.expandallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.collapseallcells",
+                "title": "%python.command.python.datascience.collapseallcells.title%",
                 "category": "Python"
             }
         ],
@@ -308,19 +364,29 @@
                     "group": "Python"
                 },
                 {
-                    "when": "python.datascience.hascodecells && python.datascience.featureenabled",
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python"
                 },
                 {
-                    "when": "python.datascience.hascodecells && python.datascience.featureenabled",
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcelladvance",
                     "group": "Python"
                 },
                 {
-                    "when": "resourceLangId == jupyter && python.datascience.featureenabled",
+                    "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && python.datascience.featureenabled",
                     "command": "python.datascience.importnotebook",
                     "group": "Python"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
+                    "command": "python.datascience.exportfileasnotebook",
+                    "group": "Python2"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
+                    "command": "python.datascience.exportfileandoutputasnotebook",
+                    "group": "Python2@2"
                 }
             ],
             "explorer/context": [
@@ -380,6 +446,66 @@
                     "command": "python.datascience.importnotebook",
                     "title": "%python.command.python.datascience.importnotebook.title%",
                     "category": "Python"
+                },
+                {
+                    "command": "python.datascience.exportfileasnotebook",
+                    "title": "%python.command.python.datascience.exportfilesasnotebook.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.exportfileandoutputasnotebook",
+                    "title": "%python.command.python.datascience.exportfileandoutputasnotebook.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.undocells",
+                    "title": "%python.command.python.datascience.undocells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.redocells",
+                    "title": "%python.command.python.datascience.redocells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveredoablecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.removeallcells",
+                    "title": "%python.command.python.datascience.removeallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.interruptkernel",
+                    "title": "%python.command.python.datascience.interruptkernel.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.restartkernel",
+                    "title": "%python.command.python.datascience.restartkernel.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.expandallcells",
+                    "title": "%python.command.python.datascience.expandallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.collapseallcells",
+                    "title": "%python.command.python.datascience.collapseallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.exportoutputasnotebook",
+                    "title": "%python.command.python.datascience.exportoutputasnotebook.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
                 }
             ]
         },
@@ -756,71 +882,19 @@
                             }
                         }
                     }
-                },
-                "initialConfigurations": [
-                    {
-                        "name": "Python: Current File (Integrated Terminal)",
-                        "type": "python",
-                        "request": "launch",
-                        "program": "${file}",
-                        "console": "integratedTerminal"
-                    },
-                    {
-                        "name": "Python: Attach",
-                        "type": "python",
-                        "request": "attach",
-                        "port": 5678,
-                        "host": "localhost"
-                    },
-                    {
-                        "name": "Python: Module",
-                        "type": "python",
-                        "request": "launch",
-                        "module": "enter-your-module-name-here",
-                        "console": "integratedTerminal"
-                    },
-                    {
-                        "name": "Python: Django",
-                        "type": "python",
-                        "request": "launch",
-                        "program": "${workspaceFolder}/manage.py",
-                        "console": "integratedTerminal",
-                        "args": [
-                            "runserver",
-                            "--noreload",
-                            "--nothreading"
-                        ],
-                        "django": true
-                    },
-                    {
-                        "name": "Python: Flask",
-                        "type": "python",
-                        "request": "launch",
-                        "module": "flask",
-                        "env": {
-                            "FLASK_APP": "app.py"
-                        },
-                        "args": [
-                            "run",
-                            "--no-debugger",
-                            "--no-reload"
-                        ],
-                        "jinja": true
-                    },
-                    {
-                        "name": "Python: Current File (External Terminal)",
-                        "type": "python",
-                        "request": "launch",
-                        "program": "${file}",
-                        "console": "externalTerminal"
-                    }
-                ]
+                }
             }
         ],
         "configuration": {
             "type": "object",
             "title": "Python Configuration",
             "properties": {
+                "python.diagnostics.sourceMapsEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable source map support for meaningful strack traces in error logs.",
+                    "scope": "application"
+                },
                 "python.autoComplete.addBrackets": {
                     "type": "boolean",
                     "default": false,
@@ -864,6 +938,48 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable the experimental data science features in the python extension.",
+                    "scope": "resource"
+                },
+                "python.dataScience.exportWithOutputEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable exporting a python file into a jupyter notebook and run all cells when doing so.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterLaunchTimeout": {
+                    "type": "number",
+                    "default": 60000,
+                    "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerURI": {
+                    "type": "string",
+                    "default": "local",
+                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
+                    "scope": "resource"
+                },
+                "python.dataScience.notebookFileRoot": {
+                    "type": "string",
+                    "default": "${workspaceFolder}",
+                    "description": "Set the root directory for loading files for the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.changeDirOnImportExport": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When importing or exporting a Jupyter Notebook add a directory change command to allow relative path loading to work.",
+                    "scope": "resource"
+                },
+                "python.dataScience.useDefaultConfigForJupyter": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When running Jupyter locally, create a default empty Jupyter config for the Python Interactive window",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterInterruptTimeout": {
+                    "type": "number",
+                    "default": 10000,
+                    "description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -1147,7 +1263,8 @@
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [
                         "--ignore-missing-imports",
-                        "--follow-imports=silent"
+                        "--follow-imports=silent",
+                        "--show-column-numbers"
                     ],
                     "items": {
                         "type": "string"
@@ -1673,24 +1790,26 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "gulp checkNativeDependencies && gulp check-datascience-dependencies && tsc -p ./ && webpack",
+        "package": "gulp clean && gulp prePublishBundle && vsce package",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
-        "dump-datascience-webpack-stats": "webpack --profile --json > tmp/ds-stats.json",
-        "compile-webviews": "npx webpack --config webpack.datascience-ui.config.js",
+        "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
+        "compile-webviews": "gulp compile-webviews",
+        "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "node ./out/test/unittests.js",
-        "test:functional": "node ./out/test/functionalTests.js",
+        "test:unittests": "mocha --require source-map-support/register --opts ./build/.mocha.unittests.opts",
+        "test:unittests:cover": "nyc --nycrc-path ./build/.nycrc npm run test:unittests",
+        "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
+        "test:functional:cover": "nyc --nycrc-path ./build/.nycrc npm run test:functional",
         "testDebugger": "node ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
-        "testAnalysisEngine": "node ./out/test/analysisEngineTest.js",
         "testPerformance": "node ./out/test/performanceTest.js",
+        "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
-        "clean:ptvsd": "gulp clean:ptvsd",
         "cover:enable": "gulp cover:enable",
         "debugger-coverage": "gulp debugger-coverage",
         "cover:inlinesource": "gulp inlinesource"
@@ -1705,12 +1824,11 @@
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
-        "getos": "^3.1.0",
         "glob": "^7.1.2",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.5",
+        "lodash": "^4.17.11",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
@@ -1723,6 +1841,7 @@
         "rxjs": "^5.5.9",
         "semver": "^5.5.0",
         "sudo-prompt": "^8.2.0",
+        "svg-inline-react": "^3.1.0",
         "tmp": "^0.0.29",
         "tree-kill": "^1.2.0",
         "typescript-char": "^0.0.0",
@@ -1750,6 +1869,7 @@
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
+        "@types/copy-webpack-plugin": "^4.4.2",
         "@types/del": "^3.0.0",
         "@types/dotenv": "^4.0.3",
         "@types/download": "^6.2.2",
@@ -1759,9 +1879,11 @@
         "@types/fs-extra": "^5.0.1",
         "@types/get-port": "^3.2.0",
         "@types/glob": "^5.0.35",
+        "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
         "@types/istanbul": "^0.4.29",
         "@types/jsdom": "^11.12.0",
+        "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
         "@types/mocha": "^2.2.48",
@@ -1779,6 +1901,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
+        "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
@@ -1802,7 +1925,7 @@
         "download": "^7.0.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
-        "event-stream": "^3.3.4",
+        "event-stream": "3.3.4",
         "file-loader": "^2.0.0",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
@@ -1819,9 +1942,11 @@
         "istanbul": "^0.4.5",
         "jsdom": "^12.2.0",
         "json-loader": "^0.5.7",
+        "loader-utils": "^1.1.0",
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
+        "nyc": "^13.1.0",
         "prismjs": "^1.15.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
@@ -1832,26 +1957,31 @@
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "shortid": "^2.2.8",
+        "source-map-support": "^0.5.9",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",
         "svg-inline-loader": "^0.8.0",
+        "ts-loader": "^5.3.0",
         "ts-mockito": "^2.3.1",
+        "tsconfig-paths-webpack-plugin": "^3.2.0",
         "tslint": "^5.9.1",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.1.3",
+        "typescript": "^3.2.2",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
-        "vscode": "^1.1.21",
+        "vscode": "^1.1.22",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",
+        "webpack-bundle-analyzer": "^3.0.3",
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
+        "wrapper-webpack-plugin": "^2.0.0",
         "yargs": "^12.0.2"
     },
     "__metadata": {

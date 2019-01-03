@@ -3,13 +3,15 @@
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import {
-    ConfigurationTarget, DiagnosticSeverity, Disposable, Uri,
-    workspace, WorkspaceConfiguration
-} from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, DiagnosticSeverity, Disposable, Uri, WorkspaceConfiguration } from 'vscode';
+import '../common/extensions';
+import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
+import { IWorkspaceService } from './application/types';
+import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
+import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -26,8 +28,6 @@ import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
-
-export const IS_WINDOWS = /^win/.test(process.platform);
 
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
@@ -58,22 +58,30 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     private disposables: Disposable[] = [];
     // tslint:disable-next-line:variable-name
     private _pythonPath = '';
+    private readonly workspace: IWorkspaceService;
 
-    constructor(workspaceFolder?: Uri) {
+    constructor(workspaceFolder: Uri | undefined, private readonly InterpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        workspace?: IWorkspaceService) {
         super();
+        this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
         this.initialize();
     }
     // tslint:disable-next-line:function-name
-    public static getInstance(resource?: Uri): PythonSettings {
-        const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource).uri;
+    public static getInstance(resource: Uri | undefined, interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        workspace?: IWorkspaceService): PythonSettings {
+        workspace = workspace || new WorkspaceService();
+        const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
 
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
-            const settings = new PythonSettings(workspaceFolderUri);
+            const settings = new PythonSettings(workspaceFolderUri, interpreterAutoSelectionService, workspace);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
-            const formatOnType = workspace.getConfiguration('editor', resource ? resource : null).get('formatOnType', false);
-            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete.addBrackets });
+            // Pass null to avoid VSC from complaining about not passing in a value.
+            // tslint:disable-next-line:no-any
+            const config = workspace.getConfiguration('editor', resource ? resource : null as any);
+            const formatOnType = config ? config.get('formatOnType', false) : false;
+            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false });
             sendTelemetryEvent(FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
         // tslint:disable-next-line:no-non-null-assertion
@@ -81,7 +89,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     }
 
     // tslint:disable-next-line:type-literal-delimiter
-    public static getSettingsUriAndTarget(resource?: Uri): { uri: Uri | undefined, target: ConfigurationTarget } {
+    public static getSettingsUriAndTarget(resource: Uri | undefined, workspace?: IWorkspaceService): { uri: Uri | undefined, target: ConfigurationTarget } {
+        workspace = workspace || new WorkspaceService();
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
         let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
 
@@ -99,21 +108,29 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             throw new Error('Dispose can only be called from unit tests');
         }
         // tslint:disable-next-line:no-void-expression
-        PythonSettings.pythonSettings.forEach(item => item.dispose());
+        PythonSettings.pythonSettings.forEach(item => item && item.dispose());
         PythonSettings.pythonSettings.clear();
     }
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach(disposable => disposable && disposable.dispose());
         this.disposables = [];
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public update(pythonSettings: WorkspaceConfiguration) {
+    protected update(pythonSettings: WorkspaceConfiguration) {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
+        // If user has defined a custom value, use it else try to get the best interpreter ourselves.
+        if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
+            const autoSelectedPythonInterpreter = this.InterpreterAutoSelectionService.getAutoSelectedInterpreter(this.workspaceRoot);
+            if (autoSelectedPythonInterpreter) {
+                this.InterpreterAutoSelectionService.setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter).ignoreErrors();
+            }
+            this.pythonPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : this.pythonPath;
+        }
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
@@ -330,7 +347,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
-
     }
 
     public get pythonPath(): string {
@@ -343,23 +359,34 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // Add support for specifying just the directory where the python executable will be located.
         // E.g. virtual directory name.
         try {
-            this._pythonPath = getPythonExecutable(value);
+            this._pythonPath = this.getPythonExecutable(value);
         } catch (ex) {
             this._pythonPath = value;
         }
     }
+    protected getPythonExecutable(pythonPath: string) {
+        return getPythonExecutable(pythonPath);
+    }
     protected initialize(): void {
-        this.disposables.push(workspace.onDidChangeConfiguration(() => {
-            const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
+        const onDidChange = () => {
+            const currentConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
             this.update(currentConfig);
 
             // If workspace config changes, then we could have a cascading effect of on change events.
             // Let's defer the change notification.
             setTimeout(() => this.emit('change'), 1);
+        };
+        this.disposables.push(this.InterpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)));
+        this.disposables.push(this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
+            if (event.affectsConfiguration('python')) {
+                onDidChange();
+            }
         }));
 
-        const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
-        this.update(initialConfig);
+        const initialConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
+        if (initialConfig) {
+            this.update(initialConfig);
+        }
     }
 }
 

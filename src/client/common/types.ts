@@ -9,17 +9,25 @@ export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
-export const Is64Bit = Symbol('Is64Bit');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
 
+export type Resource = Uri | undefined;
 export interface IPersistentState<T> {
     readonly value: T;
     updateValue(value: T): Promise<void>;
 }
+export type Version = {
+    raw: string;
+    major: number;
+    minor: number;
+    patch: number;
+    build: string[];
+    prerelease: string[];
+};
 
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 
@@ -102,6 +110,12 @@ export const IPathUtils = Symbol('IPathUtils');
 export interface IPathUtils {
     readonly delimiter: string;
     readonly home: string;
+    /**
+     * The platform-specific file separator. '\\' or '/'.
+     * @type {string}
+     * @memberof IPathUtils
+     */
+    readonly separator: string;
     getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
     getDisplayName(pathValue: string, cwd?: string): string;
@@ -144,7 +158,7 @@ export interface IPythonSettings {
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
-    readonly datascience : IDataScienceSettings;
+    readonly datascience: IDataScienceSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -264,8 +278,14 @@ export interface IAnalysisSettings {
 }
 
 export interface IDataScienceSettings {
-    allowImportFromNotebook : boolean;
-    enabled : boolean;
+    allowImportFromNotebook: boolean;
+    enabled: boolean;
+    jupyterInterruptTimeout: number;
+    jupyterLaunchTimeout: number;
+    jupyterServerURI: string;
+    notebookFileRoot: string;
+    changeDirOnImportExport: boolean;
+    useDefaultConfigForJupyter: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -351,4 +371,14 @@ export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {
     // getTextEditor(uri: Uri): Promise<{ editor: TextEditor; dispose?(): void }>;
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
+}
+
+export interface IDisposable {
+    dispose(): Promise<void> | undefined | void;
+}
+
+export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
+export interface IAsyncDisposableRegistry {
+    dispose(): Promise<void>;
+    push(disposable: IDisposable);
 }

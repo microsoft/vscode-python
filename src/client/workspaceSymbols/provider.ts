@@ -1,6 +1,7 @@
 'use strict';
 
-import * as _ from 'lodash';
+// tslint:disable-next-line:no-var-requires no-require-imports
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 import {
     CancellationToken, Location, SymbolInformation,
     Uri, WorkspaceSymbolProvider as IWorspaceSymbolProvider
@@ -31,9 +32,11 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             await this.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
         }
 
-        const generators = await Promise.all(this.tagGenerators.map(async generator => {
-            const tagFileExists = await this.fs.fileExists(generator.tagFilePath);
-            return tagFileExists ? generator : undefined;
+        const generators: Generator[] = [];
+        await Promise.all(this.tagGenerators.map(async generator => {
+            if (await this.fs.fileExists(generator.tagFilePath)) {
+                generators.push(generator);
+            }
         }));
 
         const promises = generators
@@ -51,6 +54,6 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             });
 
         const symbols = await Promise.all(promises);
-        return _.flatten(symbols);
+        return flatten(symbols);
     }
 }

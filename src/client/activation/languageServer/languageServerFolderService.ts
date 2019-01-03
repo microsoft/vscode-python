@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as semver from 'semver';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceVerbose } from '../../common/logger';
+import { traceDecorators } from '../../common/logger';
 import { NugetPackage } from '../../common/nuget/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
@@ -20,7 +20,7 @@ const languageServerFolder = 'languageServer';
 export class LanguageServerFolderService implements ILanguageServerFolderService {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
 
-    @traceVerbose('Get language server folder name')
+    @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(): Promise<string> {
         const currentFolder = await this.getCurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
@@ -40,7 +40,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         return `${languageServerFolder}.${serverVersion!.version.raw}`;
     }
 
-    @traceVerbose('Get latest version of Language Server')
+    @traceDecorators.verbose('Get latest version of Language Server')
     public getLatestLanguageServerVersion(): Promise<NugetPackage | undefined> {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion();

@@ -4,10 +4,10 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
-import { PythonSettings } from '../../../client/common/configSettings';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred } from '../../../client/common/utils/async';
+import { getExtensionSettings } from '../../common';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
@@ -16,7 +16,7 @@ use(chaiAsPromised);
 suite('ProcessService', () => {
     let pythonPath: string;
     suiteSetup(() => {
-        pythonPath = PythonSettings.getInstance().pythonPath;
+        pythonPath = getExtensionSettings(undefined).pythonPath;
         return initialize();
     });
     setup(initialize);
@@ -130,7 +130,9 @@ suite('ProcessService', () => {
             }
             if (value === '1') {
                 procKilled = true;
-                result.proc.kill();
+                if (result.proc) {
+                    result.proc.kill();
+                }
             } else {
                 done('Output received when we shouldn\'t have.');
             }

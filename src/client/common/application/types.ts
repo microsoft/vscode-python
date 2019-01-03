@@ -15,12 +15,14 @@ import {
     Event,
     FileSystemWatcher,
     GlobPattern,
+    InputBox,
     InputBoxOptions,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
     Progress,
     ProgressOptions,
+    QuickPick,
     QuickPickItem,
     QuickPickOptions,
     SaveDialogOptions,
@@ -227,6 +229,28 @@ export interface IApplicationShell {
      */
     showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined>;
 
+    /**
+     * Creates a [QuickPick](#QuickPick) to let the user pick an item from a list
+     * of items of type T.
+     *
+     * Note that in many cases the more convenient [window.showQuickPick](#window.showQuickPick)
+     * is easier to use. [window.createQuickPick](#window.createQuickPick) should be used
+     * when [window.showQuickPick](#window.showQuickPick) does not offer the required flexibility.
+     *
+     * @return A new [QuickPick](#QuickPick).
+     */
+    createQuickPick<T extends QuickPickItem>(): QuickPick<T>;
+
+    /**
+     * Creates a [InputBox](#InputBox) to let the user enter some text input.
+     *
+     * Note that in many cases the more convenient [window.showInputBox](#window.showInputBox)
+     * is easier to use. [window.createInputBox](#window.createInputBox) should be used
+     * when [window.showInputBox](#window.showInputBox) does not offer the required flexibility.
+     *
+     * @return A new [InputBox](#InputBox).
+     */
+    createInputBox(): InputBox;
     /**
      * Opens URL in a default browser.
      *

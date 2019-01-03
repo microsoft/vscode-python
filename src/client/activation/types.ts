@@ -26,7 +26,7 @@ export interface IExtensionActivator {
 
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
-  downloadFile(uri: string): RequestResult;
+  downloadFile(uri: string): Promise<RequestResult>;
   getJSON<T>(uri: string): Promise<T>;
 }
 
@@ -57,4 +57,8 @@ export const MajorLanguageServerVersion = Symbol('MajorLanguageServerVersion');
 export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
 export interface IDownloadChannelRule {
   shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean>;
+}
+export const ILanguageServerCompatibilityService = Symbol('ILanguageServerCompatibilityService');
+export interface ILanguageServerCompatibilityService {
+  isSupported(): Promise<boolean>;
 }

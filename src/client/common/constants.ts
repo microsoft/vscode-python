@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 export const PYTHON_LANGUAGE = 'python';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
@@ -39,6 +37,7 @@ export namespace Commands {
     export const Set_Linter = 'python.setLinter';
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
+    export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
@@ -73,7 +72,7 @@ export namespace LinterErrors {
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
 export function isTestExecution(): boolean {
-    return process.env.VSC_PYTHON_CI_TEST === '1';
+    return process.env.VSC_PYTHON_CI_TEST === '1' || isUnitTestExecution();
 }
 
 /**
@@ -86,4 +85,4 @@ export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';
 }
 
-export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..', '..');
+export * from '../constants';

@@ -4,6 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import '../../../client/common/extensions';
 import { PyEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
@@ -47,8 +48,7 @@ suite('Terminal Environment Activation pyenv', () => {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',
-            version: '',
-            version_info: [1, 1, 1, 'alpha'],
+            version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
             type: InterpreterType.Unknown
         };
@@ -66,8 +66,7 @@ suite('Terminal Environment Activation pyenv', () => {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',
-            version: '',
-            version_info: [1, 1, 1, 'alpha'],
+            version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
             type: InterpreterType.Pyenv
         };
@@ -85,8 +84,7 @@ suite('Terminal Environment Activation pyenv', () => {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',
-            version: '',
-            version_info: [1, 1, 1, 'alpha'],
+            version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
             type: InterpreterType.Pyenv,
             envName: 'my env name'

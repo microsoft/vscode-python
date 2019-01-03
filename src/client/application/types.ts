@@ -13,4 +13,5 @@ export interface IApplicationDiagnostics {
      * @memberof IApplicationDiagnostics
      */
     performPreStartupHealthCheck(): Promise<void>;
+    register(): void;
 }

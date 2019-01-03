@@ -8,12 +8,13 @@ import * as chaipromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
-import { getOSType, OSType } from '../../../client/common/utils/platform';
+import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
 import { FlattenedTestFunction, TestDiscoveryOptions, Tests } from '../../../client/unittests/common/types';
 import { TestsParser as PyTestsParser } from '../../../client/unittests/pytest/services/parserService';
+import { getOSType } from '../../common';
 import { PytestDataPlatformType, pytestScenarioData } from './pytest_unittest_parser_data';
 
 use(chaipromise);

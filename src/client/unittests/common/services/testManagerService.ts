@@ -1,13 +1,14 @@
 import { Disposable, Uri } from 'vscode';
-import { PythonSettings } from '../../../common/configSettings';
-import { IDisposableRegistry, Product } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestManager, ITestManagerFactory, ITestManagerService, ITestsHelper, UnitTestProduct } from './../types';
 
 export class TestManagerService implements ITestManagerService {
     private cachedTestManagers = new Map<Product, ITestManager>();
+    private readonly configurationService: IConfigurationService;
     constructor(private wkspace: Uri, private testsHelper: ITestsHelper, private serviceContainer: IServiceContainer) {
         const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
+        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         disposables.push(this);
     }
     public dispose() {
@@ -32,11 +33,11 @@ export class TestManagerService implements ITestManagerService {
         return testManager.enabled ? testManager : undefined;
     }
     public getTestWorkingDirectory() {
-        const settings = PythonSettings.getInstance(this.wkspace);
+        const settings = this.configurationService.getSettings(this.wkspace);
         return settings.unitTest.cwd && settings.unitTest.cwd.length > 0 ? settings.unitTest.cwd : this.wkspace.fsPath;
     }
     public getPreferredTestManager(): UnitTestProduct | undefined {
-        const settings = PythonSettings.getInstance(this.wkspace);
+        const settings = this.configurationService.getSettings(this.wkspace);
         if (settings.unitTest.nosetestsEnabled) {
             return Product.nosetest;
         } else if (settings.unitTest.pyTestEnabled) {

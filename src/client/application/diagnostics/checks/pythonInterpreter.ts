@@ -21,7 +21,7 @@ const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: 'Python is not installed. Please download and install Python before using the extension.',
     [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]: 'You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter.',
     [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]: 'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.',
-    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]: 'Please select the appropriate Python interpreter.'
+    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]: 'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.'
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
@@ -54,9 +54,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         }
 
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreters = await interpreterService.getInterpreters();
+        const hasInterpreters = await interpreterService.hasInterpreters;
 
-        if (interpreters.length === 0) {
+        if (!hasInterpreters) {
             return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic)];
         }
 
@@ -77,6 +77,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         if (!currentInterpreter || currentInterpreter.type !== InterpreterType.Unknown) {
             return [];
         }
+        const interpreters = await interpreterService.getInterpreters();
         if (interpreters.filter(i => !helper.isMacDefaultPythonPath(i.path)).length === 0) {
             return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic)];
         }

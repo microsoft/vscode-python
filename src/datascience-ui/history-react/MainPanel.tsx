@@ -6,15 +6,16 @@ import './mainPanel.css';
 import { min } from 'lodash';
 import * as React from 'react';
 
+import { concatMultilineString } from '../../client/datascience/common';
 import { HistoryMessages } from '../../client/datascience/constants';
-import { CellState, ICell } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
-import { RelativeImage } from '../react-common/relativeImage';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
+import { Image, ImageName } from './image';
 import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
@@ -51,21 +52,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public render() {
 
-        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
-        './images/Cancel/Cancel_16xMD_vscode_dark.svg';
-        const redoImage = this.props.theme !== 'vscode-dark' ? './images/Redo/Redo_16x_vscode.svg' :
-        './images/Redo/Redo_16x_vscode_dark.svg';
-        const undoImage = this.props.theme !== 'vscode-dark' ? './images/Undo/Undo_16x_vscode.svg' :
-        './images/Undo/Undo_16x_vscode_dark.svg';
-        const restartImage = this.props.theme !== 'vscode-dark' ? './images/Restart/Restart_grey_16x_vscode.svg' :
-        './images/Restart/Restart_grey_16x_vscode_dark.svg';
-        const saveAsImage = this.props.theme !== 'vscode-dark' ? './images/SaveAs/SaveAs_16x_vscode.svg' :
-        './images/SaveAs/SaveAs_16x_vscode_dark.svg';
-        const collapseAllImage = this.props.theme !== 'vscode-dark' ? './images/CollapseAll/CollapseAll_16x_vscode.svg' :
-        './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
-        const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
-        './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
-
         const progressBar = this.state.busy && !this.props.ignoreProgress ? <Progress /> : undefined;
 
         return (
@@ -74,25 +60,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
                     {this.renderExtraButtons()}
                     <CellButton theme={this.props.theme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                        <RelativeImage class='cell-button-image' path={collapseAllImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.CollapseAll}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.expandAll} disabled={!this.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                        <RelativeImage class='cell-button-image' path={expandAllImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.ExpandAll}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
-                        <RelativeImage class='cell-button-image' path={saveAsImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.SaveAs}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
-                        <RelativeImage class='cell-button-image' path={restartImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Restart}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Interrupt}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <RelativeImage class='cell-button-image' path={undoImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Undo}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        <RelativeImage class='cell-button-image' path={redoImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Redo}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
-                        <RelativeImage class='cell-button-image' path={clearButtonImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
                 <div className='top-spacing'/>
@@ -122,6 +111,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.getAllCells();
                 return true;
 
+            case HistoryMessages.ExpandAll:
+                this.expandAllSilent();
+                return true;
+
+            case HistoryMessages.CollapseAll:
+                this.collapseAllSilent();
+                return true;
+
+            case HistoryMessages.DeleteAllCells:
+                this.clearAllSilent();
+                return true;
+
+            case HistoryMessages.Redo:
+                this.redo();
+                return true;
+
+            case HistoryMessages.Undo:
+                this.undo();
+                return true;
+
             case HistoryMessages.StartProgress:
                 if (!this.props.ignoreProgress) {
                     this.setState({busy: true});
@@ -147,7 +156,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return cellVM.cell;
         }) ;
 
-        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload : cells});
+        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload: { contents: cells }});
     }
 
     private renderExtraButtons = () => {
@@ -191,7 +200,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private collapseAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
+        this.collapseAllSilent();
+    }
 
+    private collapseAllSilent = () => {
         const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
             if (value.inputBlockOpen) {
                 return this.toggleCellVM(value);
@@ -209,7 +221,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private expandAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
+        this.expandAllSilent();
+    }
 
+    private expandAllSilent = () => {
         const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
             if (!value.inputBlockOpen) {
                 return this.toggleCellVM(value);
@@ -276,7 +291,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private clearAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.DeleteAllCells, payload: { }});
+        this.clearAllSilent();
+    }
 
+    private clearAllSilent = () => {
         // Update our state
         this.setState({
             cellVMs: [],
@@ -284,6 +302,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             skipNextScroll: true,
             busy: false // No more progress on delete all
         });
+
+        // Tell other side, we changed our number of cells
+        this.sendInfo();
     }
 
     private redo = () => {
@@ -298,6 +319,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack: redoStack,
             skipNextScroll: true
         });
+
+        // Tell other side, we changed our number of cells
+        this.sendInfo();
     }
 
     private undo = () => {
@@ -312,11 +336,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack : redoStack,
             skipNextScroll : true
         });
+
+        // Tell other side, we changed our number of cells
+        this.sendInfo();
     }
 
     private restartKernel = () => {
         // Send a message to the other side to restart the kernel
         PostOffice.sendMessage({ type: HistoryMessages.RestartKernel, payload: { }});
+    }
+
+    private interruptKernel = () => {
+        // Send a message to the other side to restart the kernel
+        PostOffice.sendMessage({ type: HistoryMessages.Interrupt, payload: { }});
     }
 
     private export = () => {
@@ -355,6 +387,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     redoStack: this.state.redoStack,
                     skipNextScroll: false
                 });
+
+                // Tell other side, we changed our number of cells
+                this.sendInfo();
             }
         }
     }
@@ -401,7 +436,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private extractInputText = (cell: ICell) => {
-        return Cell.concatMultilineString(cell.data.source);
+        return concatMultilineString(cell.data.source);
+    }
+
+    private sendInfo = () => {
+        const info : IHistoryInfo = {
+            cellCount: this.state.cellVMs.length,
+            undoCount: this.state.undoStack.length,
+            redoCount: this.state.redoStack.length
+        };
+        PostOffice.sendMessage({type: HistoryMessages.SendInfo, payload: { info: info }});
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {

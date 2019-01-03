@@ -6,7 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
-import { IS_64_BIT, IS_WINDOWS } from '../client/common/platform/constants';
+import { IS_WINDOWS } from '../client/common/platform/constants';
 import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
@@ -19,9 +19,10 @@ import { PythonToolExecutionService } from '../client/common/process/pythonToolS
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
 import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
-import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, Is64Bit, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
+import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
 import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
@@ -30,6 +31,7 @@ import { registerTypes as lintersRegisterTypes } from '../client/linters/service
 import { TEST_OUTPUT_CHANNEL } from '../client/unittests/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/unittests/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
+import { MockAutoSelectionService } from './mocks/autoSelector';
 import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
@@ -56,9 +58,21 @@ export class IocContainer {
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
+
+        this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
+        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
     }
-    public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+    public async dispose() : Promise<void> {
+        for (let i = 0; i < this.disposables.length; i += 1) {
+            const disposable = this.disposables[i];
+            if (disposable) {
+                // tslint:disable-next-line:no-any
+                const promise = disposable.dispose() as Promise<any>;
+                if (promise) {
+                    await promise;
+                }
+            }
+        }
     }
 
     public registerCommonTypes(registerFileSystem: boolean = true) {
@@ -105,7 +119,6 @@ export class IocContainer {
 
     public registerMockProcess() {
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
-        this.serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
 
         this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);

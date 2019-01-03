@@ -44,7 +44,11 @@
 - Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
 - Do note that the `Select Interpreter` drop-down window scrolls
 
-- [ ] Detected a single virtual environment at the top-level of the workspace folder (if you created this _after_ opening VS Code, then run `Reload Window` to pick up the new environment)
+- [ ] Detected a single virtual environment at the top-level of the workspace folder on Mac when when `python` command points to default Mac Python installation or `python` command fails in the terminal.
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
+- [ ] Detected a single virtual environment at the top-level of the workspace folder on Windows when `python` fails in the terminal.
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
+- [ ] Detected a single virtual environment at the top-level of the workspace folder
   - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] Steals focus
@@ -220,6 +224,31 @@ def foo():pass
 ```python
 import unittest
 
+MODULE_SETUP = False
+
+
+def setUpModule():
+    global MODULE_SETUP
+    MODULE_SETUP = True
+
+
+class PassingSetupTests(unittest.TestCase):
+    CLASS_SETUP = False
+    METHOD_SETUP = False
+
+    @classmethod
+    def setUpClass(cls):
+        cls.CLASS_SETUP = True
+
+    def setUp(self):
+        self.METHOD_SETUP = True
+
+    def test_setup(self):
+        self.assertTrue(MODULE_SETUP)
+        self.assertTrue(self.CLASS_SETUP)
+        self.assertTrue(self.METHOD_SETUP)
+
+
 class PassingTests(unittest.TestCase):
 
     def test_passing(self):
@@ -243,6 +272,7 @@ class FailingTests(unittest.TestCase):
   - [ ] Code lens for a method runs just that test
     - [ ] `Run Test` works
     - [ ] `Debug Test` works
+    - [ ] Module/suite setup methods are also run (run the `test_setup` method to verify)
 
 #### [`pytest`](https://code.visualstudio.com/docs/python/unit-testing#_pytest-configuration-settings)
 ```python
