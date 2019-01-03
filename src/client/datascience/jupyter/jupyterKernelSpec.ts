@@ -8,7 +8,7 @@ import * as path from 'path';
 import { noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
 
-const IsGuidRegEx = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const IsGuidRegEx = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
