@@ -148,4 +148,4 @@ if __name__ == "__main__":
         else:
             raise RuntimeError(f"Unrecognized sub-command: {args.cmd!r}")
     except subprocess.CalledProcessError as exc:
-        print(f"Failed to run command {cpe.cmd} : {cpe.stderr}")
+        print(f"Failed to run command {exc.cmd} : {exc.stderr}")
