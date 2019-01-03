@@ -18,13 +18,10 @@ export class MockJupyterSession implements IJupyterSession {
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
-    private disposed: boolean = false;
-    private disposedTimer: NodeJS.Timer;
 
     constructor(cellDictionary: {[index: string] : ICell}, timedelay: number) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
-        this.disposedTimer = setInterval(this.checkForDisposed.bind(this), 200);
     }
 
     public get onRestarted() : Event<void> {
@@ -64,9 +61,7 @@ export class MockJupyterSession implements IJupyterSession {
     }
 
     public async dispose(): Promise<void> {
-        this.disposed = true;
         await sleep(10);
-        clearInterval(this.disposedTimer);
     }
 
     private findCell = (code : string) : ICell => {
@@ -80,11 +75,4 @@ export class MockJupyterSession implements IJupyterSession {
         console.log(`Cell ${code.splitLines()[0]} not found in mock`);
         throw new Error(`Cell ${code.splitLines()[0]} not found in mock`);
     }
-
-    private checkForDisposed() {
-        if (this.disposed) {
-            throw new Error('Disposed while timer is firing');
-        }
-    }
-
 }

@@ -160,14 +160,20 @@ export class JupyterSession implements IJupyterSession {
                     this.statusHandler = undefined;
                 }
                 if (this.session) {
-                    await this.session.shutdown();
+                    // Shutdown may fail if the process has been killed
+                    await Promise.race([this.session.shutdown(), sleep(100)]);
                     this.session.dispose();
                 }
                 if (this.sessionManager) {
                     this.sessionManager.dispose();
                 }
             } catch {
-                noop();
+                if (this.session) {
+                    this.session.dispose();
+                }
+                if (this.sessionManager) {
+                    this.sessionManager.dispose();
+                }
             }
             this.session = undefined;
             this.sessionManager = undefined;

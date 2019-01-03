@@ -339,8 +339,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
-            if (launchResult) {
-                this.asyncRegistry.push({ dispose: () => Promise.resolve(launchResult.dispose()) });
+            if (launchResult && cancelToken) {
+                cancelToken.onCancellationRequested(() => {
+                    launchResult.dispose();
+                });
             }
 
             // Wait for the connection information on this result

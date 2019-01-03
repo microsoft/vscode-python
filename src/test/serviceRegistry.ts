@@ -61,6 +61,7 @@ export class IocContainer {
         for (let i = 0; i < this.disposables.length; i += 1) {
             const disposable = this.disposables[i];
             if (disposable) {
+                // tslint:disable-next-line:no-any
                 const promise = disposable.dispose() as Promise<any>;
                 if (promise) {
                     await promise;

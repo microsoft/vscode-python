@@ -256,7 +256,7 @@ suite('Jupyter notebook tests', () => {
                 assert.fail('Failed to connect to remote server');
             }
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
-            await server.dispose();
+            await server!.dispose();
         }
     });
 

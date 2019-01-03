@@ -99,13 +99,18 @@ suite('History output tests', () => {
         global['acquireVsCodeApi'] = globalAcquireVsCodeApi;
     });
 
-    teardown(() => {
-        disposables.forEach(disposable => {
+    teardown(async () => {
+        for (let i = 0; i < disposables.length; i += 1) {
+            const disposable = disposables[i];
             if (disposable) {
-                disposable.dispose();
+                // tslint:disable-next-line:no-any
+                const promise = disposable.dispose() as Promise<any>;
+                if (promise) {
+                    await promise;
+                }
             }
-        });
-        ioc.dispose();
+        }
+        await ioc.dispose();
         delete global['ascquireVsCodeApi'];
     });
 
