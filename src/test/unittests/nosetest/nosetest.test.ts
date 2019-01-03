@@ -44,7 +44,7 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
     });
 
@@ -58,7 +58,7 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
 
     test('Discover Tests (single test file)', async () => {
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');

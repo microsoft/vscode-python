@@ -20,7 +20,7 @@ suite('Autocomplete PEP 484', () => {
     suiteSetup(async function () {
         await initialize();
         initializeDI();
-        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
+        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri!) === 2;
         if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -31,7 +31,7 @@ suite('Autocomplete PEP 484', () => {
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
         await closeActiveWindows();
-        ioc.dispose();
+        await ioc.dispose();
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();

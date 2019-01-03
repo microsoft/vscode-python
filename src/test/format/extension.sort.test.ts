@@ -43,7 +43,7 @@ suite('Sortingx', () => {
         sorter = new SortImportsEditingProvider(ioc.serviceContainer);
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await closeActiveWindows();
     });
     function initializeDI() {

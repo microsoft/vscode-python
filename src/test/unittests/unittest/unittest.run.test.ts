@@ -53,7 +53,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         await ignoreTestLauncher();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
 
@@ -139,7 +139,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         injectTestSocketServerResults(resultsToSend);
 
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
+        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
         const results = await testManager.runTest(CommandSource.ui);
 
         assert.equal(results.summary.errors, 1, 'Errors');
@@ -177,7 +177,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         injectTestSocketServerResults(resultsToSend);
 
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
+        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
         let results = await testManager.runTest(CommandSource.ui);
         assert.equal(results.summary.errors, 1, 'Errors');
         assert.equal(results.summary.failures, 4, 'Failures');
@@ -224,7 +224,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         injectTestSocketServerResults(resultsToSend);
 
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, unitTestSpecificTestFilesPath);
+        const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
         // tslint:disable-next-line:no-non-null-assertion
@@ -261,7 +261,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         injectTestSocketServerResults(resultsToSend);
 
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, unitTestSpecificTestFilesPath);
+        const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
         // tslint:disable-next-line:no-non-null-assertion
@@ -296,7 +296,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         injectTestSocketServerResults(resultsToSend);
 
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
+        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFn: TestsToRun = { testFile: [], testFolder: [], testFunction: [tests.testFunctions[0].testFunction], testSuite: [] };
         const results = await testManager.runTest(CommandSource.ui, testFn);

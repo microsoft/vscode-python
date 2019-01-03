@@ -50,7 +50,7 @@ suite('Unit Tests - debugging', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
         await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
         await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
@@ -86,7 +86,7 @@ suite('Unit Tests - debugging', () => {
     }
 
     async function testStartingDebugger(testProvider: TestProvider) {
-        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri, testFilesPath);
+        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri!, testFilesPath);
         const mockDebugLauncher = ioc.serviceContainer.get<MockDebugLauncher>(ITestDebugLauncher);
         const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
@@ -130,7 +130,7 @@ suite('Unit Tests - debugging', () => {
     });
 
     async function testStoppingDebugger(testProvider: TestProvider) {
-        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri, testFilesPath);
+        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri!, testFilesPath);
         const mockDebugLauncher = ioc.serviceContainer.get<MockDebugLauncher>(ITestDebugLauncher);
         const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
@@ -144,7 +144,7 @@ suite('Unit Tests - debugging', () => {
 
         const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, true, true, true);
         await expect(runningPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
-        ioc.dispose(); // will cancel test discovery
+        await ioc.dispose(); // will cancel test discovery
         await expect(discoveryPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
     }
 
@@ -164,7 +164,7 @@ suite('Unit Tests - debugging', () => {
     });
 
     async function testDebuggerWhenRediscoveringTests(testProvider: TestProvider) {
-        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri, testFilesPath);
+        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri!, testFilesPath);
         const mockDebugLauncher = ioc.serviceContainer.get<MockDebugLauncher>(ITestDebugLauncher);
         const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');

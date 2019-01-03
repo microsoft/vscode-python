@@ -29,13 +29,13 @@ suite('Signatures (Jedi)', () => {
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
+        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri!) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
         await closeActiveWindows();
-        ioc.dispose();
+        await ioc.dispose();
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();

@@ -85,7 +85,7 @@ suite('Formatting - General', () => {
         await closeActiveWindows();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
     });
 
     function initializeDI() {

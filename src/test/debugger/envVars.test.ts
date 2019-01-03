@@ -33,7 +33,7 @@ suite('Resolving Environment Variables when Debugging', () => {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await closeActiveWindows();
     });
 

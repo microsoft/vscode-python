@@ -50,7 +50,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
     });
 
@@ -81,7 +81,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     test('Discover Tests (single test file)', async () => {
         await injectTestDiscoveryOutput('one.output');
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
@@ -92,7 +92,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     test('Check that nameToRun in testSuites has class name after : (single test file)', async () => {
         await injectTestDiscoveryOutput('two.output');
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
@@ -103,7 +103,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         await injectTestDiscoveryOutput('three.output');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 5, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 16, 'Incorrect number of test functions');
@@ -119,7 +119,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         await injectTestDiscoveryOutput('four.output');
         await updateSetting('unitTest.nosetestArgs', ['-w', 'specific', '-m', 'tst'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
@@ -132,7 +132,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         await injectTestDiscoveryOutput('five.output');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
