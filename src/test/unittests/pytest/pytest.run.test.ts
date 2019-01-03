@@ -47,10 +47,10 @@ async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Test
             testFunction: []
         };
         if (scenario.testSuiteIndex) {
-            scenario.testsToRun.testSuite.push(tests.testSuites[scenario.testSuiteIndex].testSuite);
+            scenario.testsToRun.testSuite!.push(tests.testSuites[scenario.testSuiteIndex].testSuite);
         }
         if (scenario.testFunctionIndex) {
-            scenario.testsToRun.testFunction.push(tests.testSuites[scenario.testFunctionIndex].testSuite);
+            scenario.testsToRun.testFunction!.push(tests.testSuites[scenario.testFunctionIndex].testSuite);
         }
     }
     return scenario.testsToRun;
@@ -162,7 +162,7 @@ function getIssueCountFromRelevantTestDetails(testDetails: ITestDetails[], skipp
 function getDiagnosticForTestFunc(diagnostics: vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
     return diagnostics.find(diag => {
         return testFunc.testFunction.nameToRun === diag.code;
-    });
+    })!;
 }
 
 /**
@@ -171,7 +171,7 @@ function getDiagnosticForTestFunc(diagnostics: vscode.Diagnostic[], testFunc: Fl
  * @param testDetails All the test details for a scenario.
  */
 function getUniqueIssueFilesFromTestDetails(testDetails: ITestDetails[]): string[] {
-    return testDetails.reduce((filtered, issue) => {
+    return testDetails.reduce<string[]>((filtered, issue) => {
         if (filtered.indexOf(issue.fileName) === -1 && issue.fileName !== undefined) {
             filtered.push(issue.fileName);
         }
@@ -202,7 +202,7 @@ function getTestFuncFromResultsByTestFileAndName(ioc: UnitTestIocContainer, resu
     const fileSystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
     return results.testFunctions.find(test => {
         return fileSystem.arePathsSame(vscode.Uri.file(test.parentTestFile.fullPath).fsPath, testFileUri.fsPath) && test.testFunction.name === testDetails.testName;
-    });
+    })!;
 }
 
 /**
@@ -218,7 +218,7 @@ async function getExpectedDiagnosticFromTestDetails(testDetails: ITestDetails): 
     const testFileUri = vscode.Uri.file(testFilePath);
     let expectedSourceTestFilePath = testFilePath;
     if (testDetails.imported) {
-        expectedSourceTestFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.sourceFileName);
+        expectedSourceTestFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.sourceFileName!);
     }
     const expectedSourceTestFileUri = vscode.Uri.file(expectedSourceTestFilePath);
     const diagMsgPrefix = new UnitTestDiagnosticService().getMessagePrefix(testDetails.status);
@@ -233,30 +233,30 @@ async function getExpectedDiagnosticFromTestDetails(testDetails: ITestDetails): 
         // Stack should include the class furthest down the chain from the file that was executed.
         relatedInfo.push(
             new vscode.DiagnosticRelatedInformation(
-                new vscode.Location(testFileUri, testDetails.classDefRange),
-                testDetails.simpleClassName
+                new vscode.Location(testFileUri, testDetails.classDefRange!),
+                testDetails.simpleClassName!
             )
         );
         expectedDiagRange = testDetails.classDefRange;
     }
     relatedInfo.push(
         new vscode.DiagnosticRelatedInformation(
-            new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange),
+            new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
             testDetails.sourceTestName
         )
     );
     if (testDetails.status !== TestStatus.Skipped) {
         relatedInfo.push(
             new vscode.DiagnosticRelatedInformation(
-                new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange),
-                testDetails.issueLineText
+                new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
+                testDetails.issueLineText!
             )
         );
     } else {
         expectedSeverity = vscode.DiagnosticSeverity.Information;
     }
 
-    const expectedDiagnostic = new vscode.Diagnostic(expectedDiagRange, expectedDiagMsg, expectedSeverity);
+    const expectedDiagnostic = new vscode.Diagnostic(expectedDiagRange!, expectedDiagMsg, expectedSeverity);
     expectedDiagnostic.source = 'pytest';
     expectedDiagnostic.code = testDetails.nameToRun;
     expectedDiagnostic.relatedInformation = relatedInfo;
@@ -281,7 +281,7 @@ async function testDiagnostic(diagnostic: vscode.Diagnostic, expectedDiagnostic:
     assert.equal(diagnostic.range.end.line, expectedDiagnostic.range.end.line, 'Diagnostic range end line');
     assert.equal(diagnostic.range.end.character, expectedDiagnostic.range.end.character, 'Diagnostic range end character');
     assert.equal(diagnostic.source, expectedDiagnostic.source, 'Diagnostic source');
-    assert.equal(diagnostic.relatedInformation.length, expectedDiagnostic.relatedInformation.length, 'DiagnosticRelatedInformation count');
+    assert.equal(diagnostic.relatedInformation!.length, expectedDiagnostic.relatedInformation!.length, 'DiagnosticRelatedInformation count');
 }
 
 async function testDiagnosticRelatedInformation(relatedInfo: vscode.DiagnosticRelatedInformation, expectedRelatedInfo: vscode.DiagnosticRelatedInformation) {
@@ -338,9 +338,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     function getScenarioTestDetails(scenario: ITestScenarioDetails, failedRun: boolean): ITestDetails[] {
         if (scenario.shouldRunFailed && failedRun) {
-            return scenario.testDetails.filter(td => {return td.status === TestStatus.Fail; });
+            return scenario.testDetails!.filter(td => {return td.status === TestStatus.Fail; })!;
         }
-        return scenario.testDetails;
+        return scenario.testDetails!;
     }
     testScenarios.forEach(scenario => {
         suite(scenario.scenarioName, () => {
@@ -354,15 +354,15 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
                 await injectTestRunOutput(scenario.runOutput);
-                if (scenario.shouldRunFailed === true) { await injectTestRunOutput(scenario.failedRunOutput, true); }
+                if (scenario.shouldRunFailed === true) { await injectTestRunOutput(scenario.failedRunOutput!, true); }
                 await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
                 factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-                testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+                testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
                 const tests = await testManager.discoverTests(CommandSource.ui, true, true);
                 scenario.testsToRun = await getScenarioTestsToRun(scenario, tests);
             });
             suiteTeardown(async () => {
-                ioc.dispose();
+                await ioc.dispose();
                 await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
             });
             const shouldRunProperly = (suiteName, failedRun = false) => {
@@ -381,7 +381,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                             let testFileUri: vscode.Uri;
                             let expectedDiagnosticCount: number;
                             const relevantTestDetails = getRelevantTestDetailsForFile(testDetails, fileName);
-                            const relevantSkippedIssues = getRelevantSkippedIssuesFromTestDetailsForFile(scenario.testDetails, fileName);
+                            const relevantSkippedIssues = getRelevantSkippedIssuesFromTestDetailsForFile(scenario.testDetails!, fileName);
                             suiteSetup(async () => {
                                 testFileUri = vscode.Uri.file(path.join(UNITTEST_TEST_FILES_PATH, fileName));
                                 diagnostics = testManager.diagnosticCollection.get(testFileUri)!;
@@ -413,15 +413,15 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                                             suite('Test DiagnosticRelatedInformation', async () => {
                                                 if (td.imported) {
                                                     test('Class Definition', async () => {
-                                                        await testDiagnosticRelatedInformation(diagnostic.relatedInformation[0], expectedDiagnostic.relatedInformation[0]);
+                                                        await testDiagnosticRelatedInformation(diagnostic.relatedInformation![0], expectedDiagnostic.relatedInformation![0]);
                                                     });
                                                 }
                                                 test('Test Function Definition', async () => {
-                                                    await testDiagnosticRelatedInformation(diagnostic.relatedInformation[(td.imported ? 1 : 0)], expectedDiagnostic.relatedInformation[(td.imported ? 1 : 0)]);
+                                                    await testDiagnosticRelatedInformation(diagnostic.relatedInformation![(td.imported ? 1 : 0)], expectedDiagnostic.relatedInformation![(td.imported ? 1 : 0)]);
                                                 });
                                                 if (td.status !== TestStatus.Skipped) {
                                                     test('Failure Line', async () => {
-                                                        await testDiagnosticRelatedInformation(diagnostic.relatedInformation[(td.imported ? 1 : 0) + 1], expectedDiagnostic.relatedInformation[(td.imported ? 1 : 0) + 1]);
+                                                        await testDiagnosticRelatedInformation(diagnostic.relatedInformation![(td.imported ? 1 : 0) + 1], expectedDiagnostic.relatedInformation![(td.imported ? 1 : 0) + 1]);
                                                     });
                                                 }
                                             });

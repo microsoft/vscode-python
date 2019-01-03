@@ -38,15 +38,15 @@ async function testMessageProperties(message: IPythonUnitTestMessage, expectedMe
     assert.equal(message.status, expectedMessage.status, 'IPythonUnitTestMessage status');
     assert.equal(message.testFilePath, expectedMessage.testFilePath, 'IPythonUnitTestMessage testFilePath');
     if (status !== TestStatus.Pass) {
-        assert.equal(message.locationStack[0].lineText, expectedMessage.locationStack[0].lineText, 'IPythonUnitTestMessage line text');
-        assert.equal(message.locationStack[0].location.uri.fsPath, expectedMessage.locationStack[0].location.uri.fsPath, 'IPythonUnitTestMessage locationStack fsPath');
+        assert.equal(message.locationStack![0].lineText, expectedMessage.locationStack![0].lineText, 'IPythonUnitTestMessage line text');
+        assert.equal(message.locationStack![0].location.uri.fsPath, expectedMessage.locationStack![0].location.uri.fsPath, 'IPythonUnitTestMessage locationStack fsPath');
         if (status !== TestStatus.Skipped) {
-            assert.equal(message.locationStack[1].lineText, expectedMessage.locationStack[1].lineText, 'IPythonUnitTestMessage line text');
-            assert.equal(message.locationStack[1].location.uri.fsPath, expectedMessage.locationStack[1].location.uri.fsPath, 'IPythonUnitTestMessage locationStack fsPath');
+            assert.equal(message.locationStack![1].lineText, expectedMessage.locationStack![1].lineText, 'IPythonUnitTestMessage line text');
+            assert.equal(message.locationStack![1].location.uri.fsPath, expectedMessage.locationStack![1].location.uri.fsPath, 'IPythonUnitTestMessage locationStack fsPath');
         }
         if (imported) {
-            assert.equal(message.locationStack[2].lineText, expectedMessage.locationStack[2].lineText, 'IPythonUnitTestMessage imported line text');
-            assert.equal(message.locationStack[2].location.uri.fsPath, expectedMessage.locationStack[2].location.uri.fsPath, 'IPythonUnitTestMessage imported location fsPath');
+            assert.equal(message.locationStack![2].lineText, expectedMessage.locationStack![2].lineText, 'IPythonUnitTestMessage imported line text');
+            assert.equal(message.locationStack![2].location.uri.fsPath, expectedMessage.locationStack![2].location.uri.fsPath, 'IPythonUnitTestMessage imported location fsPath');
         }
     }
 }
@@ -64,29 +64,29 @@ async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails
     const testFileUri = vscode.Uri.file(testFilePath);
     let expectedSourceTestFilePath = testFilePath;
     if (testDetails.imported) {
-        expectedSourceTestFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.sourceFileName);
+        expectedSourceTestFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.sourceFileName!);
     }
     const expectedSourceTestFileUri = vscode.Uri.file(expectedSourceTestFilePath);
     if (testDetails.imported) {
         // Stack should include the class furthest down the chain from the file that was executed.
         locationStack.push(
             {
-                location: new vscode.Location(testFileUri, testDetails.classDefRange),
-                lineText: testDetails.simpleClassName
+                location: new vscode.Location(testFileUri, testDetails.classDefRange!),
+                lineText: testDetails.simpleClassName!
             }
         );
     }
     locationStack.push(
         {
-            location: new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange),
+            location: new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
             lineText: testDetails.sourceTestName
         }
     );
     if (testDetails.status !== TestStatus.Skipped) {
         locationStack.push(
             {
-                location: new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange),
-                lineText: testDetails.issueLineText
+                location: new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
+                lineText: testDetails.issueLineText!
             }
         );
     }
@@ -138,15 +138,15 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const xUnitParser = new XUnitParser();
                 await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput), PassCalculationFormulae.pytest);
                 const testResultsService = new TestResultsService(testVisitor.object);
-                await testResultsService.updateResults(parsedTests);
+                testResultsService.updateResults(parsedTests);
                 const testMessageService = new TestMessageService(ioc.serviceContainer);
                 testMessages = await testMessageService.getFilteredTestMessages(UNITTEST_TEST_FILES_PATH, parsedTests);
             });
             suiteTeardown(async () => {
-                ioc.dispose();
+                await ioc.dispose();
                 await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
             });
-            scenario.testDetails.forEach((td) => {
+            scenario.testDetails!.forEach((td) => {
                 suite(td.nameToRun, () => {
                     let testMessage: IPythonUnitTestMessage;
                     let expectedMessage: IPythonUnitTestMessage;
@@ -164,13 +164,13 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                             code: td.nameToRun,
                             message: td.message,
                             severity: expectedSeverity,
-                            provider: ProductNames.get(Product.pytest),
+                            provider: ProductNames.get(Product.pytest)!,
                             testTime: 0,
                             status: td.status,
                             locationStack: expectedLocationStack,
                             testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName)
                         };
-                        testMessage = testMessages.find(tm => tm.code === td.nameToRun);
+                        testMessage = testMessages.find(tm => tm.code === td.nameToRun)!;
                     });
                     test('Message', async () => {
                         await testMessageProperties(testMessage, expectedMessage, td.imported, td.status);
