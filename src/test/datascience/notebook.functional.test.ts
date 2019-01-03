@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
@@ -50,12 +51,11 @@ suite('Jupyter notebook tests', () => {
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
-        version: '3.6.6.6',
+        version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
-        version_info: [3, 6, 6, 'final']
     };
 
     setup(() => {
@@ -85,8 +85,7 @@ suite('Jupyter notebook tests', () => {
                 }
             }
         }
-        ioc.dispose();
-
+        await ioc.dispose();
     });
 
     function escapePath(p: string) {
@@ -256,6 +255,8 @@ suite('Jupyter notebook tests', () => {
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
+            // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
+            await server.dispose();
         }
     });
 

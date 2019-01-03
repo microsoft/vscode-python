@@ -123,7 +123,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
         @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager) {
-        this.disposableRegistry.push(this);
         this.asyncRegistry.push(this);
     }
 

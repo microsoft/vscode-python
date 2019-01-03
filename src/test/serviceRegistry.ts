@@ -57,12 +57,16 @@ export class IocContainer {
         this.disposables.push(testOutputChannel);
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
     }
-    public dispose() {
-        this.disposables.forEach(disposable => {
+    public async dispose() : Promise<void> {
+        for (let i = 0; i < this.disposables.length; i += 1) {
+            const disposable = this.disposables[i];
             if (disposable) {
-                disposable.dispose();
+                const promise = disposable.dispose() as Promise<any>;
+                if (promise) {
+                    await promise;
+                }
             }
-        });
+        }
     }
 
     public registerCommonTypes(registerFileSystem: boolean = true) {

@@ -103,7 +103,10 @@ import { PythonInterpreterLocatorService } from '../../client/interpreter/locato
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider,
+} from '../../client/interpreter/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
     GlobalVirtualEnvService,
@@ -122,6 +125,7 @@ import {
 import {
     WorkspaceVirtualEnvWatcherService,
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
+import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -136,15 +140,22 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private contextSetEvent : EventEmitter<{name: string; value: boolean}> = new EventEmitter<{name: string; value: boolean}>();
     private jupyterMock: MockJupyterManager | undefined;
     private shouldMockJupyter: boolean;
+    private asyncRegistry: AsyncDisposableRegistry;
 
     constructor() {
         super();
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
+        this.asyncRegistry = new AsyncDisposableRegistry();
     }
 
     public get onContextSet() : Event<{name: string; value: boolean}> {
         return this.contextSetEvent.event;
+    }
+
+    public async dispose() : Promise<void> {
+        await this.asyncRegistry.dispose();
+        await super.dispose();
     }
 
     //tslint:disable:max-func-body-length
@@ -159,7 +170,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
-        this.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
+        this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
+        this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {

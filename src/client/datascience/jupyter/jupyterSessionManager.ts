@@ -37,17 +37,24 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 init: { cache: 'no-store', credentials: 'same-origin' }
             });
         const sessionManager = new SessionManager({ serverSettings: serverSettings });
+        try {
+            // Ask the session manager to refresh its list of kernel specs.
+            await sessionManager.refreshSpecs();
 
-        // Ask the session manager to refresh its list of kernel specs.
-        await sessionManager.refreshSpecs();
+            // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
+            const kernelspecs = sessionManager.specs && sessionManager.specs.kernelspecs ? sessionManager.specs.kernelspecs : {};
+            const keys = Object.keys(kernelspecs);
+            return keys.map(k => {
+                const spec = kernelspecs[k];
+                return new JupyterKernelSpec(spec);
+            });
+        } finally {
+            // Cleanup the session manager as we don't need it anymore
+            if (sessionManager) {
+                sessionManager.dispose();
+            }
+        }
 
-        // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
-        const kernelspecs = sessionManager.specs && sessionManager.specs.kernelspecs ? sessionManager.specs.kernelspecs : {};
-        const keys = Object.keys(kernelspecs);
-        return keys.map(k => {
-            const spec = kernelspecs[k];
-            return new JupyterKernelSpec(spec);
-        });
     }
 
 }

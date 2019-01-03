@@ -49,7 +49,12 @@ export class JupyterSession implements IJupyterSession {
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
         if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
             try {
-                await this.contentsManager.delete(this.notebookFile.path);
+                // Make sure we have a session first and it returns something
+                if (this.sessionManager)
+                {
+                    await this.sessionManager.refreshRunning();
+                    await this.contentsManager.delete(this.notebookFile.path);
+                }
             } catch {
                 noop();
             }

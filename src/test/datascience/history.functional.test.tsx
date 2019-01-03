@@ -5,6 +5,7 @@
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 
@@ -12,7 +13,7 @@ import {
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
@@ -40,12 +41,11 @@ suite('History output tests', () => {
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
-        version: '3.6.6.6',
+        version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
-        version_info: [3, 6, 6, 'final']
     };
     setup(() => {
         ioc = new DataScienceIocContainer();
