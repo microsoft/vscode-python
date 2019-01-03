@@ -11,7 +11,7 @@ import { Uri } from 'vscode';
 import '../../../client/common/extensions';
 import { IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { deleteFiles, isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
+import { deleteFiles, isOs, isPythonVersionInProcess, OSType, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { initialize, multirootPath } from '../../initialize';
 
@@ -51,9 +51,10 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     }
 
     suiteSetup(async function () {
-        if (!await isPythonVersionInProcess(undefined, '3')) {
+        if (isOs(OSType.Linux) || await isPythonVersionInProcess(undefined, '3')) {
             return this.skip();
         }
+
         serviceContainer = (await initialize()).serviceContainer;
         locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         // This test is required, we need to wait for interpreter listing completes,
