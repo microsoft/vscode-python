@@ -528,6 +528,7 @@
     "src/test/pythonFiles/formatting/dummy.ts",
     "src/test/refactor/extension.refactor.extract.method.test.ts",
     "src/test/refactor/extension.refactor.extract.var.test.ts",
+    "src/test/refactor/extension.refactor.local.to.field.test.ts",
     "src/test/refactor/rename.test.ts",
     "src/test/serviceRegistry.ts",
     "src/test/signature/signature.jedi.test.ts",
