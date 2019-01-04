@@ -19,7 +19,7 @@ import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } fr
 const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
 const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
 
-// Mocked out python tool execution - all we need is mocked linter return values.
+// Mocked out python tool execution (all we need is mocked linter return values).
 class MockPythonToolExecService extends PythonToolExecutionService {
 
     // Mocked samples of linter messages from flake8 and pylint:
