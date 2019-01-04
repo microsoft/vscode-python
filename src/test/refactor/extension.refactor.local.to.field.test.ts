@@ -20,7 +20,7 @@ interface RenameResponse {
     results: [{ diff: string }];
 }
 
-suite('Variable Extraction', () => {
+suite('Local to Field Refactor', () => {
     // Hack hac hack
     const oldExecuteCommand = commands.executeCommand;
     const options: TextEditorOptions = { cursorStyle: TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: TextEditorLineNumbersStyle.Off, tabSize: 4 };
@@ -81,7 +81,7 @@ suite('Variable Extraction', () => {
     }
 
     // tslint:disable-next-line:no-function-expression
-    test('Extract Variable', async function () {
+    test('Local to Field', async function () {
         if (isPythonVersion('3.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
@@ -92,7 +92,7 @@ suite('Variable Extraction', () => {
         }
     });
 
-    test('Extract Variable fails if whole string not selected', async () => {
+    test('Local to Field fails if whole string not selected', async () => {
         const startPos = new Position(234, 20);
         const endPos = new Position(234, 38);
         await testingFieldToLocal(true, startPos, endPos);
@@ -110,7 +110,7 @@ suite('Variable Extraction', () => {
         try {
             await localToField(EXTENSION_DIR, editor, rangeOfTextToExtract, ch, ioc.serviceContainer);
             if (shouldError) {
-                assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
+                assert.fail('No error', 'Error', 'Local to Field should fail with an error', '');
             }
             assert.equal(ch.output.length, 0, 'Output channel is not empty');
 
@@ -129,14 +129,14 @@ suite('Variable Extraction', () => {
 
     // This test fails on linux (text document not getting updated in time)
     if (!IS_CI_SERVER) {
-        test('Extract Variable (end to end)', async () => {
+        test('Local to Field (end to end)', async () => {
             const startPos = new Position(234, 29);
             const endPos = new Position(234, 38);
             await testingFieldToLocalEndToEnd(false, startPos, endPos);
         });
     }
 
-    test('Extract Variable fails if whole string not selected (end to end)', async () => {
+    test('Local to Field fails if whole string not selected (end to end)', async () => {
         const startPos = new Position(234, 20);
         const endPos = new Position(234, 38);
         await testingFieldToLocalEndToEnd(true, startPos, endPos);
