@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as TypeMoq from 'typemoq';
 import { assert } from 'chai';
+import * as TypeMoq from 'typemoq';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../client/common/types';
+import { formatStreamText } from '../../client/datascience/common';
 import { DataScience } from '../../client/datascience/datascience';
 import { IDataScience, IDataScienceCodeLensProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { formatStreamText } from '../../client/datascience/common';
 
 suite('Data Science Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

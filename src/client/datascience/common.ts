@@ -30,10 +30,10 @@ export function formatStreamText(str: string) : string {
     // Concat is way faster than array join for building up a string.
     let result = '';
     let previousLinePos = 0;
-    for (let i=0; i < str.length; i++) {
+    for (let i = 0; i < str.length; i += 1) {
         if (str[i] === '\r') {
             // See if this is a line feed. If so, leave alone. This is goofy windows \r\n
-            if (i < str.length + 1 && str[i+1] === '\n') {
+            if (i < str.length + 1 && str[i + 1] === '\n') {
                 // This line is legit, output it and convert to '\n' only.
                 result += str.substr(previousLinePos, (i - previousLinePos));
                 result += '\n';

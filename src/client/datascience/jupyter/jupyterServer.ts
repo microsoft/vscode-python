@@ -588,6 +588,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const existing = data.outputs.find(o => o.output_type === 'stream');
         if (existing && existing.name === msg.content.name) {
+            // tslint:disable-next-line:restrict-plus-operands
             existing.text = existing.text + msg.content.text;
         } else {
             // Create a new stream entry
