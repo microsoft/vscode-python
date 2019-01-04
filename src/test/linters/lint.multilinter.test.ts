@@ -26,7 +26,7 @@ class MockPythonToolExecService extends PythonToolExecutionService {
     public flake8Msg: string = '1,1,W,W391:blank line at end of file\ns:142:13), <anonymous>:1\n1,7,E,E999:SyntaxError: invalid syntax\n';
     public pylintMsg: string = '************* Module print\ns:142:13), <anonymous>:1\n1,0,error,syntax-error:Missing parentheses in call to \'print\'. Did you mean print(x)? (<unknown>, line 1)\n';
 
-    // depending on the moduleName being exec'd, return the appropriate sample.
+    // Depending on moduleName being exec'd, return the appropriate sample.
     public async exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>> {
         let msg = this.flake8Msg;
         if (executionInfo.moduleName === 'pylint') {
