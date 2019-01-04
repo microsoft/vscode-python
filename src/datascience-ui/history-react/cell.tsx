@@ -215,9 +215,24 @@ export class Cell extends React.Component<ICellProps> {
             const stream = copy as nbformat.IStream;
             const multiline = concatMultilineString(stream.text);
             const formatted = formatStreamText(multiline);
+
             copy.data = {
                 'text/html' : `<xmp>${formatted}</xmp>`
             };
+
+            // Output may have goofy ascii colorization chars in it.
+            try {
+                const converter = new ansiToHtml();
+                const html = converter.toHtml(formatted);
+                if (html !== formatted) {
+                    copy.data = {
+                        'text/html' : html
+                    };
+                }
+            } catch {
+
+            }
+
         } else if (copy.output_type === 'error') {
             const error = copy as nbformat.IError;
             try {
