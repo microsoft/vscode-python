@@ -63,7 +63,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         await deleteFile(path.join(workspaceUri.fsPath, '.pylintrc'));
         await deleteFile(path.join(workspaceUri.fsPath, '.pydocstyle'));
 
-        // restore the execution service as it was...
+        // Restore the execution service as it was...
         api.serviceManager.rebind<IPythonToolExecutionService>(IPythonToolExecutionService, PythonToolExecutionService);
     });
 
