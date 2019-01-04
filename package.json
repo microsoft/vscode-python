@@ -59,6 +59,7 @@
     ],
     "activationEvents": [
         "onLanguage:python",
+        "onLanguage:jupyter",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
         "onCommand:python.sortImports",
