@@ -15,6 +15,9 @@ import {
     ILanguageServerCompatibilityService,
     ILanguageServerFolderService
 } from '../../client/activation/types';
+import { IDiagnosticsCommandFactory } from '../../client/application/diagnostics/commands/types';
+import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../client/application/diagnostics/promptHandler';
+import { IDiagnosticFilterService, IDiagnosticHandlerService } from '../../client/application/diagnostics/types';
 import {
     IApplicationShell, ICommandManager,
     IWorkspaceService
@@ -36,6 +39,9 @@ suite('Activation - ActivationService', () => {
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let platformService: TypeMoq.IMock<IPlatformService>;
             let lanagueServerSupportedService: TypeMoq.IMock<ILanguageServerCompatibilityService>;
+            let filterService: TypeMoq.IMock<IDiagnosticFilterService>;
+            let commandFactory: TypeMoq.IMock<IDiagnosticsCommandFactory>;
+            let messageHandler: TypeMoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -50,6 +56,9 @@ suite('Activation - ActivationService', () => {
                     version: new SemVer('1.2.3')
                 };
                 lanagueServerSupportedService = TypeMoq.Mock.ofType<ILanguageServerCompatibilityService>();
+                filterService = TypeMoq.Mock.ofType<IDiagnosticFilterService>();
+                commandFactory = TypeMoq.Mock.ofType<IDiagnosticsCommandFactory>();
+                messageHandler = TypeMoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -64,6 +73,9 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => langFolderServiceMock.object);
+                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticFilterService))).returns(() => filterService.object);
+                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
+                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticHandlerService), TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId))).returns(() => messageHandler.object);
             });
 
             async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>, lsSupported: boolean = true) {
