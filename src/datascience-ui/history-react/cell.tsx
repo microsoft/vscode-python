@@ -19,6 +19,7 @@ import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
 import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
+import { noop } from '../../test/core';
 
 // tslint:disable-next-line:match-default-export-name import-name
 interface ICellProps {
@@ -220,17 +221,18 @@ export class Cell extends React.Component<ICellProps> {
                 'text/html' : `<xmp>${formatted}</xmp>`
             };
 
-            // Output may have goofy ascii colorization chars in it.
+            // Output may have goofy ascii colorization chars in it. Try
+            // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
-                const converter = new ansiToHtml();
-                const html = converter.toHtml(formatted);
-                if (html !== formatted) {
+                if (formatted.includes('<')) {
+                    const converter = new ansiToHtml();
+                    const html = converter.toHtml(formatted);
                     copy.data = {
-                        'text/html' : html
+                        'text/html': html
                     };
                 }
             } catch {
-
+                noop();
             }
 
         } else if (copy.output_type === 'error') {
