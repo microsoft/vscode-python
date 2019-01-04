@@ -8,7 +8,7 @@ import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
 import JSONTree from 'react-json-tree';
 
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
 import { CellState, ICell } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { CellButton } from './cellButton';
@@ -210,10 +210,13 @@ export class Cell extends React.Component<ICellProps> {
 
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
+            // Stream output needs to be wrapped in xmp so it
+            // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
-            const text = concatMultilineString(stream.text);
+            const multiline = concatMultilineString(stream.text);
+            const formatted = formatStreamText(multiline);
             copy.data = {
-                'text/html' : text
+                'text/html' : `<xmp>${formatted}</xmp>`
             };
         } else if (copy.output_type === 'error') {
             const error = copy as nbformat.IError;

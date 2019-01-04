@@ -502,6 +502,8 @@ export class JupyterServer implements INotebookServer, IDisposable {
                             this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, subscriber.cell);
                         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                             this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, subscriber.cell);
+                        } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+                            this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, subscriber.cell);
                         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                             this.handleError(msg as KernelMessage.IErrorMsg, subscriber.cell);
                         } else {
@@ -582,12 +584,20 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
-        const output: nbformat.IStream = {
-            output_type: 'stream',
-            name: msg.content.name,
-            text: msg.content.text
-        };
-        this.addToCellData(cell, output);
+        // Might already have a stream message. If so, just add on to it.
+        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+        const existing = data.outputs.find(o => o.output_type === 'stream');
+        if (existing && existing.name === msg.content.name) {
+            existing.text = existing.text + msg.content.text;
+        } else {
+            // Create a new stream entry
+            const output: nbformat.IStream = {
+                output_type: 'stream',
+                name: msg.content.name,
+                text: msg.content.text
+            };
+            this.addToCellData(cell, output);
+        }
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
@@ -597,6 +607,16 @@ export class JupyterServer implements INotebookServer, IDisposable {
             metadata: msg.content.metadata
         };
         this.addToCellData(cell, output);
+    }
+
+    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, cell: ICell) {
+        // Should already have a display data output in our cell.
+        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+        const output = data.outputs.find(o => o.output_type === 'display_data');
+        if (output) {
+            output.data = msg.content.data;
+            output.metadata = msg.content.metadata;
+        }
     }
 
     private handleInterrupted(cell: ICell) {
