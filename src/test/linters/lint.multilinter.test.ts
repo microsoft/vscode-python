@@ -53,7 +53,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
 
         // We only want to return some valid strings from linters, we don't care if they
         // are being returned by actual linters (we aren't testing linters here, only how
-        // our code responds to those linters)
+        // our code responds to those linters).
         api.serviceManager.rebind<IPythonToolExecutionService>(IPythonToolExecutionService, MockPythonToolExecService);
     });
     suiteTeardown(closeActiveWindows);
