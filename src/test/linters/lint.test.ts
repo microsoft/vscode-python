@@ -5,12 +5,14 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { CancellationTokenSource, ConfigurationTarget, DiagnosticCollection, Uri, window, workspace } from 'vscode';
-import { ICommandManager } from '../../client/common/application/types';
+import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
-import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import {
+    CTagsProductPathService, FormatterProductPathService, LinterProductPathService,
+    RefactoringLibraryProductPathService, TestFrameworkProductPathService
+} from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
@@ -269,32 +271,6 @@ suite('Linting - General Tests', () => {
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
-    test('Multiple linters', async function () {
-
-        // This test notoriously times out. Change to mocked-up results (we don't need actual system results here).
-        // Tracked by #2571
-
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
-        // tslint:enable:no-invalid-this
-        await closeActiveWindows();
-        const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
-        await window.showTextDocument(document);
-        await configService.updateSetting('linting.enabled', true, workspaceUri);
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
-        await configService.updateSetting('linting.pylintEnabled', true, workspaceUri);
-        await configService.updateSetting('linting.flake8Enabled', true, workspaceUri);
-
-        const commands = ioc.serviceContainer.get<ICommandManager>(ICommandManager);
-        const collection = await commands.executeCommand('python.runLinting') as DiagnosticCollection;
-        assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
-
-        const messages = collection!.get(document.uri);
-        assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
-        assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
-        assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
-    });
-
     // tslint:disable-next-line:no-any
     async function testLinterMessageCount(product: Product, pythonFile: string, messageCountToBeReceived: number): Promise<any> {
         const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);

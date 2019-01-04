@@ -203,8 +203,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const api = buildApi(Promise.all([activationDeferred.promise, lsActivationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
-        // tslint:disable-next-line:no-any
+        // tslint:disable:no-any
         (api as any).serviceContainer = serviceContainer;
+        (api as any).serviceManager = serviceManager;
+        // tslint:enable:no-any
     }
     return api;
 }

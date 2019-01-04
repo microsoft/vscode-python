@@ -15,8 +15,10 @@ import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
-import { IServiceContainer } from '../client/ioc/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
+import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import {
+    EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST
+} from './constants';
 import { noop, sleep } from './core';
 
 const StreamZip = require('node-stream-zip');
@@ -368,6 +370,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
+    serviceManager: IServiceManager;
 }
 
 export async function unzip(zipFile: string, targetFolder: string): Promise<void> {
