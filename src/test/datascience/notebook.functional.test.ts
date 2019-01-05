@@ -28,6 +28,8 @@ import {
     INotebookImporter,
     INotebookServer,
     InterruptResult,
+    IConnection,
+    IJupyterKernelSpec,
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
@@ -716,6 +718,25 @@ plt.show()`,
             await generateNonDefaultConfig();
             const server = await createNotebookServer(true);
             assert.ok(server, 'Never connected to a default server with a bad default config');
+
+            await verifySimple(server, `a=1${os.EOL}a`, 1);
+        }
+    });
+
+    runTest('Invalid kernel spec works', async () => {
+        if (ioc.mockJupyter) {
+            // Make a dummy class that will fail during launch
+            class FailedKernelSpec extends JupyterExecution {
+                protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+                    return Promise.resolve(undefined);
+                }
+            }
+            ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedKernelSpec);
+            jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+            addMockData(`a=1${os.EOL}a`, 1);
+
+            const server = await createNotebookServer(true);
+            assert.ok(server, 'Empty kernel spec messes up creating a server');
 
             await verifySimple(server, `a=1${os.EOL}a`, 1);
         }

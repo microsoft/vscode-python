@@ -48,6 +48,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 const spec = kernelspecs[k];
                 return new JupyterKernelSpec(spec);
             });
+        } catch {
+            // For some reason this is failing. Just return nothing
+            return [];
         } finally {
             // Cleanup the session manager as we don't need it anymore
             if (sessionManager) {

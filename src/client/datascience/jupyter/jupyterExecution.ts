@@ -209,9 +209,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                     kernelSpec = await this.getMatchingKernelSpec(connection, cancelToken);
                 }
 
-                // If still not found, throw an error
+                // If still not found, log an error (this seems possible for some people, so use the default)
                 if (!kernelSpec) {
-                    throw new Error(localize.DataScience.jupyterKernelSpecNotFound());
+                    this.logger.logError(localize.DataScience.jupyterKernelSpecNotFound());
                 }
 
                 // Try to connect to our jupyter process
@@ -254,7 +254,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return result.stdout;
     }
 
-    private async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+    protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         // If not using an active connection, check on disk
         if (!connection) {
             // Get our best interpreter. We want its python path
@@ -681,18 +681,23 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const kernelSpecCommand = await this.findBestCommand(KernelSpecCommand);
 
             if (kernelSpecCommand) {
-                // Ask for our current list.
-                const list = await kernelSpecCommand.exec(['list'], { throwOnStdErr: true, encoding: 'utf8' });
+                try {
+                    // Ask for our current list.
+                    const list = await kernelSpecCommand.exec(['list'], { throwOnStdErr: true, encoding: 'utf8' });
 
-                // This should give us back a key value pair we can parse
-                const lines = list.stdout.splitLines({ trim: false, removeEmptyEntries: true });
+                    // This should give us back a key value pair we can parse
+                    const lines = list.stdout.splitLines({ trim: false, removeEmptyEntries: true });
 
-                // Generate all of the promises at once
-                const promises = lines.map(l => this.readSpec(l));
+                    // Generate all of the promises at once
+                    const promises = lines.map(l => this.readSpec(l));
 
-                // Then let them run concurrently (they are file io)
-                const specs = await Promise.all(promises);
-                return specs.filter(s => s);
+                    // Then let them run concurrently (they are file io)
+                    const specs = await Promise.all(promises);
+                    return specs.filter(s => s);
+                } catch {
+                    // This is failing for some folks. In that case return nothing
+                    return [];
+                }
             }
         }
 
