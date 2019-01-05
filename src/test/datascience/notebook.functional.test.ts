@@ -23,13 +23,13 @@ import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecut
 import {
     CellState,
     ICell,
+    IConnection,
     IJupyterExecution,
+    IJupyterKernelSpec,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
     InterruptResult,
-    IConnection,
-    IJupyterKernelSpec,
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
