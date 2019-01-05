@@ -52,7 +52,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
     suiteSetup(async function () {
         // skip for Linux CI, see #3848
-        if (isOs(OSType.Linux) || await isPythonVersionInProcess(undefined, '3')) {
+        if (isOs(OSType.Linux) || await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
         }
 
