@@ -1699,6 +1699,7 @@
         },
         "languages": [
             {
+                "firstLine": "^#!/.*\\bpython[0-9.-]*\\b|",
                 "id": "pip-requirements",
                 "aliases": [
                     "pip requirements",
