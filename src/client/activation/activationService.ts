@@ -5,14 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import {
-    ConfigurationChangeEvent, DiagnosticSeverity,
+    ConfigurationChangeEvent,
     Disposable, OutputChannel, Uri
 } from 'vscode';
-import { BaseDiagnostic, BaseDiagnosticsService } from '../application/diagnostics/base';
-import { IDiagnosticsCommandFactory } from '../application/diagnostics/commands/types';
-import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../application/diagnostics/promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../application/diagnostics/types';
+import { LSNotSupportedDiagnosticService } from '../application/diagnostics/checks/lsNotSupported';
+import { IDiagnostic } from '../application/diagnostics/types';
 import {
     IApplicationShell, ICommandManager,
     IWorkspaceService
@@ -33,48 +30,7 @@ import {
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
-const lsNotSupported = 'Your operating system does not meet the minimum requirements of the Language Server. Reverting to the alternative, Jedi';
 type ActivatorInfo = { jedi: boolean; activator: IExtensionActivator };
-
-export class LSNotSupportedDiagnostic extends BaseDiagnostic {
-    constructor(message) {
-        super(DiagnosticCodes.LSNotSupportedDiagnostic,
-            message, DiagnosticSeverity.Warning, DiagnosticScope.Global);
-    }
-}
-
-export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
-    protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
-    }
-    public async diagnose(): Promise<IDiagnostic[]>{
-        return [new LSNotSupportedDiagnostic(lsNotSupported)];
-    }
-    public async handle(diagnostics: IDiagnostic[]): Promise<void>{
-        if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
-            return;
-        }
-        const diagnostic = diagnostics[0];
-        if (await this.filterService.shouldIgnoreDiagnostic(diagnostic.code)) {
-            return;
-        }
-        const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
-        const options = [
-            {
-                prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/AA3qqka' })
-            },
-            {
-                prompt: 'Do not show again',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
-            }
-        ];
-
-        await this.messageService.handle(diagnostic, { commandPrompts: options });
-    }
-}
 
 @injectable()
 export class ExtensionActivationService implements IExtensionActivationService, Disposable {

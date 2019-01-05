@@ -130,6 +130,7 @@
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
     "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
     "diagnostics.enableSourceMapsAndReloadVSC": "Enable and reload Window",
+    "diagnostics.lsNotSupported": "Your operating system does not meet the minimum requirements of the Language Server. Reverting to the alternative, Jedi.",
     "DataScience.interruptKernel": "Interrupt iPython Kernel",
     "DataScience.exportingFormat": "Exporting {0}",
     "DataScience.exportCancel": "Cancel",

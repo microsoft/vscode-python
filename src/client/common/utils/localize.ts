@@ -13,6 +13,7 @@ export namespace Diagnostics {
     export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
     export const warnBeforeEnablingSourceMaps = localize('diagnostics.warnBeforeEnablingSourceMaps', 'Enabling source map support in the Python Extension will adversely impact performance of the extension.');
     export const enableSourceMapsAndReloadVSC = localize('diagnostics.enableSourceMapsAndReloadVSC', 'Enable and reload Window.');
+    export const lsNotSupported = localize('diagnostics.lsNotSupported', 'Your operating system does not meet the minimum requirements of the Language Server. Reverting to the alternative, Jedi.');
 }
 
 export namespace Common {
