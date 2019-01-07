@@ -45,7 +45,6 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManager } from './mockJupyterManager';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { Configuration } from 'istanbul';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
@@ -149,7 +148,7 @@ suite('Jupyter Execution', async () => {
     const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
-    const workspaceService = mock(WorkspaceService)
+    const workspaceService = mock(WorkspaceService);
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
