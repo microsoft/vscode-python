@@ -63,7 +63,7 @@ export async function closeActiveWindows(): Promise<void> {
         // Attempt to fix #1301.
         // Lets not waste too much time.
         setTimeout(() => {
-            reject(new Error('Command \'workbench.action.closeAllEditors\' timedout'));
+            reject(new Error('Command \'workbench.action.closeAllEditors\' timed out'));
         }, 15000);
     });
 }

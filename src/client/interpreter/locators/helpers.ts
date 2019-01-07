@@ -29,11 +29,11 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
             .map(item => { return { ...item }; })
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
-                const currentVersion = Array.isArray(current.version_info) ? current.version_info.join('.') : undefined;
+                const currentVersion = current && current.version ? current.version.raw : undefined;
                 const existingItem = accumulator.find(item => {
                     // If same version and same base path, then ignore.
                     // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
-                    if (Array.isArray(item.version_info) && item.version_info.join('.') === currentVersion &&
+                    if (item.version && item.version.raw === currentVersion &&
                         item.path && current.path &&
                         this.fs.arePathsSame(path.dirname(item.path), path.dirname(current.path))) {
                         return true;
@@ -49,7 +49,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                         existingItem.type = current.type;
                     }
                     const props: (keyof PythonInterpreter)[] = ['envName', 'envPath', 'path', 'sysPrefix',
-                        'architecture', 'sysVersion', 'version', 'version_info'];
+                        'architecture', 'sysVersion', 'version'];
                     for (const prop of props) {
                         if (!existingItem[prop] && current[prop]) {
                             existingItem[prop] = current[prop];

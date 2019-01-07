@@ -32,7 +32,9 @@ class VSCode(enum.Enum):
 
 def run_command(command, cwd=None):
     """Run the specified command in a subprocess shell."""
-    cmd = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    executable = shutil.which(command[0])
+    command[0] = executable
+    cmd = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     cmd.check_returncode()
 
 
@@ -40,10 +42,10 @@ def checkout_directory(install_type, dir_name="vscode-python"):
     return pathlib.Path.home() / install_type.value / "extensions" / dir_name
 
 
-def clone_repo(clone_to):
+def clone_repo(clone_to, repo, branch):
     """Clone the repository to the appropriate location."""
     # https://code.visualstudio.com/docs/editor/extension-gallery#_where-are-extensions-installed
-    cmd = ["git", "clone", "-q", "--single-branch", "--branch", "master", REPO_URL, os.fspath(clone_to)]
+    cmd = ["git", "clone", "-q", "--single-branch", "--branch", branch, repo, os.fspath(clone_to)]
     run_command(cmd)
 
 
@@ -104,11 +106,11 @@ def build(checkout):
     install_PyPI_packages(checkout)
 
 
-def setup(install_type):
+def setup(install_type, repo, branch):
     """Set up a clone of PVSC."""
     checkout = checkout_directory(install_type)
-    print(f"Cloning {REPO_URL} ...")
-    clone_repo(checkout)
+    print(f"Cloning {repo} ...")
+    clone_repo(checkout, repo, branch)
     build(checkout)
 
 
@@ -132,15 +134,20 @@ def parse_args(args=sys.argv[1:]):
     subparsers = parser.add_subparsers(dest="cmd")
     setup_parser = subparsers.add_parser("setup")
     setup_parser.add_argument("install_type", choices=[install_type.name for install_type in VSCode])
+    setup_parser.add_argument('--repo', dest='repo', default=REPO_URL)
+    setup_parser.add_argument('--branch', dest='branch', default='master')
     update_parser = subparsers.add_parser("update")
     return parser.parse_args(args)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.cmd == "setup":
-        setup(VSCode[args.install_type])
-    elif args.cmd == "update":
-        update()
-    else:
-        raise RuntimeError(f"unrecognized sub-command: {args.cmd!r}")
+    try:
+        if args.cmd == "setup":
+            setup(VSCode[args.install_type], args.repo, args.branch)
+        elif args.cmd == "update":
+            update()
+        else:
+            raise RuntimeError(f"Unrecognized sub-command: {args.cmd!r}")
+    except subprocess.CalledProcessError as exc:
+        print(f"Failed to run command {exc.cmd} : {exc.stderr}")

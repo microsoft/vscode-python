@@ -31,7 +31,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
 
@@ -79,8 +79,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         ========================= no tests ran in 0.03 seconds =========================
         `);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
+        const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        const diagnosticCollectionUris: vscode.Uri[] = [];
+        testManager.diagnosticCollection.forEach(uri => {
+            diagnosticCollectionUris.push(uri);
+        });
+        assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
@@ -158,8 +163,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         `);
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        const diagnosticCollectionUris: vscode.Uri[] = [];
+        testManager.diagnosticCollection.forEach(uri => {
+            diagnosticCollectionUris.push(uri);
+        });
+        assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
         assert.equal(tests.testFiles.length, 6, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 29, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 8, 'Incorrect number of test suites');
@@ -189,8 +199,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         `);
         await updateSetting('unitTest.pyTestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        const diagnosticCollectionUris: vscode.Uri[] = [];
+        testManager.diagnosticCollection.forEach(uri => {
+            diagnosticCollectionUris.push(uri);
+        });
+        assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
@@ -233,8 +248,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         `);
         await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
+        const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        const diagnosticCollectionUris: vscode.Uri[] = [];
+        testManager.diagnosticCollection.forEach(uri => {
+            diagnosticCollectionUris.push(uri);
+        });
+        assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 14, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 4, 'Incorrect number of test suites');
@@ -258,9 +278,14 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         `);
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, unitTestTestFilesCwdPath);
+        const testManager = factory('pytest', rootWorkspaceUri!, unitTestTestFilesCwdPath);
 
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        const diagnosticCollectionUris: vscode.Uri[] = [];
+        testManager.diagnosticCollection.forEach(uri => {
+            diagnosticCollectionUris.push(uri);
+        });
+        assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFolders.length, 1, 'Incorrect number of test folders');
         assert.equal(tests.testFunctions.length, 1, 'Incorrect number of test functions');

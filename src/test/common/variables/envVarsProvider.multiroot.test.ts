@@ -15,8 +15,10 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
+import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { clearPythonPathInWorkspaceFolder, updateSetting } from '../../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
+import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
@@ -48,7 +50,7 @@ suite('Multiroot Environment Variables Provider', () => {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await closeActiveWindows();
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -60,7 +62,8 @@ suite('Multiroot Environment Variables Provider', () => {
         const mockProcess = new MockProcess(mockVariables);
         const variablesService = new EnvironmentVariablesService(pathUtils);
         const disposables = ioc.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        const cfgService = new ConfigurationService();
+        ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
+        const cfgService = new ConfigurationService(ioc.serviceContainer);
         return new EnvironmentVariablesProvider(variablesService, disposables, new PlatformService(), cfgService, mockProcess);
     }
 

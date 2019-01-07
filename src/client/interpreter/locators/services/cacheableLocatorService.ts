@@ -12,21 +12,28 @@ import { Logger } from '../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
+import { sendTelemetryWhenDone } from '../../../telemetry';
+import { PYTHON_INTERPRETER_DISCOVERY } from '../../../telemetry/constants';
 import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
 
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
+    protected readonly _hasInterpreters: Deferred<boolean>;
     private readonly promisesPerResource = new Map<string, Deferred<PythonInterpreter[]>>();
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
     private readonly locating = new EventEmitter<Promise<PythonInterpreter[]>>();
-    constructor(@unmanaged() name: string,
+    constructor(@unmanaged() private readonly name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
         @unmanaged() private cachePerWorkspace: boolean = false) {
-        this.cacheKeyPrefix = `INTERPRETERS_CACHE_v2_${name}`;
+        this._hasInterpreters = createDeferred<boolean>();
+        this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
     }
     public get onLocating(): Event<Promise<PythonInterpreter[]>> {
         return this.locating.event;
+    }
+    public get hasInterpreters(): Promise<boolean> {
+        return this._hasInterpreters.promise;
     }
     public abstract dispose();
     public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
@@ -40,15 +47,20 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             this.addHandlersForInterpreterWatchers(cacheKey, resource)
                 .ignoreErrors();
 
-            this.getInterpretersImplementation(resource)
+            const promise = this.getInterpretersImplementation(resource)
                 .then(async items => {
                     await this.cacheInterpreters(items, resource);
                     deferred!.resolve(items);
                 })
                 .catch(ex => deferred!.reject(ex));
 
+            sendTelemetryWhenDone(PYTHON_INTERPRETER_DISCOVERY, promise, undefined, { locator: this.name });
             this.locating.fire(deferred.promise);
         }
+        deferred.promise
+            .then(items => this._hasInterpreters.resolve(items.length > 0))
+            .catch(_ => this._hasInterpreters.resolve(false));
+
         if (deferred.completed) {
             return deferred.promise;
         }

@@ -68,7 +68,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
 
         const interpreters = await parseCondaInfo(
             info,
@@ -108,7 +108,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
         condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
@@ -151,7 +151,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
 
         const interpreters = await parseCondaInfo(
             info,
@@ -179,7 +179,7 @@ suite('Interpreters from Conda Environments', () => {
             default_prefix: '',
             'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
         condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
             { name: 'base', path: environmentsPath },
@@ -222,7 +222,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
 
         const interpreters = await parseCondaInfo(
             info,
@@ -256,7 +256,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
         condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
@@ -290,7 +290,7 @@ suite('Interpreters from Conda Environments', () => {
         });
         const pythonPath = isWindows ? path.join(info.default_prefix, 'python.exe') : path.join(info.default_prefix, 'bin', 'python');
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
 
         const interpreters = await parseCondaInfo(
             info,
@@ -322,7 +322,7 @@ suite('Interpreters from Conda Environments', () => {
             path.join(environmentsPath, 'path3', 'three.exe')]
         };
         const validPaths = info.envs.filter((_, index) => index % 2 === 0);
-        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: undefined }));
         validPaths.forEach(envPath => {
             condaService.setup(c => c.getInterpreterPath(TypeMoq.It.isValue(envPath))).returns(environmentPath => {
                 return isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python');

@@ -46,7 +46,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
 
@@ -82,7 +82,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test_one.Test_test1.test_c
     `);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
+        const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
@@ -105,7 +105,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test_unittest_two.Test_test2a.test_222B2
     `);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
+        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 9, 'Incorrect number of test functions');
@@ -122,7 +122,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     unittest_three_test.Test_test3.test_B
     `);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
+        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
@@ -137,7 +137,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test_cwd.Test_Current_Working_Directory.test_cwd
     `);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, unitTestTestFilesCwdPath);
+        const testManager = factory('unittest', rootWorkspaceUri!, unitTestTestFilesCwdPath);
 
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');

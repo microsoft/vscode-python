@@ -15,10 +15,19 @@ export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
 
+export type Resource = Uri | undefined;
 export interface IPersistentState<T> {
     readonly value: T;
     updateValue(value: T): Promise<void>;
 }
+export type Version = {
+    raw: string;
+    major: number;
+    minor: number;
+    patch: number;
+    build: string[];
+    prerelease: string[];
+};
 
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 
@@ -365,7 +374,7 @@ export interface IEditorUtils {
 }
 
 export interface IDisposable {
-    dispose(): Promise<void> | undefined;
+    dispose(): Promise<void> | undefined | void;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

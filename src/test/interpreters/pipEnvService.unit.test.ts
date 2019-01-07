@@ -7,6 +7,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
@@ -129,7 +130,7 @@ suite('Interpreters - PipEnv', () => {
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
-                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'xyz' }));
+                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true)).verifiable();
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true)).verifiable();
                 const environments = await pipEnvService.getInterpreters(resource);
@@ -146,7 +147,7 @@ suite('Interpreters - PipEnv', () => {
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
-                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'xyz' }));
+                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.never());
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile)))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true)).verifiable();

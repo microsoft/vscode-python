@@ -5,13 +5,14 @@ import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
-import { ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
-import { IArgumentsService, ITestManagerRunner, TestFilter } from '../types';
+import { ITestMessageService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
+import { IArgumentsService, IPythonUnitTestMessage, ITestManagerRunner, TestFilter } from '../types';
 
 export class TestManager extends BaseTestManager {
     private readonly argsService: IArgumentsService;
     private readonly helper: ITestsHelper;
     private readonly runner: ITestManagerRunner;
+    private readonly testMessageService: ITestMessageService;
     public get enabled() {
         return this.settings.unitTest.pyTestEnabled;
     }
@@ -21,6 +22,7 @@ export class TestManager extends BaseTestManager {
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, this.testProvider);
         this.helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
         this.runner = this.serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, this.testProvider);
+        this.testMessageService = this.serviceContainer.get<ITestMessageService>(ITestMessageService, this.testProvider);
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.unitTest.pyTestArgs.slice(0);
@@ -51,6 +53,9 @@ export class TestManager extends BaseTestManager {
             token: this.testRunnerCancellationToken!,
             outChannel: this.outputChannel
         };
-        return this.runner.runTest(this.testResultsService, options, this);
+        const testResults = await this.runner.runTest(this.testResultsService, options, this);
+        const messages: IPythonUnitTestMessage[] = await this.testMessageService.getFilteredTestMessages(this.rootDirectory, testResults);
+        await this.updateDiagnostics(tests, messages);
+        return testResults;
     }
 }

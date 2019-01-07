@@ -22,6 +22,7 @@ import { registerTypes as commonRegisterTypes } from '../client/common/serviceRe
 import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
 import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
@@ -30,6 +31,7 @@ import { registerTypes as lintersRegisterTypes } from '../client/linters/service
 import { TEST_OUTPUT_CHANNEL } from '../client/unittests/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/unittests/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
+import { MockAutoSelectionService } from './mocks/autoSelector';
 import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
@@ -56,13 +58,21 @@ export class IocContainer {
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
+
+        this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
+        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
     }
-    public dispose() {
-        this.disposables.forEach(disposable => {
+    public async dispose() : Promise<void> {
+        for (let i = 0; i < this.disposables.length; i += 1) {
+            const disposable = this.disposables[i];
             if (disposable) {
-                disposable.dispose();
+                // tslint:disable-next-line:no-any
+                const promise = disposable.dispose() as Promise<any>;
+                if (promise) {
+                    await promise;
+                }
             }
-        });
+        }
     }
 
     public registerCommonTypes(registerFileSystem: boolean = true) {

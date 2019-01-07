@@ -3,8 +3,9 @@
 'use strict';
 //tslint:disable:trailing-comma
 import * as assert from 'assert';
-import { mount } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 
@@ -12,19 +13,22 @@ import {
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { Cell } from '../../datascience-ui/history-react/cell';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { SupportedCommands } from './mockJupyterManager';
 import { waitForUpdate } from './reactHelpers';
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable-next-line:max-func-body-length no-any
 suite('History output tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
@@ -35,9 +39,21 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi : () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
 
+    const workingPython: PythonInterpreter = {
+        path: '/foo/bar/python.exe',
+        version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        type: InterpreterType.Unknown,
+        architecture: Architecture.x64,
+    };
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+
+        if (ioc.mockJupyter) {
+            ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all);
+        }
 
         webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
         webPanel = TypeMoq.Mock.ofType<IWebPanel>();
@@ -52,7 +68,9 @@ suite('History output tests', () => {
             // Return our dummy web panel
             return webPanel.object;
         });
-        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m : WebPanelMessage) => window.postMessage(m, '*')); // See JSDOM valid target origins
+        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m : WebPanelMessage) => {
+            window.postMessage(m, '*');
+        }); // See JSDOM valid target origins
         webPanel.setup(p => p.show());
 
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
@@ -81,20 +99,48 @@ suite('History output tests', () => {
         global['acquireVsCodeApi'] = globalAcquireVsCodeApi;
     });
 
-    teardown(() => {
-        disposables.forEach(disposable => {
+    teardown(async () => {
+        for (let i = 0; i < disposables.length; i += 1) {
+            const disposable = disposables[i];
             if (disposable) {
-                disposable.dispose();
+                // tslint:disable-next-line:no-any
+                const promise = disposable.dispose() as Promise<any>;
+                if (promise) {
+                    await promise;
+                }
             }
-        });
-        ioc.dispose();
+        }
+        await ioc.dispose();
         delete global['ascquireVsCodeApi'];
     });
 
-    test('Simple text', async () => {
-        if (await jupyterExecution.isNotebookSupported()) {
+    function addMockData(code: string, result: string | number, mimeType?: string, cellType?: string) {
+        if (ioc.mockJupyter) {
+            if (cellType && cellType === 'error') {
+                ioc.mockJupyter.addError(code, result.toString());
+            } else {
+                ioc.mockJupyter.addCell(code, result, mimeType);
+            }
+        }
+    }
+
+    // tslint:disable-next-line:no-any
+    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
+        test(name, async () => {
             // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
             const wrapper = mount(<MainPanel theme='vscode-light' ignoreProgress={true} skipDefault={true} />);
+            try {
+                await testFunc(wrapper);
+            } finally {
+                // Make sure to unmount the wrapper or it will interfere with other tests
+                wrapper.unmount();
+            }
+        }).timeout(60000);
+    }
+
+    runMountedTest('Simple text', async (wrapper) => {
+        addMockData('a=1\na', 1);
+        if (await jupyterExecution.isNotebookSupported()) {
 
             // Get an update promise so we can wait for the add code
             const updatePromise = waitForUpdate(wrapper, MainPanel);
@@ -112,7 +158,7 @@ suite('History output tests', () => {
             // tslint:disable-next-line:no-console
             console.log('History test skipped, no Jupyter installed');
         }
-    }).timeout(60000);
+    });
 
     test('Loc React test', async () => {
         // Create our main panel and tie it into the JSDOM
@@ -142,11 +188,11 @@ suite('History output tests', () => {
         }
     });
 
-    test('EditorContext test', async () => {
+    runMountedTest('Editor Context', async (wrapper) => {
+        addMockData('a=1\na', 1);
+
         // Verify we can send different commands to the UI and it will respond
         if (await jupyterExecution.isNotebookSupported()) {
-            // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
-            const wrapper = mount(<MainPanel theme='vscode-light' ignoreProgress={true} skipDefault={true} />);
             const history = historyProvider.getOrCreateActive();
 
             // Before we have any cells, verify our contexts are not set
@@ -171,14 +217,13 @@ suite('History output tests', () => {
             // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
             let count = 0;
             let deferred = createDeferred<boolean>();
-            ioc.onContextSet(a => {
-                // tslint:disable-next-line:no-console
-                console.log(`Setting context for ${a.name} to ${a.value}`);
+            const eventDispose = ioc.onContextSet(a => {
                 count += 1;
                 if (count >= 3) {
                     deferred.resolve();
                 }
             });
+            disposables.push(eventDispose);
 
             // Create a method that resets the waiting
             const resetWaiting = () => {

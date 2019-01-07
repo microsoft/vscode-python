@@ -58,6 +58,7 @@ export class CondaEnvService extends CacheableLocatorService {
                 this.fileSystem,
                 this.helper
             );
+            this._hasInterpreters.resolve(interpreters.length > 0);
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters

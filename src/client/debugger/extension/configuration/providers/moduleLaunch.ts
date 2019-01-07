@@ -20,11 +20,11 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
             name: localize('python.snippet.launch.module.label', 'Python: Module')(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'enter-your-module-name-here'
+            module: 'enter-your-module-name'
         };
         const selectedModule = await input.showInputBox({
             title: DebugConfigurationPrompts.moduleEnterModuleTitle(),
-            value: config.module || 'enter-your-module-name-here',
+            value: config.module || 'enter-your-module-name',
             prompt: DebugConfigurationPrompts.moduleEnterModulePrompt(),
             validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigurationPrompts.moduleEnterModuleInvalidNameError())
         });

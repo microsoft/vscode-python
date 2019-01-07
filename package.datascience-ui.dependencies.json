@@ -121,6 +121,7 @@
     "style-loader",
     "styled-jsx",
     "stylis-rule-sheet",
+    "svg-inline-react",
     "svg-path-bounding-box",
     "svgpath",
     "tinycolor2",

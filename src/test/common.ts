@@ -10,12 +10,15 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
-import { ConfigurationTarget, TextDocument, Uri } from 'vscode';
+import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { IPythonSettings } from '../client/common/types';
-import { IServiceContainer } from '../client/ioc/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
+import { IPythonSettings, Resource } from '../client/common/types';
+import { PythonInterpreter } from '../client/interpreter/contracts';
+import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import {
+    EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST
+} from './constants';
 import { noop, sleep } from './core';
 
 const StreamZip = require('node-stream-zip');
@@ -46,7 +49,7 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
     'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
-    'envFile' | 'jediEnabled' | 'linting.ignorePatterns';
+    'envFile' | 'jediEnabled' | 'linting.ignorePatterns' | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {
     if (!IS_SMOKE_TEST) {
@@ -87,6 +90,11 @@ export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
     return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
 }
 
+export async function restorePythonPathInWorkspaceRoot() {
+    const vscode = require('vscode') as typeof import('vscode');
+    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, PYTHON_PATH);
+}
+
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getWorkspaceRoot() {
@@ -105,8 +113,23 @@ function getWorkspaceRoot() {
 }
 
 export function getExtensionSettings(resource: Uri | undefined): IPythonSettings {
+    const vscode = require('vscode') as typeof import('vscode');
+    class AutoSelectionService {
+        get onDidChangeAutoSelectedInterpreter(): Event<void> {
+            return new vscode.EventEmitter<void>().event;
+        }
+        public autoSelectInterpreter(_resource: Resource): Promise<void> {
+            return Promise.resolve();
+        }
+        public getAutoSelectedInterpreter(_resource: Resource): PythonInterpreter | undefined {
+            return;
+        }
+        public async setWorkspaceInterpreter(_resource: Uri, _interpreter: PythonInterpreter | undefined): Promise<void> {
+            return;
+        }
+    }
     const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
-    return pythonSettings.PythonSettings.getInstance(resource);
+    return pythonSettings.PythonSettings.getInstance(resource, new AutoSelectionService());
 }
 export function retryAsync(wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
@@ -347,6 +370,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
+    serviceManager: IServiceManager;
 }
 
 export async function unzip(zipFile: string, targetFolder: string): Promise<void> {

@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { Disposable, DocumentSymbolProvider, Event, TextDocument, Uri } from 'vscode';
+import { DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Location, TextDocument, Uri } from 'vscode';
 import { Product } from '../common/types';
 import { CommandSource } from './common/constants';
-import { FlattenedTestFunction, ITestManager, ITestResultsService, TestFile, TestFunction, TestRunOptions, Tests, TestsToRun, UnitTestProduct } from './common/types';
+import { FlattenedTestFunction, ITestManager, ITestResultsService, TestFile, TestFunction, TestRunOptions, Tests, TestStatus, TestsToRun, UnitTestProduct } from './common/types';
 
 export const IUnitTestConfigurationService = Symbol('IUnitTestConfigurationService');
 export interface IUnitTestConfigurationService {
@@ -100,4 +100,39 @@ export const IUnitTestHelper = Symbol('IUnitTestHelper');
 export interface IUnitTestHelper {
     getStartDirectory(args: string[]): string;
     getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[];
+}
+
+export const IUnitTestDiagnosticService = Symbol('IUnitTestDiagnosticService');
+export interface IUnitTestDiagnosticService {
+    getMessagePrefix(status: TestStatus): string;
+    getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity;
+}
+
+export interface IPythonUnitTestMessage {
+    code: string | undefined;
+    message?: string;
+    severity: PythonUnitTestMessageSeverity;
+    provider: string;
+    traceback?: string;
+    testTime: number;
+    status: TestStatus;
+    locationStack?: ILocationStackFrameDetails[];
+    testFilePath: string;
+}
+export enum PythonUnitTestMessageSeverity {
+    Error,
+    Failure,
+    Skip,
+    Pass
+}
+export enum DiagnosticMessageType {
+    Error,
+    Fail,
+    Skipped,
+    Pass
+}
+
+export interface ILocationStackFrameDetails {
+    location: Location;
+    lineText: string;
 }

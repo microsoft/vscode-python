@@ -33,7 +33,7 @@ suite('Debugging - Configuration Provider Module', () => {
             name: localize('python.snippet.launch.module.label', 'Python: Module')(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'enter-your-module-name-here'
+            module: 'enter-your-module-name'
         };
 
         expect(state.config).to.be.deep.equal(config);

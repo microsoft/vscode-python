@@ -39,12 +39,14 @@ class DeferredImpl<T> implements Deferred<T> {
         });
     }
     public resolve(value?: T | PromiseLike<T>) {
-        this._resolve.apply(this.scope ? this.scope : this, arguments);
+        // tslint:disable-next-line:no-any
+        this._resolve.apply(this.scope ? this.scope : this, arguments as any);
         this._resolved = true;
     }
     // tslint:disable-next-line:no-any
     public reject(reason?: any) {
-        this._reject.apply(this.scope ? this.scope : this, arguments);
+        // tslint:disable-next-line:no-any
+        this._reject.apply(this.scope ? this.scope : this, arguments as any);
         this._rejected = true;
     }
     get promise(): Promise<T> {
@@ -67,9 +69,18 @@ export function createDeferred<T>(scope: any = null): Deferred<T> {
 
 export function createDeferredFrom<T>(...promises: Promise<T>[]): Deferred<T> {
     const deferred = createDeferred<T>();
-    Promise.all(promises)
+    Promise.all<T>(promises)
+        // tslint:disable-next-line:no-any
+        .then(deferred.resolve.bind(deferred) as any)
+        // tslint:disable-next-line:no-any
+        .catch(deferred.reject.bind(deferred) as any);
+
+    return deferred;
+}
+export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
+    const deferred = createDeferred<T>();
+    promise
         .then(deferred.resolve.bind(deferred))
         .catch(deferred.reject.bind(deferred));
-
     return deferred;
 }

@@ -6,12 +6,14 @@ import '../../client/common/extensions';
 import { ChildProcess, spawn } from 'child_process';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, Uri } from 'vscode';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { IMultiStepInputFactory } from '../../client/common/utils/multiStepInput';
@@ -99,7 +101,8 @@ suite('Debugging - Attach Debugger', () => {
         const attachResolver = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
         const multiStepIput = TypeMoq.Mock.ofType<IMultiStepInputFactory>().object;
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, multiStepIput);
+        const fs = mock(FileSystem);
+        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, multiStepIput, instance(fs));
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);

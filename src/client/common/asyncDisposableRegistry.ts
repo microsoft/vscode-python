@@ -15,7 +15,9 @@ export class AsyncDisposableRegistry implements IAsyncDisposableRegistry {
         await Promise.all(promises);
     }
 
-    public push(disposable: IDisposable) {
-        this.list.push(disposable);
+    public push(disposable: IDisposable | undefined) {
+        if (disposable) {
+            this.list.push(disposable);
+        }
     }
 }

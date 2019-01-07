@@ -56,7 +56,7 @@ export abstract class ModuleInstaller {
         // If installing pylint on python 2.x, then use pylint~=1.9.0
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
-        if (currentInterpreter && currentInterpreter.version_info && currentInterpreter.version_info[0] === 2) {
+        if (currentInterpreter && currentInterpreter.version && currentInterpreter.version.major === 2) {
             const newArgs = [...args];
             // This command could be sent to the terminal, hence '<' needs to be escaped for UNIX.
             newArgs[indexOfPylint] = '"pylint<2.0.0"';

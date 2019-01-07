@@ -13,6 +13,7 @@ import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, EventEmitter } from 'vscode';
 
+import { SemVer } from 'semver';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
@@ -30,15 +31,18 @@ import {
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
 import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { ServiceManager } from '../../client/ioc/serviceManager';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { MockJupyterManager } from './mockJupyterManager';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
@@ -144,48 +148,44 @@ suite('Jupyter Execution', async () => {
     const serviceContainer = mock(ServiceContainer);
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
-    const pythonSettings = new PythonSettings();
+    const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
-        version: '3.6.6.6',
+        version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [3, 6, 6, 'final']
+        architecture: Architecture.x64
     };
 
     const missingKernelPython: PythonInterpreter = {
         path: '/foo/baz/python.exe',
-        version: '3.1.1.1',
+        version: new SemVer('3.1.1-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [3, 1, 1, 'final']
+        architecture: Architecture.x64
     };
 
     const missingNotebookPython: PythonInterpreter = {
         path: '/bar/baz/python.exe',
-        version: '2.1.1.1',
+        version: new SemVer('2.1.1-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [2, 1, 1, 'final']
+        architecture: Architecture.x64
     };
 
     const missingNotebookPython2: PythonInterpreter = {
         path: '/two/baz/python.exe',
-        version: '2.1.1.1',
+        version: new SemVer('2.1.1'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-        version_info: [2, 1, 1, 'final']
+        architecture: Architecture.x64
     };
 
     let workingKernelSpec: string;
@@ -450,6 +450,10 @@ suite('Jupyter Execution', async () => {
         when(fileSystem.createDirectory(anything())).thenResolve();
         when(fileSystem.deleteDirectory(anything())).thenResolve();
 
+        const serviceManager = mock(ServiceManager);
+
+        const mockSessionManager = new MockJupyterManager(instance(serviceManager));
+
         return new JupyterExecution(
             instance(executionFactory),
             instance(condaService),
@@ -460,6 +464,7 @@ suite('Jupyter Execution', async () => {
             disposableRegistry,
             disposableRegistry,
             instance(fileSystem),
+            mockSessionManager,
             instance(serviceContainer));
     }
 
@@ -512,8 +517,8 @@ suite('Jupyter Execution', async () => {
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
         if (usableInterpreter) { // Linter
             assert.notEqual(usableInterpreter.path, missingKernelPython.path);
-            assert.equal(usableInterpreter.version_info[0], missingKernelPython.version_info[0], 'Found interpreter should match on major');
-            assert.notEqual(usableInterpreter.version_info[1], missingKernelPython.version_info[1], 'Found interpreter should not match on minor');
+            assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
+            assert.notEqual(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should not match on minor');
         }
     }).timeout(10000);
 

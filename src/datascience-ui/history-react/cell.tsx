@@ -6,18 +6,18 @@ import './cell.css';
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
-
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
 import { CellState, ICell } from '../../client/datascience/types';
+import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
-import { RelativeImage } from '../react-common/relativeImage';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
+import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
 import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
@@ -89,19 +89,15 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderNormalCell() {
-        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
-            './images/Cancel/Cancel_16xMD_vscode_dark.svg';
-        const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
-            './images/GoToSourceCode/GoToSourceCode_16x_vscode_dark.svg';
 
         return (
             <div className='cell-wrapper'>
                 <MenuBar theme={this.props.theme}>
                     <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
-                        <RelativeImage class='cell-button-image' path={clearButtonImage} />
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
-                        <RelativeImage class='cell-button-image' path={gotoSourceImage} />
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
                     </CellButton>
                 </MenuBar>
                 <div className='cell-outer'>
@@ -215,11 +211,29 @@ export class Cell extends React.Component<ICellProps> {
 
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
+            // Stream output needs to be wrapped in xmp so it
+            // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
-            const text = concatMultilineString(stream.text);
+            const multiline = concatMultilineString(stream.text);
+            const formatted = formatStreamText(multiline);
             copy.data = {
-                'text/html' : text
+                'text/html' : `<xmp>${formatted}</xmp>`
             };
+
+            // Output may have goofy ascii colorization chars in it. Try
+            // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
+            try {
+                if (formatted.includes('<')) {
+                    const converter = new ansiToHtml();
+                    const html = converter.toHtml(formatted);
+                    copy.data = {
+                        'text/html': html
+                    };
+                }
+            } catch {
+                noop();
+            }
+
         } else if (copy.output_type === 'error') {
             const error = copy as nbformat.IError;
             try {

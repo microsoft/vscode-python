@@ -33,7 +33,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             resource = this.workspaceService.getWorkspaceFolder(resource)!.uri;
         }
         if (!resource) {
-            const wkspc = this.helper.getActiveWorkspaceUri();
+            const wkspc = this.helper.getActiveWorkspaceUri(resource);
             resource = wkspc ? wkspc.folderUri : undefined;
         }
         await this.updateDisplay(resource);

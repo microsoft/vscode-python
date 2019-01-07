@@ -1,4 +1,4 @@
-# Beta (Monday the week prior to release)
+# Beta (Tuesday, XXX XX)
 
 - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
 - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date
@@ -15,7 +15,7 @@
 - [ ] Check that component governance is happy (requires beta PR to have been merged)
 
 
-# Release candidate (Monday before release)
+# Release candidate (Tuesday, XXX XX)
 
 - [ ] Ensure all new features are tracked via telemetry
 - [ ] Announce a code freeze
@@ -43,7 +43,7 @@
 - [ ] Make sure component governance is happy (requires RC PR to have been merged)
 
 
-# Final (near a VS Code release)
+# Final (Tuesday, XXX XX)
 
 ## Preparation
 

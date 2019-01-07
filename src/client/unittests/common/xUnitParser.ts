@@ -110,6 +110,7 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
                     }
 
                     result.testFunction.line = getSafeInt(testcase.$.line, null);
+                    result.testFunction.file = testcase.$.file;
                     result.testFunction.time = parseFloat(testcase.$.time);
                     result.testFunction.passed = true;
                     result.testFunction.status = TestStatus.Pass;

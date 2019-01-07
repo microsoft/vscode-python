@@ -11,7 +11,5 @@ import { IFileSystem, IPlatformService, IRegistry } from './types';
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
-    if (serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
-        serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
-    }
+    serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 }

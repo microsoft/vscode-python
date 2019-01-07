@@ -108,8 +108,8 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup(i => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() => Promise.resolve([]))
+                .setup(i => i.hasInterpreters)
+                .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose();
@@ -123,9 +123,13 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
+                .setup(i => i.hasInterpreters)
+                .returns(() => Promise.resolve(true))
+                .verifiable(typemoq.Times.once());
+            interpreterService
                 .setup(i => i.getInterpreters(typemoq.It.isAny()))
                 .returns(() => Promise.resolve([{} as any]))
-                .verifiable(typemoq.Times.once());
+                .verifiable(typemoq.Times.never());
             interpreterService
                 .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => { return Promise.resolve({ type: InterpreterType.Unknown } as any); })
@@ -147,9 +151,13 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
+                .setup(i => i.hasInterpreters)
+                .returns(() => Promise.resolve(true))
+                .verifiable(typemoq.Times.once());
+            interpreterService
                 .setup(i => i.getInterpreters(typemoq.It.isAny()))
                 .returns(() => Promise.resolve([{} as any]))
-                .verifiable(typemoq.Times.once());
+                .verifiable(typemoq.Times.never());
             interpreterService
                 .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => { return Promise.resolve({ type: InterpreterType.Unknown } as any); })

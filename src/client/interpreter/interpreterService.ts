@@ -1,21 +1,20 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PythonSettings } from '../common/configSettings';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
-import { IPythonPathUpdaterServiceManager } from './configuration/types';
+import { captureTelemetry } from '../telemetry';
+import { PYTHON_INTERPRETER_DISCOVERY } from '../telemetry/constants';
 import {
     IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
     IInterpreterService, INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType, PIPENV_SERVICE, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
-} from './contracts';
+    InterpreterType, PythonInterpreter} from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
@@ -23,18 +22,20 @@ const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
     private readonly locator: IInterpreterLocatorService;
-    private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     private readonly fs: IFileSystem;
     private readonly persistentStateFactory: IPersistentStateFactory;
-    private readonly helper: IInterpreterHelper;
+    private readonly configService: IConfigurationService;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
+    private pythonPathSetting: string = '';
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-        this.pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+    }
+    public get hasInterpreters(): Promise<boolean> {
+        return this.locator.hasInterpreters;
     }
 
     public async refresh(resource?: Uri) {
@@ -46,10 +47,18 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         disposables.push(documentManager.onDidChangeActiveTextEditor((e) => e ? this.refresh(e.document.uri) : undefined));
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        (configService.getSettings() as PythonSettings).addListener('change', this.onConfigChanged);
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const pySettings = this.configService.getSettings();
+        this.pythonPathSetting = pySettings.pythonPath;
+        const disposable = workspaceService.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('python.pythonPath', undefined)) {
+                this.onConfigChanged();
+            }
+        });
+        disposables.push(disposable);
     }
 
+    @captureTelemetry(PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const interpreters = await this.locator.getInterpreters(resource);
         await Promise.all(interpreters
@@ -58,46 +67,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return interpreters;
     }
 
-    public async autoSetInterpreter(): Promise<void> {
-        if (!await this.shouldAutoSetInterpreter()) {
-            return;
-        }
-        const activeWorkspace = this.helper.getActiveWorkspaceUri();
-        if (!activeWorkspace) {
-            return;
-        }
-        // Check pipenv first.
-        const pipenvService = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
-        let interpreters = await pipenvService.getInterpreters(activeWorkspace.folderUri, true);
-        if (interpreters.length > 0) {
-            await this.pythonPathUpdaterService.updatePythonPath(interpreters[0].path, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
-            return;
-        }
-        // Now check virtual environments under the workspace root
-        const virtualEnvInterpreterProvider = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri, true);
-        const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
-
-        const interpretersInWorkspace = interpreters.filter(interpreter => Uri.file(interpreter.path).fsPath.toUpperCase().startsWith(workspacePathUpper));
-        if (interpretersInWorkspace.length === 0) {
-            return;
-        }
-        // Always pick the highest version by default.
-        interpretersInWorkspace.sort((a, b) => a.version! > b.version! ? 1 : -1);
-        const pythonPath = interpretersInWorkspace[0].path;
-        // Ensure this new environment is at the same level as the current workspace.
-        // In windows the interpreter is under scripts/python.exe on linux it is under bin/python.
-        // Meaning the sub directory must be either scripts, bin or other (but only one level deep).
-        const relativePath = path.dirname(pythonPath).substring(activeWorkspace.folderUri.fsPath.length);
-        if (relativePath.split(path.sep).filter(l => l.length > 0).length === 2) {
-            await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
-        }
-    }
-
     public dispose(): void {
         this.locator.dispose();
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        (configService.getSettings() as PythonSettings).removeListener('change', this.onConfigChanged);
         this.didChangeInterpreterEmitter.dispose();
     }
 
@@ -193,8 +164,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 
-        if (info.version_info && info.version_info.length > 0) {
-            displayNameParts.push(info.version_info.slice(0, 3).join('.'));
+        if (info.version) {
+            displayNameParts.push(`${info.version.major}.${info.version.minor}.${info.version.patch}`);
         }
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
@@ -228,32 +199,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         return displayName;
     }
-    public async shouldAutoSetInterpreter(): Promise<boolean> {
-        const activeWorkspace = this.helper.getActiveWorkspaceUri();
-        if (!activeWorkspace) {
-            return false;
-        }
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const pythonConfig = workspaceService.getConfiguration('python', activeWorkspace.folderUri);
-        const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath');
-        // If we have a value in user settings, then don't auto set the interpreter path.
-        if (pythonPathInConfig && pythonPathInConfig!.globalValue !== undefined && pythonPathInConfig!.globalValue !== 'python') {
-            return false;
-        }
-        if (activeWorkspace.configTarget === ConfigurationTarget.Workspace) {
-            return pythonPathInConfig!.workspaceValue === undefined || pythonPathInConfig!.workspaceValue === 'python';
-        }
-        if (activeWorkspace.configTarget === ConfigurationTarget.WorkspaceFolder) {
-            return pythonPathInConfig!.workspaceFolderValue === undefined || pythonPathInConfig!.workspaceFolderValue === 'python';
-        }
-        return false;
-    }
-
     private onConfigChanged = () => {
-        this.didChangeInterpreterEmitter.fire();
-        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
-        interpreterDisplay.refresh()
-            .catch(ex => console.error('Python Extension: display.refresh', ex));
+        // Check if we actually changed our python path
+        const pySettings = this.configService.getSettings();
+        if (this.pythonPathSetting !== pySettings.pythonPath) {
+            this.pythonPathSetting = pySettings.pythonPath;
+            this.didChangeInterpreterEmitter.fire();
+            const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+            interpreterDisplay.refresh()
+                .catch(ex => console.error('Python Extension: display.refresh', ex));
+        }
     }
     private async collectInterpreterDetails(pythonPath: string, resource: Uri | undefined) {
         const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);

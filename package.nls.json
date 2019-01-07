@@ -116,6 +116,7 @@
     "DataScience.pythonVersionHeaderNoPyKernel": "Python Version may not match, no ipykernel found:",
     "DataScience.pythonRestartHeader": "Restarted Kernel:",
     "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
+    "Linter.replaceWithSelectedLinter": "Multiple linters are enabled in settings. Replace with '{0}'?",
     "DataScience.jupyterSelectURILaunchLocal": "Launch local Jupyter server",
     "DataScience.jupyterSelectURISpecifyURI": "Type in the URI for the Jupyter server",
     "DataScience.jupyterSelectURIPrompt": "Enter the URI of a Jupyter server",
@@ -171,5 +172,8 @@
     "debug.attachRemotePortValidationError": "Enter a valid port number",
     "debug.attachRemoteHostTitle": "Remote Debugging",
     "debug.attachRemoteHostPrompt": "Enter a host name or IP address",
-    "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address"
+    "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address",
+    "UnitTests.testErrorDiagnosticMessage": "Error",
+    "UnitTests.testFailDiagnosticMessage": "Fail",
+    "UnitTests.testSkippedDiagnosticMessage": "Skipped"  
 }

@@ -26,7 +26,7 @@ const Module = require('module');
         return origRequire.call(context, filepath);
     };
     Module.prototype.require = function (filepath) {
-        if (filepath.endsWith('.css')) {
+        if (filepath.endsWith('.css') || filepath.endsWith('.svg')) {
             return '';
         }
         // tslint:disable-next-line:no-invalid-this
