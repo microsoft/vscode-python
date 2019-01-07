@@ -163,6 +163,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
                 action: { indentAction: IndentAction.Indent }
             },
             {
+                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
+                action: { indentAction: IndentAction.Indent }
+            },
+            {
                 beforeText: /^\s*#.*/,
                 afterText: /.+$/,
                 action: { indentAction: IndentAction.None, appendText: '# ' }
