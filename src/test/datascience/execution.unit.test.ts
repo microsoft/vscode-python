@@ -11,7 +11,7 @@ import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { Disposable, EventEmitter } from 'vscode';
+import { Disposable, EventEmitter, ConfigurationChangeEvent } from 'vscode';
 
 import { SemVer } from 'semver';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -43,6 +43,9 @@ import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManager } from './mockJupyterManager';
+import { WorkspaceService } from '../../client/common/application/workspace';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { Configuration } from 'istanbul';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
@@ -146,8 +149,10 @@ suite('Jupyter Execution', async () => {
     const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
+    const workspaceService = mock(WorkspaceService)
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
+    const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
     const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
@@ -419,7 +424,9 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<ILogger>(ILogger)).thenReturn(instance(logger));
+        when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
         when(configService.getSettings()).thenReturn(pythonSettings);
+        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -533,6 +540,15 @@ suite('Jupyter Execution', async () => {
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
             assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
         }
+        // Force config change and ask again
+        pythonSettings.datascience.forceJupyterExactMatch = true;
+        const evt = {
+            affectsConfiguration(m: string) : boolean {
+                return true;
+            }
+        };
+        configChangeEvent.fire(evt);
+        await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
     }).timeout(10000);
 
     test('Kernelspec is deleted on exit', async () => {
