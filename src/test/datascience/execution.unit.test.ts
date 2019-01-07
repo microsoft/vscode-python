@@ -465,6 +465,7 @@ suite('Jupyter Execution', async () => {
             disposableRegistry,
             instance(fileSystem),
             mockSessionManager,
+            instance(configService),
             instance(serviceContainer));
     }
 
@@ -509,16 +510,28 @@ suite('Jupyter Execution', async () => {
         }
     }).timeout(10000);
 
-    test('Other than active finds closest match', async () => {
+    test('Missing kernel python still finds interpreter', async () => {
         const execution = createExecution(missingKernelPython);
         when(interpreterService.getActiveInterpreter()).thenResolve(missingKernelPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
         if (usableInterpreter) { // Linter
-            assert.notEqual(usableInterpreter.path, missingKernelPython.path);
+            assert.equal(usableInterpreter.path, missingKernelPython.path);
             assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
-            assert.notEqual(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should not match on minor');
+            assert.equal(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should match on minor');
+        }
+    }).timeout(10000);
+
+    test('Other than active finds closest match', async () => {
+        const execution = createExecution(missingNotebookPython);
+        when(interpreterService.getActiveInterpreter()).thenResolve(missingNotebookPython);
+        await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
+        const usableInterpreter = await execution.getUsableJupyterPython();
+        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        if (usableInterpreter) { // Linter
+            assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
+            assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
         }
     }).timeout(10000);
 

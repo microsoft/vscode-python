@@ -21,7 +21,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
-import { IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -56,15 +56,21 @@ class JupyterCommand {
     private interpreterPromise: Promise<PythonInterpreter | undefined>;
     private condaService: ICondaService;
 
-    constructor(exe: string, args: string[], launcher: IProcessService, interpreter: IInterpreterService, condaService: ICondaService) {
+    constructor(exe: string, args: string[], launcher: IProcessService, interpreter: IInterpreterService | PythonInterpreter, condaService: ICondaService) {
         this.exe = exe;
         this.requiredArgs = args;
         this.launcher = launcher;
         this.condaService = condaService;
-        this.interpreterPromise = interpreter.getInterpreterDetails(this.exe).catch(e => undefined);
+        if (interpreter.hasOwnProperty('getInterpreterDetails')) {
+            const interpreterService = interpreter as IInterpreterService;
+            this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(e => undefined);
+        } else {
+            const interpreterDetails = interpreter as PythonInterpreter;
+            this.interpreterPromise = Promise.resolve(interpreterDetails);
+        }
     }
 
-    public mainVersion = async (): Promise<number> => {
+    public async mainVersion(): Promise<number> {
         const interpreter = await this.interpreterPromise;
         if (interpreter && interpreter.version) {
             return interpreter.version.major;
@@ -73,14 +79,18 @@ class JupyterCommand {
         }
     }
 
-    public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
+    public interpreter() : Promise<PythonInterpreter | undefined> {
+        return this.interpreterPromise;
+    }
+
+    public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
         const newOptions = { ...options };
         newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const newArgs = [...this.requiredArgs, ...args];
         return this.launcher.execObservable(this.exe, newArgs, newOptions);
     }
 
-    public exec = async (args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> => {
+    public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const newOptions = { ...options };
         newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const newArgs = [...this.requiredArgs, ...args];
@@ -93,7 +103,7 @@ class JupyterCommand {
      */
     // Base Node.js SpawnOptions uses any for environment, so use that here as well
     // tslint:disable-next-line:no-any
-    private fixupCondaEnv = async (inputEnv?: NodeJS.ProcessEnv): Promise<any> => {
+    private async fixupCondaEnv(inputEnv?: NodeJS.ProcessEnv): Promise<any> {
         if (!inputEnv) {
             inputEnv = process.env;
         }
@@ -106,7 +116,7 @@ class JupyterCommand {
         return inputEnv;
     }
 
-    private execVersion = async (): Promise<number> => {
+    private async execVersion(): Promise<number> {
         if (this.launcher) {
             const output = await this.launcher.exec(this.exe, ['--version'], { throwOnStdErr: false, encoding: 'utf8' });
             // First number should be our result
@@ -138,6 +148,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
                 @inject(IFileSystem) private fileSystem: IFileSystem,
                 @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager,
+                @inject(IConfigurationService) private configuration: IConfigurationService,
                 @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
@@ -364,65 +375,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
-
-        // Make sure somebody is useable for notebooks. Otherwise it doesn't really matter
-        // if somebody else can run ipykernel
-        if (!(await this.isNotebookSupported(cancelToken))) {
-            return undefined;
-        }
-
-        // Find the python interpreter that supports ipykernel that is closest
-        // to our active interpreter
-        const active = await this.interpreterService.getActiveInterpreter();
-        if (active && await this.doesModuleExist(KernelCreateCommand, active, cancelToken)) {
-            // The active interpreter is good enough. It supports ipykernel
-            return active;
-        } else if (active && active !== null) {
-            // Go through the rest of them and see if anybody supports it. Score each based on
-            // version numbers
-            let bestScore = 0;
-            let bestInterpreter;
-            const list = await this.interpreterService.getInterpreters();
-            for (let i = 0; i < list.length; i += 1) {
-                let score = 0;
-                // Don't check active again
-                if (active !== list[i]) {
-                    // First the interpreter has to support ipykernel
-                    if (await this.doesModuleExist(KernelCreateCommand, list[i], cancelToken)) {
-                        // This one at least works, give it a point.
-                        score += 1;
-
-                        // Then start matching based on version
-                        const listVersion = list[i].version;
-                        const activeVersion = active.version;
-                        if (listVersion && activeVersion) {
-                            if (listVersion.major === activeVersion.major) {
-                                score += 32;
-                                if (listVersion.minor === activeVersion.minor) {
-                                    score += 16;
-                                    if (listVersion.patch === activeVersion.patch) {
-                                        score += 8;
-                                        if (listVersion.raw === activeVersion.raw) {
-                                            score += 4;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Also point for type
-                        if (list[i].type === active.type) {
-                            score += 1;
-                        }
-                    }
-                }
-                if (score > bestScore) {
-                    bestInterpreter = list[i];
-                    bestScore = score;
-                }
-            }
-
-            return bestInterpreter;
+        // This should be the best interpreter for notebooks
+        const found = await this.findBestCommand(NotebookCommand, cancelToken);
+        if (found) {
+            return found.interpreter();
         }
 
         return undefined;
@@ -713,7 +669,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             // Our command args are different based on the command. ipykernel is not a jupyter command
             const args = command === KernelCreateCommand ? ['-m', command] : ['-m', 'jupyter', command];
 
-            return new JupyterCommand(interpreter.path, args, processService, this.interpreterService, this.condaService);
+            return new JupyterCommand(interpreter.path, args, processService, interpreter, this.condaService);
         }
 
         return undefined;
@@ -755,6 +711,16 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
+    private supportsSearchingForCommands() : boolean {
+        if (this.configuration) {
+            const settings = this.configuration.getSettings();
+            if (settings) {
+                return !settings.datascience.forceJupyterExactMatch;
+            }
+        }
+        return true;
+    }
+
     // For jupyter,
     // - Look in current interpreter, if found create something that has path and args
     // - Look in other interpreters, if found create something that has path and args
@@ -771,12 +737,41 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             // First we look in the current interpreter
             const current = await this.interpreterService.getActiveInterpreter();
             let found = current ? await this.findInterpreterCommand(command, current, cancelToken) : undefined;
-            if (!found) {
+            if (!found && this.supportsSearchingForCommands()) {
                 // Look through all of our interpreters (minus the active one at the same time)
                 const all = await this.interpreterService.getInterpreters();
                 const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
                 const foundList = await Promise.all(promises);
-                found = foundList.find(f => f !== undefined);
+
+                // Then go through all of the found ones and pick the closest python match
+                if (current && current.version) {
+                    let bestScore = -1;
+                    for (let i = 0; i < foundList.length; i += 1) {
+                        let currentScore = 0;
+                        if (foundList[i]) {
+                            const interpreter = await foundList[i].interpreter();
+                            const version = interpreter.version;
+                            if (version) {
+                                if (version.major === current.version.major) {
+                                    currentScore += 4;
+                                    if (version.minor === current.version.minor) {
+                                        currentScore += 2;
+                                        if (version.patch === current.version.patch) {
+                                            currentScore += 1;
+                                        }
+                                    }
+                                }
+                            }
+                            if (currentScore > bestScore) {
+                                found = foundList[i];
+                                bestScore = currentScore;
+                            }
+                        }
+                    }
+                } else {
+                    // Just pick the first one
+                    found = foundList.find(f => f !== undefined);
+                }
             }
 
             // If still not found, try looking on the path using jupyter
@@ -807,7 +802,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 const result = await pythonService.execModule(actualModule, args, newOptions);
                 return !result.stderr;
             } catch (err) {
-                this.logger.logWarning(err);
+                this.logger.logWarning(`${err} for ${interpreter.path}`);
                 return false;
             }
         } else {
