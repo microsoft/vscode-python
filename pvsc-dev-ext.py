@@ -32,6 +32,8 @@ class VSCode(enum.Enum):
 
 def run_command(command, cwd=None):
     """Run the specified command in a subprocess shell."""
+    executable = shutil.which(command[0])
+    command[0] = executable
     cmd = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     cmd.check_returncode()
 
