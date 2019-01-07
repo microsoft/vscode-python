@@ -10,6 +10,7 @@ import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 
+import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
@@ -153,6 +154,15 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
+
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const disposable = workspaceService.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('python.dataScience', undefined)) {
+                // When config changes happen, recreate our commands.
+                this.dispose();
+            }
+        });
+        this.disposableRegistry.push(disposable);
     }
 
     public dispose() {
