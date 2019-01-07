@@ -5,7 +5,7 @@ cache:
         - $HOME/.npm
         - node_modules
 git:
-    depth: 1
+    depth: 20
 
 matrix:
     include:
