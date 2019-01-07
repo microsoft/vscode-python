@@ -156,13 +156,15 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         this.disposableRegistry.push(this);
 
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const disposable = workspaceService.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('python.dataScience', undefined)) {
-                // When config changes happen, recreate our commands.
-                this.dispose();
-            }
-        });
-        this.disposableRegistry.push(disposable);
+        if (workspaceService) {
+            const disposable = workspaceService.onDidChangeConfiguration(e => {
+                if (e.affectsConfiguration('python.dataScience', undefined)) {
+                    // When config changes happen, recreate our commands.
+                    this.dispose();
+                }
+            });
+            this.disposableRegistry.push(disposable);
+        }
     }
 
     public dispose() {
