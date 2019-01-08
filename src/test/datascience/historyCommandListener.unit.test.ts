@@ -249,8 +249,10 @@ suite('History command listener', async () => {
                 metadata: metadata
             }
         );
-        when(jupyterExecution.isNotebookSupported()).thenResolve(true);
-        when(jupyterExecution.isNotebookSupported(anything())).thenResolve(true);
+
+        if (jupyterExecution.isNotebookSupported) {
+            when(jupyterExecution.isNotebookSupported()).thenResolve(true);
+        }
 
         const result = new HistoryCommandListener(
             disposableRegistry,
