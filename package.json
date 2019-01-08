@@ -968,7 +968,7 @@
                 "python.dataScience.searchForJupyter": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Search all installed pythons for a Jupyter installation when starting the Python Interactive window",
+                    "description": "Search all installed Python interpreters for a Jupyter installation when starting the Python Interactive window",
                     "scope": "resource"
                 },
                 "python.dataScience.changeDirOnImportExport": {
