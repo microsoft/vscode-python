@@ -9,11 +9,16 @@ import { exec } from 'child_process';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import '../../../client/common/extensions';
-import { IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
+import {
+    IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE
+} from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { deleteFiles, isOs, isPythonVersionInProcess, OSType, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
+import {
+    deleteFiles, isOs, isPythonVersionInProcess, OSType,
+    PYTHON_PATH, rootWorkspaceUri, waitForCondition
+} from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
-import { initialize, multirootPath } from '../../initialize';
+import { initialize, IS_VSTS, multirootPath } from '../../initialize';
 
 const timeoutMs = 60_000;
 suite('Interpreters - Workspace VirtualEnv Service', function () {
@@ -52,7 +57,12 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
     suiteSetup(async function () {
         // skip for Linux CI, see #3848
-        if (isOs(OSType.Linux) || await isPythonVersionInProcess(undefined, '2')) {
+        if (isOs(OSType.Linux) && IS_VSTS) {
+            return this.skip();
+        }
+
+        // skip for Python < 3, no venv support
+        if (await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
         }
 
