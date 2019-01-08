@@ -206,7 +206,8 @@ suite('History command listener', async () => {
             changeDirOnImportExport: true,
             notebookFileRoot: 'WORKSPACE',
             useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

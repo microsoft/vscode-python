@@ -965,10 +965,10 @@
                     "description": "Set the root directory for loading files for the Python Interactive window.",
                     "scope": "resource"
                 },
-                "python.dataScience.forceJupyterExactMatch": {
+                "python.dataScience.searchForJupyter": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Force the Python Interactive window to use the python selected and don't search for a close match",
+                    "default": true,
+                    "description": "Search all installed pythons for a Jupyter installation when starting the Python Interactive window",
                     "scope": "resource"
                 },
                 "python.dataScience.changeDirOnImportExport": {

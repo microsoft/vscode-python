@@ -149,15 +149,15 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
                 @inject(IFileSystem) private fileSystem: IFileSystem,
                 @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager,
+                @inject(IWorkspaceService) workspace: IWorkspaceService,
                 @inject(IConfigurationService) private configuration: IConfigurationService,
                 @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        if (workspaceService) {
-            const disposable = workspaceService.onDidChangeConfiguration(e => {
+        if (workspace) {
+            const disposable = workspace.onDidChangeConfiguration(e => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
                     this.dispose();
@@ -727,7 +727,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         if (this.configuration) {
             const settings = this.configuration.getSettings();
             if (settings) {
-                return !settings.datascience.forceJupyterExactMatch;
+                return settings.datascience.searchForJupyter;
             }
         }
         return true;

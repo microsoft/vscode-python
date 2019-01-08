@@ -286,7 +286,7 @@ export interface IDataScienceSettings {
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;
     useDefaultConfigForJupyter: boolean;
-    forceJupyterExactMatch?: boolean;
+    searchForJupyter: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

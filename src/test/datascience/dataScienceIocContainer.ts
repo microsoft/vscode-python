@@ -199,7 +199,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();

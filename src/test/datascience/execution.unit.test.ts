@@ -436,7 +436,8 @@ suite('Jupyter Execution', async () => {
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -471,6 +472,7 @@ suite('Jupyter Execution', async () => {
             disposableRegistry,
             instance(fileSystem),
             mockSessionManager,
+            instance(workspaceService),
             instance(configService),
             instance(serviceContainer));
     }
@@ -540,7 +542,7 @@ suite('Jupyter Execution', async () => {
             assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
         }
         // Force config change and ask again
-        pythonSettings.datascience.forceJupyterExactMatch = true;
+        pythonSettings.datascience.searchForJupyter = false;
         const evt = {
             affectsConfiguration(m: string) : boolean {
                 return true;
