@@ -7,13 +7,15 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
+import { SemVer } from 'semver';
 import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { Disposable, EventEmitter, ConfigurationChangeEvent } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
 
-import { SemVer } from 'semver';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
@@ -43,8 +45,6 @@ import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManager } from './mockJupyterManager';
-import { WorkspaceService } from '../../client/common/application/workspace';
-import { IWorkspaceService } from '../../client/common/application/types';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
