@@ -173,5 +173,8 @@
     "debug.attachRemotePortValidationError": "Enter a valid port number",
     "debug.attachRemoteHostTitle": "Remote Debugging",
     "debug.attachRemoteHostPrompt": "Enter a host name or IP address",
-    "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address"
+    "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address",
+    "UnitTests.testErrorDiagnosticMessage": "Error",
+    "UnitTests.testFailDiagnosticMessage": "Fail",
+    "UnitTests.testSkippedDiagnosticMessage": "Skipped"
 }

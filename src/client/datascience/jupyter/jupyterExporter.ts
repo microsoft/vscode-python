@@ -7,13 +7,13 @@ import * as uuid from 'uuid/v4';
 
 import * as os from 'os';
 import * as path from 'path';
-import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
-import { ILogger } from '../common/types';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { CodeSnippits, RegExpValues } from './constants';
-import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from './types';
+import { IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
+import { ILogger } from '../../common/types';
+import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
+import { CodeSnippits, RegExpValues } from '../constants';
+import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from '../types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {

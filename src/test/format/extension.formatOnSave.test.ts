@@ -31,7 +31,7 @@ suite('Formating On Save', () => {
         await closeActiveWindows();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await closeActiveWindows();
     });
 

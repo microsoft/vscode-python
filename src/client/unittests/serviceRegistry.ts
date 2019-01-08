@@ -11,6 +11,7 @@ import { TestConfigSettingsService } from './common/services/configSettingServic
 import { TestCollectionStorageService } from './common/services/storageService';
 import { TestManagerService } from './common/services/testManagerService';
 import { TestResultsService } from './common/services/testResultsService';
+import { UnitTestDiagnosticService } from './common/services/unitTestDiagnosticService';
 import { WorkspaceTestManagerService } from './common/services/workspaceTestManagerService';
 import { TestsHelper } from './common/testUtils';
 import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
@@ -18,7 +19,7 @@ import { TestFolderGenerationVisitor } from './common/testVisitors/folderGenerat
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
     ITestCollectionStorageService, ITestConfigSettingsService, ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory,
-    ITestResultsService, ITestRunner, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
+    ITestMessageService, ITestResultsService, ITestRunner, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
 } from './common/types';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
@@ -36,7 +37,8 @@ import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from './pytest/services/parserService';
-import { IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestHelper, IUnitTestManagementService } from './types';
+import { TestMessageService } from './pytest/services/testMessageService';
+import { IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
 import { TestManagerRunner as UnitTestTestManagerRunner } from './unittest/runner';
@@ -85,6 +87,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestDisplay>(ITestDisplay, TestDisplay);
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);
     serviceManager.addSingleton<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory, TestConfigurationManagerFactory);
+
+    serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
+    serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {

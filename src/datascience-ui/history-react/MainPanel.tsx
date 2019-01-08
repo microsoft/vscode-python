@@ -13,9 +13,9 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
-import { RelativeImage } from '../react-common/relativeImage';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
+import { Image, ImageName } from './image';
 import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
@@ -47,28 +47,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public componentDidUpdate(prevProps, prevState) {
-        this.sendInfo();
         this.scrollToBottom();
     }
 
     public render() {
-
-        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
-        './images/Cancel/Cancel_16xMD_vscode_dark.svg';
-        const redoImage = this.props.theme !== 'vscode-dark' ? './images/Redo/Redo_16x_vscode.svg' :
-        './images/Redo/Redo_16x_vscode_dark.svg';
-        const undoImage = this.props.theme !== 'vscode-dark' ? './images/Undo/Undo_16x_vscode.svg' :
-        './images/Undo/Undo_16x_vscode_dark.svg';
-        const restartImage = this.props.theme !== 'vscode-dark' ? './images/Restart/Restart_grey_16x_vscode.svg' :
-        './images/Restart/Restart_grey_16x_vscode_dark.svg';
-        const saveAsImage = this.props.theme !== 'vscode-dark' ? './images/SaveAs/SaveAs_16x_vscode.svg' :
-        './images/SaveAs/SaveAs_16x_vscode_dark.svg';
-        const collapseAllImage = this.props.theme !== 'vscode-dark' ? './images/CollapseAll/CollapseAll_16x_vscode.svg' :
-        './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
-        const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
-        './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
-        const interruptImage = this.props.theme !== 'vscode-dark' ? './images/Interrupt/Interrupt_16x_vscode.svg' :
-        './images/Interrupt/Interrupt_16x_vscode_dark.svg';
 
         const progressBar = this.state.busy && !this.props.ignoreProgress ? <Progress /> : undefined;
 
@@ -78,28 +60,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
                     {this.renderExtraButtons()}
                     <CellButton theme={this.props.theme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                        <RelativeImage class='cell-button-image' path={collapseAllImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.CollapseAll}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.expandAll} disabled={!this.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                        <RelativeImage class='cell-button-image' path={expandAllImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.ExpandAll}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
-                        <RelativeImage class='cell-button-image' path={saveAsImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.SaveAs}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
-                        <RelativeImage class='cell-button-image' path={restartImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Restart}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
-                        <RelativeImage class='cell-button-image' path={interruptImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Interrupt}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <RelativeImage class='cell-button-image' path={undoImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Undo}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        <RelativeImage class='cell-button-image' path={redoImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Redo}/>
                     </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
-                        <RelativeImage class='cell-button-image' path={clearButtonImage}/>
+                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
                 <div className='top-spacing'/>
@@ -320,6 +302,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             skipNextScroll: true,
             busy: false // No more progress on delete all
         });
+
+        // Tell other side, we changed our number of cells
+        this.sendInfo();
     }
 
     private redo = () => {
@@ -334,6 +319,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack: redoStack,
             skipNextScroll: true
         });
+
+        // Tell other side, we changed our number of cells
+        this.sendInfo();
     }
 
     private undo = () => {
@@ -348,6 +336,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack : redoStack,
             skipNextScroll : true
         });
+
+        // Tell other side, we changed our number of cells
+        this.sendInfo();
     }
 
     private restartKernel = () => {
@@ -396,6 +387,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     redoStack: this.state.redoStack,
                     skipNextScroll: false
                 });
+
+                // Tell other side, we changed our number of cells
+                this.sendInfo();
             }
         }
     }

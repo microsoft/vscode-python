@@ -7,13 +7,15 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
+import { SemVer } from 'semver';
 import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { Disposable, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
 
-import { SemVer } from 'semver';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
@@ -31,15 +33,18 @@ import {
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
 import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { ServiceManager } from '../../client/ioc/serviceManager';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { MockJupyterManager } from './mockJupyterManager';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
@@ -143,9 +148,11 @@ suite('Jupyter Execution', async () => {
     const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
+    const workspaceService = mock(WorkspaceService);
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
-    const pythonSettings = new PythonSettings();
+    const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+    const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
 
@@ -416,7 +423,9 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<ILogger>(ILogger)).thenReturn(instance(logger));
+        when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
         when(configService.getSettings()).thenReturn(pythonSettings);
+        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -427,7 +436,8 @@ suite('Jupyter Execution', async () => {
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -447,6 +457,10 @@ suite('Jupyter Execution', async () => {
         when(fileSystem.createDirectory(anything())).thenResolve();
         when(fileSystem.deleteDirectory(anything())).thenResolve();
 
+        const serviceManager = mock(ServiceManager);
+
+        const mockSessionManager = new MockJupyterManager(instance(serviceManager));
+
         return new JupyterExecution(
             instance(executionFactory),
             instance(condaService),
@@ -457,6 +471,9 @@ suite('Jupyter Execution', async () => {
             disposableRegistry,
             disposableRegistry,
             instance(fileSystem),
+            mockSessionManager,
+            instance(workspaceService),
+            instance(configService),
             instance(serviceContainer));
     }
 
@@ -501,17 +518,38 @@ suite('Jupyter Execution', async () => {
         }
     }).timeout(10000);
 
-    test('Other than active finds closest match', async () => {
+    test('Missing kernel python still finds interpreter', async () => {
         const execution = createExecution(missingKernelPython);
         when(interpreterService.getActiveInterpreter()).thenResolve(missingKernelPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
         if (usableInterpreter) { // Linter
-            assert.notEqual(usableInterpreter.path, missingKernelPython.path);
+            assert.equal(usableInterpreter.path, missingKernelPython.path);
             assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
-            assert.notEqual(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should not match on minor');
+            assert.equal(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should match on minor');
         }
+    }).timeout(10000);
+
+    test('Other than active finds closest match', async () => {
+        const execution = createExecution(missingNotebookPython);
+        when(interpreterService.getActiveInterpreter()).thenResolve(missingNotebookPython);
+        await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
+        const usableInterpreter = await execution.getUsableJupyterPython();
+        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        if (usableInterpreter) { // Linter
+            assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
+            assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
+        }
+        // Force config change and ask again
+        pythonSettings.datascience.searchForJupyter = false;
+        const evt = {
+            affectsConfiguration(m: string) : boolean {
+                return true;
+            }
+        };
+        configChangeEvent.fire(evt);
+        await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
     }).timeout(10000);
 
     test('Kernelspec is deleted on exit', async () => {

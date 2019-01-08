@@ -197,16 +197,16 @@ export class LinterInstaller extends BaseInstaller {
         }
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
-            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install'});
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install' });
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
-            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt'});
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt' });
             return InstallerResponse.Ignore;
         }
 
-        if (response === selectLinter){
-            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { action: 'select'});
+        if (response === selectLinter) {
+            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { action: 'select' });
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             await commandManager.executeCommand(Commands.Set_Linter);
         }
@@ -224,7 +224,7 @@ export class LinterInstaller extends BaseInstaller {
     protected getStoredResponse(key: string): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
-        return state.value;
+        return state.value === true;
     }
 
     /**

@@ -48,7 +48,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
     });
 
@@ -95,7 +95,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         await injectTestRunOutput('run.one.result');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const results = await testManager.runTest(CommandSource.ui);
         assert.equal(results.summary.errors, 1, 'Errors');
         assert.equal(results.summary.failures, 7, 'Failures');
@@ -109,7 +109,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         await injectTestRunOutput('run.two.again.result', true);
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         let results = await testManager.runTest(CommandSource.ui);
         assert.equal(results.summary.errors, 1, 'Errors');
         assert.equal(results.summary.failures, 7, 'Failures');
@@ -128,7 +128,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         await injectTestRunOutput('run.three.result');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFileToRun = tests.testFiles.find(t => t.fullPath.endsWith('test_root.py'));
         assert.ok(testFileToRun, 'Test file not found');
@@ -146,7 +146,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         await injectTestRunOutput('run.four.result');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testSuiteToRun = tests.testSuites.find(s => s.xmlClassName === 'test_root.Test_Root_test1');
         assert.ok(testSuiteToRun, 'Test suite not found');
@@ -164,7 +164,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         await injectTestRunOutput('run.five.result');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFnToRun = tests.testFunctions.find(f => f.xmlClassName === 'test_root.Test_Root_test1');
         assert.ok(testFnToRun, 'Test function not found');

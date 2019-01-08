@@ -1,8 +1,26 @@
+parameters:
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  AzureStorageAccountName: 'vscodepythonci'
+  AzureStorageContainerName: 'vscode-python-ci'
+  Platform: 'Windows'
+  pool: 
+    name: 'Hosted VS2017'
+  EnvironmentExecutableFolder: 'Scripts'
+  PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+  TEST_FILES_SUFFIX: 'testvirtualenvs'
+  TestSuiteName: 'testSingleWorkspace'
+  DependsOn: 'Prebuild'
+  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+  MOCHA_REPORTER_JUNIT: true
+
 jobs:
-- job: ${{ parameters.name }}
-  dependsOn: 'PR_Validate_Windows_py37'
-  pool:
-    name: ${{ parameters.PoolName }}
+- job:
+  displayName: ${{ format('VirtualEnvTest {0} Py{1}', parameters.Platform, parameters.PythonVersion) }}
+  dependsOn: ${{ parameters.DependsOn }}
+  pool: ${{ parameters.pool }}
 
   variables:
     nodeVersion: ${{ parameters.NodeVersion }}
@@ -15,30 +33,16 @@ jobs:
     PYTHON_VIRTUAL_ENVS_LOCATION: ${{ parameters.PYTHON_VIRTUAL_ENVS_LOCATION }}
     TEST_FILES_SUFFIX: ${{ parameters.TEST_FILES_SUFFIX }}
     TestSuiteName: ${{ parameters.TestSuiteName }}
+    MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
+    MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
 
   steps:
-    - bash: echo REQUESTED VARIABLE VALUES
+    - bash: |
+        printenv
 
-        echo Node Version = $(nodeVersion)
-
-        echo Python Version = $(pythonVersion)
-
-        echo NPM Version = $(npmVersion)
-
-        echo Mocha reportfile = '$(mochaReportFile)'
-
-        echo MOCHA_CI_REPORTFILE = $MOCHA_CI_REPORTFILE
-
-        echo MOCHA_CI_REPORTER_ID = $MOCHA_CI_REPORTER_ID
-
-        echo MOCHA_REPORTER_JUNIT = $MOCHA_REPORTER_JUNIT
-
-        echo COV_UUID = $COV_UUID
-
-        echo Run Hygiene = $(runHygiene)
-
-      displayName: 'Show build vars'
-      name: 'show_bld_vars'
+      displayName: 'Show all env vars'
+      condition: variables['system.debug']
 
 
     - powershell: |
@@ -185,5 +189,34 @@ jobs:
         customCommand: 'run $(TestSuiteName)'
       env:
         DISPLAY: :10
+
+    - task: PythonScript@0
+      displayName: 'Ensure test results'
+      inputs:
+        scriptSource: inline
+        failOnStderr: true
+        script: |
+          from __future__ import print_function
+
+          import os
+          import sys
+
+
+          test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
+
+          if not os.path.exists(test_logfile):
+              print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
+              print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
+
+
+    - task: PublishTestResults@2
+      displayName: 'Publish JUnit test results'
+      condition: always()
+      inputs:
+        testResultsFiles: '$(MOCHA_CI_REPORTFILE)'
+        searchFolder: '$(Build.ArtifactStagingDirectory)'
+        testRunTitle: '$(Platform) py$(pythonVersion) TestVirtualEnv'
+        buildPlatform: '$(Platform)-py$(pythonVersion)'
+        buildConfiguration: 'TestVirtualEnv'
 
 

@@ -50,6 +50,7 @@ import {
     ILogger,
     IMemento,
     IOutputChannel,
+    Resource,
     WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
@@ -63,6 +64,7 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
+import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     ICondaService,
@@ -109,8 +111,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     registerServices(context, serviceManager, serviceContainer);
     initializeServices(context, serviceManager, serviceContainer);
 
-    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    await interpreterManager.autoSetInterpreter();
+    const autoSelection = serviceContainer.get<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService);
+    await autoSelection.autoSelectInterpreter(undefined);
 
     // When testing, do not perform health checks, as modal dialogs can be displayed.
     if (!isTestExecution()) {
@@ -136,6 +138,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
@@ -157,6 +160,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
         onEnterRules: [
             {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
+                action: { indentAction: IndentAction.Indent }
+            },
+            {
+                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
                 action: { indentAction: IndentAction.Indent }
             },
             {
@@ -200,8 +207,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const api = buildApi(Promise.all([activationDeferred.promise, lsActivationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
-        // tslint:disable-next-line:no-any
+        // tslint:disable:no-any
         (api as any).serviceContainer = serviceContainer;
+        (api as any).serviceManager = serviceManager;
+        // tslint:enable:no-any
     }
     return api;
 }
@@ -290,7 +299,9 @@ async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceConta
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
+        const settings = configurationService.getSettings(mainWorkspaceUri);
         const [condaVersion, interpreter, interpreters] = await Promise.all([
             condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
             interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
@@ -299,13 +310,31 @@ async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceConta
         const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
         const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
         const interpreterType = interpreter ? interpreter.type : undefined;
+        const hasUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
+        const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
+        const isAutoSelectedWorkspaceInterpreterUsed = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : undefined;
         const hasPython3 = interpreters
             .filter(item => item && item.version ? item.version.major === 3 : false)
             .length > 0;
 
-        const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };
+        const props = {
+            condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3,
+            hasUserDefinedInterpreter, isAutoSelectedWorkspaceInterpreterUsed
+        };
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);
     }
+}
+function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pyhontPath')!;
+    return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
+        (settings.workspaceValue && settings.workspaceValue !== 'python') ||
+        (settings.globalValue && settings.globalValue !== 'python');
+}
+function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
+    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
+    const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
+    return interpreter ? interpreter.path : undefined;
 }

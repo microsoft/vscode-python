@@ -95,5 +95,4 @@ suite('Interpreters from Conda Environments Text File', () => {
     test('Must filter files in the list and return valid items (windows)', async () => {
         await filterFilesInEnvironmentsFileAndReturnValidItems(true);
     });
-
 });

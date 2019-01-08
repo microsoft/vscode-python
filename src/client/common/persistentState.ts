@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 
-class PersistentState<T> implements IPersistentState<T>{
+export class PersistentState<T> implements IPersistentState<T>{
     constructor(private storage: Memento, private key: string, private defaultValue?: T, private expiryDurationMs?: number) { }
 
     public get value(): T {

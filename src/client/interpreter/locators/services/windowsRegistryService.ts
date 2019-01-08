@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { IPlatformService, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { IPathUtils } from '../../../common/types';
 import { Architecture } from '../../../common/utils/platform';
-import { convertPythonVersionToSemver } from '../../../common/utils/version';
+import { parsePythonVersion } from '../../../common/utils/version';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -39,8 +39,8 @@ export class WindowsRegistryService extends CacheableLocatorService {
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.getInterpretersFromRegistry();
+    protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.platform.isWindows ? this.getInterpretersFromRegistry() : [];
     }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
@@ -131,7 +131,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 return {
                     ...(details as PythonInterpreter),
                     path: executablePath,
-                    version: convertPythonVersionToSemver(version),
+                    version: parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
                     type: InterpreterType.Unknown
                 } as PythonInterpreter;

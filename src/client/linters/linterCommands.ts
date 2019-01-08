@@ -2,23 +2,26 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as vscode from 'vscode';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { DiagnosticCollection, Disposable, QuickPickOptions, Uri } from 'vscode';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands } from '../common/constants';
+import { IDisposable } from '../common/types';
 import { Linters } from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { SELECT_LINTER } from '../telemetry/constants';
 import { ILinterManager, ILintingEngine, LinterId } from './types';
 
-export class LinterCommands implements vscode.Disposable {
-    private disposables: vscode.Disposable[] = [];
+export class LinterCommands implements IDisposable {
+    private disposables: Disposable[] = [];
     private linterManager: ILinterManager;
-    private appShell: IApplicationShell;
+    private readonly appShell: IApplicationShell;
+    private readonly documentManager: IDocumentManager;
 
     constructor(private serviceContainer: IServiceContainer) {
         this.linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
 
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         commandManager.registerCommand(Commands.Set_Linter, this.setLinterAsync.bind(this));
@@ -48,7 +51,7 @@ export class LinterCommands implements vscode.Disposable {
                 break;
         }
 
-        const quickPickOptions: vscode.QuickPickOptions = {
+        const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: `current: ${current}`
@@ -77,7 +80,7 @@ export class LinterCommands implements vscode.Disposable {
         const options = ['on', 'off'];
         const current = await this.linterManager.isLintingEnabled(true, this.settingsUri) ? options[0] : options[1];
 
-        const quickPickOptions: vscode.QuickPickOptions = {
+        const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: `current: ${current}`
@@ -90,12 +93,12 @@ export class LinterCommands implements vscode.Disposable {
         }
     }
 
-    public runLinting(): Promise<vscode.DiagnosticCollection> {
+    public runLinting(): Promise<DiagnosticCollection> {
         const engine = this.serviceContainer.get<ILintingEngine>(ILintingEngine);
         return engine.lintOpenPythonFiles();
     }
 
-    private get settingsUri(): vscode.Uri | undefined {
-        return vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document.uri : undefined;
+    private get settingsUri(): Uri | undefined {
+        return this.documentManager.activeTextEditor ? this.documentManager.activeTextEditor.document.uri : undefined;
     }
 }

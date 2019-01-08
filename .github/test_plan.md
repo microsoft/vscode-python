@@ -288,6 +288,10 @@ def test_failure():
 - [ ] Tests are discovered (as shown by code lenses on each test)
   - [ ] `Run Test` works
   - [ ] `Debug Test` works
+- [ ] A `Diagnostic` is shown in the problems pane for each failed/skipped test
+  - [ ] The `Diagnostic`s are organized according to the file the test was executed from (not neccesarily the file it was defined in)
+  - [ ] The appropriate `DiagnosticRelatedInformation` is shown for each `Diagnostic`
+  - [ ] The `DiagnosticRelatedInformation` reflects the traceback for the test
 
 #### [`nose`](https://code.visualstudio.com/docs/python/unit-testing#_nose-configuration-settings)
 ```python

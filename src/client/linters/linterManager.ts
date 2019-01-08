@@ -37,7 +37,7 @@ class DisabledLinter implements ILinter {
 
 @injectable()
 export class LinterManager implements ILinterManager {
-    private linters: ILinterInfo[];
+    protected linters: ILinterInfo[];
     private configService: IConfigurationService;
     private checkedForInstalledLinters = new Set<string>();
 

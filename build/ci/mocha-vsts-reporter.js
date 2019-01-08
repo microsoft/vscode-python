@@ -15,11 +15,9 @@ function MochaVstsReporter(runner, options) {
 
   runner.on('suite', function(suite){
     if (suite.root === true){
-      console.log('Begin test run.............');
       indentLevel++;
       indenter = INDENT_BASE.repeat(indentLevel);
     } else {
-      console.log('%sStart "%s"', indenter, suite.title);
       indentLevel++;
       indenter = INDENT_BASE.repeat(indentLevel);
     }
@@ -29,9 +27,7 @@ function MochaVstsReporter(runner, options) {
     if (suite.root === true) {
       indentLevel=0;
       indenter = '';
-      console.log('.............End test run.');
     } else {
-      console.log('%sEnd "%s"', indenter, suite.title);
       indentLevel--;
       indenter = INDENT_BASE.repeat(indentLevel);
       // ##vso[task.setprogress]current operation

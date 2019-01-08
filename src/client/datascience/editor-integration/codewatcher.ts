@@ -10,7 +10,7 @@ import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyterInstallError';
+import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { ICodeWatcher, IHistoryProvider } from '../types';
 
 @injectable()

@@ -52,7 +52,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         ioc.registerTestResultsHelper();
         ioc.registerTestStorage();
         ioc.registerTestsHelper();
-
+        ioc.registerTestDiagnosticServices();
     }
 
     test('Running tests should not stop existing discovery', async () => {

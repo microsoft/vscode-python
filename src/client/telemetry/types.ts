@@ -4,6 +4,7 @@
 
 import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
+import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { PlatformErrors } from './constants';
@@ -11,6 +12,8 @@ import { PlatformErrors } from './constants';
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
     terminal: TerminalShellType;
+    hasUserDefinedInterpreter: boolean;
+    isAutoSelectedWorkspaceInterpreterUsed: boolean;
 };
 export type FormatTelemetry = {
     tool: 'autopep8' | 'black' | 'yapf';
@@ -153,6 +156,16 @@ export type Platform = {
     osVersion?: string;
 };
 
+export type InterpreterAutoSelection = {
+    rule?: AutoSelectionRule;
+    interpreterMissing?: boolean;
+    identified?: boolean;
+    updated?: boolean;
+};
+export type InterpreterDiscovery = {
+    locator: string;
+};
+
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
@@ -173,4 +186,6 @@ export type TelemetryProperties = FormatTelemetry
     | ImportNotebook
     | Platform
     | LanguageServePlatformSupported
-    | DebuggerConfigurationPromtpsTelemetry;
+    | DebuggerConfigurationPromtpsTelemetry
+    | InterpreterAutoSelection
+    | InterpreterDiscovery;

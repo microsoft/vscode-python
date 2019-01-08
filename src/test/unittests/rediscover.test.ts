@@ -35,7 +35,7 @@ suite('Unit Tests re-discovery', () => {
         initializeDI();
     });
     teardown(async () => {
-        ioc.dispose();
+        await ioc.dispose();
         await resetSettings();
         await fs.copy(testFileWithFewTests, testFile, { overwrite: true });
         await deleteFile(path.join(path.dirname(testFile), `${path.basename(testFile, '.py')}.pyc`));
@@ -56,7 +56,7 @@ suite('Unit Tests re-discovery', () => {
     }
 
     async function discoverUnitTests(testProvider: TestProvider) {
-        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri, testFilesPath);
+        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri!, testFilesPath);
         let tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');

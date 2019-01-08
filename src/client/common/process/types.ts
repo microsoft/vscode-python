@@ -3,9 +3,7 @@
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
-
-import { SemVer } from 'semver';
-import { ExecutionInfo } from '../types';
+import { ExecutionInfo, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -64,7 +62,7 @@ export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
 export type InterpreterInfomation = {
     path: string;
-    version?: SemVer;
+    version?: Version;
     sysVersion: string;
     architecture: Architecture;
     sysPrefix: string;

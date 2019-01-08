@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
-import { HelpLinks } from './constants';
+import '../../common/extensions';
+import { HelpLinks } from '../constants';
 
 export class JupyterInstallError extends Error {
     public action: string;

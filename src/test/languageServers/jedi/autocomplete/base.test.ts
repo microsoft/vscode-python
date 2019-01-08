@@ -40,7 +40,7 @@ suite('Autocomplete Base Tests', function () {
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
         await closeActiveWindows();
-        ioc.dispose();
+        await ioc.dispose();
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -75,7 +75,7 @@ suite('Autocomplete Base Tests', function () {
             textDocument.uri,
             position);
 
-        const indexOfFstat = list.items.findIndex((val: vscode.CompletionItem) => val.label === 'fstat');
+        const indexOfFstat = list!.items.findIndex((val: vscode.CompletionItem) => val.label === 'fstat');
 
         assert(
             indexOfFstat !== -1,

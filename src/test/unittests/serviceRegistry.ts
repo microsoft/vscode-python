@@ -7,9 +7,9 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { JupyterImporter } from '../../client/datascience/jupyterImporter';
-import { JupyterServer } from '../../client/datascience/jupyterServer';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { JupyterServer } from '../../client/datascience/jupyter/jupyterServer';
 import {
     ICodeCssGenerator,
     IHistory,
@@ -23,6 +23,7 @@ import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../cli
 import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
 import { TestManagerService } from '../../client/unittests/common/services/testManagerService';
 import { TestResultsService } from '../../client/unittests/common/services/testResultsService';
+import { UnitTestDiagnosticService } from '../../client/unittests/common/services/unitTestDiagnosticService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
@@ -47,6 +48,7 @@ import { TestsParser as NoseTestTestsParser } from '../../client/unittests/noset
 import { TestManager as PyTestTestManager } from '../../client/unittests/pytest/main';
 import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/unittests/pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from '../../client/unittests/pytest/services/parserService';
+import { IUnitTestDiagnosticService } from '../../client/unittests/types';
 import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
 import {
     TestDiscoveryService as UnitTestTestDiscoveryService
@@ -99,6 +101,10 @@ export class UnitTestIocContainer extends IocContainer {
         this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, UnitTestTestDiscoveryService, UNITTEST_PROVIDER);
         this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, PytestTestDiscoveryService, PYTEST_PROVIDER);
         this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, NoseTestDiscoveryService, NOSETEST_PROVIDER);
+    }
+
+    public registerTestDiagnosticServices() {
+        this.serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
     }
 
     public registerTestManagers() {

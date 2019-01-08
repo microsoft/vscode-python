@@ -176,22 +176,22 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[0].version!.raw, '1.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[0].version!.raw, '1.0.0', 'Incorrect version');
 
         assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[1].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'path2', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[1].version!.raw, '2.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[1].version!.raw, '2.0.0', 'Incorrect version');
 
         assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[2].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(interpreters[2].path, path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[2].version!.raw, '4.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[2].version!.raw, '4.0.0', 'Incorrect version');
 
         assert.equal(interpreters[3].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[3].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(interpreters[3].path, path.join(environmentsPath, 'conda', 'envs', 'scipy', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[3].version!.raw, '5.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[3].version!.raw, '5.0.0', 'Incorrect version');
     });
     test('Must return multiple entries excluding the invalid registry items and duplicate paths', async () => {
         const registryKeys = [
@@ -240,22 +240,22 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[0].version!.raw, '1.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[0].version!.raw, '1.0.0', 'Incorrect version');
 
         assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[1].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'conda', 'envs', 'scipy', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[1].version!.raw, '2.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[1].version!.raw, '2.0.0', 'Incorrect version');
 
         assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[2].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(interpreters[2].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[2].version!.raw, '3.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[2].version!.raw, '3.0.0', 'Incorrect version');
 
         assert.equal(interpreters[3].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[3].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(interpreters[3].path, path.join(environmentsPath, 'path2', 'python.exe'), 'Incorrect path');
-        assert.equal(interpreters[3].version!.raw, '4.0.0-unknown', 'Incorrect version');
+        assert.equal(interpreters[3].version!.raw, '4.0.0', 'Incorrect version');
     });
     test('Must return multiple entries excluding the invalid registry items and nonexistent paths', async () => {
         const registryKeys = [
@@ -305,11 +305,11 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].architecture, Architecture.x86, '1. Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', '1. Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), '1. Incorrect path');
-        assert.equal(interpreters[0].version!.raw, '1.0.0-unknown', '1. Incorrect version');
+        assert.equal(interpreters[0].version!.raw, '1.0.0', '1. Incorrect version');
 
         assert.equal(interpreters[1].architecture, Architecture.x86, '2. Incorrect arhictecture');
         assert.equal(interpreters[1].companyDisplayName, 'Company Two', '2. Incorrect company name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'path2', 'python.exe'), '2. Incorrect path');
-        assert.equal(interpreters[1].version!.raw, '2.0.0-unknown', '2. Incorrect version');
+        assert.equal(interpreters[1].version!.raw, '2.0.0', '2. Incorrect version');
     });
 });

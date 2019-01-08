@@ -1,4 +1,4 @@
-jedi==0.12.0
-parso==0.2.1
+jedi==0.13.2
+parso==0.3.1
 isort==4.3.4
 ptvsd==4.2.0

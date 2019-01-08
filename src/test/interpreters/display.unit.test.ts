@@ -156,7 +156,7 @@ suite('Interpreters Display', () => {
             .returns(() => Promise.resolve(activeInterpreter))
             .verifiable(TypeMoq.Times.once());
         interpreterHelper
-            .setup(i => i.getActiveWorkspaceUri())
+            .setup(i => i.getActiveWorkspaceUri(undefined))
             .returns(() => { return { folderUri: workspaceFolder, configTarget: ConfigurationTarget.Workspace }; })
             .verifiable(TypeMoq.Times.once());
 

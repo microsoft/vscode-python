@@ -1,12 +1,14 @@
-import { CancellationToken, CancellationTokenSource, Disposable, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, Disposable, languages, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';
+import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
 import { getNamesAndValues } from '../../../common/utils/enum';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
+import { IPythonUnitTestMessage, IUnitTestDiagnosticService } from '../../types';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestProvider, Tests, TestStatus, TestsToRun } from './../types';
 
@@ -16,7 +18,9 @@ enum CancellationTokenType {
 }
 
 export abstract class BaseTestManager implements ITestManager {
+    public diagnosticCollection: DiagnosticCollection;
     protected readonly settings: IPythonSettings;
+    private readonly unitTestDiagnosticService: IUnitTestDiagnosticService;
     public abstract get enabled(): boolean;
     protected get outputChannel() {
         return this._outputChannel;
@@ -50,6 +54,8 @@ export abstract class BaseTestManager implements ITestManager {
         this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.diagnosticCollection = languages.createDiagnosticCollection(this.testProvider);
+        this.unitTestDiagnosticService = serviceContainer.get<IUnitTestDiagnosticService>(IUnitTestDiagnosticService);
         disposables.push(this);
     }
     protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
@@ -246,6 +252,42 @@ export abstract class BaseTestManager implements ITestManager {
                 return Promise.reject<Tests>(reason);
             });
     }
+    public async updateDiagnostics(tests: Tests, messages: IPythonUnitTestMessage[]): Promise<void> {
+        await this.stripStaleDiagnostics(tests, messages);
+
+        // Update relevant file diagnostics for tests that have problems.
+        const uniqueMsgFiles = messages.reduce((filtered, msg) => {
+            if (filtered.indexOf(msg.testFilePath) === -1 && msg.testFilePath !== undefined) {
+                filtered.push(msg.testFilePath);
+            }
+            return filtered;
+        }, []);
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        for (const msgFile of uniqueMsgFiles) {
+            // Check all messages against each test file.
+            const fileUri = Uri.file(msgFile);
+            if (!this.diagnosticCollection.has(fileUri)) {
+                // Create empty diagnostic for file URI so the rest of the logic can assume one already exists.
+                const diagnostics: Diagnostic[] = [];
+                this.diagnosticCollection.set(fileUri, diagnostics);
+            }
+            // Get the diagnostics for this file's URI before updating it so old tests that weren't run can still show problems.
+            const oldDiagnostics = this.diagnosticCollection.get(fileUri);
+            const newDiagnostics: Diagnostic[] = [];
+            for (const diagnostic of oldDiagnostics) {
+                newDiagnostics.push(diagnostic);
+            }
+            for (const msg of messages) {
+                if (fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) && msg.status !== TestStatus.Pass) {
+                    const diagnostic = this.createDiagnostics(msg);
+                    newDiagnostics.push(diagnostic);
+                }
+            }
+
+            // Set the diagnostics for the file.
+            this.diagnosticCollection.set(fileUri, newDiagnostics);
+        }
+    }
     // tslint:disable-next-line:no-any
     protected abstract runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any>;
     protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
@@ -269,5 +311,52 @@ export abstract class BaseTestManager implements ITestManager {
             }
             this.testRunnerCancellationTokenSource = undefined;
         }
+    }
+    /**
+     * Whenever a test is run, any previous problems it had should be removed. This runs through
+     * every already existing set of diagnostics for any that match the tests that were just run
+     * so they can be stripped out (as they are now no longer relevant). If the tests pass, then
+     * there is no need to have a diagnostic for it. If they fail, the stale diagnostic will be
+     * replaced by an up-to-date diagnostic showing the most recent problem with that test.
+     *
+     * In order to identify diagnostics associated with the tests that were run, the `nameToRun`
+     * property of each messages is compared to the `code` property of each diagnostic.
+     *
+     * @param messages Details about the tests that were just run.
+     */
+    private async stripStaleDiagnostics(tests: Tests, messages: IPythonUnitTestMessage[]): Promise<void> {
+        this.diagnosticCollection.forEach((diagnosticUri, oldDiagnostics, collection) => {
+            const newDiagnostics: Diagnostic[] = [];
+            for (const diagnostic of oldDiagnostics) {
+                const matchingMsg = messages.find((msg) => msg.code === diagnostic.code);
+                if (matchingMsg === undefined) {
+                    // No matching message was found, so this test was not included in the test run.
+                    const matchingTest = tests.testFunctions.find((tf) => tf.testFunction.nameToRun === diagnostic.code);
+                    if (matchingTest !== undefined) {
+                        // Matching test was found, so the diagnostic is still relevant.
+                        newDiagnostics.push(diagnostic);
+                    }
+                }
+            }
+            // Set the diagnostics for the file.
+            collection.set(diagnosticUri, newDiagnostics);
+        });
+    }
+
+    private createDiagnostics(message: IPythonUnitTestMessage): Diagnostic {
+        const stackStart = message.locationStack[0];
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
+        const diagMsg = message.message.split('\n')[0];
+        const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`, severity);
+        diagnostic.code = message.code;
+        diagnostic.source = message.provider;
+        const relatedInfoArr: DiagnosticRelatedInformation[] = [];
+        for (const frameDetails of message.locationStack) {
+            const relatedInfo = new DiagnosticRelatedInformation(frameDetails.location, frameDetails.lineText);
+            relatedInfoArr.push(relatedInfo);
+        }
+        diagnostic.relatedInformation = relatedInfoArr;
+        return diagnostic;
     }
 }

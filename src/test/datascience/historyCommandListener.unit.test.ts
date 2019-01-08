@@ -33,21 +33,22 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { HistoryCommandListener } from '../../client/datascience/historycommandlistener';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { JupyterExporter } from '../../client/datascience/jupyterExporter';
-import { JupyterImporter } from '../../client/datascience/jupyterImporter';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
+import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { IHistory, INotebookServer, IStatusProvider } from '../../client/datascience/types';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { noop } from '../core';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as vscodeMocks from '../vscode-mock';
 import { createDocument } from './editor-integration/helpers';
 import { MockCommandManager } from './mockCommandManager';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
-function createTypeMoq<T>(tag: string) : TypeMoq.IMock<T> {
+function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
     const result = TypeMoq.Mock.ofType<T>();
@@ -68,28 +69,28 @@ class MockDocumentManager implements IDocumentManager {
     private didChangeTextEditorViewColumnEmitter = new EventEmitter<TextEditorViewColumnChangeEvent>();
     private didCloseEmitter = new EventEmitter<TextDocument>();
     private didSaveEmitter = new EventEmitter<TextDocument>();
-    public get onDidChangeActiveTextEditor() : Event<TextEditor> {
+    public get onDidChangeActiveTextEditor(): Event<TextEditor> {
         return this.didChangeEmitter.event;
     }
-    public get onDidOpenTextDocument() : Event<TextDocument> {
+    public get onDidOpenTextDocument(): Event<TextDocument> {
         return this.didOpenEmitter.event;
     }
-    public get onDidChangeVisibleTextEditors() : Event<TextEditor[]> {
+    public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
         return this.didChangeVisibleEmitter.event;
     }
-    public get onDidChangeTextEditorSelection() : Event<TextEditorSelectionChangeEvent> {
+    public get onDidChangeTextEditorSelection(): Event<TextEditorSelectionChangeEvent> {
         return this.didChangeTextEditorSelectionEmitter.event;
     }
-    public get onDidChangeTextEditorOptions() : Event<TextEditorOptionsChangeEvent> {
+    public get onDidChangeTextEditorOptions(): Event<TextEditorOptionsChangeEvent> {
         return this.didChangeTextEditorOptionsEmitter.event;
     }
-    public get onDidChangeTextEditorViewColumn() : Event<TextEditorViewColumnChangeEvent> {
+    public get onDidChangeTextEditorViewColumn(): Event<TextEditorViewColumnChangeEvent> {
         return this.didChangeTextEditorViewColumnEmitter.event;
     }
-    public get onDidCloseTextDocument() : Event<TextDocument> {
+    public get onDidCloseTextDocument(): Event<TextDocument> {
         return this.didCloseEmitter.event;
     }
-    public get onDidSaveTextDocument() : Event<TextDocument> {
+    public get onDidSaveTextDocument(): Event<TextDocument> {
         return this.didSaveEmitter.event;
     }
     public showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
@@ -109,7 +110,7 @@ class MockDocumentManager implements IDocumentManager {
         throw new Error('Method not implemented.');
     }
 
-    private getDocument() : TextDocument {
+    private getDocument(): TextDocument {
         const mockDoc = createDocument('#%%\r\nprint("code")', 'bar.ipynb', 1, TypeMoq.Times.atMost(100), true);
         mockDoc.setup((x: any) => x.then).returns(() => undefined);
         return mockDoc.object;
@@ -138,7 +139,7 @@ suite('History command listener', async () => {
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
-    const pythonSettings = new PythonSettings();
+    const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
     const disposableRegistry = [];
     const historyProvider = mock(HistoryProvider);
     const notebookImporter = mock(JupyterImporter);
@@ -176,17 +177,16 @@ suite('History command listener', async () => {
         public match(value: Object): boolean {
             return this.func(value);
         }
-        public toString(): string
-        {
+        public toString(): string {
             return 'FunctionMatcher';
         }
     }
 
-    function argThat(func: (obj: any) => boolean) : any {
+    function argThat(func: (obj: any) => boolean): any {
         return new FunctionMatcher(func);
     }
 
-    function createCommandListener(activeHistory: IHistory | undefined) : HistoryCommandListener {
+    function createCommandListener(activeHistory: IHistory | undefined): HistoryCommandListener {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject('Unknown interpreter');
@@ -206,7 +206,8 @@ suite('History command listener', async () => {
             changeDirOnImportExport: true,
             notebookFileRoot: 'WORKSPACE',
             useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -249,7 +250,10 @@ suite('History command listener', async () => {
                 metadata: metadata
             }
         );
-        when(jupyterExecution.isNotebookSupported()).thenResolve(true);
+
+        if (jupyterExecution.isNotebookSupported) {
+            when(jupyterExecution.isNotebookSupported()).thenResolve(true);
+        }
 
         const result = new HistoryCommandListener(
             disposableRegistry,

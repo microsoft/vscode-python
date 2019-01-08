@@ -11,7 +11,7 @@ import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import {
     PythonSettings
-} from '../../client/common/configSettings';
+} from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -22,22 +22,26 @@ import {
     ITerminalSettings,
     IUnitTestSettings,
     IWorkspaceSymbolSettings
-} from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
+} from '../../../client/common/types';
+import { noop } from '../../../client/common/utils/misc';
+import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Python Settings', () => {
-    let config: TypeMoq.IMock<WorkspaceConfiguration>;
-    let expected: PythonSettings;
-    let settings: PythonSettings;
-    const CustomPythonSettings = class extends PythonSettings {
+    class CustomPythonSettings extends PythonSettings {
+        // tslint:disable-next-line:no-unnecessary-override
+        public update(pythonSettings: WorkspaceConfiguration) {
+            return super.update(pythonSettings);
+        }
         protected initialize() { noop(); }
-    };
-
+    }
+    let config: TypeMoq.IMock<WorkspaceConfiguration>;
+    let expected: CustomPythonSettings;
+    let settings: CustomPythonSettings;
     setup(() => {
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
-        expected = new CustomPythonSettings();
-        settings = new CustomPythonSettings();
+        expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+        settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
     });
 
     function initializeConfig(sourceSettings: PythonSettings) {

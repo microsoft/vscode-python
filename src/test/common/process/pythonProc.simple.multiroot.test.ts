@@ -11,6 +11,8 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -28,6 +30,7 @@ import { OSType } from '../../../client/common/utils/platform';
 import {
     registerTypes as variablesRegisterTypes
 } from '../../../client/common/variables/serviceRegistry';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -36,6 +39,7 @@ import {
     isOs,
     isPythonVersion
 } from '../../common';
+import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import {
     closeActiveWindows, initialize, initializeTest,
     IS_MULTI_ROOT_TEST
@@ -74,8 +78,10 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
+        serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
         serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
-
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
 

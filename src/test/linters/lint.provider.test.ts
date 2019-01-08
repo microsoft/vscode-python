@@ -14,6 +14,7 @@ import {
     IPythonSettings, Product
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -24,6 +25,7 @@ import {
 } from '../../client/linters/types';
 import { LinterProvider } from '../../client/providers/linterProvider';
 import { initialize } from '../initialize';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
@@ -82,7 +84,8 @@ suite('Linting - Provider', () => {
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, linterInstaller.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
         serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
-
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
         lm = new LinterManager(serviceContainer, workspaceService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();

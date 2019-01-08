@@ -663,8 +663,12 @@ function getModifiedFilesSync() {
 
         // If on CI, get a list of modified files comparing against
         // PR branch and master of current (assumed 'origin') repo.
-        cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
-        cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
+        try {
+            cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
+            cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
+        } catch (ex) {
+            return [];
+        }
         const cmd = `git diff --name-only HEAD ${originOrUpstream}/master`;
         console.info(cmd);
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });

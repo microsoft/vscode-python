@@ -39,7 +39,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    IsWindows,
+    IsWindows
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -48,16 +48,18 @@ import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { JupyterExporter } from '../../client/datascience/jupyterExporter';
-import { JupyterImporter } from '../../client/datascience/jupyterImporter';
-import { JupyterServer } from '../../client/datascience/jupyterServer';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
+import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { JupyterServer } from '../../client/datascience/jupyter/jupyterServer';
+import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import {
     ICodeCssGenerator,
     IHistory,
     IHistoryProvider,
     IJupyterExecution,
+    IJupyterSessionManager,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -101,7 +103,10 @@ import { PythonInterpreterLocatorService } from '../../client/interpreter/locato
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider,
+} from '../../client/interpreter/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
     GlobalVirtualEnvService,
@@ -120,24 +125,38 @@ import {
 import {
     WorkspaceVirtualEnvWatcherService,
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
+import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
+import { MockJupyterManager } from './mockJupyterManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
-    private pythonSettings: PythonSettings = new PythonSettings();
-    private commandManager : MockCommandManager = new MockCommandManager();
-    private setContexts : { [name: string] : boolean } = {};
-    private contextSetEvent : EventEmitter<{name: string; value: boolean}> = new EventEmitter<{name: string; value: boolean}>();
+    private pythonSettings: PythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+    private commandManager: MockCommandManager = new MockCommandManager();
+    private setContexts: { [name: string]: boolean } = {};
+    private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{ name: string; value: boolean }>();
+    private jupyterMock: MockJupyterManager | undefined;
+    private shouldMockJupyter: boolean;
+    private asyncRegistry: AsyncDisposableRegistry;
 
     constructor() {
         super();
+        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+        this.shouldMockJupyter = !isRollingBuild;
+        this.asyncRegistry = new AsyncDisposableRegistry();
     }
 
-    public get onContextSet() : Event<{name: string; value: boolean}> {
+    public get onContextSet(): Event<{ name: string; value: boolean }> {
         return this.contextSetEvent.event;
+    }
+
+    public async dispose(): Promise<void> {
+        await this.asyncRegistry.dispose();
+        await super.dispose();
     }
 
     //tslint:disable:max-func-body-length
@@ -152,12 +171,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
-        this.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
+        this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
+        this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
             this.setContexts[name] = value;
-            this.contextSetEvent.fire({name: name, value: value});
+            this.contextSetEvent.fire({ name: name, value: value });
         });
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
@@ -169,7 +189,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
-        const currentProcess = new CurrentProcess();
 
         // Setup default settings
         this.pythonSettings.datascience = {
@@ -180,7 +199,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -220,17 +240,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             return new MockFileSystemWatcher();
         });
         workspaceService
-        .setup(w => w.hasWorkspaceFolders)
-        .returns(() => true);
+            .setup(w => w.hasWorkspaceFolders)
+            .returns(() => true);
         const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         workspaceService
-        .setup(w => w.workspaceFolders)
-        .returns(() => [workspaceFolder]);
+            .setup(w => w.workspaceFolders)
+            .returns(() => [workspaceFolder]);
         workspaceService.setup(w => w.rootPath).returns(() => '~');
 
         const systemVariables: SystemVariables = new SystemVariables(undefined);
-        const env = {...systemVariables};
+        const env = { ...systemVariables };
 
         // Look on the path for python
         const pythonPath = this.findPythonPath();
@@ -251,15 +271,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
 
         this.serviceManager.addSingletonInstance<ILogger>(ILogger, logger.object);
-        this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
-        this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, documentManager.object);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
         this.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configurationService.object);
-        this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
-        this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(IEnvironmentVariablesService, EnvironmentVariablesService);
         this.serviceManager.addSingletonInstance<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, envVarsProvider.object);
@@ -277,11 +293,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WorkspaceVirtualEnvService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
         this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE);
 
-        const isWindows = this.serviceManager.get<boolean>(IsWindows);
-        if (isWindows) {
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE);
-        }
         this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
 
         this.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
@@ -293,15 +306,29 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, PythonPathUpdaterService);
+        this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
+
+        const currentProcess = new CurrentProcess();
+        this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
+
+        // Create our jupyter mock if necessary
+        if (this.shouldMockJupyter) {
+            this.jupyterMock = new MockJupyterManager(this.serviceManager);
+        } else {
+            this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
+            this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
+            this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
+            this.serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
+        }
 
         if (this.serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
             this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
         }
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider, Bash, 'bashCShellFish');
-            this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider, CommandPromptAndPowerShell, 'commandPromptAndPowerShell');
-            this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
 
         const dummyDisposable = {
@@ -318,7 +345,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
-
     }
 
     public createMoqWorkspaceFolder(folderPath: string) {
@@ -327,7 +353,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return folder.object;
     }
 
-    public getContext(name: string) : boolean {
+    public getContext(name: string): boolean {
         if (this.setContexts.hasOwnProperty(name)) {
             return this.setContexts[name];
         }
@@ -339,6 +365,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.emit('change');
     }
 
+    public get mockJupyter(): MockJupyterManager | undefined {
+        return this.jupyterMock;
+    }
+
     private findPythonPath(): string {
         try {
             const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
@@ -347,5 +377,4 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             return 'python';
         }
     }
-
 }

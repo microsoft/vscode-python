@@ -10,7 +10,7 @@ import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
-import { convertPythonVersionToSemver } from '../utils/version';
+import { parsePythonVersion } from '../utils/version';
 import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
 
 @injectable()
@@ -42,7 +42,7 @@ export class PythonExecutionService implements IPythonExecutionService {
             return {
                 architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
                 path: this.pythonPath,
-                version: convertPythonVersionToSemver(versionValue),
+                version: parsePythonVersion(versionValue),
                 sysVersion: json.sysVersion,
                 sysPrefix: json.sysPrefix
             };

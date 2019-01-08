@@ -30,6 +30,7 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 export class PostOffice extends React.Component<IPostOfficeProps> {
 
     private static vscodeApi : IVsCodeApi | undefined;
+    private registered: boolean = false;
 
     constructor(props: IPostOfficeProps) {
         super(props);
@@ -64,11 +65,17 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
     }
 
     public componentDidMount() {
-        window.addEventListener('message', this.handleMessages);
+        if (!this.registered) {
+            this.registered = true;
+            window.addEventListener('message', this.handleMessages);
+        }
     }
 
     public componentWillUnmount() {
-        window.removeEventListener('message', this.handleMessages);
+        if (this.registered) {
+            this.registered = false;
+            window.removeEventListener('message', this.handleMessages);
+        }
     }
 
     public render() {

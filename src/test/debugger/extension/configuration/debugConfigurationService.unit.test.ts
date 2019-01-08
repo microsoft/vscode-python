@@ -6,10 +6,14 @@
 // tslint:disable:no-any
 
 import { expect } from 'chai';
-import { instance, mock } from 'ts-mockito';
+import * as path from 'path';
+import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../../../client/common/platform/types';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { PythonDebugConfigurationService } from '../../../../client/debugger/extension/configuration/debugConfigurationService';
 import { DebugConfigurationProviderFactory } from '../../../../client/debugger/extension/configuration/providers/providerFactory';
 import { IDebugConfigurationResolver } from '../../../../client/debugger/extension/configuration/types';
@@ -17,12 +21,13 @@ import { DebugConfigurationState } from '../../../../client/debugger/extension/t
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../../client/debugger/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Debugging - Configuration Provider', () => {
+suite('Debugging - Configuration Service', () => {
     let attachResolver: typemoq.IMock<IDebugConfigurationResolver<AttachRequestArguments>>;
     let launchResolver: typemoq.IMock<IDebugConfigurationResolver<LaunchRequestArguments>>;
     let configService: TestPythonDebugConfigurationService;
     let multiStepFactory: typemoq.IMock<IMultiStepInputFactory>;
     let providerFactory: DebugConfigurationProviderFactory;
+    let fs: IFileSystem;
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
         // tslint:disable-next-line:no-unnecessary-override
@@ -35,7 +40,9 @@ suite('Debugging - Configuration Provider', () => {
         launchResolver = typemoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         multiStepFactory = typemoq.Mock.ofType<IMultiStepInputFactory>();
         providerFactory = mock(DebugConfigurationProviderFactory);
-        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory), multiStepFactory.object);
+        fs = mock(FileSystem);
+        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory), multiStepFactory.object,
+            instance(fs));
     });
     test('Should use attach resolver when passing attach config', async () => {
         const config = {
@@ -83,28 +90,65 @@ suite('Debugging - Configuration Provider', () => {
     test('Picker should be displayed', async () => {
         // tslint:disable-next-line:no-object-literal-type-assertion
         const state = { configs: [], folder: {}, token: undefined } as any as DebugConfigurationState;
-        const multStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
-        multStepInput
+        const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
+        multiStepInput
             .setup(i => i.showQuickPick(typemoq.It.isAny()))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(typemoq.Times.once());
 
-        await configService.pickDebugConfiguration(multStepInput.object, state);
+        await configService.pickDebugConfiguration(multiStepInput.object, state);
 
-        multStepInput.verifyAll();
+        multiStepInput.verifyAll();
     });
     test('Existing Configuration items must be removed before displaying picker', async () => {
         // tslint:disable-next-line:no-object-literal-type-assertion
         const state = { configs: [1, 2, 3], folder: {}, token: undefined } as any as DebugConfigurationState;
-        const multStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
-        multStepInput
+        const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
+        multiStepInput
             .setup(i => i.showQuickPick(typemoq.It.isAny()))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(typemoq.Times.once());
 
-        await configService.pickDebugConfiguration(multStepInput.object, state);
+        await configService.pickDebugConfiguration(multiStepInput.object, state);
 
-        multStepInput.verifyAll();
+        multiStepInput.verifyAll();
         expect(Object.keys(state.config)).to.be.lengthOf(0);
+    });
+    test('Ensure generated config is returned', async () => {
+        const expectedConfig = { yes: 'Updated' };
+        const multiStepInput = {
+            run: (_, state) => {
+                Object.assign(state.config, expectedConfig);
+                return Promise.resolve();
+            }
+        };
+        multiStepFactory
+            .setup(f => f.create())
+            .returns(() => multiStepInput as any)
+            .verifiable(typemoq.Times.once());
+        configService.pickDebugConfiguration = (_, state) => {
+            Object.assign(state.config, expectedConfig);
+            return Promise.resolve();
+        };
+        const config = await configService.provideDebugConfigurations!({} as any);
+
+        multiStepFactory.verifyAll();
+        expect(config).to.deep.equal([expectedConfig]);
+    });
+    test('Ensure default config is returned', async () => {
+        const expectedConfig = { yes: 'Updated' };
+        const multiStepInput = {
+            run: () => Promise.resolve()
+        };
+        multiStepFactory
+            .setup(f => f.create())
+            .returns(() => multiStepInput as any)
+            .verifiable(typemoq.Times.once());
+        const jsFile = path.join(EXTENSION_ROOT_DIR, 'resources', 'default.launch.json');
+        when(fs.readFile(jsFile)).thenResolve(JSON.stringify([expectedConfig]));
+        const config = await configService.provideDebugConfigurations!({} as any);
+
+        multiStepFactory.verifyAll();
+        expect(config).to.deep.equal([expectedConfig]);
     });
 });
