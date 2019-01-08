@@ -5,6 +5,7 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
+import { ILanguageServerCompatibilityService } from '../../../../client/activation/types';
 import { LSNotSupportedDiagnosticService } from '../../../../client/application/diagnostics/checks/lsNotSupported';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
@@ -18,16 +19,18 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
     let filterService: TypeMoq.IMock<IDiagnosticFilterService>;
     let commandFactory: TypeMoq.IMock<IDiagnosticsCommandFactory>;
     let messageHandler: TypeMoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
+    let lsCompatibility: TypeMoq.IMock<ILanguageServerCompatibilityService>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         filterService = TypeMoq.Mock.ofType<IDiagnosticFilterService>();
         commandFactory = TypeMoq.Mock.ofType<IDiagnosticsCommandFactory>();
         messageHandler = TypeMoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
+        lsCompatibility = TypeMoq.Mock.ofType<ILanguageServerCompatibilityService>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticFilterService))).returns(() => filterService.object);
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticHandlerService), TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId))).returns(() => messageHandler.object);
 
-        diagnosticService = new LSNotSupportedDiagnosticService(serviceContainer.object);
+        diagnosticService = new LSNotSupportedDiagnosticService(serviceContainer.object, lsCompatibility.object);
     });
 
     test('Should display two options in message displayed with 2 commands', async () => {

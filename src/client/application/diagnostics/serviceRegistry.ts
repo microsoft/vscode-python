@@ -9,6 +9,7 @@ import { ApplicationDiagnostics } from './applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
 import { InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId } from './checks/invalidDebuggerType';
 import { InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId } from './checks/invalidPythonPathInDebugger';
+import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import { PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId } from './checks/powerShellActivation';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import { DiagnosticsCommandFactory } from './commands/factory';
@@ -24,6 +25,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId);
+    serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);

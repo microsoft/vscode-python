@@ -5,6 +5,7 @@
 
 import { inject } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
+import { ILanguageServerCompatibilityService } from '../../../activation/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -20,14 +21,21 @@ export class LSNotSupportedDiagnostic extends BaseDiagnostic {
     }
 }
 
+export const LSNotSupportedDiagnosticServiceId = 'LSNotSupportedDiagnosticServiceId';
+
 export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+    @inject(ILanguageServerCompatibilityService) private readonly lsCompatibility: ILanguageServerCompatibilityService) {
         super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
     }
     public async diagnose(): Promise<IDiagnostic[]>{
-        return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported())];
+        if (!await this.lsCompatibility.isSupported()) {
+            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported())];
+        } else{
+            return [];
+        }
     }
     public async handle(diagnostics: IDiagnostic[]): Promise<void>{
         if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {

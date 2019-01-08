@@ -15,9 +15,8 @@ import {
     ILanguageServerCompatibilityService,
     ILanguageServerFolderService
 } from '../../client/activation/types';
-import { IDiagnosticsCommandFactory } from '../../client/application/diagnostics/commands/types';
-import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../client/application/diagnostics/promptHandler';
-import { IDiagnosticFilterService, IDiagnosticHandlerService } from '../../client/application/diagnostics/types';
+import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
+import { IDiagnosticsService } from '../../client/application/diagnostics/types';
 import {
     IApplicationShell, ICommandManager,
     IWorkspaceService
@@ -39,9 +38,7 @@ suite('Activation - ActivationService', () => {
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let platformService: TypeMoq.IMock<IPlatformService>;
             let lanagueServerSupportedService: TypeMoq.IMock<ILanguageServerCompatibilityService>;
-            let filterService: TypeMoq.IMock<IDiagnosticFilterService>;
-            let commandFactory: TypeMoq.IMock<IDiagnosticsCommandFactory>;
-            let messageHandler: TypeMoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
+            let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -56,9 +53,7 @@ suite('Activation - ActivationService', () => {
                     version: new SemVer('1.2.3')
                 };
                 lanagueServerSupportedService = TypeMoq.Mock.ofType<ILanguageServerCompatibilityService>();
-                filterService = TypeMoq.Mock.ofType<IDiagnosticFilterService>();
-                commandFactory = TypeMoq.Mock.ofType<IDiagnosticsCommandFactory>();
-                messageHandler = TypeMoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
+                lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -73,10 +68,8 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => langFolderServiceMock.object);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticFilterService))).returns(() => filterService.object);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticHandlerService), TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId))).returns(() => messageHandler.object);
-             });
+                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsService), TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId))).returns(() => lsNotSupportedDiagnosticService.object);
+            });
 
             async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>, lsSupported: boolean = true) {
                 activator
@@ -86,6 +79,14 @@ suite('Activation - ActivationService', () => {
                 if (lsSupported && !jediIsEnabled) {
                     activatorName = ExtensionActivators.DotNet;
                 }
+                let diagnostics;
+                if (!lsSupported && !jediIsEnabled) {
+                    diagnostics = [TypeMoq.It.isAny()];
+                } else{
+                    diagnostics = [];
+                }
+                lsNotSupportedDiagnosticService.setup(l => l.diagnose()).returns(() => diagnostics);
+                lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(activatorName)))
                     .returns(() => activator.object)
@@ -101,7 +102,7 @@ suite('Activation - ActivationService', () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator, true);
             });
@@ -109,7 +110,7 @@ suite('Activation - ActivationService', () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(false));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator, false);
             });
@@ -118,7 +119,7 @@ suite('Activation - ActivationService', () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator);
             });
@@ -126,7 +127,7 @@ suite('Activation - ActivationService', () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator);
 
@@ -149,7 +150,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -184,7 +185,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -218,7 +219,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -251,7 +252,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object, lanagueServerSupportedService.object);
+                const activationService = new ExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
