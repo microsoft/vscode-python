@@ -22,6 +22,8 @@ import { MenuBar } from './menuBar';
 export interface IMainPanelProps {
     skipDefault?: boolean;
     ignoreProgress? : boolean;
+    ignoreSysInfo? : boolean;
+    ignoreScrolling? : boolean;
     theme: string;
 }
 
@@ -358,7 +360,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll) {
+        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll && !this.props.ignoreScrolling) {
             // Delay this until we are about to render. React hasn't setup the size of the bottom element
             // yet so we need to delay. 10ms looks good from a user point of view
             setTimeout(() => {
@@ -460,11 +462,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private isCellSupported(cell: ICell) : boolean {
+        return !this.props.ignoreSysInfo || cell.data.cell_type !== 'sys_info';
+    }
+
     // tslint:disable-next-line:no-any
     private finishCell = (payload?: any) => {
         if (payload) {
             const cell = payload as ICell;
-            if (cell) {
+            if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, true);
             }
         }
@@ -474,7 +480,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateCell = (payload?: any) => {
         if (payload) {
             const cell = payload as ICell;
-            if (cell) {
+            if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, false);
             }
         }

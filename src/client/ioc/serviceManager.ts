@@ -52,4 +52,12 @@ export class ServiceManager implements IServiceManager {
         }
     }
 
+    public rebindInstance<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, instance: T, name?: string | number | symbol): void {
+        if (name) {
+            this.container.rebind<T>(serviceIdentifier).toConstantValue(instance).whenTargetNamed(name);
+        } else {
+            this.container.rebind<T>(serviceIdentifier).toConstantValue(instance);
+        }
+    }
+
 }

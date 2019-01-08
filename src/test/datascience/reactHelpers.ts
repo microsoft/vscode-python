@@ -88,13 +88,15 @@ function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>)
     });
 }
 
-function waitForRender<P, S, C>(component: React.Component<P, S, C>) : Promise<void> {
+function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1) : Promise<void> {
+    // tslint:disable-next-line:promise-must-complete
     return new Promise((resolve, reject) => {
         if (component) {
             let originalRenderFunc = component.render;
             if (originalRenderFunc) {
                 originalRenderFunc = originalRenderFunc.bind(component);
             }
+            let renderCount = 0;
             component.render = () => {
                 let result : React.ReactNode = null;
 
@@ -102,11 +104,13 @@ function waitForRender<P, S, C>(component: React.Component<P, S, C>) : Promise<v
                 if (originalRenderFunc) {
                     result = originalRenderFunc();
                 }
+                renderCount += 1;
 
-                // Reset our render function
-                component.render = originalRenderFunc;
-
-                resolve();
+                if (renderCount === numberOfRenders) {
+                    // Reset our render function
+                    component.render = originalRenderFunc;
+                    resolve();
+                }
 
                 return result;
             };
@@ -116,11 +120,11 @@ function waitForRender<P, S, C>(component: React.Component<P, S, C>) : Promise<v
     });
 }
 
-export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mainClass: ComponentClass<P>) : Promise<void> {
+export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mainClass: ComponentClass<P>, numberOfRenders: number = 1) : Promise<void> {
     const mainObj = wrapper.find(mainClass).instance();
     if (mainObj) {
         // Hook the render first.
-        const renderPromise = waitForRender(mainObj);
+        const renderPromise = waitForRender(mainObj, numberOfRenders);
 
         // First wait for the update
         await waitForComponentDidUpdate(mainObj);

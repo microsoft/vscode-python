@@ -1,26 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-//tslint:disable:trailing-comma
+//tslint:disable:trailing-comma no-any no-multiline-string
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
+import * as fs from 'fs-extra';
+import { min } from 'lodash';
+import * as path from 'path';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
+import { CancellationToken, Disposable } from 'vscode';
 
 import {
+    IApplicationShell,
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage
+    WebPanelMessage,
 } from '../../client/common/application/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { Cell } from '../../datascience-ui/history-react/cell';
+import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { sleep } from '../core';
@@ -38,6 +44,7 @@ suite('History output tests', () => {
     let webPanelListener : IWebPanelMessageListener;
     let globalAcquireVsCodeApi : () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
+    let webPanelMessagePromise: Deferred<void> | undefined;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -84,6 +91,9 @@ suite('History output tests', () => {
                     if (webPanelListener) {
                         webPanelListener.onMessage(msg.type, msg.payload);
                     }
+                    if (webPanelMessagePromise) {
+                        webPanelMessagePromise.resolve();
+                    }
                 },
                 // tslint:disable-next-line:no-any no-empty
                 setState: (msg: any) => {
@@ -124,40 +134,283 @@ suite('History output tests', () => {
         }
     }
 
+    function addContinuousMockData(code: string, resultGenerator: (c: CancellationToken) => Promise<{result: string; haveMore: boolean}>) {
+        if (ioc.mockJupyter) {
+            ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
+        }
+    }
+
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
         test(name, async () => {
-            // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
-            const wrapper = mount(<MainPanel theme='vscode-light' ignoreProgress={true} skipDefault={true} />);
-            try {
-                await testFunc(wrapper);
-            } finally {
-                // Make sure to unmount the wrapper or it will interfere with other tests
-                wrapper.unmount();
+            addMockData('a=1\na', 1);
+            if (await jupyterExecution.isNotebookSupported()) {
+                // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
+                const wrapper = mount(<MainPanel theme='vscode-light' ignoreProgress={true} skipDefault={true} ignoreSysInfo={true} ignoreScrolling={true} />);
+                try {
+                    await testFunc(wrapper);
+                } finally {
+                    // Make sure to unmount the wrapper or it will interfere with other tests
+                    wrapper.unmount();
+                }
+            } else {
+                // tslint:disable-next-line:no-console
+                console.log(`${name} skipped, no Jupyter installed.`);
             }
         }).timeout(60000);
     }
 
-    runMountedTest('Simple text', async (wrapper) => {
-        addMockData('a=1\na', 1);
-        if (await jupyterExecution.isNotebookSupported()) {
+    function verifyHtmlOnLastCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string) {
+        const foundResult = wrapper.find('Cell');
+        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
-            // Get an update promise so we can wait for the add code
-            const updatePromise = waitForUpdate(wrapper, MainPanel);
+        // Extract only the first 100 chars from the input string
+        const sliced = html.substr(0, min([html.length, 100]));
 
-            // Send some code to the history and make sure it ends up in the html returned from our render
+        // There should be some sort of span with 1 in it
+        const lastCell = foundResult.last();
+        assert.ok(lastCell, 'Last call doesn\'t exist');
+        const output = lastCell.find('div.cell-output');
+        assert.ok(output.length > 0, 'No output cell found');
+        const outHtml = output.html();
+        assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
+    }
+
+    async function waitForMessageResponse(action: () => void) :  Promise<void> {
+        webPanelMessagePromise = createDeferred();
+        action();
+        await webPanelMessagePromise.promise;
+        webPanelMessagePromise = undefined;
+    }
+
+    async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>) : Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+
+        // Get a render promise with the expected number of renders
+        const renderPromise = waitForUpdate(wrapper, MainPanel, expectedRenders);
+
+        // Call our function to update the react control
+        await updater();
+
+        // Wait for all of the renders to go through
+        await renderPromise;
+
+        // Return the result
+        return wrapper.find('Cell');
+    }
+
+    async function addCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+        // Adding code should cause 5 renders to happen.
+        // 1) Input
+        // 2) Status ready
+        // 3) Execute_Input message
+        // 4) Output message (if there's only one)
+        // 5) Status finished
+        return getCellResults(wrapper, expectedRenderCount, async () => {
             const history = historyProvider.getOrCreateActive();
-            await history.addCode('a=1\na', 'foo.py', 2);
+            await history.addCode(code, 'foo.py', 2);
+        });
+    }
 
-            // Wait for the render to go through
-            await updatePromise;
+    runMountedTest('Simple text', async (wrapper) => {
+        await addCode(wrapper, 'a=1\na');
 
-            const foundResult = wrapper.find('Cell');
-            assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
-        } else {
-            // tslint:disable-next-line:no-console
-            console.log('History test skipped, no Jupyter installed');
+        verifyHtmlOnLastCell(wrapper, '<span>1</span>');
+    });
+
+    function escapePath(p: string) {
+        return p.replace(/\\/g, '\\\\');
+    }
+
+    function srcDirectory() {
+        return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+    }
+
+    runMountedTest('Mime Types', async (wrapper) => {
+        const badPanda = `import pandas as pd
+df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df.head()`;
+        const goodPanda = `import pandas as pd
+df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df.head()`;
+        const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
+        const matPlotLibResults = await fs.readFile(path.join(srcDirectory(), 'matplotlib.txt'), 'utf8');
+        const spinningCursor = `import sys
+import time
+
+def spinning_cursor():
+    while True:
+        for cursor in '|/-\\':
+            yield cursor
+
+spinner = spinning_cursor()
+for _ in range(50):
+    sys.stdout.write(next(spinner))
+    sys.stdout.flush()
+    time.sleep(0.1)
+    sys.stdout.write('\r')`;
+
+        addMockData(badPanda, `pd has no attribute 'read'`, 'text/html', 'error');
+        addMockData(goodPanda, `<td>A table</td>`, 'text/html');
+        addMockData(matPlotLib, matPlotLibResults, 'text/html');
+        const cursors = ['|', '/', '-', '\\'];
+        let cursorPos = 0;
+        let loops = 3;
+        addContinuousMockData(spinningCursor, async (c) => {
+            const result = `${cursors[cursorPos]}\r`;
+            cursorPos += 1;
+            if (cursorPos >= cursors.length) {
+                cursorPos = 0;
+                loops -= 1;
+            }
+            return Promise.resolve({result: result, haveMore: loops > 0 });
+        });
+
+        await addCode(wrapper, badPanda, 4);
+        verifyHtmlOnLastCell(wrapper, `pd has no attribute 'read'`);
+
+        await addCode(wrapper, goodPanda);
+        verifyHtmlOnLastCell(wrapper, `<td>`);
+
+        await addCode(wrapper, matPlotLib);
+        verifyHtmlOnLastCell(wrapper, matPlotLibResults);
+
+        await addCode(wrapper, spinningCursor, 4 + (cursors.length * 3));
+        verifyHtmlOnLastCell(wrapper, '<xmp>\\</xmp>');
+    });
+
+    runMountedTest('Undo/redo commands', async (wrapper) => {
+        const history = historyProvider.getOrCreateActive();
+
+        // Get a cell into the list
+        await addCode(wrapper, 'a=1\na');
+
+        // Now verify if we undo, we have no cells
+        let afterUndo = await getCellResults(wrapper, 1, async () => {
+            await history.undoCells();
+        });
+
+        assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
+
+        // Redo should put the cells back
+        const afterRedo = await getCellResults(wrapper, 1, async () => {
+            await history.redoCells();
+        });
+        assert.equal(afterRedo.length, 1, 'Redo should put cells back');
+
+        // Get another cell into the list
+        const afterAdd = await addCode(wrapper, 'a=1\na');
+        assert.equal(afterAdd.length, 2, 'Second cell did not get added');
+
+        // Clear everything
+        const afterClear = await getCellResults(wrapper, 1, async () => {
+            await history.removeAllCells();
+        });
+        assert.equal(afterClear.length, 0, 'Clear didn\'t work');
+
+        // Undo should put them back
+        afterUndo = await getCellResults(wrapper, 1, async () => {
+            await history.undoCells();
+        });
+
+        assert.equal(afterUndo.length, 2, `Undo should put cells back`);
+    });
+
+    function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number) : ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
+        const mainObj = wrapper.find(MainPanel);
+        if (mainObj) {
+            const buttons = mainObj.find(CellButton);
+            if (buttons) {
+                return buttons.at(index);
+            }
         }
+    }
+
+    runMountedTest('Click buttons', async (wrapper) => {
+        // Get a cell into the list
+        await addCode(wrapper, 'a=1\na');
+
+        // 'Click' the buttons in the react control
+        const undo = findButton(wrapper, 5);
+        const redo = findButton(wrapper, 6);
+        const clear = findButton(wrapper, 7);
+
+        // Now verify if we undo, we have no cells
+        let afterUndo = await getCellResults(wrapper, 1, () => {
+            undo.simulate('click');
+            return Promise.resolve();
+        });
+
+        assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
+
+        // Redo should put the cells back
+        const afterRedo = await getCellResults(wrapper, 1, async () => {
+            redo.simulate('click');
+            return Promise.resolve();
+        });
+        assert.equal(afterRedo.length, 1, 'Redo should put cells back');
+
+        // Get another cell into the list
+        const afterAdd = await addCode(wrapper, 'a=1\na');
+        assert.equal(afterAdd.length, 2, 'Second cell did not get added');
+
+        // Clear everything
+        const afterClear = await getCellResults(wrapper, 1, async () => {
+            clear.simulate('click');
+            return Promise.resolve();
+        });
+        assert.equal(afterClear.length, 0, 'Clear didn\'t work');
+
+        // Undo should put them back
+        afterUndo = await getCellResults(wrapper, 1, async () => {
+            undo.simulate('click');
+            return Promise.resolve();
+        });
+
+        assert.equal(afterUndo.length, 2, `Undo should put cells back`);
+    });
+
+    runMountedTest('Export', async (wrapper) => {
+        // Export should cause the export dialog to come up. Remap appshell so we can check
+        const dummyDisposable = {
+            dispose: () => { return; }
+        };
+        let exportCalled = false;
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => {
+            exportCalled = true;
+            return Promise.resolve(undefined);
+        });
+        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+        // Make sure to create the history after the rebind or it gets the wrong application shell.
+        await addCode(wrapper, 'a=1\na');
+        const history = historyProvider.getOrCreateActive();
+
+        // Export should cause exportCalled to change to true
+        await waitForMessageResponse(() => history.exportCells());
+        assert.equal(exportCalled, true, 'Export is not being called during export');
+
+        // Remove the cell
+        const exportButton = findButton(wrapper, 2);
+        const undo = findButton(wrapper, 5);
+
+        // Now verify if we undo, we have no cells
+        const afterUndo = await getCellResults(wrapper, 1, () => {
+            undo.simulate('click');
+            return Promise.resolve();
+        });
+
+        assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
+
+        // Then verify we cannot click the button (it should be disabled)
+        exportCalled = false;
+        const response = waitForMessageResponse(() => exportButton.simulate('click'));
+        await Promise.race([sleep(10), response]);
+        assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
+
     });
 
     test('Loc React test', async () => {
@@ -189,80 +442,65 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Editor Context', async (wrapper) => {
-        addMockData('a=1\na', 1);
-
         // Verify we can send different commands to the UI and it will respond
-        if (await jupyterExecution.isNotebookSupported()) {
-            const history = historyProvider.getOrCreateActive();
+        const history = historyProvider.getOrCreateActive();
 
-            // Before we have any cells, verify our contexts are not set
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells before starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable before starting');
+        // Before we have any cells, verify our contexts are not set
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells before starting');
+        assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable before starting');
 
-            // Get an update promise so we can wait for the add code
-            const updatePromise = waitForUpdate(wrapper, MainPanel);
+        // Get an update promise so we can wait for the add code
+        const updatePromise = waitForUpdate(wrapper, MainPanel);
 
-            // Send some code to the history
-            await history.addCode('a=1\na', 'foo.py', 2);
+        // Send some code to the history
+        await history.addCode('a=1\na', 'foo.py', 2);
 
-            // Wait for the render to go through
-            await updatePromise;
+        // Wait for the render to go through
+        await updatePromise;
 
-            // Now we should have the 3 editor contexts
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractive), true, 'Should have interactive after starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after starting');
+        // Now we should have the 3 editor contexts
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractive), true, 'Should have interactive after starting');
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after starting');
+        assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after starting');
 
-            // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
-            let count = 0;
-            let deferred = createDeferred<boolean>();
-            const eventDispose = ioc.onContextSet(a => {
-                count += 1;
-                if (count >= 3) {
-                    deferred.resolve();
-                }
-            });
-            disposables.push(eventDispose);
+        // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
+        let count = 0;
+        let deferred = createDeferred<boolean>();
+        const eventDispose = ioc.onContextSet(a => {
+            count += 1;
+            if (count >= 3) {
+                deferred.resolve();
+            }
+        });
+        disposables.push(eventDispose);
 
-            // Create a method that resets the waiting
-            const resetWaiting = () => {
-                count = 0;
-                deferred = createDeferred<boolean>();
-            };
+        // Create a method that resets the waiting
+        const resetWaiting = () => {
+            count = 0;
+            deferred = createDeferred<boolean>();
+        };
 
-            // Now send an undo command. This should change the state, so use our waitForInfo promise instead
-            resetWaiting();
-            history.postMessage(HistoryMessages.Undo);
-            await Promise.race([deferred.promise, sleep(2000)]);
-            assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after undo as there are two cells');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
+        // Now send an undo command. This should change the state, so use our waitForInfo promise instead
+        resetWaiting();
+        history.postMessage(HistoryMessages.Undo);
+        await Promise.race([deferred.promise, sleep(2000)]);
+        assert.ok(deferred.resolved, 'Never got update to state');
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo as sysinfo is ignored');
+        assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
-            resetWaiting();
-            history.postMessage(HistoryMessages.Undo);
-            await Promise.race([deferred.promise, sleep(2000)]);
-            assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after second undo');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after second undo');
+        resetWaiting();
+        history.postMessage(HistoryMessages.Redo);
+        await Promise.race([deferred.promise, sleep(2000)]);
+        assert.ok(deferred.resolved, 'Never got update to state');
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after redo');
+        assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after redo');
 
-            resetWaiting();
-            history.postMessage(HistoryMessages.Redo);
-            await Promise.race([deferred.promise, sleep(2000)]);
-            assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after undo');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after redo');
-
-            resetWaiting();
-            history.postMessage(HistoryMessages.DeleteAllCells);
-            await Promise.race([deferred.promise, sleep(2000)]);
-            assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
-
-        } else {
-            // tslint:disable-next-line:no-console
-            console.log('History test skipped, no Jupyter installed');
-        }
+        resetWaiting();
+        history.postMessage(HistoryMessages.DeleteAllCells);
+        await Promise.race([deferred.promise, sleep(2000)]);
+        assert.ok(deferred.resolved, 'Never got update to state');
+        assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
     });
 
     // Tests to do:
