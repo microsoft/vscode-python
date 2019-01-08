@@ -108,7 +108,14 @@ suite('Linting - General Tests', () => {
     let linterManager: ILinterManager;
     let configService: IConfigurationService;
 
-    suiteSetup(initialize);
+    suiteSetup(async function () {
+        // these tests are currently flakey, and need some refactoring to become reliable
+        // See #3914
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
+
+        initialize();
+    });
     setup(async () => {
         initializeDI();
         await initializeTest();
