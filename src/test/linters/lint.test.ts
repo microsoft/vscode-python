@@ -114,7 +114,7 @@ suite('Linting - General Tests', () => {
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
 
-        initialize();
+        await initialize();
     });
     setup(async () => {
         initializeDI();
