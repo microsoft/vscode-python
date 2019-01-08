@@ -10,10 +10,11 @@ import * as path from 'path';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, Disposable } from 'vscode';
+import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
 
 import {
     IApplicationShell,
+    IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
@@ -21,6 +22,7 @@ import {
 } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
@@ -326,6 +328,20 @@ for _ in range(50):
     }
 
     runMountedTest('Click buttons', async (wrapper) => {
+        // Goto source should cause the visible editor to be picked as long as its filename matches
+        const showedEditor = createDeferred();
+        const textEditors: TextEditor[] = [];
+        const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
+        dummyDocument.setup(d => d.fileName).returns(() => 'foo.py');
+        visibleEditor.setup(v => v.show()).returns(() => showedEditor.resolve());
+        visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny())).returns(noop);
+        visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
+        textEditors.push(visibleEditor.object);
+        docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
+        ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
+
         // Get a cell into the list
         await addCode(wrapper, 'a=1\na');
 
@@ -367,6 +383,24 @@ for _ in range(50):
         });
 
         assert.equal(afterUndo.length, 2, `Undo should put cells back`);
+
+        // find the buttons on the cell itself
+        const cellButtons = afterUndo.last().find(CellButton);
+        assert.equal(cellButtons.length, 2, 'Cell buttons not found');
+        const goto = cellButtons.at(1);
+        const deleteButton = cellButtons.at(0);
+
+        // Make sure goto works
+        await waitForMessageResponse(() => goto.simulate('click'));
+        await Promise.race([sleep(100), showedEditor.promise]);
+        assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
+
+        // Make sure delete works
+        const afterDelete = await getCellResults(wrapper, 1, async () => {
+            deleteButton.simulate('click');
+            return Promise.resolve();
+        });
+        assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
     });
 
     runMountedTest('Export', async (wrapper) => {

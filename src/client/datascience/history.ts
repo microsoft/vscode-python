@@ -491,7 +491,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             // File URI isn't going to work. Look through the active text documents
             editor = this.documentManager.visibleTextEditors.find(te => te.document.fileName === file);
             if (editor) {
-                editor.show(ViewColumn.One);
+                editor.show();
             }
         }
 
