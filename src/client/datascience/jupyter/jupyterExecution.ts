@@ -173,12 +173,12 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         this.commands = {};
     }
 
-    public isNotebookSupported = (cancelToken?: CancellationToken): Promise<boolean> => {
+    public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
         return Cancellation.race(() => this.isCommandSupported(NotebookCommand, cancelToken), cancelToken);
     }
 
-    public getUsableJupyterPython = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
+    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
         // Only try to compute this once.
         if (!this.usablePythonInterpreter) {
             this.usablePythonInterpreter = await Cancellation.race(() => this.getUsableJupyterPythonImpl(cancelToken), cancelToken);
