@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { ILanguageServerCompatibilityService } from '../../../activation/types';
 import { Diagnostics } from '../../../common/utils/localize';
@@ -24,11 +24,10 @@ export class LSNotSupportedDiagnostic extends BaseDiagnostic {
 export const LSNotSupportedDiagnosticServiceId = 'LSNotSupportedDiagnosticServiceId';
 
 export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
-    protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
-    @inject(ILanguageServerCompatibilityService) private readonly lsCompatibility: ILanguageServerCompatibilityService) {
+    @inject(ILanguageServerCompatibilityService) private readonly lsCompatibility: ILanguageServerCompatibilityService,
+    @inject(IDiagnosticHandlerService) @named(DiagnosticCommandPromptHandlerServiceId) protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>) {
         super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
     }
     public async diagnose(): Promise<IDiagnostic[]>{
         if (!await this.lsCompatibility.isSupported()) {

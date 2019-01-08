@@ -13,7 +13,7 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-suite('Application Diagnostics - Checks Env Path Variable', () => {
+suite('Application Diagnostics - Checks LS not supported', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let diagnosticService: IDiagnosticsService;
     let filterService: TypeMoq.IMock<IDiagnosticFilterService>;
@@ -30,14 +30,14 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticHandlerService), TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId))).returns(() => messageHandler.object);
 
-        diagnosticService = new LSNotSupportedDiagnosticService(serviceContainer.object, lsCompatibility.object);
+        diagnosticService = new LSNotSupportedDiagnosticService(serviceContainer.object, lsCompatibility.object, messageHandler.object);
     });
 
     test('Should display two options in message displayed with 2 commands', async () => {
         let options: MessageCommandPrompt | undefined;
         const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
         diagnostic.setup(d => d.code)
-            .returns(() => DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)
+            .returns(() => DiagnosticCodes.LSNotSupportedDiagnostic)
             .verifiable(TypeMoq.Times.atLeastOnce());
         const launchBrowserCommand = TypeMoq.Mock.ofType<IDiagnosticCommand>();
         commandFactory.setup(f => f.createCommand(TypeMoq.It.isAny(),
