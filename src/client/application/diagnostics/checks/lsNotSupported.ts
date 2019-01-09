@@ -30,10 +30,10 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer);
     }
     public async diagnose(): Promise<IDiagnostic[]>{
-        if (!await this.lsCompatibility.isSupported()) {
-            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported())];
-        } else{
+        if (await this.lsCompatibility.isSupported()) {
             return [];
+        } else{
+            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported())];
         }
     }
     public async handle(diagnostics: IDiagnostic[]): Promise<void>{
