@@ -128,6 +128,13 @@ steps:
 
       arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
+  - task: CmdLine@1
+    displayName: 'pip install  functional requirements'
+    inputs:
+      filename: python
+      arguments: '-m pip install --upgrade -r ./build/functional-test-requirements.txt'
+    condition: variables['HasFunctionalRequirements']
+
 
   - task: CmdLine@1
     displayName: 'pip install ptvsd'
