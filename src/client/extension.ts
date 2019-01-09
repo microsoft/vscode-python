@@ -417,7 +417,18 @@ function logError(ex: Error, msg: string) {
     }
 }
 
-async function sendErrorTelemetry(ex: Error) {
+function getStackTrace(ex: Error): string {
     // tslint:disable-next-line:no-suspicious-comment
-    // TODO: finish
+    // TODO: Sanitize filenames.
+    return ex.stack || '';
+}
+
+async function sendErrorTelemetry(ex: Error) {
+    try {
+        const props = await getActivationTelemetryProps(activatedServiceContainer);
+        props.stackTrace = getStackTrace(ex);
+        sendTelemetryEvent(EDITOR_LOAD, durations, props);
+    } catch (ex) {
+        logError(ex, 'sendErrorTelemetry() failed.');
+    }
 }
