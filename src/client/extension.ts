@@ -145,6 +145,9 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
+
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Move this down to right before durations.endActivateTime is set.
     sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -297,9 +300,41 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
 
 // tslint:disable-next-line:no-any
 async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceContainer: IServiceContainer) {
-    const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;
+        const props = await getActivationTelemetryProps(serviceContainer);
+        sendTelemetryEvent(EDITOR_LOAD, durations, props);
+    } catch (ex) {
+        logError(ex, 'sendStartupTelemetry() failed.');
+    }
+}
+
+function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pyhontPath')!;
+    return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
+        (settings.workspaceValue && settings.workspaceValue !== 'python') ||
+        (settings.globalValue && settings.globalValue !== 'python');
+}
+
+function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
+    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
+    const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
+    return interpreter ? interpreter.path : undefined;
+}
+
+/////////////////////////////
+// telemetry
+
+// tslint:disable-next-line:no-any
+async function getActivationTelemetryProps(serviceContainer?: IServiceContainer): Promise<any> {
+    if (!serviceContainer) {
+        return {};
+    }
+
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Not all of this data is showing up in the database...
+    try {
         const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
         const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
@@ -323,26 +358,22 @@ async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceConta
             .filter(item => item && item.version ? item.version.major === 3 : false)
             .length > 0;
 
-        const props = {
-            condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3,
-            hasUserDefinedInterpreter, isAutoSelectedWorkspaceInterpreterUsed
+        return {
+            condaVersion,
+            terminal: terminalShellType,
+            pythonVersion,
+            interpreterType,
+            workspaceFolderCount,
+            hasPython3,
+            hasUserDefinedInterpreter,
+            isAutoSelectedWorkspaceInterpreterUsed
         };
-        sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
-        logger.logError('sendStartupTelemetry failed.', ex);
+        logError(ex, 'getActivationTelemetryProps() failed.');
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Partially populate as much as possible instead.
+        return {};
     }
-}
-function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pyhontPath')!;
-    return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
-        (settings.workspaceValue && settings.workspaceValue !== 'python') ||
-        (settings.globalValue && settings.globalValue !== 'python');
-}
-function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
-    const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
-    return interpreter ? interpreter.path : undefined;
 }
 
 /////////////////////////////
