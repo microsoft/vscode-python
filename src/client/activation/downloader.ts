@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
+import { IApplicationShell } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
@@ -14,6 +15,7 @@ import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+    PYTHON_LANGUAGE_SERVER_ERROR,
     PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
 import { PlatformData } from './platformData';
@@ -24,6 +26,7 @@ const downloadFileExtension = '.nupkg';
 export class LanguageServerDownloader implements ILanguageServerDownloader {
     private readonly output: IOutputChannel;
     private readonly fs: IFileSystem;
+    private readonly appShell: IApplicationShell;
     constructor(
         private readonly platformData: PlatformData,
         private readonly engineFolder: string,
@@ -31,6 +34,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     ) {
         this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
 
     }
 
@@ -53,6 +57,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine('download failed.');
             this.output.appendLine(err);
             success = false;
+            this.appShell.showErrorMessage('We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' });
             throw new Error(err);
         } finally {
             sendTelemetryEvent(
@@ -69,6 +75,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine('extraction failed.');
             this.output.appendLine(err);
             success = false;
+            this.appShell.showErrorMessage('We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' });
             throw new Error(err);
         } finally {
             sendTelemetryEvent(
@@ -98,6 +106,11 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         }, async (progress) => {
             const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
             const req = await httpClient.downloadFile(uri);
+            req.on('response', (response) => {
+                if (response.statusCode !== 200) {
+                    throw new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`);
+                }
+            });
             const requestProgress = await import('request-progress');
             requestProgress(req)
                 .on('progress', (state) => {
