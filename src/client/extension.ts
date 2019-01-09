@@ -100,8 +100,17 @@ durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
 let activatedServiceContainer: ServiceContainer | undefined;
 
-// tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
+    try {
+        return await activateUnsafe(context);
+    } catch (ex) {
+        handleError(ex);
+        throw ex;  // re-raise
+    }
+}
+
+// tslint:disable-next-line:max-func-body-length
+async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi> {
     displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
     const cont = new Container();
@@ -333,4 +342,29 @@ function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: 
     const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
     const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
     return interpreter ? interpreter.path : undefined;
+}
+
+/////////////////////////////
+// error handling
+
+function handleError(ex: Error) {
+    notifyUser('extension activation failed (see console log).');
+    logError(ex, 'extension activation failed');
+    sendErrorTelemetry(ex)
+        .ignoreErrors();
+}
+
+function notifyUser(msg: string) {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: finish
+}
+
+function logError(ex: Error, msg: string) {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: finish
+}
+
+async function sendErrorTelemetry(ex: Error) {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: finish
 }
