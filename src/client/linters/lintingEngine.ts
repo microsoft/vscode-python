@@ -197,7 +197,8 @@ export class LintingEngine implements ILintingEngine {
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
 
         const settings = this.configurationService.getSettings(document.uri);
-        const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new Minimatch(pattern));
+        // { dot: true } is important so dirs like `.venv` will be matched by globs
+        const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new Minimatch(pattern, { dot: true }));
         if (ignoreMinmatches.some(matcher => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
             return false;
         }
