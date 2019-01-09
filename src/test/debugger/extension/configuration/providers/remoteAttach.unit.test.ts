@@ -83,7 +83,13 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             type: DebuggerTypeName,
             request: 'attach',
             port: 5678,
-            host: 'localhost'
+            host: 'localhost',
+            pathMappings: [
+                {
+                    localRoot: '${workspaceFolder}',
+                    remoteRoot: '.'
+                }
+            ]
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -110,7 +116,13 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             type: DebuggerTypeName,
             request: 'attach',
             port: 9999,
-            host: 'Hello'
+            host: 'Hello',
+            pathMappings: [
+                {
+                    localRoot: '${workspaceFolder}',
+                    remoteRoot: '.'
+                }
+            ]
         };
 
         expect(state.config).to.be.deep.equal(config);
