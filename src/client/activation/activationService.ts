@@ -71,7 +71,7 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         this.currentActivator = { jedi, activator };
 
         const success = await activator.activate();
-        if (success && !jedi) {
+        if (!success && !jedi) {
             //Language server fails, reverting to jedi
             jedi = true;
             await this.logStartup(jedi);
