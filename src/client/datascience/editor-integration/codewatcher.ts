@@ -80,6 +80,14 @@ export class CodeWatcher implements ICodeWatcher {
                 }
             }
         }
+
+        // If there are no codelenses, just run all of the code as a single cell
+        if (this.codeLenses.length === 0) {
+            if (this.document) {
+                const code = this.document.getText();
+                await activeHistory.addCode(code, this.getFileName(), 0);
+            }
+        }
     }
 
     @captureTelemetry(Telemetry.RunCell)

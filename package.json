@@ -254,7 +254,7 @@
             },
             {
                 "command": "python.datascience.runallcells",
-                "title": "%python.command.python.datascience.runallcells.title%",
+                "title": "%python.command.python.datascience.runallcells.command.title%",
                 "category": "Python"
             },
             {
@@ -433,7 +433,7 @@
                 },
                 {
                     "command": "python.datascience.runallcells",
-                    "title": "%python.command.python.datascience.runallcells.title%",
+                    "title": "%python.command.python.datascience.runallcells.command.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
