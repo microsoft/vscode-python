@@ -675,14 +675,20 @@
                         }
                     },
                     {
-                        "label": "Python: Attach",
+                        "label": "Python: (Remote Attach)",
                         "description": "%python.snippet.launch.attach.description%",
                         "body": {
                             "name": "Attach (Remote Debug)",
                             "type": "python",
                             "request": "attach",
                             "port": 5678,
-                            "host": "localhost"
+                            "host": "localhost",
+                            "pathMappings": [
+                                {
+                                    "localRoot": "${workspaceFolder}",
+                                    "remoteRoot": "."
+                                }
+                            ]
                         }
                     }
                 ],
