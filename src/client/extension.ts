@@ -10,6 +10,8 @@ import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 import { Container } from 'inversify';
+import { sep as pathSep } from 'path';
+import * as stackTrace from 'stack-trace';
 import {
     CodeActionKind,
     debug,
@@ -57,6 +59,7 @@ import {
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { EXTENSION_ROOT_DIR } from './constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
@@ -417,10 +420,42 @@ function logError(ex: Error, msg: string) {
     }
 }
 
+let ExtRootDir = '';
+const VSCodeRootFile = `${pathSep}extensionHostProcess.js`;
+let VSCodeRootDir = '';
+
+function sanitizeFilename(filename: string): string {
+    if (ExtRootDir === '') {
+        ExtRootDir = EXTENSION_ROOT_DIR + pathSep;
+    }
+
+    if (filename.startsWith(ExtRootDir)) {
+        filename = `<pvsc>${pathSep}${filename.substring(ExtRootDir.length)}`;
+    } else if (VSCodeRootDir !== '' && filename.startsWith(VSCodeRootDir)) {
+        filename = `<vscode>${pathSep}${filename.substring(VSCodeRootDir.length)}`;
+    } else if (filename.endsWith(VSCodeRootFile)) {
+        if (VSCodeRootDir === '') {
+            VSCodeRootDir = filename.substring(0, filename.length - VSCodeRootFile.length) + pathSep;
+            filename = `<vscode>${VSCodeRootFile}`;
+        }
+    }
+    return filename;
+}
+
 function getStackTrace(ex: Error): string {
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: Sanitize filenames.
-    return ex.stack || '';
+    let trace = `Error: ${ex.message}`;
+    for (const frame of stackTrace.parse(ex)) {
+        let filename = frame.getFileName();
+        if (filename) {
+            filename = sanitizeFilename(filename);
+            const lineno = frame.getLineNumber();
+            const colno = frame.getColumnNumber();
+            trace += `\n\tat ${filename}:${lineno}:${colno}`;
+        } else {
+            trace += '\n\tat <anonymous>';
+        }
+    }
+    return trace;
 }
 
 async function sendErrorTelemetry(ex: Error) {
