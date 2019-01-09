@@ -159,7 +159,11 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
             const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
-            await downloader.downloadLanguageServer(this.context);
+            try{
+                await downloader.downloadLanguageServer(this.context);
+            } catch (err) {
+                return false;
+            }
         }
 
         const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
@@ -172,7 +176,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             });
             return true;
         } catch (ex) {
-            this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
+            this.appShell.showErrorMessage('We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+            this.output.appendLine('Language server failed to start.');
+            this.output.appendLine(ex);
             sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to start (platform)' });
             return false;
         }
