@@ -36,6 +36,7 @@ import { IApplicationShell, IWorkspaceService } from './common/application/types
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { Logger } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -372,8 +373,17 @@ function notifyUser(msg: string) {
 }
 
 function logError(ex: Error, msg: string) {
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: finish
+    try {
+        let logger: ILogger;
+        if (activatedServiceContainer) {
+            logger = activatedServiceContainer.get<ILogger>(ILogger);
+        } else {
+            logger = new Logger();
+        }
+        logger.logError(msg, ex);
+    } catch (ex) {
+        // ignore
+    }
 }
 
 async function sendErrorTelemetry(ex: Error) {
