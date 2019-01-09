@@ -32,7 +32,7 @@ import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
-import { IWorkspaceService } from './common/application/types';
+import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
@@ -354,9 +354,21 @@ function handleError(ex: Error) {
         .ignoreErrors();
 }
 
+interface IAppShell {
+    showErrorMessage(string);
+}
+
 function notifyUser(msg: string) {
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: finish
+    try {
+        msg = `Python Extension: ${msg}`;
+        let appShell = (window as IAppShell);
+        if (activatedServiceContainer) {
+            appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell);
+        }
+        appShell.showErrorMessage(msg);
+    } catch (ex) {
+        // ignore
+    }
 }
 
 function logError(ex: Error, msg: string) {
