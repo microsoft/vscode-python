@@ -30,7 +30,7 @@ export class TestsParser implements ITestsParser {
 
         let haveErrors = false;
 
-        let packagePrefix: string = '';
+        const packages: { indent: number; packagePrefix: string }[] = [];
         content.split(/\r?\n/g).forEach((line, index, lines) => {
             if (options.token && options.token.isCancellationRequested) {
                 return;
@@ -38,19 +38,25 @@ export class TestsParser implements ITestsParser {
 
             const trimmedLine: string = line.trim();
 
-            if (trimmedLine.startsWith('<Package \'')) {
+            if (trimmedLine.startsWith('<Package \'') || trimmedLine.startsWith('<Module \'') || index === lines.length - 1) {
+                let packagePrefix : string = '';
+                if (packages.length > 0) {
+                    packagePrefix = packages[packages.length - 1].packagePrefix;
+                }
                 // Process the previous lines.
                 this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
+                let indent = line.indexOf('<');
+                while (packages.length > 0 && packages[packages.length - 1].indent >= indent) {
+                    packages.pop();
+                }
                 logOutputLines = [''];
-
-                packagePrefix = this.extractPackageName(trimmedLine, options.cwd);
+                if (trimmedLine.startsWith('<Package \'')) {
+                    indent = line.indexOf('<');
+                    packagePrefix = this.extractPackageName(trimmedLine, options.cwd);
+                    packages.push({indent: indent, packagePrefix: packagePrefix});
+                }
             }
 
-            if (trimmedLine.startsWith('<Module \'') || index === lines.length - 1) {
-                // Process the previous lines.
-                this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
-                logOutputLines = [''];
-            }
             if (errorLine.test(line)) {
                 haveErrors = true;
                 logOutputLines = [''];

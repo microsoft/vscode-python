@@ -1383,5 +1383,32 @@ export const pytestScenarioData: PytestDiscoveryScenario[] =
                 "",
                 "======================== no tests ran in 0.36 seconds ========================="
             ]
+        },
+        {
+            pytest_version_spec: ">= 3.7",
+            platform: PytestDataPlatformType.NonWindows,
+            description: "With package inbetween.",
+            rootdir: "/home/user/test/pytest_scenario",
+            test_functions: [
+                "aTest/test_upper.py::test_upper_cmd",
+                "bPackage/testPackage.py::test_package",
+                "zTest/test_lower.py::test_lower_cmd"
+            ],
+            functionCount: 3,
+            stdout: [
+                "============================= test session starts =============================",
+                "platform win32 -- Python 3.7.0, pytest-3.7.4, py-1.6.0, pluggy-0.7.1",
+                "rootdir: /home/user/test/pytest_scenario, inifile:",
+                "collected 3 items",
+                "<Module 'aTest/test_upper.py'>",
+                "  <Function 'test_upper_cmd'>",
+                "<Package '/home/user/test/pytest_scenario/bPackage'>",
+                "  <Module 'testPackage.py'>",
+                "    <Function 'test_package'>",
+                "<Module 'zTest/test_lower.py'>",
+                "  <Function 'test_lower_cmd'>",
+                "",
+                "======================== no tests ran in 0.36 seconds ========================="
+            ]
         }
     ];
