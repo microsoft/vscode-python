@@ -2,7 +2,8 @@ resources:
 - repo: self
   clean: true
 
-variables: { VSCODE_PYTHON_ROLLING: true }
+variables:
+    VSCODE_PYTHON_ROLLING: true
 
 # No trigger specified here. This is a nightly build only and
 # there isn't a way to specify scheduled builds in YAML at time
