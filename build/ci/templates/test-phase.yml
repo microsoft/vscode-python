@@ -177,10 +177,8 @@ steps:
 
 
         test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
-        functional = os.environ.get('HasFunctionalRequirements')
 
-        if (not os.path.exists(test_logfile) and functional != 'true'):
-            print('Functional is ' + functional + ' ')
+        if (not os.path.exists(test_logfile)):
             print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
             print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
 
