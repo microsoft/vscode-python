@@ -14,6 +14,7 @@ import { ILanguageServerPlatformData } from '../../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, IOutputChannel, IPathUtils, IPythonSettings } from '../../../client/common/types';
+import { LanguageService } from '../../../client/common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -80,7 +81,7 @@ suite('Language Server', () => {
         expect(options!.initializationOptions!.searchPaths).to.include.members(pythonPathVar);
     });
 
-    suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
+    suite('Test LanguageServerExtensionActivator.startLanguageServer', () => {
         class LanguageServerExtensionActivatorTest extends LanguageServerExtensionActivator {
             // tslint:disable-next-line:no-unnecessary-override
             public async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
@@ -134,7 +135,7 @@ suite('Language Server', () => {
             fs.setup(a => a.fileExists(TypeMoq.It.isAnyString()))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
-            appShell.setup(a => a.showErrorMessage(TypeMoq.It.isValue('the actual string')))
+            appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToStart()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             try {

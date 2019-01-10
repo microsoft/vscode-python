@@ -27,6 +27,7 @@ import {
     IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -191,7 +192,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             });
             return true;
         } catch (ex) {
-            this.appShell.showErrorMessage('We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+            this.appShell.showErrorMessage(LanguageService.lsFailedToStart());
             this.output.appendLine('Language server failed to start.');
             this.output.appendLine(ex);
             sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to start (platform)' });

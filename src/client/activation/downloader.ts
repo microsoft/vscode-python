@@ -10,6 +10,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { createDeferred } from '../common/utils/async';
+import { LanguageService } from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
@@ -59,7 +60,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine('download failed.');
             this.output.appendLine(err);
             success = false;
-            this.appShell.showErrorMessage('We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+            this.appShell.showErrorMessage(LanguageService.lsFailedToDownload());
             sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' });
             throw new Error(err);
         } finally {
@@ -77,7 +78,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine('extraction failed.');
             this.output.appendLine(err);
             success = false;
-            this.appShell.showErrorMessage('We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+            this.appShell.showErrorMessage(LanguageService.lsFailedToExtract());
             sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' });
             throw new Error(err);
         } finally {
