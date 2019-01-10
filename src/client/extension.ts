@@ -330,11 +330,7 @@ function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: 
 // telemetry
 
 // tslint:disable-next-line:no-any
-async function getActivationTelemetryProps(serviceContainer?: IServiceContainer): Promise<any> {
-    if (!serviceContainer) {
-        return {};
-    }
-
+async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<any> {
     // tslint:disable-next-line:no-suspicious-comment
     // TODO: Not all of this data is showing up in the database...
     // tslint:disable-next-line:no-suspicious-comment
@@ -458,11 +454,13 @@ function getStackTrace(ex: Error): string {
 async function sendErrorTelemetry(ex: Error) {
     try {
         // tslint:disable-next-line:no-any
-        let props: any;
-        try {
-            props = await getActivationTelemetryProps(activatedServiceContainer);
-        } catch (ex) {
-            props = {};
+        let props: any = {};
+        if (activatedServiceContainer) {
+            try {
+                props = await getActivationTelemetryProps(activatedServiceContainer);
+            } catch (ex) {
+                // ignore
+            }
         }
         props.stackTrace = getStackTrace(ex);
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
