@@ -127,7 +127,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
         try {
             const processService = await this.processServiceFactory.create(Uri.file(rootPath));
-            const execName = this.executable.toCommandArgument();
+            const execName = this.executable;
             const result = await processService.exec(execName, [arg], { cwd: rootPath });
             if (result) {
                 const stdout = result.stdout ? result.stdout.trim() : '';
