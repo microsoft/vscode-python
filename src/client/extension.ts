@@ -10,7 +10,7 @@ import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 import { Container } from 'inversify';
-import { sep as pathSep } from 'path';
+import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import {
     CodeActionKind,
@@ -397,24 +397,12 @@ function notifyUser(msg: string) {
     }
 }
 
-let ExtRootDir = '';
-const VSCodeRootFile = `${pathSep}extensionHostProcess.js`;
-let VSCodeRootDir = '';
-
 function sanitizeFilename(filename: string): string {
-    if (ExtRootDir === '') {
-        ExtRootDir = EXTENSION_ROOT_DIR + pathSep;
-    }
-
-    if (filename.startsWith(ExtRootDir)) {
-        filename = `<pvsc>${pathSep}${filename.substring(ExtRootDir.length)}`;
-    } else if (VSCodeRootDir !== '' && filename.startsWith(VSCodeRootDir)) {
-        filename = `<vscode>${pathSep}${filename.substring(VSCodeRootDir.length)}`;
-    } else if (filename.endsWith(VSCodeRootFile)) {
-        if (VSCodeRootDir === '') {
-            VSCodeRootDir = filename.substring(0, filename.length - VSCodeRootFile.length) + pathSep;
-            filename = `<vscode>${VSCodeRootFile}`;
-        }
+    if (filename.startsWith(EXTENSION_ROOT_DIR + pathSep)) {
+        filename = `<pvsc>${filename.substring(EXTENSION_ROOT_DIR.length)}`;
+    } else {
+        // We don't really care about files outside our extension.
+        filename = `<hidden>${pathSep}${pathBasename(filename)}`;
     }
     return filename;
 }
