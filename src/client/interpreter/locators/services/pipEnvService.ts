@@ -46,17 +46,11 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     }
 
     public getExecutable(): string {
-        try {
-            const settings = this.configService.getSettings();
-            const setting = settings.pipenvPath;
-            if (setting && setting !== '') {
-                return setting;
-            }
-        } catch (exc) {
-            traceError('settings.pipenvPath lookup failed', exc);
-            // Fall back to the default.
+        const settings = this.configService.getSettings();
+        const setting = settings.pipenvPath;
+        if (setting && setting !== '') {
+            return setting;
         }
-
         return DefaultExecName;
     }
 
