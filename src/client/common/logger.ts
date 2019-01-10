@@ -84,11 +84,7 @@ export function traceVerbose(message: string) {
     new Logger().logInformation(message);
 }
 export function traceError(message: string, ex?: Error) {
-    try {
-        new Logger().logError(message, ex);
-    } catch (e) {
-        // ignore
-    }
+    new Logger().logError(message, ex);
 }
 export function traceInfo(message: string) {
     new Logger().logInformation(message);
