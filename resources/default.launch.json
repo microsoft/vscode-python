@@ -7,7 +7,7 @@
         "console": "integratedTerminal"
     },
     {
-        "name": "Python: Attach (Remote Debug)",
+        "name": "Python: Remote Attach",
         "type": "python",
         "request": "attach",
         "port": 5678,

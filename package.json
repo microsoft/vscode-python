@@ -675,7 +675,7 @@
                         }
                     },
                     {
-                        "label": "Python: (Remote Attach)",
+                        "label": "Python: Remote Attach",
                         "description": "%python.snippet.launch.attach.description%",
                         "body": {
                             "name": "Attach (Remote Debug)",

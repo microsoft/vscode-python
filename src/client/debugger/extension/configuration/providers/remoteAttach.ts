@@ -19,7 +19,7 @@ const defaultPort = 5678;
 export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurationProvider {
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
         const config: Partial<AttachRequestArguments> = {
-            name: localize('python.snippet.launch.attach.label', 'Python: Attach (Remote Debug)')(),
+            name: localize('python.snippet.launch.attach.label', 'Python: Remote Attach')(),
             type: DebuggerTypeName,
             request: 'attach',
             port: defaultPort,
