@@ -1521,6 +1521,12 @@
                     "description": "Path to the conda executable to use for activation (version 4.4+).",
                     "scope": "resource"
                 },
+                "python.pipenvPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to the pipenv executable to use for activation.",
+                    "scope": "resource"
+                },
                 "python.sortImports.args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
