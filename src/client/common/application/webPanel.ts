@@ -9,8 +9,9 @@ import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { IDisposableRegistry } from '../types';
+import { IDisposableRegistry, IConfigurationService } from '../types';
 import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
+import { ConfigurationFeature } from 'vscode-languageclient/lib/configuration';
 
 export class WebPanel implements IWebPanel {
 
@@ -18,6 +19,7 @@ export class WebPanel implements IWebPanel {
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private disposableRegistry: IDisposableRegistry;
+    private configuration: IConfigurationService;
     private rootPath: string;
 
     constructor(
@@ -26,7 +28,8 @@ export class WebPanel implements IWebPanel {
         title: string,
         mainScriptPath: string,
         embeddedCss?: string) {
-
+        // IANHU: convert to inject?
+        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
         this.rootPath = path.dirname(mainScriptPath);
@@ -92,6 +95,7 @@ export class WebPanel implements IWebPanel {
         const uri = uriPath.with({ scheme: 'vscode-resource' });
         const locDatabase = JSON.stringify(localize.getCollection());
         const style = embeddedCss ? embeddedCss : '';
+        const dsSettings = JSON.stringify(this.configuration.getSettings().datascience);
 
         return `<!doctype html>
         <html lang="en">
@@ -118,6 +122,9 @@ export class WebPanel implements IWebPanel {
                     }
                     function getLocStrings() {
                         return ${locDatabase};
+                    }
+                    function getSettings() {
+                        return ${dsSettings};
                     }
                 </script>
             <script type="text/javascript" src="${uri}"></script></body>

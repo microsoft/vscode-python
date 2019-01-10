@@ -50,6 +50,11 @@ export function setUpDomEnvironment() {
         return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
     };
 
+    // IANHU: not sure if I need this for settings, but putting it in for now
+    global['getSettings'] = () => {
+        //return { '' }
+    }
+
     configure({ adapter: new Adapter() });
 }
 

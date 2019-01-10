@@ -29,8 +29,10 @@ interface ICellProps {
     delete(): void;
 }
 
+// IANHU: Lots of input block elements, can we combine some?
 export interface ICellViewModel {
     cell: ICell;
+    inputBlockShow: boolean;
     inputBlockOpen: boolean;
     inputBlockText: string;
     inputBlockCollapseNeeded: boolean;
@@ -121,7 +123,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderInputs = () => {
-        if (this.isCodeCell()) {
+        if (this.isCodeCell() && this.props.cellVM.inputBlockShow) {
             // Colorize our text
             return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} theme={this.props.theme}/></div>);
         } else {

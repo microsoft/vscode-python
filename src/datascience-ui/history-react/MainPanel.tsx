@@ -13,6 +13,7 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
+import { getSetting } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
@@ -379,9 +380,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // tslint:disable-next-line:no-any
     private addCell = (payload?: any) => {
+        // Get our setting to see if we should have input expanded, collapsed, or hidden
+        const setting = getSetting("inputCodeDisplay", "Collapsed") as string;
+
         if (payload) {
             const cell = payload as ICell;
-            const cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
+            let cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled, setting !== "Hidden");
+
+            // Toggle by default if set
+            if (setting == "Collapsed") {
+                cellVM = this.toggleCellVM(cellVM);
+            }
+
             if (cellVM) {
                 this.setState({
                     cellVMs: [...this.state.cellVMs, cellVM],
@@ -418,6 +428,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // Toggle the input collapse state of a cell view model return a shallow copy with updated values
+    // IANHU: Don't toggle if hidden?
     private toggleCellVM = (cellVM: ICellViewModel) => {
         let newCollapseState = cellVM.inputBlockOpen;
         let newText = cellVM.inputBlockText;
