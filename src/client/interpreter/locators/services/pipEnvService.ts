@@ -45,7 +45,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         return !!envName;
     }
 
-    public getExecutable(): string {
+    public get executable(): string {
         const settings = this.configService.getSettings();
         const setting = settings.pipenvPath;
         if (setting && setting !== '') {
@@ -127,7 +127,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
         try {
             const processService = await this.processServiceFactory.create(Uri.file(rootPath));
-            const execName = this.getExecutable().toCommandArgument();
+            const execName = this.executable.toCommandArgument();
             const result = await processService.exec(execName, [arg], { cwd: rootPath });
             if (result) {
                 const stdout = result.stdout ? result.stdout.trim() : '';
