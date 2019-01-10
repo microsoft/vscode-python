@@ -388,7 +388,6 @@ interface IAppShell {
 
 function notifyUser(msg: string) {
     try {
-        msg = `Python Extension: ${msg}`;
         let appShell = (window as IAppShell);
         if (activatedServiceContainer) {
             appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell);
