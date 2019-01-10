@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import './cell.css';
+import '../../client/common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
@@ -51,7 +52,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     // Public for testing
-    public getUnknownMimeTypeFormatString = () => {
+    public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
@@ -254,14 +255,16 @@ export class Cell extends React.Component<ICellProps> {
         // Jupyter style MIME bundle
 
         // Find out which mimetype is the richest
-        const mimetype: string = richestMimetype(copy.data, displayOrder, transforms);
+        let mimetype: string = richestMimetype(copy.data, displayOrder, transforms);
 
         // If that worked, use the transform
         if (mimetype) {
             return this.renderWithTransform(mimetype, copy, index);
         }
 
+        const keys = Object.keys(copy.data);
+        mimetype = keys.length > 0 ? keys[0] : 'unknown';
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
-        return <div key={index}>${str}</div>;
+        return <div key={index}>{str}</div>;
     }
 }
