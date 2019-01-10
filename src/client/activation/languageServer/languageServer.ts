@@ -20,7 +20,7 @@ import { PythonSettings } from '../../common/configSettings';
 // tslint:disable-next-line:ordered-imports
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { Logger } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
     IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, ILogger,
@@ -40,9 +40,8 @@ import {
 import { IUnitTestManagementService } from '../../unittests/types';
 import { LanguageServerDownloader } from '../downloader';
 import { InterpreterData, InterpreterDataService } from '../interpreterDataService';
-import { PlatformData } from '../platformData';
 import { ProgressReporting } from '../progress';
-import { IExtensionActivator, ILanguageServerFolderService } from '../types';
+import { IExtensionActivator, ILanguageServerFolderService, ILanguageServerPlatformData } from '../types';
 
 const PYTHON = 'python';
 const dotNetCommand = 'dotnet';
@@ -57,15 +56,16 @@ const buildSymbolsCmdDeprecatedInfo: DeprecatedFeatureInfo = {
 
 @injectable()
 export class LanguageServerExtensionActivator implements IExtensionActivator {
+    protected languageServerFolder!: string;
+    protected readonly platformData: ILanguageServerPlatformData;
+    protected readonly context: IExtensionContext;
     private readonly configuration: IConfigurationService;
     private readonly appShell: IApplicationShell;
     private readonly output: OutputChannel;
     private readonly fs: IFileSystem;
     private readonly sw = new StopWatch();
-    private readonly platformData: PlatformData;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
-    private readonly context: IExtensionContext;
     private readonly workspace: IWorkspaceService;
     private readonly root: Uri | undefined;
 
@@ -75,7 +75,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
     private surveyBanner: IPythonExtensionBanner;
-    private languageServerFolder!: string;
     private languageServerFolderService: ILanguageServerFolderService;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
@@ -84,7 +83,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.services.get<IFileSystem>(IFileSystem);
-        this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
+        this.platformData = this.services.get<ILanguageServerPlatformData>(ILanguageServerPlatformData);
         this.workspace = this.services.get<IWorkspaceService>(IWorkspaceService);
         this.languageServerFolderService = this.services.get<ILanguageServerFolderService>(ILanguageServerFolderService);
         const deprecationManager: IFeatureDeprecationManager =
@@ -122,7 +121,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         if (!clientOptions) {
             return false;
         }
-
         this.startupCompleted.promise.then(() => {
             const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
             testManagementService.activate()
@@ -162,7 +160,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
-    private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
+    protected async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
         sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
 
@@ -173,18 +171,19 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             await this.startLanguageClient();
             return true;
         }
-
+        const z = this.context;
+        const jello = this.context.extensionPath;
         const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
             const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
-            try{
+            try {
                 await downloader.downloadLanguageServer(this.context);
             } catch (err) {
                 return false;
             }
         }
 
-        const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
+        const serverModule = path.join(this.languageServerFolder, this.platformData.getEngineExecutableName());
         this.languageClient = await this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();

@@ -9,8 +9,7 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { LanguageServerDownloader } from '../../client/activation/downloader';
-import { PlatformData } from '../../client/activation/platformData';
-import { ILanguageServerFolderService } from '../../client/activation/types';
+import { ILanguageServerFolderService, ILanguageServerPlatformData } from '../../client/activation/types';
 import { IApplicationShell } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
@@ -29,12 +28,12 @@ suite('Activation - Downloader', () => {
         folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
         const fs = TypeMoq.Mock.ofType<IFileSystem>();
         const output = TypeMoq.Mock.ofType<IOutputChannel>();
-        const platformData: PlatformData = new PlatformData(platformService.object, fs.object);
+        const platformData = TypeMoq.Mock.ofType<ILanguageServerPlatformData>();
         container.setup(a => a.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => output.object);
         container.setup(a => a.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
         container.setup(a => a.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => folderService.object);
 
-        languageServerDownloader = new LanguageServerDownloader(platformData, '', container.object);
+        languageServerDownloader = new LanguageServerDownloader(platformData.object, '', container.object);
     });
 
     test('Get download uri', async () => {
@@ -85,14 +84,14 @@ suite('Activation - Downloader', () => {
             folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
             const output = TypeMoq.Mock.ofType<IOutputChannel>();
-            const platformData: PlatformData = new PlatformData(platformService.object, fs.object);
+            const platformData = TypeMoq.Mock.ofType<ILanguageServerPlatformData>();
             container.setup(a => a.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => output.object);
             container.setup(a => a.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
             container.setup(a => a.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => folderService.object);
             container.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
-            languageServerDownloaderTest = new LanguageServerDownloaderTest(platformData, '', container.object);
-            languageServerExtractorTest = new LanguageServerExtractorTest(platformData, '', container.object);
+            languageServerDownloaderTest = new LanguageServerDownloaderTest(platformData.object, '', container.object);
+            languageServerExtractorTest = new LanguageServerExtractorTest(platformData.object, '', container.object);
         });
         test('Display error message if LS downloading fails', async () => {
             const context = TypeMoq.Mock.ofType<IExtensionContext>();

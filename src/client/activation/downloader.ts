@@ -18,8 +18,10 @@ import {
     PYTHON_LANGUAGE_SERVER_ERROR,
     PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
-import { PlatformData } from './platformData';
-import { IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService } from './types';
+import {
+    IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService,
+    ILanguageServerPlatformData
+} from './types';
 
 const downloadFileExtension = '.nupkg';
 
@@ -28,7 +30,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     private readonly fs: IFileSystem;
     private readonly appShell: IApplicationShell;
     constructor(
-        private readonly platformData: PlatformData,
+        private readonly platformData: ILanguageServerPlatformData,
         private readonly engineFolder: string,
         private readonly serviceContainer: IServiceContainer
     ) {

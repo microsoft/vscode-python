@@ -62,3 +62,18 @@ export const ILanguageServerCompatibilityService = Symbol('ILanguageServerCompat
 export interface ILanguageServerCompatibilityService {
   isSupported(): Promise<boolean>;
 }
+
+export enum PlatformName {
+    Windows32Bit = 'win-x86',
+    Windows64Bit = 'win-x64',
+    Mac64Bit = 'osx-x64',
+    Linux64Bit = 'linux-x64'
+}
+
+export const ILanguageServerPlatformData = Symbol('ILanguageServerPlatformData');
+export interface ILanguageServerPlatformData {
+    getPlatformName(): PlatformName;
+    getEngineDllName(): string;
+    getEngineExecutableName(): string;
+    getExpectedHash(): Promise<string>;
+}
