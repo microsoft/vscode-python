@@ -391,7 +391,8 @@ function notifyUser(msg: string) {
         if (activatedServiceContainer) {
             appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell);
         }
-        appShell.showErrorMessage(msg);
+        appShell.showErrorMessage(msg)
+            .ignoreErrors();
     } catch (ex) {
         // ignore
     }
