@@ -38,7 +38,7 @@ import { IApplicationShell, IWorkspaceService } from './common/application/types
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
-import { Logger } from './common/logger';
+import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -50,7 +50,6 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IFeatureDeprecationManager,
-    ILogger,
     IMemento,
     IOutputChannel,
     Resource,
@@ -308,7 +307,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceConta
         const props = await getActivationTelemetryProps(serviceContainer);
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
-        logError(ex, 'sendStartupTelemetry() failed.');
+        traceError('sendStartupTelemetry() failed.', ex);
     }
 }
 
@@ -377,7 +376,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
 
 function handleError(ex: Error) {
     notifyUser('extension activation failed (see console log).');
-    logError(ex, 'extension activation failed');
+    traceError('extension activation failed', ex);
     sendErrorTelemetry(ex)
         .ignoreErrors();
 }
@@ -393,20 +392,6 @@ function notifyUser(msg: string) {
             appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell);
         }
         appShell.showErrorMessage(msg);
-    } catch (ex) {
-        // ignore
-    }
-}
-
-function logError(ex: Error, msg: string) {
-    try {
-        let logger: ILogger;
-        if (activatedServiceContainer) {
-            logger = activatedServiceContainer.get<ILogger>(ILogger);
-        } else {
-            logger = new Logger();
-        }
-        logger.logError(msg, ex);
     } catch (ex) {
         // ignore
     }
@@ -463,7 +448,7 @@ async function sendErrorTelemetry(ex: Error) {
         }
         props.stackTrace = getStackTrace(ex);
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
-    } catch (ex) {
-        logError(ex, 'sendErrorTelemetry() failed.');
+    } catch (exc2) {
+        traceError('sendErrorTelemetry() failed.', exc2);
     }
 }
