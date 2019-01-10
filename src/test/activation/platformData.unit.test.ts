@@ -41,7 +41,7 @@ suite('Activation - platform data', () => {
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
             const pd = new LanguageServerPlatformData(platformService.object);
 
-            const actual = await pd.getPlatformName();
+            const actual = pd.getPlatformName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);
 
             const actualHash = await pd.getExpectedHash();
@@ -60,7 +60,7 @@ suite('Activation - platform data', () => {
             fs.setup(x => x.readFile(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(`NAME="name"\nID=${t.name}\nID_LIKE=debian`));
             const pd = new LanguageServerPlatformData(platformService.object);
 
-            const actual = await pd.getPlatformName();
+            const actual = pd.getPlatformName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);
 
             const actualHash = await pd.getExpectedHash();

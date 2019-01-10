@@ -171,8 +171,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             await this.startLanguageClient();
             return true;
         }
-        const z = this.context;
-        const jello = this.context.extensionPath;
         const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
             const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
