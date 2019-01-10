@@ -43,7 +43,7 @@ jobs:
       Debugger:
         TestSuiteName: 'testDebugger'
       Functional:
-        TestSuiteName: 'test:functional -- --reporter=mocha-junit-reporter --reporter-options output=./junit-out.xml'
+        TestSuiteName: 'test:functional -- --reporter=mocha-junit-reporter --reporter-options output=${{parameters.MOCHA_CI_REPORTFILE}}'
         HasFunctionalRequirements: 'true'
 
 
