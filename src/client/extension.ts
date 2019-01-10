@@ -410,7 +410,7 @@ function sanitizeFilename(filename: string): string {
 function getStackTrace(ex: Error): string {
     // We aren't showing the error message (ex.message) since it might
     // contain PII.
-    let trace = 'Error: <message hidden>';
+    let trace = '';
     for (const frame of stackTrace.parse(ex)) {
         let filename = frame.getFileName();
         if (filename) {
@@ -422,7 +422,7 @@ function getStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    return trace;
+    return trace.trim();
 }
 
 async function sendErrorTelemetry(ex: Error) {
