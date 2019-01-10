@@ -337,46 +337,43 @@ async function getActivationTelemetryProps(serviceContainer?: IServiceContainer)
 
     // tslint:disable-next-line:no-suspicious-comment
     // TODO: Not all of this data is showing up in the database...
-    try {
-        const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-        const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
-        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
-        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
-        const settings = configurationService.getSettings(mainWorkspaceUri);
-        const [condaVersion, interpreter, interpreters] = await Promise.all([
-            condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
-            interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
-            interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
-        ]);
-        const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
-        const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
-        const interpreterType = interpreter ? interpreter.type : undefined;
-        const hasUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-        const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
-        const isAutoSelectedWorkspaceInterpreterUsed = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : undefined;
-        const hasPython3 = interpreters
-            .filter(item => item && item.version ? item.version.major === 3 : false)
-            .length > 0;
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: If any one of these parts fails we send no info.  We should
+    // be able to partially populate as much as possible instead
+    // (through granular try-catch statements).
+    const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+    const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
+    const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
+    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
+    const settings = configurationService.getSettings(mainWorkspaceUri);
+    const [condaVersion, interpreter, interpreters] = await Promise.all([
+        condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
+        interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
+        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
+    ]);
+    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
+    const interpreterType = interpreter ? interpreter.type : undefined;
+    const hasUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
+    const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
+    const isAutoSelectedWorkspaceInterpreterUsed = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : undefined;
+    const hasPython3 = interpreters
+        .filter(item => item && item.version ? item.version.major === 3 : false)
+        .length > 0;
 
-        return {
-            condaVersion,
-            terminal: terminalShellType,
-            pythonVersion,
-            interpreterType,
-            workspaceFolderCount,
-            hasPython3,
-            hasUserDefinedInterpreter,
-            isAutoSelectedWorkspaceInterpreterUsed
-        };
-    } catch (ex) {
-        logError(ex, 'getActivationTelemetryProps() failed.');
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: Partially populate as much as possible instead.
-        return {};
-    }
+    return {
+        condaVersion,
+        terminal: terminalShellType,
+        pythonVersion,
+        interpreterType,
+        workspaceFolderCount,
+        hasPython3,
+        hasUserDefinedInterpreter,
+        isAutoSelectedWorkspaceInterpreterUsed
+    };
 }
 
 /////////////////////////////
@@ -460,7 +457,13 @@ function getStackTrace(ex: Error): string {
 
 async function sendErrorTelemetry(ex: Error) {
     try {
-        const props = await getActivationTelemetryProps(activatedServiceContainer);
+        // tslint:disable-next-line:no-any
+        let props: any;
+        try {
+            props = await getActivationTelemetryProps(activatedServiceContainer);
+        } catch (ex) {
+            props = {};
+        }
         props.stackTrace = getStackTrace(ex);
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
