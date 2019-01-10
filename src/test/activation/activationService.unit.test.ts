@@ -85,7 +85,7 @@ suite('Activation - ActivationService', () => {
                 } else{
                     diagnostics = [];
                 }
-                lsNotSupportedDiagnosticService.setup(l => l.diagnose()).returns(() => diagnostics);
+                lsNotSupportedDiagnosticService.setup(l => l.diagnose()).returns(() => Promise.resolve(diagnostics));
                 lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(activatorName)))
@@ -274,6 +274,38 @@ suite('Activation - ActivationService', () => {
                 appShell.verifyAll();
                 cmdManager.verifyAll();
             });
+            if (!jediIsEnabled){
+                test('Revert to jedi when LS activation fails', async () => {
+                    lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                    const activatorDotNet = TypeMoq.Mock.ofType<IExtensionActivator>();
+                    const activatorJedi = TypeMoq.Mock.ofType<IExtensionActivator>();
+                    const activationService = new ExtensionActivationService(serviceContainer.object);
+                    const diagnostics = [];
+                    lsNotSupportedDiagnosticService.setup(l => l.diagnose()).returns(() => Promise.resolve(diagnostics));
+                    lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(ExtensionActivators.DotNet)))
+                        .returns(() => activatorDotNet.object)
+                        .verifiable(TypeMoq.Times.once());
+                    activatorDotNet
+                        .setup(a => a.activate()).returns(() => Promise.resolve(false))
+                        .verifiable(TypeMoq.Times.once());
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(ExtensionActivators.Jedi)))
+                        .returns(() => activatorJedi.object)
+                        .verifiable(TypeMoq.Times.once());
+                    activatorJedi
+                        .setup(a => a.activate()).returns(() => Promise.resolve(true))
+                        .verifiable(TypeMoq.Times.once());
+
+                    await activationService.activate();
+
+                    activatorDotNet.verifyAll();
+                    activatorJedi.verifyAll();
+                    serviceContainer.verifyAll();
+                });
+            }
         });
     });
 });

@@ -88,7 +88,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         }
     }
 
-    private async downloadFile(uri: string, title: string): Promise<string> {
+    protected async downloadFile(uri: string, title: string): Promise<string> {
         this.output.append(`Downloading ${uri}... `);
         const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
 
@@ -136,7 +136,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         return tempFile.filePath;
     }
 
-    private async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
+    protected async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
         this.output.append('Unpacking archive... ');
 
         const installFolder = path.join(extensionPath, this.engineFolder);
