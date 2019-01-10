@@ -74,4 +74,70 @@ suite('Language Server', () => {
         expect(options!.initializationOptions).not.to.equal(undefined, 'initializationOptions cannot be undefined');
         expect(options!.initializationOptions!.searchPaths).to.include.members(pythonPathVar);
     });
+
+    // suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
+    //     class LanguageServerExtensionActivatorTest extends LanguageServerExtensionActivator {
+    //         // tslint:disable-next-line:no-unnecessary-override
+    //         public async activate(): Promise<boolean> {
+    //             return super.activate();
+    //         }
+    //         protected async startLanguageClient(): Promise<void> {
+    //             throw new Error('kaboom');
+    //         }
+    //     }
+    //     let languageServerFolderService: TypeMoq.IMock<ILanguageServerFolderService>;
+    //     let languageServerExtensionActivatorTest: LanguageServerExtensionActivatorTest;
+    //     setup(() => {
+    //         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+    //         extensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
+    //         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+    //         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+    //         cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
+    //         platformService = TypeMoq.Mock.ofType<IPlatformService>();
+    //         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+    //         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+    //         languageServerFolderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
+
+    //         workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
+    //         workspaceService.setup(w => w.workspaceFolders).returns(() => []);
+    //         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+
+    //         const output = TypeMoq.Mock.ofType<IOutputChannel>();
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny())).returns(() => output.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IExtensionContext))).returns(() => extensionContext.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFeatureDeprecationManager))).returns(() => TypeMoq.Mock.ofType<IFeatureDeprecationManager>().object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => TypeMoq.Mock.ofType<ILanguageServerFolderService>().object);
+    //         languageServerExtensionActivatorTest = new LanguageServerExtensionActivatorTest(serviceContainer.object);
+    //     });
+    //     test('Display error message if LS fails to start', async () => {
+    //         languageServerFolderService.setup(c => c.getLanguageServerFolderName()).returns(() => Promise.resolve('random'));
+    //         const envVarsProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
+    //         const pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
+    //         const testManagementService = TypeMoq.Mock.ofType<IUnitTestManagementService>();
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IUnitTestManagementService))).returns(() => TypeMoq.Mock.ofType<IUnitTestManagementService>().object);
+    //         testManagementService.setup(c => c.activate()).returns(() => Promise.resolve(TypeMoq.It.isAny()));
+    //         extensionContext.setup(e => e.extensionPath).returns(() => path.join('a', 'b', 'c'));
+    //         pathUtils.setup(p => p.delimiter).returns(() => TypeMoq.It.isAnyString());
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
+    //         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
+    //         envVarsProvider
+    //             .setup(p => p.getEnvironmentVariables())
+    //             .returns(() => { return Promise.resolve({ PYTHONPATH: TypeMoq.It.isAnyString() }); })
+    //             .verifiable(TypeMoq.Times.once());
+    //         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))
+    //             .returns(() => Promise.resolve(undefined))
+    //             .verifiable(TypeMoq.Times.once());
+    //         try {
+    //             await languageServerExtensionActivatorTest.activate();
+    //         } catch (err) {
+    //             appShell.verifyAll();
+    //         }
+    //     });
+    // });
 });

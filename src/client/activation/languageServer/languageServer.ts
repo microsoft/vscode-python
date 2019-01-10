@@ -144,6 +144,24 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
+    protected async startLanguageClient(): Promise<void> {
+        this.context.subscriptions.push(this.languageClient!.start());
+        await this.serverReady();
+        const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
+        const progressReporting = new ProgressReporting(this.languageClient!);
+        disposables.push(progressReporting);
+    }
+
+    protected async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+        const options = { stdio: 'pipe' };
+        const serverOptions: ServerOptions = {
+            run: { command: serverModule, rgs: [], options: options },
+            debug: { command: serverModule, args: ['--debug'], options }
+        };
+        const vscodeLanaguageClient = await import('vscode-languageclient');
+        return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
+    }
+
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
         sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
@@ -184,14 +202,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private async startLanguageClient(): Promise<void> {
-        this.context.subscriptions.push(this.languageClient!.start());
-        await this.serverReady();
-        const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
-        const progressReporting = new ProgressReporting(this.languageClient!);
-        disposables.push(progressReporting);
-    }
-
     private async serverReady(): Promise<void> {
         while (!this.languageClient!.initializeResult) {
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -213,17 +223,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const vscodeLanaguageClient = await import('vscode-languageclient');
         return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
-
-    private async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const options = { stdio: 'pipe' };
-        const serverOptions: ServerOptions = {
-            run: { command: serverModule, rgs: [], options: options },
-            debug: { command: serverModule, args: ['--debug'], options }
-        };
-        const vscodeLanaguageClient = await import('vscode-languageclient');
-        return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
-    }
-
     // tslint:disable-next-line:member-ordering
     public async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
         const properties = new Map<string, {}>();
