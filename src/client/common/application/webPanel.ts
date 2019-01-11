@@ -9,9 +9,8 @@ import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { IDisposableRegistry, IConfigurationService } from '../types';
+import { IConfigurationService, IDisposableRegistry } from '../types';
 import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
-import { ConfigurationFeature } from 'vscode-languageclient/lib/configuration';
 
 export class WebPanel implements IWebPanel {
 

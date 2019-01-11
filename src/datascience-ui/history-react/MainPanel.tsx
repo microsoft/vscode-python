@@ -157,12 +157,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return false;
     }
 
+    // tslint:disable-next-line:no-any
     private updateSettings = (payload?: any) => {
         if (payload) {
             //const prevShowInputs = getSetting("showCellInputCode", true) as boolean;
             const prevShowInputs = getSettings().showCellInputCode;
             updateSettings(payload as string);
-            
+
             // If our settings change updated show inputs we need to fix up our cells
             //const showInputs = getSetting("showCellInputCode", true) as boolean;
             const showInputs = getSettings().showCellInputCode;
@@ -221,7 +222,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             state : CellState.finished
         });
     }
-    
 
     private canCollapseAll = () => {
         return this.state.cellVMs.length > 0;
@@ -281,7 +281,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
         this.expandAllSilent();
     }
-
 
     private clearAll = () => {
         PostOffice.sendMessage({ type: HistoryMessages.DeleteAllCells, payload: { }});
@@ -380,7 +379,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const cell = payload as ICell;
             let cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
-            
+
             // Set initial cell visibility and collapse
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
@@ -458,7 +457,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 return cellVM;
             }
 
-            let newCellVM = {...cellVM};
+            const newCellVM = {...cellVM};
             if (cellVM.inputBlockShow !== visible) {
                 if (visible) {
                     // Show the cell, the rest of the function will add on correct collapse state

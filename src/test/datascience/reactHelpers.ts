@@ -53,7 +53,7 @@ export function setUpDomEnvironment() {
     // IANHU: not sure if I need this for settings, but putting it in for now
     global['getInitialSettings'] = () => {
         //return { '' }
-    }
+    };
 
     configure({ adapter: new Adapter() });
 }

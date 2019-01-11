@@ -7,9 +7,10 @@ import { IDataScienceSettings } from '../../client/common/types';
 
 // The WebPanel constructed by the extension should inject a getInitialSettings function into
 // the script. This should return a dictionary of key value pairs for settings
+// tslint:disable-next-line:no-any
 export declare function getInitialSettings(): any;
 
-let loadedSettings: IDataScienceSettings | undefined;
+let loadedSettings: IDataScienceSettings;
 
 export function getSettings() : IDataScienceSettings {
     if (loadedSettings === undefined) {
@@ -21,8 +22,7 @@ export function getSettings() : IDataScienceSettings {
 
 export function updateSettings(jsonSettingsString: string) {
     const newSettings = JSON.parse(jsonSettingsString);
-    let dsSettings: IDataScienceSettings = <IDataScienceSettings>newSettings;
-    loadedSettings = dsSettings;
+    loadedSettings = <IDataScienceSettings>newSettings;
 }
 
 function load() {

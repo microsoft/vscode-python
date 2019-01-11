@@ -21,6 +21,7 @@ import {
     IWorkspaceService
 } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
+import { PythonSettings } from '../common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IFileSystem } from '../common/platform/types';
@@ -44,7 +45,6 @@ import {
     InterruptResult,
     IStatusProvider
 } from './types';
-import { PythonSettings } from '../common/configSettings';
 
 export enum SysInfoReason {
     Start,
