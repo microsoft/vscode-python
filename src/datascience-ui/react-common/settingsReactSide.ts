@@ -24,6 +24,11 @@ export function getSetting(key: string, defValue: string | boolean | number) : s
     return defValue;
 }
 
+export function updateSettings(jsonSettingsString: string) {
+    const newSettings = JSON.parse(jsonSettingsString);
+    loadedSettingsCollection = newSettings;
+}
+
 function load() {
     // tslint:disable-next-line:no-typeof-undefined
     if (typeof getSettings !== 'undefined') {

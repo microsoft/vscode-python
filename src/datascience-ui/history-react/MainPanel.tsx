@@ -13,7 +13,7 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
-import { getSetting } from '../react-common/settingsReactSide';
+import { getSetting, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
@@ -146,6 +146,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 }
                 break;
 
+            case HistoryMessages.UpdateSettings:
+                this.updateSettings(payload);
+                break;
+
             default:
                 break;
         }
@@ -153,11 +157,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return false;
     }
 
+    private updateSettings = (payload?: any) => {
+        if (payload) {
+            const prevShowInputs = getSetting("showCellInputCode", true) as boolean;
+            updateSettings(payload as string);
+            
+            // If our settings change updated show inputs we need to fix up our cells
+            const showInputs = getSetting("showCellInputCode", true) as boolean;
+
+            if (prevShowInputs !== showInputs) {
+                const collapseInputs = getSetting("collapseCellInputCode", true) as boolean;
+                this.toggleCellInputVisibility(showInputs, collapseInputs);
+            }
+        }
+    }
+
     private getAllCells = () => {
         // Send all of our cells back to the other side
         const cells = this.state.cellVMs.map((cellVM : ICellViewModel) => {
             return cellVM.cell;
-        }) ;
+        });
 
         PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload: { contents: cells }});
     }
@@ -198,6 +217,49 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             file : 'foo.py',
             line : 0,
             state : CellState.finished
+        });
+    }
+    
+    // Toggle the visibility on all the cell inputs
+    // IANHU: we need a VM adjusting clean up along with the toggle issue
+    private toggleCellInputVisibility = (visible: boolean, collapse: boolean) => {
+        const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
+            if (value.cell.data.cell_type === 'code') {
+                if (visible) {
+                    // Show everything
+                    if (!value.inputBlockShow) {
+                       // IANHU: this repeats with toggle cell vm 
+                        let newText = this.extractInputText(value.cell);
+                        const inputLinesCount = newText.split('\n').length;
+                        if (collapse) {
+                            if (newText.length > 0) {
+                                newText = newText.split('\n', 1)[0];
+                                newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+                                newText = newText.concat('...');
+                            }
+                        }
+
+                        return {...value, inputBlockShow: true, inputBlockOpen: !collapse, inputBlockText: newText, inputBlockCollapseNeeded: (inputLinesCount > 1)};
+                    } else {
+                        return {...value};
+                    }
+                } else {
+                    // Hide everything
+                    if (value.inputBlockShow) {
+                       // IANHU: this repeats with toggle cell vm 
+                        return {...value, inputBlockShow: false, inputBlockCollapseNeeded: false};
+                    } else {
+                        return {...value};
+                    }
+                }
+            } else {
+                return {...value};
+            }
+        });
+
+        this.setState({
+            skipNextScroll: true,
+            cellVMs: newCells
         });
     }
 
@@ -380,15 +442,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // tslint:disable-next-line:no-any
     private addCell = (payload?: any) => {
-        // Get our setting to see if we should have input expanded, collapsed, or hidden
-        const setting = getSetting("inputCodeDisplay", "Collapsed") as string;
+        // Get our settings for if we should display input code and if we should collapse by default
+        const showInputs = getSetting("showCellInputCode", true) as boolean;
+        const collapseInputs = getSetting("collapseCellInputCode", true) as boolean;
 
         if (payload) {
             const cell = payload as ICell;
-            let cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled, setting !== "Hidden");
+            let cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled, showInputs);
 
             // Toggle by default if set
-            if (setting == "Collapsed") {
+            if (collapseInputs) {
                 cellVM = this.toggleCellVM(cellVM);
             }
 

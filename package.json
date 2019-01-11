@@ -989,14 +989,16 @@
                     "description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
                     "scope": "resource"
                 },
-                "python.dataScience.inputCodeDisplay": {
-                    "enum": [
-                        "Expanded",
-                        "Collapsed",
-                        "Hidden"
-                    ],
-                    "default": "Collapsed",
-                    "description": "For cells in the Python Interactive windows should input code be expanded, collapsed, or hidden by default.",
+                "python.dataScience.showCellInputCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "For cells in the Python Interactive window show cell input.",
+                    "scope": "resource"
+                },
+                "python.dataScience.collapseCellInputCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Collapse by default cell input code when cells are added to the Python Interactive windows.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

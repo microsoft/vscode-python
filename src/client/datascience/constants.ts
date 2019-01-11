@@ -55,6 +55,7 @@ export namespace HistoryMessages {
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
     export const SendInfo = 'send_info';
+    export const UpdateSettings = 'update_settings';
 }
 
 export namespace Telemetry {
