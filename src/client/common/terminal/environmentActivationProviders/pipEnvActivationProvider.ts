@@ -5,12 +5,15 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IInterpreterService, InterpreterType } from '../../../interpreter/contracts';
+import { IInterpreterService, InterpreterType, IPipEnvService } from '../../../interpreter/contracts';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export class PipEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(@inject(IInterpreterService) private readonly interpreterService: IInterpreterService) { }
+    constructor(
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IPipEnvService) private readonly pipenvService: IPipEnvService
+    ) { }
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
         return true;
@@ -22,6 +25,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
             return;
         }
 
-        return ['pipenv shell'];
+        const execName = this.pipenvService.executable;
+        return [`${execName} shell`];
     }
 }

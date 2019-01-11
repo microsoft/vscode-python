@@ -5,11 +5,12 @@
 
 import * as assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
+import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PipEnvActivationCommandProvider } from '../../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
-import { IInterpreterService, InterpreterType } from '../../../../client/interpreter/contracts';
+import { IInterpreterService, InterpreterType, IPipEnvService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
 // tslint:disable:no-any
@@ -19,9 +20,16 @@ suite('Terminals Activation - Pipenv', () => {
         suite(resource ? 'With a resource' : 'Without a resource', () => {
             let activationProvider: ITerminalActivationCommandProvider;
             let interpreterService: IInterpreterService;
+            let pipenvService: TypeMoq.IMock<IPipEnvService>;
             setup(() => {
                 interpreterService = mock(InterpreterService);
-                activationProvider = new PipEnvActivationCommandProvider(instance(interpreterService));
+                pipenvService = TypeMoq.Mock.ofType<IPipEnvService>();
+                activationProvider = new PipEnvActivationCommandProvider(
+                    instance(interpreterService),
+                    pipenvService.object
+                );
+
+                pipenvService.setup(p => p.executable).returns(() => 'pipenv');
             });
 
             test('No commands for no interpreter', async () => {
