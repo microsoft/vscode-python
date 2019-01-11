@@ -51,7 +51,7 @@ export function setUpDomEnvironment() {
     };
 
     // IANHU: not sure if I need this for settings, but putting it in for now
-    global['getSettings'] = () => {
+    global['getInitialSettings'] = () => {
         //return { '' }
     }
 

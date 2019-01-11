@@ -123,7 +123,7 @@ export class WebPanel implements IWebPanel {
                     function getLocStrings() {
                         return ${locDatabase};
                     }
-                    function getSettings() {
+                    function getInitialSettings() {
                         return ${dsSettings};
                     }
                 </script>

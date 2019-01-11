@@ -3,37 +3,46 @@
 
 'use strict';
 
-// The WebPanel constructed by the extension should inject a getSettings function into
+import { IDataScienceSettings } from '../../client/common/types';
+
+// The WebPanel constructed by the extension should inject a getInitialSettings function into
 // the script. This should return a dictionary of key value pairs for settings
-export declare function getSettings() : { [index: string ] : string | boolean | number };
+export declare function getInitialSettings(): any;
 
-// IANHU: Need to handle settings update
-let loadedSettingsCollection: { [index: string]: string | boolean | number } | undefined ;
+let loadedSettings: IDataScienceSettings | undefined;
 
-// IANHU: Does default value make sense here for a setting? Also chance to def value must match return type
-// IANHU: instead of a dictionary can I deserialize into an object?
-export function getSetting(key: string, defValue: string | boolean | number) : string | boolean | number {
-    if (!loadedSettingsCollection) {
+export function getSettings() : IDataScienceSettings {
+    if (loadedSettings === undefined) {
         load();
     }
 
-    if (loadedSettingsCollection && loadedSettingsCollection.hasOwnProperty(key)) {
-        return loadedSettingsCollection[key];
-    }
-
-    return defValue;
+    return loadedSettings;
 }
 
 export function updateSettings(jsonSettingsString: string) {
     const newSettings = JSON.parse(jsonSettingsString);
-    loadedSettingsCollection = newSettings;
+    let dsSettings: IDataScienceSettings = <IDataScienceSettings>newSettings;
+    loadedSettings = dsSettings;
 }
 
 function load() {
     // tslint:disable-next-line:no-typeof-undefined
-    if (typeof getSettings !== 'undefined') {
-        loadedSettingsCollection = getSettings();
+    if (typeof getInitialSettings !== 'undefined') {
+        loadedSettings = <IDataScienceSettings>getInitialSettings();
     } else {
-        loadedSettingsCollection = {};
+        // Default settings for tests
+        loadedSettings = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 10,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCode: true
+        };
     }
 }

@@ -201,6 +201,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCode: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();

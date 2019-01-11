@@ -287,6 +287,8 @@ export interface IDataScienceSettings {
     changeDirOnImportExport: boolean;
     useDefaultConfigForJupyter: boolean;
     searchForJupyter: boolean;
+    showCellInputCode: boolean;
+    collapseCellInputCode: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
