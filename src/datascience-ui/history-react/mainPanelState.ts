@@ -27,7 +27,7 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
     };
 }
 
-export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void, inputBlockShow: boolean) : ICellViewModel {
+export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) : ICellViewModel {
     let inputLinesCount = 0;
     let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
 
@@ -44,9 +44,9 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
    return {
        cell: inputCell,
        inputBlockOpen: true,
-       inputBlockShow: inputBlockShow,
+       inputBlockShow: true,
        inputBlockText: inputText,
-       inputBlockCollapseNeeded: (inputLinesCount > 1 && inputBlockShow),
+       inputBlockCollapseNeeded: (inputLinesCount > 1),
        inputBlockToggled: inputBlockToggled
    };
 }
@@ -54,7 +54,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
 function generateVMs(inputBlockToggled : (id: string) => void, filePath: string) : ICellViewModel [] {
     const cells = generateCells(filePath);
     return cells.map((cell : ICell) => {
-        return createCellVM(cell, inputBlockToggled, true);
+        return createCellVM(cell, inputBlockToggled);
     });
 }
 
