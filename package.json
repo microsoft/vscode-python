@@ -1525,7 +1525,7 @@
                     "type": "string",
                     "default": "pipenv",
                     "description": "Path to the pipenv executable to use for activation.",
-                    "scope": "resource"
+                    "scope": "window"
                 },
                 "python.sortImports.args": {
                     "type": "array",
