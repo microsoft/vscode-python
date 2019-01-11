@@ -55,6 +55,7 @@ export namespace HistoryMessages {
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
     export const SendInfo = 'send_info';
+    export const SubmitNewCell = 'submit_new_cell';
 }
 
 export namespace Telemetry {
@@ -80,6 +81,7 @@ export namespace Telemetry {
     export const ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE';
     export const ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT';
     export const StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST';
+    export const SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL';
 }
 
 export namespace HelpLinks {
@@ -92,4 +94,8 @@ export namespace Settings {
 
 export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{1}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+}
+
+export namespace Identifiers {
+    export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
 }

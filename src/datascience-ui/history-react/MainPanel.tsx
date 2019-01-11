@@ -16,6 +16,7 @@ import { Progress } from '../react-common/progress';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
+import { InputCell } from './inputCell';
 import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
@@ -89,6 +90,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <div className='top-spacing'/>
                 {progressBar}
                 {this.renderCells()}
+                {this.renderInput()}
                 <div ref={this.updateBottom}/>
             </div>
         );
@@ -177,6 +179,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     theme={this.props.theme}
                     gotoCode={() => this.gotoCellCode(index)}
                     delete={() => this.deleteCell(index)}/>
+            </ErrorBoundary>
+        );
+    }
+
+    private renderInput = () => {
+        const realCells = this.state.cellVMs.filter(c => c.cell.data.cell_type !== 'sys_info');
+        const inputExecutionCount = realCells && realCells.length > 0 ? realCells[realCells.length - 1].cell.data.execution_count.toString() : '1';
+        return (
+            <ErrorBoundary>
+                <InputCell theme={this.props.theme} onSubmit={this.submitInput} count={inputExecutionCount} />
             </ErrorBoundary>
         );
     }
@@ -484,5 +496,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.updateOrAdd(cell, false);
             }
         }
+    }
+
+    private submitInput = (code: string) => {
+        PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: code });
     }
 }

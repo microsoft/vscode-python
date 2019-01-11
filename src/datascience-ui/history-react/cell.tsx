@@ -1,16 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './cell.css';
 import '../../client/common/extensions';
+import './cell.css';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
+
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
+import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
@@ -90,21 +92,22 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderNormalCell() {
-
+        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
+        const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
         return (
             <div className='cell-wrapper'>
                 <MenuBar theme={this.props.theme}>
                     <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
                         <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} invisible={hasNoSource}>
                         <Image theme={this.props.theme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
                     </CellButton>
                 </MenuBar>
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <ExecutionCount cell={this.props.cellVM.cell} theme={this.props.theme} visible={this.isCodeCell()}/>
+                            <ExecutionCount isBusy={busy} theme={this.props.theme} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
                             <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
                                 open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
                                 tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>

@@ -29,7 +29,7 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, HistoryMessages, Settings, Telemetry } from './constants';
+import { EditorContexts, HistoryMessages, Identifiers, Settings, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
     CellState,
@@ -206,6 +206,10 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             case HistoryMessages.SendInfo:
                 this.updateContexts(payload);
+                break;
+
+            case HistoryMessages.SubmitNewCell:
+                this.submitNewCell(payload);
                 break;
 
             case HistoryMessages.DeleteAllCells:
@@ -395,6 +399,17 @@ export class History implements IWebPanelMessageListener, IHistory {
         } else {
             interactiveCellsContext.set(false).catch();
             redoableContext.set(false).catch();
+        }
+    }
+
+    @captureTelemetry(Telemetry.SubmitCellThroughInput, {}, false)
+    // tslint:disable-next-line:no-any
+    private submitNewCell(payload?: any) {
+        // If there's any payload, it's the code
+        if (payload) {
+            this.addCode(payload, Identifiers.EmptyFileName, 0).catch(err => {
+                this.applicationShell.showErrorMessage(err);
+            });
         }
     }
 

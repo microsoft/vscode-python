@@ -9,6 +9,7 @@ interface ICellButtonProps {
     theme: string;
     tooltip : string;
     disabled?: boolean;
+    invisible?: boolean;
     onClick() : void;
 }
 
@@ -18,10 +19,11 @@ export class CellButton extends React.Component<ICellButtonProps> {
     }
 
     public render() {
-        const classNames = `cell-button cell-button-${this.props.theme}`;
-        const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
+        if (!this.props.invisible) {
+            const classNames = `cell-button cell-button-${this.props.theme}`;
+            const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
 
-        return (
+            return (
                 <button role='button' aria-pressed='false' disabled={this.props.disabled} title={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
                     <div className={innerFilter} >
                         <div className='cell-button-child'>
@@ -30,6 +32,10 @@ export class CellButton extends React.Component<ICellButtonProps> {
                     </div>
                 </button>
             );
+        } else {
+            return null;
+        }
+
     }
 
 }
