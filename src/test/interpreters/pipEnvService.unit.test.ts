@@ -97,6 +97,7 @@ suite('Interpreters - PipEnv', () => {
                 settings = TypeMoq.Mock.ofType<IPythonSettings>();
                 config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
                 settings.setup(p => p.pipenvPath).returns(() => pipenvPathSetting);
+                pipenvPathSetting = 'pipenv';
 
                 pipEnvService = new PipEnvService(serviceContainer.object);
             });
@@ -173,15 +174,10 @@ suite('Interpreters - PipEnv', () => {
                 expect(environments).to.be.lengthOf(1);
                 fileSystem.verifyAll();
             });
-            test('Must use \'python.pipenvPath\' setting if set', async () => {
+            test('Must use \'python.pipenvPath\' setting', async () => {
                 pipenvPathSetting = 'spam-spam-pipenv-spam-spam';
                 const pipenvExe = pipEnvService.executable;
                 assert.equal(pipenvExe, 'spam-spam-pipenv-spam-spam', 'Failed to identify pipenv.exe');
-            });
-            test('Must use default if \'python.pipenvPath\' setting not set', async () => {
-                pipenvPathSetting = '';
-                const pipenvExe = pipEnvService.executable;
-                assert.equal(pipenvExe, 'pipenv', 'Failed to identify pipenv.exe');
             });
         });
     });

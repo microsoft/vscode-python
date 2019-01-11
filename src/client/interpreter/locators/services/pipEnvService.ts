@@ -13,7 +13,6 @@ import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
-const DefaultExecName = 'pipenv';
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 
 @injectable()
@@ -46,12 +45,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     }
 
     public get executable(): string {
-        const settings = this.configService.getSettings();
-        const setting = settings.pipenvPath;
-        if (setting && setting !== '') {
-            return setting;
-        }
-        return DefaultExecName;
+        return this.configService.getSettings().pipenvPath;
     }
 
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
