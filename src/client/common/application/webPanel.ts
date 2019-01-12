@@ -10,7 +10,8 @@ import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IDisposableRegistry } from '../types';
-import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
+import { IWebPanel, IWebPanelMessageListener, WebPanelMessage, IWorkspaceService } from './types';
+import { Identifiers } from '../../datascience/constants';
 
 export class WebPanel implements IWebPanel {
 
@@ -19,6 +20,7 @@ export class WebPanel implements IWebPanel {
     private loadPromise: Promise<void>;
     private disposableRegistry: IDisposableRegistry;
     private rootPath: string;
+    private workspaceService: IWorkspaceService;
 
     constructor(
         serviceContainer: IServiceContainer,
@@ -28,6 +30,7 @@ export class WebPanel implements IWebPanel {
         embeddedCss?: string) {
 
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.listener = listener;
         this.rootPath = path.dirname(mainScriptPath);
         this.panel = window.createWebviewPanel(
@@ -99,6 +102,7 @@ export class WebPanel implements IWebPanel {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
                 <meta name="theme-color" content="#000000">
+                <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
                 <base href="${uriBase}"/>
                 <style type="text/css">

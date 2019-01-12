@@ -5,14 +5,15 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { PostOffice } from '../react-common/postOffice';
-import { detectTheme } from '../react-common/themeDetector';
+import { detectBaseTheme } from '../react-common/themeDetector';
 import './index.css';
 import { MainPanel } from './MainPanel';
+import { Identifiers } from '../../client/datascience/constants';
 
-const theme = detectTheme();
+const baseTheme = detectBaseTheme();
 const skipDefault = PostOffice.canSendMessages();
 
 ReactDOM.render(
-  <MainPanel theme={theme} skipDefault={skipDefault} />,
+  <MainPanel baseTheme={baseTheme} codeTheme={Identifiers.GeneratedThemeName} skipDefault={skipDefault} />,
   document.getElementById('root') as HTMLElement
 );

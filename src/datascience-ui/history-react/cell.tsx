@@ -27,7 +27,8 @@ import { displayOrder, richestMimetype, transforms } from './transforms';
 
 interface ICellProps {
     cellVM: ICellViewModel;
-    theme: string;
+    baseTheme: string;
+    codeTheme: string;
     gotoCode(): void;
     delete(): void;
 }
@@ -47,7 +48,7 @@ export class Cell extends React.Component<ICellProps> {
 
     public render() {
         if (this.props.cellVM.cell.data.cell_type === 'sys_info') {
-            return <SysInfo theme={this.props.theme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
+            return <SysInfo theme={this.props.baseTheme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
         } else {
             return this.renderNormalCell();
         }
@@ -96,19 +97,19 @@ export class Cell extends React.Component<ICellProps> {
         const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
         return (
             <div className='cell-wrapper'>
-                <MenuBar theme={this.props.theme}>
-                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
-                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.Cancel}/>
+                <MenuBar baseTheme={this.props.baseTheme}>
+                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
+                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} invisible={hasNoSource}>
-                        <Image theme={this.props.theme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
+                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} invisible={hasNoSource}>
+                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
                     </CellButton>
                 </MenuBar>
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <ExecutionCount isBusy={busy} theme={this.props.theme} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
-                            <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
+                            <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
+                            <CollapseButton theme={this.props.baseTheme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
                                 open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
                                 tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
                         </div>
@@ -127,7 +128,7 @@ export class Cell extends React.Component<ICellProps> {
     private renderInputs = () => {
         if (this.isCodeCell()) {
             // Colorize our text
-            return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} theme={this.props.theme}/></div>);
+            return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} codeTheme={this.props.codeTheme}/></div>);
         } else {
             return null;
         }
@@ -135,7 +136,7 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderResults = () => {
         const outputClassNames = this.isCodeCell() ?
-            `cell-output cell-output-${this.props.theme}` :
+            `cell-output cell-output-${this.props.baseTheme}` :
             '';
 
         // Results depend upon the type of cell

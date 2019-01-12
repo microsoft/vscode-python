@@ -6,7 +6,7 @@ import * as React from 'react';
 import './cellButton.css';
 
 interface ICellButtonProps {
-    theme: string;
+    baseTheme: string;
     tooltip : string;
     disabled?: boolean;
     invisible?: boolean;
@@ -20,7 +20,7 @@ export class CellButton extends React.Component<ICellButtonProps> {
 
     public render() {
         if (!this.props.invisible) {
-            const classNames = `cell-button cell-button-${this.props.theme}`;
+            const classNames = `cell-button cell-button-${this.props.baseTheme}`;
             const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
 
             return (

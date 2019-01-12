@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './input.css';
 
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/python/python';
@@ -10,10 +9,13 @@ import * as CodeMirror from 'codemirror';
 import * as React from 'react';
 import * as RCM from 'react-codemirror';
 
+import './code.css';
+import './input.css';
+
 import { InputHistory } from './inputHistory';
 
 interface IInputProps {
-    theme: string;
+    codeTheme: string;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
 }
@@ -42,6 +44,7 @@ export class Input extends React.Component<IInputProps> {
                                     Enter   : this.enter,
                                     Up      : this.arrowUp
                                 },
+                                theme: `${this.props.codeTheme} default`,
                                 mode: 'python'
                             }
                         }

@@ -8,7 +8,6 @@ import './executionCount.css';
 interface IExecutionCountProps {
     isBusy: boolean;
     count: string;
-    theme: string;
     visible: boolean;
 }
 

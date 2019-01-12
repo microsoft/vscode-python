@@ -10,7 +10,8 @@ import { ExecutionCount } from './executionCount';
 import { Input } from './input';
 
 interface IInputCellProps {
-    theme: string;
+    baseTheme: string;
+    codeTheme: string;
     count: string;
     onSubmit(code: string): void;
 }
@@ -32,12 +33,12 @@ export class InputCell extends React.Component<IInputCellProps, IInputCellState>
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <ExecutionCount isBusy={false} count={this.props.count} theme={this.props.theme} visible={true}/>
+                            <ExecutionCount isBusy={false} count={this.props.count} visible={true}/>
                         </div>
                     </div>
                     <div className='content-div'>
                         <div className='cell-result-container'>
-                            <Input theme={this.props.theme} onSubmit={this.props.onSubmit} onChangeLineCount={this.onChangeLineCount} />
+                            <Input codeTheme={this.props.codeTheme} onSubmit={this.props.onSubmit} onChangeLineCount={this.onChangeLineCount} />
                         </div>
                     </div>
                 </div>

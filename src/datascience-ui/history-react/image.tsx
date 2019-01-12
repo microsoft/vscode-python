@@ -81,7 +81,7 @@ const images: { [key: string] : { light: string, dark: string } } = {
 }
 
 interface IImageProps {
-    theme: string;
+    baseTheme: string;
     image: ImageName;
     class: string;
 }
@@ -95,7 +95,7 @@ export class Image extends React.Component<IImageProps> {
         const key = (ImageName[this.props.image]).toString();
         const image = images.hasOwnProperty(key) ?
             images[key] : images['Cancel']; // Default is cancel.
-        const source = this.props.theme.includes('dark') ? image.dark : image.light;
+        const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;
         return (
             <InlineSVG className={this.props.class} src={source}/>
         )
