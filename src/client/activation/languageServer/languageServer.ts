@@ -182,7 +182,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             }
         }
 
-        const serverModule = path.join(this.languageServerFolder, this.platformData.getEngineExecutableName());
+        const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
         this.languageClient = await this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
