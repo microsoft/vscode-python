@@ -992,7 +992,7 @@
                 "python.dataScience.allowInput": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Allow the inputting of python code directly into the Python Interactive window"
+                    "description": "Allow the inputting of python code directly into the Python Interactive window (currently under development)"
                 },
                 "python.dataScience.showCellInputCode": {
                     "type": "boolean",

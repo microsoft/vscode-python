@@ -205,13 +205,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private renderInput = () => {
-        const realCells = this.state.cellVMs.filter(c => c.cell.data.cell_type !== 'sys_info');
-        const inputExecutionCount = realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
-        return (
-            <ErrorBoundary>
-                <InputCell baseTheme={this.props.baseTheme} testMode={this.props.testMode} codeTheme={this.props.codeTheme} onSubmit={this.submitInput} count={inputExecutionCount.toString()} />
-            </ErrorBoundary>
-        );
+        if (getSettings && getSettings().allowInput) {
+            const realCells = this.state.cellVMs.filter(c => c.cell.data.cell_type !== 'sys_info');
+            const inputExecutionCount = realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
+            return (
+                <ErrorBoundary>
+                    <InputCell baseTheme={this.props.baseTheme} testMode={this.props.testMode} codeTheme={this.props.codeTheme} onSubmit={this.submitInput} count={inputExecutionCount.toString()} />
+                </ErrorBoundary>
+            );
+        } else {
+            return null;
+        }
     }
 
     private addMarkdown = () => {
