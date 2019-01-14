@@ -18,6 +18,7 @@ import { InterpreterService } from '../../../../client/interpreter/interpreterSe
 suite('Terminals Activation - Pipenv', () => {
     [undefined, Uri.parse('x')].forEach(resource => {
         suite(resource ? 'With a resource' : 'Without a resource', () => {
+            let pipenvExecFile = 'pipenv';
             let activationProvider: ITerminalActivationCommandProvider;
             let interpreterService: IInterpreterService;
             let pipenvService: TypeMoq.IMock<IPipEnvService>;
@@ -29,7 +30,7 @@ suite('Terminals Activation - Pipenv', () => {
                     pipenvService.object
                 );
 
-                pipenvService.setup(p => p.executable).returns(() => 'pipenv');
+                pipenvService.setup(p => p.executable).returns(() => pipenvExecFile);
             });
 
             test('No commands for no interpreter', async () => {
@@ -61,6 +62,16 @@ suite('Terminals Activation - Pipenv', () => {
                     const cmd = await activationProvider.getActivationCommands(resource, shell.value);
 
                     assert.deepEqual(cmd, ['pipenv shell']);
+                }
+            });
+            test('pipenv is properly escaped', async () => {
+                pipenvExecFile = 'my pipenv';
+                when(interpreterService.getActiveInterpreter(resource)).thenResolve({ type: InterpreterType.Pipenv } as any);
+
+                for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
+                    const cmd = await activationProvider.getActivationCommands(resource, shell.value);
+
+                    assert.deepEqual(cmd, ['"my pipenv" shell']);
                 }
             });
         });
