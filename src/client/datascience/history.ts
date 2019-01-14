@@ -84,7 +84,6 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         // Sign up for configuration changes
-        // IANHU: Combine there? Would be duplicating interpreter change check
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
         (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
 

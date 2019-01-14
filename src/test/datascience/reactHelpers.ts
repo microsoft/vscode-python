@@ -47,7 +47,7 @@ export function setUpDomEnvironment() {
     // For the loc test to work, we have to have a global getter for loc strings
     // tslint:disable-next-line:no-string-literal no-eval
     global['getLocStrings'] = () => {
-        return { 'DataScience.unknownMimeTypeFormat' : 'Mime type {0} is not currently supported.' };
+        return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
     };
 
     global['getInitialSettings'] = () => {

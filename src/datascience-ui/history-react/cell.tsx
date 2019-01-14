@@ -29,7 +29,6 @@ interface ICellProps {
     delete(): void;
 }
 
-// IANHU: Lots of input block elements, can we combine some?
 export interface ICellViewModel {
     cell: ICell;
     inputBlockShow: boolean;

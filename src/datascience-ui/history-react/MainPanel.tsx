@@ -160,16 +160,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     private updateSettings = (payload?: any) => {
         if (payload) {
-            //const prevShowInputs = getSetting("showCellInputCode", true) as boolean;
             const prevShowInputs = getSettings().showCellInputCode;
             updateSettings(payload as string);
 
             // If our settings change updated show inputs we need to fix up our cells
-            //const showInputs = getSetting("showCellInputCode", true) as boolean;
             const showInputs = getSettings().showCellInputCode;
 
             if (prevShowInputs !== showInputs) {
-                //const collapseInputs = getSetting("collapseCellInputCode", true) as boolean;
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCode);
             }
         }
@@ -371,8 +368,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     private addCell = (payload?: any) => {
         // Get our settings for if we should display input code and if we should collapse by default
-        //const showInputs = getSetting("showCellInputCode", true) as boolean;
-        //const collapseInputs = getSetting("collapseCellInputCode", true) as boolean;
         const showInputs = getSettings().showCellInputCode;
         const collapseInputs = getSettings().collapseCellInputCode;
 
@@ -423,16 +418,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private collapseAllSilent = () => {
-        //const showInputs = getSetting("showCellInputCode", true) as boolean;
-        //if (showInputs) {
         if (getSettings().showCellInputCode) {
             this.alterAllCellVMs(true, false);
         }
     }
 
     private expandAllSilent = () => {
-        //const showInputs = getSetting("showCellInputCode", true) as boolean;
-        //if (showInputs) {
         if (getSettings().showCellInputCode) {
             this.alterAllCellVMs(true, true);
         }
