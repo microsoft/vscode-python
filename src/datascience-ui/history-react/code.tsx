@@ -16,8 +16,18 @@ export interface ICodeProps {
 }
 
 export class Code extends React.Component<ICodeProps> {
+
+    private codeMirror: CodeMirror.Editor | undefined;
+
     constructor(prop: ICodeProps) {
         super(prop);
+    }
+
+    public componentDidUpdate = () => {
+        // Force our new value
+        if (this.codeMirror) {
+            this.codeMirror.setValue(this.props.code);
+        }
     }
 
     public render() {
@@ -35,7 +45,14 @@ export class Code extends React.Component<ICodeProps> {
                     cursorBlinkRate: -1
                 }
             }
+            ref={this.updateCodeMirror}
         />
     );
+    }
+
+    private updateCodeMirror = (rcm: ReactCodeMirror.ReactCodeMirror) => {
+        if (rcm && rcm != null) {
+            this.codeMirror = rcm.getCodeMirror();
+        }
     }
 }
