@@ -207,7 +207,9 @@ suite('History command listener', async () => {
             notebookFileRoot: 'WORKSPACE',
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
-            searchForJupyter: true
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

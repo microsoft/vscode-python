@@ -56,6 +56,7 @@ export namespace HistoryMessages {
     export const Interrupt = 'interrupt';
     export const SendInfo = 'send_info';
     export const SubmitNewCell = 'submit_new_cell';
+    export const UpdateSettings = 'update_settings';
 }
 
 export namespace Telemetry {

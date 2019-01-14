@@ -36,6 +36,7 @@ interface ICellProps {
 
 export interface ICellViewModel {
     cell: ICell;
+    inputBlockShow: boolean;
     inputBlockOpen: boolean;
     inputBlockText: string;
     inputBlockCollapseNeeded: boolean;
@@ -110,7 +111,7 @@ export class Cell extends React.Component<ICellProps> {
                     <div className='controls-div'>
                         <div className='controls-flex'>
                             <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
-                            <CollapseButton theme={this.props.baseTheme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
+                            <CollapseButton theme={this.props.baseTheme} hidden={this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow}
                                 open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
                                 tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
                         </div>
@@ -127,7 +128,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderInputs = () => {
-        if (this.isCodeCell()) {
+        if (this.isCodeCell() && this.props.cellVM.inputBlockShow) {
             // Colorize our text
             return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} codeTheme={this.props.codeTheme}/></div>);
         } else {

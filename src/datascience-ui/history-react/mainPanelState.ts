@@ -44,8 +44,9 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
    return {
        cell: inputCell,
        inputBlockOpen: true,
+       inputBlockShow: true,
        inputBlockText: inputText,
-       inputBlockCollapseNeeded: inputLinesCount > 1,
+       inputBlockCollapseNeeded: (inputLinesCount > 1),
        inputBlockToggled: inputBlockToggled
    };
 }

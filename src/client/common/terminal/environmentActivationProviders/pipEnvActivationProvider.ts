@@ -26,6 +26,6 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
 
         const execName = this.pipenvService.executable;
-        return [`${execName} shell`];
+        return [`${execName.toCommandArgument()} shell`];
     }
 }

@@ -230,6 +230,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -382,6 +384,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         return false;
+    }
+
+    public getSettings() {
+        return this.pythonSettings;
     }
 
     public forceSettingsChanged() {

@@ -13,6 +13,7 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
+import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
@@ -146,6 +147,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 }
                 break;
 
+            case HistoryMessages.UpdateSettings:
+                this.updateSettings(payload);
+                break;
+
             default:
                 break;
         }
@@ -153,11 +158,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return false;
     }
 
+    // tslint:disable-next-line:no-any
+    private updateSettings = (payload?: any) => {
+        if (payload) {
+            const prevShowInputs = getSettings().showCellInputCode;
+            updateSettings(payload as string);
+
+            // If our settings change updated show inputs we need to fix up our cells
+            const showInputs = getSettings().showCellInputCode;
+
+            if (prevShowInputs !== showInputs) {
+                this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
+            }
+        }
+    }
+
     private getAllCells = () => {
         // Send all of our cells back to the other side
         const cells = this.state.cellVMs.map((cellVM : ICellViewModel) => {
             return cellVM.cell;
-        }) ;
+        });
 
         PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload: { contents: cells }});
     }
@@ -213,48 +233,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
     }
 
-    private collapseAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
-        this.collapseAllSilent();
-    }
-
-    private collapseAllSilent = () => {
-        const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
-            if (value.inputBlockOpen) {
-                return this.toggleCellVM(value);
-            } else {
-                return {...value};
-            }
-        });
-
-        // Now assign our new array copy to state
-        this.setState({
-            cellVMs: newCells,
-            skipNextScroll: true
-        });
-    }
-
-    private expandAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
-        this.expandAllSilent();
-    }
-
-    private expandAllSilent = () => {
-        const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
-            if (!value.inputBlockOpen) {
-                return this.toggleCellVM(value);
-            } else {
-                return {...value};
-            }
-        });
-
-        // Now assign our new array copy to state
-        this.setState({
-            cellVMs: newCells,
-            skipNextScroll: true
-        });
-    }
-
     private canCollapseAll = () => {
         return this.state.cellVMs.length > 0;
     }
@@ -302,6 +280,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true
         });
+    }
+
+    private collapseAll = () => {
+        PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
+        this.collapseAllSilent();
+    }
+
+    private expandAll = () => {
+        PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
+        this.expandAllSilent();
     }
 
     private clearAll = () => {
@@ -392,9 +380,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // tslint:disable-next-line:no-any
     private addCell = (payload?: any) => {
+        // Get our settings for if we should display input code and if we should collapse by default
+        const showInputs = getSettings().showCellInputCode;
+        const collapseInputs = getSettings().collapseCellInputCodeByDefault;
+
         if (payload) {
             const cell = payload as ICell;
-            const cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
+            let cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
+
+            // Set initial cell visibility and collapse
+            cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
+
             if (cellVM) {
                 this.setState({
                     cellVMs: [...this.state.cellVMs, cellVM],
@@ -421,7 +417,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const targetCellVM = cellVMArray[cellVMIndex];
 
             // Mutate the shallow array copy
-            cellVMArray[cellVMIndex] = this.toggleCellVM(targetCellVM);
+            cellVMArray[cellVMIndex] = this.alterCellVM(targetCellVM, true, !targetCellVM.inputBlockOpen);
 
             this.setState({
                 skipNextScroll: true,
@@ -430,24 +426,78 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    // Toggle the input collapse state of a cell view model return a shallow copy with updated values
-    private toggleCellVM = (cellVM: ICellViewModel) => {
-        let newCollapseState = cellVM.inputBlockOpen;
-        let newText = cellVM.inputBlockText;
+    private toggleCellInputVisibility = (visible: boolean, collapse: boolean) => {
+        this.alterAllCellVMs(visible, !collapse);
+    }
 
+    private collapseAllSilent = () => {
+        if (getSettings().showCellInputCode) {
+            this.alterAllCellVMs(true, false);
+        }
+    }
+
+    private expandAllSilent = () => {
+        if (getSettings().showCellInputCode) {
+            this.alterAllCellVMs(true, true);
+        }
+    }
+
+    private alterAllCellVMs = (visible: boolean, expanded: boolean) => {
+        const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
+            return this.alterCellVM(value, visible, expanded);
+        });
+
+        this.setState({
+            skipNextScroll: true,
+            cellVMs: newCells
+        });
+    }
+
+    // Adjust the visibility or collapsed state of a cell
+    private alterCellVM = (cellVM: ICellViewModel, visible: boolean, expanded: boolean) => {
         if (cellVM.cell.data.cell_type === 'code') {
-            newCollapseState = !newCollapseState;
-            newText = this.extractInputText(cellVM.cell);
-            if (!newCollapseState) {
-                if (newText.length > 0) {
-                    newText = newText.split('\n', 1)[0];
-                    newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-                    newText = newText.concat('...');
+            // If we are already in the correct state, return back our initial cell vm
+            if (cellVM.inputBlockShow === visible && cellVM.inputBlockOpen === expanded) {
+                return cellVM;
+            }
+
+            const newCellVM = {...cellVM};
+            if (cellVM.inputBlockShow !== visible) {
+                if (visible) {
+                    // Show the cell, the rest of the function will add on correct collapse state
+                    newCellVM.inputBlockShow = true;
+                } else {
+                    // Hide this cell
+                    newCellVM.inputBlockShow = false;
                 }
             }
+
+            // No elseif as we want newly visible cells to pick up the correct expand / collapse state
+            if (cellVM.inputBlockOpen !== expanded && cellVM.inputBlockCollapseNeeded && cellVM.inputBlockShow) {
+                if (expanded) {
+                    // Expand the cell
+                    const newText = this.extractInputText(cellVM.cell);
+
+                    newCellVM.inputBlockOpen = true;
+                    newCellVM.inputBlockText = newText;
+                } else {
+                    // Collapse the cell
+                    let newText = this.extractInputText(cellVM.cell);
+                    if (newText.length > 0) {
+                        newText = newText.split('\n', 1)[0];
+                        newText = newText.slice(0, 255); // Slice to limit length, slicing past length is fine
+                        newText = newText.concat('...');
+                    }
+
+                    newCellVM.inputBlockOpen = false;
+                    newCellVM.inputBlockText = newText;
+                }
+            }
+
+            return newCellVM;
         }
 
-        return {...cellVM, inputBlockOpen: newCollapseState, inputBlockText: newText};
+        return cellVM;
     }
 
     private extractInputText = (cell: ICell) => {

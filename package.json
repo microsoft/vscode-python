@@ -992,7 +992,18 @@
                 "python.dataScience.allowInput": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Allow the inputting of python code directly into the Python Interactive window",
+                    "description": "Allow the inputting of python code directly into the Python Interactive window"
+                },
+                "python.dataScience.showCellInputCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show cell input code.",
+                    "scope": "resource"
+                },
+                "python.dataScience.collapseCellInputCodeByDefault": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Collapse cell input code by default.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

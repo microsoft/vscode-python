@@ -86,6 +86,22 @@ export function setUpDomEnvironment() {
         return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
     };
 
+    global['getInitialSettings'] = () => {
+        return {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 10,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true
+        };
+    };
+
     configure({ adapter: new Adapter() });
 }
 

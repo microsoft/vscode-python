@@ -30,10 +30,18 @@ import { InterpreterType, PythonInterpreter } from '../../client/interpreter/con
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
+import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { waitForUpdate } from './reactHelpers';
+
+enum cellInputState {
+    Hidden,
+    Visible,
+    Collapsed,
+    Expanded
+}
 
 // tslint:disable-next-line:max-func-body-length no-any
 suite('History output tests', () => {
@@ -177,6 +185,39 @@ suite('History output tests', () => {
         assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
     }
 
+    function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, state: cellInputState) {
+        const foundResult = wrapper.find('Cell');
+        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+
+        const lastCell = foundResult.last();
+        assert.ok(lastCell, 'Last call doesn\'t exist');
+
+        const inputBlock = lastCell.find('div.cell-input');
+        const toggleButton = lastCell.find('polygon.collapse-input-svg');
+
+        switch (state) {
+            case cellInputState.Hidden:
+                assert.ok(inputBlock.length === 0, 'Cell input not hidden');
+                break;
+
+            case cellInputState.Visible:
+                assert.ok(inputBlock.length === 1, 'Cell input not visible');
+                break;
+
+            case cellInputState.Expanded:
+                assert.ok(toggleButton.html().includes('collapse-input-svg-rotate'), 'Cell input toggle not expanded');
+                break;
+
+            case cellInputState.Collapsed:
+                assert.ok(!toggleButton.html().includes('collapse-input-svg-rotate'), 'Cell input toggle not collapsed');
+                break;
+
+            default:
+                assert.fail('Unknown cellInputStat');
+                break;
+        }
+    }
+
     async function waitForMessageResponse(action: () => void) :  Promise<void> {
         webPanelMessagePromise = createDeferred();
         action();
@@ -216,6 +257,78 @@ suite('History output tests', () => {
         await addCode(wrapper, 'a=1\na');
 
         verifyHtmlOnLastCell(wrapper, '<span>1</span>');
+    });
+
+    runMountedTest('Hide inputs', async (wrapper) => {
+        const settingString = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: false,
+                collapseCellInputCodeByDefault: true
+            }
+        );
+
+        updateSettings(settingString);
+
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Hidden);
+    });
+
+    runMountedTest('Show inputs', async (wrapper) => {
+        const settingString = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: true,
+                collapseCellInputCodeByDefault: true
+            }
+        );
+
+        updateSettings(settingString);
+
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+    });
+
+    runMountedTest('Expand inputs', async (wrapper) => {
+        const settingString = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: true,
+                collapseCellInputCodeByDefault: false
+            }
+        );
+
+        updateSettings(settingString);
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Expanded);
     });
 
     function escapePath(p: string) {
@@ -351,7 +464,7 @@ for _ in range(50):
 
         // Now verify if we undo, we have no cells
         let afterUndo = await getCellResults(wrapper, 1, () => {
-            undo.simulate('click');
+            undo!.simulate('click');
             return Promise.resolve();
         });
 
@@ -359,7 +472,7 @@ for _ in range(50):
 
         // Redo should put the cells back
         const afterRedo = await getCellResults(wrapper, 1, async () => {
-            redo.simulate('click');
+            redo!.simulate('click');
             return Promise.resolve();
         });
         assert.equal(afterRedo.length, 1, 'Redo should put cells back');
@@ -370,14 +483,14 @@ for _ in range(50):
 
         // Clear everything
         const afterClear = await getCellResults(wrapper, 1, async () => {
-            clear.simulate('click');
+            clear!.simulate('click');
             return Promise.resolve();
         });
         assert.equal(afterClear.length, 0, 'Clear didn\'t work');
 
         // Undo should put them back
         afterUndo = await getCellResults(wrapper, 1, async () => {
-            undo.simulate('click');
+            undo!.simulate('click');
             return Promise.resolve();
         });
 
@@ -432,7 +545,7 @@ for _ in range(50):
 
         // Now verify if we undo, we have no cells
         const afterUndo = await getCellResults(wrapper, 1, () => {
-            undo.simulate('click');
+            undo!.simulate('click');
             return Promise.resolve();
         });
 
@@ -440,7 +553,7 @@ for _ in range(50):
 
         // Then verify we cannot click the button (it should be disabled)
         exportCalled = false;
-        const response = waitForMessageResponse(() => exportButton.simulate('click'));
+        const response = waitForMessageResponse(() => exportButton!.simulate('click'));
         await Promise.race([sleep(10), response]);
         assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
 

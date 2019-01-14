@@ -21,6 +21,7 @@ import {
     IWorkspaceService
 } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
+import { PythonSettings } from '../common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IFileSystem } from '../common/platform/types';
@@ -56,7 +57,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private disposed : boolean = false;
     private webPanel : IWebPanel | undefined;
     private loadPromise: Promise<void>;
-    private settingsChangedDisposable : Disposable;
+    private interpreterChangedDisposable : Disposable;
     private closedEvent : EventEmitter<IHistory>;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
@@ -83,7 +84,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         // Sign up for configuration changes
-        this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
+        this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
 
         // Create our event emitter
         this.closedEvent = new EventEmitter<IHistory>();
@@ -244,7 +246,8 @@ export class History implements IWebPanelMessageListener, IHistory {
     public async dispose()  {
         if (!this.disposed) {
             this.disposed = true;
-            this.settingsChangedDisposable.dispose();
+            this.interpreterChangedDisposable.dispose();
+            (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
             this.closedEvent.fire(this);
             if (this.jupyterServer) {
                 await this.jupyterServer.shutdown();
@@ -479,7 +482,17 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private onSettingsChanged = async () => {
+    // Post a message to our webpanel and update our new datascience settings
+    private onSettingsChanged = () => {
+        // Stringify our settings to send over to the panel
+        const dsSettings = JSON.stringify(this.configuration.getSettings().datascience);
+
+        if (this.webPanel) {
+            this.webPanel.postMessage({type: HistoryMessages.UpdateSettings, payload: dsSettings});
+        }
+    }
+
+    private onInterpreterChanged = async () => {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
             await this.loadPromise;
