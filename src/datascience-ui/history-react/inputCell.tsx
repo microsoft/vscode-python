@@ -13,6 +13,7 @@ interface IInputCellProps {
     baseTheme: string;
     codeTheme: string;
     count: string;
+    testMode: boolean;
     onSubmit(code: string): void;
 }
 
@@ -38,7 +39,7 @@ export class InputCell extends React.Component<IInputCellProps, IInputCellState>
                     </div>
                     <div className='content-div'>
                         <div className='cell-result-container'>
-                            <Input codeTheme={this.props.codeTheme} onSubmit={this.props.onSubmit} onChangeLineCount={this.onChangeLineCount} />
+                            <Input codeTheme={this.props.codeTheme} testMode={this.props.testMode} onSubmit={this.props.onSubmit} onChangeLineCount={this.onChangeLineCount} />
                         </div>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ import { InputHistory } from './inputHistory';
 
 interface IInputProps {
     codeTheme: string;
+    testMode: boolean;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
 }
@@ -45,7 +46,9 @@ export class Input extends React.Component<IInputProps> {
                                     Up      : this.arrowUp
                                 },
                                 theme: `${this.props.codeTheme} default`,
-                                mode: 'python'
+                                mode: 'python',
+                                cursorBlinkRate : this.props.testMode ? -1 : 530,
+                                readOnly: this.props.testMode ? 'nocursor' : false
                             }
                         }
                         />

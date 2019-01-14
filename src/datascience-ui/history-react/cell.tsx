@@ -29,6 +29,7 @@ interface ICellProps {
     cellVM: ICellViewModel;
     baseTheme: string;
     codeTheme: string;
+    testMode?: boolean;
     gotoCode(): void;
     delete(): void;
 }

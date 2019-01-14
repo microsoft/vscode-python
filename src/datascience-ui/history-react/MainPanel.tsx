@@ -22,9 +22,7 @@ import { MenuBar } from './menuBar';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
-    ignoreProgress? : boolean;
-    ignoreSysInfo? : boolean;
-    ignoreScrolling? : boolean;
+    testMode?: boolean;
     baseTheme: string;
     codeTheme: string;
 }
@@ -56,7 +54,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public render() {
 
-        const progressBar = this.state.busy && !this.props.ignoreProgress ? <Progress /> : undefined;
+        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         return (
             <div className='main-panel'>
@@ -137,13 +135,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 return true;
 
             case HistoryMessages.StartProgress:
-                if (!this.props.ignoreProgress) {
+                if (!this.props.testMode) {
                     this.setState({busy: true});
                 }
                 break;
 
             case HistoryMessages.StopProgress:
-                if (!this.props.ignoreProgress) {
+                if (!this.props.testMode) {
                     this.setState({busy: false});
                 }
                 break;
@@ -176,6 +174,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    testMode={this.props.testMode}
                     cellVM={cellVM}
                     baseTheme={this.props.baseTheme}
                     codeTheme={this.props.codeTheme}
@@ -190,7 +189,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const inputExecutionCount = realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
         return (
             <ErrorBoundary>
-                <InputCell baseTheme={this.props.baseTheme} codeTheme={this.props.codeTheme} onSubmit={this.submitInput} count={inputExecutionCount.toString()} />
+                <InputCell baseTheme={this.props.baseTheme} testMode={this.props.testMode} codeTheme={this.props.codeTheme} onSubmit={this.submitInput} count={inputExecutionCount.toString()} />
             </ErrorBoundary>
         );
     }
@@ -374,7 +373,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll && !this.props.ignoreScrolling) {
+        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll && !this.props.testMode) {
             // Delay this until we are about to render. React hasn't setup the size of the bottom element
             // yet so we need to delay. 10ms looks good from a user point of view
             setTimeout(() => {
@@ -477,7 +476,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private isCellSupported(cell: ICell) : boolean {
-        return !this.props.ignoreSysInfo || cell.data.cell_type !== 'sys_info';
+        return !this.props.testMode || cell.data.cell_type !== 'sys_info';
     }
 
     // tslint:disable-next-line:no-any

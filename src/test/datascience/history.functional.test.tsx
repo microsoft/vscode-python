@@ -147,7 +147,7 @@ suite('History output tests', () => {
             addMockData('a=1\na', 1);
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
-                const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' ignoreProgress={true} skipDefault={true} ignoreSysInfo={true} ignoreScrolling={true} />);
+                const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
                 try {
                     await testFunc(wrapper);
                 } finally {

@@ -31,7 +31,8 @@ export class Code extends React.Component<ICodeProps> {
                     mode: 'python',
                     readOnly: 'nocursor',
                     theme: `${this.props.codeTheme} default`,
-                    viewportMargin: 0
+                    viewportMargin: 0,
+                    cursorBlinkRate: -1
                 }
             }
         />
