@@ -363,6 +363,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return false;
     }
 
+    public getSettings() {
+        return this.pythonSettings;
+    }
+
     public forceSettingsChanged() {
         this.pythonSettings.emit('change');
     }

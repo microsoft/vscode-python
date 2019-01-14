@@ -27,7 +27,6 @@ export class WebPanel implements IWebPanel {
         title: string,
         mainScriptPath: string,
         embeddedCss?: string) {
-        // IANHU: convert to inject?
         this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;

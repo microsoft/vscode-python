@@ -47,12 +47,23 @@ export function setUpDomEnvironment() {
     // For the loc test to work, we have to have a global getter for loc strings
     // tslint:disable-next-line:no-string-literal no-eval
     global['getLocStrings'] = () => {
-        return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
+        return { 'DataScience.unknownMimeTypeFormat' : 'Mime type {0} is not currently supported.' };
     };
 
-    // IANHU: not sure if I need this for settings, but putting it in for now
     global['getInitialSettings'] = () => {
-        //return { '' }
+        return {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 10,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCode: true
+        };
     };
 
     configure({ adapter: new Adapter() });
