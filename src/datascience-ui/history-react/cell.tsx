@@ -102,7 +102,7 @@ export class Cell extends React.Component<ICellProps> {
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} invisible={hasNoSource}>
+                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
                     </CellButton>
                 </MenuBar>

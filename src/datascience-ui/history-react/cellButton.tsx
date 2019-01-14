@@ -9,7 +9,7 @@ interface ICellButtonProps {
     baseTheme: string;
     tooltip : string;
     disabled?: boolean;
-    invisible?: boolean;
+    hidden?: boolean;
     onClick() : void;
 }
 
@@ -19,7 +19,7 @@ export class CellButton extends React.Component<ICellButtonProps> {
     }
 
     public render() {
-        if (!this.props.invisible) {
+        if (!this.props.hidden) {
             const classNames = `cell-button cell-button-${this.props.baseTheme}`;
             const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
 
