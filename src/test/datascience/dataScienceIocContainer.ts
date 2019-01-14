@@ -12,6 +12,7 @@ import {
     ICommandManager,
     IDocumentManager,
     IWorkspaceService,
+    ITerminalManager,
 } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -29,9 +30,20 @@ import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory } from 
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
+    CondaActivationCommandProvider,
+} from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import {
+    PipEnvActivationCommandProvider,
+} from '../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
+import {
     PyEnvActivationCommandProvider,
 } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
-import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
+import { TerminalHelper } from '../../client/common/terminal/helper';
+import {
+    ITerminalActivationCommandProvider,
+    ITerminalHelper,
+    TerminalActivationProviders,
+} from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -39,7 +51,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    IsWindows
+    IsWindows,
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -65,6 +77,8 @@ import {
     INotebookServer,
     IStatusProvider,
 } from '../../client/datascience/types';
+import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
@@ -132,6 +146,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockJupyterManager } from './mockJupyterManager';
+import { TerminalManager } from '../../client/common/application/terminalManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -173,6 +188,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
+        this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+
+        this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider, CommandPromptAndPowerShell, TerminalActivationProviders.commandPromptAndPowerShell);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
+        this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -324,12 +353,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
             this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
         }
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, Bash, 'bashCShellFish');
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, CommandPromptAndPowerShell, 'commandPromptAndPowerShell');
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
 
         const dummyDisposable = {
             dispose: () => { return; }

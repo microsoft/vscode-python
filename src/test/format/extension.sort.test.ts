@@ -3,8 +3,12 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import { EOL } from 'os';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import { commands, ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
 import { Commands } from '../../client/common/constants';
+import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { InterpreterService } from '../../client/interpreter/interpreterService';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 import { updateSetting } from '../common';
@@ -20,7 +24,7 @@ const fileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'before.1.p
 const originalFileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'original.1.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Sortingx', () => {
+suite('Sorting', () => {
     let ioc: UnitTestIocContainer;
     let sorter: ISortImportsEditingProvider;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
@@ -51,6 +55,8 @@ suite('Sortingx', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
     test('Without Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);

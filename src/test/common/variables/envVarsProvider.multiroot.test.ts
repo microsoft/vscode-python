@@ -6,15 +6,20 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IS_WINDOWS, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
+import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
+import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
+import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { clearPythonPathInWorkspaceFolder, updateSetting } from '../../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
@@ -46,6 +51,10 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
+        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
+        ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        clearCache();
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);
@@ -55,6 +64,7 @@ suite('Multiroot Environment Variables Provider', () => {
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initializeTest();
+        clearCache();
     });
 
     function getVariablesProvider(mockVariables: EnvironmentVariables = { ...process.env }) {
@@ -64,7 +74,9 @@ suite('Multiroot Environment Variables Provider', () => {
         const disposables = ioc.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
         const cfgService = new ConfigurationService(ioc.serviceContainer);
-        return new EnvironmentVariablesProvider(variablesService, disposables, new PlatformService(), cfgService, mockProcess);
+        const workspaceService = new WorkspaceService();
+        return new EnvironmentVariablesProvider(variablesService, disposables,
+            new PlatformService(), workspaceService, cfgService, mockProcess);
     }
 
     test('Custom variables should not be undefined without an env file', async () => {

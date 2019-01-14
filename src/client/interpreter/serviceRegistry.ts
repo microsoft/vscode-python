@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { IServiceManager } from '../ioc/types';
+import { EnvironmentActivationService } from './activation/service';
+import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSeletionProxyService } from './autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
@@ -113,4 +115,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings);
     serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, InterpreterAutoSeletionProxyService);
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, InterpreterAutoSelectionService);
+
+    serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
 }

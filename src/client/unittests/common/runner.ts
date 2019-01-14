@@ -32,20 +32,24 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
 
     let promise: Promise<ObservableExecutionResult<string>>;
 
-    if (!testExecutablePath && testProvider === UNITTEST_PROVIDER) {
-        // Unit tests have a special way of being executed
-        const pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        pythonExecutionServicePromise = pythonServiceFactory.create({ resource: options.workspaceFolder });
-        promise = pythonExecutionServicePromise.then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
+    // Since conda 4.4.0 we have found that running python code needs the environment activated.
+    // So if running an executable, there's no way we can activate, if its a module, then activate and run the module.
+    const testHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
+    const executionInfo: ExecutionInfo = {
+        execPath: testExecutablePath,
+        args: options.args,
+        moduleName: testExecutablePath && testExecutablePath.length > 0 ? undefined : moduleName,
+        product: testHelper.parseProduct(testProvider)
+    };
+
+    if (testProvider === UNITTEST_PROVIDER) {
+        promise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment(options.workspaceFolder)
+            .then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
+    } else if (typeof executionInfo.moduleName === 'string' && executionInfo.moduleName.length > 0) {
+        pythonExecutionServicePromise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment(options.workspaceFolder);
+        promise = pythonExecutionServicePromise.then(executionService => executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options));
     } else {
         const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
-        const testHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
-        const executionInfo: ExecutionInfo = {
-            execPath: testExecutablePath,
-            args: options.args,
-            moduleName: testExecutablePath && testExecutablePath.length > 0 ? undefined : moduleName,
-            product: testHelper.parseProduct(testProvider)
-        };
         promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
     }
 

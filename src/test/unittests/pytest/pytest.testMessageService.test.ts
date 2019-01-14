@@ -6,11 +6,15 @@
 import { assert } from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import * as typeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { Product } from '../../../client/common/types';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { TestResultsService } from '../../../client/unittests/common/services/testResultsService';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
@@ -107,6 +111,8 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         ioc.registerVariableTypes();
         // Mocks.
         ioc.registerMockProcessTypes();
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
     // Build tests for the test data that is relevant for this platform.
     filterdTestScenarios.forEach((scenario) => {

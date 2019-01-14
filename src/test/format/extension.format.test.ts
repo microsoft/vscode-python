@@ -4,6 +4,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import {
     CancellationTokenSource, Position, Uri, window, workspace
 } from 'vscode';
@@ -13,6 +14,8 @@ import {
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
+import { ICondaService } from '../../client/interpreter/contracts';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
@@ -97,6 +100,7 @@ suite('Formatting - General', () => {
 
         // Mocks.
         ioc.registerMockProcessTypes();
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
 
     async function injectFormatOutput(outputFileName: string) {

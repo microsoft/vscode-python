@@ -7,7 +7,6 @@ import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PLATFORM_INFO, PlatformErrors } from '../../telemetry/constants';
-import { traceDecorators, traceError } from '../logger';
 import { OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
@@ -23,7 +22,6 @@ export class PlatformService implements IPlatformService {
     public get virtualEnvBinName() {
         return this.isWindows ? 'Scripts' : 'bin';
     }
-    @traceDecorators.verbose('Get Platform Version')
     public async getVersion(): Promise<SemVer> {
         if (this.version) {
             return this.version;
@@ -43,7 +41,6 @@ export class PlatformService implements IPlatformService {
                     throw new Error('Unable to parse version');
                 } catch (ex) {
                     sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToParseVersion });
-                    traceError(`Failed to parse Version ${os.release()}`, ex);
                     return parseVersion(os.release());
                 }
             default:

@@ -66,11 +66,20 @@ export class ExtensionActivationService implements IExtensionActivationService, 
 
         await this.logStartup(jedi);
 
-        const activatorName = jedi ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
-        const activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
+        let activatorName = jedi ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
+        let activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
         this.currentActivator = { jedi, activator };
 
-        await activator.activate();
+        const success = await activator.activate();
+        if (!success && !jedi) {
+            //Language server fails, reverting to jedi
+            jedi = true;
+            await this.logStartup(jedi);
+            activatorName = ExtensionActivators.Jedi;
+            activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
+            this.currentActivator = { jedi, activator };
+            await activator.activate();
+        }
     }
 
     public dispose() {

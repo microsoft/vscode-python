@@ -13,8 +13,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../../common/types';
 import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
-import { PlatformName } from '../platformData';
-import { ILanguageServerPackageService } from '../types';
+import { ILanguageServerPackageService, PlatformName } from '../types';
 import { azureCDNBlobStorageAccount, LanguageServerPackageStorageContainers } from './languageServerPackageRepository';
 
 const downloadBaseFileName = 'Python-Language-Server';

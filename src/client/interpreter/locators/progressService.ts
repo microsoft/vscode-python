@@ -48,9 +48,11 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
     private notifyRefreshing() {
         this.refreshing.fire();
     }
-    @traceDecorators.verbose('Checking whether locactors have completed locating')
     private checkProgress() {
-        if (this.areAllItemsCcomplete()) {
+        if (this.deferreds.length === 0) {
+            return;
+        }
+        if (this.areAllItemsComplete()) {
             return this.notifyCompleted();
         }
         Promise.all(this.deferreds.map(item => item.promise))
@@ -58,7 +60,8 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
             .then(() => this.checkProgress())
             .ignoreErrors();
     }
-    private areAllItemsCcomplete() {
+    @traceDecorators.verbose('Checking whether locactors have completed locating')
+    private areAllItemsComplete() {
         this.deferreds = this.deferreds.filter(item => !item.completed);
         return this.deferreds.length === 0;
     }

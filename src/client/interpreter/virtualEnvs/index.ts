@@ -52,7 +52,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         }
 
         if (await this.isPipEnvironment(pythonPath, resource)) {
-            return InterpreterType.PipEnv;
+            return InterpreterType.Pipenv;
         }
 
         if (await this.isVirtualEnvironment(pythonPath)) {

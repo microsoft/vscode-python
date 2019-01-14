@@ -3,6 +3,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
@@ -20,7 +21,8 @@ import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
-import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
+import { TerminalHelper } from '../../client/common/terminal/helper';
+import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -132,6 +134,7 @@ suite('Module Installer', () => {
             mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
+            ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
             processService.onExec((file, args, options, callback) => {
@@ -167,6 +170,7 @@ suite('Module Installer', () => {
             ]));
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
+            ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
             processService.onExec((file, args, options, callback) => {

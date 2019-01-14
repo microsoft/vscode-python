@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { InterpreterVersionService } from '../../../client/interpreter/interpreterVersion';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -34,6 +35,11 @@ suite('PythonExecutableService', () => {
         procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(procService.object));
         envVarsProvider.setup(v => v.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
+        const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
+        envActivationService.setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IEnvironmentActivationService), TypeMoq.It.isAny()))
+            .returns(() => envActivationService.object);
     });
     test('Ensure resource is used when getting configuration service settings (undefined resource)', async () => {
         const pythonPath = `Python_Path_${new Date().toString()}`;

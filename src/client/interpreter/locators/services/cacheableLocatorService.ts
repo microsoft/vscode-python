@@ -8,7 +8,7 @@ import * as md5 from 'md5';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { Logger } from '../../../common/logger';
+import { Logger, traceVerbose } from '../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
@@ -50,6 +50,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             const promise = this.getInterpretersImplementation(resource)
                 .then(async items => {
                     await this.cacheInterpreters(items, resource);
+                    traceVerbose(`Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`);
                     deferred!.resolve(items);
                 })
                 .catch(ex => deferred!.reject(ex));

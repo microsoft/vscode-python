@@ -17,7 +17,8 @@ import { LanguageServerCompatibilityService } from './languageServer/languageSer
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
-import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
+import { LanguageServerPlatformData } from './platformData';
+import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerFolderService, ILanguageServerPackageService, ILanguageServerPlatformData } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExtensionActivationService);
@@ -35,4 +36,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadBetaChannelRule, LanguageServerDownloadChannel.beta);
     serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadStableChannelRule, LanguageServerDownloadChannel.stable);
     serviceManager.addSingleton<ILanagueServerCompatibilityService>(ILanagueServerCompatibilityService, LanguageServerCompatibilityService);
+    serviceManager.addSingleton<ILanguageServerPlatformData>(ILanguageServerPlatformData, LanguageServerPlatformData);
 }

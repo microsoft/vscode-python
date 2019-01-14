@@ -888,7 +888,7 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "Python Configuration",
+            "title": "Python",
             "properties": {
                 "python.diagnostics.sourceMapsEnabled": {
                     "type": "boolean",
@@ -1521,6 +1521,12 @@
                     "description": "Path to the conda executable to use for activation (version 4.4+).",
                     "scope": "resource"
                 },
+                "python.pipenvPath": {
+                    "type": "string",
+                    "default": "pipenv",
+                    "description": "Path to the pipenv executable to use for activation.",
+                    "scope": "window"
+                },
                 "python.sortImports.args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
@@ -1578,7 +1584,7 @@
                 "python.unitTest.nosetestsEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to enable or disable unit testing using nosetests.",
+                    "description": "Enable unit testing using nosetests.",
                     "scope": "resource"
                 },
                 "python.unitTest.nosetestPath": {
@@ -1590,7 +1596,7 @@
                 "python.unitTest.promptToConfigure": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Where to prompt to configure a test framework if potential tests directories are discovered.",
+                    "description": "Prompt to configure a test framework if potential tests directories are discovered.",
                     "scope": "resource"
                 },
                 "python.unitTest.pyTestArgs": {
@@ -1605,7 +1611,7 @@
                 "python.unitTest.pyTestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to enable or disable unit testing using pytest.",
+                    "description": "Enable unit testing using pytest.",
                     "scope": "resource"
                 },
                 "python.unitTest.pyTestPath": {
@@ -1632,13 +1638,13 @@
                 "python.unitTest.unittestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to enable or disable unit testing using unittest.",
+                    "description": "Enable unit testing using unittest.",
                     "scope": "resource"
                 },
                 "python.unitTest.autoTestDiscoverOnSaveEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Whether to enable or disable auto run test discovery when saving a unit test file.",
+                    "description": "Enable auto run test discovery when saving a unit test file.",
                     "scope": "resource"
                 },
                 "python.venvFolders": {
@@ -1848,6 +1854,7 @@
         "request-progress": "^3.0.0",
         "rxjs": "^5.5.9",
         "semver": "^5.5.0",
+        "stack-trace": "0.0.10",
         "strip-json-comments": "^2.0.1",
         "sudo-prompt": "^8.2.0",
         "tmp": "^0.0.29",

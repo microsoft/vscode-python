@@ -154,10 +154,6 @@ gulp.task("compile", () => {
 
 
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
-gulp.task('webpack', async () => {
-    await spawnAsync('npx', ['webpack', '--mode', 'production', '--inline', '--progress']);
-    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production', '--inline', '--progress']);
-});
 
 gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--mode', 'production']);
@@ -708,6 +704,7 @@ function getFilesToProcess(fileList) {
 * @param {hygieneOptions} options
 */
 function getFileListToProcess(options) {
+    return [];
     const mode = options ? options.mode : 'all';
     const gulpSrcOptions = { base: '.' };
 

@@ -40,6 +40,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public venvPath = '';
     public venvFolders: string[] = [];
     public condaPath = '';
+    public pipenvPath = '';
     public devOptions: string[] = [];
     public linting!: ILintingSettings;
     public formatting!: IFormattingSettings;
@@ -137,6 +138,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
         const condaPath = systemVariables.resolveAny(pythonSettings.get<string>('condaPath'))!;
         this.condaPath = condaPath && condaPath.length > 0 ? getAbsolutePath(condaPath, workspaceRoot) : condaPath;
+        const pipenvPath = systemVariables.resolveAny(pythonSettings.get<string>('pipenvPath'))!;
+        this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
 
         this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;

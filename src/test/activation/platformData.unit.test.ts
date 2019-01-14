@@ -4,7 +4,7 @@
 // tslint:disable:no-unused-variable
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { PlatformData, PlatformLSExecutables } from '../../client/activation/platformData';
+import { LanguageServerPlatformData, PlatformLSExecutables } from '../../client/activation/platformData';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 
 const testDataWinMac = [
@@ -39,9 +39,9 @@ suite('Activation - platform data', () => {
             platformService.setup(x => x.is64bit).returns(() => t.is64Bit);
 
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
-            const pd = new PlatformData(platformService.object, fs.object);
+            const pd = new LanguageServerPlatformData(platformService.object);
 
-            const actual = await pd.getPlatformName();
+            const actual = pd.getPlatformName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);
 
             const actualHash = await pd.getExpectedHash();
@@ -58,9 +58,9 @@ suite('Activation - platform data', () => {
 
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
             fs.setup(x => x.readFile(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(`NAME="name"\nID=${t.name}\nID_LIKE=debian`));
-            const pd = new PlatformData(platformService.object, fs.object);
+            const pd = new LanguageServerPlatformData(platformService.object);
 
-            const actual = await pd.getPlatformName();
+            const actual = pd.getPlatformName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);
 
             const actualHash = await pd.getExpectedHash();
@@ -75,7 +75,7 @@ suite('Activation - platform data', () => {
             platformService.setup(x => x.isMac).returns(() => t.isMac);
 
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
-            const pd = new PlatformData(platformService.object, fs.object);
+            const pd = new LanguageServerPlatformData(platformService.object);
 
             const actual = pd.getEngineExecutableName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);

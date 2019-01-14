@@ -128,6 +128,13 @@ steps:
 
       arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
+  - task: CmdLine@1
+    displayName: 'pip install  functional requirements'
+    inputs:
+      filename: python
+      arguments: '-m pip install --upgrade -r ./build/functional-test-requirements.txt'
+    condition: variables['HasFunctionalRequirements']
+
 
   - task: CmdLine@1
     displayName: 'pip install ptvsd'
@@ -171,7 +178,7 @@ steps:
 
         test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
 
-        if not os.path.exists(test_logfile):
+        if (not os.path.exists(test_logfile)):
             print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
             print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
 

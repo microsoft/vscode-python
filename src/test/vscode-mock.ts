@@ -14,7 +14,7 @@ const Module = require('module');
 type VSCode = typeof vscode;
 
 const mockedVSCode: Partial<VSCode> = {};
-const mockedVSCodeNamespaces: { [P in keyof VSCode]?: TypeMoq.IMock<VSCode[P]> } = {};
+export const mockedVSCodeNamespaces: { [P in keyof VSCode]?: TypeMoq.IMock<VSCode[P]> } = {};
 const originalLoad = Module._load;
 
 function generateMock<K extends keyof VSCode>(name: K): void {

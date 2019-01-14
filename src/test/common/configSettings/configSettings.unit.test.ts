@@ -46,7 +46,7 @@ suite('Python Settings', () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'envFile']) {
+        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile']) {
             config.setup(c => c.get<string>(name))
                 .returns(() => sourceSettings[name]);
         }

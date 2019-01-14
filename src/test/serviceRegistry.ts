@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Container } from 'inversify';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
@@ -22,6 +23,8 @@ import { registerTypes as commonRegisterTypes } from '../client/common/serviceRe
 import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
+import { EnvironmentActivationService } from '../client/interpreter/activation/service';
+import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
 import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
@@ -87,6 +90,9 @@ export class IocContainer {
     }
     public registerProcessTypes() {
         processRegisterTypes(this.serviceManager);
+        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
+        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
+        this.serviceManager.addSingletonInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
     }
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);
@@ -115,6 +121,10 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
         this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
         this.serviceManager.addSingleton<IPythonToolExecutionService>(IPythonToolExecutionService, PythonToolExecutionService);
+        this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
+        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
+        this.serviceManager.rebindInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
     }
 
     public registerMockProcess() {

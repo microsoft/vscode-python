@@ -4,6 +4,7 @@
 
 ### Fixes
 
+
 1. Lowering threshold for Language Server support on a platform.
    ([#3693](https://github.com/Microsoft/vscode-python/issues/3693))
 1. Fix bug affecting multiple linters used in a workspace.

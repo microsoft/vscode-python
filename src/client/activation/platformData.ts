@@ -1,20 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { inject, injectable } from 'inversify';
+import { IPlatformService } from '../common/platform/types';
 import {
     language_server_linux_x64_sha512,
     language_server_osx_x64_sha512,
     language_server_win_x64_sha512,
     language_server_win_x86_sha512
 } from './languageServer/languageServerHashes';
-
-export enum PlatformName {
-    Windows32Bit = 'win-x86',
-    Windows64Bit = 'win-x64',
-    Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64'
-}
+import { ILanguageServerPlatformData, PlatformName } from './types';
 
 export enum PlatformLSExecutables {
     Windows = 'Microsoft.Python.LanguageServer.exe',
@@ -22,8 +17,11 @@ export enum PlatformLSExecutables {
     Linux = 'Microsoft.Python.LanguageServer'
 }
 
-export class PlatformData {
-    constructor(private platform: IPlatformService, fs: IFileSystem) { }
+@injectable()
+export class LanguageServerPlatformData implements ILanguageServerPlatformData {
+    constructor(
+        @inject(IPlatformService) private platform: IPlatformService) { }
+
     public getPlatformName(): PlatformName {
         if (this.platform.isWindows) {
             return this.platform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit;

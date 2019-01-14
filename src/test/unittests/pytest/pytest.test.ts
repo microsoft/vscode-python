@@ -1,7 +1,11 @@
 import * as assert from 'assert';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -33,6 +37,8 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         ioc.registerProcessTypes();
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        ioc.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     }
 
     test('Discover Tests (single test file)', async () => {

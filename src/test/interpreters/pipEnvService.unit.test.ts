@@ -5,6 +5,7 @@
 
 // tslint:disable:max-func-body-length no-any
 
+import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -13,10 +14,17 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
-import { ICurrentProcess, ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import {
+    IConfigurationService,
+    ICurrentProcess,
+    ILogger,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { IInterpreterHelper, IInterpreterLocatorService } from '../../client/interpreter/contracts';
+import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -30,7 +38,7 @@ suite('Interpreters - PipEnv', () => {
         [undefined, Uri.file(path.join(rootWorkspace, 'one.py'))].forEach(resource => {
             const testSuffix = ` (${os.name}, ${resource ? 'with' : 'without'} a workspace)`;
 
-            let pipEnvService: IInterpreterLocatorService;
+            let pipEnvService: PipEnvService;
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
             let processService: TypeMoq.IMock<IProcessService>;
@@ -42,6 +50,9 @@ suite('Interpreters - PipEnv', () => {
             let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
             let logger: TypeMoq.IMock<ILogger>;
             let platformService: TypeMoq.IMock<IPlatformService>;
+            let config: TypeMoq.IMock<IConfigurationService>;
+            let settings: TypeMoq.IMock<IPythonSettings>;
+            let pipenvPathSetting: string;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -80,6 +91,13 @@ suite('Interpreters - PipEnv', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => config.object);
+
+                config = TypeMoq.Mock.ofType<IConfigurationService>();
+                settings = TypeMoq.Mock.ofType<IPythonSettings>();
+                config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
+                settings.setup(p => p.pipenvPath).returns(() => pipenvPathSetting);
+                pipenvPathSetting = 'pipenv';
 
                 pipEnvService = new PipEnvService(serviceContainer.object);
             });
@@ -155,6 +173,11 @@ suite('Interpreters - PipEnv', () => {
 
                 expect(environments).to.be.lengthOf(1);
                 fileSystem.verifyAll();
+            });
+            test('Must use \'python.pipenvPath\' setting', async () => {
+                pipenvPathSetting = 'spam-spam-pipenv-spam-spam';
+                const pipenvExe = pipEnvService.executable;
+                assert.equal(pipenvExe, 'spam-spam-pipenv-spam-spam', 'Failed to identify pipenv.exe');
             });
         });
     });

@@ -37,6 +37,8 @@ import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from './terminal/environmentActivationProviders/commandPrompt';
+import { CondaActivationCommandProvider } from './terminal/environmentActivationProviders/condaActivationProvider';
+import { PipEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { PyEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
@@ -45,7 +47,8 @@ import {
     ITerminalActivationHandler,
     ITerminalActivator,
     ITerminalHelper,
-    ITerminalServiceFactory
+    ITerminalServiceFactory,
+    TerminalActivationProviders
 } from './terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -93,11 +96,15 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, Bash, 'bashCShellFish');
+        ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, CommandPromptAndPowerShell, 'commandPromptAndPowerShell');
+        ITerminalActivationCommandProvider, CommandPromptAndPowerShell, TerminalActivationProviders.commandPromptAndPowerShell);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
+        ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);

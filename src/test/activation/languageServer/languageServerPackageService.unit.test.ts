@@ -10,7 +10,7 @@ import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import { azureCDNBlobStorageAccount, LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
-import { PlatformName } from '../../../client/activation/platformData';
+import { PlatformName } from '../../../client/activation/types';
 import { IApplicationEnvironment } from '../../../client/common/application/types';
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService, NugetPackage } from '../../../client/common/nuget/types';

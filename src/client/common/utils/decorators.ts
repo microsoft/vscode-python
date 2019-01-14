@@ -1,5 +1,12 @@
-import { ProgressLocation, ProgressOptions, window } from 'vscode';
+// tslint:disable:no-any no-require-imports no-function-expression no-invalid-this
+
+import { ProgressLocation, ProgressOptions, Uri, window } from 'vscode';
+import '../../common/extensions';
 import { isTestExecution } from '../constants';
+import { traceError, traceVerbose } from '../logger';
+import { Resource } from '../types';
+import { InMemoryInterpreterSpecificCache } from './cacheUtils';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
@@ -20,8 +27,32 @@ export function debounce(wait?: number) {
     };
 }
 
+type VSCodeType = typeof import('vscode');
+type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]]) => Promise<any>;
+
+export function clearCachedResourceSpecificIngterpreterData(key: string, resource: Resource, vscode: VSCodeType = require('vscode')) {
+    const cache = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode);
+    cache.clear();
+}
+export function cacheResourceSpecificInterpreterData(key: string, expiryDurationMs: number, vscode: VSCodeType = require('vscode')) {
+    return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunctionWithFirstArgOfResource>) {
+        const originalMethod = descriptor.value!;
+        descriptor.value = async function (...args: [Uri | undefined, ...any[]]) {
+            const cache = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
+            if (cache.hasData) {
+                traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
+                return Promise.resolve(cache.data);
+            }
+            const promise = originalMethod.apply(this, args) as Promise<any>;
+            promise.then(result => cache.data = result).ignoreErrors();
+            return promise;
+        };
+    };
+}
+
 /**
  * Swallows exceptions thrown by a function. Function must return either a void or a promise that resolves to a void.
+ * When exceptions (including in promises) are caught, this will return `undefined` to calling code.
  * @export
  * @param {string} [scopeName] Scope for the error message to be logged along with the error.
  * @returns void
@@ -43,14 +74,14 @@ export function swallowExceptions(scopeName: string) {
                         if (isTestExecution()) {
                             return;
                         }
-                        console.error(errorMessage, error);
+                        traceError(errorMessage, error);
                     });
                 }
             } catch (error) {
                 if (isTestExecution()) {
                     return;
                 }
-                console.error(errorMessage, error);
+                traceError(errorMessage, error);
             }
         };
     };

@@ -4,10 +4,14 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
+import { instance, mock, anything } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/unittests/common/services/unitTestDiagnosticService';
 import { FlattenedTestFunction, ITestManager, ITestManagerFactory, Tests, TestStatus, TestsToRun } from '../../../client/unittests/common/types';
@@ -16,6 +20,8 @@ import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 import { ITestDetails, ITestScenarioDetails, testScenarios } from './pytest_run_tests_data';
+import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
+import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
@@ -308,6 +314,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.registerVariableTypes();
         // Mocks.
         ioc.registerMockProcessTypes();
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {

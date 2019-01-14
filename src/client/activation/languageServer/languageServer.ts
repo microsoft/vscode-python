@@ -20,13 +20,14 @@ import { PythonSettings } from '../../common/configSettings';
 // tslint:disable-next-line:ordered-imports
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { Logger } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
     IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, ILogger,
     IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -40,9 +41,8 @@ import {
 import { IUnitTestManagementService } from '../../unittests/types';
 import { LanguageServerDownloader } from '../downloader';
 import { InterpreterData, InterpreterDataService } from '../interpreterDataService';
-import { PlatformData } from '../platformData';
 import { ProgressReporting } from '../progress';
-import { IExtensionActivator, ILanguageServerFolderService } from '../types';
+import { IExtensionActivator, ILanguageServerFolderService, ILanguageServerPlatformData } from '../types';
 
 const PYTHON = 'python';
 const dotNetCommand = 'dotnet';
@@ -57,15 +57,16 @@ const buildSymbolsCmdDeprecatedInfo: DeprecatedFeatureInfo = {
 
 @injectable()
 export class LanguageServerExtensionActivator implements IExtensionActivator {
+    protected languageServerFolder!: string;
+    protected readonly platformData: ILanguageServerPlatformData;
+    protected readonly context: IExtensionContext;
     private readonly configuration: IConfigurationService;
     private readonly appShell: IApplicationShell;
     private readonly output: OutputChannel;
     private readonly fs: IFileSystem;
     private readonly sw = new StopWatch();
-    private readonly platformData: PlatformData;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
-    private readonly context: IExtensionContext;
     private readonly workspace: IWorkspaceService;
     private readonly root: Uri | undefined;
 
@@ -75,7 +76,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
     private surveyBanner: IPythonExtensionBanner;
-    private languageServerFolder!: string;
     private languageServerFolderService: ILanguageServerFolderService;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
@@ -84,7 +84,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.services.get<IFileSystem>(IFileSystem);
-        this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
+        this.platformData = this.services.get<ILanguageServerPlatformData>(ILanguageServerPlatformData);
         this.workspace = this.services.get<IWorkspaceService>(IWorkspaceService);
         this.languageServerFolderService = this.services.get<ILanguageServerFolderService>(ILanguageServerFolderService);
         const deprecationManager: IFeatureDeprecationManager =
@@ -122,7 +122,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         if (!clientOptions) {
             return false;
         }
-
         this.startupCompleted.promise.then(() => {
             const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
             testManagementService.activate()
@@ -144,7 +143,25 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
-    private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
+    protected async startLanguageClient(): Promise<void> {
+        this.context.subscriptions.push(this.languageClient!.start());
+        await this.serverReady();
+        const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
+        const progressReporting = new ProgressReporting(this.languageClient!);
+        disposables.push(progressReporting);
+    }
+
+    protected async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+        const options = { stdio: 'pipe' };
+        const serverOptions: ServerOptions = {
+            run: { command: serverModule, rgs: [], options: options },
+            debug: { command: serverModule, args: ['--debug'], options }
+        };
+        const vscodeLanaguageClient = await import('vscode-languageclient');
+        return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
+    }
+
+    protected async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
         sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
 
@@ -155,11 +172,14 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             await this.startLanguageClient();
             return true;
         }
-
         const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
             const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
-            await downloader.downloadLanguageServer(this.context);
+            try {
+                await downloader.downloadLanguageServer(this.context);
+            } catch (err) {
+                return false;
+            }
         }
 
         const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
@@ -172,18 +192,12 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             });
             return true;
         } catch (ex) {
-            this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
+            this.appShell.showErrorMessage(LanguageService.lsFailedToStart());
+            this.output.appendLine('Language server failed to start.');
+            this.output.appendLine(ex);
             sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to start (platform)' });
             return false;
         }
-    }
-
-    private async startLanguageClient(): Promise<void> {
-        this.context.subscriptions.push(this.languageClient!.start());
-        await this.serverReady();
-        const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
-        const progressReporting = new ProgressReporting(this.languageClient!);
-        disposables.push(progressReporting);
     }
 
     private async serverReady(): Promise<void> {
@@ -207,17 +221,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const vscodeLanaguageClient = await import('vscode-languageclient');
         return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
-
-    private async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const options = { stdio: 'pipe' };
-        const serverOptions: ServerOptions = {
-            run: { command: serverModule, rgs: [], options: options },
-            debug: { command: serverModule, args: ['--debug'], options }
-        };
-        const vscodeLanaguageClient = await import('vscode-languageclient');
-        return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
-    }
-
     // tslint:disable-next-line:member-ordering
     public async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
         const properties = new Map<string, {}>();

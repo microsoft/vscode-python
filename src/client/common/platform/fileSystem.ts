@@ -9,7 +9,6 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { traceDecorators } from '../logger';
 import { createDeferred } from '../utils/async';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
@@ -144,7 +143,6 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    @traceDecorators.error('Failed to get FileHash')
     public getFileHash(filePath: string): Promise<string | undefined> {
         return new Promise<string | undefined>(resolve => {
             fs.lstat(filePath, (err, stats) => {

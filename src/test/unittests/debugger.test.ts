@@ -1,8 +1,12 @@
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
 import { createDeferred } from '../../client/common/utils/async';
+import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { InterpreterService } from '../../client/interpreter/interpreterService';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { TestManagerRunner as NoseTestManagerRunner } from '../../client/unittests//nosetest/runner';
 import { TestManagerRunner as PytestManagerRunner } from '../../client/unittests//pytest/runner';
 import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/unittests//unittest/runner';
@@ -83,6 +87,8 @@ suite('Unit Tests - debugging', () => {
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, MockDebugLauncher);
         ioc.serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
 
     async function testStartingDebugger(testProvider: TestProvider) {

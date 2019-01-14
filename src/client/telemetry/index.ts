@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-reference
+// tslint:disable:no-reference no-any import-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
-// tslint:disable-next-line:import-name
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -103,6 +102,8 @@ export function captureTelemetry(
                     // tslint:disable-next-line:promise-function-async
                     .catch(ex => {
                         // tslint:disable-next-line:no-any
+                        properties = properties || {};
+                        (properties as any).failed = true;
                         sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties);
                     });
             } else {

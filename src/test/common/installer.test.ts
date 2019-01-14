@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
@@ -14,6 +15,8 @@ import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessServiceFactory } from '../../client/common/process/types';
+import { TerminalHelper } from '../../client/common/terminal/helper';
+import { ITerminalHelper } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product, ProductType } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { getNamesAndValues } from '../../client/common/utils/enum';
@@ -94,6 +97,7 @@ suite('Installer', () => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
+            ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
                 return;
             }
@@ -120,6 +124,7 @@ suite('Installer', () => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
+            ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort) {
                 return;
             }

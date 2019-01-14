@@ -84,7 +84,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             case InterpreterType.Conda: {
                 return 'conda';
             }
-            case InterpreterType.PipEnv: {
+            case InterpreterType.Pipenv: {
                 return 'pipenv';
             }
             case InterpreterType.Pyenv: {

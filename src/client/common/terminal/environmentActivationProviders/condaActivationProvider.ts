@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { ICondaService } from '../../../interpreter/contracts';
@@ -19,7 +19,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 @injectable()
 export class CondaActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(
-        private readonly serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) { }
 
     /**

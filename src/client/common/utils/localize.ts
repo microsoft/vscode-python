@@ -25,6 +25,9 @@ export namespace LanguageService {
     export const bannerMessage = localize('LanguageService.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?');
     export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
+    export const lsFailedToStart = localize('LanguageService.lsFailedToStart', 'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+    export const lsFailedToDownload = localize('LanguageService.lsFailedToStart', 'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details..');
+    export const lsFailedToExtract = localize('LanguageService.lsFailedToStart', 'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
 }
 
 export namespace Interpreters {

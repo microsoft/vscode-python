@@ -8,12 +8,11 @@ import { IApplicationShell, IWorkspaceService } from '../../../common/applicatio
 import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { ICurrentProcess, ILogger } from '../../../common/types';
+import { IConfigurationService, ICurrentProcess, ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
-const execName = 'pipenv';
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 
 @injectable()
@@ -23,6 +22,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
     private readonly logger: ILogger;
+    private readonly configService: IConfigurationService;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('PipEnvService', serviceContainer);
@@ -31,6 +31,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
+        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
@@ -42,6 +43,11 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         const envName = await this.getInterpreterPathFromPipenv(dir, true);
         return !!envName;
     }
+
+    public get executable(): string {
+        return this.configService.getSettings().pipenvPath;
+    }
+
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
         const pipenvCwd = this.getPipenvWorkingDirectory(resource);
         if (!pipenvCwd) {
@@ -67,7 +73,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         return {
             ...(details as PythonInterpreter),
             path: interpreterPath,
-            type: InterpreterType.PipEnv
+            type: InterpreterType.Pipenv
         };
     }
 
@@ -115,6 +121,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
         try {
             const processService = await this.processServiceFactory.create(Uri.file(rootPath));
+            const execName = this.executable;
             const result = await processService.exec(execName, [arg], { cwd: rootPath });
             if (result) {
                 const stdout = result.stdout ? result.stdout.trim() : '';

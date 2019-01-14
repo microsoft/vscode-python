@@ -16,7 +16,7 @@ parameters:
 jobs:
 - job:
   displayName: ${{ format('SystemTest {0} Py{1}', parameters.Platform, parameters.PythonVersion) }}
-  dependsOn: ${{ parameters.DependsOn }} 
+  dependsOn: ${{ parameters.DependsOn }}
   pool: ${{ parameters.pool }}
 
   variables:
@@ -42,6 +42,9 @@ jobs:
         TestSuiteName: 'testMultiWorkspace'
       Debugger:
         TestSuiteName: 'testDebugger'
+      Functional:
+        TestSuiteName: 'test:functional -- --reporter=mocha-junit-reporter --reporter-options mochaFile=${{ parameters.MOCHA_CI_REPORTFILE }}'
+        HasFunctionalRequirements: 'true'
 
 
   steps:

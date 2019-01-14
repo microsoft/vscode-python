@@ -6,8 +6,11 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { parse } from 'semver';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
+import { TerminalManager } from '../../../client/common/application/terminalManager';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import '../../../client/common/extensions';
 import {
     IFileSystem, IPlatformService
@@ -15,9 +18,13 @@ import {
 import {
     IProcessService, IProcessServiceFactory
 } from '../../../client/common/process/types';
+import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
+import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
     CondaActivationCommandProvider
 } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import { PipEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
+import { PyEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import {
     ITerminalActivationCommandProvider, TerminalShellType
@@ -28,6 +35,7 @@ import {
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Terminal Environment Activation conda', () => {
@@ -42,6 +50,7 @@ suite('Terminal Environment Activation conda', () => {
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let condaService: TypeMoq.IMock<ICondaService>;
     let conda: string;
+    let bash: ITerminalActivationCommandProvider;
 
     setup(() => {
         conda = 'conda';
@@ -54,6 +63,7 @@ suite('Terminal Environment Activation conda', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>();
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve(conda));
+        bash = mock(Bash);
 
         processService.setup((x: any) => x.then).returns(() => undefined);
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
@@ -72,7 +82,17 @@ suite('Terminal Environment Activation conda', () => {
         terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
         pythonSettings.setup(s => s.terminal).returns(() => terminalSettings.object);
 
-        terminalHelper = new TerminalHelper(serviceContainer.object);
+        terminalHelper = new TerminalHelper(platformService.object,
+            instance(mock(TerminalManager)), instance(mock(WorkspaceService)),
+            condaService.object,
+            instance(mock(InterpreterService)),
+            configService.object,
+            new CondaActivationCommandProvider(serviceContainer.object),
+            instance(bash),
+            mock(CommandPromptAndPowerShell),
+            mock(PyEnvActivationCommandProvider),
+            mock(PipEnvActivationCommandProvider));
+
     });
     teardown(() => {
         disposables.forEach(disposable => {
@@ -258,7 +278,11 @@ suite('Terminal Environment Activation conda', () => {
         mockProvider.setup(p => p.getActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(['mock command']));
 
         const expectedActivationCommand = ['mock command'];
+        when(bash.isShellSupported(anything())).thenReturn(true);
+        when(bash.getActivationCommands(anything(), TerminalShellType.bash)).thenResolve(expectedActivationCommand);
+
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(TerminalShellType.bash, undefined);
+
         expect(activationCommands).to.deep.equal(expectedActivationCommand, 'Incorrect Activation command');
     });
     async function expectActivationCommandIfCondaDetectionFails(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, condaEnvsPath: string) {
@@ -270,10 +294,8 @@ suite('Terminal Environment Activation conda', () => {
         condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         pythonSettings.setup(s => s.pythonPath).returns(() => pythonPath);
 
-        const mockProvider = TypeMoq.Mock.ofType<ITerminalActivationCommandProvider>();
-        serviceContainer.setup(c => c.getAll(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny())).returns(() => [mockProvider.object]);
-        mockProvider.setup(p => p.isShellSupported(TypeMoq.It.isAny())).returns(() => true);
-        mockProvider.setup(p => p.getActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(['mock command']));
+        when(bash.isShellSupported(anything())).thenReturn(true);
+        when(bash.getActivationCommands(anything(), TerminalShellType.bash)).thenResolve(['mock command']);
 
         const expectedActivationCommand = ['mock command'];
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(TerminalShellType.bash, undefined);

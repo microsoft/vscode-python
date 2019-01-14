@@ -165,7 +165,7 @@ suite('Interpreters - Locators Helper', () => {
             ['3.6', '3.6'].forEach((name, index) => {
                 // Ensure the type in the first item is 'Unknown',
                 // and type in second item is known (e.g. Conda).
-                const type = index === 0 ? InterpreterType.Unknown : InterpreterType.PipEnv;
+                const type = index === 0 ? InterpreterType.Unknown : InterpreterType.Pipenv;
                 const interpreter = {
                     architecture: Architecture.Unknown,
                     displayName: name,

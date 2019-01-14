@@ -3,8 +3,7 @@
 import { exec, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import * as tk from 'tree-kill';
-import { Disposable } from 'vscode';
-
+import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
@@ -47,11 +46,11 @@ export class ProcessService implements IProcessService {
         let procExited = false;
 
         const output = new Observable<Output<string>>(subscriber => {
-            const disposables: Disposable[] = [];
+            const disposables: IDisposable[] = [];
 
             const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
                 ee.on(name, fn as any);
-                disposables.push({ dispose: () => ee.removeListener(name, fn as any) });
+                disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
             };
 
             if (options.token) {
@@ -102,11 +101,11 @@ export class ProcessService implements IProcessService {
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
-        const disposables: Disposable[] = [];
+        const disposables: IDisposable[] = [];
 
         const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
             ee.on(name, fn as any);
-            disposables.push({ dispose: () => ee.removeListener(name, fn as any) });
+            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any});
         };
 
         if (options.token) {

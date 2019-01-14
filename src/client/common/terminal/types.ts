@@ -1,9 +1,16 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { Event, Terminal, Uri } from 'vscode';
+import { Resource } from '../types';
 
+export enum TerminalActivationProviders {
+    bashCShellFish = 'bashCShellFish',
+    commandPromptAndPowerShell = 'commandPromptAndPowerShell',
+    pyenv = 'pyenv',
+    conda = 'conda',
+    pipenv = 'pipenv'
+}
 export enum TerminalShellType {
     powershell = 'powershell',
     powershellCore = 'powershellCore',
@@ -16,6 +23,7 @@ export enum TerminalShellType {
     cshell = 'cshell',
     tcshell = 'tshell',
     wsl = 'wsl',
+    xonsh = 'xonsh',
     other = 'other'
 }
 
@@ -49,6 +57,7 @@ export interface ITerminalHelper {
     getTerminalShellPath(): string;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
     getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
+    getEnvironmentActivationShellCommands(resource: Resource): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivator = Symbol('ITerminalActivator');

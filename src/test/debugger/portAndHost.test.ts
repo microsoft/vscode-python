@@ -50,7 +50,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
             cwd: debugFilesPath,
             stopOnEntry,
             showReturnValue,
-            logToFile: true,
+            logToFile: false,
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
             args: [],

@@ -311,7 +311,7 @@ suite('Interpreters service', () => {
                                             path: pythonPath
                                         };
 
-                                        if (interpreterInfo.path && interpreterType && interpreterType.value === InterpreterType.PipEnv) {
+                                        if (interpreterInfo.path && interpreterType && interpreterType.value === InterpreterType.Pipenv) {
                                             virtualEnvMgr
                                                 .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(interpreterInfo.path!), TypeMoq.It.isAny()))
                                                 .returns(() => Promise.resolve(pipEnvName));
@@ -339,7 +339,7 @@ suite('Interpreters service', () => {
                                         if (interpreterInfo.architecture) {
                                             displayNameParts.push(getArchitectureDisplayName(interpreterInfo.architecture));
                                         }
-                                        if (!interpreterInfo.envName && interpreterInfo.path && interpreterInfo.type && interpreterInfo.type === InterpreterType.PipEnv && pipEnvName) {
+                                        if (!interpreterInfo.envName && interpreterInfo.path && interpreterInfo.type && interpreterInfo.type === InterpreterType.Pipenv && pipEnvName) {
                                             // If we do not have the name of the environment, then try to get it again.
                                             // This can happen based on the context (i.e. resource).
                                             // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).

@@ -15,10 +15,13 @@ import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { PYTHON_PATH } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from './../initialize';
+
+// tslint:disable:no-any
 
 type RenameResponse = {
     results: [{ diff: string }];
@@ -36,11 +39,18 @@ suite('Refactor Rename', () => {
         configService.setup(c => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processServiceFactory.setup(p => p.create(typeMoq.It.isAny())).returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
-
+        const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
+        envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny())).returns(() => configService.object);
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny())).returns(() => processServiceFactory.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny())).returns(() => new PythonExecutionFactory(serviceContainer.object));
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
+            .returns(() => envActivationService.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
+            .returns(() => new PythonExecutionFactory(serviceContainer.object,
+                undefined as any, processServiceFactory.object,
+                configService.object, undefined as any));
         await initializeTest();
     });
     teardown(closeActiveWindows);

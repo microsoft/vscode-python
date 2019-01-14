@@ -62,7 +62,7 @@ export enum InterpreterType {
     Unknown = 'Unknown',
     Conda = 'Conda',
     VirtualEnv = 'VirtualEnv',
-    PipEnv = 'PipEnv',
+    Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv'
 }
@@ -113,6 +113,7 @@ export interface IInterpreterHelper {
 
 export const IPipEnvService = Symbol('IPipEnvService');
 export interface IPipEnvService {
+    executable: string;
     isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
 }
 

@@ -46,7 +46,7 @@ export type LintingTelemetry = {
 
 export type LinterInstallPromptTelemetry = {
     tool?: LinterId;
-    action: 'select'|'disablePrompt'|'install';
+    action: 'select' | 'disablePrompt' | 'install';
 };
 
 export type LinterSelectionTelemetry = {
@@ -166,6 +166,18 @@ export type InterpreterDiscovery = {
     locator: string;
 };
 
+export type InterpreterActivationEnvironmentVariables = {
+    hasEnvVars?: boolean;
+    failed?: boolean;
+};
+
+export type InterpreterActivation = {
+    hasCommands?: boolean;
+    failed?: boolean;
+    terminal: TerminalShellType;
+    pythonVersion?: string;
+};
+
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
@@ -188,4 +200,6 @@ export type TelemetryProperties = FormatTelemetry
     | LanguageServePlatformSupported
     | DebuggerConfigurationPromtpsTelemetry
     | InterpreterAutoSelection
-    | InterpreterDiscovery;
+    | InterpreterDiscovery
+    | InterpreterActivationEnvironmentVariables
+    | InterpreterActivation;

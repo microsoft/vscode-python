@@ -131,7 +131,9 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 return {
                     ...(details as PythonInterpreter),
                     path: executablePath,
-                    version: parsePythonVersion(version),
+                    // Do not use version info from registry, this doesn't contain the release level.
+                    // Give preference to what we have retrieved from getInterpreterInformation.
+                    version: details.version || parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
                     type: InterpreterType.Unknown
                 } as PythonInterpreter;

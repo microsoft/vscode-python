@@ -2,6 +2,9 @@ resources:
 - repo: self
   clean: true
 
+variables:
+    VSCODE_PYTHON_ROLLING: true
+
 # No trigger specified here. This is a nightly build only and
 # there isn't a way to specify scheduled builds in YAML at time
 # of writing...
@@ -49,35 +52,35 @@ jobs:
 ## System Tests
 - template: templates/test-phase-job.yml
   parameters:
-    pool: 
+    pool:
       name: 'Hosted VS2017'
     Platform: 'Windows'
     PythonVersion: '3.7'
 
 - template: templates/test-phase-job.yml
   parameters:
-    pool: 
+    pool:
       name: 'Hosted VS2017'
     Platform: 'Windows'
     PythonVersion: '3.6'
 
 - template: templates/test-phase-job.yml
   parameters:
-    pool: 
+    pool:
       name: 'Hosted VS2017'
     Platform: 'Windows'
     PythonVersion: '3.5'
 
 - template: templates/test-phase-job.yml
   parameters:
-    pool: 
+    pool:
       name: 'Hosted VS2017'
     Platform: 'Windows'
     PythonVersion: '3.4'
 
 - template: templates/test-phase-job.yml
   parameters:
-    pool: 
+    pool:
       name: 'Hosted VS2017'
     Platform: 'Windows'
     PythonVersion: '2.7'

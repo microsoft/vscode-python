@@ -10,6 +10,8 @@ import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 import { Container } from 'inversify';
+import { basename as pathBasename, sep as pathSep } from 'path';
+import * as stackTrace from 'stack-trace';
 import {
     CodeActionKind,
     debug,
@@ -32,10 +34,11 @@ import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
-import { IWorkspaceService } from './common/application/types';
+import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -47,7 +50,6 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IFeatureDeprecationManager,
-    ILogger,
     IMemento,
     IOutputChannel,
     Resource,
@@ -56,6 +58,7 @@ import {
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { EXTENSION_ROOT_DIR } from './constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
@@ -100,8 +103,17 @@ durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
 let activatedServiceContainer: ServiceContainer | undefined;
 
-// tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
+    try {
+        return await activateUnsafe(context);
+    } catch (ex) {
+        handleError(ex);
+        throw ex;  // re-raise
+    }
+}
+
+// tslint:disable-next-line:max-func-body-length
+async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi> {
     displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
     const cont = new Container();
@@ -135,6 +147,9 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
+
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Move this down to right before durations.endActivateTime is set.
     sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -291,41 +306,15 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
 
 // tslint:disable-next-line:no-any
 async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceContainer: IServiceContainer) {
-    const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;
-        const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-        const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
-        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
-        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
-        const settings = configurationService.getSettings(mainWorkspaceUri);
-        const [condaVersion, interpreter, interpreters] = await Promise.all([
-            condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
-            interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
-            interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
-        ]);
-        const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
-        const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
-        const interpreterType = interpreter ? interpreter.type : undefined;
-        const hasUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-        const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
-        const isAutoSelectedWorkspaceInterpreterUsed = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : undefined;
-        const hasPython3 = interpreters
-            .filter(item => item && item.version ? item.version.major === 3 : false)
-            .length > 0;
-
-        const props = {
-            condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3,
-            hasUserDefinedInterpreter, isAutoSelectedWorkspaceInterpreterUsed
-        };
+        const props = await getActivationTelemetryProps(serviceContainer);
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
-        logger.logError('sendStartupTelemetry failed.', ex);
+        traceError('sendStartupTelemetry() failed.', ex);
     }
 }
+
 function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pyhontPath')!;
@@ -333,8 +322,128 @@ function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IService
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
         (settings.globalValue && settings.globalValue !== 'python');
 }
+
 function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
     const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
     return interpreter ? interpreter.path : undefined;
+}
+
+/////////////////////////////
+// telemetry
+
+// tslint:disable-next-line:no-any
+async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<any> {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Not all of this data is showing up in the database...
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: If any one of these parts fails we send no info.  We should
+    // be able to partially populate as much as possible instead
+    // (through granular try-catch statements).
+    const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+    const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
+    const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
+    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
+    const settings = configurationService.getSettings(mainWorkspaceUri);
+    const [condaVersion, interpreter, interpreters] = await Promise.all([
+        condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
+        interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
+        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
+    ]);
+    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
+    const interpreterType = interpreter ? interpreter.type : undefined;
+    const hasUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
+    const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
+    const isAutoSelectedWorkspaceInterpreterUsed = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : undefined;
+    const hasPython3 = interpreters
+        .filter(item => item && item.version ? item.version.major === 3 : false)
+        .length > 0;
+
+    return {
+        condaVersion,
+        terminal: terminalShellType,
+        pythonVersion,
+        interpreterType,
+        workspaceFolderCount,
+        hasPython3,
+        hasUserDefinedInterpreter,
+        isAutoSelectedWorkspaceInterpreterUsed
+    };
+}
+
+/////////////////////////////
+// error handling
+
+function handleError(ex: Error) {
+    notifyUser('extension activation failed (see console log).');
+    traceError('extension activation failed', ex);
+    sendErrorTelemetry(ex)
+        .ignoreErrors();
+}
+
+interface IAppShell {
+    showErrorMessage(string);
+}
+
+function notifyUser(msg: string) {
+    try {
+        let appShell = (window as IAppShell);
+        if (activatedServiceContainer) {
+            appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell);
+        }
+        appShell.showErrorMessage(msg)
+            .ignoreErrors();
+    } catch (ex) {
+        // ignore
+    }
+}
+
+function sanitizeFilename(filename: string): string {
+    if (filename.startsWith(EXTENSION_ROOT_DIR + pathSep)) {
+        filename = `<pvsc>${filename.substring(EXTENSION_ROOT_DIR.length)}`;
+    } else {
+        // We don't really care about files outside our extension.
+        filename = `<hidden>${pathSep}${pathBasename(filename)}`;
+    }
+    return filename;
+}
+
+function getStackTrace(ex: Error): string {
+    // We aren't showing the error message (ex.message) since it might
+    // contain PII.
+    let trace = '';
+    for (const frame of stackTrace.parse(ex)) {
+        let filename = frame.getFileName();
+        if (filename) {
+            filename = sanitizeFilename(filename);
+            const lineno = frame.getLineNumber();
+            const colno = frame.getColumnNumber();
+            trace += `\n\tat ${filename}:${lineno}:${colno}`;
+        } else {
+            trace += '\n\tat <anonymous>';
+        }
+    }
+    return trace.trim();
+}
+
+async function sendErrorTelemetry(ex: Error) {
+    try {
+        // tslint:disable-next-line:no-any
+        let props: any = {};
+        if (activatedServiceContainer) {
+            try {
+                props = await getActivationTelemetryProps(activatedServiceContainer);
+            } catch (ex) {
+                // ignore
+            }
+        }
+        props.stackTrace = getStackTrace(ex);
+        sendTelemetryEvent(EDITOR_LOAD, durations, props);
+    } catch (exc2) {
+        traceError('sendErrorTelemetry() failed.', exc2);
+    }
 }

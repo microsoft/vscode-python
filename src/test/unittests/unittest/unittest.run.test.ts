@@ -5,9 +5,13 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { ArgumentsHelper } from '../../../client/unittests/common/argumentsHelper';
 import { CommandSource, UNITTEST_PROVIDER } from '../../../client/unittests/common/constants';
 import { TestRunner } from '../../../client/unittests/common/runner';
@@ -81,6 +85,8 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, TestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
         ioc.serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
 
     async function ignoreTestLauncher() {
