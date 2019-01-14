@@ -51,7 +51,7 @@ export class Code extends React.Component<ICodeProps> {
     }
 
     private updateCodeMirror = (rcm: ReactCodeMirror.ReactCodeMirror) => {
-        if (rcm && rcm != null) {
+        if (rcm) {
             this.codeMirror = rcm.getCodeMirror();
         }
     }
