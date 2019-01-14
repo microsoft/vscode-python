@@ -6,12 +6,13 @@ import { FindOptions } from 'file-matcher';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as stripJsonComments from 'strip-json-comments';
+
 import { IWorkspaceService } from '../common/application/types';
 import { ICurrentProcess, ILogger } from '../common/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
-import { ICodeCssGenerator } from './types';
 import { Identifiers } from './constants';
-import  * as stripJsonComments from 'strip-json-comments';
+import { ICodeCssGenerator } from './types';
 
 // This class generates css using the current theme in order to colorize code.
 //
@@ -103,9 +104,9 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const keyword = this.getScopeColor(tokenColors, 'keyword.control', 'keyword');
         const operator = this.getScopeColor(tokenColors, 'keyword.operator');
         const variable = this.getScopeColor(tokenColors, 'variable');
-        const atomic = this.getScopeColor(tokenColors, 'atomic');
+        // const atomic = this.getScopeColor(tokenColors, 'atomic');
         const builtin = this.getScopeColor(tokenColors, 'support.function');
-        const punctuation = this.getScopeColor(tokenColors, 'punctuation')
+        const punctuation = this.getScopeColor(tokenColors, 'punctuation');
 
         const def = 'var(--vscode-editor-foreground)';
 
@@ -181,7 +182,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             recursiveSearch: true,
             fileFilter: {
                 fileNamePattern: '**/*.json',
-                content: new RegExp(`name[',"]:\\s*[',"]${escapedThemeName}[',"]`)
+                content: new RegExp(`[name|id][',"]:\\s*[',"]${escapedThemeName}[',"]`)
             }
         };
         // tslint:disable-next-line:no-require-imports

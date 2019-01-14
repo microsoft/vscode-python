@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import './index.css';
+
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+
+import { Identifiers } from '../../client/datascience/constants';
 import { PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
-import './index.css';
 import { MainPanel } from './MainPanel';
-import { Identifiers } from '../../client/datascience/constants';
 
 const baseTheme = detectBaseTheme();
 const skipDefault = PostOffice.canSendMessages();

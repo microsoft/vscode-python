@@ -27,7 +27,6 @@ import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { Cell } from '../../datascience-ui/history-react/cell';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
