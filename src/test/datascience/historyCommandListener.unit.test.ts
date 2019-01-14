@@ -209,7 +209,7 @@ suite('History command listener', async () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCode: true
+            collapseCellInputCodeByDefault: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

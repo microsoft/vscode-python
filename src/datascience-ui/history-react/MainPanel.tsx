@@ -167,7 +167,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const showInputs = getSettings().showCellInputCode;
 
             if (prevShowInputs !== showInputs) {
-                this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCode);
+                this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
         }
     }
@@ -369,7 +369,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private addCell = (payload?: any) => {
         // Get our settings for if we should display input code and if we should collapse by default
         const showInputs = getSettings().showCellInputCode;
-        const collapseInputs = getSettings().collapseCellInputCode;
+        const collapseInputs = getSettings().collapseCellInputCodeByDefault;
 
         if (payload) {
             const cell = payload as ICell;

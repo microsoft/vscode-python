@@ -439,7 +439,7 @@ suite('Jupyter Execution', async () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCode: true
+            collapseCellInputCodeByDefault: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning

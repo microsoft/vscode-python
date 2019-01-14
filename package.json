@@ -992,13 +992,13 @@
                 "python.dataScience.showCellInputCode": {
                     "type": "boolean",
                     "default": true,
-                    "description": "For cells in the Python Interactive window show cell input.",
+                    "description": "Show cell input code.",
                     "scope": "resource"
                 },
-                "python.dataScience.collapseCellInputCode": {
+                "python.dataScience.collapseCellInputCodeByDefault": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Collapse by default cell input code when cells are added to the Python Interactive windows.",
+                    "description": "Collapse cell input code by default.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

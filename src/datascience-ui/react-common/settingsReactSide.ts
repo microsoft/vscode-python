@@ -42,7 +42,7 @@ function load() {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCode: true
+            collapseCellInputCodeByDefault: true
         };
     }
 }

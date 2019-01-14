@@ -273,7 +273,7 @@ suite('History output tests', () => {
                 jupyterInterruptTimeout: 10000,
                 searchForJupyter: true,
                 showCellInputCode: false,
-                collapseCellInputCode: true
+                collapseCellInputCodeByDefault: true
             }
         );
 
@@ -297,7 +297,7 @@ suite('History output tests', () => {
                 jupyterInterruptTimeout: 10000,
                 searchForJupyter: true,
                 showCellInputCode: true,
-                collapseCellInputCode: true
+                collapseCellInputCodeByDefault: true
             }
         );
 
@@ -322,7 +322,7 @@ suite('History output tests', () => {
                 jupyterInterruptTimeout: 10000,
                 searchForJupyter: true,
                 showCellInputCode: true,
-                collapseCellInputCode: false
+                collapseCellInputCodeByDefault: false
             }
         );
 

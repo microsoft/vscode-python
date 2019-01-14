@@ -62,7 +62,7 @@ export function setUpDomEnvironment() {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCode: true
+            collapseCellInputCodeByDefault: true
         };
     };
 
