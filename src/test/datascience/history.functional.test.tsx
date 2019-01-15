@@ -360,11 +360,9 @@ suite('History output tests', () => {
         const foundResult = wrapper.find('Cell');
         assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
-        // IANHU: allow cell index to be passed in?
         // Find the last cell added
         const lastCell = foundResult.last();
         assert.ok(lastCell, 'Last call doesn\'t exist');
-
 
         const toggleButton = lastCell.find('button.collapse-input');
         assert.ok(toggleButton);
