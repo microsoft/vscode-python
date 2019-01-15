@@ -85,6 +85,7 @@ export namespace Telemetry {
     export const SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL';
     export const ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER';
     export const ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER';
+    export const ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER';
 }
 
 export namespace HelpLinks {
