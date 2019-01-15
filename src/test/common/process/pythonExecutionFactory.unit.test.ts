@@ -103,28 +103,9 @@ suite('Process - PythonExecutionFactory', () => {
 
                     const service = await factory.createActivatedEnvironment(resource, interpreter);
 
-                    verify(activationHelper.getActivatedEnvironmentVariables(resource)).once();
+                    verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
                     assert.deepEqual(service, mockExecService);
                     assert.equal(createInvoked, true);
-                });
-                test('PythonExecutionService is created', async () => {
-                    let createInvoked = false;
-                    const mockExecService = 'something';
-                    factory.create = async (_options: ExecutionFactoryCreationOptions) => {
-                        createInvoked = true;
-                        return Promise.resolve(mockExecService as any as IPythonExecutionService);
-                    };
-
-                    const pythonSettings = mock(PythonSettings);
-                    when(activationHelper.getActivatedEnvironmentVariables(resource, anything())).thenResolve({ x: '1' });
-                    when(pythonSettings.pythonPath).thenReturn('HELLO');
-                    when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                    const service = await factory.createActivatedEnvironment(resource, interpreter);
-
-                    verify(activationHelper.getActivatedEnvironmentVariables(resource)).once();
-                    verify(pythonSettings.pythonPath).once();
-                    expect(service).instanceOf(PythonExecutionService);
-                    assert.equal(createInvoked, false);
                 });
                 test('PythonExecutionService is created', async () => {
                     let createInvoked = false;
