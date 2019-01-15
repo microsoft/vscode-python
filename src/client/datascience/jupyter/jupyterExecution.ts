@@ -34,7 +34,7 @@ import {
     PythonInterpreter
 } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IConnection, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager, INotebookServer } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
@@ -240,6 +240,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 // Try to connect to our jupyter process
                 const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
                 await result.connect(connection, kernelSpec, cancelToken, workingDir);
+                sendTelemetryEvent(uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
                 return result;
             } catch (err) {
                 // Something else went wrong

@@ -83,6 +83,8 @@ export namespace Telemetry {
     export const ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT';
     export const StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST';
     export const SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL';
+    export const ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER';
+    export const ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER';
 }
 
 export namespace HelpLinks {
