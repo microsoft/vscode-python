@@ -8,9 +8,9 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
+import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
-import { ObservableExecutionResult, ExecutionResult, SpawnOptions } from '../common/process/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -40,7 +40,7 @@ export enum InterruptResult {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
@@ -72,7 +72,7 @@ export interface IJupyterSession extends IDisposable {
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager {
-    startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<IJupyterSession>;
+    startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken) : Promise<IJupyterSession>;
     getActiveKernelSpecs(connInfo: IConnection) : Promise<IJupyterKernelSpec[]>;
 }
 

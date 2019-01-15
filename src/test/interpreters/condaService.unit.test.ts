@@ -20,7 +20,7 @@ import {
     InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
-import { CondaGetEnvironmentPrefix, CondaService } from '../../client/interpreter/locators/services/condaService';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
 import { MockState } from './mocks';
 
@@ -104,9 +104,7 @@ suite('Interpreters Conda Service', () => {
             persistentStateFactory.object,
             config.object,
             logger.object,
-            interpreterService.object,
             disposableRegistry,
-            serviceContainer.object,
             workspaceService.object,
             registryInterpreterLocatorService.object);
 
@@ -396,9 +394,7 @@ suite('Interpreters Conda Service', () => {
             persistentStateFactory.object,
             config.object,
             logger.object,
-            interpreterService.object,
             disposableRegistry,
-            serviceContainer.object,
             workspaceService.object);
 
         const result = await condaSrv.getCondaFile();

@@ -7,12 +7,13 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 
+import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService,
     ITerminalManager,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -30,19 +31,19 @@ import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory } from 
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
-    CondaActivationCommandProvider,
+    CondaActivationCommandProvider
 } from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
 import {
-    PipEnvActivationCommandProvider,
+    PipEnvActivationCommandProvider
 } from '../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import {
-    PyEnvActivationCommandProvider,
+    PyEnvActivationCommandProvider
 } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import {
     ITerminalActivationCommandProvider,
     ITerminalHelper,
-    TerminalActivationProviders,
+    TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -51,7 +52,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    IsWindows,
+    IsWindows
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -60,6 +61,7 @@ import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
+import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
@@ -70,12 +72,13 @@ import {
     ICodeCssGenerator,
     IHistory,
     IHistoryProvider,
+    IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
+    IStatusProvider
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -85,7 +88,7 @@ import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/config
 import {
     IInterpreterComparer,
     IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager,
+    IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -108,7 +111,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -119,25 +122,25 @@ import { CondaEnvFileService } from '../../client/interpreter/locators/services/
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import {
     CurrentPathService,
-    PythonInPathCommandProvider,
+    PythonInPathCommandProvider
 } from '../../client/interpreter/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService,
+    GlobalVirtualEnvService
 } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
-    KnownSearchPathsForInterpreters,
+    KnownSearchPathsForInterpreters
 } from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService,
+    WorkspaceVirtualEnvService
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import {
-    WorkspaceVirtualEnvWatcherService,
+    WorkspaceVirtualEnvWatcherService
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
@@ -146,7 +149,6 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockJupyterManager } from './mockJupyterManager';
-import { TerminalManager } from '../../client/common/application/terminalManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -183,6 +185,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
+        this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);

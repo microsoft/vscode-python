@@ -12,7 +12,7 @@ import { JupyterSession } from './jupyterSession';
 @injectable()
 export class JupyterSessionManager implements IJupyterSessionManager {
 
-    public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
+    public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
         // Create a new session and attempt to connect to it
         const session = new JupyterSession(connInfo, kernelSpec);
         try {

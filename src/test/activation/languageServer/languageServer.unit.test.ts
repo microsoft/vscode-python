@@ -88,7 +88,7 @@ suite('Language Server', () => {
                 this.languageServerFolder = '';
                 return super.startLanguageServer(clientOptions);
             }
-            protected async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+            protected async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient | undefined> {
                 return Promise.resolve(undefined);
             }
             protected async startLanguageClient(): Promise<void> {

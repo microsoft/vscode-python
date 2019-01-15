@@ -3,10 +3,11 @@
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
+
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { ExecutionInfo, Resource, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {

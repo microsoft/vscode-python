@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { expect } from 'chai';
+import { SemVer } from 'semver';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
+
 import { TerminalManager } from '../../../client/common/application/terminalManager';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -14,18 +15,27 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
-import { CondaActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
-import { PipEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
-import { PyEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
+import {
+    CondaActivationCommandProvider
+} from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import {
+    PipEnvActivationCommandProvider
+} from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
+import {
+    PyEnvActivationCommandProvider
+} from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
-import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
+import {
+    ITerminalActivationCommandProvider,
+    ITerminalHelper,
+    TerminalShellType
+} from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { OSType, Architecture } from '../../../client/common/utils/platform';
-import { ICondaService, PythonInterpreter, InterpreterType } from '../../../client/interpreter/contracts';
+import { Architecture, OSType } from '../../../client/common/utils/platform';
+import { ICondaService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
-import { SemVer } from 'semver';
 
 // tslint:disable:max-func-body-length no-any
 
@@ -49,7 +59,7 @@ suite('Terminal Service helpers', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     function doSetup() {
@@ -91,16 +101,16 @@ suite('Terminal Service helpers', () => {
             expect(args.name).to.be.deep.equal(undefined, 'name should be undefined');
         });
         test('Create terminal with a title', () => {
-            const title = 'Hello';
+            const theTitle = 'Hello';
             const terminal = 'Terminal Created';
             when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
 
-            const term = helper.createTerminal(title);
+            const term = helper.createTerminal(theTitle);
 
             verify(terminalManager.createTerminal(anything())).once();
             const args = capture(terminalManager.createTerminal).first()[0];
             expect(term).to.be.deep.equal(terminal);
-            expect(args.name).to.be.deep.equal(title);
+            expect(args.name).to.be.deep.equal(theTitle);
         });
         test('Test identification of Terminal Shells', async () => {
             const shellPathsAndIdentification = new Map<string, TerminalShellType>();
@@ -199,7 +209,7 @@ suite('Terminal Service helpers', () => {
     });
 
     function title(resource?: Uri, interpreter?: PythonInterpreter) {
-        return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter': ''}`;
+        return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
 
     suite('Activation', () => {

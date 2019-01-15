@@ -1,16 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { inject, injectable } from 'inversify';
+
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES } from '../../telemetry/constants';
 import { IConfigurationService, Resource } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
-import { ExecutionFactoryCreationOptions, IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from './types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import {
+    ExecutionFactoryCreationOptions,
+    IBufferDecoder,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from './types';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {

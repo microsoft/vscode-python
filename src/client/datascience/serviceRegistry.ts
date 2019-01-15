@@ -9,6 +9,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
+import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecution } from './jupyter/jupyterExecution';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
@@ -23,15 +24,14 @@ import {
     IDataScienceCommandListener,
     IHistory,
     IHistoryProvider,
+    IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
-    IJupyterCommandFactory
+    IStatusProvider
 } from './types';
-import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);

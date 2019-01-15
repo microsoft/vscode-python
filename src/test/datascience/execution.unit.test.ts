@@ -33,11 +33,12 @@ import {
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
 import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
+import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -45,8 +46,6 @@ import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManager } from './mockJupyterManager';
-import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
@@ -143,7 +142,6 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
 suite('Jupyter Execution', async () => {
     const interpreterService = mock(InterpreterService);
     const executionFactory = mock(PythonExecutionFactory);
-    const condaService = mock(CondaService);
     const configService = mock(ConfigurationService);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
@@ -466,7 +464,6 @@ suite('Jupyter Execution', async () => {
 
         return new JupyterExecution(
             instance(executionFactory),
-            instance(condaService),
             instance(interpreterService),
             instance(processServiceFactory),
             instance(knownSearchPaths),

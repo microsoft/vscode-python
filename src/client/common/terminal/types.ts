@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { Event, Terminal, Uri } from 'vscode';
-import { Resource } from '../types';
+
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { Resource } from '../types';
 
 export enum TerminalActivationProviders {
     bashCShellFish = 'bashCShellFish',

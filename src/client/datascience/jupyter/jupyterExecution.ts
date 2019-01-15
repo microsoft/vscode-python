@@ -14,32 +14,26 @@ import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import {
-    ExecutionResult,
-    IProcessService,
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    ObservableExecutionResult,
-    SpawnOptions
-} from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import {
-    ICondaService,
-    IInterpreterService,
-    IKnownSearchPathsForInterpreters,
-    InterpreterType,
-    PythonInterpreter
-} from '../../interpreter/contracts';
+import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IConnection, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager, INotebookServer, IJupyterCommand, IJupyterCommandFactory } from '../types';
+import {
+    IConnection,
+    IJupyterCommand,
+    IJupyterCommandFactory,
+    IJupyterExecution,
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    INotebookServer
+} from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 
 const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
 const NotebookCommand = 'notebook';
@@ -48,7 +42,6 @@ const KernelSpecCommand = 'kernelspec';
 const KernelCreateCommand = 'ipykernel';
 const PyKernelOutputRegEx = /.*\s+(.+)$/m;
 const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution, Disposable {
@@ -59,7 +52,6 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private usablePythonInterpreter: PythonInterpreter | undefined;
 
     constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-                @inject(ICondaService) private condaService: ICondaService,
                 @inject(IInterpreterService) private interpreterService: IInterpreterService,
                 @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
                 @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
@@ -321,7 +313,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
         if (bestInterpreter) {
             const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
-            const launcher = await this.executionFactory.createActivatedEnvironment(null, bestInterpreter);
+            const launcher = await this.executionFactory.createActivatedEnvironment(undefined, bestInterpreter);
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             const serverInfoString = await launcher.exec([file], newOptions);
 
@@ -577,12 +569,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> => {
         // If the module is found on this interpreter, then we found it.
         if (interpreter && await this.doesModuleExist(command, interpreter, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
-            // We need a process service to create a command
-            const processService = await this.processServicePromise;
 
             // Our command args are different based on the command. ipykernel is not a jupyter command
             const args = command === KernelCreateCommand ? ['-m', command] : ['-m', 'jupyter', command];
-
             return this.commandFactory.createInterpreterCommand(args, interpreter);
         }
 
@@ -660,9 +649,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                     let bestScore = -1;
                     for (let i = 0; i < foundList.length; i += 1) {
                         let currentScore = 0;
-                        if (foundList[i]) {
-                            const interpreter = await foundList[i].interpreter();
-                            const version = interpreter.version;
+                        const entry = foundList[i];
+                        if (entry) {
+                            const interpreter = await entry.interpreter();
+                            const version = interpreter ? interpreter.version : undefined;
                             if (version) {
                                 if (version.major === current.version.major) {
                                     currentScore += 4;
@@ -704,7 +694,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private doesModuleExist = async (module: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> => {
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
-            const pythonService = await this.executionFactory.createActivatedEnvironment(null, interpreter);
+            const pythonService = await this.executionFactory.createActivatedEnvironment(undefined, interpreter);
             try {
                 // Special case for ipykernel
                 const actualModule = module === KernelCreateCommand ? module : 'jupyter';

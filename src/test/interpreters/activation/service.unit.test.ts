@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, workspace as workspaceType, WorkspaceConfiguration } from 'vscode';
+
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
@@ -20,15 +21,14 @@ import { ITerminalHelper } from '../../../client/common/terminal/types';
 import { ICurrentProcess } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { OSType, Architecture } from '../../../client/common/utils/platform';
+import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
+import { InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { noop } from '../../core';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
-import { PythonInterpreter, InterpreterType } from '../../../client/interpreter/contracts';
-import { SemVer } from 'semver';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
@@ -55,7 +55,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     function initSetup() {
@@ -88,7 +88,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
     });
 
     function title(resource?: Uri, interpreter?: PythonInterpreter) {
-        return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter': ''}`;
+        return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
 
     [undefined, Uri.parse('a')].forEach(resource =>

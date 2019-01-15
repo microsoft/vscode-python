@@ -2,18 +2,16 @@ import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
+
 import { IWorkspaceService } from '../../../common/application/types';
 import { Logger } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { ExecutionResult, IProcessServiceFactory } from '../../../common/process/types';
-import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../common/terminal/types';
+import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
 import {
     CondaInfo,
     ICondaService,
     IInterpreterLocatorService,
-    IInterpreterService,
     InterpreterType,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE
@@ -46,9 +44,6 @@ const condaGlobPathsForWindows = [
 // format for glob processing:
 export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
-// Regex for splitting environment strings
-const EnvironmentSplitRegex = /^\s*([^=]+)\s*=\s*(.+)\s*$/;
-
 export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 
 /**
@@ -59,9 +54,6 @@ export class CondaService implements ICondaService {
     private condaFile?: Promise<string | undefined>;
     private isAvailable: boolean | undefined;
     private readonly condaHelper = new CondaHelper();
-    private activatedEnvironmentCache: { [key: string]: NodeJS.ProcessEnv } = {};
-    private activationProvider: ITerminalActivationCommandProvider;
-    private shellType: TerminalShellType;
 
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -70,16 +62,10 @@ export class CondaService implements ICondaService {
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ILogger) private logger: ILogger,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService
     ) {
-        this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged.bind(this)));
-        this.activationProvider = serviceContainer.get<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider,
-            this.platform.isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish');
-        this.shellType = this.platform.isWindows ? TerminalShellType.commandPrompt : TerminalShellType.bash; // Defaults for Child_Process.exec
         this.addCondaPathChangedHandler();
     }
 
@@ -370,13 +356,5 @@ export class CondaService implements ICondaService {
             });
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
-    }
-
-    /**
-     * Called when the user changes the current interpreter.
-     */
-    private onInterpreterChanged(): void {
-        // Clear our activated environment cache as it can't match the current one anymore
-        this.activatedEnvironmentCache = {};
     }
 }

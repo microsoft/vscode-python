@@ -151,7 +151,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         disposables.push(progressReporting);
     }
 
-    protected async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+    protected async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient | undefined> {
         const options = { stdio: 'pipe' };
         const serverOptions: ServerOptions = {
             run: { command: serverModule, rgs: [], options: options },
@@ -186,7 +186,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.languageClient = await this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
-            this.languageClient.onTelemetry(telemetryEvent => {
+            this.languageClient!.onTelemetry(telemetryEvent => {
                 const eventName = telemetryEvent.EventName ? telemetryEvent.EventName : PYTHON_LANGUAGE_SERVER_TELEMETRY;
                 sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
             });

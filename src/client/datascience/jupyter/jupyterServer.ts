@@ -126,7 +126,7 @@ export class JupyterServer implements INotebookServer, IDisposable {
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string): Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string): Promise<void> => {
         // Save connection info. Determines if we need to change directory or not
         this.connInfo = connInfo;
         this.workingDir = workingDir;
