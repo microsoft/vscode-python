@@ -36,9 +36,10 @@ import {
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IConnection, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager, INotebookServer } from '../types';
+import { IConnection, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager, INotebookServer, IJupyterCommand, IJupyterCommandFactory } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 
 const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
 const NotebookCommand = 'notebook';
@@ -48,94 +49,12 @@ const KernelCreateCommand = 'ipykernel';
 const PyKernelOutputRegEx = /.*\s+(.+)$/m;
 const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
 
-// JupyterCommand objects represent some process that can be launched that should be guaranteed to work because it
-// was found by testing it previously
-class JupyterCommand {
-    private exe: string;
-    private requiredArgs: string[];
-    private launcher: IProcessService;
-    private interpreterPromise: Promise<PythonInterpreter | undefined>;
-    private condaService: ICondaService;
-
-    constructor(exe: string, args: string[], launcher: IProcessService, interpreter: IInterpreterService | PythonInterpreter, condaService: ICondaService) {
-        this.exe = exe;
-        this.requiredArgs = args;
-        this.launcher = launcher;
-        this.condaService = condaService;
-        if (interpreter.hasOwnProperty('getInterpreterDetails')) {
-            const interpreterService = interpreter as IInterpreterService;
-            this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(e => undefined);
-        } else {
-            const interpreterDetails = interpreter as PythonInterpreter;
-            this.interpreterPromise = Promise.resolve(interpreterDetails);
-        }
-    }
-
-    public async mainVersion(): Promise<number> {
-        const interpreter = await this.interpreterPromise;
-        if (interpreter && interpreter.version) {
-            return interpreter.version.major;
-        } else {
-            return this.execVersion();
-        }
-    }
-
-    public interpreter() : Promise<PythonInterpreter | undefined> {
-        return this.interpreterPromise;
-    }
-
-    public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        const newOptions = { ...options };
-        newOptions.env = await this.fixupCondaEnv(newOptions.env);
-        const newArgs = [...this.requiredArgs, ...args];
-        return this.launcher.execObservable(this.exe, newArgs, newOptions);
-    }
-
-    public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const newOptions = { ...options };
-        newOptions.env = await this.fixupCondaEnv(newOptions.env);
-        const newArgs = [...this.requiredArgs, ...args];
-        return this.launcher.exec(this.exe, newArgs, newOptions);
-    }
-
-    /**
-     * Conda needs specific paths and env vars set to be happy. Call this function to fix up
-     * (or created if not present) our environment to run jupyter
-     */
-    // Base Node.js SpawnOptions uses any for environment, so use that here as well
-    // tslint:disable-next-line:no-any
-    private async fixupCondaEnv(inputEnv?: NodeJS.ProcessEnv): Promise<any> {
-        if (!inputEnv) {
-            inputEnv = process.env;
-        }
-        const interpreter = await this.interpreterPromise;
-
-        if (interpreter && interpreter.type === InterpreterType.Conda) {
-            return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
-        }
-
-        return inputEnv;
-    }
-
-    private async execVersion(): Promise<number> {
-        if (this.launcher) {
-            const output = await this.launcher.exec(this.exe, ['--version'], { throwOnStdErr: false, encoding: 'utf8' });
-            // First number should be our result
-            const matches = /.*(\d+).*/m.exec(output.stdout);
-            if (matches && matches.length > 1) {
-                return parseInt(matches[1], 10);
-            }
-        }
-        return 0;
-    }
-
-}
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private processServicePromise: Promise<IProcessService>;
-    private commands: { [command: string]: JupyterCommand } = {};
+    private commands: { [command: string]: IJupyterCommand } = {};
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
 
@@ -151,6 +70,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager,
                 @inject(IWorkspaceService) workspace: IWorkspaceService,
                 @inject(IConfigurationService) private configuration: IConfigurationService,
+                @inject(IJupyterCommandFactory) private commandFactory : IJupyterCommandFactory,
                 @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
@@ -401,10 +321,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
         if (bestInterpreter) {
             const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
-            newOptions.env = await this.fixupCondaEnv(newOptions.env, bestInterpreter);
-            const processService = await this.processServiceFactory.create();
+            const launcher = await this.executionFactory.createActivatedEnvironment(null, bestInterpreter);
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-            const serverInfoString = await processService.exec(bestInterpreter.path, [file], newOptions);
+            const serverInfoString = await launcher.exec([file], newOptions);
 
             let serverInfos: JupyterServerInfo[];
             try {
@@ -512,23 +431,6 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             this.logger.logWarning(err);
             return false;
         }
-    }
-
-    /**
-     * Conda needs specific paths and env vars set to be happy. Call this function to fix up
-     * (or created if not present) our environment to run jupyter
-     */
-    // Base Node.js SpawnOptions uses any for environment, so use that here as well
-    // tslint:disable-next-line:no-any
-    private fixupCondaEnv = async (inputEnv: NodeJS.ProcessEnv, interpreter: PythonInterpreter): Promise<any> => {
-        if (!inputEnv) {
-            inputEnv = process.env;
-        }
-        if (interpreter && interpreter.type === InterpreterType.Conda) {
-            return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
-        }
-
-        return inputEnv;
     }
 
     private hasSpecPathMatch = async (info: PythonInterpreter | undefined, cancelToken?: CancellationToken): Promise<boolean> => {
@@ -672,7 +574,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return [];
     }
 
-    private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<JupyterCommand | undefined> => {
+    private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> => {
         // If the module is found on this interpreter, then we found it.
         if (interpreter && await this.doesModuleExist(command, interpreter, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
             // We need a process service to create a command
@@ -681,7 +583,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             // Our command args are different based on the command. ipykernel is not a jupyter command
             const args = command === KernelCreateCommand ? ['-m', command] : ['-m', 'jupyter', command];
 
-            return new JupyterCommand(interpreter.path, args, processService, interpreter, this.condaService);
+            return this.commandFactory.createInterpreterCommand(args, interpreter);
         }
 
         return undefined;
@@ -710,14 +612,12 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.jupyterPath;
     }
 
-    private findPathCommand = async (command: string, cancelToken?: CancellationToken): Promise<JupyterCommand | undefined> => {
+    private findPathCommand = async (command: string, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> => {
         if (await this.doesJupyterCommandExist(command, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
             // Search the known paths for jupyter
             const jupyterPath = await this.searchPathsForJupyter();
             if (jupyterPath) {
-                // We need a process service to create a command
-                const processService = await this.processServicePromise;
-                return new JupyterCommand(jupyterPath, [command], processService, this.interpreterService, this.condaService);
+                return this.commandFactory.createProcessCommand(jupyterPath, [command]);
             }
         }
         return undefined;
@@ -741,7 +641,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     // - Look for module in current interpreter, if found create something with python path and -m module
     // - Look in other interpreters, if found create something with python path and -m module
     // - Look on path for jupyter, if found create something with jupyter path and args
-    private findBestCommand = async (command: string, cancelToken?: CancellationToken): Promise<JupyterCommand | undefined> => {
+    private findBestCommand = async (command: string, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> => {
         // See if we already have this command in list
         if (!this.commands.hasOwnProperty(command)) {
             // Not found, try to find it.
@@ -804,8 +704,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private doesModuleExist = async (module: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> => {
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
-            newOptions.env = await this.fixupCondaEnv(newOptions.env, interpreter);
-            const pythonService = await this.executionFactory.create({ pythonPath: interpreter.path });
+            const pythonService = await this.executionFactory.createActivatedEnvironment(null, interpreter);
             try {
                 // Special case for ipykernel
                 const actualModule = module === KernelCreateCommand ? module : 'jupyter';

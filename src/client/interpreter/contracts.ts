@@ -55,7 +55,6 @@ export interface ICondaService {
     getInterpreterPath(condaEnvironmentPath: string): string;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined>;
-    getActivatedCondaEnvironment(interpreter: PythonInterpreter, inputEnvironment?: NodeJS.ProcessEnv): Promise<NodeJS.ProcessEnv>;
 }
 
 export enum InterpreterType {

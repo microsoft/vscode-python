@@ -45,6 +45,8 @@ import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManager } from './mockJupyterManager';
+import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
+import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
@@ -145,6 +147,7 @@ suite('Jupyter Execution', async () => {
     const configService = mock(ConfigurationService);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
+    const activationHelper = mock(EnvironmentActivationService);
     const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
@@ -474,6 +477,11 @@ suite('Jupyter Execution', async () => {
             mockSessionManager,
             instance(workspaceService),
             instance(configService),
+            new JupyterCommandFactory(
+                instance(executionFactory),
+                instance(activationHelper),
+                instance(processServiceFactory),
+                instance(interpreterService)),
             instance(serviceContainer));
     }
 

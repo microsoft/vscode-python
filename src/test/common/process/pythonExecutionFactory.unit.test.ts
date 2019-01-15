@@ -6,7 +6,7 @@
 
 import * as assert from 'assert';
 import { expect } from 'chai';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { instance, mock, verify, when, anything } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -20,6 +20,9 @@ import { IConfigurationService } from '../../../client/common/types';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ServiceContainer } from '../../../client/ioc/container';
+import { PythonInterpreter, InterpreterType } from '../../../client/interpreter/contracts';
+import { SemVer } from 'semver';
+import { Architecture } from '../../../client/common/utils/platform';
 
 suite('Process - PythonExecutionFactory', () => {
     [undefined, Uri.parse('x')].forEach(resource => {
@@ -29,6 +32,16 @@ suite('Process - PythonExecutionFactory', () => {
             let bufferDecoder: IBufferDecoder;
             let procecssFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
+
+            const pythonInterpreter: PythonInterpreter = {
+                path: '/foo/bar/python.exe',
+                version: new SemVer('3.6.6-final'),
+                sysVersion: '1.0.0.0',
+                sysPrefix: 'Python',
+                type: InterpreterType.Unknown,
+                architecture: Architecture.x64,
+            };
+
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -81,6 +94,57 @@ suite('Process - PythonExecutionFactory', () => {
                 const service = await factory.createActivatedEnvironment(resource);
 
                 verify(activationHelper.getActivatedEnvironmentVariables(resource)).once();
+                assert.deepEqual(service, mockExecService);
+                assert.equal(createInvoked, true);
+            });
+            test('PythonExecutionService is created', async () => {
+                let createInvoked = false;
+                const mockExecService = 'something';
+                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                    createInvoked = true;
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                };
+
+                const pythonSettings = mock(PythonSettings);
+                when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
+                when(pythonSettings.pythonPath).thenReturn('HELLO');
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+                const service = await factory.createActivatedEnvironment(resource);
+
+                verify(activationHelper.getActivatedEnvironmentVariables(resource)).once();
+                verify(pythonSettings.pythonPath).once();
+                expect(service).instanceOf(PythonExecutionService);
+                assert.equal(createInvoked, false);
+            });
+            test('Ensure we use an existing `create` method if there are no environment variables for the activated env when using an interpreter', async () => {
+                let createInvoked = false;
+                const mockExecService = 'something';
+                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                    createInvoked = true;
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                };
+
+                when(activationHelper.getActivatedEnvironmentVariables(resource, anything())).thenResolve();
+
+                const service = await factory.createActivatedEnvironment(resource, pythonInterpreter);
+
+                verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
+                assert.deepEqual(service, mockExecService);
+                assert.equal(createInvoked, true);
+            });
+            test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
+                let createInvoked = false;
+                const mockExecService = 'something';
+                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                    createInvoked = true;
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                };
+
+                when(activationHelper.getActivatedEnvironmentVariables(resource, anything())).thenResolve({});
+
+                const service = await factory.createActivatedEnvironment(resource, pythonInterpreter);
+
+                verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
                 assert.deepEqual(service, mockExecService);
                 assert.equal(createInvoked, true);
             });

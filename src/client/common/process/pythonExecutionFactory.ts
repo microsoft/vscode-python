@@ -10,6 +10,7 @@ import { IConfigurationService, Resource } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import { ExecutionFactoryCreationOptions, IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from './types';
+import { PythonInterpreter } from '../../interpreter/contracts';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -24,8 +25,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService = await this.processServiceFactory.create(options.resource);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    public async createActivatedEnvironment(resource: Resource): Promise<IPythonExecutionService> {
-        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(resource);
+    public async createActivatedEnvironment(resource: Resource, interpreter?: PythonInterpreter): Promise<IPythonExecutionService> {
+        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(resource, interpreter);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {

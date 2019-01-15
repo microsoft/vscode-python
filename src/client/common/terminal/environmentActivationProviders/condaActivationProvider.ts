@@ -32,11 +32,17 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     /**
      * Return the command needed to activate the conda env.
      */
-    public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
-        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+    public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService)
             .getSettings(resource).pythonPath;
+        return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
+    }
 
+    /**
+     * Return the command needed to activate the conda env.
+     */
+    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
         const envInfo = await condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
             return;

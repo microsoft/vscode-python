@@ -10,6 +10,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 import { ICommandManager } from '../common/application/types';
 import { IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
+import { ObservableExecutionResult, ExecutionResult, SpawnOptions } from '../common/process/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -187,4 +188,17 @@ export interface IStatusProvider {
 
     // call this function to wait for a promise while displaying status
     waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void) : Promise<T>;
+}
+
+export interface IJupyterCommand {
+    mainVersion(): Promise<number>;
+    interpreter() : Promise<PythonInterpreter | undefined>;
+    execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
+    exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+}
+
+export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
+export interface IJupyterCommandFactory {
+    createInterpreterCommand(args: string[], interpreter: PythonInterpreter) : IJupyterCommand;
+    createProcessCommand(exe: string, args: string[]) : IJupyterCommand;
 }

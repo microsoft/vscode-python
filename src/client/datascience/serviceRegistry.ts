@@ -28,8 +28,10 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider
+    IStatusProvider,
+    IJupyterCommandFactory
 } from './types';
+import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
@@ -45,4 +47,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
+    serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
 }

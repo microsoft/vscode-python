@@ -25,4 +25,14 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
 
         return [`pyenv shell ${interpreter.envName}`];
     }
+
+    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
+        const interpreter = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
+        if (!interpreter || interpreter.type !== InterpreterType.Pyenv || !interpreter.envName) {
+            return;
+        }
+
+        return [`pyenv shell ${interpreter.envName}`];
+    }
+
 }

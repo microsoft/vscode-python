@@ -21,10 +21,11 @@ import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { OSType } from '../../../client/common/utils/platform';
-import { ICondaService } from '../../../client/interpreter/contracts';
+import { OSType, Architecture } from '../../../client/common/utils/platform';
+import { ICondaService, PythonInterpreter, InterpreterType } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { SemVer } from 'semver';
 
 // tslint:disable:max-func-body-length no-any
 
@@ -41,6 +42,15 @@ suite('Terminal Service helpers', () => {
     let pyenvActivationProvider: ITerminalActivationCommandProvider;
     let pipenvActivationProvider: ITerminalActivationCommandProvider;
     let pythonSettings: PythonSettings;
+
+    const pythonInterpreter: PythonInterpreter = {
+        path: '/foo/bar/python.exe',
+        version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        type: InterpreterType.Unknown,
+        architecture: Architecture.x64,
+    };
 
     function doSetup() {
         terminalManager = mock(TerminalManager);
@@ -188,9 +198,13 @@ suite('Terminal Service helpers', () => {
         });
     });
 
+    function title(resource?: Uri, interpreter?: PythonInterpreter) {
+        return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter': ''}`;
+    }
+
     suite('Activation', () => {
-        [undefined, Uri.parse('x')].forEach(resource => {
-            suite(resource ? 'With a resource' : 'Without a resource', () => {
+        [undefined, Uri.parse('a')].forEach(resource => {
+            suite(title(resource), () => {
                 setup(() => {
                     doSetup();
                     when(configurationService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -341,45 +355,49 @@ suite('Terminal Service helpers', () => {
                     verify(pipenvActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(cmdActivationProvider.isShellSupported(anything())).atLeast(1);
                 });
-                test('Activation command for Shell must be empty for unknown os', async () => {
-                    const pythonPath = 'some python Path value';
-                    ensureCondaIsSupported(false, pythonPath, []);
-
-                    when(platformService.osType).thenReturn(OSType.Unknown);
-                    when(bashActivationProvider.isShellSupported(anything())).thenReturn(false);
-                    when(cmdActivationProvider.isShellSupported(anything())).thenReturn(false);
-
-                    const cmd = await helper.getEnvironmentActivationShellCommands(resource);
-
-                    expect(cmd).to.equal(undefined, 'Command must be undefined');
-                    verify(pythonSettings.terminal).never();
-                    verify(pythonSettings.pythonPath).never();
-                    verify(condaService.isCondaEnvironment(pythonPath)).never();
-                    verify(bashActivationProvider.isShellSupported(anything())).never();
-                    verify(pyenvActivationProvider.isShellSupported(anything())).never();
-                    verify(pipenvActivationProvider.isShellSupported(anything())).never();
-                    verify(cmdActivationProvider.isShellSupported(anything())).never();
-                });
-                [OSType.Linux, OSType.OSX, OSType.Windows].forEach(osType => {
-                    test(`Activation command for Shell must never use pipenv nor pyenv (${osType})`, async () => {
+                [undefined, pythonInterpreter].forEach(interpreter => {
+                    test('Activation command for Shell must be empty for unknown os', async () => {
                         const pythonPath = 'some python Path value';
-                        const shellToExpect = osType === OSType.Windows ? TerminalShellType.commandPrompt : TerminalShellType.bash;
                         ensureCondaIsSupported(false, pythonPath, []);
 
-                        when(platformService.osType).thenReturn(osType);
-                        when(bashActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
-                        when(cmdActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
+                        when(platformService.osType).thenReturn(OSType.Unknown);
+                        when(bashActivationProvider.isShellSupported(anything())).thenReturn(false);
+                        when(cmdActivationProvider.isShellSupported(anything())).thenReturn(false);
 
-                        const cmd = await helper.getEnvironmentActivationShellCommands(resource);
+                        const cmd = await helper.getEnvironmentActivationShellCommands(resource, interpreter);
 
                         expect(cmd).to.equal(undefined, 'Command must be undefined');
-                        verify(pythonSettings.terminal).once();
-                        verify(pythonSettings.pythonPath).once();
-                        verify(condaService.isCondaEnvironment(pythonPath)).once();
-                        verify(bashActivationProvider.isShellSupported(shellToExpect)).atLeast(1);
+                        verify(pythonSettings.terminal).never();
+                        verify(pythonSettings.pythonPath).never();
+                        verify(condaService.isCondaEnvironment(pythonPath)).never();
+                        verify(bashActivationProvider.isShellSupported(anything())).never();
                         verify(pyenvActivationProvider.isShellSupported(anything())).never();
                         verify(pipenvActivationProvider.isShellSupported(anything())).never();
-                        verify(cmdActivationProvider.isShellSupported(shellToExpect)).atLeast(1);
+                        verify(cmdActivationProvider.isShellSupported(anything())).never();
+                    });
+                });
+                [undefined, pythonInterpreter].forEach(interpreter => {
+                    [OSType.Linux, OSType.OSX, OSType.Windows].forEach(osType => {
+                        test(`Activation command for Shell must never use pipenv nor pyenv (${osType})`, async () => {
+                            const pythonPath = 'some python Path value';
+                            const shellToExpect = osType === OSType.Windows ? TerminalShellType.commandPrompt : TerminalShellType.bash;
+                            ensureCondaIsSupported(false, pythonPath, []);
+
+                            when(platformService.osType).thenReturn(osType);
+                            when(bashActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
+                            when(cmdActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
+
+                            const cmd = await helper.getEnvironmentActivationShellCommands(resource, interpreter);
+
+                            expect(cmd).to.equal(undefined, 'Command must be undefined');
+                            verify(pythonSettings.terminal).once();
+                            verify(pythonSettings.pythonPath).once();
+                            verify(condaService.isCondaEnvironment(pythonPath)).once();
+                            verify(bashActivationProvider.isShellSupported(shellToExpect)).atLeast(1);
+                            verify(pyenvActivationProvider.isShellSupported(anything())).never();
+                            verify(pipenvActivationProvider.isShellSupported(anything())).never();
+                            verify(cmdActivationProvider.isShellSupported(shellToExpect)).atLeast(1);
+                        });
                     });
                 });
             });

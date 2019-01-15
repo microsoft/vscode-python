@@ -6,6 +6,7 @@ import { CancellationToken, Uri } from 'vscode';
 import { ExecutionInfo, Resource, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
+import { PythonInterpreter } from '../../interpreter/contracts';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
@@ -57,7 +58,7 @@ export type ExecutionFactoryCreationOptions = {
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
-    createActivatedEnvironment(resource: Resource): Promise<IPythonExecutionService>;
+    createActivatedEnvironment(resource: Resource, interpreter?: PythonInterpreter): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];

@@ -18,6 +18,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry } from '../../telemetry';
 import { PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES } from '../../telemetry/constants';
 import { IEnvironmentActivationService } from './types';
+import { PythonInterpreter } from '../contracts';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const cacheDuration = 10 * 60 * 1000;
@@ -49,13 +50,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @swallowExceptions('getActivatedEnvironmentVariables')
     @captureTelemetry(PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
     @cacheResourceSpecificInterpreterData('ActivatedEnvironmentVariables', cacheDuration)
-    public async getActivatedEnvironmentVariables(resource: Resource): Promise<NodeJS.ProcessEnv | undefined> {
+    public async getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter): Promise<NodeJS.ProcessEnv | undefined> {
         const shell = defaultShells[this.platform.osType];
         if (!shell) {
             return;
         }
 
-        const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource);
+        const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource, interpreter);
         traceVerbose(`Activation Commands received ${activationCommands}`);
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;
