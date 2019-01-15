@@ -677,7 +677,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             }
 
             // If still not found, try looking on the path using jupyter
-            if (!found) {
+            if (!found && this.supportsSearchingForCommands()) {
                 found = await this.findPathCommand(command, cancelToken);
             }
 
