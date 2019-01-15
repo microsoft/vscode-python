@@ -514,7 +514,7 @@ suite('Jupyter Execution', async () => {
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
-            searchForJupyter: !skipSearch
+            searchForJupyter: !skipSearch,
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true
         };
