@@ -331,6 +331,129 @@ suite('History output tests', () => {
         verifyLastCellInputState(wrapper, cellInputState.Expanded);
     });
 
+    runMountedTest('Collapse / expand cell', async(wrapper) => {
+        const settingString = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: true,
+                collapseCellInputCodeByDefault: true
+            }
+        );
+
+        updateSettings(settingString);
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+
+        toggleCellExpansion(wrapper);
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Expanded);
+
+        toggleCellExpansion(wrapper);
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+    });
+
+    runMountedTest('Hide / show cell', async(wrapper) => {
+        // IANHU: factor this out? Helper function to create / update
+        const settingString = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: true,
+                collapseCellInputCodeByDefault: true
+            }
+        );
+        updateSettings(settingString);
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+
+        const settingString2 = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: false,
+                collapseCellInputCodeByDefault: true
+            }
+        );
+        //updateSettings(settingString2);
+        const mainObj = wrapper.find(MainPanel);
+        if (mainObj) {
+            const panel = mainObj.instance() as MainPanel;
+            panel.handleMessage(HistoryMessages.UpdateSettings, settingString2);
+        }
+        wrapper.update();
+
+        verifyLastCellInputState(wrapper, cellInputState.Hidden);
+
+        const settingString3 = JSON.stringify(
+             {
+                allowImportFromNotebook: true,
+                jupyterLaunchTimeout: 10,
+                enabled: true,
+                jupyterServerURI: 'local',
+                notebookFileRoot: 'WORKSPACE',
+                changeDirOnImportExport: true,
+                useDefaultConfigForJupyter: true,
+                jupyterInterruptTimeout: 10000,
+                searchForJupyter: true,
+                showCellInputCode: true,
+                collapseCellInputCodeByDefault: true
+            }
+        );
+
+        if (mainObj) {
+            const panel = mainObj.instance() as MainPanel;
+            panel.handleMessage(HistoryMessages.UpdateSettings, settingString3);
+        }
+        wrapper.update();
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+    });
+
+    function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+        const foundResult = wrapper.find('Cell');
+        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+
+        // IANHU: allow cell index to be passed in?
+        // Find the last cell added
+        const lastCell = foundResult.last();
+        assert.ok(lastCell, 'Last call doesn\'t exist');
+
+
+        const toggleButton = lastCell.find('button.collapse-input');
+        assert.ok(toggleButton);
+        toggleButton.simulate('click');
+    }
+
     function escapePath(p: string) {
         return p.replace(/\\/g, '\\\\');
     }
