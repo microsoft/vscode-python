@@ -11,14 +11,20 @@ import { LanguageServerSurveyBanner } from '../languageServices/languageServerSu
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
 import { ExtensionActivationService } from './activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule, DownloadStableChannelRule } from './downloadChannelRules';
+import { LanguageServerDownloader } from './downloader';
+import { InterpreterDataService } from './interpreterDataService';
 import { JediExtensionActivator } from './jedi';
-import { LanguageServerExtensionActivator } from './languageServer/languageServer';
+import { LanguageServerExtensionActivator } from './languageServer/activator';
+import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
+import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from './languageServer/languageClientFactory';
+import { LanguageServer } from './languageServer/languageServer';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
-import { LanguageServerPlatformData } from './platformData';
-import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerFolderService, ILanguageServerPackageService, ILanguageServerPlatformData } from './types';
+import { LanguageServerManager } from './languageServer/manager';
+import { PlatformData } from './platformData';
+import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, IInterpreterDataService, ILanaguageServer, ILanguageClientFactory, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExtensionActivationService);
@@ -36,5 +42,13 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadBetaChannelRule, LanguageServerDownloadChannel.beta);
     serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadStableChannelRule, LanguageServerDownloadChannel.stable);
     serviceManager.addSingleton<ILanagueServerCompatibilityService>(ILanagueServerCompatibilityService, LanguageServerCompatibilityService);
-    serviceManager.addSingleton<ILanguageServerPlatformData>(ILanguageServerPlatformData, LanguageServerPlatformData);
+    serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, BaseLanguageClientFactory, LanguageClientFactory.base);
+    serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DownloadedLanguageClientFactory, LanguageClientFactory.downloaded);
+    serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, SimpleLanguageClientFactory, LanguageClientFactory.simple);
+    serviceManager.addSingleton<IInterpreterDataService>(IInterpreterDataService, InterpreterDataService);
+    serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
+    serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
+    serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
+    serviceManager.add<ILanaguageServer>(ILanaguageServer, LanguageServer);
+    serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
 }

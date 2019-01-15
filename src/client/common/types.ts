@@ -288,6 +288,9 @@ export interface IDataScienceSettings {
     changeDirOnImportExport: boolean;
     useDefaultConfigForJupyter: boolean;
     searchForJupyter: boolean;
+    allowInput?: boolean;
+    showCellInputCode: boolean;
+    collapseCellInputCodeByDefault: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -340,9 +343,7 @@ export interface IBrowserService {
 
 export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
 export interface IPythonExtensionBanner {
-    enabled: boolean;
-    shownCount: Promise<number>;
-    optionLabels: string[];
+    readonly enabled: boolean;
     showBanner(): Promise<void>;
 }
 export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
@@ -371,16 +372,17 @@ export interface IFeatureDeprecationManager extends Disposable {
 
 export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {
-    // getTextEditor(uri: Uri): Promise<{ editor: TextEditor; dispose?(): void }>;
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
 }
 
 export interface IDisposable {
-    dispose(): Promise<void> | undefined | void;
+    dispose(): void | undefined;
+}
+export interface IAsyncDisposable {
+    dispose(): Promise<void>;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
-export interface IAsyncDisposableRegistry {
-    dispose(): Promise<void>;
-    push(disposable: IDisposable);
+export interface IAsyncDisposableRegistry extends IAsyncDisposable {
+    push(disposable: IDisposable | IAsyncDisposable);
 }

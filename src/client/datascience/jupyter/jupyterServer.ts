@@ -15,7 +15,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -108,7 +108,7 @@ class CellSubscriber {
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
-export class JupyterServer implements INotebookServer, IDisposable {
+export class JupyterServer implements INotebookServer, IAsyncDisposable {
     private session: IJupyterSession | undefined;
     private connInfo: IConnection | undefined;
     private workingDir: string | undefined;

@@ -48,15 +48,6 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
         }
         this.isInitialized = true;
     }
-
-    public get optionLabels(): string[] {
-        return this.bannerLabels;
-    }
-
-    public get shownCount(): Promise<number> {
-        return this.getPythonDSCommandCounter();
-    }
-
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value;
     }

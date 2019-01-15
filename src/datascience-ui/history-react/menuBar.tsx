@@ -7,7 +7,7 @@ import './menuBar.css';
 import * as React from 'react';
 
 interface IMenuBarProps {
-    theme: string;
+    baseTheme: string;
     stylePosition? : string;
 }
 
@@ -20,7 +20,7 @@ export class MenuBar extends React.Component<IMenuBarProps> {
 
     public render() {
         const classNames = this.props.stylePosition ?
-            `menuBar-${this.props.stylePosition} menuBar-${this.props.stylePosition}-${this.props.theme}`
+            `menuBar-${this.props.stylePosition} menuBar-${this.props.stylePosition}-${this.props.baseTheme}`
             : 'menuBar';
         return (
             <div className={classNames}>

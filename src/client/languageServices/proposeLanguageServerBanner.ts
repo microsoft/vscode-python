@@ -65,15 +65,6 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             return;
         }
     }
-
-    public get shownCount(): Promise<number> {
-        return Promise.resolve(-1); // we don't count this popup banner!
-    }
-
-    public get optionLabels(): string[] {
-        return this.bannerLabels;
-    }
-
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }

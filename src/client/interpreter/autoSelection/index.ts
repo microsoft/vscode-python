@@ -62,10 +62,10 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         winRegInterpreter.setNextRule(systemInterpreter);
     }
     public async autoSelectInterpreter(resource: Resource): Promise<void> {
-        Promise.all(this.rules.map(item => item.autoSelectInterpreter(undefined))).ignoreErrors();
         await this.initializeStore();
         await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
         this.didAutoSelectedInterpreterEmitter.fire();
+        Promise.all(this.rules.map(item => item.autoSelectInterpreter(undefined))).ignoreErrors();
     }
     public get onDidChangeAutoSelectedInterpreter(): Event<void> {
         return this.didAutoSelectedInterpreterEmitter.event;
@@ -120,8 +120,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             }
             this.autoSelectedInterpreterByWorkspace.set(workspaceFolderPath, interpreter);
         }
-
-        this.didAutoSelectedInterpreterEmitter.fire();
     }
     protected async initializeStore() {
         if (this.globallyPreferredInterpreter) {

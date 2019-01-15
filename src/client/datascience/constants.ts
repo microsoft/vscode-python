@@ -55,6 +55,8 @@ export namespace HistoryMessages {
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
     export const SendInfo = 'send_info';
+    export const SubmitNewCell = 'submit_new_cell';
+    export const UpdateSettings = 'update_settings';
 }
 
 export namespace Telemetry {
@@ -80,6 +82,10 @@ export namespace Telemetry {
     export const ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE';
     export const ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT';
     export const StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST';
+    export const SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL';
+    export const ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER';
+    export const ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER';
+    export const ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER';
 }
 
 export namespace HelpLinks {
@@ -92,4 +98,9 @@ export namespace Settings {
 
 export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{1}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+}
+
+export namespace Identifiers {
+    export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
+    export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
 }

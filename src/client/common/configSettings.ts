@@ -26,10 +26,10 @@ import {
 } from './types';
 import { SystemVariables } from './variables/systemVariables';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// tslint:disable:no-require-imports no-var-requires
 const untildify = require('untildify');
+const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
-// tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
     public downloadLanguageServer = true;
@@ -377,7 +377,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 
             // If workspace config changes, then we could have a cascading effect of on change events.
             // Let's defer the change notification.
-            setTimeout(() => this.emit('change'), 1);
+            _debounce(() => this.emit('change'), 1);
         };
         this.disposables.push(this.InterpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)));
         this.disposables.push(this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {

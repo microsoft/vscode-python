@@ -1,0 +1,28 @@
+.CodeMirror {
+    text-align: left!important;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--vscode-editor-font-size);
+}
+
+.cm-s-default {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--code-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--code-font-size);
+}
+
+.CodeMirror-lines {
+    padding: 0px;
+}
+
+.CodeMirror pre {
+    padding: 0px;
+}
+
+.code-readonly .CodeMirror {
+    height: auto;
+}

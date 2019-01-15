@@ -989,6 +989,23 @@
                     "description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
                     "scope": "resource"
                 },
+                "python.dataScience.allowInput": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow the inputting of python code directly into the Python Interactive window (currently under development)"
+                },
+                "python.dataScience.showCellInputCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show cell input code.",
+                    "scope": "resource"
+                },
+                "python.dataScience.collapseCellInputCodeByDefault": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Collapse cell input code by default.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
@@ -1525,7 +1542,7 @@
                     "type": "string",
                     "default": "pipenv",
                     "description": "Path to the pipenv executable to use for activation.",
-                    "scope": "window"
+                    "scope": "resource"
                 },
                 "python.sortImports.args": {
                     "type": "array",
@@ -1829,6 +1846,7 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.1.4",
+        "@types/strip-json-comments": "0.0.30",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -1854,6 +1872,7 @@
         "rxjs": "^5.5.9",
         "semver": "^5.5.0",
         "stack-trace": "0.0.10",
+        "strip-json-comments": "^2.0.1",
         "sudo-prompt": "^8.2.0",
         "tmp": "^0.0.29",
         "tree-kill": "^1.2.0",
@@ -1901,15 +1920,16 @@
         "@types/md5": "^2.1.32",
         "@types/mocha": "^2.2.48",
         "@types/node": "9.4.7",
-        "@types/prismjs": "^1.9.0",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
+        "@types/react-codemirror": "^1.0.2",
         "@types/react-dom": "^16.0.8",
         "@types/react-json-tree": "^0.6.8",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^4.3.0",
+        "@types/stack-trace": "0.0.29",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
@@ -1922,7 +1942,6 @@
         "awesome-typescript-loader": "^5.2.1",
         "babel-loader": "^8.0.3",
         "babel-plugin-inline-json-import": "^0.3.1",
-        "babel-plugin-prismjs": "^1.0.2",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "chai": "^4.1.2",
@@ -1960,15 +1979,16 @@
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
         "nyc": "^13.1.0",
-        "prismjs": "^1.15.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
+        "react-codemirror": "^1.0.0",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
+        "rewiremock": "^3.13.0",
         "shortid": "^2.2.8",
         "source-map-support": "^0.5.9",
         "style-loader": "^0.23.1",

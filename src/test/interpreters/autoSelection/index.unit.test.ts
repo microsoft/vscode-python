@@ -87,8 +87,12 @@ suite('Interpreters - Auto Selection', () => {
         verify(systemInterpreter.setNextRule(anything())).never();
     });
     test('Run rules in background', async () => {
+        let eventFired = false;
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
         autoSelectionService.initializeStore = () => Promise.resolve();
         await autoSelectionService.autoSelectInterpreter(undefined);
+
+        expect(eventFired).to.deep.equal(true, 'event not fired');
 
         const allRules = [userDefinedInterpreter, winRegInterpreter, currentPathInterpreter, systemInterpreter, workspaceInterpreter, cachedPaths];
         for (const service of allRules) {
@@ -100,16 +104,24 @@ suite('Interpreters - Auto Selection', () => {
         verify(userDefinedInterpreter.autoSelectInterpreter(anything(), autoSelectionService)).once();
     });
     test('Run userDefineInterpreter as the first rule', async () => {
+        let eventFired = false;
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
         autoSelectionService.initializeStore = () => Promise.resolve();
+
         await autoSelectionService.autoSelectInterpreter(undefined);
 
+        expect(eventFired).to.deep.equal(true, 'event not fired');
         verify(userDefinedInterpreter.autoSelectInterpreter(undefined, autoSelectionService)).once();
     });
     test('Initialize the store', async () => {
         let initialize = false;
+        let eventFired = false;
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
         autoSelectionService.initializeStore = async () => initialize = true as any;
+
         await autoSelectionService.autoSelectInterpreter(undefined);
 
+        expect(eventFired).to.deep.equal(true, 'event not fired');
         expect(initialize).to.be.equal(true, 'Not invoked');
     });
     test('Initializing the store would be executed once', async () => {
@@ -162,7 +174,7 @@ suite('Interpreters - Auto Selection', () => {
 
         verify(state.updateValue(interpreterInfo)).once();
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
-        expect(eventFired).to.deep.equal(true, 'event not fired');
+        expect(eventFired).to.deep.equal(false, 'event fired');
     });
     test('Do not store global interpreter info in state store when resource is undefined and version is lower than one already in state', async () => {
         let eventFired = false;
@@ -198,7 +210,7 @@ suite('Interpreters - Auto Selection', () => {
 
         verify(state.updateValue(anything())).once();
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
-        expect(eventFired).to.deep.equal(true, 'event fired');
+        expect(eventFired).to.deep.equal(false, 'event fired');
     });
     test('Store global interpreter info in state store', async () => {
         const pythonPath = 'Hello World';
@@ -227,7 +239,7 @@ suite('Interpreters - Auto Selection', () => {
 
         verify(state.updateValue(interpreterInfo)).never();
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
-        expect(eventFired).to.deep.equal(true, 'event not fired');
+        expect(eventFired).to.deep.equal(false, 'event fired');
     });
     test('Store workspace interpreter info in state store', async () => {
         const pythonPath = 'Hello World';

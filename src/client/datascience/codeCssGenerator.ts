@@ -6,9 +6,12 @@ import { FindOptions } from 'file-matcher';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as stripJsonComments from 'strip-json-comments';
+
 import { IWorkspaceService } from '../common/application/types';
 import { ICurrentProcess, ILogger } from '../common/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
+import { Identifiers } from './constants';
 import { ICodeCssGenerator } from './types';
 
 // This class generates css using the current theme in order to colorize code.
@@ -40,7 +43,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
                 // The tokens object then contains the necessary data to generate our css
                 if (tokenColors && font && fontSize) {
-                    return this.generateCss(tokenColors, font, fontSize);
+                    return this.generateCss(theme, tokenColors, font, fontSize);
                 }
             }
         } catch (err) {
@@ -51,9 +54,12 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         return '';
     }
 
-    private getScopeColor = (tokenColors: JSONArray, scope: string): string => {
-        // Search through the scopes on the json object
-        const match = tokenColors.findIndex(entry => {
+    private escapeThemeName(themeName: string) : string {
+        return themeName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+
+    private matchTokenColor(tokenColors: JSONArray, scope: string) : number {
+        return tokenColors.findIndex(entry => {
             if (entry) {
                 const scopes = entry['scope'] as JSONValue;
                 if (scopes && Array.isArray(scopes)) {
@@ -67,7 +73,14 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
             return false;
         });
+    }
 
+    private getScopeColor = (tokenColors: JSONArray, scope: string, secondary?: string): string => {
+        // Search through the scopes on the json object
+        let match = this.matchTokenColor(tokenColors, scope);
+        if (match < 0 && secondary) {
+            match = this.matchTokenColor(tokenColors, secondary);
+        }
         const found = match >= 0 ? tokenColors[match] : null;
         if (found !== null) {
             const settings = found['settings'];
@@ -81,154 +94,47 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private generateCss = (tokenColors: JSONArray, fontFamily: string, fontSize: number): string => {
+    private generateCss(theme: string, tokenColors: JSONArray, fontFamily: string, fontSize: number): string {
+        const escapedThemeName = Identifiers.GeneratedThemeName;
 
         // There's a set of values that need to be found
         const comment = this.getScopeColor(tokenColors, 'comment');
         const numeric = this.getScopeColor(tokenColors, 'constant.numeric');
         const stringColor = this.getScopeColor(tokenColors, 'string');
-        const keyword = this.getScopeColor(tokenColors, 'keyword');
+        const keyword = this.getScopeColor(tokenColors, 'keyword.control', 'keyword');
         const operator = this.getScopeColor(tokenColors, 'keyword.operator');
         const variable = this.getScopeColor(tokenColors, 'variable');
+        // const atomic = this.getScopeColor(tokenColors, 'atomic');
+        const builtin = this.getScopeColor(tokenColors, 'support.function');
+        const punctuation = this.getScopeColor(tokenColors, 'punctuation');
+
         const def = 'var(--vscode-editor-foreground)';
 
         // Use these values to fill in our format string
         return `
         :root {
-            --comment-color: ${comment}
+            --code-comment-color: ${comment};
+            --code-font-family: ${fontFamily};
+            --code-font-size:${fontSize}px;
         }
-        code[class*="language-"],
-        pre[class*="language-"] {
-            color: ${def};
-            background: none;
-            text-shadow: none;
-            font-family: ${fontFamily};
-            text-align: left;
-            white-space: pre;
-            word-spacing: normal;
-            word-break: normal;
-            word-wrap: normal;
-            font-size: ${fontSize}px;
+        .cm-header, .cm-strong {font-weight: bold;}
+        .cm-em {font-style: italic;}
+        .cm-link {text-decoration: underline;}
+        .cm-strikethrough {text-decoration: line-through;}
 
-            -moz-tab-size: 4;
-            -o-tab-size: 4;
-            tab-size: 4;
-
-            -webkit-hyphens: none;
-            -moz-hyphens: none;
-            -ms-hyphens: none;
-            hyphens: none;
-        }
-
-        pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-        code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-            text-shadow: none;
-            background: var(--vscode-editor-selectionBackground);
-        }
-
-        pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-        code[class*="language-"]::selection, code[class*="language-"] ::selection {
-            text-shadow: none;
-            background: var(--vscode-editor-selectionBackground);
-        }
-
-        @media print {
-            code[class*="language-"],
-            pre[class*="language-"] {
-                text-shadow: none;
-            }
-        }
-
-        /* Code blocks */
-        pre[class*="language-"] {
-            padding: 1em;
-            margin: .5em 0;
-            overflow: auto;
-        }
-
-        :not(pre) > code[class*="language-"],
-        pre[class*="language-"] {
-            background: transparent;
-        }
-
-        /* Inline code */
-        :not(pre) > code[class*="language-"] {
-            padding: .1em;
-            border-radius: .3em;
-            white-space: normal;
-        }
-
-        .token.comment,
-        .token.prolog,
-        .token.doctype,
-        .token.cdata {
-            color: ${comment};
-        }
-
-        .token.punctuation {
-            color: ${def};
-        }
-
-        .namespace {
-            opacity: .7;
-        }
-
-        .token.property,
-        .token.tag,
-        .token.boolean,
-        .token.number,
-        .token.constant,
-        .token.symbol,
-        .token.deleted {
-            color: ${numeric};
-        }
-
-        .token.selector,
-        .token.attr-name,
-        .token.string,
-        .token.char,
-        .token.builtin,
-        .token.inserted {
-            color: ${stringColor};
-        }
-
-        .token.operator,
-        .token.entity,
-        .token.url,
-        .language-css .token.string,
-        .style .token.string {
-            color: ${operator};
-            background: transparent;
-        }
-
-        .token.atrule,
-        .token.attr-value,
-        .token.keyword {
-            color: ${keyword};
-        }
-
-        .token.function,
-        .token.class-name {
-            color: ${keyword};
-        }
-
-        .token.regex,
-        .token.important,
-        .token.variable {
-            color: ${variable};
-        }
-
-        .token.important,
-        .token.bold {
-            font-weight: bold;
-        }
-        .token.italic {
-            font-style: italic;
-        }
-
-        .token.entity {
-            cursor: help;
-        }
+        .cm-s-${escapedThemeName} span.cm-keyword {color: ${keyword};}
+        .cm-s-${escapedThemeName} span.cm-number {color: ${numeric};}
+        .cm-s-${escapedThemeName} span.cm-def {color: ${def};}
+        .cm-s-${escapedThemeName} span.cm-variable {color: ${variable};}
+        .cm-s-${escapedThemeName} span.cm-punctuation {color: ${punctuation};}
+        .cm-s-${escapedThemeName} span.cm-property,
+        .cm-s-${escapedThemeName} span.cm-operator {color: ${operator};}
+        .cm-s-${escapedThemeName} span.cm-variable-2 {color: ${variable};}
+        .cm-s-${escapedThemeName} span.cm-variable-3, .cm-s-${theme} .cm-type {color: ${variable};}
+        .cm-s-${escapedThemeName} span.cm-comment {color: ${comment};}
+        .cm-s-${escapedThemeName} span.cm-string {color: ${stringColor};}
+        .cm-s-${escapedThemeName} span.cm-string-2 {color: ${stringColor};}
+        .cm-s-${escapedThemeName} span.cm-builtin {color: ${builtin};}
 `;
 
     }
@@ -239,7 +145,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         const tokenContent = await fs.readFile(themeFile, 'utf8');
-        const theme = JSON.parse(tokenContent) as JSONObject;
+        const theme = JSON.parse(stripJsonComments(tokenContent)) as JSONObject;
         const tokenColors = theme['tokenColors'] as JSONArray;
         if (tokenColors && tokenColors.length > 0) {
             // This theme may include others. If so we need to combine the two together
@@ -270,13 +176,13 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         }
 
         // Search through all of the json files for the theme name
-        const escapedThemeName = theme.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const escapedThemeName = this.escapeThemeName(theme);
         const searchOptions: FindOptions = {
             path: extensionsPath,
             recursiveSearch: true,
             fileFilter: {
                 fileNamePattern: '**/*.json',
-                content: new RegExp(`id[',"]:\\s*[',"]${escapedThemeName}[',"]`)
+                content: new RegExp(`[name|id][',"]:\\s*[',"]${escapedThemeName}[',"]`)
             }
         };
         // tslint:disable-next-line:no-require-imports
@@ -290,10 +196,19 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             if (results && results.length > 0) {
                 // This should be the path to the file. Load it as a json object
                 const contents = await fs.readFile(results[0], 'utf8');
-                const json = JSON.parse(contents) as JSONObject;
+                const json = JSON.parse(stripJsonComments(contents)) as JSONObject;
 
-                // There should be a contributes section
+                // There should be a theme colors section
                 const contributes = json['contributes'] as JSONObject;
+
+                // If no contributes section, see if we have a tokenColors section. This means
+                // this is a direct token colors file
+                if (!contributes) {
+                    const tokenColors = json['tokenColors'] as JSONObject;
+                    if (tokenColors) {
+                        return await this.readTokenColors(results[0]);
+                    }
+                }
 
                 // This should have a themes section
                 const themes = contributes['themes'] as JSONArray;

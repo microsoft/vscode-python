@@ -29,8 +29,44 @@ export function setUpDomEnvironment() {
     // Special case. Transform needs createRange
     // tslint:disable-next-line:no-string-literal
     global['document'].createRange = () => ({
-        createContextualFragment: str => JSDOM.fragment(str)
+        createContextualFragment: str => JSDOM.fragment(str),
+        setEnd : (endNode, endOffset) => {},
+        setStart : (startNode, startOffset) => {},
+        getBoundingClientRect : () => null,
+        getClientRects: () => []
     });
+
+    // Another special case. CodeMirror needs selection
+    // tslint:disable-next-line:no-string-literal
+    global['document'].selection = {
+        anchorNode: null,
+        anchorOffset: 0,
+        baseNode: null,
+        baseOffset: 0,
+        extentNode: null,
+        extentOffset: 0,
+        focusNode: null,
+        focusOffset: 0,
+        isCollapsed: false,
+        rangeCount: 0,
+        type: '',
+        addRange: (range: Range) => {},
+        createRange: () => null,
+        collapse: (parentNode: Node, offset: number) => {},
+        collapseToEnd: () => {},
+        collapseToStart: () => {},
+        containsNode: (node: Node, partlyContained: boolean) => false,
+        deleteFromDocument: () => {},
+        empty: () => {},
+        extend: (newNode: Node, offset: number) => {},
+        getRangeAt: (index: number) => null,
+        removeAllRanges: () => {},
+        removeRange: (range: Range) => {},
+        selectAllChildren: (parentNode: Node) => {},
+        setBaseAndExtent: (baseNode: Node, baseOffset: number, extentNode: Node, extentOffset: number) => {},
+        setPosition: (parentNode: Node, offset: number) => {},
+        toString: () => '{Selection}'
+    };
 
     // For Jupyter server to load correctly. It expects the window object to not be defined
     // tslint:disable-next-line:no-eval
@@ -48,6 +84,22 @@ export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-string-literal no-eval
     global['getLocStrings'] = () => {
         return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
+    };
+
+    global['getInitialSettings'] = () => {
+        return {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 10,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true
+        };
     };
 
     configure({ adapter: new Adapter() });

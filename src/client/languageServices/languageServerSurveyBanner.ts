@@ -62,14 +62,6 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         }
     }
 
-    public get optionLabels(): string[] {
-        return this.bannerLabels;
-    }
-
-    public get shownCount(): Promise<number> {
-        return this.getPythonLSLaunchCounter();
-    }
-
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).value;
     }

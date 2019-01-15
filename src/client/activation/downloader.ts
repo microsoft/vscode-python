@@ -3,50 +3,42 @@
 
 'use strict';
 
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IExtensionContext, IOutputChannel } from '../common/types';
+import { IOutputChannel } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { LanguageService } from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
-import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ERROR,
     PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
-import {
-    IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService,
-    ILanguageServerPlatformData
-} from './types';
+import { IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService, IPlatformData } from './types';
 
 const downloadFileExtension = '.nupkg';
 
+@injectable()
 export class LanguageServerDownloader implements ILanguageServerDownloader {
-    private readonly output: IOutputChannel;
-    private readonly fs: IFileSystem;
-    private readonly appShell: IApplicationShell;
     constructor(
-        private readonly platformData: ILanguageServerPlatformData,
-        private readonly engineFolder: string,
-        private readonly serviceContainer: IServiceContainer
+        @inject(IPlatformData) private readonly platformData: IPlatformData,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(IHttpClient) private readonly httpClient: IHttpClient,
+        @inject(ILanguageServerFolderService) private readonly lsFolderService: ILanguageServerFolderService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
-        this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-
     }
 
     public async getDownloadInfo() {
-        const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
-        return lsFolderService.getLatestLanguageServerVersion().then(item => item!);
+        return this.lsFolderService.getLatestLanguageServerVersion().then(item => item!);
     }
-
-    public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
+    public async downloadLanguageServer(destinationFolder: string): Promise<void> {
         const downloadInfo = await this.getDownloadInfo();
         const downloadUri = downloadInfo.uri;
         const lsVersion = downloadInfo.version.raw;
@@ -61,7 +53,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(err);
             success = false;
             this.appShell.showErrorMessage(LanguageService.lsFailedToDownload());
-            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' });
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' }, err);
             throw new Error(err);
         } finally {
             sendTelemetryEvent(
@@ -73,13 +65,13 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
 
         timer.reset();
         try {
-            await this.unpackArchive(context.extensionPath, localTempFilePath);
+            await this.unpackArchive(destinationFolder, localTempFilePath);
         } catch (err) {
             this.output.appendLine('extraction failed.');
             this.output.appendLine(err);
             success = false;
             this.appShell.showErrorMessage(LanguageService.lsFailedToExtract());
-            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' });
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' }, err);
             throw new Error(err);
         } finally {
             sendTelemetryEvent(
@@ -107,11 +99,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         await window.withProgress({
             location: ProgressLocation.Window
         }, async (progress) => {
-            const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
-            const req = await httpClient.downloadFile(uri);
+            const req = await this.httpClient.downloadFile(uri);
             req.on('response', (response) => {
                 if (response.statusCode !== 200) {
-                    throw new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`);
+                    const error = new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`);
+                    deferred.reject(error);
+                    throw error;
                 }
             });
             const requestProgress = await import('request-progress');
@@ -139,10 +132,9 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         return tempFile.filePath;
     }
 
-    protected async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
+    protected async unpackArchive(destinationFolder: string, tempFilePath: string): Promise<void> {
         this.output.append('Unpacking archive... ');
 
-        const installFolder = path.join(extensionPath, this.engineFolder);
         const deferred = createDeferred();
 
         const title = 'Extracting files... ';
@@ -160,10 +152,10 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             let extractedFiles = 0;
             zip.on('ready', async () => {
                 totalFiles = zip.entriesCount;
-                if (!await this.fs.directoryExists(installFolder)) {
-                    await this.fs.createDirectory(installFolder);
+                if (!await this.fs.directoryExists(destinationFolder)) {
+                    await this.fs.createDirectory(destinationFolder);
                 }
-                zip.extract(null, installFolder, (err) => {
+                zip.extract(null, destinationFolder, (err) => {
                     if (err) {
                         deferred.reject(err);
                     } else {
@@ -181,7 +173,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         });
 
         // Set file to executable (nothing happens in Windows, as chmod has no definition there)
-        const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
+        const executablePath = path.join(destinationFolder, this.platformData.engineExecutableName);
         await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
 
         this.output.appendLine('done.');

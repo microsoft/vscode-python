@@ -8,8 +8,9 @@ import * as path from 'path';
 import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 
 import * as localize from '../../common/utils/localize';
+import { Identifiers } from '../../datascience/constants';
 import { IServiceContainer } from '../../ioc/types';
-import { IDisposableRegistry } from '../types';
+import { IConfigurationService, IDisposableRegistry } from '../types';
 import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
 
 export class WebPanel implements IWebPanel {
@@ -18,6 +19,7 @@ export class WebPanel implements IWebPanel {
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private disposableRegistry: IDisposableRegistry;
+    private configuration: IConfigurationService;
     private rootPath: string;
 
     constructor(
@@ -26,7 +28,7 @@ export class WebPanel implements IWebPanel {
         title: string,
         mainScriptPath: string,
         embeddedCss?: string) {
-
+        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
         this.rootPath = path.dirname(mainScriptPath);
@@ -92,6 +94,7 @@ export class WebPanel implements IWebPanel {
         const uri = uriPath.with({ scheme: 'vscode-resource' });
         const locDatabase = JSON.stringify(localize.getCollection());
         const style = embeddedCss ? embeddedCss : '';
+        const dsSettings = JSON.stringify(this.configuration.getSettings().datascience);
 
         return `<!doctype html>
         <html lang="en">
@@ -99,6 +102,7 @@ export class WebPanel implements IWebPanel {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
                 <meta name="theme-color" content="#000000">
+                <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
                 <base href="${uriBase}"/>
                 <style type="text/css">
@@ -118,6 +122,9 @@ export class WebPanel implements IWebPanel {
                     }
                     function getLocStrings() {
                         return ${locDatabase};
+                    }
+                    function getInitialSettings() {
+                        return ${dsSettings};
                     }
                 </script>
             <script type="text/javascript" src="${uri}"></script></body>

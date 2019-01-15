@@ -13,8 +13,7 @@
 
 ---
 
-[Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) is located in its own repo
-[Contributing to Microsoft Python Language Server](https://github.com/Microsoft/python-language-server/blob/master/CONTRIBUTING.md)
+[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [ptvsd](https://github.com/microsoft/ptvsd) see its own repo]
 
 ## Contributing a pull request
 

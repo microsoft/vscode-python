@@ -1,0 +1,13 @@
+
+.input-outer {
+    display:flex;
+    flex-direction: row;
+    justify-content: left;
+    width: 100%;
+}
+
+.input-area {
+    width:100%;
+}
+
+

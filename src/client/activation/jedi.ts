@@ -33,7 +33,7 @@ export class JediExtensionActivator implements IExtensionActivator {
         this.documentSelector = PYTHON;
     }
 
-    public async activate(): Promise<boolean> {
+    public async activate(): Promise<void> {
         const context = this.context;
 
         const jediFactory = this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
@@ -76,11 +76,9 @@ export class JediExtensionActivator implements IExtensionActivator {
         testManagementService.activate()
             .then(() => testManagementService.activateCodeLenses(symbolProvider))
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
-
-        return true;
     }
 
-    public async deactivate(): Promise<void> {
+    public dispose(): void {
         if (this.jediFactory) {
             this.jediFactory.dispose();
         }

@@ -10,8 +10,6 @@ import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 import { Container } from 'inversify';
-import { basename as pathBasename, sep as pathSep } from 'path';
-import * as stackTrace from 'stack-trace';
 import {
     CodeActionKind,
     debug,
@@ -58,7 +56,6 @@ import {
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { EXTENSION_ROOT_DIR } from './constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
@@ -402,34 +399,6 @@ function notifyUser(msg: string) {
     }
 }
 
-function sanitizeFilename(filename: string): string {
-    if (filename.startsWith(EXTENSION_ROOT_DIR + pathSep)) {
-        filename = `<pvsc>${filename.substring(EXTENSION_ROOT_DIR.length)}`;
-    } else {
-        // We don't really care about files outside our extension.
-        filename = `<hidden>${pathSep}${pathBasename(filename)}`;
-    }
-    return filename;
-}
-
-function getStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might
-    // contain PII.
-    let trace = '';
-    for (const frame of stackTrace.parse(ex)) {
-        let filename = frame.getFileName();
-        if (filename) {
-            filename = sanitizeFilename(filename);
-            const lineno = frame.getLineNumber();
-            const colno = frame.getColumnNumber();
-            trace += `\n\tat ${filename}:${lineno}:${colno}`;
-        } else {
-            trace += '\n\tat <anonymous>';
-        }
-    }
-    return trace.trim();
-}
-
 async function sendErrorTelemetry(ex: Error) {
     try {
         // tslint:disable-next-line:no-any
@@ -441,8 +410,7 @@ async function sendErrorTelemetry(ex: Error) {
                 // ignore
             }
         }
-        props.stackTrace = getStackTrace(ex);
-        sendTelemetryEvent(EDITOR_LOAD, durations, props);
+        sendTelemetryEvent(EDITOR_LOAD, durations, props, ex);
     } catch (exc2) {
         traceError('sendErrorTelemetry() failed.', exc2);
     }
