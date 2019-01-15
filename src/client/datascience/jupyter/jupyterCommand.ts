@@ -33,15 +33,6 @@ class ProcessJupyterCommand implements IJupyterCommand {
         this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(e => undefined);
     }
 
-    public async mainVersion(): Promise<number> {
-        const interpreter = await this.interpreterPromise;
-        if (interpreter && interpreter.version) {
-            return interpreter.version.major;
-        } else {
-            return this.execVersion();
-        }
-    }
-
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
     }
@@ -60,19 +51,6 @@ class ProcessJupyterCommand implements IJupyterCommand {
         const launcher = await this.launcherPromise;
         const newArgs = [...this.requiredArgs, ...args];
         return launcher.exec(this.exe, newArgs, newOptions);
-    }
-
-    private async execVersion(): Promise<number> {
-        const launcher = await this.launcherPromise;
-        if (launcher) {
-            const output = await launcher.exec(this.exe, ['--version'], { throwOnStdErr: false, encoding: 'utf8' });
-            // First number should be our result
-            const matches = /.*(\d+).*/m.exec(output.stdout);
-            if (matches && matches.length > 1) {
-                return parseInt(matches[1], 10);
-            }
-        }
-        return 0;
     }
 
     private fixupEnv(env: NodeJS.ProcessEnv) : Promise<NodeJS.ProcessEnv | undefined> {
@@ -94,15 +72,6 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         this.requiredArgs = args;
         this.interpreterPromise = Promise.resolve(interpreter);
         this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter });
-    }
-
-    public async mainVersion(): Promise<number> {
-        const interpreter = await this.interpreterPromise;
-        if (interpreter && interpreter.version) {
-            return interpreter.version.major;
-        } else {
-            return this.execVersion();
-        }
     }
 
     public interpreter() : Promise<PythonInterpreter | undefined> {

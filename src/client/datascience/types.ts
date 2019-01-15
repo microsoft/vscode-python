@@ -191,7 +191,6 @@ export interface IStatusProvider {
 }
 
 export interface IJupyterCommand {
-    mainVersion(): Promise<number>;
     interpreter() : Promise<PythonInterpreter | undefined>;
     execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
