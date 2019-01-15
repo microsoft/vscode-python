@@ -116,8 +116,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.pythonExecutionFactory.setup(f => f.create(TypeMoq.It.is(o => {
             return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
         }))).returns(() => Promise.resolve(pythonService));
-        this.pythonExecutionFactory.setup(f => f.createActivatedEnvironment(TypeMoq.It.isAny(), TypeMoq.It.is(o => {
-            return !o || JSON.stringify(o) === JSON.stringify(interpreter);
+        this.pythonExecutionFactory.setup(f => f.createActivatedEnvironment(TypeMoq.It.is(o => {
+            return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
         }))).returns(() => Promise.resolve(pythonService));
         this.setupSupportedPythonService(pythonService, interpreter, supportedCommands, notebookStdErr);
 

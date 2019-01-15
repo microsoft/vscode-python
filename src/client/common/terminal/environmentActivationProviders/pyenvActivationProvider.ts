@@ -23,7 +23,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
             return;
         }
 
-        return [`pyenv shell ${interpreter.envName}`];
+        return [`pyenv shell ${interpreter.envName.toCommandArgument()}`];
     }
 
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
@@ -32,7 +32,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
             return;
         }
 
-        return [`pyenv shell ${interpreter.envName}`];
+        return [`pyenv shell ${interpreter.envName.toCommandArgument()}`];
     }
 
 }

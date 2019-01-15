@@ -85,7 +85,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                     when(activationHelper.getActivatedEnvironmentVariables(resource, anything())).thenResolve();
 
-                    const service = await factory.createActivatedEnvironment(resource, interpreter);
+                    const service = await factory.createActivatedEnvironment({resource, interpreter});
 
                     verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
                     assert.deepEqual(service, mockExecService);
@@ -101,7 +101,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                     when(activationHelper.getActivatedEnvironmentVariables(resource, anything())).thenResolve({});
 
-                    const service = await factory.createActivatedEnvironment(resource, interpreter);
+                    const service = await factory.createActivatedEnvironment({resource, interpreter});
 
                     verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
                     assert.deepEqual(service, mockExecService);
@@ -119,7 +119,7 @@ suite('Process - PythonExecutionFactory', () => {
                     when(activationHelper.getActivatedEnvironmentVariables(resource, anything())).thenResolve({ x: '1' });
                     when(pythonSettings.pythonPath).thenReturn('HELLO');
                     when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                    const service = await factory.createActivatedEnvironment(resource, interpreter);
+                    const service = await factory.createActivatedEnvironment({resource, interpreter});
 
                     verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
                     verify(pythonSettings.pythonPath).once();

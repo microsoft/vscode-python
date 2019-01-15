@@ -493,7 +493,7 @@ suite('Jupyter Execution', async () => {
             activeService = missingNotebookService2.object;
         }
         when(executionFactory.create(argThat(o => !o || !o.pythonPath))).thenResolve(activeService);
-        when(executionFactory.createActivatedEnvironment(anything(), argThat(o => !o || o === activeInterpreter))).thenResolve(activeService);
+        when(executionFactory.createActivatedEnvironment(argThat(o => !o || o.interpreter === activeInterpreter))).thenResolve(activeService);
         when(processServiceFactory.create()).thenResolve(processService.object);
 
         // Service container needs logger, file system, and config service

@@ -57,9 +57,13 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
+export type ExecutionFactoryCreateWithEnvironmentOptions = {
+    resource?: Uri;
+    interpreter?: PythonInterpreter;
+};
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
-    createActivatedEnvironment(resource: Resource, interpreter?: PythonInterpreter): Promise<IPythonExecutionService>;
+    createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];

@@ -26,7 +26,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
 
         const execName = this.pipenvService.executable;
-        return [`${execName.toCommandArgument()} shell`];
+        return [`${execName.fileToCommandArgument()} shell`];
     }
 
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
@@ -36,7 +36,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
 
         const execName = this.pipenvService.executable;
-        return [`${execName} shell`];
+        return [`${execName.fileToCommandArgument()} shell`];
     }
 
 }

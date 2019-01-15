@@ -15,7 +15,8 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
+    ExecutionFactoryCreateWithEnvironmentOptions
 } from './types';
 
 @injectable()
@@ -31,14 +32,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService = await this.processServiceFactory.create(options.resource);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    public async createActivatedEnvironment(resource: Resource, interpreter?: PythonInterpreter): Promise<IPythonExecutionService> {
-        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(resource, interpreter);
+    public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
+        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
-            return this.create({ resource });
+            return this.create({ resource: options.resource });
         }
-        const pythonPath = this.configService.getSettings(resource).pythonPath;
+        const pythonPath = this.configService.getSettings(options.resource).pythonPath;
         const processService = new ProcessService(this.decoder, { ...envVars });
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
