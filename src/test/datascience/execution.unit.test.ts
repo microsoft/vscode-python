@@ -455,7 +455,7 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
     }
 
-    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[]): JupyterExecution {
+    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecution {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
@@ -514,7 +514,7 @@ suite('Jupyter Execution', async () => {
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
-            searchForJupyter: true
+            searchForJupyter: !skipSearch
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -648,5 +648,14 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
         await assert.isFulfilled(execution.connectToNotebookServer(undefined, true), 'Should be able to start a server');
+    }).timeout(10000);
+
+    test('Jupyter found on the path skipped', async () => {
+        // Make sure we can find jupyter on the path if we
+        // can't find it in a python module.
+        const execution = createExecution(missingNotebookPython, undefined, true);
+        when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
+        when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
+        await assert.isRejected(execution.connectToNotebookServer(undefined, true), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 });
