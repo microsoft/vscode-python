@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
 //tslint:disable:trailing-comma no-any no-multiline-string
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
@@ -21,6 +22,7 @@ import {
     WebPanelMessage,
 } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture, OSType } from '../../client/common/utils/platform';
@@ -37,7 +39,6 @@ import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { waitForUpdate } from './reactHelpers';
-import { IDataScienceSettings } from '../../client/common/types';
 
 enum cellInputState {
     Hidden,
