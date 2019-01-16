@@ -244,32 +244,12 @@ export class CondaService implements ICondaService {
     }
 
     /**
-     * Is the given interpreter from conda?
+     * Get the conda exe from the path to an interpreter's python. This might be different than the globally registered conda.exe
      */
-    private detectCondaEnvironment(interpreter: PythonInterpreter) {
-        return interpreter.type === InterpreterType.Conda ||
-            (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
-    }
-
-    /**
-     * Return the highest Python version from the given list.
-     */
-    private getLatestVersion(interpreters: PythonInterpreter[]) {
-        const sortedInterpreters = interpreters.slice();
-        // tslint:disable-next-line:no-non-null-assertion
-        sortedInterpreters.sort((a, b) => (a.version && b.version) ? compare(a.version.raw, b.version.raw) : 0);
-        if (sortedInterpreters.length > 0) {
-            return sortedInterpreters[sortedInterpreters.length - 1];
-        }
-    }
-
-    private async getCondaFileFromInterpreter(interpreter: PythonInterpreter | undefined): Promise<string | undefined> {
+    public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
-        const interpreterDir = interpreter ? path.dirname(interpreter.path) : '';
-        const envName = interpreter && interpreter.envName ? interpreter.envName : undefined;
+        const interpreterDir = interpreterPath ? path.dirname(interpreterPath) : '';
         let condaPath = path.join(interpreterDir, condaExe);
         if (await this.fileSystem.fileExists(condaPath)) {
             return condaPath;
@@ -298,6 +278,29 @@ export class CondaService implements ICondaService {
             if (await this.fileSystem.fileExists(condaPath)) {
                 return condaPath;
             }
+        }
+    }
+
+
+    /**
+     * Is the given interpreter from conda?
+     */
+    private detectCondaEnvironment(interpreter: PythonInterpreter) {
+        return interpreter.type === InterpreterType.Conda ||
+            (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
+            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
+            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
+    }
+
+    /**
+     * Return the highest Python version from the given list.
+     */
+    private getLatestVersion(interpreters: PythonInterpreter[]) {
+        const sortedInterpreters = interpreters.slice();
+        // tslint:disable-next-line:no-non-null-assertion
+        sortedInterpreters.sort((a, b) => (a.version && b.version) ? compare(a.version.raw, b.version.raw) : 0);
+        if (sortedInterpreters.length > 0) {
+            return sortedInterpreters[sortedInterpreters.length - 1];
         }
     }
 
@@ -332,7 +335,7 @@ export class CondaService implements ICondaService {
             const interpreters = await this.registryLookupForConda.getInterpreters();
             const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
             const condaInterpreter = this.getLatestVersion(condaInterpreters);
-            const interpreterPath = await this.getCondaFileFromInterpreter(condaInterpreter);
+            const interpreterPath = await this.getCondaFileFromInterpreter(condaInterpreter.path, condaInterpreter.envName);
             if (interpreterPath) {
                 return interpreterPath;
             }

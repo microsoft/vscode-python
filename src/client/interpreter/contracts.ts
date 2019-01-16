@@ -53,6 +53,7 @@ export interface ICondaService {
     getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;
+    getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined>;
 }

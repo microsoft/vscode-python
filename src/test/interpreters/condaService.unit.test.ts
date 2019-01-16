@@ -646,4 +646,47 @@ suite('Interpreters Conda Service', () => {
         fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
         await testFailureOfGettingCondaEnvironments(false, true, false, pythonPath);
     });
+
+    type InterpreterSearchTestParams = {
+        pythonPath: string;
+        environmentName: string;
+        isLinux: boolean;
+        expectedCondaPath: string;
+    };
+
+    const testsForInterpreter: InterpreterSearchTestParams[] =
+        [
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test1', 'python'),
+                environmentName: 'test1',
+                isLinux: true,
+                expectedCondaPath: path.join('users', 'foo', 'bin', 'conda')
+            },
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test1', 'python'),
+                environmentName: 'test1',
+                isLinux: false,
+                expectedCondaPath: path.join('users', 'foo', 'Scripts', 'conda.exe')
+            }
+        ];
+
+    testsForInterpreter.forEach(t => {
+        test(`Finds conda.exe for subenvironment ${t.environmentName}`, async () => {
+            platformService.setup(p => p.isLinux).returns(() => t.isLinux);
+            platformService.setup(p => p.isWindows).returns(() => !t.isLinux);
+            platformService.setup(p => p.isMac).returns(() => false);
+            fileSystem.setup(f => f.fileExists(TypeMoq.It.is(p => {
+                if (p === path.join('users','foo','bin','conda')) {
+                    return true;
+                }
+                if (p === path.join('users','foo','Scripts','conda.exe')) {
+                    return true;
+                }
+                return false;
+            }))).returns(() => Promise.resolve(true));
+
+            const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
+            assert.equal(condaFile, t.expectedCondaPath);
+        });
+    })
 });
