@@ -5,6 +5,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
@@ -152,8 +153,12 @@ export abstract class BaseLinter implements ILinter {
     }
 
     protected handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
-        this.errorHandler.handleError(error, resource, execInfo)
-            .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
+        if (isTestExecution()) {
+            this.errorHandler.handleError(error, resource, execInfo);
+        } else {
+            this.errorHandler.handleError(error, resource, execInfo)
+                .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
+        }
     }
 
     private parseLine(line: string, regEx: string): ILintMessage | undefined {
