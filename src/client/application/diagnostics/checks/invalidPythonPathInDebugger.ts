@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from 'vscode';
 import { openFile } from '../../../../test/common';
@@ -39,14 +39,13 @@ export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebugger
 
 @injectable()
 export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService implements IInvalidPythonPathInDebuggerService {
-    protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDiagnosticsCommandFactory) private readonly commandFactory: IDiagnosticsCommandFactory,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService) {
-        super([DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic], serviceContainer);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IDiagnosticHandlerService) @named(DiagnosticCommandPromptHandlerServiceId) protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>) {
+            super([DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic], serviceContainer);
     }
     public async diagnose(): Promise<IDiagnostic[]> {
         return [];

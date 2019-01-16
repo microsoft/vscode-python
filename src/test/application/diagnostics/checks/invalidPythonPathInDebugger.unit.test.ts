@@ -44,18 +44,23 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
 
-        diagnosticService = new InvalidPythonPathInDebuggerService(serviceContainer.object, workspaceService.object, commandFactory.object, helper.object, configService.object);
+        diagnosticService = new InvalidPythonPathInDebuggerService(serviceContainer.object, workspaceService.object, commandFactory.object, helper.object, configService.object, messageHandler.object);
     });
 
     test('Can handle InvalidPythonPathInDebugger diagnostics', async () => {
-        const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
-        diagnostic.setup(d => d.code)
-            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic)
-            .verifiable(typemoq.Times.atLeastOnce());
+        for (const code of [
+            DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
+            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
+        ]) {
+            const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
+            diagnostic.setup(d => d.code)
+                .returns(() => code)
+                .verifiable(typemoq.Times.atLeastOnce());
 
-        const canHandle = await diagnosticService.canHandle(diagnostic.object);
-        expect(canHandle).to.be.equal(true, 'Invalid value');
-        diagnostic.verifyAll();
+            const canHandle = await diagnosticService.canHandle(diagnostic.object);
+            expect(canHandle).to.be.equal(true, `Should be able to handle ${code}`);
+            diagnostic.verifyAll();
+        }
     });
     test('Can not handle non-InvalidPythonPathInDebugger diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
@@ -71,10 +76,10 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         const diagnostics = await diagnosticService.diagnose();
         expect(diagnostics).to.be.deep.equal([]);
     });
-    test('Should display one option to with a command', async () => {
+    test('InvalidPythonPathInDebuggerSettings diagnostic should display one option to with a command', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         diagnostic.setup(d => d.code)
-            .returns(() => DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)
+            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic)
             .verifiable(typemoq.Times.atLeastOnce());
         const interpreterSelectionCommand = typemoq.Mock.ofType<IDiagnosticCommand>();
         commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
@@ -89,6 +94,24 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         diagnostic.verifyAll();
         commandFactory.verifyAll();
         messageHandler.verifyAll();
+    });
+    test('InvalidPythonPathInDebuggerLaunch diagnostic should display one option to with a command', async () => {
+        const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
+        let options: MessageCommandPrompt | undefined;
+        diagnostic.setup(d => d.code)
+            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic)
+            .verifiable(typemoq.Times.atLeastOnce());
+        messageHandler.setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+            .callback((_, opts: MessageCommandPrompt) => options = opts)
+            .verifiable(typemoq.Times.once());
+
+        await diagnosticService.handle([diagnostic.object]);
+
+        diagnostic.verifyAll();
+        commandFactory.verifyAll();
+        messageHandler.verifyAll();
+        expect(options!.commandPrompts).to.be.lengthOf(1);
+        expect(options!.commandPrompts[0].prompt).to.be.equal('Open launch.json');
     });
     test('Ensure we get python path from config when path = ${config:python.pythonPath}', async () => {
         const pythonPath = '${config:python.pythonPath}';
@@ -196,7 +219,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         helper.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
-    test('Ensure we do get python path from config when path is provided', async () => {
+    test('Ensure we do not get python path from config when path is provided', async () => {
         const pythonPath = path.join('a', 'b');
 
         const settings = typemoq.Mock.ofType<IPythonSettings>();
@@ -215,12 +238,51 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         helper.verifyAll();
         expect(valid).to.be.equal(true, 'not valid');
     });
-    test('Ensure diagnosics are handled when path is invalid', async () => {
+    test('Ensure InvalidPythonPathInDebuggerLaunch diagnostic is handled when path is invalid in launch.json', async () => {
         const pythonPath = path.join('a', 'b');
+        const settings = typemoq.Mock.ofType<IPythonSettings>();
+        configService
+            .setup(c => c.getSettings(typemoq.It.isAny()))
+            .returns(() => settings.object)
+            .verifiable(typemoq.Times.never());
         let handleInvoked = false;
-        diagnosticService.handle = () => { handleInvoked = true; return Promise.resolve(); };
+        diagnosticService.handle = (diagnostics) => {
+            if (diagnostics.length !== 0 && diagnostics[0].code === DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic){
+                handleInvoked = true;
+            }
+            return Promise.resolve();
+        };
         helper
             .setup(h => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
+
+        helper.verifyAll();
+        expect(valid).to.be.equal(false, 'should be invalid');
+        expect(handleInvoked).to.be.equal(true, 'should be invoked');
+    });
+    test('Ensure InvalidPythonPathInDebuggerSettings diagnostic is handled when path is invalid in settings.json', async () => {
+        const pythonPath = undefined;
+        const settings = typemoq.Mock.ofType<IPythonSettings>();
+        settings
+            .setup(s => s.pythonPath)
+            .returns(() => 'p')
+            .verifiable(typemoq.Times.once());
+        configService
+            .setup(c => c.getSettings(typemoq.It.isAny()))
+            .returns(() => settings.object)
+            .verifiable(typemoq.Times.once());
+        let handleInvoked = false;
+        diagnosticService.handle = (diagnostics) => {
+            if (diagnostics.length !== 0 && diagnostics[0].code === DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic){
+                handleInvoked = true;
+            }
+            return Promise.resolve();
+        };
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue('p')))
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
