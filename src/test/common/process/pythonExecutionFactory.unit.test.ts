@@ -122,7 +122,9 @@ suite('Process - PythonExecutionFactory', () => {
                     const service = await factory.createActivatedEnvironment({resource, interpreter});
 
                     verify(activationHelper.getActivatedEnvironmentVariables(resource, anything())).once();
-                    verify(pythonSettings.pythonPath).once();
+                    if (!interpreter) {
+                        verify(pythonSettings.pythonPath).once();
+                    }
                     expect(service).instanceOf(PythonExecutionService);
                     assert.equal(createInvoked, false);
                 });
