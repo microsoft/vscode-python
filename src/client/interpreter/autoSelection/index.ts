@@ -84,17 +84,10 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             return this.autoSelectedInterpreterByWorkspace.get(workspaceFolderPath);
         }
 
-        if (this.globallyPreferredInterpreter) {
-            return this.globallyPreferredInterpreter.value;
-        }
-
-        return undefined;
+        return this.globallyPreferredInterpreter.value;
     }
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined) {
-        // Don't set this if already set. Otherwise we continually emit an update.
-        if (this.getAutoSelectedInterpreter(resource) !== interpreter) {
-            await this.storeAutoSelectedInterperter(resource, interpreter);
-        }
+        await this.storeAutoSelectedInterperter(resource, interpreter);
     }
     public async setGlobalInterpreter(interpreter: PythonInterpreter) {
         await this.storeAutoSelectedInterperter(undefined, interpreter);
