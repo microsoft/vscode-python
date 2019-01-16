@@ -22,8 +22,26 @@ import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
 import {
-    IAvailableLinterActivator, ILinter, ILinterInfo, ILinterManager, ILintMessage
+    IAvailableLinterActivator,
+    ILinter,
+    ILinterInfo,
+    ILinterManager,
+    ILintMessage,
+    LinterId
 } from './types';
+
+export const LINTERS = {
+    // tslint:disable: object-literal-key-quotes
+    'bandit': Product.bandit,
+    'flake8': Product.flake8,
+    'pylint': Product.pylint,
+    'mypy': Product.mypy,
+    'pep8': Product.pep8,
+    'prospector': Product.prospector,
+    'pydocstyle': Product.pydocstyle,
+    'pylama': Product.pylama
+    // tslint:enable: object-literal-key-quotes
+};
 
 class DisabledLinter implements ILinter {
     constructor(private configService: IConfigurationService) { }
@@ -44,16 +62,24 @@ export class LinterManager implements ILinterManager {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.linters = [
-            new LinterInfo(Product.bandit, 'bandit', this.configService),
-            new LinterInfo(Product.flake8, 'flake8', this.configService),
-            new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
-            new LinterInfo(Product.mypy, 'mypy', this.configService),
-            new LinterInfo(Product.pep8, 'pep8', this.configService),
-            new LinterInfo(Product.prospector, 'prospector', this.configService),
-            new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
-            new LinterInfo(Product.pylama, 'pylama', this.configService)
-        ];
+        this.linters = [];
+        for (const prodID of Object.keys(LINTERS)) {
+            let info: ILinterInfo;
+            if (prodID === 'pylint') {
+                info = new PylintLinterInfo(
+                    this.configService,
+                    this.workspaceService,
+                    ['.pylintrc', 'pylintrc']
+                );
+            } else {
+                info = new LinterInfo(
+                    LINTERS[prodID],
+                    prodID as LinterId,
+                    this.configService
+                );
+            }
+            this.linters.push(info);
+        }
     }
 
     public getAllLinterInfos(): ILinterInfo[] {
