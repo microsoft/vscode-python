@@ -58,7 +58,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
         const versionInfo = await this.condaService.getCondaVersion();
-        if (versionInfo && versionInfo.major > CondaRequiredMajor || (versionInfo.major == CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor)) {
+        if (versionInfo && (versionInfo.major > CondaRequiredMajor || (versionInfo.major == CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor))) {
             // New version.
             const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
             if (interpreterPath) {

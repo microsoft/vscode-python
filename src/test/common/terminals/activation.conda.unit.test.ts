@@ -442,7 +442,7 @@ suite('Terminal Environment Activation conda', () => {
             servCnt.setup(s => s.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
                 .returns(() => condaSrv.object);
 
-            const tstCmdProvider = new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object);
+            const tstCmdProvider = new CondaActivationCommandProvider(condaSrv.object, platformService.object, configService.object);
 
             let result: string[] | undefined;
 
