@@ -663,10 +663,22 @@ suite('Interpreters Conda Service', () => {
                 expectedCondaPath: path.join('users', 'foo', 'bin', 'conda')
             },
             {
-                pythonPath: path.join('users', 'foo', 'envs', 'test1', 'python'),
-                environmentName: 'test1',
+                pythonPath: path.join('users', 'foo', 'envs', 'test2', 'python'),
+                environmentName: 'test2',
+                isLinux: true,
+                expectedCondaPath: path.join('users', 'foo', 'envs', 'test2', 'conda')
+            },
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test3', 'python'),
+                environmentName: 'test3',
                 isLinux: false,
                 expectedCondaPath: path.join('users', 'foo', 'Scripts', 'conda.exe')
+            },
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test4', 'python'),
+                environmentName: 'test4',
+                isLinux: false,
+                expectedCondaPath: path.join('users', 'foo', 'conda.exe')
             }
         ];
 
@@ -676,10 +688,7 @@ suite('Interpreters Conda Service', () => {
             platformService.setup(p => p.isWindows).returns(() => !t.isLinux);
             platformService.setup(p => p.isMac).returns(() => false);
             fileSystem.setup(f => f.fileExists(TypeMoq.It.is(p => {
-                if (p === path.join('users','foo','bin','conda')) {
-                    return true;
-                }
-                if (p === path.join('users','foo','Scripts','conda.exe')) {
+                if (p === t.expectedCondaPath) {
                     return true;
                 }
                 return false;
@@ -687,6 +696,26 @@ suite('Interpreters Conda Service', () => {
 
             const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
             assert.equal(condaFile, t.expectedCondaPath);
+        });
+        test(`Finds conda.exe for different ${t.environmentName}`, async () => {
+            platformService.setup(p => p.isLinux).returns(() => t.isLinux);
+            platformService.setup(p => p.isWindows).returns(() => !t.isLinux);
+            platformService.setup(p => p.isMac).returns(() => false);
+            fileSystem.setup(f => f.fileExists(TypeMoq.It.is(p => {
+                if (p === t.expectedCondaPath) {
+                    return true;
+                }
+                return false;
+            }))).returns(() => Promise.resolve(true));
+
+            const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, undefined);
+
+            // This should only work if the expectedConda path has the original environment name in it
+            if (t.expectedCondaPath.includes(t.environmentName)) {
+                assert.equal(condaFile, t.expectedCondaPath);
+            } else {
+                assert.equal(condaFile, undefined);
+            }
         });
     })
 });
