@@ -114,7 +114,12 @@ suite('Debugging - Configuration Service', () => {
         multiStepInput.verifyAll();
         expect(Object.keys(state.config)).to.be.lengthOf(0);
     });
-    test('Ensure generated config is returned', async () => {
+    test('Ensure generated config is returned', async function () {
+        // Disable this test until this is resolved:
+        // Issue #4007: Disable debugging configuration provider temporarily
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
+
         const expectedConfig = { yes: 'Updated' };
         const multiStepInput = {
             run: (_, state) => {
@@ -148,7 +153,10 @@ suite('Debugging - Configuration Service', () => {
         when(fs.readFile(jsFile)).thenResolve(JSON.stringify([expectedConfig]));
         const config = await configService.provideDebugConfigurations!({} as any);
 
-        multiStepFactory.verifyAll();
+        // Disable this check until this is resolved:
+        // Issue #4007: Disable debugging configuration provider temporarily
+        // multiStepFactory.verifyAll();
+
         expect(config).to.deep.equal([expectedConfig]);
     });
 });
