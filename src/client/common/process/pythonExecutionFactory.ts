@@ -3,20 +3,19 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES } from '../../telemetry/constants';
-import { IConfigurationService, Resource } from '../types';
+import { IConfigurationService } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService,
-    ExecutionFactoryCreateWithEnvironmentOptions
+    IPythonExecutionService
 } from './types';
 
 @injectable()

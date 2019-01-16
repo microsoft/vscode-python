@@ -46,7 +46,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             const keys = Object.keys(kernelspecs);
             return keys.map(k => {
                 const spec = kernelspecs[k];
-                return new JupyterKernelSpec(spec);
+                return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
             });
         } catch {
             // For some reason this is failing. Just return nothing

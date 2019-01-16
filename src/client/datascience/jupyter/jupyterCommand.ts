@@ -91,19 +91,6 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         const newArgs = [...this.requiredArgs, ...args];
         return launcher.exec(newArgs, newOptions);
     }
-
-    private async execVersion(): Promise<number> {
-        const launcher = await this.pythonLauncher;
-        if (launcher) {
-            const output = await launcher.exec(['--version'], { throwOnStdErr: false, encoding: 'utf8' });
-            // First number should be our result
-            const matches = /.*(\d+).*/m.exec(output.stdout);
-            if (matches && matches.length > 1) {
-                return parseInt(matches[1], 10);
-            }
-        }
-        return 0;
-    }
 }
 
 @injectable()

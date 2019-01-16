@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import '../../extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+
 import { ICondaService } from '../../../interpreter/contracts';
-import { IServiceContainer } from '../../../ioc/types';
-import '../../extensions';
-import { IPlatformService, IFileSystem } from '../../platform/types';
+import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
@@ -58,7 +57,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
         const versionInfo = await this.condaService.getCondaVersion();
-        if (versionInfo && (versionInfo.major > CondaRequiredMajor || (versionInfo.major == CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor))) {
+        if (versionInfo && (versionInfo.major > CondaRequiredMajor || (versionInfo.major === CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor))) {
             // New version.
             const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
             if (interpreterPath) {

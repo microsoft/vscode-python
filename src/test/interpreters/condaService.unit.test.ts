@@ -717,5 +717,5 @@ suite('Interpreters Conda Service', () => {
                 assert.equal(condaFile, undefined);
             }
         });
-    })
+    });
 });

@@ -540,7 +540,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return undefined;
     }
 
-    private enumerateSpecs = async (cancelToken?: CancellationToken): Promise<(IJupyterKernelSpec | undefined)[]> => {
+    private enumerateSpecs = async (cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.findBestCommand(KernelSpecCommand);
 

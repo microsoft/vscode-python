@@ -9,7 +9,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDisposable } from '../common/types';
+import { IAsyncDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -76,7 +76,7 @@ export interface IJupyterSessionManager {
     getActiveKernelSpecs(connInfo: IConnection) : Promise<IJupyterKernelSpec[]>;
 }
 
-export interface IJupyterKernelSpec extends IDisposable {
+export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;

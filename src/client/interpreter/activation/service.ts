@@ -47,7 +47,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         this.envVarsService.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange, this, this.disposables);
     }
 
-    public dispose(): void | Promise<void> {
+    public dispose(): void | undefined {
         this.disposables.forEach(d => d.dispose());
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)

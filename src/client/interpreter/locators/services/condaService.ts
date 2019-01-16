@@ -281,7 +281,6 @@ export class CondaService implements ICondaService {
         }
     }
 
-
     /**
      * Is the given interpreter from conda?
      */
@@ -335,9 +334,11 @@ export class CondaService implements ICondaService {
             const interpreters = await this.registryLookupForConda.getInterpreters();
             const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
             const condaInterpreter = this.getLatestVersion(condaInterpreters);
-            const interpreterPath = await this.getCondaFileFromInterpreter(condaInterpreter.path, condaInterpreter.envName);
-            if (interpreterPath) {
-                return interpreterPath;
+            if (condaInterpreter) {
+                const interpreterPath = await this.getCondaFileFromInterpreter(condaInterpreter.path, condaInterpreter.envName);
+                if (interpreterPath) {
+                    return interpreterPath;
+                }
             }
         }
         return this.getCondaFileFromKnownLocations();
