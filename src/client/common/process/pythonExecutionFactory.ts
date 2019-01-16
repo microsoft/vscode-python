@@ -36,9 +36,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
-            return this.create({ resource: options.resource });
+            return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
-        const pythonPath = this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService = new ProcessService(this.decoder, { ...envVars });
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
