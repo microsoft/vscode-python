@@ -50,7 +50,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     test('Can handle InvalidPythonPathInDebugger diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         diagnostic.setup(d => d.code)
-            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerDiagnostic)
+            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic)
             .verifiable(typemoq.Times.atLeastOnce());
 
         const canHandle = await diagnosticService.canHandle(diagnostic.object);
