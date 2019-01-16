@@ -57,6 +57,7 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
+    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -381,7 +382,7 @@ suite('History output tests', () => {
 
     runMountedTest('Mime Types', async function (wrapper) {
         // This test hasn't yet succeeded in Linux on AzDO. See #3973
-        if (IS_VSTS && isOs(OSType.Linux)) {
+        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }

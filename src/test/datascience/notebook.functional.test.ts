@@ -52,6 +52,7 @@ suite('Jupyter notebook tests', () => {
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
+    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -379,7 +380,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Restart kernel', async function () {
         // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isOs(OSType.Linux)) {
+        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -453,7 +454,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Cancel execution', async function () {
         // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isOs(OSType.Linux)) {
+        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -528,7 +529,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Interrupt kernel', async function () {
         // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isOs(OSType.Linux)) {
+        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
