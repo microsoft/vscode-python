@@ -21,14 +21,18 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
     constructor(@inject(IDebugConfigurationResolver) @named('attach') private readonly attachResolver: IDebugConfigurationResolver<AttachRequestArguments>,
         @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
         @inject(IDebugConfigurationProviderFactory) private readonly providerFactory: IDebugConfigurationProviderFactory,
+        // tslint:disable-next-line:no-unused-variable
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem) {
     }
     public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[] | undefined> {
         const config: Partial<DebugConfigurationArguments> = {};
         const state = { config, folder, token };
-        const multiStep = this.multiStepFactory.create<DebugConfigurationState>();
-        await multiStep.run((input, s) => this.pickDebugConfiguration(input, s), state);
+
+        // Disabled until configuration issues are addressed by VS Code. See #4007
+        // const multiStep = this.multiStepFactory.create<DebugConfigurationState>();
+        // await multiStep.run((input, s) => this.pickDebugConfiguration(input, s), state);
+
         if (Object.keys(state.config).length === 0) {
             return this.getDefaultDebugConfig();
         } else {
