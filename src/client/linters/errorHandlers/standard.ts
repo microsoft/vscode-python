@@ -1,4 +1,5 @@
 import { OutputChannel, Uri, window } from 'vscode';
+import { IApplicationShell } from '../../common/application/types';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager, LinterId } from '../types';
@@ -25,7 +26,8 @@ export class StandardErrorHandler extends BaseErrorHandler {
     }
     private async displayLinterError(linterId: LinterId, resource: Uri) {
         const message = `There was an error in running the linter '${linterId}'`;
-        await window.showErrorMessage(message, 'View Errors');
+        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        await appShell.showErrorMessage(message, 'View Errors');
         this.outputChannel.show();
     }
 }
