@@ -290,15 +290,15 @@ suite('Terminal Service helpers', () => {
                     verify(pipenvActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(cmdActivationProvider.isShellSupported(anything())).atLeast(1);
                 });
-                test('Activation command must return command from bash if that is supported and even if others are supported', async () => {
+                test('Activation command must return command from pipenv if that is supported and even if others are supported', async () => {
                     const pythonPath = 'some python Path value';
                     const expectCommand = ['one', 'two'];
                     ensureCondaIsSupported(false, pythonPath, []);
 
-                    when(bashActivationProvider.getActivationCommands(resource, anything())).thenResolve(expectCommand);
-                    when(bashActivationProvider.isShellSupported(anything())).thenReturn(true);
+                    when(pipenvActivationProvider.getActivationCommands(resource, anything())).thenResolve(expectCommand);
+                    when(pipenvActivationProvider.isShellSupported(anything())).thenReturn(true);
 
-                    [pipenvActivationProvider, cmdActivationProvider, pyenvActivationProvider].forEach(provider => {
+                    [bashActivationProvider, cmdActivationProvider, pyenvActivationProvider].forEach(provider => {
                         when(provider.getActivationCommands(resource, anything())).thenResolve(['Something']);
                         when(provider.isShellSupported(anything())).thenReturn(true);
                     });
@@ -310,9 +310,10 @@ suite('Terminal Service helpers', () => {
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
-                    verify(bashActivationProvider.getActivationCommands(resource, anything())).once();
+                    verify(bashActivationProvider.getActivationCommands(resource, anything())).never();
                     verify(pyenvActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(pipenvActivationProvider.isShellSupported(anything())).atLeast(1);
+                    verify(pipenvActivationProvider.getActivationCommands(resource, anything())).atLeast(1);
                     verify(cmdActivationProvider.isShellSupported(anything())).atLeast(1);
                 });
                 test('Activation command must return command from Command Prompt if that is supported and others are not', async () => {

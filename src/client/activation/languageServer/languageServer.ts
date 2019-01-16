@@ -5,12 +5,17 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
 import { Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { PYTHON_LANGUAGE_SERVER_ENABLED, PYTHON_LANGUAGE_SERVER_READY, PYTHON_LANGUAGE_SERVER_TELEMETRY } from '../../telemetry/constants';
+import {
+    PYTHON_LANGUAGE_SERVER_ENABLED,
+    PYTHON_LANGUAGE_SERVER_READY,
+    PYTHON_LANGUAGE_SERVER_TELEMETRY
+} from '../../telemetry/constants';
 import { ProgressReporting } from '../progress';
 import { ILanaguageServer as ILanguageServer, ILanguageClientFactory, LanguageClientFactory } from '../types';
 
@@ -20,22 +25,28 @@ export class LanguageServer implements ILanguageServer {
     private readonly disposables: Disposable[] = [];
 
     private languageClient?: LanguageClient;
+    private extensionLoadedArgs = new Set<{}>();
 
-    constructor(@inject(ILanguageClientFactory) @named(LanguageClientFactory.base) private readonly factory: ILanguageClientFactory) {
-
+    constructor(
+        @inject(ILanguageClientFactory)
+        @named(LanguageClientFactory.base)
+        private readonly factory: ILanguageClientFactory
+    ) {
         this.startupCompleted = createDeferred<void>();
     }
     @traceDecorators.verbose('Stopping Language Server')
     public dispose() {
         if (this.languageClient) {
             // Do not await on this.
-            this.languageClient.stop()
-                .then(noop, ex => traceError('Stopping language client failed', ex));
+            this.languageClient.stop().then(noop, ex => traceError('Stopping language client failed', ex));
             this.languageClient = undefined;
         }
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
+        }
+        if (this.startupCompleted.completed) {
+            this.startupCompleted.reject(new Error('Disposed Language Server'));
         }
     }
 
@@ -54,14 +65,17 @@ export class LanguageServer implements ILanguageServer {
     }
     @traceDecorators.error('Failed to load Language Server extension')
     public loadExtension(args?: {}) {
-        if (!this.languageClient) {
-            throw new Error('Activation not completed or not invoked');
+        if (this.extensionLoadedArgs.has(args || '')) {
+            return;
         }
-        if (!this.startupCompleted.completed) {
-            throw new Error('Activation not completed');
-        }
-        this.languageClient.sendRequest('python/loadExtension', args)
-            .then(noop, ex => traceError('Request python/loadExtension failed', ex));
+        this.extensionLoadedArgs.add(args || '');
+        this.startupCompleted.promise
+            .then(() =>
+                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex =>
+                    traceError('Request python/loadExtension failed', ex)
+                )
+            )
+            .ignoreErrors();
     }
     @captureTelemetry(PYTHON_LANGUAGE_SERVER_READY, undefined, true)
     private async serverReady(): Promise<void> {

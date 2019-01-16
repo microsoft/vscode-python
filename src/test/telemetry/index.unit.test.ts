@@ -58,7 +58,7 @@ suite('Telemetry', () => {
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.equal(undefined, 'Measures should be empty');
-        expect(Reporter.properties).to.equal(undefined, 'Properties should be empty');
+        expect(Reporter.properties).to.deep.equal({}, 'Properties should be empty');
     });
     test('Send Error Telemetry', () => {
         rewiremock.enable();

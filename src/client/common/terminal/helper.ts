@@ -104,7 +104,7 @@ export class TerminalHelper implements ITerminalHelper {
         return `${commandPrefix}${command.fileToCommandArgument()} ${args.join(' ')}`.trim();
     }
     public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined> {
-        const providers = [this.bashCShellFish, this.commandPromptAndPowerShell, this.pyenv, this.pipenv];
+        const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource || undefined, undefined, terminalShellType, providers);
         this.sendTelemetry(resource, terminalShellType, PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL, promise).ignoreErrors();
         return promise;

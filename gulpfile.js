@@ -156,12 +156,47 @@ gulp.task("compile", () => {
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 
 gulp.task('webpack', async () => {
-    await spawnAsync('npx', ['webpack', '--mode', 'production']);
-    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.sourceMaps.config.js', '--mode', 'production']);
-    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
-    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.debugadapter.config.js', '--mode', 'production']);
+    await buildWebPack('production', []);
+    await buildWebPack('sourceMaps', ['--config', './build/webpack/webpack.extension.sourceMaps.config.js']);
+    await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
+    await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
 });
 
+async function buildWebPack(webpackConfigName, args) {
+    const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName);
+    const stdOut = await spawnAsync('npx', ['webpack', ...args, ...['--mode', 'production']], allowedWarnings);
+    const warnings = stdOut
+        .split('\n')
+        .map(item => item.trim())
+        .filter(item => item.length > 0)
+        .filter(item => item.startsWith('WARNING in '))
+        .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
+    if (warnings.length === 0) {
+        return;
+    }
+    throw new Error(`Warnings in ${webpackConfigName}, \n{warnings.join(', ')}\n\n${stdOut}`);
+}
+function getAllowedWarningsForWebPack(buildConfig) {
+    switch (buildConfig) {
+        case 'production':
+            return [
+                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+                'WARNING in webpack performance recommendations:',
+                'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+                'WARNING in ./node_modules/ws/lib/BufferUtil.js',
+                'WARNING in ./node_modules/ws/lib/Validation.js'
+            ];
+        case 'sourceMaps':
+            return [];
+        case 'extension':
+            return [];
+        case 'debugAdapter':
+            return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
+        default:
+            throw new Error('Unknown WebPack Configuration');
+    }
+}
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
@@ -188,15 +223,17 @@ gulp.task('installPythonLibs', async () => {
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
+        let stdOut = '';
         const proc = spawn(command, args, { cwd: __dirname });
         proc.stdout.on('data', data => {
             // Log output on CI (else travis times out when there's not output).
+            stdOut += data.toString();
             if (isCI) {
                 console.log(data.toString());
             }
         });
         proc.stderr.on('data', data => console.error(data.toString()));
-        proc.on('close', () => resolve());
+        proc.on('close', () => resolve(stdOut));
         proc.on('error', error => reject(error));
     });
 }

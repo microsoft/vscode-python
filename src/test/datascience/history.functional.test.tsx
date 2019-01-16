@@ -35,6 +35,7 @@ import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { waitForUpdate } from './reactHelpers';
+import { IDataScienceSettings } from '../../client/common/types';
 
 enum cellInputState {
     Hidden,
@@ -260,23 +261,7 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Hide inputs', async (wrapper) => {
-        const settingString = JSON.stringify(
-             {
-                allowImportFromNotebook: true,
-                jupyterLaunchTimeout: 10,
-                enabled: true,
-                jupyterServerURI: 'local',
-                notebookFileRoot: 'WORKSPACE',
-                changeDirOnImportExport: true,
-                useDefaultConfigForJupyter: true,
-                jupyterInterruptTimeout: 10000,
-                searchForJupyter: true,
-                showCellInputCode: false,
-                collapseCellInputCodeByDefault: true
-            }
-        );
-
-        updateSettings(settingString);
+        initialDataScienceSettings({...defaultDataScienceSettings(), showCellInputCode: false});
 
         await addCode(wrapper, 'a=1\na');
 
@@ -284,23 +269,7 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Show inputs', async (wrapper) => {
-        const settingString = JSON.stringify(
-             {
-                allowImportFromNotebook: true,
-                jupyterLaunchTimeout: 10,
-                enabled: true,
-                jupyterServerURI: 'local',
-                notebookFileRoot: 'WORKSPACE',
-                changeDirOnImportExport: true,
-                useDefaultConfigForJupyter: true,
-                jupyterInterruptTimeout: 10000,
-                searchForJupyter: true,
-                showCellInputCode: true,
-                collapseCellInputCodeByDefault: true
-            }
-        );
-
-        updateSettings(settingString);
+        initialDataScienceSettings({...defaultDataScienceSettings()});
 
         await addCode(wrapper, 'a=1\na');
 
@@ -309,27 +278,96 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Expand inputs', async (wrapper) => {
-        const settingString = JSON.stringify(
-             {
-                allowImportFromNotebook: true,
-                jupyterLaunchTimeout: 10,
-                enabled: true,
-                jupyterServerURI: 'local',
-                notebookFileRoot: 'WORKSPACE',
-                changeDirOnImportExport: true,
-                useDefaultConfigForJupyter: true,
-                jupyterInterruptTimeout: 10000,
-                searchForJupyter: true,
-                showCellInputCode: true,
-                collapseCellInputCodeByDefault: false
-            }
-        );
-
-        updateSettings(settingString);
+        initialDataScienceSettings({...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false});
         await addCode(wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, cellInputState.Expanded);
     });
+
+    runMountedTest('Collapse / expand cell', async(wrapper) => {
+        initialDataScienceSettings({...defaultDataScienceSettings()});
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+
+        toggleCellExpansion(wrapper);
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Expanded);
+
+        toggleCellExpansion(wrapper);
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+    });
+
+    runMountedTest('Hide / show cell', async(wrapper) => {
+        initialDataScienceSettings({...defaultDataScienceSettings()});
+        await addCode(wrapper, 'a=1\na');
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+
+        // Hide the inputs and verify
+        updateDataScienceSettings(wrapper, {...defaultDataScienceSettings(), showCellInputCode: false });
+
+        verifyLastCellInputState(wrapper, cellInputState.Hidden);
+
+        // Show the inputs and verify
+        updateDataScienceSettings(wrapper, {...defaultDataScienceSettings(), showCellInputCode: true });
+
+        verifyLastCellInputState(wrapper, cellInputState.Visible);
+        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+    });
+
+    // The default base set of data science settings to use
+    function defaultDataScienceSettings() : IDataScienceSettings {
+        return {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 10,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true
+        };
+    }
+
+    // Set initial data science settings to use for a test (initially loaded via settingsReactSide.ts)
+    function initialDataScienceSettings(newSettings: IDataScienceSettings) {
+        const settingsString = JSON.stringify(newSettings);
+        updateSettings(settingsString);
+    }
+
+    // Update data science settings while running (goes through the UpdateSettings channel)
+    function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}>>, newSettings: IDataScienceSettings) {
+        const settingsString = JSON.stringify(newSettings);
+
+        const mainObj = wrapper.find(MainPanel);
+        if (mainObj) {
+            const panel = mainObj.instance() as MainPanel;
+            panel.handleMessage(HistoryMessages.UpdateSettings, settingsString);
+        }
+        wrapper.update();
+    }
+
+    function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+        const foundResult = wrapper.find('Cell');
+        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+
+        // Find the last cell added
+        const lastCell = foundResult.last();
+        assert.ok(lastCell, 'Last call doesn\'t exist');
+
+        const toggleButton = lastCell.find('button.collapse-input');
+        assert.ok(toggleButton);
+        toggleButton.simulate('click');
+    }
 
     function escapePath(p: string) {
         return p.replace(/\\/g, '\\\\');

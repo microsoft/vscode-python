@@ -71,9 +71,9 @@ export function sendTelemetryEvent(eventName: string, durationMs?: { [key: strin
         customProperties.stackTrace = getStackTrace(ex);
     }
     if (ex && eventName !== 'ERROR') {
-        reporter.sendTelemetryEvent(eventName, properties ? customProperties : undefined, measures);
+        reporter.sendTelemetryEvent('ERROR', customProperties, measures);
     }
-    reporter.sendTelemetryEvent(eventName, properties ? customProperties : undefined, measures);
+    reporter.sendTelemetryEvent(eventName, customProperties, measures);
 }
 
 // tslint:disable-next-line:no-any function-name
