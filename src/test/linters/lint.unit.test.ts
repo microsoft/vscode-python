@@ -3,74 +3,90 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
-import { WorkspaceService } from '../../client/common/application/workspace';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import * as os from 'os';
+import * as TypeMoq from 'typemoq';
+import {
+    CancellationTokenSource,
+    DiagnosticSeverity,
+    TextDocument,
+    TextLine,
+    Uri,
+    WorkspaceFolder
+} from 'vscode';
+import {
+    IApplicationShell,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
-    CTagsProductPathService, FormatterProductPathService, LinterProductPathService,
-    RefactoringLibraryProductPathService, TestFrameworkProductPathService
-} from '../../client/common/installer/productPath';
-import { ProductService } from '../../client/common/installer/productService';
-import { IProductPathService, IProductService } from '../../client/common/installer/types';
-import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
-import { LinterManager } from '../../client/linters/linterManager';
-import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { MockOutputChannel } from '../mockClasses';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-
-const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
-const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
-const flake8ConfigPath = path.join(pythoFilesPath, 'flake8config');
-const pep8ConfigPath = path.join(pythoFilesPath, 'pep8config');
-const pydocstyleConfigPath27 = path.join(pythoFilesPath, 'pydocstyleconfig27');
-const pylintConfigPath = path.join(pythoFilesPath, 'pylintconfig');
-const fileToLint = path.join(pythoFilesPath, 'file.py');
-const threeLineLintsPath = path.join(pythoFilesPath, 'threeLineLints.py');
+    IFileSystem,
+    IPlatformService
+} from '../../client/common/platform/types';
+import {
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    IPythonToolExecutionService
+} from '../../client/common/process/types';
+import {
+    Flake8CategorySeverity,
+    IConfigurationService,
+    IInstaller,
+    ILogger,
+    IMypyCategorySeverity,
+    IOutputChannel,
+    IPep8CategorySeverity,
+    IPylintCategorySeverity,
+    IPythonSettings
+} from '../../client/common/types';
+import { IServiceContainer } from '../../client/ioc/types';
+import { LinterManager, LINTERS } from '../../client/linters/linterManager';
+import {
+    ILinter,
+    ILinterManager,
+    ILintMessage,
+    LinterId,
+    LintMessageSeverity
+} from '../../client/linters/types';
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
-    { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 30, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 34, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: '' },
-    { line: 40, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 44, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: '' },
-    { line: 55, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 59, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: '' },
-    { line: 62, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling undefined-variable (E0602)', provider: '', type: '' },
-    { line: 70, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 84, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 87, column: 0, severity: LintMessageSeverity.Hint, code: 'C0304', message: 'Final newline missing', provider: '', type: '' },
-    { line: 11, column: 20, severity: LintMessageSeverity.Warning, code: 'W0613', message: 'Unused argument \'arg\'', provider: '', type: '' },
-    { line: 26, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blop\' member', provider: '', type: '' },
-    { line: 36, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 46, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 61, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 72, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 75, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 77, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 83, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' }
+    { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 30, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 34, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 40, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 44, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 55, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 59, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 62, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling undefined-variable (E0602)', provider: '', type: 'warning' },
+    { line: 70, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 84, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
+    { line: 87, column: 0, severity: LintMessageSeverity.Hint, code: 'C0304', message: 'Final newline missing', provider: '', type: 'warning' },
+    { line: 11, column: 20, severity: LintMessageSeverity.Warning, code: 'W0613', message: 'Unused argument \'arg\'', provider: '', type: 'warning' },
+    { line: 26, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blop\' member', provider: '', type: 'warning' },
+    { line: 36, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
+    { line: 46, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
+    { line: 61, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
+    { line: 72, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
+    { line: 75, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
+    { line: 77, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
+    { line: 83, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' }
 ];
 const flake8MessagesToBeReturned: ILintMessage[] = [
-    { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: '' },
-    { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: '' },
-    { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: '' },
-    { line: 62, column: 30, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: '' },
-    { line: 70, column: 22, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: '' },
-    { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: '' },
-    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: '' }
+    { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
+    { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: 'E' },
+    { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
+    { line: 62, column: 30, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
+    { line: 70, column: 22, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
+    { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: 'E' },
+    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
 ];
 const pep8MessagesToBeReturned: ILintMessage[] = [
-    { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: '' },
-    { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: '' },
-    { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: '' },
-    { line: 62, column: 30, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: '' },
-    { line: 70, column: 22, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: '' },
-    { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: '' },
-    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: '' }
+    { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
+    { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: 'E' },
+    { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
+    { line: 62, column: 30, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
+    { line: 70, column: 22, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
+    { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: 'E' },
+    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
 ];
 const pydocstyleMessagseToBeReturned: ILintMessage[] = [
     { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'e\')', column: 0, line: 1, type: '', provider: 'pydocstyle' },
@@ -95,200 +111,484 @@ const pydocstyleMessagseToBeReturned: ILintMessage[] = [
     { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 80, type: '', provider: 'pydocstyle' }
 ];
 
-const filteredFlake8MessagesToBeReturned: ILintMessage[] = [
-    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: '' }
-];
-const filteredPep88MessagesToBeReturned: ILintMessage[] = [
-    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: '' }
-];
+function linterMessagesAsLine(msg: ILintMessage): string {
+    switch (msg.provider) {
+        case 'pydocstyle': {
+            return `<filename>:${msg.line} spam:${os.EOL}\t${msg.code}: ${msg.message}`;
+        }
+        default: {
+            return `${msg.line},${msg.column},${msg.type},${msg.code}:${msg.message}`;
+        }
+    }
+}
+
+function getLinterID(product: Product): LinterId {
+    for (const id of Object.keys(LINTERS)) {
+        if (LINTERS[id] === product) {
+            return id as LinterId;
+        }
+    }
+    throw Error(`unsupprted product ${product}`);
+}
+
+class LintingSettings {
+    public enabled: boolean;
+    public ignorePatterns: string[];
+    public prospectorEnabled: boolean;
+    public prospectorArgs: string[];
+    public pylintEnabled: boolean;
+    public pylintArgs: string[];
+    public pep8Enabled: boolean;
+    public pep8Args: string[];
+    public pylamaEnabled: boolean;
+    public pylamaArgs: string[];
+    public flake8Enabled: boolean;
+    public flake8Args: string[];
+    public pydocstyleEnabled: boolean;
+    public pydocstyleArgs: string[];
+    public lintOnSave: boolean;
+    public maxNumberOfProblems: number;
+    public pylintCategorySeverity: IPylintCategorySeverity;
+    public pep8CategorySeverity: IPep8CategorySeverity;
+    public flake8CategorySeverity: Flake8CategorySeverity;
+    public mypyCategorySeverity: IMypyCategorySeverity;
+    public prospectorPath: string;
+    public pylintPath: string;
+    public pep8Path: string;
+    public pylamaPath: string;
+    public flake8Path: string;
+    public pydocstylePath: string;
+    public mypyEnabled: boolean;
+    public mypyArgs: string[];
+    public mypyPath: string;
+    public banditEnabled: boolean;
+    public banditArgs: string[];
+    public banditPath: string;
+    public pylintUseMinimalCheckers: boolean;
+
+    constructor() {
+        // mostly from configSettings.ts
+
+        this.enabled = true;
+        this.ignorePatterns = [];
+        this.lintOnSave = false;
+        this.maxNumberOfProblems = 100;
+
+        this.flake8Enabled = false;
+        this.flake8Path = 'flake';
+        this.flake8Args = [];
+        this.flake8CategorySeverity = {
+            E: DiagnosticSeverity.Error,
+            W: DiagnosticSeverity.Warning,
+            F: DiagnosticSeverity.Warning
+        };
+
+        this.mypyEnabled = false;
+        this.mypyPath = 'mypy';
+        this.mypyArgs = [];
+        this.mypyCategorySeverity = {
+            error: DiagnosticSeverity.Error,
+            note: DiagnosticSeverity.Hint
+        };
+
+        this.banditEnabled = false;
+        this.banditPath = 'bandit';
+        this.banditArgs = [];
+
+        this.pep8Enabled = false;
+        this.pep8Path = 'pep8';
+        this.pep8Args = [];
+        this.pep8CategorySeverity = {
+            E: DiagnosticSeverity.Error,
+            W: DiagnosticSeverity.Warning
+        };
+
+        this.pylamaEnabled = false;
+        this.pylamaPath = 'pylama';
+        this.pylamaArgs = [];
+
+        this.prospectorEnabled = false;
+        this.prospectorPath = 'prospector';
+        this.prospectorArgs = [];
+
+        this.pydocstyleEnabled = false;
+        this.pydocstylePath = 'pydocstyle';
+        this.pydocstyleArgs = [];
+
+        this.pylintEnabled = false;
+        this.pylintPath = 'pylint';
+        this.pylintArgs = [];
+        this.pylintCategorySeverity = {
+            convention: DiagnosticSeverity.Hint,
+            error: DiagnosticSeverity.Error,
+            fatal: DiagnosticSeverity.Error,
+            refactor: DiagnosticSeverity.Hint,
+            warning: DiagnosticSeverity.Warning
+        };
+        this.pylintUseMinimalCheckers = false;
+    }
+}
+
+class TestFixture {
+    public linterManager: LinterManager;
+    public serviceContainer: TypeMoq.IMock<IServiceContainer>;
+
+    // services
+    public filesystem: TypeMoq.IMock<IFileSystem>;
+    public workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    public logger: TypeMoq.IMock<ILogger>;
+    public installer: TypeMoq.IMock<IInstaller>;
+    public platformService: TypeMoq.IMock<IPlatformService>;
+    public pythonToolExecService: TypeMoq.IMock<IPythonToolExecutionService>;
+    public pythonExecService: TypeMoq.IMock<IPythonExecutionService>;
+    public pythonExecFactory: TypeMoq.IMock<IPythonExecutionFactory>;
+    public appShell: TypeMoq.IMock<IApplicationShell>;
+
+    // config
+    public configService: TypeMoq.IMock<IConfigurationService>;
+    public pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    public lintingSettings: LintingSettings;
+
+    // data
+    public outputChannel: TypeMoq.IMock<IOutputChannel>;
+    public document: TypeMoq.IMock<TextDocument>;
+
+    // artifacts
+    public output: string;
+    public logged: string[];
+
+    constructor(
+        public readonly workspaceDir = '.',
+        private readonly printLogs = false
+    ) {
+        this.serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+
+        // services
+
+        this.filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        this.workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.logger = TypeMoq.Mock.ofType<ILogger>(undefined, TypeMoq.MockBehavior.Strict);
+        this.installer = TypeMoq.Mock.ofType<IInstaller>(undefined, TypeMoq.MockBehavior.Strict);
+        this.platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.pythonToolExecService = TypeMoq.Mock.ofType<IPythonToolExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.pythonExecService = TypeMoq.Mock.ofType<IPythonExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>(undefined, TypeMoq.MockBehavior.Strict);
+        this.appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
+
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .returns(() => this.filesystem.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .returns(() => this.workspaceService.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny()))
+            .returns(() => this.logger.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
+            .returns(() => this.installer.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .returns(() => this.platformService.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
+            .returns(() => this.pythonToolExecService.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionService), TypeMoq.It.isAny()))
+            .returns(() => this.pythonExecService.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))
+            .returns(() => this.pythonExecFactory.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
+            .returns(() => this.appShell.object);
+        this.initServices();
+
+        // config
+
+        this.configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
+        this.lintingSettings = new LintingSettings();
+
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .returns(() => this.configService.object);
+        this.configService.setup(c => c.getSettings(TypeMoq.It.isAny()))
+            .returns(() => this.pythonSettings.object);
+        this.pythonSettings.setup(s => s.linting)
+            .returns(() => this.lintingSettings);
+        this.initConfig();
+
+        // data
+
+        this.outputChannel = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
+        this.document = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
+
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
+            .returns(() => this.outputChannel.object);
+        this.initData();
+
+        // artifacts
+
+        this.output = '';
+        this.logged = [];
+
+        // linting
+
+        this.linterManager = new LinterManager(
+            this.serviceContainer.object,
+            this.workspaceService.object!
+        );
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+            .returns(() => this.linterManager);
+    }
+
+    public async getLinter(product: Product, enabled = true): Promise<ILinter> {
+        const info = this.linterManager.getLinterInfo(product);
+        this.lintingSettings[info.enabledSettingName] = enabled;
+
+        await this.linterManager.setActiveLintersAsync([product]);
+        await this.linterManager.enableLintingAsync(enabled);
+        return this.linterManager.createLinter(
+            product,
+            this.outputChannel.object,
+            this.serviceContainer.object
+        );
+    }
+
+    public async getEnabledLinter(product: Product): Promise<ILinter> {
+        return this.getLinter(product, true);
+    }
+
+    public async getDisabledLinter(product: Product): Promise<ILinter> {
+        return this.getLinter(product, false);
+    }
+
+    public setDefaultMessages(product: Product): ILintMessage[] {
+        let messages: ILintMessage[];
+        switch (product) {
+            case Product.pylint: {
+                messages = pylintMessagesToBeReturned;
+                break;
+            }
+            case Product.flake8: {
+                messages = flake8MessagesToBeReturned;
+                break;
+            }
+            case Product.pep8: {
+                messages = pep8MessagesToBeReturned;
+                break;
+            }
+            case Product.pydocstyle: {
+                messages = pydocstyleMessagseToBeReturned;
+                break;
+            }
+            default: {
+                throw Error(`unsupported linter ${product}`);
+            }
+        }
+        this.setMessages(messages, product);
+        return messages;
+    }
+
+    public setMessages(messages: ILintMessage[], product?: Product) {
+        if (messages.length === 0) {
+            this.setStdout('');
+            return;
+        }
+
+        const lines: string[] = [];
+        for (const msg of messages) {
+            if (msg.provider === '' && product) {
+                msg.provider = getLinterID(product);
+            }
+            const line = linterMessagesAsLine(msg);
+            lines.push(line);
+        }
+        this.setStdout(lines.join(os.EOL) + os.EOL);
+    }
+
+    public setStdout(stdout: string) {
+        this.pythonToolExecService.setup(s => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: stdout }));
+    }
+
+    public makeDocument(product: Product, filename: string): TextDocument {
+        const uri = Uri.file(filename);
+        const doc = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
+        doc.setup(s => s.uri)
+            .returns(() => uri);
+        if (product === Product.pydocstyle) {
+            const dummyLine = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
+            dummyLine.setup(d => d.text)
+                .returns(() => '    ...');
+            doc.setup(s => s.lineAt(TypeMoq.It.isAny()))
+                .returns(() => dummyLine.object);
+        }
+        return doc.object;
+    }
+
+    private initServices(): void {
+        this.filesystem.setup(f => f.fileExists(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true));
+
+        const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>(undefined, TypeMoq.MockBehavior.Strict);
+        workspaceFolder.setup(f => f.uri)
+            .returns(() => Uri.file(this.workspaceDir));
+        this.workspaceService.setup(s => s.getWorkspaceFolder(TypeMoq.It.isAny()))
+            .returns(() => workspaceFolder.object);
+
+        this.logger.setup(l => l.logError(TypeMoq.It.isAny()))
+            .callback(msg => {
+                this.logged.push(msg);
+                if (this.printLogs) {
+                    // tslint:disable-next-line:no-console
+                    console.log(msg);
+                }
+            })
+            .returns(() => undefined);
+
+        // tslint:disable-next-line:no-any
+        this.pythonExecService.setup((s: any) => s.then)
+            .returns(() => undefined);
+        this.pythonExecService.setup(s => s.isModuleInstalled(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true));
+
+        this.pythonExecFactory.setup(f => f.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(this.pythonExecService.object));
+
+        this.appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+    }
+
+    private initConfig(): void {
+        this.configService.setup(c => c.updateSetting(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+
+        this.pythonSettings.setup(s => s.jediEnabled)
+            .returns(() => true);
+    }
+
+    private initData(): void {
+        this.outputChannel.setup(o => o.appendLine(TypeMoq.It.isAny()))
+            .callback(line => {
+                if (this.output === '') {
+                    this.output = line;
+                } else {
+                    this.output = `${this.output}${os.EOL}${line}`;
+                }
+            });
+        this.outputChannel.setup(o => o.append(TypeMoq.It.isAny()))
+            .callback(data => {
+                this.output += data;
+            });
+        this.outputChannel.setup(o => o.show());
+    }
+}
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - functional (mocked)', () => {
-    let ioc: UnitTestIocContainer;
-    let linterManager: ILinterManager;
-    let configService: IConfigurationService;
 
-    suiteSetup(async function () {
-        await initialize();
-    });
-    setup(async () => {
-        initializeDI();
-        await initializeTest();
-        await resetSettings();
-    });
-    suiteTeardown(closeActiveWindows);
-    teardown(async () => {
-        await ioc.dispose();
-        await closeActiveWindows();
-        await resetSettings();
-        await deleteFile(path.join(workspaceUri.fsPath, '.pylintrc'));
-        await deleteFile(path.join(workspaceUri.fsPath, '.pydocstyle'));
-    });
-
-    function initializeDI() {
-        ioc = new UnitTestIocContainer();
-        ioc.registerCommonTypes(false);
-        ioc.registerProcessTypes();
-        ioc.registerLinterTypes();
-        ioc.registerVariableTypes();
-        ioc.registerPlatformTypes();
-        linterManager = new LinterManager(ioc.serviceContainer, new WorkspaceService());
-        configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
-    }
-
-    async function resetSettings() {
-        // Don't run these updates in parallel, as they are updating the same file.
-        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-
-        await configService.updateSetting('linting.enabled', true, rootWorkspaceUri, target);
-        await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
-
-        linterManager.getAllLinterInfos().forEach(async (x) => {
-            await configService.updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
-        });
-    }
-
-    function makeSettingKey(product: Product): PythonSettingKeys {
-        return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
-    }
-
-    async function testEnablingDisablingOfLinter(product: Product, enabled: boolean, file?: string) {
-        const setting = makeSettingKey(product);
-        const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-
-        await configService.updateSetting(setting, enabled, rootWorkspaceUri,
-            IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace);
-
-        file = file ? file : fileToLint;
-        const document = await workspace.openTextDocument(file);
-        const cancelToken = new CancellationTokenSource();
-
-        await linterManager.setActiveLintersAsync([product]);
-        await linterManager.enableLintingAsync(enabled);
-        const linter = await linterManager.createLinter(product, output, ioc.serviceContainer);
-
-        const messages = await linter.lint(document, cancelToken.token);
+    async function testEnablingDisablingOfLinter(
+        fixture: TestFixture,
+        product: Product,
+        enabled: boolean
+    ) {
+        fixture.lintingSettings.enabled = true;
+        fixture.setDefaultMessages(product);
         if (enabled) {
-            assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
+            fixture.setDefaultMessages(product);
+        }
+        const linter = await fixture.getLinter(product, enabled);
+
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            (new CancellationTokenSource()).token
+        );
+
+        if (enabled) {
+            assert.notEqual(messages.length, 0, `Expected linter errors when linter is enabled, Output - ${fixture.output}`);
         } else {
-            assert.equal(messages.length, 0, `Errors returned when linter is disabled, Output - ${output.output}`);
+            assert.equal(messages.length, 0, `Unexpected linter errors when linter is disabled, Output - ${fixture.output}`);
+        }
+    }
+    for (const prodID of Object.keys(LINTERS)) {
+        const product = LINTERS[prodID];
+        for (const enabled of [false, true]) {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Add coverage for these linters.
+            if (['bandit', 'mypy', 'pylama'].some(id => id === prodID)) {
+                continue;
+            }
+            const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
+            test(`${enabled ? 'Enable' : 'Disable'} ${productName} and run linter`, async function() {
+                if (product === Product.prospector) {
+                    // Skipping to solve #3464, tracked by issue #3466.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+
+                const fixture = new TestFixture();
+                await testEnablingDisablingOfLinter(fixture, product, enabled);
+            });
+        }
+    }
+    for (const useMinimal of [true, false]) {
+        for (const enabled of [true, false]) {
+            test(`PyLint ${enabled ? 'enabled' : 'disabled'} with${useMinimal ? '' : 'out'} minimal checkers`, async () => {
+                const fixture = new TestFixture();
+                fixture.lintingSettings.pylintUseMinimalCheckers = useMinimal;
+                await testEnablingDisablingOfLinter(fixture, Product.pylint, enabled);
+            });
         }
     }
 
-    test('Disable Pylint and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pylint, false);
-    });
-    test('Enable Pylint and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pylint, true);
-    });
-    test('Disable Pep8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pep8, false);
-    });
-    test('Enable Pep8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pep8, true);
-    });
-    test('Disable Flake8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.flake8, false);
-    });
-    test('Enable Flake8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.flake8, true);
-    });
-    test('Disable Prospector and test linter', async function () {
-        // Skipping to solve #3464, tracked by issue #3466.
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
-        await testEnablingDisablingOfLinter(Product.prospector, false);
-    });
-    test('Enable Prospector and test linter', async function () {
-        // Skipping to solve #3464, tracked by issue #3466.
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
-        await testEnablingDisablingOfLinter(Product.prospector, true);
-    });
-    test('Disable Pydocstyle and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pydocstyle, false);
-    });
-    test('Enable Pydocstyle and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pydocstyle, true);
-    });
+    async function testLinterMessages(
+        fixture: TestFixture,
+        product: Product
+    ) {
+        const messagesToBeReceived = fixture.setDefaultMessages(product);
+        const linter = await fixture.getEnabledLinter(product);
 
-    // tslint:disable-next-line:no-any
-    async function testLinterMessages(product: Product, pythonFile: string, messagesToBeReceived: ILintMessage[]): Promise<any> {
-        const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const cancelToken = new CancellationTokenSource();
-        const document = await workspace.openTextDocument(pythonFile);
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            (new CancellationTokenSource()).token
+        );
 
-        await linterManager.setActiveLintersAsync([product], document.uri);
-        const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
-
-        const messages = await linter.lint(document, cancelToken.token);
         if (messagesToBeReceived.length === 0) {
-            assert.equal(messages.length, 0, `No errors in linter, Output - ${outputChannel.output}`);
+            assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         } else {
-            if (outputChannel.output.indexOf('ENOENT') === -1) {
+            if (fixture.output.indexOf('ENOENT') === -1) {
                 // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
                 // Looks like pylint stops linting as soon as it comes across any ERRORS.
-                assert.notEqual(messages.length, 0, `No errors in linter, Output - ${outputChannel.output}`);
+                assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
             }
         }
     }
-    test('PyLint', async () => {
-        await testLinterMessages(Product.pylint, fileToLint, pylintMessagesToBeReturned);
-    });
-    test('Flake8', async () => {
-        await testLinterMessages(Product.flake8, fileToLint, flake8MessagesToBeReturned);
-    });
-    test('Pep8', async () => {
-        await testLinterMessages(Product.pep8, fileToLint, pep8MessagesToBeReturned);
-    });
-    test('Pydocstyle', async () => {
-        await testLinterMessages(Product.pydocstyle, fileToLint, pydocstyleMessagseToBeReturned);
-    });
-    test('PyLint with config in root', async () => {
-        await fs.copy(path.join(pylintConfigPath, '.pylintrc'), path.join(workspaceUri.fsPath, '.pylintrc'));
-        await testLinterMessages(Product.pylint, path.join(pylintConfigPath, 'file2.py'), []);
-    });
-    test('Flake8 with config in root', async () => {
-        await testLinterMessages(Product.flake8, path.join(flake8ConfigPath, 'file.py'), filteredFlake8MessagesToBeReturned);
-    });
-    test('Pep8 with config in root', async () => {
-        await testLinterMessages(Product.pep8, path.join(pep8ConfigPath, 'file.py'), filteredPep88MessagesToBeReturned);
-    });
-    test('Pydocstyle with config in root', async () => {
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
-        await fs.copy(path.join(pydocstyleConfigPath27, '.pydocstyle'), path.join(workspaceUri.fsPath, '.pydocstyle'));
-        await testLinterMessages(Product.pydocstyle, path.join(pydocstyleConfigPath27, 'file.py'), []);
-    });
-    test('PyLint minimal checkers', async () => {
-        const file = path.join(pythoFilesPath, 'minCheck.py');
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', true, workspaceUri);
-        await testEnablingDisablingOfLinter(Product.pylint, false, file);
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
-        await testEnablingDisablingOfLinter(Product.pylint, true, file);
-    });
-    // tslint:disable-next-line:no-any
-    async function testLinterMessageCount(product: Product, pythonFile: string, messageCountToBeReceived: number): Promise<any> {
-        const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const cancelToken = new CancellationTokenSource();
-        const document = await workspace.openTextDocument(pythonFile);
-
-        await linterManager.setActiveLintersAsync([product], document.uri);
-        const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
-
-        const messages = await linter.lint(document, cancelToken.token);
-        assert.equal(messages.length, messageCountToBeReceived, 'Expected number of lint errors does not match lint error count');
+    for (const prodID of Object.keys(LINTERS)) {
+        const product = LINTERS[prodID];
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Add coverage for these linters.
+        if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
+            continue;
+        }
+        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
+        test(`Check ${productName} messages`, async () => {
+            const  fixture = new TestFixture();
+            await testLinterMessages(fixture, product);
+        });
     }
-    test('Three line output counted as one message', async () => {
+
+    async function testLinterMessageCount(
+        fixture: TestFixture,
+        product: Product,
+        messageCountToBeReceived: number
+    ) {
+        fixture.setDefaultMessages(product);
+        const linter = await fixture.getEnabledLinter(product);
+
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            (new CancellationTokenSource()).token
+        );
+
+        assert.equal(messages.length, messageCountToBeReceived, `Expected number of lint errors does not match lint error count, Output - ${fixture.output}`);
+    }
+    test('Three line output counted as one message (Pylint)', async () => {
         const maxErrors = 5;
-        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-        await configService.updateSetting('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
-        await testLinterMessageCount(Product.pylint, threeLineLintsPath, maxErrors);
+        const fixture = new TestFixture();
+        fixture.lintingSettings.maxNumberOfProblems = maxErrors;
+
+        await testLinterMessageCount(fixture, Product.pylint, maxErrors);
     });
 });
