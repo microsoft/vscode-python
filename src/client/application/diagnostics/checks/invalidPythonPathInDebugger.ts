@@ -9,7 +9,7 @@ import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from '
 import { openFile } from '../../../../test/common';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { Logger, traceError } from '../../../common/logger';
+import { traceError } from '../../../common/logger';
 import { IConfigurationService } from '../../../common/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
@@ -45,7 +45,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService i
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDiagnosticHandlerService) @named(DiagnosticCommandPromptHandlerServiceId) protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>) {
-            super([DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic], serviceContainer);
+        super([DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic], serviceContainer);
     }
     public async diagnose(): Promise<IDiagnostic[]> {
         return [];
@@ -74,11 +74,11 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService i
         traceError(`Invalid Python Path '${pythonPath}'`);
         if (pathInLaunchJson) {
             this.handle([new InvalidPythonPathInDebuggerLaunchDiagnostic()])
-                .catch(ex => Logger.error('Failed to handle invalid python path in launch.json debugger', ex))
+                .catch(ex => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();
         } else {
             this.handle([new InvalidPythonPathInDebuggerSettingsDiagnostic()])
-                .catch(ex => Logger.error('Failed to handle invalid python path in settings.json debugger', ex))
+                .catch(ex => traceError('Failed to handle invalid python path in settings.json debugger', ex))
                 .ignoreErrors();
         }
         return false;
