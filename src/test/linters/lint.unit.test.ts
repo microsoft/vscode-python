@@ -479,6 +479,37 @@ class TestFixture {
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - functional (mocked)', () => {
 
+    test('No linting with PyLint (enabled) when disabled at top-level', async () => {
+        const product = Product.pylint;
+        const fixture = new TestFixture();
+        fixture.lintingSettings.enabled = false;
+        fixture.setDefaultMessages(product);
+        const linter = await fixture.getEnabledLinter(product);
+
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            (new CancellationTokenSource()).token
+        );
+
+        assert.equal(messages.length, 0, `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`);
+    });
+
+    test('No linting with Pylint disabled (and Flake8 enabled)', async () => {
+        const product = Product.pylint;
+        const fixture = new TestFixture();
+        fixture.lintingSettings.enabled = true;
+        fixture.lintingSettings.flake8Enabled = true;
+        fixture.setDefaultMessages(Product.pylint);
+        const linter = await fixture.getDisabledLinter(product);
+
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            (new CancellationTokenSource()).token
+        );
+
+        assert.equal(messages.length, 0, `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`);
+    });
+
     async function testEnablingDisablingOfLinter(
         fixture: TestFixture,
         product: Product,
@@ -504,18 +535,14 @@ suite('Linting - functional (mocked)', () => {
     }
     for (const prodID of Object.keys(LINTERS)) {
         const product = LINTERS[prodID];
+        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
         for (const enabled of [false, true]) {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Add coverage for these linters.
-            if (['bandit', 'mypy', 'pylama'].some(id => id === prodID)) {
-                continue;
-            }
-            const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
             test(`${enabled ? 'Enable' : 'Disable'} ${productName} and run linter`, async function() {
-                if (product === Product.prospector) {
-                    // Skipping to solve #3464, tracked by issue #3466.
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO: Add coverage for these linters.
+                if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
                     // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
+                    this.skip();
                 }
 
                 const fixture = new TestFixture();
@@ -557,13 +584,15 @@ suite('Linting - functional (mocked)', () => {
     }
     for (const prodID of Object.keys(LINTERS)) {
         const product = LINTERS[prodID];
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: Add coverage for these linters.
-        if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
-            continue;
-        }
         const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
-        test(`Check ${productName} messages`, async () => {
+        test(`Check ${productName} messages`, async function() {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Add coverage for these linters.
+            if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+
             const  fixture = new TestFixture();
             await testLinterMessages(fixture, product);
         });
