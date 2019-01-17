@@ -11,6 +11,7 @@ import * as RCM from 'react-codemirror';
 
 import './code.css';
 import { InputHistory } from './inputHistory';
+import { Cursor } from './cursor';
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -42,28 +43,30 @@ export class Code extends React.Component<ICodeProps> {
 
     public render() {
         const readOnly = this.props.testMode || this.props.readOnly;
+        const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         return (
-            <div className='code-area'>
-            <RCM
-                key={1}
-                value={this.props.code}
-                autoFocus={this.props.autoFocus}
-                onChange={this.onChange}
-                options={
-                    {
-                        extraKeys:
+            <div className={classes}>
+                <Cursor/>
+                <RCM
+                    key={1}
+                    value={this.props.code}
+                    autoFocus={this.props.autoFocus}
+                    onChange={this.onChange}
+                    options={
                         {
-                            Down    : this.arrowDown,
-                            Enter   : this.enter,
-                            Up      : this.arrowUp
-                        },
-                        theme: `${this.props.codeTheme} default`,
-                        mode: 'python',
-                        cursorBlinkRate : readOnly ? -1 : 530,
-                        readOnly: readOnly ? 'nocursor' : false
+                            extraKeys:
+                            {
+                                Down: this.arrowDown,
+                                Enter: this.enter,
+                                Up: this.arrowUp
+                            },
+                            theme: `${this.props.codeTheme} default`,
+                            mode: 'python',
+                            cursorBlinkRate: readOnly ? -1 : 530,
+                            readOnly: readOnly ? 'nocursor' : false
+                        }
                     }
-                }
-                ref={this.updateCodeMirror}
+                    ref={this.updateCodeMirror}
                 />
             </div>
         );

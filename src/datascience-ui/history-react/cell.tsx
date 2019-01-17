@@ -7,7 +7,6 @@ import './cell.css';
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
-
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
@@ -19,6 +18,7 @@ import { getLocString } from '../react-common/locReactSide';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
+import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
@@ -31,6 +31,7 @@ interface ICellProps {
     codeTheme: string;
     testMode?: boolean;
     autoFocus: boolean;
+    maxTextSize?: number;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -98,9 +99,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderNormalCell() {
-        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
-        const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
         return (
             <div className='cell-wrapper'>
                 <MenuBar baseTheme={this.props.baseTheme}>
@@ -113,12 +112,7 @@ export class Cell extends React.Component<ICellProps> {
                 </MenuBar>
                 <div className='cell-outer'>
                     <div className='controls-div'>
-                        <div className='controls-flex'>
-                            <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
-                            <CollapseButton theme={this.props.baseTheme} visible={collapseVisible}
-                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
-                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
-                        </div>
+                        {this.renderControls()}
                     </div>
                     <div className='content-div'>
                         <div className='cell-result-container'>
@@ -141,6 +135,25 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return this.props.cellVM.inputBlockText;
+    }
+
+    private renderControls = () => {
+        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
+        const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
+        const afterExecution = this.props.cellVM.editable ?
+            <CommandPrompt /> :
+            <CollapseButton theme={this.props.baseTheme}
+                            visible={collapseVisible}
+                            open={this.props.cellVM.inputBlockOpen}
+                            onClick={this.toggleInputBlock}
+                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>;
+
+        return (
+            <div className='controls-flex'>
+                <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
+                {afterExecution}
+            </div>
+        )
     }
 
     private renderInputs = () => {
@@ -218,10 +231,22 @@ export class Cell extends React.Component<ICellProps> {
                     let data = output.data[mimetype];
                     if (mimetype === 'text/plain') {
                         data = concatMultilineString(data);
+                        renderWithScrollbars = true;
                     }
 
-                    // Return the transformed control using the data we massaged
-                    return <Transform key={index} data={data} className={renderWithScrollbars ? 'cell-output-text' : ''} />;
+                    // Create a scrollbar style if necessary
+                    if (renderWithScrollbars && this.props.maxTextSize) {
+                        const style = {
+                            maxHeight : `${this.props.maxTextSize}px`,
+                            overflowY : 'auto',
+                            overflowX : 'auto'
+                        } as React.CSSProperties;
+
+                        return <div id='stylewrapper' style={style}><Transform key={index} data={data} /></div>;
+                    } else {
+                        return <Transform key={index} data={data} />;
+                    }
+
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');

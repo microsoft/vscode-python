@@ -291,6 +291,7 @@ export interface IDataScienceSettings {
     allowInput?: boolean;
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
+    maxOutputSize? : number;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

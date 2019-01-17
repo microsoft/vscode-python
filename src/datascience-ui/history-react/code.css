@@ -29,6 +29,10 @@
 
 
 .code-area {
+    position: relative;
     width:100%;
 }
 
+.code-area-editable {
+    margin-bottom: 10px;
+}

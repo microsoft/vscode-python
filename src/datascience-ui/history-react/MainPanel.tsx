@@ -194,9 +194,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private renderCells = () => {
+        const maxOutputSize = getSettings().maxOutputSize;
+        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    maxTextSize={maxTextSize}
                     autoFocus={document.hasFocus()}
                     testMode={this.props.testMode}
                     cellVM={cellVM}
@@ -596,7 +599,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const withoutEdits = this.state.cellVMs.filter(c => !c.editable);
 
             // Change this editable cell to not editable.
-            editCell.editable = false;
             editCell.cell.state = CellState.executing;
             editCell.cell.data.source = code;
 
@@ -605,8 +607,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const firstLine = split[0];
             editCell.cell.data.cell_type = RegExpValues.PythonMarkdownCellMarker.test(firstLine) ? 'markdown' : 'code';
 
-            // Update input controls
-            editCell.inputBlockText = this.extractInputText(editCell.cell);
+            // Update input controls (always show expanded since we just edited it.)
+            editCell = createCellVM(editCell.cell, this.inputBlockToggled);
 
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy

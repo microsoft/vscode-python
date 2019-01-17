@@ -1,0 +1,7 @@
+.cursor-top {
+    position:absolute;
+    top:0;
+    margin-top:1px;
+    height: var(--vscode-editor-font-size);
+    z-index:1005;
+}

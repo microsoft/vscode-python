@@ -53,12 +53,6 @@
     font-family: monospace;
 }
 
-.cell-output-text {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: auto;
-}
-
 .cell-output pre {
     white-space: pre-wrap;
     font-family: monospace;
@@ -106,7 +100,7 @@
 
 .controls-flex {
     display:flex;
-    min-width: 40px;
+    min-width: 45px;
 }
 
 .center-img {
