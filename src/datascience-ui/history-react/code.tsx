@@ -46,6 +46,7 @@ export class Code extends React.Component<ICodeProps> {
             <div className='code-area'>
             <RCM
                 key={1}
+                value={this.props.code}
                 autoFocus={this.props.autoFocus}
                 onChange={this.onChange}
                 options={

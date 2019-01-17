@@ -103,7 +103,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case HistoryMessages.StartCell:
-                this.addCell(payload);
+                this.startCell(payload);
                 return true;
 
             case HistoryMessages.FinishCell:
@@ -564,6 +564,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // tslint:disable-next-line:no-any
+    private startCell = (payload?: any) => {
+        if (payload) {
+            const cell = payload as ICell;
+            if (cell && this.isCellSupported(cell)) {
+                this.updateOrAdd(cell, true);
+            }
+        }
+    }
+
+    // tslint:disable-next-line:no-any
     private updateCell = (payload?: any) => {
         if (payload) {
             const cell = payload as ICell;
@@ -580,26 +590,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private submitInput = (code: string) => {
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
-        const lastCell = this.state.cellVMs.length > 0 ? this.state.cellVMs[this.state.cellVMs.length-1] : undefined;
-        if (lastCell && lastCell.editable) {
-            lastCell.editable = false;
-            lastCell.cell.state = CellState.executing;
-            lastCell.cell.data.source = code;
+        let editCell = this.getEditCell();
+        if (editCell) {
+            // Save a copy of the ones without edits.
+            const withoutEdits = this.state.cellVMs.filter(c => !c.editable);
+
+            // Change this editable cell to not editable.
+            editCell.editable = false;
+            editCell.cell.state = CellState.executing;
+            editCell.cell.data.source = code;
 
             // Change type to markdown if necessary
             const split = code.splitLines({trim: false});
             const firstLine = split[0];
-            lastCell.cell.data.cell_type = RegExpValues.PythonMarkdownCellMarker.test(firstLine) ? 'markdown' : 'code';
+            editCell.cell.data.cell_type = RegExpValues.PythonMarkdownCellMarker.test(firstLine) ? 'markdown' : 'code';
+
+            // Update input controls
+            editCell.inputBlockText = this.extractInputText(editCell.cell);
 
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
-                cellVMs: [...this.state.cellVMs, createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs))],
+                cellVMs: [...withoutEdits, editCell, createEditableCellVM(this.getInputExecutionCount(withoutEdits))],
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false
             });
-            PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: lastCell.cell.id }});
+            PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
         }
     }
 }
