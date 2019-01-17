@@ -196,14 +196,14 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
         }
     }
 
-    public executeObservable = (code: string, file: string, line: number): Observable<ICell[]> => {
+    public executeObservable = (code: string, file: string, line: number, id?: string): Observable<ICell[]> => {
         // Do initial setup if necessary
         this.initialNotebookSetup();
 
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
-            const cells = generateCells(code, file, line);
+            const cells = generateCells(code, file, line, true, id);
 
             // Might have more than one (markdown might be split)
             if (cells.length > 1) {

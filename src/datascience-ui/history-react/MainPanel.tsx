@@ -7,7 +7,7 @@ import { min } from 'lodash';
 import * as React from 'react';
 
 import { concatMultilineString } from '../../client/datascience/common';
-import { HistoryMessages } from '../../client/datascience/constants';
+import { HistoryMessages, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -17,8 +17,7 @@ import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
-import { InputCell } from './inputCell';
-import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
+import { createCellVM, generateTestState, IMainPanelState, createEditableCellVM } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
 export interface IMainPanelProps {
@@ -39,6 +38,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Default state should show a busy message
         this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [] };
+
+        // Add a single empty cell if it's supported
+        if (getSettings && getSettings().allowInput) {
+            this.state.cellVMs.push(createEditableCellVM(1));
+        }
 
         if (!this.props.skipDefault) {
             this.state = generateTestState(this.inputBlockToggled);
@@ -90,7 +94,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <div className='top-spacing'/>
                 {progressBar}
                 {this.renderCells()}
-                {this.renderInput()}
                 <div ref={this.updateBottom}/>
             </div>
         );
@@ -194,28 +197,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    autoFocus={document.hasFocus()}
                     testMode={this.props.testMode}
                     cellVM={cellVM}
+                    submitNewCode={this.submitInput}
                     baseTheme={this.props.baseTheme}
                     codeTheme={this.props.codeTheme}
                     gotoCode={() => this.gotoCellCode(index)}
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
-    }
-
-    private renderInput = () => {
-        if (getSettings && getSettings().allowInput) {
-            const realCells = this.state.cellVMs.filter(c => c.cell.data.cell_type !== 'sys_info');
-            const inputExecutionCount = realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
-            return (
-                <ErrorBoundary>
-                    <InputCell baseTheme={this.props.baseTheme} testMode={this.props.testMode} codeTheme={this.props.codeTheme} onSubmit={this.submitInput} count={inputExecutionCount.toString()} />
-                </ErrorBoundary>
-            );
-        } else {
-            return null;
-        }
     }
 
     private addMarkdown = () => {
@@ -396,9 +387,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
+                let newList = [];
+
+                // Insert before the edit cell if we have one
+                const editCell = this.getEditCell();
+                if (editCell) {
+                    newList = [...this.state.cellVMs.filter(c => !c.editable), cellVM, editCell];
+
+                    // Update execution count on the last cell
+                    editCell.cell.data.execution_count = this.getInputExecutionCount(newList);
+                } else {
+                    newList = [...this.state.cellVMs, cellVM];
+                }
+
                 this.setState({
-                    cellVMs: [...this.state.cellVMs, cellVM],
-                    undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
+                    cellVMs: newList,
+                    undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
                     redoStack: this.state.redoStack,
                     skipNextScroll: false
                 });
@@ -407,6 +411,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.sendInfo();
             }
         }
+    }
+
+    private getEditCell() : ICellViewModel | undefined {
+        const editCells = this.state.cellVMs.filter(c => c.editable);
+        if (editCells && editCells.length === 1) {
+            return editCells[0];
+        }
+
+        return undefined;
     }
 
     private inputBlockToggled = (id: string) => {
@@ -522,6 +535,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (index >= 0) {
             // Update this cell
             this.state.cellVMs[index].cell = cell;
+
+            // Also update the last cell execution count. It may have changed
+            const editCell = this.getEditCell();
+            if (editCell) {
+                editCell.cell.data.execution_count = this.getInputExecutionCount(this.state.cellVMs);
+            }
+
             this.forceUpdate();
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
@@ -553,7 +573,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
+        const realCells = cellVMs.filter(c => c.cell.data.cell_type !== 'sys_info' && !c.editable);
+        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
+    }
+
     private submitInput = (code: string) => {
-        PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: code });
+        // This should be from our last entry. Switch this entry to read only, and add a new item to our list
+        const lastCell = this.state.cellVMs.length > 0 ? this.state.cellVMs[this.state.cellVMs.length-1] : undefined;
+        if (lastCell && lastCell.editable) {
+            lastCell.editable = false;
+            lastCell.cell.state = CellState.executing;
+            lastCell.cell.data.source = code;
+
+            // Change type to markdown if necessary
+            const split = code.splitLines({trim: false});
+            const firstLine = split[0];
+            lastCell.cell.data.cell_type = RegExpValues.PythonMarkdownCellMarker.test(firstLine) ? 'markdown' : 'code';
+
+            // Stick in a new cell at the bottom that's editable and update our state
+            // so that the last cell becomes busy
+            this.setState({
+                cellVMs: [...this.state.cellVMs, createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs))],
+                undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
+                redoStack: this.state.redoStack,
+                skipNextScroll: false
+            });
+            PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: lastCell.cell.id }});
+        }
     }
 }

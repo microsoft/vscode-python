@@ -40,7 +40,7 @@ export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
     connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
-    executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
+    executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
@@ -144,6 +144,7 @@ export interface ICodeWatcher {
 }
 
 export enum CellState {
+    editing = -1,
     init = 0,
     executing = 1,
     finished = 2,

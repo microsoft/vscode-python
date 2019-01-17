@@ -16,7 +16,7 @@ function appendLineFeed(arr : string[], modifier? : (s : string) => string) {
     });
 }
 
-function generateCodeCell(code: string[], file: string, line: number) : ICell {
+function generateCodeCell(code: string[], file: string, line: number, id?: string) : ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: {
@@ -26,7 +26,7 @@ function generateCodeCell(code: string[], file: string, line: number) : ICell {
             metadata: {},
             execution_count: 0
         },
-        id: uuid(),
+        id: id ? id: uuid(),
         file: file,
         line: line,
         state: CellState.init
@@ -34,12 +34,12 @@ function generateCodeCell(code: string[], file: string, line: number) : ICell {
 
 }
 
-function generateMarkdownCell(code: string[], file: string, line: number) : ICell {
+function generateMarkdownCell(code: string[], file: string, line: number, id?: string) : ICell {
     // Generate markdown by stripping out the comment and markdown header
     const markdown = appendLineFeed(code.slice(1).filter(s => s.includes('#')), s => s.trim().slice(1).trim());
 
     return {
-        id: uuid(),
+        id: id ? id : uuid(),
         file: file,
         line: line,
         state: CellState.finished,
@@ -52,7 +52,7 @@ function generateMarkdownCell(code: string[], file: string, line: number) : ICel
 
 }
 
-export function generateCells(code: string, file: string, line: number, splitMarkdown?: boolean) : ICell[] {
+export function generateCells(code: string, file: string, line: number, splitMarkdown?: boolean, id?: string) : ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({trim: false});
     const firstLine = split[0];
@@ -62,16 +62,16 @@ export function generateCells(code: string, file: string, line: number, splitMar
         const firstNonMarkdown = splitMarkdown ? split.findIndex((l: string) => l.trim().length > 0 && !l.trim().startsWith('#')) : -1;
         if (firstNonMarkdown >= 0) {
             return [
-                generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line),
+                generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
                 generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown)
             ];
         } else {
             // Just a single markdown cell
-            return [generateMarkdownCell(split, file, line)];
+            return [generateMarkdownCell(split, file, line, id)];
         }
     } else {
         // Just code
-        return [generateCodeCell(split, file, line)];
+        return [generateCodeCell(split, file, line, id)];
     }
 }
 

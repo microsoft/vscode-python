@@ -30,7 +30,7 @@
 }
 
 .hide {
-    display: none;
+    visibility: hidden;
 }
 
 .cell-result-container {
@@ -51,6 +51,9 @@
     background: var(--vscode-notifications-background);
     white-space: pre-wrap;
     font-family: monospace;
+}
+
+.cell-output-text {
     max-height: 300px;
     overflow-y: auto;
     overflow-x: auto;

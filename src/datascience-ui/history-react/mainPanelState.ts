@@ -7,6 +7,9 @@ import * as path from 'path';
 import { concatMultilineString } from '../../client/datascience/common';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
 import { ICellViewModel } from './cell';
+import * as uuid from 'uuid/v4';
+import { Identifiers } from '../../client/datascience/constants';
+import { noop } from '../../test/core';
 
 export interface IMainPanelState {
     cellVMs: ICellViewModel[];
@@ -27,6 +30,32 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
     };
 }
 
+export function createEditableCellVM(executionCount: number) : ICellViewModel {
+    return {
+        cell:
+        {
+            data:
+            {
+                cell_type: 'code', // We should eventually allow this to change to entering of markdown?
+                execution_count: executionCount,
+                metadata: {},
+                outputs: [],
+                source: ''
+            },
+            id: uuid(),
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.editing,
+        },
+        editable: true,
+        inputBlockOpen: true,
+        inputBlockShow: true,
+        inputBlockText: '',
+        inputBlockCollapseNeeded: false,
+        inputBlockToggled: noop
+    }
+}
+
 export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) : ICellViewModel {
     let inputLinesCount = 0;
     let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
@@ -43,6 +72,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
 
    return {
        cell: inputCell,
+       editable: false,
        inputBlockOpen: true,
        inputBlockShow: true,
        inputBlockText: inputText,

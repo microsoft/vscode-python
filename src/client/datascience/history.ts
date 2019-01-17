@@ -111,69 +111,9 @@ export class History implements IWebPanelMessageListener, IHistory {
         return this.closedEvent.event;
     }
 
-    public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
-        // Start a status item
-        const status = this.setStatus(localize.DataScience.executingCode());
-
-        // Create a deferred object that will wait until the status is disposed
-        const finishedAddingCode = createDeferred<void>();
-        const actualDispose = status.dispose;
-        status.dispose = () => {
-            finishedAddingCode.resolve();
-            actualDispose();
-        };
-
-        try {
-
-            // Make sure we're loaded first.
-            const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
-            try {
-                await this.loadPromise;
-            } finally {
-                statusLoad.dispose();
-            }
-
-            // Then show our webpanel
-            await this.show();
-
-            // Add our sys info if necessary
-            await this.addSysInfo(SysInfoReason.Start);
-
-            if (this.jupyterServer) {
-                // Before we try to execute code make sure that we have an initial directory set
-                // Normally set via the workspace, but we might not have one here if loading a single loose file
-                await this.jupyterServer.setInitialDirectory(path.dirname(file));
-
-                // Attempt to evaluate this cell in the jupyter notebook
-                const observable = this.jupyterServer.executeObservable(code, file, line);
-
-                // Sign up for cell changes
-                observable.subscribe(
-                    (cells: ICell[]) => {
-                        this.onAddCodeEvent(cells, editor);
-                    },
-                    (error) => {
-                        status.dispose();
-                        if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error);
-                        }
-                    },
-                    () => {
-                        // Indicate executing until this cell is done.
-                        status.dispose();
-                    });
-
-                // Wait for the cell to finish
-                await finishedAddingCode.promise;
-            }
-        } catch (err) {
-            status.dispose();
-
-            // We failed, dispose of ourselves too so that nobody uses us again
-            this.dispose().ignoreErrors();
-
-            throw err;
-        }
+    public addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+        // Call the internal method.
+        return this.submitCode(code, file, line, editor);
     }
 
     // tslint:disable-next-line: no-any no-empty
@@ -408,11 +348,76 @@ export class History implements IWebPanelMessageListener, IHistory {
     @captureTelemetry(Telemetry.SubmitCellThroughInput, {}, false)
     // tslint:disable-next-line:no-any
     private submitNewCell(payload?: any) {
-        // If there's any payload, it's the code
-        if (payload) {
-            this.addCode(payload, Identifiers.EmptyFileName, 0).catch(err => {
-                this.applicationShell.showErrorMessage(err);
-            });
+        // If there's any payload, it has the code and the id
+        if (payload && payload.code && payload.id) {
+            this.submitCode(payload.code, Identifiers.EmptyFileName, 0, undefined, payload.id).ignoreErrors();
+        }
+    }
+
+    private async submitCode(code: string, file: string, line: number, editor?: TextEditor, id?: string) : Promise<void> {
+        // Start a status item
+        const status = this.setStatus(localize.DataScience.executingCode());
+
+        // Create a deferred object that will wait until the status is disposed
+        const finishedAddingCode = createDeferred<void>();
+        const actualDispose = status.dispose;
+        status.dispose = () => {
+            finishedAddingCode.resolve();
+            actualDispose();
+        };
+
+        try {
+
+            // Make sure we're loaded first.
+            const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
+            try {
+                await this.loadPromise;
+            } finally {
+                statusLoad.dispose();
+            }
+
+            // Then show our webpanel
+            await this.show();
+
+            // Add our sys info if necessary
+            if (file !== Identifiers.EmptyFileName) {
+                await this.addSysInfo(SysInfoReason.Start);
+            }
+
+            if (this.jupyterServer) {
+                // Before we try to execute code make sure that we have an initial directory set
+                // Normally set via the workspace, but we might not have one here if loading a single loose file
+                if (file !== Identifiers.EmptyFileName) {
+                    await this.jupyterServer.setInitialDirectory(path.dirname(file));
+                }
+
+                // Attempt to evaluate this cell in the jupyter notebook
+                const observable = this.jupyterServer.executeObservable(code, file, line, id);
+
+                // Sign up for cell changes
+                observable.subscribe(
+                    (cells: ICell[]) => {
+                        this.onAddCodeEvent(cells, undefined);
+                    },
+                    (error) => {
+                        status.dispose();
+                        if (!(error instanceof CancellationError)) {
+                            this.applicationShell.showErrorMessage(error);
+                        }
+                    },
+                    () => {
+                        // Indicate executing until this cell is done.
+                        status.dispose();
+                    });
+
+                // Wait for the cell to finish
+                await finishedAddingCode.promise;
+            }
+        } catch (err) {
+            status.dispose();
+
+            const message = localize.DataScience.executingCodeFailure().format(err);
+            this.applicationShell.showErrorMessage(message)
         }
     }
 

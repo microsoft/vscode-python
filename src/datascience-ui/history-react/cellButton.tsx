@@ -19,23 +19,18 @@ export class CellButton extends React.Component<ICellButtonProps> {
     }
 
     public render() {
-        if (!this.props.hidden) {
-            const classNames = `cell-button cell-button-${this.props.baseTheme}`;
-            const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
+        const classNames = `cell-button cell-button-${this.props.baseTheme} ${this.props.hidden ? 'hide' : ''}`;
+        const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
 
-            return (
-                <button role='button' aria-pressed='false' disabled={this.props.disabled} title={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
-                    <div className={innerFilter} >
-                        <div className='cell-button-child'>
-                            {this.props.children}
-                        </div>
+        return (
+            <button role='button' aria-pressed='false' disabled={this.props.disabled} title={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
+                <div className={innerFilter} >
+                    <div className='cell-button-child'>
+                        {this.props.children}
                     </div>
-                </button>
-            );
-        } else {
-            return null;
-        }
-
+                </div>
+            </button>
+        );
     }
 
 }
