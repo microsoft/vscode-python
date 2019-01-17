@@ -10,26 +10,36 @@ import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IExtensionActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
+import {
+    ILanguageServerActivator,
+    ILanguageServerDownloader,
+    ILanguageServerFolderService,
+    ILanguageServerManager
+} from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
  *
  * @export
  * @class LanguageServerExtensionActivator
- * @implements {IExtensionActivator}
+ * @implements {ILanguageServerActivator}
  */
 @injectable()
-export class LanguageServerExtensionActivator implements IExtensionActivator {
-    constructor(@inject(ILanguageServerManager) private readonly manager: ILanguageServerManager,
+export class LanguageServerExtensionActivator implements ILanguageServerActivator {
+    constructor(
+        @inject(ILanguageServerManager) private readonly manager: ILanguageServerManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService) { }
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+    ) {}
     @traceDecorators.error('Failed to activate language server')
     public async activate(): Promise<void> {
-        const mainWorkspaceUri = this.workspace.hasWorkspaceFolders ? this.workspace.workspaceFolders![0].uri : undefined;
+        const mainWorkspaceUri = this.workspace.hasWorkspaceFolders
+            ? this.workspace.workspaceFolders![0].uri
+            : undefined;
         await this.ensureLanguageServerIsAvailable(mainWorkspaceUri);
         await this.manager.start(mainWorkspaceUri);
     }
@@ -45,7 +55,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
-        if (!await this.fs.fileExists(mscorlib)) {
+        if (!(await this.fs.fileExists(mscorlib))) {
             await this.lsDownloader.downloadLanguageServer(languageServerFolderPath);
         }
     }

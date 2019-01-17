@@ -9,7 +9,8 @@ import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner'
 import { IServiceManager } from '../ioc/types';
 import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
-import { ExtensionActivationService } from './activationService';
+import { ExtensionActivationManager } from './activationManager';
+import { LanguageServerExtensionActivationService } from './activationService';
 import { JediExtensionActivator } from './jedi';
 import { LanguageServerExtensionActivator } from './languageServer/activator';
 import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
@@ -24,12 +25,13 @@ import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageReposito
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { LanguageServerManager } from './languageServer/manager';
 import { PlatformData } from './languageServer/platformData';
-import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, IInterpreterDataService, ILanguageClientFactory, ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory } from './types';
+import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IInterpreterDataService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExtensionActivationService);
-    serviceManager.add<IExtensionActivator>(IExtensionActivator, JediExtensionActivator, ExtensionActivators.Jedi);
-    serviceManager.add<IExtensionActivator>(IExtensionActivator, LanguageServerExtensionActivator, ExtensionActivators.DotNet);
+    serviceManager.addSingleton<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerActivator.Jedi);
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerActivator.DotNet);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);
