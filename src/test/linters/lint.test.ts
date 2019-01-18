@@ -39,7 +39,6 @@ const linterConfigRCFiles = {
 };
 
 const fileToLint = path.join(pythoFilesPath, 'file.py');
-const threeLineLintsPath = path.join(pythoFilesPath, 'threeLineLints.py');
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
@@ -203,6 +202,10 @@ suite('Linting - General Tests', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
     }
 
+    function makeSettingKey(product: Product): PythonSettingKeys {
+        return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
+    }
+
     async function resetSettings() {
         // Don't run these updates in parallel, as they are updating the same file.
         const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
@@ -216,77 +219,46 @@ suite('Linting - General Tests', () => {
         });
     }
 
-    function makeSettingKey(product: Product): PythonSettingKeys {
-        return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
-    }
+    test('Linting settings (set/get)', async () => {
+        const settings = configService.getSettings();
 
-    async function testEnablingDisablingOfLinter(
-        product: Product,
-        enabled: boolean,
-        file?: string
-    ) {
-        const setting = makeSettingKey(product);
-        const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        // Don't run these updates in parallel, as they are updating the same file.
+        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
-        await configService.updateSetting(setting, enabled, rootWorkspaceUri,
-            IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace);
-
-        file = file ? file : fileToLint;
-        const document = await workspace.openTextDocument(file);
-        const cancelToken = new CancellationTokenSource();
-
-        await linterManager.setActiveLintersAsync([product]);
-        await linterManager.enableLintingAsync(enabled);
-        const linter = await linterManager.createLinter(product, output, ioc.serviceContainer);
-
-        const messages = await linter.lint(document, cancelToken.token);
-        if (enabled) {
-            assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
-        } else {
-            assert.equal(messages.length, 0, `Errors returned when linter is disabled, Output - ${output.output}`);
-        }
-    }
-    for (const prodID of Object.keys(LINTERS)) {
-        const product = LINTERS[prodID];
-        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
-        for (const enabled of [false, true]) {
-            test(`${enabled ? 'Enable' : 'Disable'} ${productName} and run linter`, async function() {
-                // tslint:disable-next-line:no-suspicious-comment
-                // TODO: Add coverage for these linters.
-                // For prospector (at least) see issue #3466.
-                if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-
-                await testEnablingDisablingOfLinter(product, enabled);
-            });
-        }
-    }
-    test('PyLint minimal checkers', async () => {
-        const file = path.join(pythoFilesPath, 'minCheck.py');
+        await configService.updateSetting('linting.enabled', true, rootWorkspaceUri, target);
+        assert.equal(settings.linting.enabled, true, 'mismatch');
+        await configService.updateSetting('linting.enabled', false, rootWorkspaceUri, target);
+        assert.equal(settings.linting.enabled, false, 'mismatch');
 
         await configService.updateSetting('linting.pylintUseMinimalCheckers', true, workspaceUri);
-        await testEnablingDisablingOfLinter(Product.pylint, false, file);
-
+        assert.equal(settings.linting.pylintUseMinimalCheckers, true, 'mismatch');
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
-        await testEnablingDisablingOfLinter(Product.pylint, true, file);
+        assert.equal(settings.linting.pylintUseMinimalCheckers, false, 'mismatch');
+
+        linterManager.getAllLinterInfos().forEach(async (x) => {
+            await configService.updateSetting(makeSettingKey(x.product), true, rootWorkspaceUri, target);
+            assert.equal(settings.linting[x.enabledSettingName], true, 'mismatch');
+            await configService.updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
+            assert.equal(settings.linting[x.enabledSettingName], false, 'mismatch');
+        });
     });
 
-    // tslint:disable-next-line:no-any
     async function testLinterMessages(
         product: Product,
         pythonFile: string,
         messagesToBeReceived: ILintMessage[]
     ) {
         const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const cancelToken = new CancellationTokenSource();
-        const document = await workspace.openTextDocument(pythonFile);
+        const doc = await workspace.openTextDocument(pythonFile);
 
-        await linterManager.setActiveLintersAsync([product], document.uri);
+        await linterManager.setActiveLintersAsync([product], doc.uri);
         const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
-        const messages = await linter.lint(document, cancelToken.token);
+        const messages = await linter.lint(
+            doc,
+            (new CancellationTokenSource()).token
+        );
+
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${outputChannel.output}`);
         } else {
@@ -347,26 +319,4 @@ suite('Linting - General Tests', () => {
             }
         });
     }
-
-    async function testLinterMessageCount(
-        product: Product,
-        pythonFile: string,
-        messageCountToBeReceived: number
-    ) {
-        const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const cancelToken = new CancellationTokenSource();
-        const document = await workspace.openTextDocument(pythonFile);
-
-        await linterManager.setActiveLintersAsync([product], document.uri);
-        const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
-
-        const messages = await linter.lint(document, cancelToken.token);
-        assert.equal(messages.length, messageCountToBeReceived, 'Expected number of lint errors does not match lint error count');
-    }
-    test('Three line output counted as one message (pylint)', async () => {
-        const maxErrors = 5;
-        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-        await configService.updateSetting('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
-        await testLinterMessageCount(Product.pylint, threeLineLintsPath, maxErrors);
-    });
 });
