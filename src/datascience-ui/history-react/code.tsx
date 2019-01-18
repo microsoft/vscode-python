@@ -97,7 +97,12 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     private onCursorActivity = (codeMirror: CodeMirror.Editor) => {
         // Update left/top/char for cursor
         if (codeMirror) {
-            const coords = codeMirror.cursorCoords(false, 'local');
+            const doc = codeMirror.getDoc();
+            const selections = doc.listSelections();
+            const cursor = doc.getCursor();
+            const anchor = selections && selections.length > 0 ? selections[selections.length-1].anchor : {ch: 10000, line: 10000};
+            const wantStart = cursor.line < anchor.line || cursor.line == anchor.line && cursor.ch < anchor.ch;
+            const coords = codeMirror.cursorCoords(wantStart, 'local');
             const char = this.getCursorChar();
             this.setState({
                 cursorLeft: coords.left,
@@ -170,10 +175,16 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         const doc = instance.getDoc();
         // Double check we don't have an entirely empty document
         if (doc.getValue('').trim().length > 0) {
-            const code = doc.getValue();
+            let code = doc.getValue();
             // We have to clear the history as this CodeMirror doesn't go away.
             doc.clearHistory();
             doc.setValue('');
+
+            // Submit without the last extra line if we have one.
+            if (code.endsWith('\n\n')) {
+                code = code.slice(0, code.length-1);
+            }
+
             this.props.onSubmit(code);
             return;
         }
@@ -207,15 +218,17 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private arrowUp = (instance: CodeMirror.Editor) => {
-        if (instance.getDoc().getCursor().line === 0) {
+        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch == 0) {
             instance.getDoc().setValue(this.history.completeUp());
+            return;
         }
         return CodeMirror.Pass;
     }
 
     private arrowDown = (instance: CodeMirror.Editor) => {
-        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().lineCount() <= 1) {
+        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch == 0) {
             instance.getDoc().setValue(this.history.completeDown());
+            return;
         }
         return CodeMirror.Pass;
     }

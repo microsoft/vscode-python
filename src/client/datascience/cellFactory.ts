@@ -8,13 +8,7 @@ import { Range, TextDocument } from 'vscode';
 
 import { RegExpValues } from './constants';
 import { CellState, ICell } from './types';
-
-function appendLineFeed(arr : string[], modifier? : (s : string) => string) {
-    return arr.map((s: string, i: number) => {
-        const out = modifier ? modifier(s) : s;
-        return i === arr.length - 1 ? `${out}` : `${out}\n`;
-    });
-}
+import { generateMarkdownFromCodeLines, appendLineFeed } from './common';
 
 function generateCodeCell(code: string[], file: string, line: number, id?: string) : ICell {
     // Code cells start out with just source and no outputs.
@@ -35,9 +29,6 @@ function generateCodeCell(code: string[], file: string, line: number, id?: strin
 }
 
 function generateMarkdownCell(code: string[], file: string, line: number, id?: string) : ICell {
-    // Generate markdown by stripping out the comment and markdown header
-    const markdown = appendLineFeed(code.slice(1).filter(s => s.includes('#')), s => s.trim().slice(1).trim());
-
     return {
         id: id ? id : uuid(),
         file: file,
@@ -45,7 +36,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id?: s
         state: CellState.finished,
         data: {
             cell_type: 'markdown',
-            source: markdown,
+            source: generateMarkdownFromCodeLines(code),
             metadata: {}
         }
     };

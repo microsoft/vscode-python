@@ -6,7 +6,7 @@ import './mainPanel.css';
 import { min } from 'lodash';
 import * as React from 'react';
 
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineString, generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -590,7 +590,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
-        const realCells = cellVMs.filter(c => c.cell.data.cell_type !== 'sys_info' && !c.editable);
+        const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
         return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
     }
 
@@ -608,7 +608,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Change type to markdown if necessary
             const split = code.splitLines({trim: false});
             const firstLine = split[0];
-            editCell.cell.data.cell_type = RegExpValues.PythonMarkdownCellMarker.test(firstLine) ? 'markdown' : 'code';
+            if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
+                editCell.cell.data.cell_type = 'markdown';
+                editCell.cell.data.source = generateMarkdownFromCodeLines(split);
+                editCell.cell.state = CellState.finished;
+            }
 
             // Update input controls (always show expanded since we just edited it.)
             editCell = createCellVM(editCell.cell, this.inputBlockToggled);
@@ -625,7 +629,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 skipNextScroll: false,
                 historyStack: newHistory
             });
-            PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
+
+            // Send a message to execute this code if necessary.
+            if (editCell.cell.state != CellState.finished) {
+                PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
+            }
         }
     }
 }

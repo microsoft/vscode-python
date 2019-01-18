@@ -52,3 +52,15 @@ export function formatStreamText(str: string) : string {
     result += str.substr(previousLinePos, str.length - previousLinePos);
     return result;
 }
+
+export function appendLineFeed(arr : string[], modifier? : (s : string) => string) {
+    return arr.map((s: string, i: number) => {
+        const out = modifier ? modifier(s) : s;
+        return i === arr.length - 1 ? `${out}` : `${out}\n`;
+    });
+}
+
+export function generateMarkdownFromCodeLines(lines: string[]) {
+    // Generate markdown by stripping out the comment and markdown header
+    return appendLineFeed(lines.slice(1).filter(s => s.includes('#')), s => s.trim().slice(1));
+}
