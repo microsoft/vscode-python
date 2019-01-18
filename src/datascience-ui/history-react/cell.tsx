@@ -16,6 +16,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
+import { getSettings } from '../react-common/settingsReactSide';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
@@ -97,34 +98,40 @@ export class Cell extends React.Component<ICellProps> {
     private renderNormalCell() {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
-        return (
-            <div className='cell-wrapper'>
-                <MenuBar baseTheme={this.props.baseTheme}>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
-                    </CellButton>
-                </MenuBar>
-                <div className='cell-outer'>
-                    <div className='controls-div'>
-                        <div className='controls-flex'>
-                            <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
-                            <CollapseButton theme={this.props.baseTheme} hidden={this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow}
-                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
-                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
+        const results: JSX.Element[] = this.renderResults();
+        if (!getSettings().showCellInputCode && (!results || results.length === 0)) {
+            // null is a valid JSX.Element return to render nothing. Plain return doesn't work
+            return null;
+        } else {
+            return (
+                <div className='cell-wrapper'>
+                    <MenuBar baseTheme={this.props.baseTheme}>
+                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
+                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
+                        </CellButton>
+                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
+                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
+                        </CellButton>
+                    </MenuBar>
+                    <div className='cell-outer'>
+                        <div className='controls-div'>
+                            <div className='controls-flex'>
+                                <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count ? this.props.cellVM.cell.data.execution_count.toString() : '0'} visible={this.isCodeCell()}/>
+                                <CollapseButton theme={this.props.baseTheme} hidden={this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow}
+                                    open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
+                                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
+                            </div>
                         </div>
-                    </div>
-                    <div className='content-div'>
-                        <div className='cell-result-container'>
-                            {this.renderInputs()}
-                            {this.renderResults()}
+                        <div className='content-div'>
+                            <div className='cell-result-container'>
+                                {this.renderInputs()}
+                                {this.renderResultsDiv(results)}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
     private renderInputs = () => {
@@ -136,18 +143,20 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
-    private renderResults = () => {
+    private renderResultsDiv = (results: JSX.Element[]) => {
         const outputClassNames = this.isCodeCell() ?
             `cell-output cell-output-${this.props.baseTheme}` :
             '';
 
-        // Results depend upon the type of cell
-        const results = this.isCodeCell() ?
-            this.renderCodeOutputs() :
-            this.renderMarkdown(this.getMarkdownCell());
-
         // Then combine them inside a div
         return <div className={outputClassNames}>{results}</div>;
+    }
+
+    private renderResults = (): JSX.Element[] => {
+        // Results depend upon the type of cell
+        return this.isCodeCell() ?
+            this.renderCodeOutputs() :
+            this.renderMarkdown(this.getMarkdownCell());
     }
     private renderCodeOutputs = () => {
         if (this.isCodeCell() && this.hasOutput()) {
@@ -155,8 +164,9 @@ export class Cell extends React.Component<ICellProps> {
             return this.getCodeCell().outputs.map((output: nbformat.IOutput, index: number) => {
                 return this.renderOutput(output, index);
             });
-
         }
+
+        return [];
     }
 
     private renderMarkdown = (markdown : nbformat.IMarkdownCell) => {
@@ -164,7 +174,7 @@ export class Cell extends React.Component<ICellProps> {
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
-        return <Transform data={source}/>;
+        return [<Transform data={source}/>];
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {
@@ -268,8 +278,12 @@ export class Cell extends React.Component<ICellProps> {
             return this.renderWithTransform(mimetype, copy, index);
         }
 
-        const keys = Object.keys(copy.data);
-        mimetype = keys.length > 0 ? keys[0] : 'unknown';
+        if (copy.data) {
+            const keys = Object.keys(copy.data);
+            mimetype = keys.length > 0 ? keys[0] : 'unknown';
+        } else {
+            mimetype = 'unknown';
+        }
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
     }

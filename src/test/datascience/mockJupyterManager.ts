@@ -179,7 +179,12 @@ export class MockJupyterManager implements IJupyterSessionManager {
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
-                data.outputs = [...data.outputs, massagedResult];
+                if (result) {
+                    data.outputs = [...data.outputs, massagedResult];
+                } else {
+                    data.outputs = [];
+                }
+                //    data.outputs = [...data.outputs, massagedResult];
                 c.data = data;
             }
 
