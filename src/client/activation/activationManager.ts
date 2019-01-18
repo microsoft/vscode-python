@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, multiInject } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import { TextDocument, workspace } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
@@ -14,6 +14,7 @@ import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/t
 import { IInterpreterService } from '../interpreter/contracts';
 import { IExtensionActivationManager, IExtensionActivationService } from './types';
 
+@injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
@@ -80,8 +81,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         // When testing, do not perform health checks, as modal dialogs can be displayed.
         if (!isTestExecution()) {
-            await this.appDiagnostics.performPreStartupHealthCheck(undefined);
+            await this.appDiagnostics.performPreStartupHealthCheck(resource);
         }
+        await this.autoSelection.autoSelectInterpreter(resource);
     }
     protected getWorkspaceKey(resource: Resource) {
         if (!resource) {
