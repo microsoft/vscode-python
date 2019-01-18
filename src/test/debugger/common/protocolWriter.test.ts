@@ -12,7 +12,7 @@ suite('Debugging - Protocol Writer', () => {
     test('Test request, response and event messages', async () => {
         let dataWritten = '';
         const throughOutStream = new Transform({
-            transform: (chunk, encoding, callback) => {
+            transform: (chunk, _encoding, callback) => {
                 dataWritten += (chunk as Buffer).toString('utf8');
                 callback(null, chunk);
             }

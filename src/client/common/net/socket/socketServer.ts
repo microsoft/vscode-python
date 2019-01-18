@@ -57,9 +57,9 @@ export class SocketServer extends EventEmitter implements ISocketServer {
         client.on('data', (data: Buffer) => {
             this.emit('data', client, data);
         });
-        client.on('error', (err: Error) => noop);
+        client.on('error', () => noop);
 
-        client.on('timeout', d => {
+        client.on('timeout', () => {
             // let msg = "Debugger client timedout, " + d;
         });
     }

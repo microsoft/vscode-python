@@ -19,7 +19,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
-    public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken):
+    public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken):
         vscode.CodeLens[] {
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();

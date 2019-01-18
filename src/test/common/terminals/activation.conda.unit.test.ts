@@ -49,6 +49,7 @@ suite('Terminal Environment Activation conda', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let condaService: TypeMoq.IMock<ICondaService>;
+    let configService: TypeMoq.IMock<IConfigurationService>;
     let conda: string;
     let bash: ITerminalActivationCommandProvider;
 
@@ -74,7 +75,7 @@ suite('Terminal Environment Activation conda', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => procServiceFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny())).returns(() => condaService.object);
 
-        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        configService = TypeMoq.Mock.ofType<IConfigurationService>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -87,7 +88,7 @@ suite('Terminal Environment Activation conda', () => {
             condaService.object,
             instance(mock(InterpreterService)),
             configService.object,
-            new CondaActivationCommandProvider(serviceContainer.object),
+            new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object),
             instance(bash),
             mock(CommandPromptAndPowerShell),
             mock(PyEnvActivationCommandProvider),
@@ -117,7 +118,7 @@ suite('Terminal Environment Activation conda', () => {
         condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve({ name: envName, path: path.dirname(pythonPath) }));
         const expected = ['"path to conda" activate EnvA'];
 
-        const provider = new CondaActivationCommandProvider(serviceContainer.object);
+        const provider = new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object);
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.fish);
 
         expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
@@ -140,7 +141,7 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() => Promise.resolve(parse('4.3.1', true)!));
         const expected = [`source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgument()} EnvA`];
 
-        const provider = new CondaActivationCommandProvider(serviceContainer.object);
+        const provider = new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object);
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
         expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
@@ -163,7 +164,7 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() => Promise.resolve(parse('4.4.0', true)!));
         const expected = [`source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgument()} EnvA`];
 
-        const provider = new CondaActivationCommandProvider(serviceContainer.object);
+        const provider = new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object);
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
         expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
@@ -179,7 +180,7 @@ suite('Terminal Environment Activation conda', () => {
         const envName = hasSpaceInEnvironmentName ? 'EnvA' : 'Env A';
         condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve({ name: envName, path: path.dirname(pythonPath) }));
 
-        const activationCommands = await new CondaActivationCommandProvider(serviceContainer.object).getActivationCommands(undefined, shellType);
+        const activationCommands = await new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object).getActivationCommands(undefined, shellType);
         let expectedActivationCommamnd: string[] | undefined;
         switch (shellType) {
             case TerminalShellType.powershell:
@@ -441,7 +442,7 @@ suite('Terminal Environment Activation conda', () => {
             servCnt.setup(s => s.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
                 .returns(() => condaSrv.object);
 
-            const tstCmdProvider = new CondaActivationCommandProvider(servCnt.object);
+            const tstCmdProvider = new CondaActivationCommandProvider(condaSrv.object, platformService.object, configService.object);
 
             let result: string[] | undefined;
 

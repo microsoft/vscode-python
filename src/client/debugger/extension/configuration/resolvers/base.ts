@@ -12,7 +12,7 @@ import { IDocumentManager, IWorkspaceService } from '../../../../common/applicat
 import { PYTHON_LANGUAGE } from '../../../../common/constants';
 import { IConfigurationService } from '../../../../common/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
-import { DEBUGGER } from '../../../../telemetry/constants';
+import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTelemetry } from '../../../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../types';
 import { IDebugConfigurationResolver } from '../types';
@@ -92,7 +92,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
             gevent: name.toLowerCase().indexOf('gevent') >= 0,
             scrapy: moduleName.toLowerCase() === 'scrapy'
         };
-        sendTelemetryEvent(DEBUGGER, undefined, telemetryProps);
+        sendTelemetryEvent(EventName.DEBUGGER, undefined, telemetryProps);
     }
 
 }

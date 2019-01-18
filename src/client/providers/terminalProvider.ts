@@ -7,7 +7,7 @@ import { Commands } from '../common/constants';
 import { ITerminalServiceFactory } from '../common/terminal/types';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
-import { TERMINAL_CREATE } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 
 export class TerminalProvider implements Disposable {
     private disposables: Disposable[] = [];
@@ -23,7 +23,7 @@ export class TerminalProvider implements Disposable {
 
         this.disposables.push(disposable);
     }
-    @captureTelemetry(TERMINAL_CREATE, { triggeredBy: 'commandpalette' })
+    @captureTelemetry(EventName.TERMINAL_CREATE, { triggeredBy: 'commandpalette' })
     private async onCreateTerminal() {
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         const activeResource = this.getActiveResource();

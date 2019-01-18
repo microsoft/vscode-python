@@ -33,6 +33,7 @@ export interface IInterpreterAutoSelectionService extends IInterpreterAutoSeleti
 }
 
 export enum AutoSelectionRule {
+    all = 'all',
     currentPath = 'currentPath',
     workspaceVirtualEnvs = 'workspaceEnvs',
     settings = 'settings',

@@ -26,6 +26,17 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
 
         const execName = this.pipenvService.executable;
-        return [`${execName.toCommandArgument()} shell`];
+        return [`${execName.fileToCommandArgument()} shell`];
     }
+
+    public async getActivationCommandsForInterpreter(pythonPath: string, _targetShell: TerminalShellType): Promise<string[] | undefined> {
+        const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
+        if (!interpreter || interpreter.type !== InterpreterType.Pipenv) {
+            return;
+        }
+
+        const execName = this.pipenvService.executable;
+        return [`${execName.fileToCommandArgument()} shell`];
+    }
+
 }

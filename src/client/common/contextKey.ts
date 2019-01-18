@@ -1,7 +1,7 @@
 import { ICommandManager } from './application/types';
 
 export class ContextKey {
-    private lastValue: boolean;
+    private lastValue?: boolean;
 
     constructor(private name: string, private commandManager: ICommandManager) { }
 

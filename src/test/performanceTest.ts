@@ -79,7 +79,7 @@ class TestRunner {
         const releaseVersion = await this.getReleaseVersion();
         const devVersion = await this.getDevVersion();
         await fs.ensureDir(path.dirname(logFile));
-        const env: { [key: string]: {} } = {
+        const env: Record<string, {}> = {
             ACTIVATION_TIMES_LOG_FILE_PATH: logFile,
             ACTIVATION_TIMES_EXT_VERSION: version === Version.Release ? releaseVersion : devVersion,
             CODE_EXTENSIONS_PATH: version === Version.Release ? publishedExtensionPath : EXTENSION_ROOT_DIR
@@ -88,7 +88,7 @@ class TestRunner {
         await this.launchTest(env);
     }
     private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
-        const env: { [key: string]: {} } = {
+        const env: Record<string, {}> = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),
             ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(releaseLogFiles),
             ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(languageServerLogFiles)
@@ -97,9 +97,9 @@ class TestRunner {
         await this.launchTest(env);
     }
 
-    private async  launchTest(customEnvVars: { [key: string]: {} }) {
+    private async  launchTest(customEnvVars: Record<string, {}>) {
         await new Promise((resolve, reject) => {
-            const env: { [key: string]: {} } = {
+            const env: Record<string, {}> = {
                 TEST_FILES_SUFFIX: 'perf.test',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance'),
                 ...process.env,

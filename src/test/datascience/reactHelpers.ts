@@ -7,6 +7,7 @@ import { ComponentClass, configure, ReactWrapper  } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
 import { JSDOM } from 'jsdom';
 import * as React from 'react';
+import { noop } from '../../client/common/utils/misc';
 
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
@@ -30,8 +31,8 @@ export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-string-literal
     global['document'].createRange = () => ({
         createContextualFragment: str => JSDOM.fragment(str),
-        setEnd : (endNode, endOffset) => {},
-        setStart : (startNode, startOffset) => {},
+        setEnd : (endNode, endOffset) => noop(),
+        setStart : (startNode, startOffset) => noop(),
         getBoundingClientRect : () => null,
         getClientRects: () => []
     });
@@ -50,21 +51,21 @@ export function setUpDomEnvironment() {
         isCollapsed: false,
         rangeCount: 0,
         type: '',
-        addRange: (range: Range) => {},
+        addRange: (range: Range) => noop(),
         createRange: () => null,
-        collapse: (parentNode: Node, offset: number) => {},
-        collapseToEnd: () => {},
-        collapseToStart: () => {},
+        collapse: (parentNode: Node, offset: number) => noop(),
+        collapseToEnd: noop,
+        collapseToStart: noop,
         containsNode: (node: Node, partlyContained: boolean) => false,
-        deleteFromDocument: () => {},
-        empty: () => {},
-        extend: (newNode: Node, offset: number) => {},
+        deleteFromDocument: noop,
+        empty: noop,
+        extend: (newNode: Node, offset: number) => noop(),
         getRangeAt: (index: number) => null,
-        removeAllRanges: () => {},
-        removeRange: (range: Range) => {},
-        selectAllChildren: (parentNode: Node) => {},
-        setBaseAndExtent: (baseNode: Node, baseOffset: number, extentNode: Node, extentOffset: number) => {},
-        setPosition: (parentNode: Node, offset: number) => {},
+        removeAllRanges: noop,
+        removeRange: (range: Range) => noop(),
+        selectAllChildren: (parentNode: Node) => noop(),
+        setBaseAndExtent: (baseNode: Node, baseOffset: number, extentNode: Node, extentOffset: number) => noop(),
+        setPosition: (parentNode: Node, offset: number) => noop(),
         toString: () => '{Selection}'
     };
 

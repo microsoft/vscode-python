@@ -9,19 +9,22 @@ import { exec } from 'child_process';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import '../../../client/common/extensions';
+import { createDeferredFromPromise, Deferred } from '../../../client/common/utils/async';
+import { StopWatch } from '../../../client/common/utils/stopWatch';
 import {
-    IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE
+    IInterpreterLocatorService,
+    IInterpreterWatcherBuilder,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../client/interpreter/contracts';
+import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IServiceContainer } from '../../../client/ioc/types';
-import {
-    deleteFiles, isOs, isPythonVersionInProcess, OSType,
-    PYTHON_PATH, rootWorkspaceUri, waitForCondition
-} from '../../common';
+import { deleteFiles, isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
-import { initialize, IS_VSTS, multirootPath } from '../../initialize';
+import { sleep } from '../../core';
+import { initialize, multirootPath } from '../../initialize';
 
 const timeoutMs = 60_000;
-suite('Interpreters - Workspace VirtualEnv Service', function () {
+suite('Interpreters - Workspace VirtualEnv Service', function() {
     this.timeout(timeoutMs);
     this.retries(0);
 
@@ -31,43 +34,65 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     const venvPrefix = '.venv';
     let serviceContainer: IServiceContainer;
 
+    async function manuallyTriggerFSWatcher(deferred: Deferred<void>) {
+        // Monitoring files on virtualized environments can be finicky...
+        // Lets trigger the fs watcher manually for the tests.
+        const stopWatch = new StopWatch();
+        const builder = serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder);
+        const watcher = (await builder.getWorkspaceVirtualEnvInterpreterWatcher(
+            workspaceUri
+        )) as WorkspaceVirtualEnvWatcherService;
+        while (!deferred.completed && stopWatch.elapsedTime < timeoutMs - 10_000) {
+            watcher.createHandler(workspaceUri).ignoreErrors();
+            await sleep(1000);
+        }
+    }
     async function waitForInterpreterToBeDetected(envNameToLookFor: string) {
         const predicate = async () => {
             const items = await locator.getInterpreters(workspaceUri);
             return items.some(item => item.envName === envNameToLookFor);
         };
-        await waitForCondition(predicate, timeoutMs, `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`);
+        const promise = waitForCondition(
+            predicate,
+            timeoutMs,
+            `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`
+        );
+        const deferred = createDeferredFromPromise(promise);
+        manuallyTriggerFSWatcher(deferred).ignoreErrors();
+        await deferred.promise;
     }
     async function createVirtualEnvironment(envSuffix: string) {
         // Ensure env is random to avoid conflicts in tests (currupting test data).
         const envName = `${venvPrefix}${envSuffix}${new Date().getTime().toString()}`;
         return new Promise<string>((resolve, reject) => {
-            exec(`${PYTHON_PATH.fileToCommandArgument()} -m venv ${envName}`, { cwd: workspaceUri.fsPath }, (ex, _, stderr) => {
-                if (ex) {
-                    return reject(ex);
+            exec(
+                `${PYTHON_PATH.fileToCommandArgument()} -m venv ${envName}`,
+                { cwd: workspaceUri.fsPath },
+                (ex, _, stderr) => {
+                    if (ex) {
+                        return reject(ex);
+                    }
+                    if (stderr && stderr.length > 0) {
+                        reject(new Error(`Failed to create Env ${envName}, ${PYTHON_PATH}, Error: ${stderr}`));
+                    } else {
+                        resolve(envName);
+                    }
                 }
-                if (stderr && stderr.length > 0) {
-                    reject(new Error(`Failed to create Env ${envName}, ${PYTHON_PATH}, Error: ${stderr}`));
-                } else {
-                    resolve(envName);
-                }
-            });
+            );
         });
     }
 
-    suiteSetup(async function () {
-        // skip for Linux CI, see #3848
-        if (isOs(OSType.Linux) && IS_VSTS) {
-            return this.skip();
-        }
-
+    suiteSetup(async function() {
         // skip for Python < 3, no venv support
         if (await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
         }
 
         serviceContainer = (await initialize()).serviceContainer;
-        locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
+        locator = serviceContainer.get<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE
+        );
         // This test is required, we need to wait for interpreter listing completes,
         // before proceeding with other tests.
         await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
@@ -91,7 +116,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         await waitForInterpreterToBeDetected(env2);
     });
 
-    test('Detect a new Virtual Environment, and other workspace folder must not be affected (multiroot)', async function () {
+    test('Detect a new Virtual Environment, and other workspace folder must not be affected (multiroot)', async function() {
         if (!IS_MULTI_ROOT_TEST) {
             return this.skip();
         }
@@ -99,7 +124,10 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         let items4 = await locator.getInterpreters(workspace4);
         expect(items4).to.be.lengthOf(0);
 
-        const [env1, env2] = await Promise.all([createVirtualEnvironment('first3'), createVirtualEnvironment('second3')]);
+        const [env1, env2] = await Promise.all([
+            createVirtualEnvironment('first3'),
+            createVirtualEnvironment('second3')
+        ]);
         await Promise.all([waitForInterpreterToBeDetected(env1), waitForInterpreterToBeDetected(env2)]);
 
         // Workspace4 should still not have any interpreters.

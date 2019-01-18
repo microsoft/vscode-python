@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
-import { REFERENCE } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
 export class PythonReferenceProvider implements vscode.ReferenceProvider {
@@ -29,7 +29,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
         return [];
     }
 
-    @captureTelemetry(REFERENCE)
+    @captureTelemetry(EventName.REFERENCE)
     public async provideReferences(document: vscode.TextDocument, position: vscode.Position, _context: vscode.ReferenceContext, token: vscode.CancellationToken): Promise<vscode.Location[] | undefined> {
         const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {

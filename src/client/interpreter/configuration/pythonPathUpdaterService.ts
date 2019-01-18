@@ -5,7 +5,7 @@ import { InterpreterInfomation, IPythonExecutionFactory } from '../../common/pro
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { PYTHON_INTERPRETER } from '../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
 import { IInterpreterVersionService } from '../contracts';
 import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './types';
@@ -56,7 +56,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
                 telemtryProperties.pipVersion = pipVersion;
             }
         }
-        sendTelemetryEvent(PYTHON_INTERPRETER, duration, telemtryProperties);
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER, duration, telemtryProperties);
     }
     private getPythonUpdaterService(configTarget: ConfigurationTarget, wkspace?: Uri) {
         switch (configTarget) {

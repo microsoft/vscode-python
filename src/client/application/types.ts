@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { Resource } from '../common/types';
+
 export const IApplicationDiagnostics = Symbol('IApplicationDiagnostics');
 
 export interface IApplicationDiagnostics {
@@ -12,6 +14,6 @@ export interface IApplicationDiagnostics {
      * @returns {Promise<void>}
      * @memberof IApplicationDiagnostics
      */
-    performPreStartupHealthCheck(): Promise<void>;
+    performPreStartupHealthCheck(resource: Resource): Promise<void>;
     register(): void;
 }

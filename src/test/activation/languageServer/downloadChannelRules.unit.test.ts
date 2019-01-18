@@ -7,9 +7,9 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { DownloadBetaChannelRule, DownloadDailyChannelRule, DownloadStableChannelRule } from '../../client/activation/downloadChannelRules';
-import { IPersistentState, IPersistentStateFactory } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { DownloadBetaChannelRule, DownloadDailyChannelRule, DownloadStableChannelRule } from '../../../client/activation/languageServer/downloadChannelRules';
+import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Language Server Download Channel Rules', () => {
     [undefined, path.join('a', 'b')].forEach(currentFolderPath => {

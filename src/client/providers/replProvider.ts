@@ -3,7 +3,7 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/
 import { Commands } from '../common/constants';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
-import { REPL } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { ICodeExecutionService } from '../terminals/types';
 
 export class ReplProvider implements Disposable {
@@ -19,7 +19,7 @@ export class ReplProvider implements Disposable {
         const disposable = commandManager.registerCommand(Commands.Start_REPL, this.commandHandler, this);
         this.disposables.push(disposable);
     }
-    @captureTelemetry(REPL)
+    @captureTelemetry(EventName.REPL)
     private async commandHandler() {
         const resource = this.getActiveResourceUri();
         const replProvider = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'repl');

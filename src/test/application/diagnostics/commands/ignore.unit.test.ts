@@ -8,6 +8,8 @@ import { IgnoreDiagnosticCommand } from '../../../../client/application/diagnost
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService } from '../../../../client/application/diagnostics/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
+// tslint:disable:no-any
+
 suite('Application Diagnostics - Commands Ignore', () => {
     let ignoreCommand: IDiagnosticCommand;
     let serviceContainer: typemoq.IMock<IServiceContainer>;
@@ -24,7 +26,7 @@ suite('Application Diagnostics - Commands Ignore', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
             .returns(() => filterService.object)
             .verifiable(typemoq.Times.once());
-        diagnostic.setup(d => d.code).returns(() => 'xyz')
+        diagnostic.setup(d => d.code).returns(() => 'xyz' as any)
             .verifiable(typemoq.Times.once());
         filterService.setup(s => s.ignoreDiagnostic(typemoq.It.isValue('xyz'), typemoq.It.isValue(DiagnosticScope.Global)))
             .verifiable(typemoq.Times.once());

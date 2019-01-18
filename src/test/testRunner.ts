@@ -114,15 +114,18 @@ class CoverageRunner {
     private sourceFiles: string[] = [];
     private instrumenter!: Instrumenter;
 
-    private get coverage(): { [key: string]: CoverState } {
+    private get coverage(): Record<string, CoverState> {
+        // @ts-ignore
         if (global[this.coverageVar] === undefined || Object.keys(global[this.coverageVar]).length === 0) {
             console.error('No coverage information was collected, exit without writing coverage information');
             return {};
         } else {
+            // @ts-ignore
             return global[this.coverageVar];
         }
     }
-    private set coverage(value: { [key: string]: CoverState }) {
+    private set coverage(value: Record<string, CoverState>) {
+        // @ts-ignore
         global[this.coverageVar] = value;
     }
 

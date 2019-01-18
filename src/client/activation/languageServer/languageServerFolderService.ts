@@ -31,7 +31,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         }
 
         serverVersion = await this.getLatestLanguageServerVersion()
-            .catch(ex => undefined);
+            .catch(() => undefined);
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
             return path.basename(currentFolder.path);

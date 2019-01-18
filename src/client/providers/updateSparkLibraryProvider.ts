@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
 import { sendTelemetryEvent } from '../telemetry';
-import { UPDATE_PYSPARK_LIBRARY } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 
 export function activateUpdateSparkLibraryProvider(): vscode.Disposable {
     return vscode.commands.registerCommand(Commands.Update_SparkLibrary, updateSparkLibrary);
@@ -22,5 +22,5 @@ function updateSparkLibrary() {
         console.error(reason);
     });
     vscode.window.showInformationMessage('Make sure you have SPARK_HOME environment variable set to the root path of the local spark installation!');
-    sendTelemetryEvent(UPDATE_PYSPARK_LIBRARY);
+    sendTelemetryEvent(EventName.UPDATE_PYSPARK_LIBRARY);
 }

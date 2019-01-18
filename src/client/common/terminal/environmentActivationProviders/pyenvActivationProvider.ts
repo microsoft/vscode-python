@@ -23,6 +23,16 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
             return;
         }
 
-        return [`pyenv shell ${interpreter.envName}`];
+        return [`pyenv shell ${interpreter.envName.toCommandArgument()}`];
     }
+
+    public async getActivationCommandsForInterpreter(pythonPath: string, _targetShell: TerminalShellType): Promise<string[] | undefined> {
+        const interpreter = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
+        if (!interpreter || interpreter.type !== InterpreterType.Pyenv || !interpreter.envName) {
+            return;
+        }
+
+        return [`pyenv shell ${interpreter.envName.toCommandArgument()}`];
+    }
+
 }

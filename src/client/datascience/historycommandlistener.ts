@@ -114,7 +114,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         }
     }
 
-    @captureTelemetry(Telemetry.ExportPythonFile, {}, false)
+    @captureTelemetry(Telemetry.ExportPythonFile, undefined, false)
     private async exportFile(file: string): Promise<void> {
         if (file && file.length > 0) {
             // If the current file is the active editor, then generate cells from the document.
@@ -154,7 +154,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         }
     }
 
-    @captureTelemetry(Telemetry.ExportPythonFileAndOutput, {}, false)
+    @captureTelemetry(Telemetry.ExportPythonFileAndOutput, undefined, false)
     private async exportFileAndOutput(file: string): Promise<void> {
         if (file && file.length > 0 && this.jupyterExecution.isNotebookSupported()) {
             // If the current file is the active editor, then generate cells from the document.
@@ -333,7 +333,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
     }
 
-    @captureTelemetry(Telemetry.ShowHistoryPane, {}, false)
+    @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
     private showHistoryPane() : Promise<void>{
         const active = this.historyProvider.getOrCreateActive();
         return active.show();

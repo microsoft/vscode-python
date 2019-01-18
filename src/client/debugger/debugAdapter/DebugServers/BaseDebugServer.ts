@@ -33,5 +33,5 @@ export abstract class BaseDebugServer extends EventEmitter {
     }
 
     public abstract Start(): Promise<IDebugServer>;
-    public abstract Stop();
+    public abstract Stop(): void;
 }

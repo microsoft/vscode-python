@@ -3,7 +3,7 @@
 'use strict';
 
 import { Socket } from 'net';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -52,9 +52,9 @@ export enum LogLevel {
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
-    logError(message: string, error?: Error);
-    logWarning(message: string, error?: Error);
-    logInformation(message: string, error?: Error);
+    logError(message: string, error?: Error): void;
+    logWarning(message: string, error?: Error): void;
+    logInformation(message: string, error?: Error): void;
 }
 
 export enum InstallerResponse {
@@ -160,6 +160,7 @@ export interface IPythonSettings {
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
+    readonly onDidChange: Event<void>;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -384,5 +385,5 @@ export interface IAsyncDisposable {
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
-    push(disposable: IDisposable | IAsyncDisposable);
+    push(disposable: IDisposable | IAsyncDisposable): void;
 }

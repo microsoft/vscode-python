@@ -18,7 +18,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.powershell ||
             targetShell === TerminalShellType.powershellCore;
     }
-    public async getActivationCommandsForInterpreter(pythonPath, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
         // Dependending on the target shell, look for the preferred script file.
         const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {

@@ -12,7 +12,7 @@ import { JupyterSession } from './jupyterSession';
 @injectable()
 export class JupyterSessionManager implements IJupyterSessionManager {
 
-    public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
+    public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
         // Create a new session and attempt to connect to it
         const session = new JupyterSession(connInfo, kernelSpec);
         try {
@@ -46,7 +46,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             const keys = Object.keys(kernelspecs);
             return keys.map(k => {
                 const spec = kernelspecs[k];
-                return new JupyterKernelSpec(spec);
+                return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
             });
         } catch {
             // For some reason this is failing. Just return nothing

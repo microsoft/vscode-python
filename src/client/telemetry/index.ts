@@ -1,14 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-reference no-any import-name
+// tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
 import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
-import { TelemetryProperties } from './types';
+import { Telemetry } from '../datascience/constants';
+import { EventName } from './constants';
+import {
+    CodeExecutionTelemetry,
+    DebuggerConfigurationPromtpsTelemetry,
+    DebuggerTelemetry,
+    DiagnosticsAction,
+    DiagnosticsMessages,
+    EditorLoadTelemetry,
+    FormatTelemetry,
+    InterpreterActivation,
+    InterpreterActivationEnvironmentVariables,
+    InterpreterAutoSelection,
+    InterpreterDiscovery,
+    LanguageServePlatformSupported,
+    LanguageServerErrorTelemetry,
+    LanguageServerVersionTelemetry,
+    LinterInstallPromptTelemetry,
+    LinterSelectionTelemetry,
+    LintingTelemetry,
+    Platform,
+    PythonInterpreterTelemetry,
+    TerminalTelemetry,
+    TestDiscoverytTelemetry,
+    TestRunTelemetry
+} from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -44,18 +69,23 @@ function getTelemetryReporter() {
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return telemetryReporter = new reporter(extensionId, extensionVersion, aiKey);
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, aiKey));
 }
 
-export function sendTelemetryEvent(eventName: string, durationMs?: { [key: string]: number } | number, properties?: TelemetryProperties, ex?: Error) {
+export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    durationMs?: Record<string, number> | number,
+    properties?: P[E],
+    ex?: Error
+) {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : (durationMs ? durationMs : undefined);
+    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
 
     // tslint:disable-next-line:no-any
-    const customProperties: { [key: string]: string } = {};
+    const customProperties: Record<string, string> = {};
     if (properties) {
         // tslint:disable-next-line:prefer-type-cast no-any
         const data = properties as any;
@@ -70,24 +100,25 @@ export function sendTelemetryEvent(eventName: string, durationMs?: { [key: strin
     if (ex) {
         customProperties.stackTrace = getStackTrace(ex);
     }
-    if (ex && eventName !== 'ERROR') {
+    if (ex && (eventName as any) !== 'ERROR') {
+        customProperties.originalEventName = eventName as any as string;
         reporter.sendTelemetryEvent('ERROR', customProperties, measures);
     }
-    reporter.sendTelemetryEvent(eventName, customProperties, measures);
+    reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry(
-    eventName: string,
-    properties?: TelemetryProperties,
+export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    properties?: P[E],
     captureDuration: boolean = true,
-    failureEventName?: string
+    failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function(...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -110,9 +141,14 @@ export function captureTelemetry(
                     // tslint:disable-next-line:promise-function-async
                     .catch(ex => {
                         // tslint:disable-next-line:no-any
-                        properties = properties || {};
+                        properties = properties || ({} as any);
                         (properties as any).failed = true;
-                        sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties, ex);
+                        sendTelemetryEvent(
+                            failureEventName ? failureEventName : eventName,
+                            stopWatch.elapsedTime,
+                            properties,
+                            ex
+                        );
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
@@ -125,23 +161,29 @@ export function captureTelemetry(
     };
 }
 
-// tslint:disable-next-line:no-any function-name
-export function sendTelemetryWhenDone(eventName: string, promise: Promise<any> | Thenable<any>,
-    stopWatch?: StopWatch, properties?: TelemetryProperties) {
+// function sendTelemetryWhenDone<T extends IDSMappings, K extends keyof T>(eventName: K, properties?: T[K]);
+export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    promise: Promise<any> | Thenable<any>,
+    stopWatch?: StopWatch,
+    properties?: P[E]
+) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
         // tslint:disable-next-line:prefer-type-cast no-any
-        (promise as Promise<any>)
-            .then(data => {
+        (promise as Promise<any>).then(
+            data => {
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
                 // tslint:disable-next-line:promise-function-async
-            }, ex => {
+            },
+            ex => {
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
-            });
+            }
+        );
     } else {
         throw new Error('Method is neither a Promise nor a Theneable');
     }
@@ -197,4 +239,88 @@ function getCallsite(frame: stackTrace.StackFrame) {
         }
     }
     return parts.map(sanitizeName).join('.');
+}
+
+// Map all events to their properties
+interface IEventNamePropertyMapping {
+    [EventName.COMPLETION]: never | undefined;
+    [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
+    [EventName.DEBUGGER]: DebuggerTelemetry;
+    [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
+    [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
+    [EventName.DEBUGGER_PERFORMANCE]: any;
+    [EventName.DEFINITION]: never | undefined;
+    [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
+    [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
+    [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
+    [EventName.EXECUTION_CODE]: CodeExecutionTelemetry;
+    [EventName.EXECUTION_DJANGO]: CodeExecutionTelemetry;
+    [EventName.FORMAT]: FormatTelemetry;
+    [EventName.FORMAT_ON_TYPE]: { enabled: boolean };
+    [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
+    [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
+    [EventName.HOVER_DEFINITION]: never | undefined;
+    [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
+    [EventName.LINTING]: LintingTelemetry;
+    [EventName.PLATFORM_INFO]: Platform;
+    [EventName.PYTHON_INTERPRETER]: PythonInterpreterTelemetry;
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: InterpreterActivationEnvironmentVariables;
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: InterpreterActivation;
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: InterpreterActivation;
+    [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
+    [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
+    [EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME]: { success: boolean };
+    [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
+    [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
+    [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
+    [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
+    [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
+    [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
+    [EventName.REFACTOR_RENAME]: never | undefined;
+    [EventName.REFERENCE]: never | undefined;
+    [EventName.REPL]: never | undefined;
+    [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
+    [EventName.SIGNATURE]: never | undefined;
+    [EventName.SYMBOL]: never | undefined;
+    [EventName.TERMINAL_CREATE]: TerminalTelemetry;
+    [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
+    [EventName.UNITTEST_RUN]: TestRunTelemetry;
+    [EventName.UNITTEST_STOP]: never | undefined;
+    [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
+    [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
+    [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
+    [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
+    // Data Science
+    [Telemetry.CollapseAll]: never | undefined;
+    [Telemetry.ConnectFailedJupyter]: never | undefined;
+    [Telemetry.ConnectLocalJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteJupyter]: never | undefined;
+    [Telemetry.DeleteAllCells]: never | undefined;
+    [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.ExpandAll]: never | undefined;
+    [Telemetry.ExportNotebook]: never | undefined;
+    [Telemetry.ExportPythonFile]: never | undefined;
+    [Telemetry.ExportPythonFileAndOutput]: never | undefined;
+    [Telemetry.GotoSourceCode]: never | undefined;
+    [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.Redo]: never | undefined;
+    [Telemetry.RestartKernel]: never | undefined;
+    [Telemetry.RunAllCells]: never | undefined;
+    [Telemetry.RunCell]: never | undefined;
+    [Telemetry.RunCurrentCell]: never | undefined;
+    [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
+    [Telemetry.SelectJupyterURI]: never | undefined;
+    [Telemetry.SetJupyterURIToLocal]: never | undefined;
+    [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
+    [Telemetry.ShowHistoryPane]: never | undefined;
+    [Telemetry.StartJupyter]: never | undefined;
+    [Telemetry.SubmitCellThroughInput]: never | undefined;
+    [Telemetry.Undo]: never | undefined;
 }

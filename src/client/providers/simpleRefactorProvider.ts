@@ -5,7 +5,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { sendTelemetryWhenDone } from '../telemetry';
-import { REFACTOR_EXTRACT_FUNCTION, REFACTOR_EXTRACT_VAR } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 
 type RenameResponse = {
     results: [{ diff: string }];
@@ -22,7 +22,7 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
             vscode.window.activeTextEditor!.selection,
             // tslint:disable-next-line:no-empty
             outputChannel, serviceContainer).catch(() => { });
-        sendTelemetryWhenDone(REFACTOR_EXTRACT_VAR, promise, stopWatch);
+        sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_VAR, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
 
@@ -33,7 +33,7 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
             vscode.window.activeTextEditor!.selection,
             // tslint:disable-next-line:no-empty
             outputChannel, serviceContainer).catch(() => { });
-        sendTelemetryWhenDone(REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
+        sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
 }

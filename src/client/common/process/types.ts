@@ -3,7 +3,9 @@
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
-import { ExecutionInfo, Resource, Version } from '../types';
+
+import { PythonInterpreter } from '../../interpreter/contracts';
+import { ExecutionInfo, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -55,9 +57,13 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
+export type ExecutionFactoryCreateWithEnvironmentOptions = {
+    resource?: Uri;
+    interpreter?: PythonInterpreter;
+};
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
-    createActivatedEnvironment(resource: Resource): Promise<IPythonExecutionService>;
+    createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];

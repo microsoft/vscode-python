@@ -6,9 +6,9 @@
 import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, ProviderResult, TextDocument, TextEdit } from 'vscode';
 
 export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider {
-    private readonly providers: { [key: string]: OnTypeFormattingEditProvider };
+    private readonly providers: Record<string, OnTypeFormattingEditProvider>;
 
-    constructor(providers: { [key: string]: OnTypeFormattingEditProvider }) {
+    constructor(providers: Record<string, OnTypeFormattingEditProvider>) {
         this.providers = providers;
     }
 

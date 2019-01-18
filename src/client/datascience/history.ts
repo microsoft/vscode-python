@@ -21,11 +21,10 @@ import {
     IWorkspaceService
 } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
-import { PythonSettings } from '../common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -54,18 +53,19 @@ export enum SysInfoReason {
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
-    private disposed : boolean = false;
-    private webPanel : IWebPanel | undefined;
+    private disposed: boolean = false;
+    private webPanel: IWebPanel | undefined;
     private loadPromise: Promise<void>;
-    private interpreterChangedDisposable : Disposable;
-    private closedEvent : EventEmitter<IHistory>;
+    private interpreterChangedDisposable: Disposable;
+    private closedEvent: EventEmitter<IHistory>;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
     private addedSysInfo: boolean = false;
     private ignoreCount: number = 0;
-    private waitingForExportCells : boolean = false;
+    private waitingForExportCells: boolean = false;
     private jupyterServer: INotebookServer | undefined;
+    private changeHandler: IDisposable | undefined;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -73,9 +73,9 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
-        @inject(ILogger) private logger : ILogger,
-        @inject(IStatusProvider) private statusProvider : IStatusProvider,
+        @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
+        @inject(ILogger) private logger: ILogger,
+        @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
@@ -85,7 +85,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
         // Sign up for configuration changes
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
-        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
 
         // Create our event emitter
         this.closedEvent = new EventEmitter<IHistory>();
@@ -95,7 +95,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         this.loadPromise = this.load();
     }
 
-    public async show() : Promise<void> {
+    public async show(): Promise<void> {
         if (!this.disposed) {
             // Make sure we're loaded first
             await this.loadPromise;
@@ -107,11 +107,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public get closed() : Event<IHistory> {
+    public get closed(): Event<IHistory> {
         return this.closedEvent.event;
     }
 
-    public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<void> {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
@@ -179,7 +179,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     // tslint:disable-next-line: no-any no-empty
     public postMessage(type: string, payload?: any) {
         if (this.webPanel) {
-            this.webPanel.postMessage({type: type, payload: payload});
+            this.webPanel.postMessage({ type: type, payload: payload });
         }
     }
 
@@ -243,16 +243,19 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public async dispose()  {
+    public async dispose() {
         if (!this.disposed) {
             this.disposed = true;
             this.interpreterChangedDisposable.dispose();
-            (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
             this.closedEvent.fire(this);
             if (this.jupyterServer) {
                 await this.jupyterServer.shutdown();
             }
             this.updateContexts();
+        }
+        if (this.changeHandler) {
+            this.changeHandler.dispose();
+            this.changeHandler = undefined;
         }
     }
 
@@ -345,7 +348,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private async restartKernelInternal() : Promise<void> {
+    private async restartKernelInternal(): Promise<void> {
         this.restartingKernel = true;
 
         // First we need to finish all outstanding cells.
@@ -405,7 +408,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    @captureTelemetry(Telemetry.SubmitCellThroughInput, {}, false)
+    @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
     // tslint:disable-next-line:no-any
     private submitNewCell(payload?: any) {
         // If there's any payload, it's the code
@@ -416,13 +419,13 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private setStatus = (message: string) : Disposable => {
+    private setStatus = (message: string): Disposable => {
         const result = this.statusProvider.set(message);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
     }
 
-    private logTelemetry = (event : string) => {
+    private logTelemetry = (event : Telemetry) => {
         sendTelemetryEvent(event);
     }
 
@@ -434,13 +437,13 @@ export class History implements IWebPanelMessageListener, IHistory {
             copy.data.execution_count = count - this.ignoreCount;
         }
         if (this.webPanel) {
-            this.webPanel.postMessage({type: message, payload: copy});
+            this.webPanel.postMessage({ type: message, payload: copy });
         }
     }
 
-    private onAddCodeEvent = (cells : ICell[], editor?: TextEditor) => {
+    private onAddCodeEvent = (cells: ICell[], editor?: TextEditor) => {
         // Send each cell to the other side
-        cells.forEach((cell : ICell) => {
+        cells.forEach((cell: ICell) => {
             if (this.webPanel) {
                 switch (cell.state) {
                     case CellState.init:
@@ -459,7 +462,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                     case CellState.error:
                     case CellState.finished:
                         // Tell the react controls we're done
-                        this.sendCell(cell,  HistoryMessages.FinishCell);
+                        this.sendCell(cell, HistoryMessages.FinishCell);
 
                         // Remove from the list of unfinished cells
                         this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
@@ -488,7 +491,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         const dsSettings = JSON.stringify(this.configuration.getSettings().datascience);
 
         if (this.webPanel) {
-            this.webPanel.postMessage({type: HistoryMessages.UpdateSettings, payload: dsSettings});
+            this.webPanel.postMessage({ type: HistoryMessages.UpdateSettings, payload: dsSettings });
         }
     }
 
@@ -503,7 +506,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         this.loadPromise = this.loadJupyterServer(true);
     }
 
-    @captureTelemetry(Telemetry.GotoSourceCode, {}, false)
+    @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
     private gotoCode(file: string, line: number) {
         this.gotoCodeInternal(file, line).catch(err => {
             this.applicationShell.showErrorMessage(err);
@@ -511,10 +514,10 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private async gotoCodeInternal(file: string, line: number) {
-        let editor : TextEditor | undefined;
+        let editor: TextEditor | undefined;
 
         if (await fs.pathExists(file)) {
-            editor = await this.documentManager.showTextDocument(Uri.file(file), {viewColumn: ViewColumn.One});
+            editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
             editor = this.documentManager.visibleTextEditors.find(te => te.document.fileName === file);
@@ -530,16 +533,16 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    @captureTelemetry(Telemetry.ExportNotebook, {}, false)
+    @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
     // tslint:disable-next-line: no-any no-empty
-    private export (payload: any) {
+    private export(payload: any) {
         if (payload.contents) {
             // Should be an array of cells
             const cells = payload.contents as ICell[];
             if (cells && this.applicationShell) {
 
                 const filtersKey = localize.DataScience.exportDialogFilter();
-                const filtersObject = {};
+                const filtersObject: Record<string, string[]> = {};
                 filtersObject[filtersKey] = ['ipynb'];
 
                 // Bring up the open file dialog box
@@ -556,7 +559,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private exportToFile = async (cells: ICell[], file : string) => {
+    private exportToFile = async (cells: ICell[], file: string) => {
         // Take the list of cells, convert them to a notebook json format and write to disk
         if (this.jupyterServer) {
             let directoryChange;
@@ -569,8 +572,8 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             try {
                 // tslint:disable-next-line: no-any
-                await this.fileSystem.writeFile(file, JSON.stringify(notebook), {encoding: 'utf8', flag: 'w'});
-                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str : string | undefined) => {
+                await this.fileSystem.writeFile(file, JSON.stringify(notebook), { encoding: 'utf8', flag: 'w' });
+                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
                     if (str && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
                         this.jupyterExecution.spawnNotebook(file).ignoreErrors();
@@ -583,12 +586,12 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
+    private loadJupyterServer = async (restart?: boolean): Promise<void> => {
         // Startup our jupyter server
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         let workingDir: string | undefined;
-        const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
         try {
             // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
@@ -611,8 +614,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     // Calculate the working directory that we should move into when starting up our Jupyter server locally
-    private calculateWorkingDirectory = async (): Promise<string | undefined> =>
-    {
+    private calculateWorkingDirectory = async (): Promise<string | undefined> => {
         let workingDir: string | undefined;
         // For a local launch calculate the working directory that we should switch into
         const settings = this.configuration.getSettings();
@@ -631,21 +633,21 @@ export class History implements IWebPanelMessageListener, IHistory {
                     workingDir = workspaceFolderPath;
                 }
             } else {
-               // fileRoot is a relative path, combine it with the workspace folder
-               const combinedPath = path.join(workspaceFolderPath, fileRoot);
-               if (await this.fileSystem.directoryExists(combinedPath)) {
-                   // combined path exists, use it
-                   workingDir = combinedPath;
-               } else {
-                   // Combined path doesn't exist, use workspace
-                   workingDir = workspaceFolderPath;
-               }
+                // fileRoot is a relative path, combine it with the workspace folder
+                const combinedPath = path.join(workspaceFolderPath, fileRoot);
+                if (await this.fileSystem.directoryExists(combinedPath)) {
+                    // combined path exists, use it
+                    workingDir = combinedPath;
+                } else {
+                    // Combined path doesn't exist, use workspace
+                    workingDir = workspaceFolderPath;
+                }
             }
         }
         return workingDir;
     }
 
-    private extractStreamOutput(cell: ICell) : string {
+    private extractStreamOutput(cell: ICell): string {
         let result = '';
         if (cell.state === CellState.error || cell.state === CellState.finished) {
             const outputs = cell.data.outputs as nbformat.IOutput[];
@@ -657,7 +659,8 @@ export class History implements IWebPanelMessageListener, IHistory {
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
-                            result = result.concat(data['text/plain']);
+                            // tslint:disable-next-line:no-any
+                            result = result.concat((data as any)['text/plain']);
                         }
                     }
                 });
@@ -666,7 +669,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         return result;
     }
 
-    private generateSysInfoCell = async (reason: SysInfoReason) : Promise<ICell | undefined> => {
+    private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
         if (this.jupyterServer) {
@@ -715,22 +718,22 @@ export class History implements IWebPanelMessageListener, IHistory {
     private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
         switch (reason) {
             case SysInfoReason.Start:
-                    // Message depends upon if ipykernel is supported or not.
-                    if (!(await this.jupyterExecution.isKernelCreateSupported())) {
-                        return localize.DataScience.pythonVersionHeaderNoPyKernel();
-                    }
-                    return localize.DataScience.pythonVersionHeader();
-                    break;
+                // Message depends upon if ipykernel is supported or not.
+                if (!(await this.jupyterExecution.isKernelCreateSupported())) {
+                    return localize.DataScience.pythonVersionHeaderNoPyKernel();
+                }
+                return localize.DataScience.pythonVersionHeader();
+                break;
             case SysInfoReason.Restart:
-                    return localize.DataScience.pythonRestartHeader();
-                    break;
+                return localize.DataScience.pythonRestartHeader();
+                break;
             case SysInfoReason.Interrupt:
-                    return localize.DataScience.pythonInterruptFailedHeader();
-                    break;
+                return localize.DataScience.pythonInterruptFailedHeader();
+                break;
             default:
-                    this.logger.logError('Invalid SysInfoReason');
-                    return '';
-                    break;
+                this.logger.logError('Invalid SysInfoReason');
+                return '';
+                break;
         }
     }
 
@@ -745,7 +748,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         return `${localize.DataScience.sysInfoURILabel()}${urlString}`;
     }
 
-    private addSysInfo = async (reason: SysInfoReason) : Promise<void> => {
+    private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
         if (!this.addedSysInfo || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
             this.addedSysInfo = true;
             this.ignoreCount = 0;
@@ -758,7 +761,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private loadWebPanel = async () : Promise<void> => {
+    private loadWebPanel = async (): Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
 
         // Figure out the name of our main bundle. Should be in our output directory
@@ -772,7 +775,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
     }
 
-    private load = async () : Promise<void> => {
+    private load = async (): Promise<void> => {
         const status = this.setStatus(localize.DataScience.startingJupyter());
 
         // Check to see if we support ipykernel or not

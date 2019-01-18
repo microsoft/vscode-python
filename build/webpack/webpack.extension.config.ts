@@ -5,12 +5,9 @@
 
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { Configuration, ContextReplacementPlugin } from 'webpack';
+import { Configuration } from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins, getListOfExistingModulesInOutDir } from './common';
-
-// tslint:disable-next-line:no-var-requires no-require-imports
-const WrapperPlugin = require('wrapper-webpack-plugin');
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
@@ -65,13 +62,7 @@ const config: Configuration = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        ...getDefaultPlugins('extension'),
-        new WrapperPlugin({
-            test: /\extension.js$/,
-            // Import source map warning file only if source map is enabled.
-            // Minimize importing external files.
-            header: '(function(){if (require(\'vscode\').workspace.getConfiguration(\'python.diagnostics\', undefined).get(\'sourceMapsEnabled\', false)) {require(\'./sourceMapSupport\').default(require(\'vscode\'));}})();'
-        })
+        ...getDefaultPlugins('extension')
     ],
     resolve: {
         extensions: ['.ts', '.js'],

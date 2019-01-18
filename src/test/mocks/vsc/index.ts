@@ -19,7 +19,7 @@ export namespace vscMock {
     export class Uri implements vscode.Uri {
         private constructor(public readonly scheme: string, public readonly authority: string,
             public readonly path: string, public readonly query: string,
-            public readonly fragment: string, public readonly fsPath) {
+            public readonly fragment: string, public readonly fsPath: string) {
 
         }
         public static file(path: string): Uri {
@@ -54,6 +54,7 @@ export namespace vscMock {
         public event: vscode.Event<T>;
         public emitter: NodeEventEmitter;
         constructor() {
+            // @ts-ignore
             this.event = this.add.bind(this);
             this.emitter = new NodeEventEmitter();
         }
@@ -79,6 +80,7 @@ export namespace vscMock {
         public onCancellationRequested: vscode.Event<any>;
         constructor() {
             super();
+            // @ts-ignore
             this.onCancellationRequested = this.add.bind(this);
         }
         public cancel() {

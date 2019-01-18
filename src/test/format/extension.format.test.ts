@@ -4,7 +4,6 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { instance, mock } from 'ts-mockito';
 import {
     CancellationTokenSource, Position, Uri, window, workspace
 } from 'vscode';

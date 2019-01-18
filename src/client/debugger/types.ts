@@ -58,7 +58,7 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     args: string[];
     cwd?: string;
     debugOptions?: DebugOptions[];
-    env?: { [key: string]: string | undefined };
+    env?: Record<string, string | undefined>;
     envFile: string;
     console?: ConsoleType;
 }

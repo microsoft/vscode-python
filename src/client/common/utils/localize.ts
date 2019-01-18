@@ -14,20 +14,29 @@ export namespace Diagnostics {
     export const warnBeforeEnablingSourceMaps = localize('diagnostics.warnBeforeEnablingSourceMaps', 'Enabling source map support in the Python Extension will adversely impact performance of the extension.');
     export const enableSourceMapsAndReloadVSC = localize('diagnostics.enableSourceMapsAndReloadVSC', 'Enable and reload Window.');
     export const lsNotSupported = localize('diagnostics.lsNotSupported', 'Your operating system does not meet the minimum requirements of the Language Server. Reverting to the alternative, Jedi.');
+    export const invalidPythonPathInDebuggerSettings = localize('diagnostics.invalidPythonPathInDebuggerSettings', 'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.');
+    export const invalidPythonPathInDebuggerLaunch = localize('diagnostics.invalidPythonPathInDebuggerLaunch', 'The Python path in your debug configuration is invalid.');
 }
 
 export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
     export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
+    export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
 }
 
 export namespace LanguageService {
     export const bannerMessage = localize('LanguageService.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?');
     export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
-    export const lsFailedToStart = localize('LanguageService.lsFailedToStart', 'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
-    export const lsFailedToDownload = localize('LanguageService.lsFailedToDownload', 'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details..');
-    export const lsFailedToExtract = localize('LanguageService.lsFailedToExtract', 'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Output panel for details.');
+    export const lsFailedToStart = localize('LanguageService.lsFailedToStart', 'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
+    export const lsFailedToDownload = localize('LanguageService.lsFailedToDownload', 'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
+    export const lsFailedToExtract = localize('LanguageService.lsFailedToExtract', 'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
+    export const downloadFailedOutputMessage = localize('LanguageService.downloadFailedOutputMessage', 'download failed.');
+    export const extractionFailedOutputMessage = localize('LanguageService.extractionFailedOutputMessage', 'extraction failed.');
+    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'complete.');
+    export const extractionDoneOutputMessage = localize('LanguageService.extractionDoneOutputMessage', 'done.');
+    export const reloadVSCodeIfSeachPathHasChanged = localize('LanguageService.reloadVSCodeIfSeachPathHasChanged', 'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.');
+
 }
 
 export namespace Interpreters {
@@ -156,9 +165,9 @@ export namespace UnitTests {
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
-let loadedCollection: { [index: string]: string } | undefined;
-let defaultCollection: { [index: string]: string } | undefined;
-const askedForCollection: { [index: string]: string } = {};
+let loadedCollection: Record<string, string> | undefined;
+let defaultCollection: Record<string, string> | undefined;
+const askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
 export function localize(key: string, defValue: string) {

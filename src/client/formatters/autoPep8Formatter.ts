@@ -4,7 +4,7 @@ import { IConfigurationService } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
-import { FORMAT } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { BaseFormatter } from './baseFormatter';
 
 export class AutoPep8Formatter extends BaseFormatter {
@@ -24,7 +24,7 @@ export class AutoPep8Formatter extends BaseFormatter {
             autoPep8Args.push(...['--line-range', (range!.start.line + 1).toString(), (range!.end.line + 1).toString()]);
         }
         const promise = super.provideDocumentFormattingEdits(document, options, token, autoPep8Args);
-        sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'autopep8', hasCustomArgs, formatSelection });
+        sendTelemetryWhenDone(EventName.FORMAT, promise, stopWatch, { tool: 'autopep8', hasCustomArgs, formatSelection });
         return promise;
     }
 }

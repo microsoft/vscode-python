@@ -1,6 +1,10 @@
-import { Range, window, TextDocument, Position } from 'vscode';
+import { Position, Range, TextDocument, window } from 'vscode';
 
 export class JupyterProvider {
+    private static isCodeBlock(code: string): boolean {
+        return code.trim().endsWith(':') && code.indexOf('#') === -1;
+    }
+
     /**
      * Returns a Regular Expression used to determine whether a line is a Cell delimiter or not
      *
@@ -22,7 +26,8 @@ export class JupyterProvider {
      *
      * @memberOf LanguageProvider
      */
-    getSelectedCode(selectedCode: string, currentCell?: Range): Promise<string> {
+    // @ts-ignore
+    public getSelectedCode(selectedCode: string, currentCell?: Range): Promise<string> {
         if (!JupyterProvider.isCodeBlock(selectedCode)) {
             return Promise.resolve(selectedCode);
         }
@@ -30,11 +35,14 @@ export class JupyterProvider {
         // ok we're in a block, look for the end of the block untill the last line in the cell (if there are any cells)
         return new Promise<string>((resolve, reject) => {
             const activeEditor = window.activeTextEditor;
+            if (!activeEditor) {
+                return resolve('');
+            }
             const endLineNumber = currentCell ? currentCell.end.line : activeEditor.document.lineCount - 1;
             const startIndent = selectedCode.indexOf(selectedCode.trim());
             const nextStartLine = activeEditor.selection.start.line + 1;
 
-            for (let lineNumber = nextStartLine; lineNumber <= endLineNumber; lineNumber++) {
+            for (let lineNumber = nextStartLine; lineNumber <= endLineNumber; lineNumber += 1) {
                 const line = activeEditor.document.lineAt(lineNumber);
                 const nextLine = line.text;
                 const nextLineIndent = nextLine.indexOf(nextLine.trim());
@@ -62,9 +70,9 @@ export class JupyterProvider {
      *
      * @memberOf LanguageProvider
      */
-    getFirstLineOfExecutableCode(document: TextDocument, range: Range): Promise<Position> {
-        for (let lineNumber = range.start.line; lineNumber < range.end.line; lineNumber++) {
-            let line = document.lineAt(lineNumber);
+    public getFirstLineOfExecutableCode(document: TextDocument, range: Range): Promise<Position> {
+        for (let lineNumber = range.start.line; lineNumber < range.end.line; lineNumber += 1) {
+            const line = document.lineAt(lineNumber);
             if (line.isEmptyOrWhitespace) {
                 continue;
             }
@@ -82,9 +90,4 @@ export class JupyterProvider {
         // give up
         return Promise.resolve(new Position(range.start.line, 0));
     }
-
-    private static isCodeBlock(code: string): boolean {
-        return code.trim().endsWith(':') && code.indexOf('#') === -1;
-    }
-
 }

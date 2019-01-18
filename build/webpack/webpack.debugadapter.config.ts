@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { Configuration, ContextReplacementPlugin } from 'webpack';
+import { Configuration } from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins } from './common';
 

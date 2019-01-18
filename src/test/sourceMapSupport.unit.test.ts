@@ -3,12 +3,14 @@
 
 'use strict';
 
-// tslint:disable:no-any
+// tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file
 
 import { expect } from 'chai';
-import { ConfigurationTarget } from 'vscode';
+import * as path from 'path';
+import { ConfigurationTarget, Disposable } from 'vscode';
 import { Diagnostics } from '../client/common/utils/localize';
-import * as sourceMaps from '../client/sourceMapSupport';
+import { EXTENSION_ROOT_DIR } from '../client/constants';
+import { initialize, SourceMapSupport } from '../client/sourceMapSupport';
 import { noop, sleep } from './core';
 
 suite('Source Map Support', () => {
@@ -47,17 +49,26 @@ suite('Source Map Support', () => {
         };
         return { stubInfo, vscode };
     }
+
+    const disposables: Disposable[] = [];
+    teardown(() => {
+        disposables.forEach(disposable => {
+            try {
+                disposable.dispose();
+            } catch { noop(); }
+        });
+    });
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(false);
-        sourceMaps.default(stub.vscode as any);
+        initialize(stub.vscode as any);
         await sleep(100);
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
         expect(stub.stubInfo.messageDisplayed).to.be.equal(false, 'Message displayed');
     });
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true);
-        const instance = new class extends sourceMaps.SourceMapSupport {
-            protected initializeSourceMaps() {
+        const instance = new class extends SourceMapSupport {
+            protected async enableSourceMaps(enable: boolean) {
                 noop();
             }
         }(stub.vscode as any);
@@ -68,14 +79,36 @@ suite('Source Map Support', () => {
     });
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true, true);
-        const instance = new class extends sourceMaps.SourceMapSupport {
-            protected initializeSourceMaps() {
+        const instance = new class extends SourceMapSupport {
+            protected async enableSourceMaps(enable: boolean) {
                 noop();
             }
         }(stub.vscode as any);
+
         await instance.initialize();
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
         expect(stub.stubInfo.messageDisplayed).to.be.equal(true, 'Message displayed');
         expect(stub.stubInfo.configValueUpdated).to.be.equal(true, 'Config Value not updated');
     });
+    async function testRenamingFilesWhenEnablingDisablingSourceMaps(enableSourceMaps: boolean) {
+        const stub = createVSCStub(true, true);
+        const sourceFilesPassed: string[] = [];
+        const instance = new class extends SourceMapSupport {
+            public async enableSourceMaps(enable: boolean) {
+                return super.enableSourceMaps(enable);
+            }
+            public async enableSourceMap(enable: boolean, sourceFile: string) {
+                expect(enable).to.equal(enableSourceMaps);
+                sourceFilesPassed.push(sourceFile);
+                return Promise.resolve();
+            }
+        }(stub.vscode as any);
+
+        await instance.enableSourceMaps(enableSourceMaps);
+        const extensionSourceMap = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'extension.js');
+        const debuggerSourceMap = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
+        expect(sourceFilesPassed).to.deep.equal([extensionSourceMap, debuggerSourceMap]);
+    }
+    test('Rename extension and debugger source maps when enabling source maps', () => testRenamingFilesWhenEnablingDisablingSourceMaps(true));
+    test('Rename extension and debugger source maps when disabling source maps', () => testRenamingFilesWhenEnablingDisablingSourceMaps(false));
 });

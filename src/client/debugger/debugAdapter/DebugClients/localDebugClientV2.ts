@@ -12,7 +12,7 @@ export class LocalDebugClientV2 extends LocalDebugClient {
     constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
-    protected buildDebugArguments(cwd: string, debugPort: number): string[] {
+    protected buildDebugArguments(_cwd: string, debugPort: number): string[] {
         return this.launcherScriptProvider.getLauncherArgs({ host: 'localhost', port: debugPort, customDebugger: this.args.customDebugger });
     }
     protected buildStandardArguments() {

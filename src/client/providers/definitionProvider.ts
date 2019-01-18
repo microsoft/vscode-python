@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
-import { DEFINITION } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
 export class PythonDefinitionProvider implements vscode.DefinitionProvider {
@@ -19,7 +19,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             return new vscode.Location(definitionResource, range);
         }
     }
-    @captureTelemetry(DEFINITION)
+    @captureTelemetry(EventName.DEFINITION)
     public async provideDefinition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Definition | undefined> {
         const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {

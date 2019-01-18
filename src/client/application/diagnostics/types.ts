@@ -4,23 +4,31 @@
 'use strict';
 
 import { DiagnosticSeverity, Uri } from 'vscode';
+import { Resource } from '../../common/types';
+import { DiagnosticCodes } from './constants';
 
 export enum DiagnosticScope {
     Global = 'Global',
     WorkspaceFolder = 'WorkspaceFolder'
 }
 
+export enum DiagnosticIgnoreScope {
+    always = 'always',
+    session = 'session'
+}
+
 export interface IDiagnostic {
-    readonly code: string;
+    readonly code: DiagnosticCodes;
     readonly message: string;
     readonly severity: DiagnosticSeverity;
     readonly scope: DiagnosticScope;
+    readonly resource: Resource;
 }
 
 export const IDiagnosticsService = Symbol('IDiagnosticsService');
 
 export interface IDiagnosticsService {
-    diagnose(): Promise<IDiagnostic[]>;
+    diagnose(resource: Resource): Promise<IDiagnostic[]>;
     canHandle(diagnostic: IDiagnostic): Promise<boolean>;
     handle(diagnostics: IDiagnostic[]): Promise<void>;
 }

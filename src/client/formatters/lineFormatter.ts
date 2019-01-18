@@ -149,7 +149,7 @@ export class LineFormatter {
                         this.builder.append('*');
                         return;
                     }
-                    if (this.handleStarOperator(t, prev)) {
+                    if (this.handleStarOperator(t, prev!)) {
                         return;
                     }
                     break;
@@ -158,7 +158,7 @@ export class LineFormatter {
             }
         } else if (t.length === 2) {
             if (this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
-                if (this.handleStarOperator(t, prev)) {
+                if (this.handleStarOperator(t, prev!)) {
                     return;
                 }
             }
@@ -204,7 +204,7 @@ export class LineFormatter {
         return false;
     }
 
-    private handleEqual(t: IToken, index: number): void {
+    private handleEqual(_t: IToken, index: number): void {
         if (this.isMultipleStatements(index) && !this.braceCounter.isOpened(TokenType.OpenBrace)) {
             // x = 1; x, y = y, x
             this.builder.softAppendSpace();

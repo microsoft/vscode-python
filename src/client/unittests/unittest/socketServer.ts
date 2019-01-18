@@ -5,7 +5,7 @@ import * as net from 'net';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IUnitTestSocketServer } from '../common/types';
 
-// tslint:disable-next-line:variable-name
+// tslint:disable:variable-name no-any
 const MaxConnections = 100;
 
 @injectable()
@@ -93,7 +93,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         });
         this.emit('connect', socket);
     }
-    private log(message, ...data) {
+    private log(message: string, ...data: any[]) {
         this.emit('log', message, ...data);
     }
     private onCloseSocket() {

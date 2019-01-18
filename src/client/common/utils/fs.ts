@@ -56,7 +56,7 @@ export function createTemporaryFile(extension: string, temporaryDirectory?: stri
     }
 
     return new Promise<{ filePath: string; cleanupCallback: Function }>((resolve, reject) => {
-        tmp.file(options, (err, tmpFile, fd, cleanupCallback) => {
+        tmp.file(options, (err, tmpFile, _fd, cleanupCallback) => {
             if (err) {
                 return reject(err);
             }

@@ -40,7 +40,7 @@ export abstract class BaseFormatter {
         }
         return vscode.Uri.file(__dirname);
     }
-    protected async provideDocumentFormattingEdits(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, args: string[], cwd?: string): Promise<vscode.TextEdit[]> {
+    protected async provideDocumentFormattingEdits(document: vscode.TextDocument, _options: vscode.FormattingOptions, token: vscode.CancellationToken, args: string[], cwd?: string): Promise<vscode.TextEdit[]> {
         if (typeof cwd !== 'string' || cwd.length === 0) {
             cwd = this.getWorkspaceUri(document).fsPath;
         }
@@ -81,7 +81,7 @@ export abstract class BaseFormatter {
         return promise;
     }
 
-    protected async handleError(expectedFileName: string, error: Error, resource?: vscode.Uri) {
+    protected async handleError(_expectedFileName: string, error: Error, resource?: vscode.Uri) {
         let customError = `Formatting with ${this.Id} failed.`;
 
         if (isNotInstalledError(error)) {

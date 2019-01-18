@@ -4,7 +4,7 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal, isWhiteSpace } from './characters';
+import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
 import { TextRangeCollection } from './textRangeCollection';
 import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenizerMode, TokenType } from './types';

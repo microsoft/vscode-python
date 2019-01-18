@@ -24,7 +24,7 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     public isSupported(resource?: Uri): Promise<boolean> {
         return this.isPipAvailable(resource);
     }
-    protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
+    protected async getExecutionInfo(moduleName: string, _resource?: Uri): Promise<ExecutionInfo> {
         const proxyArgs: string[] = [];
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const proxy = workspaceService.getConfiguration('http').get('proxy', '');

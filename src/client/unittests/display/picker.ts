@@ -137,11 +137,16 @@ function buildItems(tests?: Tests): TestItem[] {
     return items;
 }
 
-const statusSortPrefix = {};
-statusSortPrefix[TestStatus.Error] = '1';
-statusSortPrefix[TestStatus.Fail] = '2';
-statusSortPrefix[TestStatus.Skipped] = '3';
-statusSortPrefix[TestStatus.Pass] = '4';
+const statusSortPrefix = {
+    [TestStatus.Error]: '1',
+    [TestStatus.Fail]: '2',
+    [TestStatus.Skipped]: '3',
+    [TestStatus.Pass]: '4',
+    [TestStatus.Discovering]: undefined,
+    [TestStatus.Idle]: undefined,
+    [TestStatus.Running]: undefined,
+    [TestStatus.Unknown]: undefined
+};
 
 function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false, debug: boolean = false): TestItem[] {
     const functionItems: TestItem[] = [];
@@ -163,13 +168,13 @@ function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunct
         let sortAPrefix = '5-';
         let sortBPrefix = '5-';
         if (sortBasedOnResults && a.fn && a.fn.testFunction.status && b.fn && b.fn.testFunction.status) {
-            sortAPrefix = statusSortPrefix[a.fn.testFunction.status] ? statusSortPrefix[a.fn.testFunction.status] : sortAPrefix;
-            sortBPrefix = statusSortPrefix[b.fn.testFunction.status] ? statusSortPrefix[b.fn.testFunction.status] : sortBPrefix;
+            sortAPrefix = statusSortPrefix[a.fn.testFunction.status] ? statusSortPrefix[a.fn.testFunction.status]! : sortAPrefix;
+            sortBPrefix = statusSortPrefix[b.fn.testFunction.status] ? statusSortPrefix[b.fn.testFunction.status]! : sortBPrefix;
         }
-        if (sortAPrefix + a.detail + a.label < sortBPrefix + b.detail + b.label) {
+        if (`${sortAPrefix}${a.detail}${a.label}` < `${sortBPrefix}${b.detail}${b.label}`) {
             return -1;
         }
-        if (sortAPrefix + a.detail + a.label > sortBPrefix + b.detail + b.label) {
+        if (`${sortAPrefix}${a.detail}${a.label}` > `${sortBPrefix}${b.detail}${b.label}`) {
             return 1;
         }
         return 0;

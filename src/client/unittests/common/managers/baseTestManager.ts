@@ -5,7 +5,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
 import { getNamesAndValues } from '../../../common/utils/enum';
 import { IServiceContainer } from '../../../ioc/types';
-import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
+import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
 import { IPythonUnitTestMessage, IUnitTestDiagnosticService } from '../../types';
@@ -143,7 +143,7 @@ export abstract class BaseTestManager implements ITestManager {
                 const wkspace = this.workspaceService.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
                 this.testCollectionStorage.storeTests(wkspace, tests);
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
-                sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
                 return tests;
             }).catch((reason: {}) => {
                 if (isNotInstalledError(reason as Error) && !quietMode) {
@@ -158,7 +158,7 @@ export abstract class BaseTestManager implements ITestManager {
                     this._status = TestStatus.Idle;
                 } else {
                     telementryProperties.failed = true;
-                    sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
+                    sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
                     this._status = TestStatus.Error;
                     this.outputChannel.appendLine('Test Discovery failed: ');
                     // tslint:disable-next-line:prefer-template
@@ -237,7 +237,7 @@ export abstract class BaseTestManager implements ITestManager {
             }).then(() => {
                 this._status = TestStatus.Idle;
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
-                sendTelemetryEvent(UNITTEST_RUN, undefined, telementryProperties);
+                sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
                 return this.tests!;
             }).catch(reason => {
                 if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
@@ -246,7 +246,7 @@ export abstract class BaseTestManager implements ITestManager {
                 } else {
                     this._status = TestStatus.Error;
                     telementryProperties.failed = true;
-                    sendTelemetryEvent(UNITTEST_RUN, undefined, telementryProperties);
+                    sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
                 }
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 return Promise.reject<Tests>(reason);
@@ -256,7 +256,7 @@ export abstract class BaseTestManager implements ITestManager {
         await this.stripStaleDiagnostics(tests, messages);
 
         // Update relevant file diagnostics for tests that have problems.
-        const uniqueMsgFiles = messages.reduce((filtered, msg) => {
+        const uniqueMsgFiles = messages.reduce<string[]>((filtered, msg) => {
             if (filtered.indexOf(msg.testFilePath) === -1 && msg.testFilePath !== undefined) {
                 filtered.push(msg.testFilePath);
             }
@@ -272,7 +272,7 @@ export abstract class BaseTestManager implements ITestManager {
                 this.diagnosticCollection.set(fileUri, diagnostics);
             }
             // Get the diagnostics for this file's URI before updating it so old tests that weren't run can still show problems.
-            const oldDiagnostics = this.diagnosticCollection.get(fileUri);
+            const oldDiagnostics = this.diagnosticCollection.get(fileUri)!;
             const newDiagnostics: Diagnostic[] = [];
             for (const diagnostic of oldDiagnostics) {
                 newDiagnostics.push(diagnostic);
@@ -344,15 +344,15 @@ export abstract class BaseTestManager implements ITestManager {
     }
 
     private createDiagnostics(message: IPythonUnitTestMessage): Diagnostic {
-        const stackStart = message.locationStack[0];
+        const stackStart = message.locationStack![0];
         const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
-        const diagMsg = message.message.split('\n')[0];
+        const diagMsg = message.message!.split('\n')[0];
         const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];
-        for (const frameDetails of message.locationStack) {
+        for (const frameDetails of message.locationStack!) {
             const relatedInfo = new DiagnosticRelatedInformation(frameDetails.location, frameDetails.lineText);
             relatedInfoArr.push(relatedInfo);
         }

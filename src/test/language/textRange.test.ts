@@ -45,11 +45,17 @@ suite('Language.TextRange', () => {
     });
     test('Exceptions', async () => {
         assert.throws(
-            () => { const e = new TextRange(0, -1); },
+            () => {
+                // @ts-ignore
+                const e = new TextRange(0, -1);
+            },
             Error
         );
         assert.throws(
-            () => { const e = TextRange.fromBounds(3, 1); },
+            () => {
+                // @ts-ignore
+                const e = TextRange.fromBounds(3, 1);
+            },
             Error
         );
     });

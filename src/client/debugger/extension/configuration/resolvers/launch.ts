@@ -26,7 +26,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IConfigurationService) configurationService: IConfigurationService) {
         super(workspaceService, documentManager, configurationService);
     }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
+    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         const config = debugConfiguration as LaunchRequestArguments;

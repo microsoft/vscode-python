@@ -1,7 +1,7 @@
 import { OutputChannel, Uri } from 'vscode';
-import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
+import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IErrorHandler, ILinterInfo } from '../types';
+import { IErrorHandler } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 import { NotInstalledErrorHandler } from './notInstalled';
 import { StandardErrorHandler } from './standard';

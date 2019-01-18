@@ -204,9 +204,11 @@ export namespace vscMockRange {
 
             // Check if selection is now empty
             if (resultStartLineNumber > resultEndLineNumber) {
+                // @ts-ignore
                 return null;
             }
             if (resultStartLineNumber === resultEndLineNumber && resultStartColumn > resultEndColumn) {
+                // @ts-ignore
                 return null;
             }
             return new Range(resultStartLineNumber, resultStartColumn, resultEndLineNumber, resultEndColumn);
@@ -293,6 +295,7 @@ export namespace vscMockRange {
          */
         public static lift(range: IRange): Range {
             if (!range) {
+                // @ts-ignore
                 return null;
             }
             return new Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn);

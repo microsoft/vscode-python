@@ -4,10 +4,11 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { Terminal, Uri } from 'vscode';
+import { Terminal } from 'vscode';
 import { PowerShellActivationHackDiagnosticsServiceId, PowershellActivationNotAvailableDiagnostic } from '../../../application/diagnostics/checks/powerShellActivation';
 import { IDiagnosticsService } from '../../../application/diagnostics/types';
 import { IPlatformService } from '../../platform/types';
+import { Resource } from '../../types';
 import { ITerminalActivationHandler, ITerminalHelper, TerminalShellType } from '../types';
 
 @injectable()
@@ -16,7 +17,7 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IDiagnosticsService) @named(PowerShellActivationHackDiagnosticsServiceId) private readonly diagnosticService: IDiagnosticsService) {
     }
-    public async handleActivation(_terminal: Terminal, resource: Uri | undefined, _preserveFocus: boolean, activated: boolean) {
+    public async handleActivation(_terminal: Terminal, resource: Resource, _preserveFocus: boolean, activated: boolean) {
         if (activated || !this.platformService.isWindows) {
             return;
         }
@@ -29,7 +30,7 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;
         }
-        this.diagnosticService.handle([new PowershellActivationNotAvailableDiagnostic()]).ignoreErrors();
+        this.diagnosticService.handle([new PowershellActivationNotAvailableDiagnostic(resource)]).ignoreErrors();
     }
 
 }

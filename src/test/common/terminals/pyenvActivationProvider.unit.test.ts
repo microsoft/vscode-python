@@ -95,6 +95,6 @@ suite('Terminal Environment Activation pyenv', () => {
             .verifiable(TypeMoq.Times.once());
 
         const activationCommands = await activationProvider.getActivationCommands(undefined, TerminalShellType.bash);
-        expect(activationCommands).to.deep.equal([`pyenv shell ${intepreterInfo.envName}`], 'Invalid Activation command');
+        expect(activationCommands).to.deep.equal([`pyenv shell "${intepreterInfo.envName}"`], 'Invalid Activation command');
     });
 });

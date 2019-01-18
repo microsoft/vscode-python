@@ -12,14 +12,13 @@ import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
-
 import {
     IApplicationShell,
     IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';

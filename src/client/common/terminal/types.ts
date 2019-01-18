@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { Event, Terminal, Uri } from 'vscode';
+
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { Resource } from '../types';
 
 export enum TerminalActivationProviders {
@@ -57,7 +58,7 @@ export interface ITerminalHelper {
     getTerminalShellPath(): string;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
     getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
-    getEnvironmentActivationShellCommands(resource: Resource): Promise<string[] | undefined>;
+    getEnvironmentActivationShellCommands(resource: Resource, interpreter?: PythonInterpreter): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivator = Symbol('ITerminalActivator');
@@ -70,7 +71,7 @@ export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCom
 export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
-    getActivationCommandsForInterpreter?(pythonPath, targetShell: TerminalShellType): Promise<string[] | undefined>;
+    getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivationHandler = Symbol('ITerminalActivationHandler');

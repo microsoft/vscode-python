@@ -69,7 +69,7 @@ export abstract class ModuleInstaller {
         return new Promise<boolean>(resolve => {
             fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
                 if (!error) {
-                    fs.close(fd, (e) => {
+                    fs.close(fd, () => {
                         fs.unlink(filePath, noop);
                     });
                 }
@@ -90,7 +90,7 @@ export abstract class ModuleInstaller {
         // tslint:disable-next-line:no-require-imports no-var-requires
         const sudo = require('sudo-prompt');
 
-        sudo.exec(command, options, (error, stdout, stderr) => {
+        sudo.exec(command, options, (error: string, stdout: string, stderr: string) => {
             if (error) {
                 vscode.window.showErrorMessage(error);
             } else {

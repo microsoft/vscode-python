@@ -6,7 +6,7 @@ import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
-import { PLATFORM_INFO, PlatformErrors } from '../../telemetry/constants';
+import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
@@ -35,12 +35,12 @@ export class PlatformService implements IPlatformService {
                 try {
                     const ver = coerce(os.release());
                     if (ver) {
-                        sendTelemetryEvent(PLATFORM_INFO, undefined, { osVersion: `${ver.major}.${ver.minor}.${ver.patch}` });
+                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { osVersion: `${ver.major}.${ver.minor}.${ver.patch}` });
                         return this.version = ver;
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
-                    sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToParseVersion });
+                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToParseVersion });
                     return parseVersion(os.release());
                 }
             default:
@@ -59,7 +59,7 @@ export class PlatformService implements IPlatformService {
     }
     public get is64bit(): boolean {
         // tslint:disable-next-line:no-require-imports
-        const arch = require('arch') as typeof import('arch');
+        const arch = require('arch');
         return arch() === 'x64';
     }
 }
@@ -72,7 +72,7 @@ function getOSType(platform: string = process.platform): OSType {
     } else if (/^linux/.test(platform)) {
         return OSType.Linux;
     } else {
-        sendTelemetryEvent(PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToDetermineOS });
+        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToDetermineOS });
         return OSType.Unknown;
     }
 }

@@ -7,7 +7,7 @@ import { injectable } from 'inversify';
 import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
 import { InputStep, MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
-import { DEBUGGER_CONFIGURATION_PROMPTS } from '../../../../telemetry/constants';
+import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTypeName } from '../../../constants';
 import { AttachRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
@@ -38,7 +38,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             config.host = defaultHost;
         }
 
-        sendTelemetryEvent(DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.remoteAttach, manuallyEnteredAValue: config.host !== defaultHost });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.remoteAttach, manuallyEnteredAValue: config.host !== defaultHost });
         Object.assign(state.config, config);
         return _ => this.configurePort(input, state.config);
     }
@@ -57,6 +57,6 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
         if (!config.port) {
             config.port = defaultPort;
         }
-        sendTelemetryEvent(DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.remoteAttach, manuallyEnteredAValue: config.port !== defaultPort });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.remoteAttach, manuallyEnteredAValue: config.port !== defaultPort });
     }
 }

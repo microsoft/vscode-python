@@ -87,7 +87,7 @@ suite('Autocomplete Base Tests', function () {
         const textDocument = await vscode.workspace.openTextDocument(fileDoc);
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(5, 27);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         // These are not known to work, jedi issue
         // assert.equal(list.items.filter(item => item.label === 'capitalize').length, 1, 'capitalize not found (known not to work, Jedi issue)');
         // assert.notEqual(list.items.filter(item => item.label === 'upper').length, 1, 'upper not found');

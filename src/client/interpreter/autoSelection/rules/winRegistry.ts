@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
@@ -28,6 +29,7 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
         }
         const interpreters = await this.winRegInterpreterLocator.getInterpreters(resource);
         const bestInterpreter = this.helper.getBestInterpreter(interpreters);
+        traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
         return await this.setGlobalInterpreter(bestInterpreter, manager) ? NextAction.exit : NextAction.runNextRule;
     }
 }

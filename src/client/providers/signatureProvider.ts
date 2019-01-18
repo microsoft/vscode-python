@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
-import { SIGNATURE } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 import { isPositionInsideStringOrComment } from './providerUtilities';
 
@@ -110,7 +110,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
 
         return new SignatureHelp();
     }
-    @captureTelemetry(SIGNATURE)
+    @captureTelemetry(EventName.SIGNATURE)
     public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): Thenable<SignatureHelp> {
         // early exit if we're in a string or comment (or in an undefined position)
         if (position.character <= 0 ||

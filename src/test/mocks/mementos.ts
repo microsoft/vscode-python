@@ -4,6 +4,7 @@ import { Memento } from 'vscode';
 @injectable()
 export class MockMemento implements Memento {
     private map: Map<string, {}> = new Map<string, {}>();
+    // @ts-ignore
     // tslint:disable-next-line:no-any
     public get(key: any, defaultValue?: any);
     public get<T>(key: string, defaultValue?: T): T {

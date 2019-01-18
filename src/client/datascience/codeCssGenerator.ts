@@ -14,6 +14,8 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 import { Identifiers } from './constants';
 import { ICodeCssGenerator } from './types';
 
+// tslint:disable:no-any
+
 // This class generates css using the current theme in order to colorize code.
 //
 // NOTE: This is all a big hack. It's relying on the theme json files to have a certain format
@@ -59,11 +61,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     private matchTokenColor(tokenColors: JSONArray, scope: string) : number {
-        return tokenColors.findIndex(entry => {
+        return tokenColors.findIndex((entry: any) => {
             if (entry) {
                 const scopes = entry['scope'] as JSONValue;
                 if (scopes && Array.isArray(scopes)) {
-                    if (scopes.find(v => v !== null && v.toString() === scope)) {
+                    if (scopes.find(v => v !== null && v !== undefined && v.toString() === scope)) {
                         return true;
                     }
                 } else if (scopes && scopes.toString() === scope) {
@@ -81,7 +83,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         if (match < 0 && secondary) {
             match = this.matchTokenColor(tokenColors, secondary);
         }
-        const found = match >= 0 ? tokenColors[match] : null;
+        const found = match >= 0 ? tokenColors[match] as any : null;
         if (found !== null) {
             const settings = found['settings'];
             if (settings && settings !== null) {
@@ -214,11 +216,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 const themes = contributes['themes'] as JSONArray;
 
                 // One of these (it's an array), should have our matching theme entry
-                const index = themes.findIndex(e => {
+                const index = themes.findIndex((e: any) => {
                     return e !== null && e['id'] === theme;
                 });
 
-                const found = index >= 0 ? themes[index] : null;
+                const found = index >= 0 ? themes[index] as any : null;
                 if (found !== null) {
                     // Then the path entry should contain a relative path to the json file with
                     // the tokens in it
