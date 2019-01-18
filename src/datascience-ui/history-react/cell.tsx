@@ -25,7 +25,6 @@ import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
 import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
-import { getSettings } from '../react-common/settingsReactSide';
 
 interface ICellProps {
     cellVM: ICellViewModel;
@@ -47,6 +46,7 @@ export interface ICellViewModel {
     inputBlockText: string;
     inputBlockCollapseNeeded: boolean;
     editable: boolean;
+    directInput?: boolean;
     inputBlockToggled(id: string): void;
 }
 
@@ -104,10 +104,11 @@ export class Cell extends React.Component<ICellProps> {
     private renderNormalCell() {
         const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
         const results: JSX.Element[] = this.renderResults();
-        if (!getSettings().showCellInputCode && (!results || results.length === 0)) {
-            // null is a valid JSX.Element return to render nothing. Plain return doesn't work
-            return null;
-        } else {
+        const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
+        const shouldRender = allowsPlainInput || (results && results.length > 0);
+
+        // Only render if we are allowed to.
+        if (shouldRender) {
             return (
                 <div className='cell-wrapper'>
                     <MenuBar baseTheme={this.props.baseTheme}>
@@ -125,14 +126,16 @@ export class Cell extends React.Component<ICellProps> {
                         <div className='content-div'>
                             <div className='cell-result-container'>
                                 {this.renderInputs()}
-                                {this.renderResults()}
+                                {this.renderResultsDiv(results)}
                             </div>
                         </div>
                     </div>
                 </div>
             );
-
         }
+
+        // Shouldn't be rendered because not allowing empty input and not a direct input cell
+        return null;
     }
 
     private showInputs = () : boolean => {
@@ -198,25 +201,27 @@ export class Cell extends React.Component<ICellProps> {
         return 'block';
     }
 
-    private renderResults = () => {
+    private renderResultsDiv = (results: JSX.Element[]) => {
+
         // Only render results if the user can't edit. For now. Might allow editing of code later?
         if (!this.props.cellVM.editable) {
-
             const outputClassNames = this.isCodeCell() ?
                 `cell-output cell-output-${this.props.baseTheme}` :
                 '';
 
-            // Results depend upon the type of cell
-            const results = this.isCodeCell() ?
-                this.renderCodeOutputs() :
-                this.renderMarkdown(this.getMarkdownCell());
-
             // Then combine them inside a div
             return <div className={outputClassNames}>{results}</div>;
         }
-
         return null;
     }
+
+    private renderResults = (): JSX.Element[] => {
+        // Results depend upon the type of cell
+        return this.isCodeCell() ?
+            this.renderCodeOutputs() :
+            this.renderMarkdown(this.getMarkdownCell());
+    }
+
     private renderCodeOutputs = () => {
         if (this.isCodeCell() && this.hasOutput()) {
             // Render the outputs

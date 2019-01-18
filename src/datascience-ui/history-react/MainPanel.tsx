@@ -617,6 +617,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Update input controls (always show expanded since we just edited it.)
             editCell = createCellVM(editCell.cell, this.inputBlockToggled);
 
+            // Indicate this is direct input so that we don't hide it if the user has
+            // hide all inputs turned on.
+            editCell.directInput = true;
+
             // Compute our new history (skip adding dupes)
             const newHistory = this.state.historyStack.indexOf(code) >= 0 ? this.state.historyStack : [code, ...this.state.historyStack];
 
