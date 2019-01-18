@@ -11,6 +11,7 @@ export interface ICursorProps {
     hidden: boolean;
     left: number;
     top: number;
+    bottom: number;
     text: string;
     cursorType: string;
 }
@@ -22,9 +23,13 @@ export class Cursor extends React.Component<ICursorProps> {
     }
 
     public render() {
-        const style = {
+        const style = this.props.bottom > 0 ? {
             left : `${this.props.left}px`,
-            top: `${this.props.top}px`
+            top: `${this.props.top}px`,
+            height: `${this.props.bottom - this.props.top}px`,
+        } as React.CSSProperties : {
+            left : `${this.props.left}px`,
+            top: `${this.props.top}px`,
         } as React.CSSProperties;
 
         if (this.props.hidden) {
@@ -42,7 +47,7 @@ export class Cursor extends React.Component<ICursorProps> {
 
     private renderInFocus = (style: React.CSSProperties) => {
         const cursorClass = `cursor-top cursor-${this.props.cursorType}-overlay`;
-        const textClass = this.props.cursorType === 'block' ? 'cursor-text' : 'cusror-measure';
+        const textClass = this.props.cursorType !== 'block' || this.props.text.length === 0 ? 'cursor-measure' : 'cursor-text';
         return <div className={cursorClass} style={style}><div className={textClass}>{this.getRenderText()}</div></div>
     }
 

@@ -20,8 +20,19 @@
     min-width: 5px;
 }
 
+.cursor-measure {
+    visibility: hidden;
+}
+
+.cursor-text {
+}
+
 .cursor-line-overlay {
-    border-left: 1px solid var(--vscode-editor-foreground);
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: transparent;
+    min-width: 5px;
+    animation: blinkCursorLine 750ms infinite;
 }
 
 .cursor-underline-overlay {
@@ -29,37 +40,27 @@
     border-bottom-style: solid;
     border-bottom-color: transparent;
     min-width: 5px;
-    animation-name: blinkCursorUnderline;
-    animation-duration: 530ms;
-    animation-iteration-count: infinite;
-    animation-timing-function:steps(2);
+    animation: blinkCursorUnderline 750ms infinite;
 }
 
 .cursor-block-overlay {
     font-family: var(--code-font-family);
     background-color: transparent;
     color: transparent;
-    animation-name: blinkCursor;
-    animation-duration: 530ms;
-    animation-iteration-count: infinite;
-    animation-timing-function:steps(2);
+    animation: blinkCursorBlock 750ms infinite;
 }
 
-@keyframes blinkCursor {
-    from {background-color: transparent; color: transparent;}
-    to {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+@keyframes blinkCursorLine {
+    0%, 49%    {border-left-color: transparent;}
+    50%, 100% {border-left-color: var(--vscode-editor-foreground);}
 }
 
-@keyframes blinkCursor {
-    from {background-color: transparent; color: transparent;}
-    to {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+@keyframes blinkCursorUnderline {
+    0%, 49%    {border-bottom-color: transparent; color: transparent;}
+    50%, 100% {border-bottom-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
 }
 
-@keyframes blinkCursor {
-    from {background-color: transparent; color: transparent;}
-    to {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
-}
-
-.cursor-measure {
-    visibility: hidden;
+@keyframes blinkCursorBlock {
+    0%, 49%   {background-color: transparent; color: transparent;}
+    50%, 100%  {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
 }

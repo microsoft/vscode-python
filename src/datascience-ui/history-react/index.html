@@ -343,6 +343,11 @@
 
                         return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath;
                     }
+                    function getInitialSettings() {
+                        return { allowInput: true,
+                                extraSettings: { terminalCursor: 'block'}
+                               };
+                    }
                 </script>
     </body>
 </html>

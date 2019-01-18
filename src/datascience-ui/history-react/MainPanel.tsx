@@ -39,14 +39,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Default state should show a busy message
         this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], historyStack: []};
 
+        // Add test state if necessary
+        if (!this.props.skipDefault) {
+            this.state = generateTestState(this.inputBlockToggled);
+        }
+
         // Add a single empty cell if it's supported
         if (getSettings && getSettings().allowInput) {
             this.state.cellVMs.push(createEditableCellVM(1));
         }
 
-        if (!this.props.skipDefault) {
-            this.state = generateTestState(this.inputBlockToggled);
-        }
     }
 
     public componentDidMount() {

@@ -28,8 +28,9 @@ export interface ICodeProps {
 
 interface ICodeState {
     focused: boolean;
-    left: number;
-    top: number;
+    cursorLeft: number;
+    cursorTop: number;
+    cursorBottom: number;
     charUnderCursor: string;
 }
 
@@ -41,7 +42,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     constructor(prop: ICodeProps) {
         super(prop);
-        this.state = {focused: false, left: 0, top: 0, charUnderCursor: ''};
+        this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: ''};
         this.history = new InputHistory(this.props.history);
     }
 
@@ -62,8 +63,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     codeInFocus={this.state.focused}
                     cursorType={this.props.cursorType}
                     text={this.state.charUnderCursor}
-                    left={this.state.left}
-                    top={this.state.top}/>
+                    left={this.state.cursorLeft}
+                    top={this.state.cursorTop}
+                    bottom={this.state.cursorBottom}/>
                 <RCM
                     key={1}
                     value={this.props.code}
@@ -97,8 +99,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             const coords = codeMirror.cursorCoords(false, 'local');
             const char = this.getCursorChar();
             this.setState({
-                left: coords.left,
-                top: coords.top,
+                cursorLeft: coords.left,
+                cursorTop: coords.top,
+                cursorBottom: coords.bottom,
                 charUnderCursor: char
             });
         }
@@ -127,6 +130,14 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     private updateCodeMirror = (rcm: ReactCodeMirror.ReactCodeMirror) => {
         if (rcm) {
             this.codeMirror = rcm.getCodeMirror();
+            const coords = this.codeMirror.cursorCoords(false, 'local');
+            const char = this.getCursorChar();
+            this.setState({
+                cursorLeft: coords.left,
+                cursorTop: coords.top,
+                cursorBottom: coords.bottom,
+                charUnderCursor: char
+            });
         }
     }
 

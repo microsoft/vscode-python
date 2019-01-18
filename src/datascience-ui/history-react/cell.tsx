@@ -142,6 +142,8 @@ export class Cell extends React.Component<ICellProps> {
     private renderControls = () => {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
+        const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
+            this.props.cellVM.cell.data.execution_count.toString() : '0';
         const afterExecution = this.props.cellVM.editable ?
             <CommandPrompt /> :
             <CollapseButton theme={this.props.baseTheme}
@@ -152,7 +154,7 @@ export class Cell extends React.Component<ICellProps> {
 
         return (
             <div className='controls-flex'>
-                <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count.toString()} visible={this.isCodeCell()}/>
+                <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()}/>
                 {afterExecution}
             </div>
         )
@@ -181,7 +183,11 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getCursorType = () : string => {
-        return getSettings ? getSettings().extraSettings.terminalCursor : 'block';
+        if (getSettings && getSettings().extraSettings) {
+            return getSettings().extraSettings.terminalCursor;
+        }
+
+        return 'block';
     }
 
     private renderResults = () => {
