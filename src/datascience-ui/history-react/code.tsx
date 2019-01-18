@@ -77,6 +77,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                             {
                                 Down: this.arrowDown,
                                 Enter: this.enter,
+                                'Shift-Enter': this.shiftEnter,
                                 Up: this.arrowUp
                             },
                             theme: `${this.props.codeTheme} default`,
@@ -164,28 +165,34 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return frontIndent + (lastChar === ':' ? baseIndent : 0);
     }
 
+    private shiftEnter = (instance: CodeMirror.Editor) => {
+        // Shift enter is always submit (for now)
+        const doc = instance.getDoc();
+        // Double check we don't have an entirely empty document
+        if (doc.getValue('').trim().length > 0) {
+            const code = doc.getValue();
+            // We have to clear the history as this CodeMirror doesn't go away.
+            doc.clearHistory();
+            doc.setValue('');
+            this.props.onSubmit(code);
+            return;
+        }
+    }
+
     private enter = (instance: CodeMirror.Editor) => {
-        // See if the cursor is at the end or not
+        // See if the cursor is at the end of a single line or if on an indented line. Any indent
+        // or line ends with : or ;\, then don't submit
         const doc = instance.getDoc();
         const cursor = doc.getCursor();
         const lastLine = doc.lastLine();
         if (cursor.line === lastLine) {
 
-            // Check for an empty line or no ':' on the first line.
-            const lastLineStr = doc.getLine(lastLine).trimRight();
-            const lastChar = lastLineStr.length === 0 ? null : lastLineStr.charAt(lastLineStr.length - 1);
-
-            if ((lastChar === null) || (lastChar !== ':' && cursor.line === 0)) {
-                // Double check we don't have an entirely empty document
-                if (doc.getValue('').trim().length > 0)
-                {
-                    const code = doc.getValue();
-                    // We have to clear the history as this CodeMirror doesn't go away.
-                    doc.clearHistory();
-                    doc.setValue('');
-                    this.props.onSubmit(code);
-                    return;
-                }
+            // Check for any text
+            const line = doc.getLine(lastLine);
+            if (line.length === 0) {
+                // Do the same thing as shift+enter
+                this.shiftEnter(instance);
+                return;
             }
         }
 
