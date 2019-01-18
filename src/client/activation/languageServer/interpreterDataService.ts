@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { createHash } from 'crypto';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IApplicationShell } from '../common/application/types';
-import '../common/extensions';
-import { IPlatformService } from '../common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
-import { IExtensionContext, Resource } from '../common/types';
-import { createDeferred } from '../common/utils/async';
-import { IServiceContainer } from '../ioc/types';
-import { IInterpreterDataService, InterpreterData } from './types';
+import { IApplicationShell } from '../../common/application/types';
+import '../../common/extensions';
+import { IPlatformService } from '../../common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
+import { IExtensionContext, Resource } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
+import { LanguageService } from '../../common/utils/localize';
+import { IServiceContainer } from '../../ioc/types';
+import { IInterpreterDataService, InterpreterData } from '../types';
 
 const DataVersion = 1;
 class InterpreterDataCls {
@@ -137,7 +140,7 @@ export class InterpreterDataService implements IInterpreterDataService {
                 if (paths !== currentPaths) {
                     this.context.globalState.update(interpreterPath, undefined);
                     const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                    await appShell.showWarningMessage('Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.');
+                    await appShell.showWarningMessage(LanguageService.reloadVSCodeIfSeachPathHasChanged());
                 }
             }).ignoreErrors();
     }

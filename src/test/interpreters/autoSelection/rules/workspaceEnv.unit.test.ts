@@ -26,7 +26,12 @@ import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../../cl
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
 import { PythonPathUpdaterService } from '../../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../../client/interpreter/configuration/types';
-import { IInterpreterHelper, IInterpreterLocatorService, PythonInterpreter, WorkspacePythonPath } from '../../../../client/interpreter/contracts';
+import {
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+    PythonInterpreter,
+    WorkspacePythonPath
+} from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
 
@@ -42,7 +47,10 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     let workspaceService: IWorkspaceService;
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
-        public async setGlobalInterpreter(interpreter?: PythonInterpreter, manager?: IInterpreterAutoSelectionService): Promise<boolean> {
+        public async setGlobalInterpreter(
+            interpreter?: PythonInterpreter,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
         public async next(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
@@ -66,11 +74,19 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         virtualEnvLocator = mock(KnownPathsService);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest(instance(fs), instance(helper),
-            instance(stateFactory), instance(platform),
-            instance(workspaceService), instance(pythonPathUpdaterService),
-            instance(pipEnvLocator), instance(virtualEnvLocator));
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+            instance(state)
+        );
+        rule = new WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest(
+            instance(fs),
+            instance(helper),
+            instance(stateFactory),
+            instance(platform),
+            instance(workspaceService),
+            instance(pythonPathUpdaterService),
+            instance(pipEnvLocator),
+            instance(virtualEnvLocator)
+        );
     });
     test('Invoke next rule if there is no workspace', async () => {
         const nextRule = mock(BaseRuleService);
@@ -153,11 +169,17 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
 
         await rule.cacheSelectedInterpreter(resource, { path: pythonPath } as any);
 
-        verify(pythonPathUpdaterService.updatePythonPath(pythonPath, workspacePythonPath.configTarget, 'load', workspacePythonPath.folderUri)).once();
+        verify(
+            pythonPathUpdaterService.updatePythonPath(
+                pythonPath,
+                workspacePythonPath.configTarget,
+                'load',
+                workspacePythonPath.folderUri
+            )
+        ).once();
         verify(helper.getActiveWorkspaceUri(resource)).once();
     });
     test('getWorkspaceVirtualEnvInterpreters will not return any interpreters if there is no workspace ', async () => {
-
         let envs = await rule.getWorkspaceVirtualEnvInterpreters(undefined);
         expect(envs || []).to.be.lengthOf(0);
 
@@ -189,7 +211,11 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const workspaceFolder: WorkspaceFolder = { name: '', index: 0, uri: folderUri };
         const resource = Uri.file('x');
 
-        when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([interpreter1, interpreter2, interpreter3] as any);
+        when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([
+            interpreter1,
+            interpreter2,
+            interpreter3
+        ] as any);
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         when(platform.osType).thenReturn(OSType.Windows);
 
@@ -220,7 +246,11 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             const workspaceFolder: WorkspaceFolder = { name: '', index: 0, uri: folderUri };
             const resource = Uri.file('x');
 
-            when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([interpreter1, interpreter2, interpreter3] as any);
+            when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([
+                interpreter1,
+                interpreter2,
+                interpreter3
+            ] as any);
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(platform.osType).thenReturn(osType);
 
@@ -317,7 +347,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         verify(helper.getActiveWorkspaceUri(resource)).atLeast(1);
         verify(manager.setWorkspaceInterpreter(folderUri, interpreterInfo)).once();
     });
-    test('Wait for virtualEnv if pipEnv completes without any intepreters', async () => {
+    test('Wait for virtualEnv if pipEnv completes without any interpreters', async () => {
         const folderUri = Uri.parse('Folder');
         type PythonPathInConfig = { workspaceFolderValue: string };
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
@@ -348,7 +378,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         verify(helper.getActiveWorkspaceUri(resource)).atLeast(1);
         verify(manager.setWorkspaceInterpreter(folderUri, interpreterInfo)).once();
     });
-    test('Wait for pipEnv if VirtualEnv completes without any intepreters', async () => {
+    test('Wait for pipEnv if VirtualEnv completes without any interpreters', async () => {
         const folderUri = Uri.parse('Folder');
         type PythonPathInConfig = { workspaceFolderValue: string };
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();

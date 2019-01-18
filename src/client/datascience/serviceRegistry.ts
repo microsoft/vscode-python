@@ -9,6 +9,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
+import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecution } from './jupyter/jupyterExecution';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
@@ -23,6 +24,7 @@ import {
     IDataScienceCommandListener,
     IHistory,
     IHistoryProvider,
+    IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
     INotebookExporter,
@@ -45,4 +47,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
+    serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
 }

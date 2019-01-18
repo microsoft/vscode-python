@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:max-func-body-length no-any
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
     const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
@@ -33,12 +33,12 @@ suite('Activation of Environments in Terminal', () => {
         Linux: '',
         MacOS: ''
     };
-    let terminalSettings;
-    let pythonSettings;
+    let terminalSettings: any;
+    let pythonSettings: any;
     suiteSetup(async () => {
         envPaths = await fs.readJson(envsLocation);
-        terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders[0].uri);
-        pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders[0].uri);
+        terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
+        pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
         defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
         defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
@@ -51,7 +51,7 @@ suite('Activation of Environments in Terminal', () => {
     teardown(cleanUp);
     suiteTeardown(revertSettings);
     async function revertSettings() {
-        await updateSetting('terminal.activateEnvironment', undefined, vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+        await updateSetting('terminal.activateEnvironment', undefined, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await terminalSettings.update('integrated.shell.windows', defaultShell.Windows, vscode.ConfigurationTarget.Global);
         await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
@@ -63,8 +63,8 @@ suite('Activation of Environments in Terminal', () => {
         }
     }
 
-    async function testActivation(envPath) {
-        await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+    async function testActivation(envPath: string) {
+        await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPath);
         const terminal = vscode.window.createTerminal();
         await sleep(waitTimeForActivation);
@@ -74,7 +74,7 @@ suite('Activation of Environments in Terminal', () => {
         expect(content).to.equal(envPath);
     }
     async function testNonActivation() {
-        await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders[0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+        await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         const terminal = vscode.window.createTerminal();
         terminal.sendText(`python ${file}`, true);
         await waitForCondition(() => fs.pathExists(outputFile), 5_000, '\'testExecInTerminal.log\' file not created');

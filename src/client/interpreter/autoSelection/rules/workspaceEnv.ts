@@ -6,6 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
@@ -60,6 +61,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             await this.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
             await manager.setWorkspaceInterpreter(workspacePath.folderUri!, bestInterpreter);
         }
+        traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
         return NextAction.runNextRule;
     }
     protected async getWorkspaceVirtualEnvInterpreters(resource: Resource): Promise<PythonInterpreter[] | undefined> {

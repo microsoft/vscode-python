@@ -1,8 +1,14 @@
-"use strict";
+'use strict';
 
-import * as net from "net";
-const uint64be = require("uint64be");
+import * as net from 'net';
+// tslint:disable:no-var-requires no-require-imports member-ordering no-any
+const uint64be = require('uint64be');
 
+enum DataType {
+    string,
+    int32,
+    int64
+}
 
 export class SocketStream {
     constructor(socket: net.Socket, buffer: Buffer) {
@@ -16,11 +22,11 @@ export class SocketStream {
     }
 
     public WriteInt64(num: number) {
-        let buffer = uint64be.encode(num);
+        const buffer = uint64be.encode(num);
         this.socket.write(buffer);
     }
     public WriteString(value: string) {
-        let stringBuffer = new Buffer(value, "utf-8");
+        const stringBuffer = new Buffer(value, 'utf-8');
         this.WriteInt32(stringBuffer.length);
         if (stringBuffer.length > 0) {
             this.socket.write(stringBuffer);
@@ -30,9 +36,8 @@ export class SocketStream {
         this.socket.write(buffer);
     }
 
-
     private buffer: Buffer;
-    private isInTransaction: boolean;
+    private isInTransaction!: boolean;
     private bytesRead: number = 0;
     public get Buffer(): Buffer {
         return this.buffer;
@@ -76,7 +81,7 @@ export class SocketStream {
             this.buffer = additionalData;
             return;
         }
-        let newBuffer = new Buffer(this.buffer.length + additionalData.length);
+        const newBuffer = new Buffer(this.buffer.length + additionalData.length);
         this.buffer.copy(newBuffer);
         additionalData.copy(newBuffer, this.buffer.length);
         this.buffer = newBuffer;
@@ -92,65 +97,62 @@ export class SocketStream {
 
     public ReadByte(): number {
         if (!this.isSufficientDataAvailable(1)) {
-            return null;
+            return null as any;
         }
 
-        let value = this.buffer.slice(this.bytesRead, this.bytesRead + 1)[0];
+        const value = this.buffer.slice(this.bytesRead, this.bytesRead + 1)[0];
         if (this.isInTransaction) {
-            this.bytesRead++;
-        }
-        else {
+            this.bytesRead += 1;
+        } else {
             this.buffer = this.buffer.slice(1);
         }
         return value;
     }
 
     public ReadString(): string {
-        let byteRead = this.ReadByte();
+        const byteRead = this.ReadByte();
         if (this.HasInsufficientDataForReading) {
-            return null;
+            return null as any;
         }
 
         if (byteRead < 0) {
-            throw new Error("IOException() - Socket.ReadString failed to read string type;");
+            throw new Error('IOException() - Socket.ReadString failed to read string type;');
         }
 
-        let type = new Buffer([byteRead]).toString();
+        const type = new Buffer([byteRead]).toString();
         let isUnicode = false;
         switch (type) {
-            case "N": // null string
-                return null;
-            case "U":
+            case 'N': // null string
+                return null as any;
+            case 'U':
                 isUnicode = true;
                 break;
-            case "A": {
+            case 'A': {
                 isUnicode = false;
                 break;
             }
             default: {
-                throw new Error("IOException(); Socket.ReadString failed to parse unknown string type " + type);
+                throw new Error(`IOException(); Socket.ReadString failed to parse unknown string type ${type}`);
             }
         }
 
-        let len = this.ReadInt32();
+        const len = this.ReadInt32();
         if (this.HasInsufficientDataForReading) {
-            return null;
+            return null as any;
         }
 
         if (!this.isSufficientDataAvailable(len)) {
-            return null;
+            return null as any;
         }
 
-        let stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + len);
+        const stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + len);
         if (this.isInTransaction) {
             this.bytesRead = this.bytesRead + len;
-        }
-        else {
+        } else {
             this.buffer = this.buffer.slice(len);
         }
 
-        let resp = isUnicode ? stringBuffer.toString("utf-8") : stringBuffer.toString();
-        return resp;
+        return isUnicode ? stringBuffer.toString('utf-8') : stringBuffer.toString();
     }
 
     public ReadInt32(): number {
@@ -159,35 +161,32 @@ export class SocketStream {
 
     public ReadInt64(): number {
         if (!this.isSufficientDataAvailable(8)) {
-            return null;
+            return null as any;
         }
 
-        let buf = this.buffer.slice(this.bytesRead, this.bytesRead + 8);
+        const buf = this.buffer.slice(this.bytesRead, this.bytesRead + 8);
 
         if (this.isInTransaction) {
             this.bytesRead = this.bytesRead + 8;
-        }
-        else {
+        } else {
             this.buffer = this.buffer.slice(8);
         }
 
-        let returnValue = uint64be.decode(buf);
-        return returnValue;
+        return uint64be.decode(buf);
     }
 
     public ReadAsciiString(length: number): string {
         if (!this.isSufficientDataAvailable(length)) {
-            return null;
+            return null as any;
         }
 
-        let stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + length);
+        const stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + length);
         if (this.isInTransaction) {
             this.bytesRead = this.bytesRead + length;
-        }
-        else {
+        }        else {
             this.buffer = this.buffer.slice(length);
         }
-        return stringBuffer.toString("ascii");
+        return stringBuffer.toString('ascii');
     }
 
     private readValueInTransaction<T>(dataType: DataType): T {
@@ -210,12 +209,15 @@ export class SocketStream {
                 data = this.ReadInt64();
                 break;
             }
+            default: {
+                break;
+            }
         }
         if (this.HasInsufficientDataForReading) {
             if (startedTransaction) {
                 this.RollBackTransaction();
             }
-            return undefined;
+            return undefined as any;
         }
         if (startedTransaction) {
             this.EndTransaction();
@@ -233,10 +235,4 @@ export class SocketStream {
     public readInt64InTransaction(): number {
         return this.readValueInTransaction<number>(DataType.int64);
     }
-}
-
-enum DataType {
-    string,
-    int32,
-    int64
 }

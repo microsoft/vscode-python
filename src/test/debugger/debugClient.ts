@@ -20,7 +20,7 @@ export class DebugClientEx extends DebugClient {
      * a debug adapter running in server mode is established. This is useful for debugging
      * the adapter while running tests. For this reason all timeouts are disabled in server mode.
      */
-    public start(port?: number): Promise<void> {
+    public start(_port?: number): Promise<void> {
         return new Promise((resolve, reject) => {
             const runtime = path.join(EXTENSION_ROOT_DIR, 'node_modules', '.bin', 'istanbul');
             const args = ['cover', '--report=json', '--print=none', `--dir=${this.coverageDirectory}`, '--handle-sigint', this.executable];

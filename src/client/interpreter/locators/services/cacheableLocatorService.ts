@@ -13,7 +13,7 @@ import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/ty
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryWhenDone } from '../../../telemetry';
-import { PYTHON_INTERPRETER_DISCOVERY } from '../../../telemetry/constants';
+import { EventName } from '../../../telemetry/constants';
 import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
 
 @injectable()
@@ -35,7 +35,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     public get hasInterpreters(): Promise<boolean> {
         return this._hasInterpreters.promise;
     }
-    public abstract dispose();
+    public abstract dispose(): void;
     public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
         const cacheKey = this.getCacheKey(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
@@ -55,7 +55,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                 })
                 .catch(ex => deferred!.reject(ex));
 
-            sendTelemetryWhenDone(PYTHON_INTERPRETER_DISCOVERY, promise, undefined, { locator: this.name });
+            sendTelemetryWhenDone(EventName.PYTHON_INTERPRETER_DISCOVERY, promise, undefined, { locator: this.name });
             this.locating.fire(deferred.promise);
         }
         deferred.promise

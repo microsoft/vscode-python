@@ -4,7 +4,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const tsconfig_paths_webpack_plugin_1 = require("tsconfig-paths-webpack-plugin");
-const webpack_1 = require("webpack");
 const constants_1 = require("../constants");
 const common_1 = require("./common");
 // tslint:disable-next-line:no-var-requires no-require-imports

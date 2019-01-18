@@ -6,7 +6,7 @@
 import { inject, injectable, unmanaged } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES } from '../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { traceDecorators } from '../logger';
 import { INugetRepository, INugetService, NugetPackage } from './types';
 
@@ -20,7 +20,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName, this.azureCDNBlobStorageAccount);
     }
 
-    @captureTelemetry(PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
+    @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
     @traceDecorators.verbose('Listing Nuget Packages')
     protected async listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string, azureCDNBlobStorageAccount: string) {
         // tslint:disable-next-line:no-require-imports

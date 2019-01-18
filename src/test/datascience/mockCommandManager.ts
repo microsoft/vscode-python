@@ -9,7 +9,7 @@ import { ICommandManager } from '../../client/common/application/types';
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
 export class MockCommandManager implements ICommandManager {
-    private commands: {[key: string]: (...args: any[]) => any} = {};
+    private commands: Record<string, (...args: any[]) => any> = {};
 
     public registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
         this.commands[command] = callback;

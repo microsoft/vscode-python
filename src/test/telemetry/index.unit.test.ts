@@ -3,7 +3,7 @@
 
 'use strict';
 
-//tslint:disable:max-func-body-length match-default-export-name
+//tslint:disable:max-func-body-length match-default-export-name no-any
 
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
@@ -25,7 +25,7 @@ suite('Telemetry', () => {
 
     class Reporter {
         public static eventName: string;
-        public static properties: { [key: string]: string };
+        public static properties: Record<string, string>;
         public static measures: {};
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
             Reporter.eventName = eventName;
@@ -42,7 +42,7 @@ suite('Telemetry', () => {
         const measuers = { start: 123, end: 987 };
 
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(eventName, measuers, properties as any);
+        sendTelemetryEvent(eventName as any, measuers, properties as any);
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.deep.equal(measuers);
@@ -54,7 +54,7 @@ suite('Telemetry', () => {
 
         const eventName = 'Testing';
 
-        sendTelemetryEvent(eventName);
+        sendTelemetryEvent(eventName as any);
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.equal(undefined, 'Measures should be empty');
@@ -70,14 +70,14 @@ suite('Telemetry', () => {
         const measuers = { start: 123, end: 987 };
 
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(eventName, measuers, properties as any, error);
+        sendTelemetryEvent(eventName as any, measuers, properties as any, error);
 
         const stackTrace = Reporter.properties.stackTrace;
         delete Reporter.properties.stackTrace;
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.deep.equal(measuers);
-        expect(Reporter.properties).to.deep.equal(properties);
+        expect(Reporter.properties).to.deep.equal({ ...properties, originalEventName: eventName });
         expect(stackTrace).to.be.length.greaterThan(1);
     });
     test('Send Error Telemetry', () => {
@@ -108,14 +108,14 @@ at processImmediate [as _immediateCallback] (timers.js:722:5)`;
         const measuers = { start: 123, end: 987 };
 
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(eventName, measuers, properties as any, error);
+        sendTelemetryEvent(eventName as any, measuers, properties as any, error);
 
         const stackTrace = Reporter.properties.stackTrace;
         delete Reporter.properties.stackTrace;
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.deep.equal(measuers);
-        expect(Reporter.properties).to.deep.equal(properties);
+        expect(Reporter.properties).to.deep.equal({ ...properties, originalEventName: eventName });
         expect(stackTrace).to.be.length.greaterThan(1);
 
         // tslint:disable-next-line:no-multiline-string
@@ -155,14 +155,14 @@ at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js
         const measuers = { start: 123, end: 987 };
 
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(eventName, measuers, properties as any, error);
+        sendTelemetryEvent(eventName as any, measuers, properties as any, error);
 
         const stackTrace = Reporter.properties.stackTrace;
         delete Reporter.properties.stackTrace;
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.deep.equal(measuers);
-        expect(Reporter.properties).to.deep.equal(properties);
+        expect(Reporter.properties).to.deep.equal({ ...properties, originalEventName: eventName });
         expect(stackTrace).to.be.length.greaterThan(1);
 
         // tslint:disable-next-line:no-multiline-string
@@ -190,14 +190,14 @@ at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js
         const measuers = { start: 123, end: 987 };
 
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(eventName, measuers, properties as any, error);
+        sendTelemetryEvent(eventName as any, measuers, properties as any, error);
 
         const stackTrace = Reporter.properties.stackTrace;
         delete Reporter.properties.stackTrace;
 
         expect(Reporter.eventName).to.equal(eventName);
         expect(Reporter.measures).to.deep.equal(measuers);
-        expect(Reporter.properties).to.deep.equal(properties);
+        expect(Reporter.properties).to.deep.equal({ ...properties, originalEventName: eventName });
         expect(stackTrace).to.be.length.greaterThan(1);
 
         // tslint:disable-next-line:no-multiline-string

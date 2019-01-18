@@ -56,7 +56,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     @traceDecorators.error('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
-        const properties = new Map<string, {}>();
+        const properties: Record<string, {}> = {};
         let interpreterData: InterpreterData | undefined;
         let pythonPath = '';
 

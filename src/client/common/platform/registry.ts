@@ -32,7 +32,7 @@ export function getArchitectureDisplayName(arch?: Architecture) {
 async function getRegistryValue(options: Options, name: string = '') {
     // tslint:disable-next-line:no-require-imports
     const Registry = require('winreg') as typeof import('winreg');
-    return new Promise<string | undefined | null>((resolve, reject) => {
+    return new Promise<string | undefined | null>(resolve => {
         new Registry(options).get(name, (error, result) => {
             if (error || !result || typeof result.value !== 'string') {
                 return resolve(undefined);
@@ -46,7 +46,7 @@ async function getRegistryKeys(options: Options): Promise<string[]> {
     // tslint:disable-next-line:no-require-imports
     const Registry = require('winreg') as typeof import('winreg');
     // https://github.com/python/peps/blob/master/pep-0514.txt#L85
-    return new Promise<string[]>((resolve, reject) => {
+    return new Promise<string[]>(resolve => {
         new Registry(options).keys((error, result) => {
             if (error || !Array.isArray(result)) {
                 return resolve([]);

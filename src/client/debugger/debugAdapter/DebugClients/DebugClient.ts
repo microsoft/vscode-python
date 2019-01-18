@@ -25,7 +25,7 @@ export abstract class DebugClient<T> extends EventEmitter {
     public Stop() {
     }
 
-    public LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
+    public LaunchApplicationToDebug(_dbgServer: IDebugServer): Promise<any> {
         return Promise.resolve();
     }
 }

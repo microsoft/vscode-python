@@ -3,7 +3,7 @@ import { IConfigurationService, Product } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
-import { FORMAT } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { BaseFormatter } from './baseFormatter';
 
 export class YapfFormatter extends BaseFormatter {
@@ -26,7 +26,7 @@ export class YapfFormatter extends BaseFormatter {
         const fallbarFolder = this.getWorkspaceUri(document).fsPath;
         const cwd = this.getDocumentPath(document, fallbarFolder);
         const promise = super.provideDocumentFormattingEdits(document, options, token, yapfArgs, cwd);
-        sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'yapf', hasCustomArgs, formatSelection });
+        sendTelemetryWhenDone(EventName.FORMAT, promise, stopWatch, { tool: 'yapf', hasCustomArgs, formatSelection });
         return promise;
     }
 }

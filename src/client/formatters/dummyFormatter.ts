@@ -8,7 +8,7 @@ export class DummyFormatter extends BaseFormatter {
         super('none', Product.yapf, serviceContainer);
     }
 
-    public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {
+    public formatDocument(_document: vscode.TextDocument, _options: vscode.FormattingOptions, _token: vscode.CancellationToken, _range?: vscode.Range): Thenable<vscode.TextEdit[]> {
         return Promise.resolve([]);
     }
 }

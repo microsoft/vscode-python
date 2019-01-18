@@ -85,7 +85,7 @@ suite('Activation - ActivationService', () => {
                 } else {
                     diagnostics = [];
                 }
-                lsNotSupportedDiagnosticService.setup(l => l.diagnose()).returns(() => Promise.resolve(diagnostics));
+                lsNotSupportedDiagnosticService.setup(l => l.diagnose(undefined)).returns(() => Promise.resolve(diagnostics));
                 lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(activatorName)))
@@ -282,7 +282,7 @@ suite('Activation - ActivationService', () => {
                     const activatorJedi = TypeMoq.Mock.ofType<IExtensionActivator>();
                     const activationService = new ExtensionActivationService(serviceContainer.object);
                     const diagnostics = [];
-                    lsNotSupportedDiagnosticService.setup(l => l.diagnose()).returns(() => Promise.resolve(diagnostics));
+                    lsNotSupportedDiagnosticService.setup(l => l.diagnose(undefined)).returns(() => Promise.resolve(diagnostics));
                     lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
                     serviceContainer
                         .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(ExtensionActivators.DotNet)))

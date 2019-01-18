@@ -4,16 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IPersistentStateFactory } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { FolderVersionPair, IDownloadChannelRule } from './types';
+import { IPersistentStateFactory } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { FolderVersionPair, IDownloadChannelRule } from '../types';
 
 const lastCheckedForLSDateTimeCacheKey = 'LS.LAST.CHECK.TIME';
 const frequencyForBetalLSDownloadCheck = 1000 * 60 * 60 * 24; // One day.
 
 @injectable()
 export class DownloadDailyChannelRule implements IDownloadChannelRule {
-    public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
+    public async shouldLookForNewLanguageServer(_currentFolder?: FolderVersionPair): Promise<boolean> {
         return true;
     }
 }

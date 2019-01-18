@@ -6,7 +6,7 @@ import { IProcessServiceFactory } from '../common/process/types';
 import { IConfigurationService, IPythonSettings } from '../common/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { captureTelemetry } from '../telemetry';
-import { WORKSPACE_SYMBOLS_BUILD } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 
 export class Generator implements Disposable {
     private optionsFile: string;
@@ -44,7 +44,7 @@ export class Generator implements Disposable {
 
         return [`--options=${this.optionsFile}`, '--languages=Python'].concat(excludes);
     }
-    @captureTelemetry(WORKSPACE_SYMBOLS_BUILD)
+    @captureTelemetry(EventName.WORKSPACE_SYMBOLS_BUILD)
     private async generateTags(source: { directory?: string; file?: string }): Promise<void> {
         const tagFile = path.normalize(this.pythonSettings.workspaceSymbols.tagFilePath);
         const cmd = this.pythonSettings.workspaceSymbols.ctagsPath;

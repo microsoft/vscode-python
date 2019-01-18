@@ -10,6 +10,12 @@ import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 
+const severityMapping: Record<string, LintMessageSeverity | undefined> = {
+    LOW: LintMessageSeverity.Information,
+    MEDIUM: LintMessageSeverity.Warning,
+    HIGH: LintMessageSeverity.Error
+};
+
 export class Bandit extends BaseLinter {
     constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         super(Product.bandit, outputChannel, serviceContainer);
@@ -22,11 +28,7 @@ export class Bandit extends BaseLinter {
         ], document, cancellation);
 
         messages.forEach(msg => {
-            msg.severity = {
-                LOW: LintMessageSeverity.Information,
-                MEDIUM: LintMessageSeverity.Warning,
-                HIGH: LintMessageSeverity.Error
-            }[msg.type];
+            msg.severity = severityMapping[msg.type];
         });
         return messages;
     }

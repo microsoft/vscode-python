@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -145,7 +146,7 @@ export type DiagnosticsMessages = {
      * Code of diagnostics message detected and displayed.
      * @type {string}
      */
-    code: string;
+    code: DiagnosticCodes;
 };
 export type ImportNotebook = {
     scope: 'command';
@@ -176,30 +177,5 @@ export type InterpreterActivation = {
     failed?: boolean;
     terminal: TerminalShellType;
     pythonVersion?: string;
+    interpreterType: InterpreterType;
 };
-
-export type TelemetryProperties = FormatTelemetry
-    | LanguageServerVersionTelemetry
-    | LanguageServerErrorTelemetry
-    | LintingTelemetry
-    | LinterInstallPromptTelemetry
-    | LinterSelectionTelemetry
-    | EditorLoadTelemetry
-    | PythonInterpreterTelemetry
-    | CodeExecutionTelemetry
-    | TestRunTelemetry
-    | TestDiscoverytTelemetry
-    | FeedbackTelemetry
-    | TerminalTelemetry
-    | DebuggerTelemetry
-    | SettingsTelemetry
-    | DiagnosticsAction
-    | DiagnosticsMessages
-    | ImportNotebook
-    | Platform
-    | LanguageServePlatformSupported
-    | DebuggerConfigurationPromtpsTelemetry
-    | InterpreterAutoSelection
-    | InterpreterDiscovery
-    | InterpreterActivationEnvironmentVariables
-    | InterpreterActivation;

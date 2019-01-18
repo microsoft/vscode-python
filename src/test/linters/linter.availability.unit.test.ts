@@ -418,7 +418,7 @@ function setupConfigurationServiceForJediSettingsTest(
     return [configServiceMock, pythonSettings];
 }
 
-function setupInstallerForAvailabilityTest(linterInfo: LinterInfo, linterIsInstalled: boolean, installerMock): TypeMoq.IMock<IInstaller> {
+function setupInstallerForAvailabilityTest(linterInfo: LinterInfo, linterIsInstalled: boolean, installerMock: TypeMoq.IMock<IInstaller>): TypeMoq.IMock<IInstaller> {
     if (!installerMock) {
         installerMock = TypeMoq.Mock.ofType<IInstaller>();
     }

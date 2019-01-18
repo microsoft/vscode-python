@@ -10,7 +10,7 @@ import { openFile } from '../../../../test/common';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, Resource } from '../../../common/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
 import { IInterpreterHelper } from '../../../interpreter/contracts';
@@ -19,46 +19,63 @@ import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IInvalidPythonPathInDebuggerService } from '../types';
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticCommand,
+    IDiagnosticHandlerService,
+    IInvalidPythonPathInDebuggerService
+} from '../types';
 
 export class InvalidPythonPathInDebuggerSettingsDiagnostic extends BaseDiagnostic {
-    constructor() {
-        super(DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-            Diagnostics.invalidPythonPathInDebuggerSettings(), DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder);
+    constructor(resource: Resource) {
+        super(
+            DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
+            Diagnostics.invalidPythonPathInDebuggerSettings(),
+            DiagnosticSeverity.Error,
+            DiagnosticScope.WorkspaceFolder,
+            resource
+        );
     }
 }
 
 export class InvalidPythonPathInDebuggerLaunchDiagnostic extends BaseDiagnostic {
-    constructor() {
-        super(DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
-            Diagnostics.invalidPythonPathInDebuggerLaunch(), DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder);
+    constructor(resource: Resource) {
+        super(
+            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
+            Diagnostics.invalidPythonPathInDebuggerLaunch(),
+            DiagnosticSeverity.Error,
+            DiagnosticScope.WorkspaceFolder,
+            resource
+        );
     }
 }
 
 export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebuggerServiceId';
 
 @injectable()
-export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService implements IInvalidPythonPathInDebuggerService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
+    implements IInvalidPythonPathInDebuggerService {
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDiagnosticsCommandFactory) private readonly commandFactory: IDiagnosticsCommandFactory,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IDiagnosticHandlerService) @named(DiagnosticCommandPromptHandlerServiceId) protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>) {
-        super([DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic], serviceContainer);
+        @inject(IDiagnosticHandlerService)
+        @named(DiagnosticCommandPromptHandlerServiceId)
+        protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
+    ) {
+        super(
+            [
+                DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
+                DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
+            ],
+            serviceContainer
+        );
     }
-    public async diagnose(): Promise<IDiagnostic[]> {
+    public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
         return [];
-    }
-    public async handle(diagnostics: IDiagnostic[]): Promise<void> {
-        // This class can only handle one type of diagnostic, hence just use first item in list.
-        if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
-            return;
-        }
-        const diagnostic = diagnostics[0];
-        const commandPrompts = this.getCommandPrompts(diagnostic);
-
-        await this.messageService.handle(diagnostic, { commandPrompts });
     }
     public async validatePythonPath(pythonPath?: string, resource?: Uri) {
         pythonPath = pythonPath ? this.resolveVariables(pythonPath, resource) : undefined;
@@ -73,15 +90,25 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService i
         }
         traceError(`Invalid Python Path '${pythonPath}'`);
         if (pathInLaunchJson) {
-            this.handle([new InvalidPythonPathInDebuggerLaunchDiagnostic()])
+            this.handle([new InvalidPythonPathInDebuggerLaunchDiagnostic(resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();
         } else {
-            this.handle([new InvalidPythonPathInDebuggerSettingsDiagnostic()])
+            this.handle([new InvalidPythonPathInDebuggerSettingsDiagnostic(resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in settings.json debugger', ex))
                 .ignoreErrors();
         }
         return false;
+    }
+    protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
+        // This class can only handle one type of diagnostic, hence just use first item in list.
+        if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
+            return;
+        }
+        const diagnostic = diagnostics[0];
+        const commandPrompts = this.getCommandPrompts(diagnostic);
+
+        await this.messageService.handle(diagnostic, { commandPrompts });
     }
     protected resolveVariables(pythonPath: string, resource: Uri | undefined): string {
         const workspaceFolder = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
@@ -91,22 +118,30 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService i
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         switch (diagnostic.code) {
             case DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic: {
-                return [{
-                    prompt: 'Select Python Interpreter',
-                    command: this.commandFactory.createCommand(diagnostic, { type: 'executeVSCCommand', options: 'python.setInterpreter' })
-                }];
+                return [
+                    {
+                        prompt: 'Select Python Interpreter',
+                        command: this.commandFactory.createCommand(diagnostic, {
+                            type: 'executeVSCCommand',
+                            options: 'python.setInterpreter'
+                        })
+                    }
+                ];
             }
             case DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic: {
-                return [{
-                    prompt: 'Open launch.json',
-                    // tslint:disable-next-line:no-object-literal-type-assertion
-                    command: {
-                        diagnostic, invoke: async (): Promise<void> => {
-                            const launchJson = this.getLaunchJsonFile(workspc.workspaceFolders[0]);
-                            await openFile(launchJson);
+                return [
+                    {
+                        prompt: 'Open launch.json',
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        command: {
+                            diagnostic,
+                            invoke: async (): Promise<void> => {
+                                const launchJson = this.getLaunchJsonFile(workspc.workspaceFolders![0]);
+                                await openFile(launchJson);
+                            }
                         }
                     }
-                }];
+                ];
             }
             default: {
                 throw new Error('Invalid diagnostic for \'InvalidPythonPathInDebuggerService\'');

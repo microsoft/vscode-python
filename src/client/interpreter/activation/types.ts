@@ -4,8 +4,9 @@
 'use strict';
 
 import { Resource } from '../../common/types';
+import { PythonInterpreter } from '../contracts';
 
 export const IEnvironmentActivationService = Symbol('IEnvironmentActivationService');
 export interface IEnvironmentActivationService {
-    getActivatedEnvironmentVariables(resource: Resource): Promise<NodeJS.ProcessEnv | undefined>;
+    getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter): Promise<NodeJS.ProcessEnv | undefined>;
 }

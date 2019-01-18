@@ -13,13 +13,13 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
-    private dict: {[index: string] : ICell};
+    private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
 
-    constructor(cellDictionary: {[index: string] : ICell}, timedelay: number) {
+    constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
     }

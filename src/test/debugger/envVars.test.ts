@@ -77,7 +77,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const prop1 = shortid.generate();
         const prop2 = shortid.generate();
         const prop3 = shortid.generate();
-        const env = {};
+        const env: Record<string, string> = {};
         env[prop1] = prop1;
         env[prop2] = prop2;
         mockProcess.env[prop3] = prop3;
@@ -133,7 +133,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const prop2 = shortid.generate();
         const prop3 = shortid.generate();
 
-        const env = {};
+        const env : Record<string, string> = {};
         env[pathVariableName] = customPathToAppend;
         env['PYTHONPATH'] = customPythonPathToAppend;
         env[prop1] = prop1;
@@ -162,7 +162,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         }
 
         // Confirm the paths have been appended correctly.
-        const expectedPath = customPathToAppend + path.delimiter + mockProcess.env[pathVariableName];
+        const expectedPath = `${customPathToAppend}${path.delimiter}${mockProcess.env[pathVariableName]}`;
         expect(envVars).to.have.property(pathVariableName, expectedPath, 'PATH is not correct');
 
         // Confirm the paths have been appended correctly.

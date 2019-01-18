@@ -3,19 +3,19 @@
 //https://github.com/sindresorhus/opn/blob/master/index.js
 //Modified as this uses target as an argument
 
-import * as path from 'path';
 import * as childProcess from 'child_process';
 
+// tslint:disable:no-any no-function-expression prefer-template
 export function open(opts: any): Promise<childProcess.ChildProcess> {
     // opts = objectAssign({wait: true}, opts);
-    if (!opts.hasOwnProperty("wait")) {
+    if (!opts.hasOwnProperty('wait')) {
         (<any>opts).wait = true;
     }
 
-    var cmd;
-    var appArgs = [];
-    var args = [];
-    var cpOpts: any = {};
+    let cmd;
+    let appArgs = [];
+    let args: string[] = [];
+    const cpOpts: any = {};
     if (opts.cwd && typeof opts.cwd === 'string' && opts.cwd.length > 0) {
         cpOpts.cwd = opts.cwd;
     }
@@ -33,7 +33,7 @@ export function open(opts: any): Promise<childProcess.ChildProcess> {
         cmd = 'osascript';
         args = ['-e', 'tell application "terminal"',
             '-e', 'activate',
-            '-e', 'do script "' + sudoPrefix + [opts.app].concat(appArgs).join(" ") + '"',
+            '-e', 'do script "' + sudoPrefix + [opts.app].concat(appArgs).join(' ') + '"',
             '-e', 'end tell'];
     } else if (process.platform === 'win32') {
         cmd = 'cmd';
@@ -53,10 +53,10 @@ export function open(opts: any): Promise<childProcess.ChildProcess> {
     } else {
         cmd = 'gnome-terminal';
         const sudoPrefix = opts.sudo === true ? 'sudo ' : '';
-        args = ['-x', 'sh', '-c', `"${sudoPrefix}${opts.app}" ${appArgs.join(" ")}`]
+        args = ['-x', 'sh', '-c', `"${sudoPrefix}${opts.app}" ${appArgs.join(' ')}`];
     }
 
-    var cp = childProcess.spawn(cmd, args, cpOpts);
+    const cp = childProcess.spawn(cmd, args, cpOpts);
 
     if (opts.wait) {
         return new Promise(function (resolve, reject) {
@@ -64,7 +64,7 @@ export function open(opts: any): Promise<childProcess.ChildProcess> {
 
             cp.once('close', function (code) {
                 if (code > 0) {
-                    reject(new Error('Exited with code ' + code));
+                    reject(new Error(`Exited with code ${code}`));
                     return;
                 }
 
@@ -76,4 +76,4 @@ export function open(opts: any): Promise<childProcess.ChildProcess> {
     cp.unref();
 
     return Promise.resolve(cp);
-};
+}

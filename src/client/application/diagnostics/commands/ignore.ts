@@ -5,7 +5,7 @@
 
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { DIAGNOSTICS_ACTION } from '../../../telemetry/constants';
+import { EventName } from '../../../telemetry/constants';
 import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService } from '../types';
 import { BaseDiagnosticCommand } from './base';
 
@@ -14,7 +14,7 @@ export class IgnoreDiagnosticCommand extends BaseDiagnosticCommand {
         super(diagnostic);
     }
     public invoke(): Promise<void> {
-        sendTelemetryEvent(DIAGNOSTICS_ACTION, undefined, { ignoreCode: this.diagnostic.code });
+        sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, { ignoreCode: this.diagnostic.code });
         const filter = this.serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
         return filter.ignoreDiagnostic(this.diagnostic.code, this.scope);
     }

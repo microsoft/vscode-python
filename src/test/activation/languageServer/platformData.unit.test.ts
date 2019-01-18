@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:no-unused-variable
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { PlatformData, PlatformLSExecutables } from '../../client/activation/platformData';
-import { IPlatformService } from '../../client/common/platform/types';
+import { PlatformData, PlatformLSExecutables } from '../../../client/activation/languageServer/platformData';
+import { IPlatformService } from '../../../client/common/platform/types';
 
 const testDataWinMac = [
     { isWindows: true, is64Bit: true, expectedName: 'win-x64' },

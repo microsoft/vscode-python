@@ -1,15 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { inject, injectable } from 'inversify';
+
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES } from '../../telemetry/constants';
-import { IConfigurationService, Resource } from '../types';
+import { EventName } from '../../telemetry/constants';
+import { IConfigurationService } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
-import { ExecutionFactoryCreationOptions, IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from './types';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    ExecutionFactoryCreationOptions,
+    IBufferDecoder,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from './types';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -24,14 +31,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService = await this.processServiceFactory.create(options.resource);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    public async createActivatedEnvironment(resource: Resource): Promise<IPythonExecutionService> {
-        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(resource);
+    public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
+        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
-        sendTelemetryEvent(PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
-            return this.create({ resource });
+            return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
-        const pythonPath = this.configService.getSettings(resource).pythonPath;
+        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService = new ProcessService(this.decoder, { ...envVars });
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }

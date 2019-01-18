@@ -22,7 +22,7 @@ class TestRunner {
         await this.launchSmokeTests();
     }
     private async  launchSmokeTests() {
-        const env: { [key: string]: {} } = {
+        const env: Record<string, {}> = {
             VSC_PYTHON_SMOKE_TEST: '1',
             CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR
         };
@@ -34,9 +34,9 @@ class TestRunner {
         await fs.ensureDir(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode'));
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
     }
-    private async  launchTest(customEnvVars: { [key: string]: {} }) {
+    private async  launchTest(customEnvVars: Record<string, {}>) {
         await new Promise((resolve, reject) => {
-            const env: { [key: string]: {} } = {
+            const env: Record<string, {}> = {
                 TEST_FILES_SUFFIX: 'smoke.test',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests'),
                 ...process.env,

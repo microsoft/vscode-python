@@ -18,7 +18,10 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { CachedInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/cached';
 import { SystemWideInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/system';
-import { IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionRule,
+    IInterpreterAutoSelectionService
+} from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 
@@ -33,10 +36,16 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
     let helper: IInterpreterHelper;
     class CachedInterpretersAutoSelectionRuleTest extends CachedInterpretersAutoSelectionRule {
         public readonly rules!: IInterpreterAutoSelectionRule[];
-        public async setGlobalInterpreter(interpreter?: PythonInterpreter, manager?: IInterpreterAutoSelectionService): Promise<boolean> {
+        public async setGlobalInterpreter(
+            interpreter?: PythonInterpreter,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
-        public async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
+        public async onAutoSelectInterpreter(
+            resource: Resource,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
     }
@@ -49,13 +58,20 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
         currentPathInterpreter = mock(SystemWideInterpretersAutoSelectionRule);
         winRegInterpreter = mock(SystemWideInterpretersAutoSelectionRule);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new CachedInterpretersAutoSelectionRuleTest(instance(fs), instance(helper),
-            instance(stateFactory), instance(systemInterpreter),
-            instance(currentPathInterpreter), instance(winRegInterpreter));
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+            instance(state)
+        );
+        rule = new CachedInterpretersAutoSelectionRuleTest(
+            instance(fs),
+            instance(helper),
+            instance(stateFactory),
+            instance(systemInterpreter),
+            instance(currentPathInterpreter),
+            instance(winRegInterpreter)
+        );
     });
 
-    test('Invoke next rule if there are no cached intepreters', async () => {
+    test('Invoke next rule if there are no cached interpreters', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
 

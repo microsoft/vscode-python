@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
-import { ILanaguageServer, ILanguageClientFactory } from '../../../client/activation/types';
+import { ILanguageClientFactory, ILanguageServer } from '../../../client/activation/types';
 import '../../../client/common/extensions';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -19,7 +19,7 @@ import { sleep } from '../../../client/common/utils/async';
 
 suite('Language Server - LanguageServer', () => {
     let clientFactory: ILanguageClientFactory;
-    let server: ILanaguageServer;
+    let server: ILanguageServer;
     let client: typemoq.IMock<LanguageClient>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();

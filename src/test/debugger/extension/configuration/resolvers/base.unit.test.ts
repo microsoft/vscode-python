@@ -177,7 +177,7 @@ suite('Debugging - Config Resolver', () => {
 
         expect(config.pythonPath).to.equal(pythonPath);
     });
-    const localHostTestMatrix = { localhost: true, '127.0.0.1': true, '::1': true, '127.0.0.2': false, '156.1.2.3': false, '::2': false };
+    const localHostTestMatrix: Record<string, boolean> = { localhost: true, '127.0.0.1': true, '::1': true, '127.0.0.2': false, '156.1.2.3': false, '::2': false };
     Object.keys(localHostTestMatrix)
         .forEach(key => {
             test(`Local host = ${localHostTestMatrix[key]} for ${key}`, () => {

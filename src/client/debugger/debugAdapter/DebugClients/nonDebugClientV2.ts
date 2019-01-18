@@ -29,7 +29,7 @@ export class NonDebugClientV2 extends LocalDebugClientV2 {
             this.pyProc = undefined;
         }
     }
-    protected handleProcessOutput(proc: ChildProcess, _failedToLaunch: (error: Error | string | Buffer) => void) {
+    protected handleProcessOutput(_proc: ChildProcess, _failedToLaunch: (error: Error | string | Buffer) => void) {
         // Do nothing
     }
 }

@@ -10,7 +10,7 @@ import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { EXECUTION_CODE, EXECUTION_DJANGO } from '../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -27,7 +27,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal, this.executeSelectionInTerminal.bind(this)));
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Django_Shell, this.executeSelectionInDjangoShell.bind(this)));
     }
-    @captureTelemetry(EXECUTION_CODE, { scope: 'file' }, false)
+    @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'file' }, false)
     private async executeFileInterTerminal(file?: Uri) {
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         file = file instanceof Uri ? file : undefined;
@@ -40,14 +40,14 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         await executionService.executeFile(fileToExecute);
     }
 
-    @captureTelemetry(EXECUTION_CODE, { scope: 'selection' }, false)
+    @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)
     private async executeSelectionInTerminal(): Promise<void> {
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
 
         await this.executeSelection(executionService);
     }
 
-    @captureTelemetry(EXECUTION_DJANGO, { scope: 'selection' }, false)
+    @captureTelemetry(EventName.EXECUTION_DJANGO, { scope: 'selection' }, false)
     private async executeSelectionInDjangoShell(): Promise<void> {
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'djangoShell');
         await this.executeSelection(executionService);

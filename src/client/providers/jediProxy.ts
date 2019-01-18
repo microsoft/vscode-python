@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-var-requires no-require-imports
+// tslint:disable:no-var-requires no-require-imports no-any
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+// @ts-ignore
 import * as pidusage from 'pidusage';
 import {
     CancellationToken, CancellationTokenSource, CompletionItemKind,
@@ -262,7 +263,7 @@ export class JediProxy implements Disposable {
 
         // Do not run pidusage over and over, wait for it to finish.
         const deferred = createDeferred<void>();
-        pidusage.stat(this.proc.pid, async (err, result) => {
+        (pidusage as any).stat(this.proc.pid, async (err: any, result: any) => {
             if (err) {
                 this.pidUsageFailures.counter += 1;
                 // If this function fails 2 times in the last 60 seconds, lets not try ever again.

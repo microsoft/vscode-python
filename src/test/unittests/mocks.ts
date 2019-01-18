@@ -32,7 +32,7 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     constructor() {
         this._launched = createDeferred<boolean>();
     }
-    public async getLaunchOptions(resource?: Uri): Promise<{ port: number; host: string }> {
+    public async getLaunchOptions(_resource?: Uri): Promise<{ port: number; host: string }> {
         return { port: 0, host: 'localhost' };
     }
     public async launchDebugger(options: LaunchOptions): Promise<void> {
@@ -64,19 +64,19 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         serviceContainer: IServiceContainer) {
         super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
     }
-    protected getDiscoveryOptions(ignoreCache: boolean) {
+    protected getDiscoveryOptions(_ignoreCache: boolean) {
         // tslint:disable-next-line:no-object-literal-type-assertion
         return {} as TestDiscoveryOptions;
     }
     // tslint:disable-next-line:no-any
-    protected async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
+    protected async runTestImpl(_tests: Tests, _testsToRun?: TestsToRun, _runFailedTests?: boolean, _debug?: boolean): Promise<any> {
         // tslint:disable-next-line:no-non-null-assertion
         this.testRunnerCancellationToken!.onCancellationRequested(() => {
             this.runnerDeferred.reject(CANCELLATION_REASON);
         });
         return this.runnerDeferred.promise;
     }
-    protected async discoverTestsImpl(ignoreCache: boolean, debug?: boolean): Promise<Tests> {
+    protected async discoverTestsImpl(_ignoreCache: boolean, _debug?: boolean): Promise<Tests> {
         // tslint:disable-next-line:no-non-null-assertion
         this.testDiscoveryCancellationToken!.onCancellationRequested(() => {
             this.discoveryDeferred.reject(CANCELLATION_REASON);
@@ -88,7 +88,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
 @injectable()
 export class MockDiscoveryService implements ITestDiscoveryService {
     constructor(private discoverPromise: Promise<Tests>) { }
-    public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
+    public async discoverTests(_options: TestDiscoveryOptions): Promise<Tests> {
         return this.discoverPromise;
     }
 }

@@ -9,7 +9,7 @@ import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../c
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { captureTelemetry } from '../telemetry';
-import { REFACTOR_RENAME } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 
 type RenameResponse = {
     results: [{ diff: string }];
@@ -22,7 +22,7 @@ export class PythonRenameProvider implements RenameProvider {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
-    @captureTelemetry(REFACTOR_RENAME)
+    @captureTelemetry(EventName.REFACTOR_RENAME)
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
         return workspace.saveAll(false).then(() => {
             return this.doRename(document, position, newName, token);

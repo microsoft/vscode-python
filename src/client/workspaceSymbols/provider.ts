@@ -10,7 +10,7 @@ import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { captureTelemetry } from '../telemetry';
-import { WORKSPACE_SYMBOLS_GO_TO } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { Generator } from './generator';
 import { parseTags } from './parser';
 
@@ -22,7 +22,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
     ) {
     }
 
-    @captureTelemetry(WORKSPACE_SYMBOLS_GO_TO)
+    @captureTelemetry(EventName.WORKSPACE_SYMBOLS_GO_TO)
     public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[]> {
         if (this.tagGenerators.length === 0) {
             return [];

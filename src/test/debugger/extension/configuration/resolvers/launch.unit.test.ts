@@ -452,7 +452,7 @@ suite('Debugging - Config Resolver Launch', () => {
         diagnosticsService.verifyAll();
         expect(debugConfig).to.not.be.equal(undefined, 'is undefined');
     });
-    async function testSetting(requestType: 'launch' | 'attach', settings: { [key: string]: boolean }, debugOptionName: DebugOptions, mustHaveDebugOption: boolean) {
+    async function testSetting(requestType: 'launch' | 'attach', settings: Record<string, boolean>, debugOptionName: DebugOptions, mustHaveDebugOption: boolean) {
         setupIoc('pythonPath');
         const debugConfiguration: DebugConfiguration = { request: requestType, type: 'python', name: '', ...settings };
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);

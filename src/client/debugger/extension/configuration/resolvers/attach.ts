@@ -19,7 +19,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         @inject(IConfigurationService) configurationService: IConfigurationService) {
         super(workspaceService, documentManager, configurationService);
     }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
+    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, _token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         await this.provideAttachDefaults(workspaceFolder, debugConfiguration as AttachRequestArguments);

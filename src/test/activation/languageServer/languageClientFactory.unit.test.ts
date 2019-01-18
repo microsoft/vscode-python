@@ -14,7 +14,7 @@ import { Uri } from 'vscode';
 import { LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { PlatformData } from '../../../client/activation/platformData';
+import { PlatformData } from '../../../client/activation/languageServer/platformData';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';

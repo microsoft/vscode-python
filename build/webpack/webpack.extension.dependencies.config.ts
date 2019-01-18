@@ -8,7 +8,7 @@ import * as webpack from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins, nodeModulesToExternalize } from './common';
 
-const entryItems: { [key: string]: string } = {};
+const entryItems: Record<string, string> = {};
 nodeModulesToExternalize.forEach(moduleName => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
 });

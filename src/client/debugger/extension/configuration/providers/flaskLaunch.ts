@@ -10,7 +10,7 @@ import { IFileSystem } from '../../../../common/platform/types';
 import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
-import { DEBUGGER_CONFIGURATION_PROMPTS } from '../../../../telemetry/constants';
+import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
@@ -55,7 +55,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
             }
         }
 
-        sendTelemetryEvent(DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchFlask, autoDetectedFlaskAppPyPath: !!application, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchFlask, autoDetectedFlaskAppPyPath: !!application, manuallyEnteredAValue });
         Object.assign(state.config, config);
     }
     protected async getApplicationPath(folder: WorkspaceFolder | undefined): Promise<string | undefined> {

@@ -22,7 +22,7 @@ import { TestProvider } from '../../../client/unittests/common/types';
 
 use(chaiAsPromised);
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable-next-line:max-func-body-length no-any
 suite('Unit Tests - Debug Launcher', () => {
     let unitTestSettings: TypeMoq.IMock<IUnitTestSettings>;
     let debugLauncher: DebugLauncher;
@@ -50,7 +50,7 @@ suite('Unit Tests - Debug Launcher', () => {
     });
     function setupDebugManager(workspaceFolder: WorkspaceFolder, name: string, type: string,
         request: string, program: string, cwd: string,
-        args: string[], console, debugOptions: DebugOptions[],
+        args: string[], console: any, debugOptions: DebugOptions[],
         testProvider: TestProvider) {
 
         const envFile = __filename;

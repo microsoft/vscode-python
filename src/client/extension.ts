@@ -1,11 +1,17 @@
 'use strict';
+// tslint:disable:no-var-requires no-require-imports
+
 // This line should always be right on top.
-// tslint:disable-next-line:no-any
+// tslint:disable:no-any
 if ((Reflect as any).metadata === undefined) {
-    // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
-const durations: { [key: string]: number } = {};
+
+// Initialize source maps (this must never be moved up nor further down).
+import {initialize } from './sourceMapSupport';
+initialize(require('vscode'));
+
+const durations: Record<string, number> = {};
 import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
@@ -90,7 +96,7 @@ import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import { sendTelemetryEvent } from './telemetry';
-import { EDITOR_LOAD } from './telemetry/constants';
+import { EventName } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
@@ -126,7 +132,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     // When testing, do not perform health checks, as modal dialogs can be displayed.
     if (!isTestExecution()) {
         const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
-        await appDiagnostics.performPreStartupHealthCheck();
+        await appDiagnostics.performPreStartupHealthCheck(undefined);
     }
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
@@ -306,12 +312,19 @@ async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceConta
     try {
         await activatedPromise;
         const props = await getActivationTelemetryProps(serviceContainer);
-        sendTelemetryEvent(EDITOR_LOAD, durations, props);
+        sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props);
     } catch (ex) {
         traceError('sendStartupTelemetry() failed.', ex);
     }
 }
-
+function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceContainer: IServiceContainer): boolean {
+    const service = serviceContainer.get<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService);
+    const globalInterpreter = service.getAutoSelectedInterpreter(undefined);
+    if (!globalInterpreter) {
+        return false;
+    }
+    return currentPythonPath === globalInterpreter.path;
+}
 function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pyhontPath')!;
@@ -355,6 +368,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const interpreterType = interpreter ? interpreter.type : undefined;
     const hasUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
+    const isUsingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
     const isAutoSelectedWorkspaceInterpreterUsed = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : undefined;
     const hasPython3 = interpreters
         .filter(item => item && item.version ? item.version.major === 3 : false)
@@ -368,7 +382,8 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         workspaceFolderCount,
         hasPython3,
         hasUserDefinedInterpreter,
-        isAutoSelectedWorkspaceInterpreterUsed
+        isAutoSelectedWorkspaceInterpreterUsed,
+        isUsingGlobalInterpreter
     };
 }
 
@@ -376,21 +391,23 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
 // error handling
 
 function handleError(ex: Error) {
-    notifyUser('extension activation failed (see console log).');
+    notifyUser('Extension activation failed, run the \'Developer: Toggle Developer Tools\' command for more information.');
     traceError('extension activation failed', ex);
     sendErrorTelemetry(ex)
         .ignoreErrors();
 }
 
 interface IAppShell {
-    showErrorMessage(string);
+    showErrorMessage(string: string): Promise<void>;
 }
 
 function notifyUser(msg: string) {
     try {
-        let appShell = (window as IAppShell);
+        // tslint:disable-next-line:no-any
+        let appShell: IAppShell = (window as any as IAppShell);
         if (activatedServiceContainer) {
-            appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell);
+            // tslint:disable-next-line:no-any
+            appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any as IAppShell;
         }
         appShell.showErrorMessage(msg)
             .ignoreErrors();
@@ -410,7 +427,7 @@ async function sendErrorTelemetry(ex: Error) {
                 // ignore
             }
         }
-        sendTelemetryEvent(EDITOR_LOAD, durations, props, ex);
+        sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props, ex);
     } catch (exc2) {
         traceError('sendErrorTelemetry() failed.', exc2);
     }

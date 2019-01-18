@@ -126,7 +126,7 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string): Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string): Promise<void> => {
         // Save connection info. Determines if we need to change directory or not
         this.connInfo = connInfo;
         this.workingDir = workingDir;
@@ -434,7 +434,7 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
     private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
         return new Observable<ICell[]>(subscriber => {
             // When all complete, we have our results
-            const results: { [id: string]: ICell } = {};
+            const results: Record<string, ICell> = {};
 
             args.forEach(o => {
                 o.subscribe(c => {

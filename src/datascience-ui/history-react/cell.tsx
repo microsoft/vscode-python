@@ -15,6 +15,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
+import { getSettings } from '../react-common/settingsReactSide';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
@@ -102,29 +103,36 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderNormalCell() {
         const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
-        return (
-            <div className='cell-wrapper'>
-                <MenuBar baseTheme={this.props.baseTheme}>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
-                    </CellButton>
-                </MenuBar>
-                <div className='cell-outer'>
-                    <div className='controls-div'>
-                        {this.renderControls()}
-                    </div>
-                    <div className='content-div'>
-                        <div className='cell-result-container'>
-                            {this.renderInputs()}
-                            {this.renderResults()}
+        const results: JSX.Element[] = this.renderResults();
+        if (!getSettings().showCellInputCode && (!results || results.length === 0)) {
+            // null is a valid JSX.Element return to render nothing. Plain return doesn't work
+            return null;
+        } else {
+            return (
+                <div className='cell-wrapper'>
+                    <MenuBar baseTheme={this.props.baseTheme}>
+                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
+                        </CellButton>
+                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
+                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
+                        </CellButton>
+                    </MenuBar>
+                    <div className='cell-outer'>
+                        <div className='controls-div'>
+                            {this.renderControls()}
+                        </div>
+                        <div className='content-div'>
+                            <div className='cell-result-container'>
+                                {this.renderInputs()}
+                                {this.renderResults()}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+
+        }
     }
 
     private showInputs = () : boolean => {
@@ -215,8 +223,9 @@ export class Cell extends React.Component<ICellProps> {
             return this.getCodeCell().outputs.map((output: nbformat.IOutput, index: number) => {
                 return this.renderOutput(output, index);
             });
-
         }
+
+        return [];
     }
 
     private renderMarkdown = (markdown : nbformat.IMarkdownCell) => {
@@ -224,7 +233,7 @@ export class Cell extends React.Component<ICellProps> {
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
-        return <Transform data={source}/>;
+        return [<Transform data={source}/>];
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean) => {
@@ -345,8 +354,12 @@ export class Cell extends React.Component<ICellProps> {
             return this.renderWithTransform(mimetype, copy, index, addScrollbars);
         }
 
-        const keys = Object.keys(copy.data);
-        mimetype = keys.length > 0 ? keys[0] : 'unknown';
+        if (copy.data) {
+            const keys = Object.keys(copy.data);
+            mimetype = keys.length > 0 ? keys[0] : 'unknown';
+        } else {
+            mimetype = 'unknown';
+        }
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
     }

@@ -22,7 +22,7 @@ import {
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
-import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import {
     ExtensionActivators, IExtensionActivationService,
     IExtensionActivator
@@ -56,10 +56,10 @@ export class ExtensionActivationService implements IExtensionActivationService, 
 
         let jedi = this.useJedi();
         if (!jedi) {
-            const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose();
+            const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
             this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
+            if (diagnostic.length){
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
                 jedi = true;
             }
         }

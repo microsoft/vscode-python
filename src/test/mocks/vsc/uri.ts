@@ -270,6 +270,7 @@ export namespace vscUri {
 
         public static from(components: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): URI {
             return new _URI(
+                // @ts-ignore
                 components.scheme,
                 components.authority,
                 components.path,
@@ -349,8 +350,9 @@ export namespace vscUri {
 
     // tslint:disable-next-line:class-name
     class _URI extends URI {
-
+        // @ts-ignore
         _formatted: string = null;
+        // @ts-ignore
         _fsPath: string = null;
 
         get fsPath(): string {

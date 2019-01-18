@@ -61,7 +61,8 @@ export class MockState implements IPersistentState<any> {
     get value(): any {
         return this.data;
     }
-    public async updateValue(data): Promise<void> {
+    // tslint:disable-next-line:no-any
+    public async updateValue(data: any): Promise<void> {
         this.data = data;
     }
 }

@@ -82,7 +82,7 @@ String.prototype.fileToCommandArgument = function (this: string): string {
  * String.trimQuotes implementation
  * Removes leading and trailing quotes from a string
  */
-String.prototype.trimQuotes = function (this): string {
+String.prototype.trimQuotes = function (this: string): string {
     if (!this) {
         return this;
     }

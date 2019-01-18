@@ -14,7 +14,6 @@ import {
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { splitParent } from '../../../client/common/utils/string';
 import { parseRange } from '../../../client/common/utils/text';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { JediFactory } from '../../../client/languageServices/jediProxyFactory';
@@ -461,4 +460,26 @@ function normalizeSymbols(uri: Uri, raw: any[]): SymbolInformation[] {
         symbols.push(symbol);
     }
     return symbols;
+}
+
+/**
+ * Return [parent name, name] for the given qualified (dotted) name.
+ *
+ * Examples:
+ *  'x.y'   -> ['x', 'y']
+ *  'x'     -> ['', 'x']
+ *  'x.y.z' -> ['x.y', 'z']
+ *  ''      -> ['', '']
+ */
+export function splitParent(fullName: string): [string, string] {
+    if (fullName.length === 0) {
+        return ['', ''];
+    }
+    const pos = fullName.lastIndexOf('.');
+    if (pos < 0) {
+        return ['', fullName];
+    }
+    const parentName = fullName.slice(0, pos);
+    const name = fullName.slice(pos + 1);
+    return [parentName, name];
 }

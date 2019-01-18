@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import Char from 'typescript-char';
 import { CharacterStream } from '../../client/language/characterStream';
 import { TextIterator } from '../../client/language/textIterator';
-import { ICharacterStream, TextRange } from '../../client/language/types';
+import { ICharacterStream } from '../../client/language/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Language.CharacterStream', () => {

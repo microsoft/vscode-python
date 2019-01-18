@@ -105,7 +105,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     });
     test('Confirm debuggig fails when provided port is in use', async () => {
         const server = net.createServer(noop);
-        const port = await new Promise<number>((resolve, reject) => server.listen({ host: 'localhost', port: 0 }, () => resolve(server.address().port)));
+        const port = await new Promise<number>(resolve => server.listen({ host: 'localhost', port: 0 }, () => resolve(server.address().port)));
         let exception: Error | undefined;
         try {
             await testDebuggingWithProvidedPort(port);

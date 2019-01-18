@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../../../common/types';
 import { IInterpreterHelper } from '../../contracts';
@@ -29,6 +30,7 @@ export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
             .filter(item => !!item)
             .map(item => item!);
         const bestInterpreter = this.helper.getBestInterpreter(cachedInterpreters);
+        traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
         return await this.setGlobalInterpreter(bestInterpreter, manager) ? NextAction.exit : NextAction.runNextRule;
     }
 }

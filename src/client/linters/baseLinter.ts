@@ -15,7 +15,7 @@ import {
     LinterId, LintMessageSeverity
 } from './types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// tslint:disable-next-line:no-require-imports no-var-requires no-any
 const namedRegexp = require('named-js-regexp');
 // Allow negative column numbers (https://github.com/PyCQA/pylint/issues/1822)
 const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w\\d+):(?<message>.*)\\r?(\\n|$)';
@@ -28,7 +28,7 @@ export interface IRegexGroup {
     type: string;
 }
 
-export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
+export function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {
     const compiledRegexp = namedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {

@@ -10,7 +10,7 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
-import { SYMBOL } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
 function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string = ''): SymbolInformation[] {
@@ -92,7 +92,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
-    @captureTelemetry(SYMBOL)
+    @captureTelemetry(EventName.SYMBOL)
     public provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
         return this.provideDocumentSymbolsThrottled(document, token);
     }

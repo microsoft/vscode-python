@@ -13,7 +13,7 @@ import { DebugConfigurationPrompts, localize } from '../../../../common/utils/lo
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
-import { DEBUGGER_CONFIGURATION_PROMPTS } from '../../../../telemetry/constants';
+import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
@@ -55,7 +55,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             }
         }
 
-        sendTelemetryEvent(DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchPyramid, autoDetectedPyramidIniPath: !!iniPath, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchPyramid, autoDetectedPyramidIniPath: !!iniPath, manuallyEnteredAValue });
         Object.assign(state.config, config);
     }
     public async validateIniPath(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {

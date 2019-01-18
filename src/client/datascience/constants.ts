@@ -59,33 +59,33 @@ export namespace HistoryMessages {
     export const UpdateSettings = 'update_settings';
 }
 
-export namespace Telemetry {
-    export const ImportNotebook = 'DATASCIENCE.IMPORT_NOTEBOOK';
-    export const RunCell = 'DATASCIENCE.RUN_CELL';
-    export const RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL';
-    export const RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE';
-    export const RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS';
-    export const DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS';
-    export const DeleteCell = 'DATASCIENCE.DELETE_CELL';
-    export const GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE';
-    export const RestartKernel = 'DATASCIENCE.RESTART_KERNEL';
-    export const ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK';
-    export const Undo = 'DATASCIENCE.UNDO';
-    export const Redo = 'DATASCIENCE.REDO';
-    export const ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE';
-    export const ExpandAll = 'DATASCIENCE.EXPAND_ALL';
-    export const CollapseAll = 'DATASCIENCE.COLLAPSE_ALL';
-    export const SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI';
-    export const SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL';
-    export const SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED';
-    export const Interrupt = 'DATASCIENCE.INTERRUPT';
-    export const ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE';
-    export const ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT';
-    export const StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST';
-    export const SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL';
-    export const ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER';
-    export const ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER';
-    export const ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER';
+export enum Telemetry {
+    ImportNotebook = 'DATASCIENCE.IMPORT_NOTEBOOK',
+    RunCell = 'DATASCIENCE.RUN_CELL',
+    RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL',
+    RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE',
+    RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS',
+    DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
+    DeleteCell = 'DATASCIENCE.DELETE_CELL',
+    GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
+    RestartKernel = 'DATASCIENCE.RESTART_KERNEL',
+    ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
+    Undo = 'DATASCIENCE.UNDO',
+    Redo = 'DATASCIENCE.REDO',
+    ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
+    ExpandAll = 'DATASCIENCE.EXPAND_ALL',
+    CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
+    SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
+    SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
+    SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
+    Interrupt = 'DATASCIENCE.INTERRUPT',
+    ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
+    ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST',
+    SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
+    ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER',
+    ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
+    ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER'
 }
 
 export namespace HelpLinks {

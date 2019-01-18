@@ -42,9 +42,11 @@ suite('localize tests', () => {
         }
 
         // Now match all of our namespace entries to our nls entries
-        entries.forEach((e : string) => {
+        entries.forEach((e: string) => {
+            // @ts-ignore
             if (typeof localize[e] !== 'function') {
                 // This must be a namespace. It should have functions inside of it
+                // @ts-ignore
                 const namespace = localize[e];
                 const funcs = Object.keys(namespace);
 

@@ -60,7 +60,7 @@ export interface ICharacterStream extends ITextIterator {
     getText(): string;
     isEndOfStream(): boolean;
     lookAhead(offset: number): number;
-    advance(offset: number);
+    advance(offset: number): void;
     moveNext(): boolean;
     isAtWhiteSpace(): boolean;
     isAtLineBreak(): boolean;

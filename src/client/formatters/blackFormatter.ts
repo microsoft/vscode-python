@@ -9,7 +9,7 @@ import { IConfigurationService } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
-import { FORMAT } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { BaseFormatter } from './baseFormatter';
 
 export class BlackFormatter extends BaseFormatter {
@@ -35,7 +35,7 @@ export class BlackFormatter extends BaseFormatter {
 
         const blackArgs = ['--diff', '--quiet'];
         const promise = super.provideDocumentFormattingEdits(document, options, token, blackArgs);
-        sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'black', hasCustomArgs, formatSelection });
+        sendTelemetryWhenDone(EventName.FORMAT, promise, stopWatch, { tool: 'black', hasCustomArgs, formatSelection });
         return promise;
     }
 }

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri, workspace, ConfigurationChangeEvent } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry, Resource } from '../types';
+import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
 import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngterpreterData } from '../utils/decorators';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 

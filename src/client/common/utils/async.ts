@@ -18,9 +18,9 @@ export interface Deferred<T> {
     readonly resolved: boolean;
     readonly rejected: boolean;
     readonly completed: boolean;
-    resolve(value?: T | PromiseLike<T>);
+    resolve(value?: T | PromiseLike<T>): void;
     // tslint:disable-next-line:no-any
-    reject(reason?: any);
+    reject(reason?: any): void;
 }
 
 class DeferredImpl<T> implements Deferred<T> {
@@ -38,13 +38,13 @@ class DeferredImpl<T> implements Deferred<T> {
             this._reject = rej;
         });
     }
-    public resolve(value?: T | PromiseLike<T>) {
+    public resolve(_value?: T | PromiseLike<T>) {
         // tslint:disable-next-line:no-any
         this._resolve.apply(this.scope ? this.scope : this, arguments as any);
         this._resolved = true;
     }
     // tslint:disable-next-line:no-any
-    public reject(reason?: any) {
+    public reject(_reason?: any) {
         // tslint:disable-next-line:no-any
         this._reject.apply(this.scope ? this.scope : this, arguments as any);
         this._rejected = true;

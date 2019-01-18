@@ -12,14 +12,13 @@ import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
-
 import {
     IApplicationShell,
     IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
@@ -40,11 +39,16 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { waitForUpdate } from './reactHelpers';
 
-enum cellInputState {
+enum CellInputState {
     Hidden,
     Visible,
     Collapsed,
     Expanded
+}
+
+enum CellPosition {
+    First = 'first',
+    Last = 'last'
 }
 
 // tslint:disable-next-line:max-func-body-length no-any
@@ -138,12 +142,16 @@ suite('History output tests', () => {
         delete global['ascquireVsCodeApi'];
     });
 
-    function addMockData(code: string, result: string | number, mimeType?: string, cellType?: string) {
+    function addMockData(code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
         if (ioc.mockJupyter) {
             if (cellType && cellType === 'error') {
-                ioc.mockJupyter.addError(code, result.toString());
+                ioc.mockJupyter.addError(code, result ? result.toString() : '');
             } else {
-                ioc.mockJupyter.addCell(code, result, mimeType);
+                if (result) {
+                    ioc.mockJupyter.addCell(code, result, mimeType);
+                } else {
+                    ioc.mockJupyter.addCell(code);
+                }
             }
         }
     }
@@ -174,23 +182,50 @@ suite('History output tests', () => {
         }).timeout(60000);
     }
 
-    function verifyHtmlOnLastCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string) {
+    function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
         const foundResult = wrapper.find('Cell');
         assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
-        // Extract only the first 100 chars from the input string
-        const sliced = html.substr(0, min([html.length, 100]));
+        let targetCell: ReactWrapper;
+        // Get the correct result that we are dealing with
+        if (typeof cellIndex === 'number') {
+            if (cellIndex >= 0 && cellIndex <= (foundResult.length - 1)) {
+                targetCell = foundResult.at(cellIndex);
+            }
+        } else if (typeof cellIndex === 'string') {
+            switch (cellIndex) {
+                case CellPosition.First:
+                    targetCell = foundResult.first();
+                    break;
 
-        // There should be some sort of span with 1 in it
-        const lastCell = foundResult.last();
-        assert.ok(lastCell, 'Last call doesn\'t exist');
-        const output = lastCell.find('div.cell-output');
-        assert.ok(output.length > 0, 'No output cell found');
-        const outHtml = output.html();
-        assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
+                case CellPosition.Last:
+                    targetCell = foundResult.last();
+                    break;
+
+                default:
+                    // Fall through, targetCell check will fail out
+                    break;
+            }
+        }
+
+        // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
+        assert.ok(targetCell!, 'Target cell doesn\'t exist');
+
+        // If html is specified, check it
+        if (html) {
+            // Extract only the first 100 chars from the input string
+            const sliced = html.substr(0, min([html.length, 100]));
+            const output = targetCell!.find('div.cell-output');
+            assert.ok(output.length > 0, 'No output cell found');
+            const outHtml = output.html();
+            assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
+        } else {
+            // html not specified, look for an empty render
+            assert.ok(targetCell!.isEmptyRender(), 'Target cell is not empty render');
+        }
     }
 
-    function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, state: cellInputState) {
+    function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, state: CellInputState) {
         const foundResult = wrapper.find('Cell');
         assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
@@ -201,19 +236,19 @@ suite('History output tests', () => {
         const toggleButton = lastCell.find('polygon.collapse-input-svg');
 
         switch (state) {
-            case cellInputState.Hidden:
+            case CellInputState.Hidden:
                 assert.ok(inputBlock.length === 0, 'Cell input not hidden');
                 break;
 
-            case cellInputState.Visible:
+            case CellInputState.Visible:
                 assert.ok(inputBlock.length === 1, 'Cell input not visible');
                 break;
 
-            case cellInputState.Expanded:
+            case CellInputState.Expanded:
                 assert.ok(toggleButton.html().includes('collapse-input-svg-rotate'), 'Cell input toggle not expanded');
                 break;
 
-            case cellInputState.Collapsed:
+            case CellInputState.Collapsed:
                 assert.ok(!toggleButton.html().includes('collapse-input-svg-rotate'), 'Cell input toggle not collapsed');
                 break;
 
@@ -261,7 +296,7 @@ suite('History output tests', () => {
     runMountedTest('Simple text', async (wrapper) => {
         await addCode(wrapper, 'a=1\na');
 
-        verifyHtmlOnLastCell(wrapper, '<span>1</span>');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
 
     runMountedTest('Hide inputs', async (wrapper) => {
@@ -269,7 +304,14 @@ suite('History output tests', () => {
 
         await addCode(wrapper, 'a=1\na');
 
-        verifyLastCellInputState(wrapper, cellInputState.Hidden);
+        verifyLastCellInputState(wrapper, CellInputState.Hidden);
+
+        // Add a cell without output, this cell should not show up at all
+        addMockData('a=1', undefined, 'text/plain');
+        await addCode(wrapper, 'a=1', 4);
+
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.First);
+        verifyHtmlOnCell(wrapper, undefined, CellPosition.Last);
     });
 
     runMountedTest('Show inputs', async (wrapper) => {
@@ -277,52 +319,52 @@ suite('History output tests', () => {
 
         await addCode(wrapper, 'a=1\na');
 
-        verifyLastCellInputState(wrapper, cellInputState.Visible);
-        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+        verifyLastCellInputState(wrapper, CellInputState.Visible);
+        verifyLastCellInputState(wrapper, CellInputState.Collapsed);
     });
 
     runMountedTest('Expand inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
         await addCode(wrapper, 'a=1\na');
 
-        verifyLastCellInputState(wrapper, cellInputState.Expanded);
+        verifyLastCellInputState(wrapper, CellInputState.Expanded);
     });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
         await addCode(wrapper, 'a=1\na');
 
-        verifyLastCellInputState(wrapper, cellInputState.Visible);
-        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+        verifyLastCellInputState(wrapper, CellInputState.Visible);
+        verifyLastCellInputState(wrapper, CellInputState.Collapsed);
 
         toggleCellExpansion(wrapper);
 
-        verifyLastCellInputState(wrapper, cellInputState.Visible);
-        verifyLastCellInputState(wrapper, cellInputState.Expanded);
+        verifyLastCellInputState(wrapper, CellInputState.Visible);
+        verifyLastCellInputState(wrapper, CellInputState.Expanded);
 
         toggleCellExpansion(wrapper);
 
-        verifyLastCellInputState(wrapper, cellInputState.Visible);
-        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+        verifyLastCellInputState(wrapper, CellInputState.Visible);
+        verifyLastCellInputState(wrapper, CellInputState.Collapsed);
     });
 
     runMountedTest('Hide / show cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
         await addCode(wrapper, 'a=1\na');
 
-        verifyLastCellInputState(wrapper, cellInputState.Visible);
-        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+        verifyLastCellInputState(wrapper, CellInputState.Visible);
+        verifyLastCellInputState(wrapper, CellInputState.Collapsed);
 
         // Hide the inputs and verify
         updateDataScienceSettings(wrapper, { ...defaultDataScienceSettings(), showCellInputCode: false });
 
-        verifyLastCellInputState(wrapper, cellInputState.Hidden);
+        verifyLastCellInputState(wrapper, CellInputState.Hidden);
 
         // Show the inputs and verify
         updateDataScienceSettings(wrapper, { ...defaultDataScienceSettings(), showCellInputCode: true });
 
-        verifyLastCellInputState(wrapper, cellInputState.Visible);
-        verifyLastCellInputState(wrapper, cellInputState.Collapsed);
+        verifyLastCellInputState(wrapper, CellInputState.Visible);
+        verifyLastCellInputState(wrapper, CellInputState.Collapsed);
     });
 
     // The default base set of data science settings to use
@@ -428,16 +470,16 @@ for _ in range(50):
         });
 
         await addCode(wrapper, badPanda, 4);
-        verifyHtmlOnLastCell(wrapper, `pd has no attribute 'read'`);
+        verifyHtmlOnCell(wrapper, `pd has no attribute 'read'`, CellPosition.Last);
 
         await addCode(wrapper, goodPanda);
-        verifyHtmlOnLastCell(wrapper, `<td>`);
+        verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
 
         await addCode(wrapper, matPlotLib);
-        verifyHtmlOnLastCell(wrapper, matPlotLibResults);
+        verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
         await addCode(wrapper, spinningCursor, 4 + (cursors.length * 3));
-        verifyHtmlOnLastCell(wrapper, '<xmp>\\</xmp>');
+        verifyHtmlOnCell(wrapper, '<xmp>\\</xmp>', CellPosition.Last);
     });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {

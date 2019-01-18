@@ -6,8 +6,8 @@
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { LanguageServerDownloader } from '../../../client/activation/downloader';
 import { LanguageServerExtensionActivator } from '../../../client/activation/languageServer/activator';
+import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { IExtensionActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';

@@ -121,11 +121,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         });
         proc.stderr.setEncoding('utf8');
         proc.stderr.on('data', noop);
-        proc.stdout.on('data', d => {
+        proc.stdout.on('data', _ => {
             // This is necessary so we read the stdout of the python process,
             // Else it just keep building up (related to issue #203 and #52).
             // tslint:disable-next-line:prefer-const no-unused-variable
-            let x = 0;
+            noop();
         });
     }
     private buildLaunchArguments(cwd: string, debugPort: number): string[] {
@@ -133,7 +133,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
 
     // tslint:disable-next-line:member-ordering
-    protected buildDebugArguments(cwd: string, debugPort: number): string[] {
+    protected buildDebugArguments(_cwd: string, _debugPort: number): string[] {
         throw new Error('Not Implemented');
     }
     // tslint:disable-next-line:member-ordering

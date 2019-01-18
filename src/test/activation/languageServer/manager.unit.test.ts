@@ -12,7 +12,7 @@ import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanaguageServer, ILanguageServerAnalysisOptions } from '../../../client/activation/types';
+import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../../client/activation/types';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
@@ -38,10 +38,10 @@ suite('Language Server - Manager', () => {
     let manager: LanguageServerManagerTest;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
-    let languageServer: ILanaguageServer;
+    let languageServer: ILanguageServer;
     let commandManager: ICommandManager;
     let onChangeHandler: Function;
-    const languageClientOptions = { x: 1 } as any as LanguageClientOptions;
+    const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     let commandRegistrationDisposable: typemoq.IMock<IDisposable>;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
@@ -49,30 +49,36 @@ suite('Language Server - Manager', () => {
         languageServer = mock(LanguageServer);
         commandManager = mock(CommandManager);
         commandRegistrationDisposable = typemoq.Mock.ofType<IDisposable>();
-        manager = new LanguageServerManagerTest(instance(serviceContainer),
+        manager = new LanguageServerManagerTest(
+            instance(serviceContainer),
             instance(commandManager),
-            instance(analysisOptions));
+            instance(analysisOptions)
+        );
         manager.clearLoadExtensionArgs();
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {
         async function startLanguageServer() {
-            when(commandManager.registerCommand(loadExtensionCommand, anything()))
-                .thenReturn(commandRegistrationDisposable.object);
+            when(commandManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
+                commandRegistrationDisposable.object
+            );
 
             let handlerRegistered = false;
-            const changeFn = (handler: Function) => { handlerRegistered = true; onChangeHandler = handler; };
+            const changeFn = (handler: Function) => {
+                handlerRegistered = true;
+                onChangeHandler = handler;
+            };
             when(analysisOptions.initialize(resource)).thenResolve();
             when(analysisOptions.getAnalysisOptions()).thenResolve(languageClientOptions);
             when(analysisOptions.onDidChange).thenReturn(changeFn as any);
-            when(serviceContainer.get<ILanaguageServer>(ILanaguageServer)).thenReturn(instance(languageServer));
+            when(serviceContainer.get<ILanguageServer>(ILanguageServer)).thenReturn(instance(languageServer));
             when(languageServer.start(resource, languageClientOptions)).thenResolve();
 
             await manager.start(resource);
 
             verify(analysisOptions.initialize(resource)).once();
             verify(analysisOptions.getAnalysisOptions()).once();
-            verify(serviceContainer.get<ILanaguageServer>(ILanaguageServer)).once();
+            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).once();
             verify(languageServer.start(resource, languageClientOptions)).once();
             expect(handlerRegistered).to.be.true;
             verify(languageServer.dispose()).never();
@@ -100,7 +106,7 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanaguageServer>(ILanaguageServer)).twice();
+            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
             verify(languageServer.start(resource, languageClientOptions)).twice();
         });
         test('Changes in analysis options must throttled when restarting LS', async () => {
@@ -110,16 +116,18 @@ suite('Language Server - Manager', () => {
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
-            await Promise.all([onChangeHandler.call(manager),
-            onChangeHandler.call(manager),
-            onChangeHandler.call(manager),
-            onChangeHandler.call(manager)]);
+            await Promise.all([
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager)
+            ]);
             await sleep(1);
 
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanaguageServer>(ILanaguageServer)).twice();
+            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
             verify(languageServer.start(resource, languageClientOptions)).twice();
         });
         test('Multiple changes in analysis options must restart LS twice', async () => {
@@ -129,32 +137,36 @@ suite('Language Server - Manager', () => {
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
-            await Promise.all([onChangeHandler.call(manager),
-            onChangeHandler.call(manager),
-            onChangeHandler.call(manager),
-            onChangeHandler.call(manager)]);
+            await Promise.all([
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager)
+            ]);
             await sleep(1);
 
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanaguageServer>(ILanaguageServer)).twice();
+            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
             verify(languageServer.start(resource, languageClientOptions)).twice();
 
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
             await onChangeHandler.call(manager);
-            await Promise.all([onChangeHandler.call(manager),
-            onChangeHandler.call(manager),
-            onChangeHandler.call(manager),
-            onChangeHandler.call(manager)]);
+            await Promise.all([
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager),
+                onChangeHandler.call(manager)
+            ]);
             await sleep(1);
 
             verify(languageServer.dispose()).twice();
 
             verify(analysisOptions.getAnalysisOptions()).thrice();
-            verify(serviceContainer.get<ILanaguageServer>(ILanaguageServer)).thrice();
+            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).thrice();
             verify(languageServer.start(resource, languageClientOptions)).thrice();
         });
         test('Must register command handler', async () => {

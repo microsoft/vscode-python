@@ -8,7 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { IAsyncDisposable, IDisposable, IDataScienceSettings } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -39,8 +39,8 @@ export enum InterruptResult {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
-    executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
+    executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
@@ -71,11 +71,11 @@ export interface IJupyterSession extends IAsyncDisposable {
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager {
-    startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<IJupyterSession>;
+    startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken) : Promise<IJupyterSession>;
     getActiveKernelSpecs(connInfo: IConnection) : Promise<IJupyterKernelSpec[]>;
 }
 
-export interface IJupyterKernelSpec extends IDisposable {
+export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;
@@ -188,6 +188,18 @@ export interface IStatusProvider {
 
     // call this function to wait for a promise while displaying status
     waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void) : Promise<T>;
+}
+
+export interface IJupyterCommand {
+    interpreter() : Promise<PythonInterpreter | undefined>;
+    execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
+    exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+}
+
+export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
+export interface IJupyterCommandFactory {
+    createInterpreterCommand(args: string[], interpreter: PythonInterpreter) : IJupyterCommand;
+    createProcessCommand(exe: string, args: string[]) : IJupyterCommand;
 }
 
 // Config settings we pass to our react code

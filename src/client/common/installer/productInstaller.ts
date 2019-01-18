@@ -7,7 +7,7 @@ import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { LINTER_NOT_INSTALLED_PROMPT } from '../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
@@ -112,7 +112,7 @@ export class CTagsInstaller extends BaseInstaller {
         super(serviceContainer, outputChannel);
     }
 
-    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async install(_product: Product, resource?: Uri): Promise<InstallerResponse> {
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
             this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
@@ -197,16 +197,16 @@ export class LinterInstaller extends BaseInstaller {
         }
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
-            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install' });
+            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install' });
             return this.install(product, resource);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
-            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt' });
+            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt' });
             return InstallerResponse.Ignore;
         }
 
         if (response === selectLinter) {
-            sendTelemetryEvent(LINTER_NOT_INSTALLED_PROMPT, undefined, { action: 'select' });
+            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, { action: 'select' });
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             await commandManager.executeCommand(Commands.Set_Linter);
         }

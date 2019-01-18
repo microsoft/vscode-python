@@ -7,18 +7,19 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as typemoq from 'typemoq';
 import { DiagnosticSeverity } from 'vscode';
+import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import { EnvironmentPathVariableDiagnosticsService } from '../../../../client/application/diagnostics/checks/envPathVariable';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
-import { IApplicationEnvironment } from '../../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../client/common/types';
 import { EnvironmentVariables } from '../../../../client/common/variables/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:max-func-body-length no-any
 suite('Application Diagnostics - Checks Env Path Variable', () => {
     let diagnosticService: IDiagnosticsService;
     let platformService: typemoq.IMock<IPlatformService>;
@@ -64,8 +65,20 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPathUtils)))
             .returns(() => pathUtils.object);
+        const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
+        workspaceService.setup(w => w.getWorkspaceFolder(typemoq.It.isAny()))
+            .returns(() => undefined);
 
-        diagnosticService = new EnvironmentPathVariableDiagnosticsService(serviceContainer.object);
+        diagnosticService = new class extends EnvironmentPathVariableDiagnosticsService {
+            public _clear() {
+                while (BaseDiagnosticsService.handledDiagnosticCodeKeys.length > 0) {
+                    BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
+                }
+            }
+        }(serviceContainer.object);
+        (diagnosticService as any)._clear();
     });
 
     test('Can handle EnvPathVariable diagnostics', async () => {
@@ -81,7 +94,7 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
     test('Can not handle non-EnvPathVariable diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         diagnostic.setup(d => d.code)
-            .returns(() => 'Something Else')
+            .returns(() => 'Something Else' as any)
             .verifiable(typemoq.Times.atLeastOnce());
 
         const canHandle = await diagnosticService.canHandle(diagnostic.object);
@@ -92,14 +105,14 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         platformService.setup(p => p.isMac).returns(() => true);
         platformService.setup(p => p.isLinux).returns(() => false);
         platformService.setup(p => p.isWindows).returns(() => false);
-        const diagnostics = await diagnosticService.diagnose();
+        const diagnostics = await diagnosticService.diagnose(undefined);
         expect(diagnostics).to.be.deep.equal([]);
     });
     test('Should return empty diagnostics for Linux', async () => {
         platformService.setup(p => p.isMac).returns(() => false);
         platformService.setup(p => p.isLinux).returns(() => true);
         platformService.setup(p => p.isWindows).returns(() => false);
-        const diagnostics = await diagnosticService.diagnose();
+        const diagnostics = await diagnosticService.diagnose(undefined);
         expect(diagnostics).to.be.deep.equal([]);
     });
     test('Should return empty diagnostics for Windows if path variable is valid', async () => {
@@ -110,7 +123,7 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         ].join(pathDelimiter);
         procEnv.setup(env => env[pathVariableName]).returns(() => paths);
 
-        const diagnostics = await diagnosticService.diagnose();
+        const diagnostics = await diagnosticService.diagnose(undefined);
 
         expect(diagnostics).to.be.deep.equal([]);
     });
@@ -123,7 +136,7 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         ].join(pathDelimiter);
         procEnv.setup(env => env[pathVariableName]).returns(() => paths);
 
-        const diagnostics = await diagnosticService.diagnose();
+        const diagnostics = await diagnosticService.diagnose(undefined);
 
         expect(diagnostics).to.be.lengthOf(1);
         expect(diagnostics[0].code).to.be.equal(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic);
@@ -140,7 +153,7 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         platformService.setup(p => p.isWindows).returns(() => true);
         procEnv.setup(env => env[pathVariableName]).returns(() => paths);
 
-        const diagnostics = await diagnosticService.diagnose();
+        const diagnostics = await diagnosticService.diagnose(undefined);
 
         expect(diagnostics).to.be.lengthOf(0);
     });

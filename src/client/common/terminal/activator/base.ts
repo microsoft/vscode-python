@@ -32,7 +32,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         deferred.resolve(activated);
         return activated;
     }
-    protected async waitForCommandToProcess(shell: TerminalShellType) {
+    protected async waitForCommandToProcess(_shell: TerminalShellType) {
         // Give the command some time to complete.
         // Its been observed that sending commands too early will strip some text off in VS Code Terminal.
         await sleep(500);

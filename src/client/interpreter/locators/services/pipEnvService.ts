@@ -135,7 +135,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         } catch (error) {
             const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-            const enviromentVariableValues = {
+            const enviromentVariableValues: Record<string, string | undefined> = {
                 LC_ALL: currentProc.env.LC_ALL,
                 LANG: currentProc.env.LANG
             };

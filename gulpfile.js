@@ -197,7 +197,16 @@ function getAllowedWarningsForWebPack(buildConfig) {
             throw new Error('Unknown WebPack Configuration');
     }
 }
-gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
+gulp.task('renameSourceMaps', async () => {
+    // By default souce maps will be disabled in the extenion.
+    // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
+    const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
+    const debuggerSourceMap = path.join(__dirname, 'out', 'client', 'debugger', 'debugAdapter', 'main.js.map');
+    await fs.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
+    await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
+});
+
+gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
 const installPythonLibArgs = ['-m', 'pip', '--disable-pip-version-check', 'install',

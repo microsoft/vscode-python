@@ -57,7 +57,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         }
     }
     @traceDecorators.verbose('Intepreter Watcher change handler')
-    protected async createHandler(e: Uri) {
+    public async createHandler(e: Uri) {
         this.didCreate.fire();
         // On Windows, creation of environments are very slow, hence lets notify again after
         // the python executable is accessible (i.e. when we can launch the process).

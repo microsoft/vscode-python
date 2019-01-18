@@ -10,7 +10,7 @@ import { IConfigurationService, IDisposableRegistry, IEditorUtils, ILogger, IOut
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
-import { FORMAT_SORT_IMPORTS } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { ISortImportsEditingProvider } from './types';
 
 @injectable()
@@ -29,7 +29,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
     }
-    @captureTelemetry(FORMAT_SORT_IMPORTS)
+    @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
     public async provideDocumentSortImportsEdits(uri: Uri, token?: CancellationToken): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
         if (!document) {

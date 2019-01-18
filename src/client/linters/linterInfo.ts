@@ -7,6 +7,8 @@ import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
+// tslint:disable:no-any
+
 export class LinterInfo implements ILinterInfo {
     private _id: LinterId;
     private _product: Product;
@@ -43,16 +45,16 @@ export class LinterInfo implements ILinterInfo {
     }
     public isEnabled(resource?: Uri): boolean {
         const settings = this.configService.getSettings(resource);
-        return settings.linting[this.enabledSettingName] as boolean;
+        return (settings.linting as any)[this.enabledSettingName] as boolean;
     }
 
     public pathName(resource?: Uri): string {
         const settings = this.configService.getSettings(resource);
-        return settings.linting[this.pathSettingName] as string;
+        return (settings.linting as any)[this.pathSettingName] as string;
     }
     public linterArgs(resource?: Uri): string[] {
         const settings = this.configService.getSettings(resource);
-        const args = settings.linting[this.argsSettingName];
+        const args = (settings.linting as any)[this.argsSettingName];
         return Array.isArray(args) ? args as string[] : [];
     }
     public getExecutionInfo(customArgs: string[], resource?: Uri): ExecutionInfo {

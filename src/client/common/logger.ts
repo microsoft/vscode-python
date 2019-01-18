@@ -1,4 +1,4 @@
-// tslint:disable:no-console
+// tslint:disable:no-console no-any
 
 import { injectable } from 'inversify';
 import { sendTelemetryEvent } from '../telemetry';
@@ -56,16 +56,18 @@ export enum LogOptions {
 // tslint:disable-next-line:no-any
 function argsToLogString(args: any[]): string {
     try {
-        return (args || []).map((item, index) => {
-            try {
-                if (item.fsPath) {
-                    return `Arg ${index + 1}: <Uri:${item.fsPath}>`;
+        return (args || [])
+            .map((item, index) => {
+                try {
+                    if (item.fsPath) {
+                        return `Arg ${index + 1}: <Uri:${item.fsPath}>`;
+                    }
+                    return `Arg ${index + 1}: ${JSON.stringify(item)}`;
+                } catch {
+                    return `Arg ${index + 1}: UNABLE TO DETERMINE VALUE`;
                 }
-                return `Arg ${index + 1}: ${JSON.stringify(item)}`;
-            } catch {
-                return `Arg ${index + 1}: UNABLE TO DETERMINE VALUE`;
-            }
-        }).join(', ');
+            })
+            .join(', ');
     } catch {
         return '';
     }
@@ -113,10 +115,11 @@ export namespace traceDecorators {
 }
 function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function(...args: any[]) {
+            const className = _ && _.constructor ? _.constructor.name : '';
             // tslint:disable-next-line:no-any
             function writeSuccess(returnValue?: any) {
                 if (logLevel === LogLevel.Error) {
@@ -130,6 +133,7 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
             // tslint:disable-next-line:no-any
             function writeToLog(returnValue?: any, ex?: Error) {
                 const messagesToLog = [message];
+                messagesToLog.push(`Class name = ${className}`);
                 if ((options && LogOptions.Arguments) === LogOptions.Arguments) {
                     messagesToLog.push(argsToLogString(args));
                 }
@@ -138,7 +142,7 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                 }
                 if (ex) {
                     new Logger().logError(messagesToLog.join(', '), ex);
-                    sendTelemetryEvent('ERROR', undefined, undefined, ex);
+                    sendTelemetryEvent('ERROR' as any, undefined, undefined, ex);
                 } else {
                     new Logger().logInformation(messagesToLog.join(', '));
                 }

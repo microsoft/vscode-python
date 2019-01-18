@@ -5,7 +5,7 @@ import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
-import { COMPLETION } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { CompletionSource } from './completionSource';
 import { ItemInfoSource } from './itemInfoSource';
 
@@ -18,7 +18,7 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    @captureTelemetry(COMPLETION)
+    @captureTelemetry(EventName.COMPLETION)
     public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken):
         Promise<vscode.CompletionItem[]> {
         const items = await this.completionSource.getVsCodeCompletionItems(document, position, token);

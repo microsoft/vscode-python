@@ -14,5 +14,5 @@ export type CommandOptions = LaunchBrowserOption | IgnoreDiagnostOption | Execut
 export const IDiagnosticsCommandFactory = Symbol('IDiagnosticsCommandFactory');
 
 export interface IDiagnosticsCommandFactory {
-    createCommand<T>(diagnostic: IDiagnostic, options: CommandOptions): IDiagnosticCommand;
+    createCommand(diagnostic: IDiagnostic, options: CommandOptions): IDiagnosticCommand;
 }

@@ -9,7 +9,7 @@ import { IDisposable } from '../common/types';
 import { Linters } from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
-import { SELECT_LINTER } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { ILinterManager, ILintingEngine, LinterId } from './types';
 
 export class LinterCommands implements IDisposable {
@@ -61,7 +61,7 @@ export class LinterCommands implements IDisposable {
         if (selection !== undefined) {
             if (selection === 'Disable Linting'){
                 await this.linterManager.enableLintingAsync(false);
-                sendTelemetryEvent(SELECT_LINTER, undefined, {enabled: false});
+                sendTelemetryEvent(EventName.SELECT_LINTER, undefined, {enabled: false});
             } else{
                 const index = linters.findIndex(x => x.id === selection);
                 if (activeLinters.length > 1) {
@@ -71,7 +71,7 @@ export class LinterCommands implements IDisposable {
                     }
                 }
                 await this.linterManager.setActiveLintersAsync([linters[index].product], this.settingsUri);
-                sendTelemetryEvent(SELECT_LINTER, undefined, {tool: selection as LinterId, enabled: true});
+                sendTelemetryEvent(EventName.SELECT_LINTER, undefined, {tool: selection as LinterId, enabled: true});
             }
         }
     }

@@ -165,7 +165,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         }
     }
 
-    private async stepThrough<T>(start: InputStep<S>, state: S) {
+    private async stepThrough(start: InputStep<S>, state: S) {
         let step: InputStep<S> | void = start;
         while (step) {
             this.steps.push(step);

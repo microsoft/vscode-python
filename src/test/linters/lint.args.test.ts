@@ -106,7 +106,7 @@ suite('Linting - Arguments', () => {
                     document.setup(d => d.uri).returns(() => fileUri);
 
                     let invoked = false;
-                    (linter as any).run = (args, doc, token) => {
+                    (linter as any).run = (args: string[]) => {
                         expect(args).to.deep.equal(expectedArgs);
                         invoked = true;
                         return Promise.resolve([]);

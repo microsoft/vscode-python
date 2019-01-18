@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { Progress, ProgressLocation, window } from 'vscode';
 import { Disposable, LanguageClient } from 'vscode-languageclient';
-import { createDeferred, Deferred } from '../common/utils/async';
-import { StopWatch } from '../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../telemetry';
-import { PYTHON_LANGUAGE_SERVER_ANALYSISTIME } from '../telemetry/constants';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 // Draw the line at Language Server analysis 'timing out'
 // and becoming a failure-case at 1 minute:
@@ -17,8 +19,6 @@ export class ProgressReporting implements Disposable {
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
   private progressDeferred: Deferred<void> | undefined;
   private progressTimer?: StopWatch;
-  // tslint:disable-next-line:no-unused-variable
-  private progressTimeout?: NodeJS.Timer;
 
   constructor(private readonly languageClient: LanguageClient) {
     this.languageClient.onNotification('python/setStatusBarMessage', (m: string) => {
@@ -35,7 +35,7 @@ export class ProgressReporting implements Disposable {
 
       this.progressDeferred = createDeferred<void>();
       this.progressTimer = new StopWatch();
-      this.progressTimeout = setTimeout(
+      setTimeout(
         this.handleTimeout.bind(this),
         ANALYSIS_TIMEOUT_MS
       );
@@ -73,13 +73,12 @@ export class ProgressReporting implements Disposable {
   private completeAnalysisTracking(success: boolean): void {
     if (this.progressTimer) {
       sendTelemetryEvent(
-        PYTHON_LANGUAGE_SERVER_ANALYSISTIME,
+        EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME,
         this.progressTimer.elapsedTime,
         { success }
       );
     }
     this.progressTimer = undefined;
-    this.progressTimeout = undefined;
   }
 
   // tslint:disable-next-line:no-any

@@ -82,15 +82,15 @@ export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
     start(resource: Resource): Promise<void>;
 }
-export const ILanaguageServer = Symbol('ILanaguageServer');
-export interface ILanaguageServer extends IDisposable {
+export const ILanguageServer = Symbol('ILanguageServer');
+export interface ILanguageServer extends IDisposable {
     start(resource: Resource, options: LanguageClientOptions): Promise<void>;
     /**
      * Sends a request to LS so as to load other extensions.
      * This is used as a plugin loader mechanism.
      * Anyone (such as intellicode) wanting to interact with LS, needs to send this request to LS.
      * @param {{}} [args]
-     * @memberof ILanaguageServer
+     * @memberof ILanguageServer
      */
     loadExtension(args?: {}): void;
 }

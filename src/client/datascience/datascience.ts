@@ -8,12 +8,12 @@ import { URL } from 'url';
 import * as vscode from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { PythonSettings } from '../common/configSettings';
 import { PYTHON, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import {
     BANNER_NAME_DS_SURVEY,
     IConfigurationService,
+    IDisposable,
     IDisposableRegistry,
     IExtensionContext,
     IPythonExtensionBanner
@@ -30,6 +30,7 @@ export class DataScience implements IDataScience {
     public isDisposed: boolean = false;
     private readonly commandListeners: IDataScienceCommandListener[];
     private readonly dataScienceSurveyBanner: IPythonExtensionBanner;
+    private changeHandler: IDisposable | undefined;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -38,8 +39,8 @@ export class DataScience implements IDataScience {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell) {
-            this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
-            this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
+        this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
+        this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
 
     public async activate(): Promise<void> {
@@ -53,7 +54,7 @@ export class DataScience implements IDataScience {
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
-        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
         this.disposableRegistry.push(this);
 
         // Listen for active editor changes so we can detect have code cells or not
@@ -62,9 +63,9 @@ export class DataScience implements IDataScience {
     }
 
     public async dispose() {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
-            (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        if (this.changeHandler) {
+            this.changeHandler.dispose();
+            this.changeHandler = undefined;
         }
     }
 
@@ -121,13 +122,13 @@ export class DataScience implements IDataScience {
         switch (selection) {
             case localize.DataScience.jupyterSelectURILaunchLocal():
                 return this.setJupyterURIToLocal();
-            break;
+                break;
             case localize.DataScience.jupyterSelectURISpecifyURI():
                 return this.selectJupyterLaunchURI();
-            break;
+                break;
             default:
                 // If user cancels quick pick we will get undefined as the selection and fall through here
-            break;
+                break;
         }
     }
 
@@ -139,8 +140,10 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async selectJupyterLaunchURI(): Promise<void> {
         // First get the proposed URI from the user
-        const userURI = await this.appShell.showInputBox({prompt: localize.DataScience.jupyterSelectURIPrompt(),
-            placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI, ignoreFocusOut: true});
+        const userURI = await this.appShell.showInputBox({
+            prompt: localize.DataScience.jupyterSelectURIPrompt(),
+            placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI, ignoreFocusOut: true
+        });
 
         if (userURI) {
             await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
@@ -149,8 +152,8 @@ export class DataScience implements IDataScience {
 
     private validateURI = (testURI: string): string | undefined | null => {
         try {
-           // tslint:disable-next-line:no-unused-expression
-           new URL(testURI);
+            // tslint:disable-next-line:no-unused-expression
+            new URL(testURI);
         } catch {
             return localize.DataScience.jupyterSelectURIInvalidURI();
         }
@@ -169,8 +172,7 @@ export class DataScience implements IDataScience {
     // Get our matching code watcher for the active document
     private getCurrentCodeWatcher(): ICodeWatcher | undefined {
         const activeEditor = vscode.window.activeTextEditor;
-        if (!activeEditor || !activeEditor.document)
-        {
+        if (!activeEditor || !activeEditor.document) {
             return undefined;
         }
 

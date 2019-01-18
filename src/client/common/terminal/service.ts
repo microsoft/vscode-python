@@ -7,7 +7,7 @@ import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { TERMINAL_CREATE } from '../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import { ITerminalActivator, ITerminalHelper, ITerminalService, TerminalShellType } from './types';
@@ -83,6 +83,6 @@ export class TerminalService implements ITerminalService, Disposable {
         const interpreterInfo = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
         const pythonVersion = (interpreterInfo && interpreterInfo.version) ? interpreterInfo.version.raw : undefined;
         const interpreterType = interpreterInfo ? interpreterInfo.type : undefined;
-        captureTelemetry(TERMINAL_CREATE, { terminal: this.terminalShellType, pythonVersion, interpreterType });
+        captureTelemetry(EventName.TERMINAL_CREATE, { terminal: this.terminalShellType, pythonVersion, interpreterType });
     }
 }

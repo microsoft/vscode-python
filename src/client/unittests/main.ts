@@ -9,7 +9,7 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/
 import * as constants from '../common/constants';
 import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../telemetry/constants';
+import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './common/constants';
@@ -156,7 +156,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         await discoveryPromise;
     }
     public async stopTests(resource: Uri) {
-        sendTelemetryEvent(UNITTEST_STOP);
+        sendTelemetryEvent(EventName.UNITTEST_STOP);
         const testManager = await this.getTestManager(true, resource);
         if (testManager) {
             testManager.stop();
@@ -190,7 +190,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspaceFolder, testManager.workingDirectory, file, testFunctions, debug);
     }
     public viewOutput(cmdSource: CommandSource) {
-        sendTelemetryEvent(UNITTEST_VIEW_OUTPUT);
+        sendTelemetryEvent(EventName.UNITTEST_VIEW_OUTPUT);
         this.outputChannel.show();
     }
     public async selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean) {

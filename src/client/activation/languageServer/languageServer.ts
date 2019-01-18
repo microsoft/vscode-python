@@ -11,13 +11,9 @@ import { Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import {
-    PYTHON_LANGUAGE_SERVER_ENABLED,
-    PYTHON_LANGUAGE_SERVER_READY,
-    PYTHON_LANGUAGE_SERVER_TELEMETRY
-} from '../../telemetry/constants';
-import { ProgressReporting } from '../progress';
-import { ILanaguageServer as ILanguageServer, ILanguageClientFactory, LanguageClientFactory } from '../types';
+import { EventName } from '../../telemetry/constants';
+import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
+import { ProgressReporting } from './progress';
 
 @injectable()
 export class LanguageServer implements ILanguageServer {
@@ -51,7 +47,7 @@ export class LanguageServer implements ILanguageServer {
     }
 
     @traceDecorators.error('Failed to start language server')
-    @captureTelemetry(PYTHON_LANGUAGE_SERVER_ENABLED, undefined, true)
+    @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_ENABLED, undefined, true)
     public async start(resource: Resource, options: LanguageClientOptions): Promise<void> {
         this.languageClient = await this.factory.createLanguageClient(resource, options);
         this.disposables.push(this.languageClient!.start());
@@ -59,7 +55,7 @@ export class LanguageServer implements ILanguageServer {
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
         this.languageClient.onTelemetry(telemetryEvent => {
-            const eventName = telemetryEvent.EventName || PYTHON_LANGUAGE_SERVER_TELEMETRY;
+            const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
             sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
         });
     }
@@ -77,7 +73,7 @@ export class LanguageServer implements ILanguageServer {
             )
             .ignoreErrors();
     }
-    @captureTelemetry(PYTHON_LANGUAGE_SERVER_READY, undefined, true)
+    @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)
     private async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient!.initializeResult) {
             await sleep(100);

@@ -10,21 +10,22 @@ import { IDisposable, Resource } from '../../common/types';
 import { debounce } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { PYTHON_LANGUAGE_SERVER_STARTUP } from '../../telemetry/constants';
-import { ILanaguageServer, ILanguageServerAnalysisOptions, ILanguageServerManager } from '../types';
+import { EventName } from '../../telemetry/constants';
+import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerManager } from '../types';
 
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 @injectable()
 export class LanguageServerManager implements ILanguageServerManager {
     protected static loadExtensionArgs?: {};
-    private languageServer?: ILanaguageServer;
+    private languageServer?: ILanguageServer;
     private resource!: Resource;
     private disposables: IDisposable[] = [];
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions) { }
+        @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions
+    ) {}
     public dispose() {
         if (this.languageServer) {
             this.languageServer.dispose();
@@ -64,10 +65,10 @@ export class LanguageServerManager implements ILanguageServerManager {
         }
         await this.startLanguageServer();
     }
-    @captureTelemetry(PYTHON_LANGUAGE_SERVER_STARTUP, undefined, true)
+    @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_STARTUP, undefined, true)
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
-        this.languageServer = this.serviceContainer.get<ILanaguageServer>(ILanaguageServer);
+        this.languageServer = this.serviceContainer.get<ILanguageServer>(ILanguageServer);
         const options = await this.analysisOptions!.getAnalysisOptions();
         await this.languageServer.start(this.resource, options);
         this.loadExtensionIfNecessary();

@@ -1832,7 +1832,7 @@
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
-        "postinstall": "node ./node_modules/vscode/bin/install",
+        "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --require source-map-support/register --opts ./build/.mocha.unittests.opts",
         "test:unittests:cover": "nyc --nycrc-path ./build/.nycrc npm run test:unittests",
@@ -1909,6 +1909,7 @@
         "@types/chai-as-promised": "^7.1.0",
         "@types/copy-webpack-plugin": "^4.4.2",
         "@types/del": "^3.0.0",
+        "@types/diff-match-patch": "^1.0.32",
         "@types/dotenv": "^4.0.3",
         "@types/download": "^6.2.2",
         "@types/enzyme": "^3.1.14",
@@ -1996,7 +1997,6 @@
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "rewiremock": "^3.13.0",
         "shortid": "^2.2.8",
-        "source-map-support": "^0.5.9",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",
         "svg-inline-loader": "^0.8.0",
@@ -2021,7 +2021,6 @@
         "webpack-fix-default-import-plugin": "^1.0.3",
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
-        "wrapper-webpack-plugin": "^2.0.0",
         "yargs": "^12.0.2"
     },
     "__metadata": {

@@ -1,22 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import '../../common/extensions';
+
 import { LogOptions, traceDecorators, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
-import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngterpreterData, swallowExceptions } from '../../common/utils/decorators';
+import {
+    cacheResourceSpecificInterpreterData,
+    clearCachedResourceSpecificIngterpreterData,
+    swallowExceptions
+} from '../../common/utils/decorators';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry } from '../../telemetry';
-import { PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES } from '../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
+import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
@@ -42,20 +47,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         this.envVarsService.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange, this, this.disposables);
     }
 
-    public dispose(): void | Promise<void> {
+    public dispose(): void {
         this.disposables.forEach(d => d.dispose());
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @swallowExceptions('getActivatedEnvironmentVariables')
-    @captureTelemetry(PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
+    @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
     @cacheResourceSpecificInterpreterData('ActivatedEnvironmentVariables', cacheDuration)
-    public async getActivatedEnvironmentVariables(resource: Resource): Promise<NodeJS.ProcessEnv | undefined> {
+    public async getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter): Promise<NodeJS.ProcessEnv | undefined> {
         const shell = defaultShells[this.platform.osType];
         if (!shell) {
             return;
         }
 
-        const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource);
+        const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource, interpreter);
         traceVerbose(`Activation Commands received ${activationCommands}`);
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;

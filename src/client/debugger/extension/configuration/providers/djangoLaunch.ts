@@ -13,7 +13,7 @@ import { DebugConfigurationPrompts, localize } from '../../../../common/utils/lo
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
-import { DEBUGGER_CONFIGURATION_PROMPTS } from '../../../../telemetry/constants';
+import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
@@ -55,7 +55,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             }
         }
 
-        sendTelemetryEvent(DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchDjango, autoDetectedDjangoManagePyPath: !!program, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchDjango, autoDetectedDjangoManagePyPath: !!program, manuallyEnteredAValue });
         Object.assign(state.config, config);
     }
     public async validateManagePy(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {

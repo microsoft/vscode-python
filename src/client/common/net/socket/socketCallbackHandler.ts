@@ -8,16 +8,16 @@ import { SocketStream } from "./SocketStream";
 import { SocketServer } from './socketServer';
 
 export abstract class SocketCallbackHandler extends EventEmitter {
-    private _stream: SocketStream;
+    private _stream!: SocketStream;
     private commandHandlers: Map<string, Function>;
-    private handeshakeDone: boolean;
+    private handeshakeDone!: boolean;
 
     constructor(socketServer: SocketServer) {
         super();
         this.commandHandlers = new Map<string, Function>();
         socketServer.on('data', this.onData.bind(this));
     }
-    private disposed: boolean;
+    private disposed!: boolean;
     public dispose() {
         this.disposed = true;
         this.commandHandlers.clear();

@@ -20,7 +20,7 @@ import {
     InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
-import { CondaGetEnvironmentPrefix, CondaService } from '../../client/interpreter/locators/services/condaService';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
 import { MockState } from './mocks';
 
@@ -104,9 +104,7 @@ suite('Interpreters Conda Service', () => {
             persistentStateFactory.object,
             config.object,
             logger.object,
-            interpreterService.object,
             disposableRegistry,
-            serviceContainer.object,
             workspaceService.object,
             registryInterpreterLocatorService.object);
 
@@ -396,9 +394,7 @@ suite('Interpreters Conda Service', () => {
             persistentStateFactory.object,
             config.object,
             logger.object,
-            interpreterService.object,
             disposableRegistry,
-            serviceContainer.object,
             workspaceService.object);
 
         const result = await condaSrv.getCondaFile();
@@ -650,63 +646,76 @@ suite('Interpreters Conda Service', () => {
         fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
         await testFailureOfGettingCondaEnvironments(false, true, false, pythonPath);
     });
-    test('Create activated conda environment for Windows', async () => {
-        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda', envName: 'Anaconda' };
-        const environment: any = { Path: 'C:\\test' };
 
-        platformService.setup(p => p.isWindows).returns(() => true);
-        fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+    type InterpreterSearchTestParams = {
+        pythonPath: string;
+        environmentName: string;
+        isLinux: boolean;
+        expectedCondaPath: string;
+    };
 
-        const newEnvironment = await condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
+    const testsForInterpreter: InterpreterSearchTestParams[] =
+        [
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test1', 'python'),
+                environmentName: 'test1',
+                isLinux: true,
+                expectedCondaPath: path.join('users', 'foo', 'bin', 'conda')
+            },
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test2', 'python'),
+                environmentName: 'test2',
+                isLinux: true,
+                expectedCondaPath: path.join('users', 'foo', 'envs', 'test2', 'conda')
+            },
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test3', 'python'),
+                environmentName: 'test3',
+                isLinux: false,
+                expectedCondaPath: path.join('users', 'foo', 'Scripts', 'conda.exe')
+            },
+            {
+                pythonPath: path.join('users', 'foo', 'envs', 'test4', 'python'),
+                environmentName: 'test4',
+                isLinux: false,
+                expectedCondaPath: path.join('users', 'foo', 'conda.exe')
+            }
+        ];
 
-        // This part depends on the OS of path.join in getActivatedCondaEnvironment, so compute it here to match
-        const expectedPath = path.join(pythonInterpreter.envPath ? pythonInterpreter.envPath : '', 'Scripts');
-        expect(newEnvironment.Path).to.be.equal(expectedPath.concat(';', environment.Path), 'Incorrect Windows Path Value');
-        expect(newEnvironment.CONDA_PREFIX).to.be.equal(pythonInterpreter.envPath, 'Incorrect Windows CONDA_PREFIX Value');
-        expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Windows CONDA_DEFAULT_ENV Value');
+    testsForInterpreter.forEach(t => {
+        test(`Finds conda.exe for subenvironment ${t.environmentName}`, async () => {
+            platformService.setup(p => p.isLinux).returns(() => t.isLinux);
+            platformService.setup(p => p.isWindows).returns(() => !t.isLinux);
+            platformService.setup(p => p.isMac).returns(() => false);
+            fileSystem.setup(f => f.fileExists(TypeMoq.It.is(p => {
+                if (p === t.expectedCondaPath) {
+                    return true;
+                }
+                return false;
+            }))).returns(() => Promise.resolve(true));
+
+            const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
+            assert.equal(condaFile, t.expectedCondaPath);
+        });
+        test(`Finds conda.exe for different ${t.environmentName}`, async () => {
+            platformService.setup(p => p.isLinux).returns(() => t.isLinux);
+            platformService.setup(p => p.isWindows).returns(() => !t.isLinux);
+            platformService.setup(p => p.isMac).returns(() => false);
+            fileSystem.setup(f => f.fileExists(TypeMoq.It.is(p => {
+                if (p === t.expectedCondaPath) {
+                    return true;
+                }
+                return false;
+            }))).returns(() => Promise.resolve(true));
+
+            const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, undefined);
+
+            // This should only work if the expectedConda path has the original environment name in it
+            if (t.expectedCondaPath.includes(t.environmentName)) {
+                assert.equal(condaFile, t.expectedCondaPath);
+            } else {
+                assert.equal(condaFile, undefined);
+            }
+        });
     });
-    test('Create activated conda environment for Non-Windows', async () => {
-        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'usr/Anaconda', envName: 'Anaconda' };
-        const environment: any = { PATH: 'usr/test' };
-
-        platformService.setup(p => p.isWindows).returns(() => false);
-        fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-
-        const newEnvironment = await condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
-
-        // This part depends on the OS of path.join in getActivatedCondaEnvironment, so compute it here to match
-        const expectedPath = path.join('usr/Anaconda', 'bin');
-        expect(newEnvironment.PATH).to.be.equal(expectedPath.concat(':', environment.PATH), 'Incorrect Non-Windows Path Value');
-        expect(newEnvironment.CONDA_PREFIX).to.be.equal(pythonInterpreter.envPath, 'Incorrect Non-Windows CONDA_PREFIX Value');
-        expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Non-Windows CONDA_DEFAULT_ENV Value');
-    });
-    test('Create activated conda environment for using shell', async () => {
-        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda\\Foo\\envs\\test', envName: 'Anaconda' };
-        const environment: any = { Path: 'C:\\test' };
-
-        platformService.setup(p => p.isWindows).returns(() => true);
-        fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: `${CondaGetEnvironmentPrefix}\r\nCONDA_PREFIX=TEST_PREFIX` }));
-
-        const newEnvironment = await condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
-
-        expect(newEnvironment.CONDA_PREFIX).to.be.equal('TEST_PREFIX', 'Incorrect shell exec CONDA_PREFIX Value');
-    });
-    test('Create activated conda environment for using shell that fails all', async () => {
-        const pythonInterpreter: PythonInterpreter = { ...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda\\Foo\\envs\\test', envName: 'Anaconda' };
-        const environment: any = { Path: 'C:\\test' };
-
-        platformService.setup(p => p.isWindows).returns(() => true);
-        fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.reject());
-
-        const newEnvironment = await condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
-
-        // This part depends on the OS of path.join in getActivatedCondaEnvironment, so compute it here to match
-        const expectedPath = path.join(pythonInterpreter.envPath ? pythonInterpreter.envPath : '', 'Scripts');
-        expect(newEnvironment.Path).to.be.equal(expectedPath.concat(';', environment.Path), 'Incorrect Windows Path Value');
-        expect(newEnvironment.CONDA_PREFIX).to.be.equal(pythonInterpreter.envPath, 'Incorrect Windows CONDA_PREFIX Value');
-        expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Windows CONDA_DEFAULT_ENV Value');
-    });
-
 });

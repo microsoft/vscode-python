@@ -43,10 +43,10 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
     };
 
     if (testProvider === UNITTEST_PROVIDER) {
-        promise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment(options.workspaceFolder)
+        promise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment({ resource: options.workspaceFolder })
             .then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
     } else if (typeof executionInfo.moduleName === 'string' && executionInfo.moduleName.length > 0) {
-        pythonExecutionServicePromise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment(options.workspaceFolder);
+        pythonExecutionServicePromise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment({ resource: options.workspaceFolder });
         promise = pythonExecutionServicePromise.then(executionService => executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options));
     } else {
         const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);

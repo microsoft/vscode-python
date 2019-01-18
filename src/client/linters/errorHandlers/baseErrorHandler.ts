@@ -10,13 +10,13 @@ export abstract class BaseErrorHandler implements IErrorHandler {
     protected logger: ILogger;
     protected installer: IInstaller;
 
-    private handler: IErrorHandler;
+    private handler?: IErrorHandler;
 
     constructor(protected product: Product, protected outputChannel: OutputChannel, protected serviceContainer: IServiceContainer) {
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.installer = this.serviceContainer.get<IInstaller>(IInstaller);
     }
-    protected get nextHandler() {
+    protected get nextHandler(): IErrorHandler | undefined {
         return this.handler;
     }
     public setNextHandler(handler: IErrorHandler): void {

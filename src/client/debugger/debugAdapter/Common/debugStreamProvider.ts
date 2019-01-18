@@ -47,7 +47,7 @@ export class DebugStreamProvider implements IDebugStreamProvider {
 
         let debugPort = 0;
         const args = currentProcess.argv.slice(2);
-        args.forEach((val, index, array) => {
+        args.forEach(val => {
             const portMatch = /^--server=(\d{4,5})$/.exec(val);
             if (portMatch) {
                 debugPort = parseInt(portMatch[1], 10);

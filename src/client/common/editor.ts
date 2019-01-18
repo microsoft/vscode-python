@@ -164,7 +164,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     let character = 0;
     if (line > 0) {
         const beforeLines = before.split(/\r?\n/g);
-        beforeLines.filter((l, i) => i < line).forEach(l => character += l.length + NEW_LINE_LENGTH);
+        beforeLines.filter((_l, i) => i < line).forEach(l => character += l.length + NEW_LINE_LENGTH);
     }
     const edits: Edit[] = [];
     let edit: Edit | null = null;
@@ -252,7 +252,7 @@ export function getTempFileWithDocumentContents(document: TextDocument): Promise
  * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
  * @throws {!Error} If invalid input.
  */
-function patch_fromText(textline): Patch[] {
+function patch_fromText(textline: string): Patch[] {
     const patches: Patch[] = [];
     if (!textline) {
         return patches;

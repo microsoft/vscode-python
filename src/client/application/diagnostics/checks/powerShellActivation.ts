@@ -8,39 +8,51 @@ import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
 import { Logger } from '../../../common/logger';
 import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
-import { IConfigurationService, ICurrentProcess } from '../../../common/types';
+import { IConfigurationService, ICurrentProcess, Resource } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { DIAGNOSTICS_ACTION } from '../../../telemetry/constants';
+import { EventName } from '../../../telemetry/constants';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
-const PowershellActivationNotSupportedWithBatchFilesMessage = 'Activation of the selected Python environment is not supported in PowerShell. Consider changing your shell to Command Prompt.';
+const PowershellActivationNotSupportedWithBatchFilesMessage =
+    'Activation of the selected Python environment is not supported in PowerShell. Consider changing your shell to Command Prompt.';
 
 export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
-    constructor() {
-        super(DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic,
+    constructor(resource: Resource) {
+        super(
+            DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic,
             PowershellActivationNotSupportedWithBatchFilesMessage,
-            DiagnosticSeverity.Warning, DiagnosticScope.Global);
+            DiagnosticSeverity.Warning,
+            DiagnosticScope.Global,
+            resource
+        );
     }
 }
 
-export const PowerShellActivationHackDiagnosticsServiceId = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic';
+export const PowerShellActivationHackDiagnosticsServiceId =
+    'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic';
 
 @injectable()
 export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic], serviceContainer);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
+        super(
+            [DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic],
+            serviceContainer
+        );
+        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
+            IDiagnosticHandlerService,
+            DiagnosticCommandPromptHandlerServiceId
+        );
     }
-    public async diagnose(): Promise<IDiagnostic[]> {
+    public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
         return [];
     }
-    public async handle(diagnostics: IDiagnostic[]): Promise<void> {
+    protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         // This class can only handle one type of diagnostic, hence just use first item in list.
         if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
             return;
@@ -57,10 +69,14 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                 prompt: 'Use Command Prompt',
                 // tslint:disable-next-line:no-object-literal-type-assertion
                 command: {
-                    diagnostic, invoke: async (): Promise<void> => {
-                        sendTelemetryEvent(DIAGNOSTICS_ACTION, undefined, { action: 'switchToCommandPrompt' });
-                        useCommandPromptAsDefaultShell(currentProcess, configurationService)
-                            .catch(ex => Logger.error('Use Command Prompt as default shell', ex));
+                    diagnostic,
+                    invoke: async (): Promise<void> => {
+                        sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, {
+                            action: 'switchToCommandPrompt'
+                        });
+                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex =>
+                            Logger.error('Use Command Prompt as default shell', ex)
+                        );
                     }
                 }
             },
@@ -73,7 +89,10 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
             },
             {
                 prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/CondaPwsh' })
+                command: commandFactory.createCommand(diagnostic, {
+                    type: 'launch',
+                    options: 'https://aka.ms/CondaPwsh'
+                })
             }
         ];
 

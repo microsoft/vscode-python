@@ -847,7 +847,7 @@ export interface IWebPanel {
     /**
      * Sends a message to the hosted html page
      */
-    postMessage(message: WebPanelMessage);
+    postMessage(message: WebPanelMessage): void;
 }
 
 // Wraps the VS Code api for creating a web panel
