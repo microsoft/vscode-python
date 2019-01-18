@@ -182,9 +182,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 if (result) {
                     data.outputs = [...data.outputs, massagedResult];
                 } else {
-                    data.outputs = [];
+                    data.outputs = [...data.outputs];
                 }
-                //    data.outputs = [...data.outputs, massagedResult];
                 c.data = data;
             }
 
