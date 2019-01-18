@@ -141,6 +141,7 @@
     "unist-util-stringify-position",
     "unist-util-visit-parents",
     "unist-util-visit",
+    "uuid",
     "vfile-location",
     "vfile-message",
     "vfile",

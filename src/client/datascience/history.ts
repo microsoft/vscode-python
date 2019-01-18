@@ -775,7 +775,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
         // Get our settings to pass along to the react control
         const workbench = this.workspaceService.getConfiguration('workbench');
-        const terminalCursor = workbench.get<string>('terminal.integrated.cursorStyle', 'block');
+        const terminalCursor = workbench ? workbench.get<string>('terminal.integrated.cursorStyle', 'block') : 'block';
         const settings: IDataScienceExtraSettings =
         {
             ...this.configuration.getSettings().datascience,

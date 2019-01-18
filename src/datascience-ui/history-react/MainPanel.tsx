@@ -45,7 +45,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         // Add a single empty cell if it's supported
-        if (getSettings && getSettings().allowInput) {
+        if (getSettings && getSettings().allowInput && !this.props.testMode) {
             this.state.cellVMs.push(createEditableCellVM(1));
         }
 
