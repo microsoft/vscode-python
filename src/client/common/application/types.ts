@@ -860,5 +860,5 @@ export interface IWebPanelProvider {
      * @param: mainScriptPath: full path in the output folder to the script
      * @return A IWebPanel that can be used to show html pages.
      */
-    create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string): IWebPanel;
+    create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
 }

@@ -3,50 +3,51 @@
 'use strict';
 
 import * as React from 'react';
-import './commandPrompt.css';
+import './cursor.css';
 
 
-interface ICursorState {
-    show: boolean;
+export interface ICursorProps {
+    codeInFocus: boolean;
+    hidden: boolean;
+    left: number;
+    top: number;
+    text: string;
+    cursorType: string;
 }
 
-export class Cursor extends React.Component<{}, ICursorState> {
-
-    private registered: boolean = false;
+export class Cursor extends React.Component<ICursorProps> {
 
     constructor(props) {
         super(props);
-        this.state = {show: true};
     }
-
-    public componentDidMount() {
-        if (!this.registered) {
-            this.registered = true;
-            window.addEventListener('onfocusin', this.focusGained);
-            window.addEventListener('onfocusout', this.focusLost);
-        }
-    }
-
-    public componentWillUnmount() {
-        if (this.registered) {
-            this.registered = false;
-            window.removeEventListener('onfocusin', this.focusGained);
-            window.removeEventListener('onfocusout', this.focusLost);
-        }
-    }
-
 
     public render() {
-        const nonFocusClass = document.hasFocus() ? '' : 'CodeMirror-cursor cursor-top';
-        return <div className={nonFocusClass}></div>
+        const style = {
+            left : `${this.props.left}px`,
+            top: `${this.props.top}px`
+        } as React.CSSProperties;
+
+        if (this.props.hidden) {
+            return null;
+        } else if (this.props.codeInFocus) {
+            return this.renderInFocus(style);
+        } else {
+            return this.renderOutOfFocus(style);
+        }
     }
 
-    private focusGained = () => {
-        this.setState({show: false});
+    private getRenderText() : string {
+        return this.props.text.length > 0 ? this.props.text.slice(0, 1) : 'A'
     }
 
-    private focusLost = () => {
-        this.setState({show: true});
+    private renderInFocus = (style: React.CSSProperties) => {
+        const cursorClass = `cursor-top cursor-${this.props.cursorType}-overlay`;
+        const textClass = this.props.cursorType === 'block' ? 'cursor-text' : 'cusror-measure';
+        return <div className={cursorClass} style={style}><div className={textClass}>{this.getRenderText()}</div></div>
     }
 
+    private renderOutOfFocus = (style: React.CSSProperties) => {
+        const cursorClass = `cursor-top cursor-${this.props.cursorType}`;
+        return <div className={cursorClass} style={style}><div className='cursor-measure'>{this.getRenderText()}</div></div>
+    }
 }

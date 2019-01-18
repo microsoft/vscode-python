@@ -8,7 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { IAsyncDisposable, IDisposable } from '../common/types';
+import { IAsyncDisposable, IDisposable, IDataScienceSettings } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -188,4 +188,11 @@ export interface IStatusProvider {
 
     // call this function to wait for a promise while displaying status
     waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void) : Promise<T>;
+}
+
+// Config settings we pass to our react code
+export interface IDataScienceExtraSettings extends IDataScienceSettings {
+    extraSettings: {
+        terminalCursor: string;
+    }
 }

@@ -43,7 +43,8 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider
+    IStatusProvider,
+    IDataScienceExtraSettings
 } from './types';
 
 export enum SysInfoReason {
@@ -772,9 +773,20 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Generate a css to put into the webpanel for viewing code
         const css = await this.cssGenerator.generateThemeCss();
 
+        // Get our settings to pass along to the react control
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        const terminalCursor = workbench.get<string>('terminal.integrated.cursorStyle', 'block');
+        const settings: IDataScienceExtraSettings =
+        {
+            ...this.configuration.getSettings().datascience,
+            extraSettings: {
+                terminalCursor: terminalCursor
+            }
+        };
+
         // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.
-        this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
+        this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
     }
 
     private load = async () : Promise<void> => {

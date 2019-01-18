@@ -19,12 +19,21 @@ export interface ICodeProps {
     codeTheme: string;
     testMode: boolean;
     readOnly: boolean;
+    history: string[];
+    cursorType: string;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
 
 }
 
-export class Code extends React.Component<ICodeProps> {
+interface ICodeState {
+    focused: boolean;
+    left: number;
+    top: number;
+    charUnderCursor: string;
+}
+
+export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private codeMirror: CodeMirror.Editor | undefined;
     private history : InputHistory;
@@ -32,6 +41,8 @@ export class Code extends React.Component<ICodeProps> {
 
     constructor(prop: ICodeProps) {
         super(prop);
+        this.state = {focused: false, left: 0, top: 0, charUnderCursor: ''};
+        this.history = new InputHistory(this.props.history);
     }
 
     public componentDidUpdate = () => {
@@ -46,7 +57,13 @@ export class Code extends React.Component<ICodeProps> {
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         return (
             <div className={classes}>
-                <Cursor/>
+                <Cursor
+                    hidden={readOnly}
+                    codeInFocus={this.state.focused}
+                    cursorType={this.props.cursorType}
+                    text={this.state.charUnderCursor}
+                    left={this.state.left}
+                    top={this.state.top}/>
                 <RCM
                     key={1}
                     value={this.props.code}
@@ -62,14 +79,49 @@ export class Code extends React.Component<ICodeProps> {
                             },
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
-                            cursorBlinkRate: readOnly ? -1 : 530,
+                            cursorBlinkRate: -1,
                             readOnly: readOnly ? 'nocursor' : false
                         }
                     }
                     ref={this.updateCodeMirror}
+                    onFocusChange={this.onFocusChange}
+                    onCursorActivity={this.onCursorActivity}
                 />
             </div>
         );
+    }
+
+    private onCursorActivity = (codeMirror: CodeMirror.Editor) => {
+        // Update left/top/char for cursor
+        if (codeMirror) {
+            const coords = codeMirror.cursorCoords(false, 'local');
+            const char = this.getCursorChar();
+            this.setState({
+                left: coords.left,
+                top: coords.top,
+                charUnderCursor: char
+            });
+        }
+
+    }
+
+    private getCursorChar = () : string => {
+        if (this.codeMirror) {
+            const doc = this.codeMirror.getDoc();
+            const cursorPos = doc.getCursor();
+            const line = doc.getLine(cursorPos.line);
+            if (line.length > cursorPos.ch) {
+                return line.slice(cursorPos.ch, cursorPos.ch + 1);
+            }
+        }
+
+        // We don't need a state update on cursor change because
+        // we only really need this on focus change
+        return '';
+    }
+
+    private onFocusChange = (focused: boolean) => {
+        this.setState({focused});
     }
 
     private updateCodeMirror = (rcm: ReactCodeMirror.ReactCodeMirror) => {
@@ -111,14 +163,18 @@ export class Code extends React.Component<ICodeProps> {
             // Check for an empty line or no ':' on the first line.
             const lastLineStr = doc.getLine(lastLine).trimRight();
             const lastChar = lastLineStr.length === 0 ? null : lastLineStr.charAt(lastLineStr.length - 1);
-            if (lastChar === null || (lastChar !== ':' && cursor.line === 0)) {
-                const code = doc.getValue();
 
-                // We have to clear the history as this CodeMirror doesn't go away.
-                doc.clearHistory();
-                doc.setValue('');
-                this.props.onSubmit(code);
-                return;
+            if ((lastChar === null) || (lastChar !== ':' && cursor.line === 0)) {
+                // Double check we don't have an entirely empty document
+                if (doc.getValue('').trim().length > 0)
+                {
+                    const code = doc.getValue();
+                    // We have to clear the history as this CodeMirror doesn't go away.
+                    doc.clearHistory();
+                    doc.setValue('');
+                    this.props.onSubmit(code);
+                    return;
+                }
             }
         }
 
@@ -147,6 +203,6 @@ export class Code extends React.Component<ICodeProps> {
     }
 
     private onChange = (newValue: string, change: CodeMirror.EditorChange) => {
-        // Do nothing
+        this.history.onChange();
     }
 }

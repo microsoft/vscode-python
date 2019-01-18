@@ -1,7 +1,65 @@
 .cursor-top {
-    position:absolute;
-    top:0;
-    margin-top:1px;
-    height: var(--vscode-editor-font-size);
+    position: absolute;
     z-index:1005;
+    font-family: var(--code-font-family);
+}
+
+.cursor-block {
+    border: 1px solid var(--vscode-editor-foreground);
+    min-width: 5px;
+    margin-left: -1px;
+    margin-right: -1px;
+}
+
+.cursor-line {
+    border-left: 1px solid var(--vscode-editor-foreground);
+}
+
+.cursor-underline {
+    border-bottom: 1px solid var(--vscode-editor-foreground);
+    min-width: 5px;
+}
+
+.cursor-line-overlay {
+    border-left: 1px solid var(--vscode-editor-foreground);
+}
+
+.cursor-underline-overlay {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: transparent;
+    min-width: 5px;
+    animation-name: blinkCursorUnderline;
+    animation-duration: 530ms;
+    animation-iteration-count: infinite;
+    animation-timing-function:steps(2);
+}
+
+.cursor-block-overlay {
+    font-family: var(--code-font-family);
+    background-color: transparent;
+    color: transparent;
+    animation-name: blinkCursor;
+    animation-duration: 530ms;
+    animation-iteration-count: infinite;
+    animation-timing-function:steps(2);
+}
+
+@keyframes blinkCursor {
+    from {background-color: transparent; color: transparent;}
+    to {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+}
+
+@keyframes blinkCursor {
+    from {background-color: transparent; color: transparent;}
+    to {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+}
+
+@keyframes blinkCursor {
+    from {background-color: transparent; color: transparent;}
+    to {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+}
+
+.cursor-measure {
+    visibility: hidden;
 }

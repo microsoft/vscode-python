@@ -37,7 +37,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [] };
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], historyStack: []};
 
         // Add a single empty cell if it's supported
         if (getSettings && getSettings().allowInput) {
@@ -199,6 +199,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    history={cellVM.editable ? this.state.historyStack : []}
                     maxTextSize={maxTextSize}
                     autoFocus={document.hasFocus()}
                     testMode={this.props.testMode}
@@ -610,13 +611,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Update input controls (always show expanded since we just edited it.)
             editCell = createCellVM(editCell.cell, this.inputBlockToggled);
 
+            // Compute our new history (skip adding dupes)
+            const newHistory = this.state.historyStack.indexOf(code) >= 0 ? this.state.historyStack : [code, ...this.state.historyStack];
+
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
                 cellVMs: [...withoutEdits, editCell, createEditableCellVM(this.getInputExecutionCount(withoutEdits))],
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
-                skipNextScroll: false
+                skipNextScroll: false,
+                historyStack: newHistory
             });
             PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
         }

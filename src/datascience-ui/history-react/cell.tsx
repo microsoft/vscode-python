@@ -24,6 +24,7 @@ import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
 import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
+import { getSettings } from '../react-common/settingsReactSide';
 
 interface ICellProps {
     cellVM: ICellViewModel;
@@ -32,6 +33,7 @@ interface ICellProps {
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
+    history: string [];
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -161,6 +163,8 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className='cell-input'>
                     <Code
+                        cursorType={this.getCursorType()}
+                        history={this.props.history}
                         autoFocus={this.props.autoFocus}
                         code={this.getRenderableInputCode()}
                         codeTheme={this.props.codeTheme}
@@ -174,6 +178,10 @@ export class Cell extends React.Component<ICellProps> {
         } else {
             return null;
         }
+    }
+
+    private getCursorType = () : string => {
+        return getSettings ? getSettings().extraSettings.terminalCursor : 'block';
     }
 
     private renderResults = () => {
