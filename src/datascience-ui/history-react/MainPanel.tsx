@@ -616,6 +616,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             // Update input controls (always show expanded since we just edited it.)
             editCell = createCellVM(editCell.cell, this.inputBlockToggled);
+            const showInputs = getSettings().showCellInputCode;
+            const collapseInputs = getSettings().collapseCellInputCodeByDefault;
+            editCell = this.alterCellVM(editCell, showInputs, !collapseInputs);
 
             // Indicate this is direct input so that we don't hide it if the user has
             // hide all inputs turned on.
