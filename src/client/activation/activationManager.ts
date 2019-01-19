@@ -35,7 +35,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
     }
     public async activate(): Promise<void> {
-        this.initialize();
+        await this.initialize();
         this.activateWorkspace(this.getActiveResource()).ignoreErrors();
     }
     protected async initialize() {
@@ -70,7 +70,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             return;
         }
         const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
-        this.activateWorkspace(folder ? folder.uri : undefined);
+        this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
     }
     @traceDecorators.error('Failed to activate a worksapce')
     protected async activateWorkspace(resource: Resource) {
