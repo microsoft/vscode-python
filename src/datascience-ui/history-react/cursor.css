@@ -56,8 +56,8 @@
 }
 
 @keyframes blinkCursorUnderline {
-    0%, 49%    {border-bottom-color: transparent; color: transparent;}
-    50%, 100% {border-bottom-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+    0%, 49%    {border-bottom-color: transparent;}
+    50%, 100% {border-bottom-color: var(--vscode-editor-foreground); }
 }
 
 @keyframes blinkCursorBlock {

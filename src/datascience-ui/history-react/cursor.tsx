@@ -5,7 +5,6 @@
 import * as React from 'react';
 import './cursor.css';
 
-
 export interface ICursorProps {
     codeInFocus: boolean;
     hidden: boolean;
@@ -23,14 +22,14 @@ export class Cursor extends React.Component<ICursorProps> {
     }
 
     public render() {
-        const style = this.props.bottom > 0 ? {
+        const style : React.CSSProperties = this.props.bottom > 0 ? {
             left : `${this.props.left}px`,
             top: `${this.props.top}px`,
-            height: `${this.props.bottom - this.props.top}px`,
-        } as React.CSSProperties : {
+            height: `${this.props.bottom - this.props.top}px`
+        } : {
             left : `${this.props.left}px`,
-            top: `${this.props.top}px`,
-        } as React.CSSProperties;
+            top: `${this.props.top}px`
+        };
 
         if (this.props.hidden) {
             return null;
@@ -42,17 +41,17 @@ export class Cursor extends React.Component<ICursorProps> {
     }
 
     private getRenderText() : string {
-        return this.props.text.length > 0 ? this.props.text.slice(0, 1) : 'A'
+        return this.props.text.length > 0 ? this.props.text.slice(0, 1) : 'A';
     }
 
     private renderInFocus = (style: React.CSSProperties) => {
         const cursorClass = `cursor-top cursor-${this.props.cursorType}-overlay`;
         const textClass = this.props.cursorType !== 'block' || this.props.text.length === 0 ? 'cursor-measure' : 'cursor-text';
-        return <div className={cursorClass} style={style}><div className={textClass}>{this.getRenderText()}</div></div>
+        return <div className={cursorClass} style={style}><div className={textClass}>{this.getRenderText()}</div></div>;
     }
 
     private renderOutOfFocus = (style: React.CSSProperties) => {
         const cursorClass = `cursor-top cursor-${this.props.cursorType}`;
-        return <div className={cursorClass} style={style}><div className='cursor-measure'>{this.getRenderText()}</div></div>
+        return <div className={cursorClass} style={style}><div className='cursor-measure'>{this.getRenderText()}</div></div>;
     }
 }

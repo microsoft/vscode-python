@@ -13,6 +13,7 @@ export class WebPanelProvider implements IWebPanelProvider {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     }
 
+    // tslint:disable-next-line:no-any
     public create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any) {
         return new WebPanel(this.serviceContainer, listener, title, mainScriptPath, embeddedCss, settings);
     }

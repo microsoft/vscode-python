@@ -10,7 +10,7 @@ import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import { Identifiers } from '../../datascience/constants';
 import { IServiceContainer } from '../../ioc/types';
-import { IConfigurationService, IDisposableRegistry } from '../types';
+import { IDisposableRegistry } from '../types';
 import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
 
 export class WebPanel implements IWebPanel {
@@ -27,6 +27,7 @@ export class WebPanel implements IWebPanel {
         title: string,
         mainScriptPath: string,
         embeddedCss?: string,
+        // tslint:disable-next-line:no-any
         settings?: any) {
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
@@ -60,6 +61,7 @@ export class WebPanel implements IWebPanel {
         }
     }
 
+    // tslint:disable-next-line:no-any
     private async load(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         if (this.panel) {
             if (await fs.pathExists(mainScriptPath)) {
@@ -86,6 +88,7 @@ export class WebPanel implements IWebPanel {
         }
     }
 
+    // tslint:disable-next-line:no-any
     private generateReactHtml(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         const uriBasePath = Uri.file(`${path.dirname(mainScriptPath)}/`);
         const uriPath = Uri.file(mainScriptPath);
@@ -93,7 +96,7 @@ export class WebPanel implements IWebPanel {
         const uri = uriPath.with({ scheme: 'vscode-resource' });
         const locDatabase = JSON.stringify(localize.getCollection());
         const style = embeddedCss ? embeddedCss : '';
-        const settingsString = settings? JSON.stringify(settings) : '';
+        const settingsString = settings ? JSON.stringify(settings) : '';
 
         return `<!doctype html>
         <html lang="en">

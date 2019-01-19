@@ -5,7 +5,6 @@
 
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 
-
 // The WebPanel constructed by the extension should inject a getInitialSettings function into
 // the script. This should return a dictionary of key value pairs for settings
 // tslint:disable-next-line:no-any

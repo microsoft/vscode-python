@@ -5,14 +5,13 @@
 import * as React from 'react';
 import './commandPrompt.css';
 
-
 export class CommandPrompt extends React.Component {
     constructor(props) {
         super(props);
     }
 
     public render() {
-        return <div className='command-prompt'>{`>>>`}</div>
+        return <div className='command-prompt'>{'>>>'}</div>;
     }
 
 }

@@ -36,14 +36,14 @@ import {
     ICell,
     ICodeCssGenerator,
     IConnection,
+    IDataScienceExtraSettings,
     IHistory,
     IHistoryInfo,
     IJupyterExecution,
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider,
-    IDataScienceExtraSettings
+    IStatusProvider
 } from './types';
 
 export enum SysInfoReason {
@@ -421,7 +421,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             status.dispose();
 
             const message = localize.DataScience.executingCodeFailure().format(err);
-            this.applicationShell.showErrorMessage(message)
+            this.applicationShell.showErrorMessage(message);
         }
     }
 

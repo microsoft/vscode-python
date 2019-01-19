@@ -168,7 +168,7 @@ export class Cell extends React.Component<ICellProps> {
                 <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()}/>
                 {afterExecution}
             </div>
-        )
+        );
     }
 
     private renderInputs = () => {
@@ -181,7 +181,7 @@ export class Cell extends React.Component<ICellProps> {
                         autoFocus={this.props.autoFocus}
                         code={this.getRenderableInputCode()}
                         codeTheme={this.props.codeTheme}
-                        testMode={this.props.testMode}
+                        testMode={this.props.testMode ? true : false}
                         readOnly={!this.props.cellVM.editable}
                         onSubmit={this.props.submitNewCode}
                         onChangeLineCount={this.onChangeLineCount}
@@ -264,11 +264,11 @@ export class Cell extends React.Component<ICellProps> {
 
                     // Create a scrollbar style if necessary
                     if (renderWithScrollbars && this.props.maxTextSize) {
-                        const style = {
+                        const style: React.CSSProperties = {
                             maxHeight : `${this.props.maxTextSize}px`,
                             overflowY : 'auto',
                             overflowX : 'auto'
-                        } as React.CSSProperties;
+                        };
 
                         return <div id='stylewrapper' style={style}><Transform key={index} data={data} /></div>;
                     } else {

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-import { min, max } from 'lodash';
+import { max, min } from 'lodash';
 
 export class InputHistory {
 
@@ -13,18 +12,22 @@ export class InputHistory {
         this.history = ['', ...history];
     }
 
-    public completeUp() : string | undefined {
+    public completeUp() : string {
         if (this.history.length) {
-            this.pos = min([this.pos + 1, this.history.length -1]);
+            this.pos = this.pos >= this.history.length - 1 ? this.history.length -1 : this.pos + 1;
             return this.history[this.pos];
         }
+
+        return '';
     }
 
     public completeDown() : string {
         if (this.history.length) {
-            this.pos = max([this.pos - 1, 0]);
+            this.pos = this.pos > 0 ? this.pos - 1 : 0;
             return this.history[this.pos];
         }
+
+        return '';
     }
 
     public onChange() {

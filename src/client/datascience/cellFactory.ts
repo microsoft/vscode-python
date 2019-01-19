@@ -6,9 +6,9 @@ import '../common/extensions';
 import * as uuid from 'uuid/v4';
 import { Range, TextDocument } from 'vscode';
 
+import { appendLineFeed, generateMarkdownFromCodeLines } from './common';
 import { RegExpValues } from './constants';
 import { CellState, ICell } from './types';
-import { generateMarkdownFromCodeLines, appendLineFeed } from './common';
 
 function generateCodeCell(code: string[], file: string, line: number, id?: string) : ICell {
     // Code cells start out with just source and no outputs.
@@ -20,7 +20,7 @@ function generateCodeCell(code: string[], file: string, line: number, id?: strin
             metadata: {},
             execution_count: 0
         },
-        id: id ? id: uuid(),
+        id: id ? id : uuid(),
         file: file,
         line: line,
         state: CellState.init

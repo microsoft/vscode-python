@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-
 import * as path from 'path';
-import { concatMultilineString } from '../../client/datascience/common';
-import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
-import { ICellViewModel } from './cell';
 import * as uuid from 'uuid/v4';
+
+import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
+import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
 import { noop } from '../../test/core';
+import { ICellViewModel } from './cell';
 
 export interface IMainPanelState {
     cellVMs: ICellViewModel[];
@@ -47,7 +47,7 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
             id: uuid(),
             file: Identifiers.EmptyFileName,
             line: 0,
-            state: CellState.editing,
+            state: CellState.editing
         },
         editable: true,
         inputBlockOpen: true,
@@ -55,7 +55,7 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
         inputBlockToggled: noop
-    }
+    };
 }
 
 export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) : ICellViewModel {

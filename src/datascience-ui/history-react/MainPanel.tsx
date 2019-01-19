@@ -17,7 +17,7 @@ import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
-import { createCellVM, generateTestState, IMainPanelState, createEditableCellVM } from './mainPanelState';
+import { createCellVM, createEditableCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
 export interface IMainPanelProps {
@@ -393,7 +393,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
-                let newList = [];
+                let newList : ICellViewModel[] = [];
 
                 // Insert before the edit cell if we have one
                 const editCell = this.getEditCell();
@@ -591,7 +591,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
         const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count.toString(), 10) + 1 : 1;
+        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
     }
 
     private submitInput = (code: string) => {
@@ -637,7 +637,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             });
 
             // Send a message to execute this code if necessary.
-            if (editCell.cell.state != CellState.finished) {
+            if (editCell.cell.state !== CellState.finished) {
                 PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
             }
         }

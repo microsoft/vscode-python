@@ -117,7 +117,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const cursorStyle = cursorType === 'block' ?
             `{ border: 1px solid ${def}; background: ${def}; width: 5px; z-index=100; }` : cursorType === 'underline' ?
             `{ border-bottom: 1px solid ${def}; z-index=100; width: 5px; }` :
-            `{ border-left: 1px solid ${def}; border-right: none; z-index=100; }`
+            `{ border-left: 1px solid ${def}; border-right: none; z-index=100; }`;
 
         // Use these values to fill in our format string
         return `
@@ -145,7 +145,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         .cm-s-${escapedThemeName} span.cm-string-2 {color: ${stringColor};}
         .cm-s-${escapedThemeName} span.cm-builtin {color: ${builtin};}
         .cm-s-${escapedThemeName} div.CodeMirror-cursor ${cursorStyle}
-        .cm-s-${escapedThemeName} div.CodeMirror-selected {background: var(--vscode-editor-selectionBackground) !important;;}
+        .cm-s-${escapedThemeName} div.CodeMirror-selected {background: var(--vscode-editor-selectionBackground) !important;}
 `;
 
     }

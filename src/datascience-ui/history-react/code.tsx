@@ -10,8 +10,9 @@ import * as React from 'react';
 import * as RCM from 'react-codemirror';
 
 import './code.css';
-import { InputHistory } from './inputHistory';
+
 import { Cursor } from './cursor';
+import { InputHistory } from './inputHistory';
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -48,7 +49,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     public componentDidUpdate = () => {
         // Force our new value. the RCM control doesn't do this correctly
-        if (this.codeMirror && this.props.readOnly && this.codeMirror.getValue() != this.props.code) {
+        if (this.codeMirror && this.props.readOnly && this.codeMirror.getValue() !== this.props.code) {
             this.codeMirror.setValue(this.props.code);
         }
     }
@@ -100,8 +101,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             const doc = codeMirror.getDoc();
             const selections = doc.listSelections();
             const cursor = doc.getCursor();
-            const anchor = selections && selections.length > 0 ? selections[selections.length-1].anchor : {ch: 10000, line: 10000};
-            const wantStart = cursor.line < anchor.line || cursor.line == anchor.line && cursor.ch < anchor.ch;
+            const anchor = selections && selections.length > 0 ? selections[selections.length - 1].anchor : {ch: 10000, line: 10000};
+            const wantStart = cursor.line < anchor.line || cursor.line === anchor.line && cursor.ch < anchor.ch;
             const coords = codeMirror.cursorCoords(wantStart, 'local');
             const char = this.getCursorChar();
             this.setState({
@@ -182,7 +183,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
             // Submit without the last extra line if we have one.
             if (code.endsWith('\n\n')) {
-                code = code.slice(0, code.length-1);
+                code = code.slice(0, code.length - 1);
             }
 
             this.props.onSubmit(code);
@@ -218,7 +219,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private arrowUp = (instance: CodeMirror.Editor) => {
-        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch == 0) {
+        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch === 0) {
             instance.getDoc().setValue(this.history.completeUp());
             return;
         }
@@ -226,7 +227,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private arrowDown = (instance: CodeMirror.Editor) => {
-        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch == 0) {
+        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch === 0) {
             instance.getDoc().setValue(this.history.completeDown());
             return;
         }
