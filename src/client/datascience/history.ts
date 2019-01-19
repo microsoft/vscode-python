@@ -494,7 +494,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     // Post a message to our webpanel and update our new datascience settings
     private onSettingsChanged = () => {
         // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(this.configuration.getSettings().datascience);
+        const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
 
         if (this.webPanel) {
             this.webPanel.postMessage({ type: HistoryMessages.UpdateSettings, payload: dsSettings });
@@ -767,6 +767,17 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
+    private generateDataScienceExtraSettings() : IDataScienceExtraSettings {
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        const terminalCursor = workbench ? workbench.get<string>('terminal.integrated.cursorStyle', 'block') : 'block';
+        return {
+            ...this.configuration.getSettings().datascience,
+            extraSettings: {
+                terminalCursor: terminalCursor
+            }
+        };
+    }
+
     private loadWebPanel = async (): Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
 
@@ -777,15 +788,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         const css = await this.cssGenerator.generateThemeCss();
 
         // Get our settings to pass along to the react control
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        const terminalCursor = workbench ? workbench.get<string>('terminal.integrated.cursorStyle', 'block') : 'block';
-        const settings: IDataScienceExtraSettings =
-        {
-            ...this.configuration.getSettings().datascience,
-            extraSettings: {
-                terminalCursor: terminalCursor
-            }
-        };
+        const settings = this.generateDataScienceExtraSettings();
 
         // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.

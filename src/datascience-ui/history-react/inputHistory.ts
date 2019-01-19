@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { max, min } from 'lodash';
 
 export class InputHistory {
 
@@ -14,7 +13,7 @@ export class InputHistory {
 
     public completeUp() : string {
         if (this.history.length) {
-            this.pos = this.pos >= this.history.length - 1 ? this.history.length -1 : this.pos + 1;
+            this.pos = this.pos >= this.history.length - 1 ? this.history.length - 1 : this.pos + 1;
             return this.history[this.pos];
         }
 
