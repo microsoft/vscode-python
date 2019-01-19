@@ -768,8 +768,8 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private generateDataScienceExtraSettings() : IDataScienceExtraSettings {
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        const terminalCursor = workbench ? workbench.get<string>('terminal.integrated.cursorStyle', 'block') : 'block';
+        const terminal = this.workspaceService.getConfiguration('terminal');
+        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
         return {
             ...this.configuration.getSettings().datascience,
             extraSettings: {
