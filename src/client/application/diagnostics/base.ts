@@ -17,7 +17,7 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService, IDiagnosticsSer
 export abstract class BaseDiagnostic implements IDiagnostic {
     constructor(public readonly code: DiagnosticCodes, public readonly message: string,
         public readonly severity: DiagnosticSeverity, public readonly scope: DiagnosticScope,
-        public readonly resource: Resource) { }
+        public readonly resource: Resource, public readonly runInBackground: Boolean) { }
 }
 
 @injectable()

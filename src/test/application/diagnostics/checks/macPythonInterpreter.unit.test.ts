@@ -204,7 +204,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .verifiable(typemoq.Times.atLeastOnce());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal([new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic, undefined)], 'not the same');
+            expect(diagnostics).to.be.deep.equal([new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic, undefined, true)], 'not the same');
             settings.verifyAll();
             interpreterService.verifyAll();
             platformService.verifyAll();
@@ -242,14 +242,14 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal([new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, undefined)], 'not the same');
+            expect(diagnostics).to.be.deep.equal([new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, undefined, true)], 'not the same');
             settings.verifyAll();
             interpreterService.verifyAll();
             platformService.verifyAll();
             helper.verifyAll();
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
-            const diagnostic = new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, undefined);
+            const diagnostic = new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, undefined, true);
             const cmd = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
@@ -270,7 +270,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Select Python Interpreter', command: cmd }]);
         });
         test('Handling no interpreters diagnostisc should return download and learn links', async () => {
-            const diagnostic = new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic, undefined);
+            const diagnostic = new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic, undefined, true);
             const cmdDownload = {} as any as IDiagnosticCommand;
             const cmdLearn = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;

@@ -25,8 +25,8 @@ const messages = {
 };
 
 export class InvalidMacPythonInterpreterDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, resource: Resource) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
+    constructor(code: DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, resource: Resource, runInBackground: Boolean) {
+        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, runInBackground);
     }
 }
 
@@ -83,7 +83,8 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             return [
                 new InvalidMacPythonInterpreterDiagnostic(
                     DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-                    resource
+                    resource,
+                    true
                 )
             ];
         }
@@ -91,7 +92,8 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         return [
             new InvalidMacPythonInterpreterDiagnostic(
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                resource
+                resource,
+                true
             )
         ];
     }

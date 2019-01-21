@@ -115,12 +115,12 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal([new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined)], 'not the same');
+            expect(diagnostics).to.be.deep.equal([new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined, false)], 'not the same');
             settings.verifyAll();
             interpreterService.verifyAll();
         });
         test('Handling no interpreters diagnostic should return download link', async () => {
-            const diagnostic = new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined);
+            const diagnostic = new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined, false);
             const cmd = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
@@ -142,7 +142,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, undefined
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, undefined, false
             );
             const cmd = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
@@ -164,7 +164,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Select Python Interpreter', command: cmd }]);
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
-            const diagnostic = new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, undefined);
+            const diagnostic = new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, undefined, false);
             const cmd = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler

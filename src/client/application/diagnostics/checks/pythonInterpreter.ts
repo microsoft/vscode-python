@@ -23,8 +23,8 @@ const messages = {
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.NoPythonInterpretersDiagnostic | DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, resource: Resource) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
+    constructor(code: DiagnosticCodes.NoPythonInterpretersDiagnostic | DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, resource: Resource, runInBackground: Boolean) {
+        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, runInBackground);
     }
 }
 
@@ -52,7 +52,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         const hasInterpreters = await interpreterService.hasInterpreters;
 
         if (!hasInterpreters) {
-            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, resource)];
+            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, resource, false)];
         }
 
         const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
@@ -60,7 +60,8 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             return [
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
-                    resource
+                    resource,
+                    false
                 )
             ];
         }

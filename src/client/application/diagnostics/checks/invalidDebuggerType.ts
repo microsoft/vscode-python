@@ -23,13 +23,14 @@ const InvalidDebuggerTypeMessage =
     'not work. Would you like to automatically update your launch.json file now?';
 
 export class InvalidDebuggerTypeDiagnostic extends BaseDiagnostic {
-    constructor(message: string, resource: Resource) {
+    constructor(message: string, resource: Resource, runInBackground: Boolean) {
         super(
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             message,
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
-            resource
+            resource,
+            runInBackground
         );
     }
 }
@@ -54,7 +55,7 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.isExperimentalDebuggerUsed()) {
-            return [new InvalidDebuggerTypeDiagnostic(InvalidDebuggerTypeMessage, resource)];
+            return [new InvalidDebuggerTypeDiagnostic(InvalidDebuggerTypeMessage, resource, true)];
         } else {
             return [];
         }

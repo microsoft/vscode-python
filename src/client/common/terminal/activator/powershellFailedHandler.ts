@@ -30,7 +30,7 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;
         }
-        this.diagnosticService.handle([new PowershellActivationNotAvailableDiagnostic(resource)]).ignoreErrors();
+        this.diagnosticService.handle([new PowershellActivationNotAvailableDiagnostic(resource, true)]).ignoreErrors();
     }
 
 }

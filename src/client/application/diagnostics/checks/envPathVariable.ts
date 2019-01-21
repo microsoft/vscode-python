@@ -21,13 +21,14 @@ const InvalidEnvPathVariableMessage =
     ' The existence of such a character is known to have caused the {1} extension to not load. If the extension fails to load please modify your paths to remove this \'"\' character.';
 
 export class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
-    constructor(message: string, resource: Resource) {
+    constructor(message: string, resource: Resource, runInBackground: Boolean) {
         super(
             DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic,
             message,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource
+            resource,
+            runInBackground
         );
     }
 }
@@ -50,7 +51,7 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         if (this.platform.isWindows && this.doesPathVariableHaveInvalidEntries()) {
             const env = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
             const message = InvalidEnvPathVariableMessage.format(this.platform.pathVariableName, env.extensionName);
-            return [new InvalidEnvironmentPathVariableDiagnostic(message, resource)];
+            return [new InvalidEnvironmentPathVariableDiagnostic(message, resource, true)];
         } else {
             return [];
         }
