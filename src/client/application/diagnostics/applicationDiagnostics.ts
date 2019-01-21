@@ -43,7 +43,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
                 .then(diagnostics => {
                     if (diagnostics.length > 0 && diagnostics[0].runInBackground) {
                         this.log(diagnostics);
-                        diagnosticsService.handle(diagnostics);
+                        diagnosticsService.handle(diagnostics).ignoreErrors();
                     } else {
                         return;
                     }
