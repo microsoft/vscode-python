@@ -39,7 +39,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         // Perform these validation checks in the background.
         diagnosticsServices.map(diagnosticsService => {
             diagnosticsService
-                .diagnose(undefined)
+                .diagnose(resource)
                 .then(diagnostics => {
                     if (diagnostics.length > 0 && diagnostics[0].runInBackground) {
                         this.log(diagnostics);
