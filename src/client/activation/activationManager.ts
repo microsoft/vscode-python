@@ -26,7 +26,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+    ) {
+        this.addHandlers();
+    }
 
     public dispose() {
         while (this.disposables.length > 0) {
@@ -36,14 +38,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     public async activate(): Promise<void> {
         await this.initialize();
-        this.activateWorkspace(this.getActiveResource()).ignoreErrors();
+        await this.activateWorkspace(this.getActiveResource());
     }
     protected async initialize() {
         // Get latest interpreter list.
         const mainWorkspaceUri = this.getActiveResource();
         this.interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
-
-        await this.autoSelection.autoSelectInterpreter(undefined);
     }
     protected addHandlers() {
         this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this, this.disposables);
