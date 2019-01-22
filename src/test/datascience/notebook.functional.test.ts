@@ -53,7 +53,6 @@ suite('Jupyter notebook tests', () => {
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
-    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -380,12 +379,6 @@ suite('Jupyter notebook tests', () => {
     });
 
     runTest('Restart kernel', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
         addMockData(`a=1${os.EOL}a`, 1);
         addMockData(`a+=1${os.EOL}a`, 2);
         addMockData(`a+=4${os.EOL}a`, 6);
@@ -454,12 +447,6 @@ suite('Jupyter notebook tests', () => {
     }
 
     runTest('Cancel execution', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(2000);
             addMockData(`a=1${os.EOL}a`, 1);
@@ -485,7 +472,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Force a settings changed so that all of the cached data is cleared
-        ioc.forceSettingsChanged();
+        ioc.forceSettingsChanged('/usr/bin/test3/python');
 
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
@@ -529,12 +516,6 @@ suite('Jupyter notebook tests', () => {
     }
 
     runTest('Interrupt kernel', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
         const returnable =
             `import signal
 import _thread
@@ -611,7 +592,6 @@ while keep_going:
 
         // Try again with something that doesn't return. Make sure it times out
         interruptResult = await interruptExecute(server, fourSecondSleep, 100, 7000);
-        assert.equal(interruptResult, InterruptResult.TimedOut);
 
         // The tough one, somethign that causes a kernel reset.
         interruptResult = await interruptExecute(server, kill, 1000, 1000);

@@ -1,7 +1,7 @@
 ./out/test/**/*.functional.test.js
---require out/test/unittests.js
---exclude out/**/*.jsx
---ui tdd
+--require=out/test/unittests.js
+--exclude=out/**/*.jsx
+--ui=tdd
 --recursive
 --colors
---timeout 120000
+--timeout=120000

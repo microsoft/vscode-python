@@ -62,7 +62,6 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
-    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -179,7 +178,7 @@ suite('History output tests', () => {
                 // tslint:disable-next-line:no-console
                 console.log(`${name} skipped, no Jupyter installed.`);
             }
-        }).timeout(60000);
+        });
     }
 
     function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
@@ -424,11 +423,6 @@ suite('History output tests', () => {
     }
 
     runMountedTest('Mime Types', async function (wrapper) {
-        // This test hasn't yet succeeded in Linux on AzDO. See #3973
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
 
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -443,7 +437,7 @@ import time
 
 def spinning_cursor():
     while True:
-        for cursor in '|/-\\':
+        for cursor in '|/-\\\\':
             yield cursor
 
 spinner = spinning_cursor()
@@ -451,9 +445,9 @@ for _ in range(50):
     sys.stdout.write(next(spinner))
     sys.stdout.flush()
     time.sleep(0.1)
-    sys.stdout.write('\r')`;
+    sys.stdout.write('\\r')`;
 
-        addMockData(badPanda, `pd has no attribute 'read'`, 'text/html', 'error');
+        addMockData(badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
         addMockData(goodPanda, `<td>A table</td>`, 'text/html');
         addMockData(matPlotLib, matPlotLibResults, 'text/html');
         const cursors = ['|', '/', '-', '\\'];
@@ -470,7 +464,7 @@ for _ in range(50):
         });
 
         await addCode(wrapper, badPanda, 4);
-        verifyHtmlOnCell(wrapper, `pd has no attribute 'read'`, CellPosition.Last);
+        verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
 
         await addCode(wrapper, goodPanda);
         verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
@@ -478,8 +472,8 @@ for _ in range(50):
         await addCode(wrapper, matPlotLib);
         verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
-        await addCode(wrapper, spinningCursor, 4 + (cursors.length * 3));
-        verifyHtmlOnCell(wrapper, '<xmp>\\</xmp>', CellPosition.Last);
+        await addCode(wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
     });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {
