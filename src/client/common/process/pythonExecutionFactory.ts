@@ -32,12 +32,15 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
-        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter);
+        let envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
             return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
+
+        // Not activating, just use current environment.
+        envVars = process.env;
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService = new ProcessService(this.decoder, { ...envVars });
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);

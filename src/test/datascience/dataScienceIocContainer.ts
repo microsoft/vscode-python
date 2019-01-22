@@ -300,6 +300,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const folders = ['Envs', '.virtualenvs'];
         this.pythonSettings.venvFolders = folders;
         this.pythonSettings.venvPath = path.join('~', 'foo');
+        this.pythonSettings.terminal = {
+            executeInFileDir: undefined,
+            launchArgs: undefined,
+            activateEnvironment: true
+        };
 
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
         condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
@@ -347,7 +352,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, PythonPathUpdaterService);
-        this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
