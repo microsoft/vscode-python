@@ -55,7 +55,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.scrollToBottom();
     }
 
-    public componentDidUpdate(prevProps, prevState) {
+    public componentDidUpdate(prevProps: Readonly<IMainPanelProps>, prevState: Readonly<IMainPanelState>, snapshot?: {}) {
         this.scrollToBottom();
     }
 

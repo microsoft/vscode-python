@@ -5,6 +5,7 @@ import '../../client/common/extensions';
 import './cell.css';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
@@ -256,9 +257,10 @@ export class Cell extends React.Component<ICellProps> {
             try {
                 // Text/plain has to be massaged. It expects a continuous string
                 if (output.data) {
-                    let data = output.data[mimetype];
+                    const mimeBundle = output.data as nbformat.IMimeBundle;
+                    let data: nbformat.MultilineString | JSONObject = mimeBundle[mimetype];
                     if (mimetype === 'text/plain') {
-                        data = concatMultilineString(data);
+                        data = concatMultilineString(data as nbformat.MultilineString);
                         renderWithScrollbars = true;
                     }
 
@@ -298,7 +300,7 @@ export class Cell extends React.Component<ICellProps> {
         const copy = {...output};
 
         // Special case for json
-        if (copy.data && copy.data['application/json']) {
+        if (copy.data && copy.data.hasOwnProperty('application/json')) {
           return <JSONTree key={index} data={copy.data} />;
         }
 
