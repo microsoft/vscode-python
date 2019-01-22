@@ -3,11 +3,9 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import * as path from 'path';
-import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
     CTagsProductPathService, FormatterProductPathService, LinterProductPathService,
@@ -15,30 +13,28 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
-import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
-import { LinterManager, LINTERS } from '../../client/linters/linterManager';
-import { ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
-import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
+import { IConfigurationService, ProductType } from '../../client/common/types';
+import { LinterManager } from '../../client/linters/linterManager';
+import { ILinterManager } from '../../client/linters/types';
+import { rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
-const pythoFilesPath = path.join(workspaceDir, 'pythonFiles', 'linting');
 
 const linterConfigDirs = {
-    flake8: path.join(pythoFilesPath, 'flake8config'),
-    pep8: path.join(pythoFilesPath, 'pep8config'),
-    pydocstyle: path.join(pythoFilesPath, 'pydocstyleconfig27'),
-    pylint: path.join(pythoFilesPath, 'pylintconfig')
+    flake8: path.join(pythonFilesPath, 'flake8config'),
+    pep8: path.join(pythonFilesPath, 'pep8config'),
+    pydocstyle: path.join(pythonFilesPath, 'pydocstyleconfig27'),
+    pylint: path.join(pythonFilesPath, 'pylintconfig')
 };
 const linterConfigRCFiles = {
     pylint: '.pylintrc',
     pydocstyle: '.pydocstyle'
 };
 
-const fileToLint = path.join(pythoFilesPath, 'file.py');
+const fileToLint = path.join(pythonFilesPath, 'file.py');
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
@@ -128,15 +124,6 @@ function getMessages(product: Product): ILintMessage[] {
             throw Error(`unsupported linter ${product}`);
         }
     }
-}
-
-function getLinterID(product: Product): LinterId {
-    for (const id of Object.keys(LINTERS)) {
-        if (LINTERS[id] === product) {
-            return id as LinterId;
-        }
-    }
-    throw Error(`unsupprted linter ${product}`);
 }
 
 async function getInfoForConfig(product: Product) {
