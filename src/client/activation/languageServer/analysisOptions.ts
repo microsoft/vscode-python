@@ -171,11 +171,14 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         if (e && !e.affectsConfiguration('python', this.resource)) {
             return;
         }
-        this.onSettingsChanged().catch(ex => traceError('Failed to detect changes', ex));
+        this.onSettingsChanged();
+    }
+    @debounce(1000)
+    protected onSettingsChanged(): void {
+        this.notifyIfSettingsChanged().ignoreErrors();
     }
     @traceDecorators.verbose('Changes in python settings detected in analysis options')
-    @debounce(1000)
-    protected async onSettingsChanged(): Promise<void> {
+    protected async notifyIfSettingsChanged(): Promise<void> {
         const idata = await this.interpreterDataService.getInterpreterData(this.resource);
         if (!idata || idata.hash !== this.interpreterHash) {
             this.interpreterHash = idata ? idata.hash : '';

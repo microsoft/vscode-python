@@ -3,16 +3,16 @@
 
 'use strict';
 
-import { IDataScienceSettings } from '../../client/common/types';
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 
 // The WebPanel constructed by the extension should inject a getInitialSettings function into
 // the script. This should return a dictionary of key value pairs for settings
 // tslint:disable-next-line:no-any
 export declare function getInitialSettings(): any;
 
-let loadedSettings: IDataScienceSettings;
+let loadedSettings: IDataScienceExtraSettings;
 
-export function getSettings() : IDataScienceSettings {
+export function getSettings() : IDataScienceExtraSettings {
     if (loadedSettings === undefined) {
         load();
     }
@@ -22,13 +22,13 @@ export function getSettings() : IDataScienceSettings {
 
 export function updateSettings(jsonSettingsString: string) {
     const newSettings = JSON.parse(jsonSettingsString);
-    loadedSettings = <IDataScienceSettings>newSettings;
+    loadedSettings = <IDataScienceExtraSettings>newSettings;
 }
 
 function load() {
     // tslint:disable-next-line:no-typeof-undefined
     if (typeof getInitialSettings !== 'undefined') {
-        loadedSettings = <IDataScienceSettings>getInitialSettings();
+        loadedSettings = <IDataScienceExtraSettings>getInitialSettings();
     } else {
         // Default settings for tests
         loadedSettings = {
@@ -42,7 +42,10 @@ function load() {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCodeByDefault: true
+            collapseCellInputCodeByDefault: true,
+            extraSettings: {
+                terminalCursor: 'block'
+            }
         };
     }
 }

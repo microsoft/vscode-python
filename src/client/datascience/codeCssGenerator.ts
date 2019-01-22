@@ -35,6 +35,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             // First compute our current theme.
             const workbench = this.workspaceService.getConfiguration('workbench');
             const theme = workbench.get<string>('colorTheme');
+            const terminalCursor = workbench.get<string>('terminal.integrated.cursorStyle', 'block');
             const editor = this.workspaceService.getConfiguration('editor', undefined);
             const font = editor.get<string>('fontFamily');
             const fontSize = editor.get<number>('fontSize');
@@ -45,7 +46,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
                 // The tokens object then contains the necessary data to generate our css
                 if (tokenColors && font && fontSize) {
-                    return this.generateCss(theme, tokenColors, font, fontSize);
+                    return this.generateCss(theme, tokenColors, font, fontSize, terminalCursor);
                 }
             }
         } catch (err) {
@@ -96,7 +97,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private generateCss(theme: string, tokenColors: JSONArray, fontFamily: string, fontSize: number): string {
+    private generateCss(theme: string, tokenColors: JSONArray, fontFamily: string, fontSize: number, cursorType: string): string {
         const escapedThemeName = Identifiers.GeneratedThemeName;
 
         // There's a set of values that need to be found
@@ -111,6 +112,12 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const punctuation = this.getScopeColor(tokenColors, 'punctuation');
 
         const def = 'var(--vscode-editor-foreground)';
+
+        // Define our cursor style based on the cursor type
+        const cursorStyle = cursorType === 'block' ?
+            `{ border: 1px solid ${def}; background: ${def}; width: 5px; z-index=100; }` : cursorType === 'underline' ?
+            `{ border-bottom: 1px solid ${def}; z-index=100; width: 5px; }` :
+            `{ border-left: 1px solid ${def}; border-right: none; z-index=100; }`;
 
         // Use these values to fill in our format string
         return `
@@ -137,6 +144,8 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         .cm-s-${escapedThemeName} span.cm-string {color: ${stringColor};}
         .cm-s-${escapedThemeName} span.cm-string-2 {color: ${stringColor};}
         .cm-s-${escapedThemeName} span.cm-builtin {color: ${builtin};}
+        .cm-s-${escapedThemeName} div.CodeMirror-cursor ${cursorStyle}
+        .cm-s-${escapedThemeName} div.CodeMirror-selected {background: var(--vscode-editor-selectionBackground) !important;}
 `;
 
     }

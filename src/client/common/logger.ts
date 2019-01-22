@@ -58,13 +58,19 @@ function argsToLogString(args: any[]): string {
     try {
         return (args || [])
             .map((item, index) => {
+                if (item === undefined) {
+                    return `Arg ${index + 1}: undefined`;
+                }
+                if (item === null) {
+                    return `Arg ${index + 1}: null`;
+                }
                 try {
-                    if (item.fsPath) {
+                    if (item && item.fsPath) {
                         return `Arg ${index + 1}: <Uri:${item.fsPath}>`;
                     }
                     return `Arg ${index + 1}: ${JSON.stringify(item)}`;
                 } catch {
-                    return `Arg ${index + 1}: UNABLE TO DETERMINE VALUE`;
+                    return `Arg ${index + 1}: <argument cannot be serialized for logging>`;
                 }
             })
             .join(', ');

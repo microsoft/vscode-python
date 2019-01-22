@@ -8,7 +8,7 @@ import './collapseButton.css';
 interface ICollapseButtonProps {
     theme: string;
     tooltip: string;
-    hidden: boolean;
+    visible: boolean;
     open: boolean;
     onClick(): void;
 }
@@ -20,7 +20,7 @@ export class CollapseButton extends React.Component<ICollapseButtonProps> {
 
     public render() {
         const collapseInputPolygonClassNames = `collapse-input-svg ${this.props.open ? ' collapse-input-svg-rotate' : ''} collapse-input-svg-${this.props.theme}`;
-        const collapseInputClassNames = `collapse-input remove-style ${this.props.hidden ? '' : ' hide'}`;
+        const collapseInputClassNames = `collapse-input remove-style ${this.props.visible ? '' : ' hide'}`;
         return (
             <div >
                 <button className={collapseInputClassNames} onClick={this.props.onClick}>

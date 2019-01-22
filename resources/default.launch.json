@@ -7,11 +7,17 @@
         "console": "integratedTerminal"
     },
     {
-        "name": "Python: Attach",
+        "name": "Python: Remote Attach",
         "type": "python",
         "request": "attach",
         "port": 5678,
-        "host": "localhost"
+        "host": "localhost",
+        "pathMappings": [
+            {
+                "localRoot": "${workspaceFolder}",
+                "remoteRoot": "."
+            }
+        ]
     },
     {
         "name": "Python: Module",

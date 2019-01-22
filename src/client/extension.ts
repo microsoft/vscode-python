@@ -327,7 +327,7 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
 }
 function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pyhontPath')!;
+    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
     return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
         (settings.globalValue && settings.globalValue !== 'python');

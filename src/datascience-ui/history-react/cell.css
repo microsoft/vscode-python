@@ -30,7 +30,7 @@
 }
 
 .hide {
-    display: none;
+    visibility: hidden;
 }
 
 .cell-result-container {
@@ -51,9 +51,6 @@
     background: var(--vscode-notifications-background);
     white-space: pre-wrap;
     font-family: monospace;
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: auto;
 }
 
 .cell-output pre {
@@ -103,7 +100,7 @@
 
 .controls-flex {
     display:flex;
-    min-width: 40px;
+    min-width: 45px;
 }
 
 .center-img {

@@ -9,7 +9,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -41,7 +41,7 @@ export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
     connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
-    executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
+    executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
@@ -145,6 +145,7 @@ export interface ICodeWatcher {
 }
 
 export enum CellState {
+    editing = -1,
     init = 0,
     executing = 1,
     finished = 2,
@@ -200,4 +201,11 @@ export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
 export interface IJupyterCommandFactory {
     createInterpreterCommand(args: string[], interpreter: PythonInterpreter) : IJupyterCommand;
     createProcessCommand(exe: string, args: string[]) : IJupyterCommand;
+}
+
+// Config settings we pass to our react code
+export interface IDataScienceExtraSettings extends IDataScienceSettings {
+    extraSettings: {
+        terminalCursor: string;
+    };
 }

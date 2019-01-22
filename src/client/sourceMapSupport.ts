@@ -27,10 +27,11 @@ export class SourceMapSupport {
         await this.enableSourceMaps(true);
         const localize = require('./common/utils/localize') as typeof import('./common/utils/localize');
         const disable = localize.Diagnostics.disableSourceMaps();
-        const selection = await this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable);
-        if (selection === disable) {
-            await this.disable();
-        }
+        this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable).then(selection => {
+            if (selection === disable) {
+                this.disable().ignoreErrors();
+            }
+        });
     }
     public get enabled(): boolean {
         return this.config.get<boolean>(setting, false);

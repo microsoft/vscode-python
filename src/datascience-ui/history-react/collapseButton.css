@@ -11,6 +11,10 @@
     fill: lightgray;
 }
 
+.collapse-input {
+    margin-left:50%;
+}
+
 .remove-style {
     background-color:transparent;
     border:transparent;

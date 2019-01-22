@@ -675,14 +675,20 @@
                         }
                     },
                     {
-                        "label": "Python: Attach",
+                        "label": "Python: Remote Attach",
                         "description": "%python.snippet.launch.attach.description%",
                         "body": {
                             "name": "Attach (Remote Debug)",
                             "type": "python",
                             "request": "attach",
                             "port": 5678,
-                            "host": "localhost"
+                            "host": "localhost",
+                            "pathMappings": [
+                                {
+                                    "localRoot": "${workspaceFolder}",
+                                    "remoteRoot": "."
+                                }
+                            ]
                         }
                     }
                 ],
@@ -991,8 +997,8 @@
                 },
                 "python.dataScience.allowInput": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Allow the inputting of python code directly into the Python Interactive window (currently under development)"
+                    "default": true,
+                    "description": "Allow the inputting of python code directly into the Python Interactive window"
                 },
                 "python.dataScience.showCellInputCode": {
                     "type": "boolean",
@@ -1004,6 +1010,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Collapse cell input code by default.",
+                    "scope": "resource"
+                },
+                "python.dataScience.maxOutputSize": {
+                    "type": "number",
+                    "default": 400,
+                    "description": "Maximum size (in pixels) of text output in the Python Interactive window before a scrollbar appears. Set to -1 for infinity.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

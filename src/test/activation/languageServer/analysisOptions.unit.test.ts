@@ -39,7 +39,7 @@ suite('Language Server - Analysis Options', () => {
         public getTypeshedPaths(): string[] {
             return super.getTypeshedPaths();
         }
-        public async onSettingsChanged(): Promise<void> {
+        public onSettingsChanged(): void {
             return super.onSettingsChanged();
         }
         public async notifyIfValuesHaveChanged(oldArray: string[], newArray: string[]): Promise<void> {
@@ -128,7 +128,7 @@ suite('Language Server - Analysis Options', () => {
         let eventFired = false;
         analysisOptions.onDidChange(() => eventFired = true);
 
-        await analysisOptions.onSettingsChanged();
+        analysisOptions.onSettingsChanged();
         await sleep(1);
 
         expect(eventFired).to.be.equal(false);
@@ -142,7 +142,7 @@ suite('Language Server - Analysis Options', () => {
         let eventFired = false;
         analysisOptions.onDidChange(() => eventFired = true);
 
-        await analysisOptions.onSettingsChanged();
+        analysisOptions.onSettingsChanged();
         await sleep(1);
 
         expect(eventFired).to.be.equal(true);
@@ -156,7 +156,7 @@ suite('Language Server - Analysis Options', () => {
         let eventFired = false;
         analysisOptions.onDidChange(() => eventFired = true);
 
-        await analysisOptions.onSettingsChanged();
+        analysisOptions.onSettingsChanged();
         await sleep(1);
 
         expect(eventFired).to.be.equal(true);
@@ -168,7 +168,7 @@ suite('Language Server - Analysis Options', () => {
         let eventFired = false;
         analysisOptions.onDidChange(() => eventFired = true);
 
-        await analysisOptions.onSettingsChanged();
+        analysisOptions.onSettingsChanged();
         await sleep(1);
 
         expect(eventFired).to.be.equal(true);

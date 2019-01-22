@@ -7,7 +7,6 @@ import './cell.css';
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
-
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
@@ -20,6 +19,7 @@ import { getSettings } from '../react-common/settingsReactSide';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
+import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
@@ -31,8 +31,12 @@ interface ICellProps {
     baseTheme: string;
     codeTheme: string;
     testMode?: boolean;
+    autoFocus: boolean;
+    maxTextSize?: number;
+    history: string [];
     gotoCode(): void;
     delete(): void;
+    submitNewCode(code: string): void;
 }
 
 export interface ICellViewModel {
@@ -41,6 +45,8 @@ export interface ICellViewModel {
     inputBlockOpen: boolean;
     inputBlockText: string;
     inputBlockCollapseNeeded: boolean;
+    editable: boolean;
+    directInput?: boolean;
     inputBlockToggled(id: string): void;
 }
 
@@ -96,31 +102,26 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderNormalCell() {
-        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const hasNoSource = this.props.cellVM.cell.file === Identifiers.EmptyFileName;
         const results: JSX.Element[] = this.renderResults();
-        if (!getSettings().showCellInputCode && (!results || results.length === 0)) {
-            // null is a valid JSX.Element return to render nothing. Plain return doesn't work
-            return null;
-        } else {
+        const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
+        const shouldRender = allowsPlainInput || (results && results.length > 0);
+
+        // Only render if we are allowed to.
+        if (shouldRender) {
             return (
                 <div className='cell-wrapper'>
                     <MenuBar baseTheme={this.props.baseTheme}>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
+                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
                         </CellButton>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode}/>
+                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
                         </CellButton>
                     </MenuBar>
                     <div className='cell-outer'>
                         <div className='controls-div'>
-                            <div className='controls-flex'>
-                                <ExecutionCount isBusy={busy} count={this.props.cellVM.cell.data.execution_count ? this.props.cellVM.cell.data.execution_count.toString() : '0'} visible={this.isCodeCell()}/>
-                                <CollapseButton theme={this.props.baseTheme} hidden={this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow}
-                                    open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
-                                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
-                            </div>
+                            {this.renderControls()}
                         </div>
                         <div className='content-div'>
                             <div className='cell-result-container'>
@@ -132,24 +133,86 @@ export class Cell extends React.Component<ICellProps> {
                 </div>
             );
         }
+
+        // Shouldn't be rendered because not allowing empty input and not a direct input cell
+        return null;
+    }
+
+    private showInputs = () : boolean => {
+        return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
+    }
+
+    private getRenderableInputCode = () : string => {
+        if (this.props.cellVM.editable) {
+            return '';
+        }
+
+        return this.props.cellVM.inputBlockText;
+    }
+
+    private renderControls = () => {
+        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
+        const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
+        const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
+            this.props.cellVM.cell.data.execution_count.toString() : '0';
+        const afterExecution = this.props.cellVM.editable ?
+            <CommandPrompt /> :
+            <CollapseButton theme={this.props.baseTheme}
+                            visible={collapseVisible}
+                            open={this.props.cellVM.inputBlockOpen}
+                            onClick={this.toggleInputBlock}
+                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>;
+
+        return (
+            <div className='controls-flex'>
+                <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()}/>
+                {afterExecution}
+            </div>
+        );
     }
 
     private renderInputs = () => {
-        if (this.isCodeCell() && this.props.cellVM.inputBlockShow) {
-            // Colorize our text
-            return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} codeTheme={this.props.codeTheme}/></div>);
+        if (this.showInputs()) {
+            return (
+                <div className='cell-input'>
+                    <Code
+                        cursorType={this.getCursorType()}
+                        history={this.props.history}
+                        autoFocus={this.props.autoFocus}
+                        code={this.getRenderableInputCode()}
+                        codeTheme={this.props.codeTheme}
+                        testMode={this.props.testMode ? true : false}
+                        readOnly={!this.props.cellVM.editable}
+                        onSubmit={this.props.submitNewCode}
+                        onChangeLineCount={this.onChangeLineCount}
+                        />
+                </div>
+            );
         } else {
             return null;
         }
     }
 
-    private renderResultsDiv = (results: JSX.Element[]) => {
-        const outputClassNames = this.isCodeCell() ?
-            `cell-output cell-output-${this.props.baseTheme}` :
-            '';
+    private getCursorType = () : string => {
+        if (getSettings && getSettings().extraSettings) {
+            return getSettings().extraSettings.terminalCursor;
+        }
 
-        // Then combine them inside a div
-        return <div className={outputClassNames}>{results}</div>;
+        return 'block';
+    }
+
+    private renderResultsDiv = (results: JSX.Element[]) => {
+
+        // Only render results if the user can't edit. For now. Might allow editing of code later?
+        if (!this.props.cellVM.editable) {
+            const outputClassNames = this.isCodeCell() ?
+                `cell-output cell-output-${this.props.baseTheme}` :
+                '';
+
+            // Then combine them inside a div
+            return <div className={outputClassNames}>{results}</div>;
+        }
+        return null;
     }
 
     private renderResults = (): JSX.Element[] => {
@@ -158,6 +221,7 @@ export class Cell extends React.Component<ICellProps> {
             this.renderCodeOutputs() :
             this.renderMarkdown(this.getMarkdownCell());
     }
+
     private renderCodeOutputs = () => {
         if (this.isCodeCell() && this.hasOutput()) {
             // Render the outputs
@@ -177,7 +241,7 @@ export class Cell extends React.Component<ICellProps> {
         return [<Transform data={source}/>];
     }
 
-    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {
+    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean) => {
 
         // If we found a mimetype, use the transform
         if (mimetype) {
@@ -195,10 +259,22 @@ export class Cell extends React.Component<ICellProps> {
                     let data = output.data[mimetype];
                     if (mimetype === 'text/plain') {
                         data = concatMultilineString(data);
+                        renderWithScrollbars = true;
                     }
 
-                    // Return the transformed control using the data we massaged
-                    return <Transform key={index} data={data} />;
+                    // Create a scrollbar style if necessary
+                    if (renderWithScrollbars && this.props.maxTextSize) {
+                        const style: React.CSSProperties = {
+                            maxHeight : `${this.props.maxTextSize}px`,
+                            overflowY : 'auto',
+                            overflowX : 'auto'
+                        };
+
+                        return <div id='stylewrapper' style={style}><Transform key={index} data={data} /></div>;
+                    } else {
+                        return <Transform key={index} data={data} />;
+                    }
+
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -226,8 +302,12 @@ export class Cell extends React.Component<ICellProps> {
           return <JSONTree key={index} data={copy.data} />;
         }
 
+        // Only for text and error ouptut do we add scrollbars
+        let addScrollbars = false;
+
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
+            addScrollbars = true;
             // Stream output needs to be wrapped in xmp so it
             // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
@@ -252,6 +332,7 @@ export class Cell extends React.Component<ICellProps> {
             }
 
         } else if (copy.output_type === 'error') {
+            addScrollbars = true;
             const error = copy as nbformat.IError;
             try {
                 const converter = new ansiToHtml();
@@ -275,7 +356,7 @@ export class Cell extends React.Component<ICellProps> {
 
         // If that worked, use the transform
         if (mimetype) {
-            return this.renderWithTransform(mimetype, copy, index);
+            return this.renderWithTransform(mimetype, copy, index, addScrollbars);
         }
 
         if (copy.data) {
@@ -286,5 +367,9 @@ export class Cell extends React.Component<ICellProps> {
         }
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
+    }
+
+    private onChangeLineCount = (lineCount: number) => {
+        // Ignored for now. Might use this to update the . next to the code lines
     }
 }

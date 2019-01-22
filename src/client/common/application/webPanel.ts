@@ -10,7 +10,7 @@ import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import { Identifiers } from '../../datascience/constants';
 import { IServiceContainer } from '../../ioc/types';
-import { IConfigurationService, IDisposableRegistry } from '../types';
+import { IDisposableRegistry } from '../types';
 import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
 
 export class WebPanel implements IWebPanel {
@@ -19,7 +19,6 @@ export class WebPanel implements IWebPanel {
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private disposableRegistry: IDisposableRegistry;
-    private configuration: IConfigurationService;
     private rootPath: string;
 
     constructor(
@@ -27,8 +26,9 @@ export class WebPanel implements IWebPanel {
         listener: IWebPanelMessageListener,
         title: string,
         mainScriptPath: string,
-        embeddedCss?: string) {
-        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        embeddedCss?: string,
+        // tslint:disable-next-line:no-any
+        settings?: any) {
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
         this.rootPath = path.dirname(mainScriptPath);
@@ -41,7 +41,7 @@ export class WebPanel implements IWebPanel {
                 retainContextWhenHidden: true,
                 localResourceRoots: [Uri.file(this.rootPath)]
             });
-        this.loadPromise = this.load(mainScriptPath, embeddedCss);
+        this.loadPromise = this.load(mainScriptPath, embeddedCss, settings);
     }
 
     public async show() {
@@ -61,13 +61,14 @@ export class WebPanel implements IWebPanel {
         }
     }
 
-    private async load(mainScriptPath: string, embeddedCss?: string) {
+    // tslint:disable-next-line:no-any
+    private async load(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         if (this.panel) {
             if (await fs.pathExists(mainScriptPath)) {
 
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.generateReactHtml(mainScriptPath, embeddedCss);
+                this.panel.webview.html = this.generateReactHtml(mainScriptPath, embeddedCss, settings);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(this.panel.onDidDispose(() => {
@@ -87,14 +88,15 @@ export class WebPanel implements IWebPanel {
         }
     }
 
-    private generateReactHtml(mainScriptPath: string, embeddedCss?: string) {
+    // tslint:disable-next-line:no-any
+    private generateReactHtml(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         const uriBasePath = Uri.file(`${path.dirname(mainScriptPath)}/`);
         const uriPath = Uri.file(mainScriptPath);
         const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
         const uri = uriPath.with({ scheme: 'vscode-resource' });
         const locDatabase = JSON.stringify(localize.getCollection());
         const style = embeddedCss ? embeddedCss : '';
-        const dsSettings = JSON.stringify(this.configuration.getSettings().datascience);
+        const settingsString = settings ? JSON.stringify(settings) : '{}';
 
         return `<!doctype html>
         <html lang="en">
@@ -124,7 +126,7 @@ export class WebPanel implements IWebPanel {
                         return ${locDatabase};
                     }
                     function getInitialSettings() {
-                        return ${dsSettings};
+                        return ${settingsString};
                     }
                 </script>
             <script type="text/javascript" src="${uri}"></script></body>

@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../common/application/types';
+import '../../common/extensions';
 import { traceDecorators } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { debounce } from '../../common/utils/decorators';
@@ -39,7 +40,7 @@ export class LanguageServerManager implements ILanguageServerManager {
         }
         this.registerCommandHandler();
         this.resource = resource;
-        this.analysisOptions.onDidChange(this.restartLanguageServer, this, this.disposables);
+        this.analysisOptions.onDidChange(this.restartLanguageServerDebounced, this, this.disposables);
 
         await this.analysisOptions.initialize(resource);
         await this.startLanguageServer();
@@ -56,9 +57,12 @@ export class LanguageServerManager implements ILanguageServerManager {
             this.languageServer.loadExtension(LanguageServerManager.loadExtensionArgs);
         }
     }
+    @debounce(1000)
+    protected restartLanguageServerDebounced(): void {
+        this.restartLanguageServer().ignoreErrors();
+    }
     @traceDecorators.error('Failed to restart Language Server')
     @traceDecorators.verbose('Restarting Language Server')
-    @debounce(1000)
     protected async restartLanguageServer(): Promise<void> {
         if (this.languageServer) {
             this.languageServer.dispose();

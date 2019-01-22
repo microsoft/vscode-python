@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
+
 import { concatMultilineString } from '../../client/datascience/common';
+import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
+import { noop } from '../../test/core';
 import { ICellViewModel } from './cell';
 
 export interface IMainPanelState {
@@ -14,6 +17,7 @@ export interface IMainPanelState {
     skipNextScroll? : boolean;
     undoStack : ICellViewModel[][];
     redoStack : ICellViewModel[][];
+    historyStack: string[];
 }
 
 // This function generates test state when running under a browser instead of inside of
@@ -23,7 +27,34 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         busy: true,
         skipNextScroll : false,
         undoStack : [],
-        redoStack : []
+        redoStack : [],
+        historyStack: []
+    };
+}
+
+export function createEditableCellVM(executionCount: number) : ICellViewModel {
+    return {
+        cell:
+        {
+            data:
+            {
+                cell_type: 'code', // We should eventually allow this to change to entering of markdown?
+                execution_count: executionCount,
+                metadata: {},
+                outputs: [],
+                source: ''
+            },
+            id: uuid(),
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.editing
+        },
+        editable: true,
+        inputBlockOpen: true,
+        inputBlockShow: true,
+        inputBlockText: '',
+        inputBlockCollapseNeeded: false,
+        inputBlockToggled: noop
     };
 }
 
@@ -43,6 +74,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
 
    return {
        cell: inputCell,
+       editable: false,
        inputBlockOpen: true,
        inputBlockShow: true,
        inputBlockText: inputText,

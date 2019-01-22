@@ -23,6 +23,16 @@
     padding: 0px;
 }
 
-.code-readonly .CodeMirror {
+.code-area .CodeMirror {
     height: auto;
+}
+
+
+.code-area {
+    position: relative;
+    width:100%;
+}
+
+.code-area-editable {
+    margin-bottom: 10px;
 }
