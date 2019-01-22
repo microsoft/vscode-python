@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as TypeMoq from 'typemoq';
-import { TextDocument } from 'vscode';
-import { CancellationTokenSource } from 'vscode-jsonrpc';
+import { CancellationTokenSource, TextDocument } from 'vscode';
 
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
