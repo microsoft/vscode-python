@@ -26,9 +26,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {
-        this.addHandlers();
-    }
+    ) { }
 
     public dispose() {
         while (this.disposables.length > 0) {
@@ -44,9 +42,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Get latest interpreter list.
         const mainWorkspaceUri = this.getActiveResource();
         this.interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
+        this.addHandlers();
     }
     protected addHandlers() {
-        this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this, this.disposables);
+        this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
     protected addRemoveDocOpenedHandlers() {
         if (this.hasMultipleWorkspaces() && !this.docOpenedHandler) {
