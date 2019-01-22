@@ -187,7 +187,7 @@
         "prefix": "__main__",
         "body": [
             "if __name__ == \"__main__\":",
-            "    ${1:pass}",
+            "    ${1:pass}"
         ],
         "description": "Code snippet for a `if __name__ == \"__main__\": ...` block"
     },
@@ -239,5 +239,5 @@
         "prefix": "pudb",
         "body": "import pudb; pudb.set_trace()",
         "description": "Code snippet for pudb debug"
-    },
+    }
 }
