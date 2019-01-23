@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { sendTelemetryEvent } from '../../client/telemetry';
+import { correctPathForOsType } from '../common';
 
 suite('Telemetry', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
@@ -83,7 +84,7 @@ suite('Telemetry', () => {
     test('Send Error Telemetry', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        error.stack = `Error: Boo
+        error.stack = correctPathForOsType(`Error: Boo
 at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)
 at callFn (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:372:21)
 at Test.Runnable.run (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7)
@@ -100,7 +101,7 @@ at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:317:10)
 at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)
 at runCallback (timers.js:789:20)
 at tryOnImmediate (timers.js:751:5)
-at processImmediate [as _immediateCallback] (timers.js:722:5)`;
+at processImmediate [as _immediateCallback] (timers.js:722:5)`);
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
@@ -119,7 +120,7 @@ at processImmediate [as _immediateCallback] (timers.js:722:5)`;
         expect(stackTrace).to.be.length.greaterThan(1);
 
         // tslint:disable-next-line:no-multiline-string
-        const expectedStack = `at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23
+        const expectedStack = correctPathForOsType(`at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23
 \tat callFn <pvsc>/node_modules/mocha/lib/runnable.js:372:21
 \tat Test.Runnable.run <pvsc>/node_modules/mocha/lib/runnable.js:364:7
 \tat Runner.runTest <pvsc>/node_modules/mocha/lib/runner.js:455:10
@@ -135,19 +136,19 @@ at processImmediate [as _immediateCallback] (timers.js:722:5)`;
 \tat Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5
 \tat runCallback <hidden>/timers.js:789:20
 \tat tryOnImmediate <hidden>/timers.js:751:5
-\tat processImmediate [as _immediateCallback] <hidden>/timers.js:722:5`;
+\tat processImmediate [as _immediateCallback] <hidden>/timers.js:722:5`);
 
         expect(stackTrace).to.be.equal(expectedStack);
     });
     test('Ensure non extension file paths are stripped from stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        error.stack = `Error: Boo
+        error.stack = correctPathForOsType(`Error: Boo
 at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)
 at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)
 at Test.Runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)
 at Runner.runTest (\\wow\wee/node_modules/mocha/lib/runner.js:455:10)
-at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`;
+at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`);
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
@@ -166,23 +167,23 @@ at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js
         expect(stackTrace).to.be.length.greaterThan(1);
 
         // tslint:disable-next-line:no-multiline-string
-        const expectedStack = `at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23
+        const expectedStack = correctPathForOsType(`at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23
 \tat callFn <hidden>/runnable.js:372:21
 \tat Test.Runnable.run <hidden>/runnable.js:364:7
 \tat Runner.runTest <hidden>/runner.js:455:10
-\tat Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5`;
+\tat Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5`);
 
         expect(stackTrace).to.be.equal(expectedStack);
     });
     test('Ensure non function names containing file names (unlikely, but for sake of completeness) are stripped from stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        error.stack = `Error: Boo
+        error.stack = correctPathForOsType(`Error: Boo
 at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)
 at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)
 at Test./usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)
 at Runner.runTest (\\wow\wee/node_modules/mocha/lib/runner.js:455:10)
-at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`;
+at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`);
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
@@ -201,11 +202,11 @@ at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js
         expect(stackTrace).to.be.length.greaterThan(1);
 
         // tslint:disable-next-line:no-multiline-string
-        const expectedStack = `at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23
+        const expectedStack = correctPathForOsType(`at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23
 \tat callFn <hidden>/runnable.js:372:21
 \tat <hidden>.run <hidden>/runnable.js:364:7
 \tat Runner.runTest <hidden>/runner.js:455:10
-\tat Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5`;
+\tat Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5`);
 
         expect(stackTrace).to.be.equal(expectedStack);
     });
