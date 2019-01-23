@@ -13,6 +13,7 @@ import {
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
+import { LINTERID_BY_PRODUCT } from './constants';
 import { Flake8 } from './flake8';
 import { LinterInfo, PylintLinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
@@ -26,22 +27,8 @@ import {
     ILinter,
     ILinterInfo,
     ILinterManager,
-    ILintMessage,
-    LinterId
+    ILintMessage
 } from './types';
-
-export const LINTERS = {
-    // tslint:disable: object-literal-key-quotes
-    'bandit': Product.bandit,
-    'flake8': Product.flake8,
-    'pylint': Product.pylint,
-    'mypy': Product.mypy,
-    'pep8': Product.pep8,
-    'prospector': Product.prospector,
-    'pydocstyle': Product.pydocstyle,
-    'pylama': Product.pylama
-    // tslint:enable: object-literal-key-quotes
-};
 
 class DisabledLinter implements ILinter {
     constructor(private configService: IConfigurationService) { }
@@ -63,9 +50,9 @@ export class LinterManager implements ILinterManager {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [];
-        for (const prodID of Object.keys(LINTERS)) {
+        for (const [prod, linterID] of LINTERID_BY_PRODUCT) {
             let info: ILinterInfo;
-            if (prodID === 'pylint') {
+            if (prod === Product.pylint) {
                 info = new PylintLinterInfo(
                     this.configService,
                     this.workspaceService,
@@ -73,8 +60,8 @@ export class LinterManager implements ILinterManager {
                 );
             } else {
                 info = new LinterInfo(
-                    LINTERS[prodID],
-                    prodID as LinterId,
+                    prod,
+                    linterID,
                     this.configService
                 );
             }

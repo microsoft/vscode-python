@@ -68,8 +68,6 @@ suite('Linting Settings', () => {
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
-            //return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
-            //const settingKey: PythonSettingKeys = `linting.${x.enabledSettingName}`;
             const settingKey = `linting.${x.enabledSettingName}`;
             await configService.updateSetting(settingKey, false, rootWorkspaceUri, target);
         });
@@ -92,7 +90,6 @@ suite('Linting Settings', () => {
         assert.equal(settings.linting.pylintUseMinimalCheckers, false, 'mismatch');
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
-            //const settingKey: PythonSettingKeys = `linting.${x.enabledSettingName}`;
             const settingKey = `linting.${x.enabledSettingName}`;
             await configService.updateSetting(settingKey, true, rootWorkspaceUri, target);
             assert.equal(settings.linting[x.enabledSettingName], true, 'mismatch');

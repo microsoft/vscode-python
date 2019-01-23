@@ -11,6 +11,8 @@ import {
     TextLine
 } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
+import { ProductNames } from '../../client/common/installer/productNames';
+import { ProductService } from '../../client/common/installer/productService';
 import {
     IFileSystem,
     IPlatformService
@@ -20,7 +22,8 @@ import {
     IPythonExecutionService,
     IPythonToolExecutionService
 } from '../../client/common/process/types';
-import { LINTERS } from '../../client/linters/linterManager';
+import { ProductType } from '../../client/common/types';
+import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import {
     ILintMessage,
     LintMessageSeverity
@@ -28,7 +31,9 @@ import {
 import {
     BaseTestFixture,
     getLinterID,
-    linterMessageAsLine
+    getProductName,
+    linterMessageAsLine,
+    throwUnknownProduct
 } from './common';
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
@@ -116,6 +121,7 @@ class TestFixture extends BaseTestFixture {
             pythonExecFactory.object,
             undefined,
             undefined,
+            true,
             workspaceDir,
             printLogs
         );
@@ -171,7 +177,8 @@ class TestFixture extends BaseTestFixture {
                 break;
             }
             default: {
-                throw Error(`unsupported linter ${product}`);
+                throwUnknownProduct(product);
+                return [];  // to quiet tslint
             }
         }
         this.setMessages(messages, product);
@@ -260,14 +267,12 @@ suite('Linting Scenarios', () => {
             assert.equal(messages.length, 0, `Unexpected linter errors when linter is disabled, Output - ${fixture.output}`);
         }
     }
-    for (const prodID of Object.keys(LINTERS)) {
-        const product = LINTERS[prodID];
-        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
+    for (const product of LINTERID_BY_PRODUCT.keys()) {
         for (const enabled of [false, true]) {
-            test(`${enabled ? 'Enable' : 'Disable'} ${productName} and run linter`, async function() {
+            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function() {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Add coverage for these linters.
-                if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
+                if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
@@ -309,13 +314,11 @@ suite('Linting Scenarios', () => {
             }
         }
     }
-    for (const prodID of Object.keys(LINTERS)) {
-        const product = LINTERS[prodID];
-        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
-        test(`Check ${productName} messages`, async function() {
+    for (const product of LINTERID_BY_PRODUCT.keys()) {
+        test(`Check ${getProductName(product)} messages`, async function() {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Add coverage for these linters.
-            if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
+            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
@@ -346,5 +349,39 @@ suite('Linting Scenarios', () => {
         fixture.lintingSettings.maxNumberOfProblems = maxErrors;
 
         await testLinterMessageCount(fixture, Product.pylint, maxErrors);
+    });
+});
+
+const PRODUCTS = Object.keys(Product)
+    .filter(key => !isNaN(Number(Product[key])))
+    .map(key => Product[key]);
+
+// tslint:disable-next-line:max-func-body-length
+suite('Linting Products', () => {
+    const prodService = new ProductService();
+
+    test('All linting products are represented by linters', async () => {
+        for (const product of PRODUCTS) {
+            if (prodService.getProductType(product) !== ProductType.Linter) {
+                continue;
+            }
+            const found = LINTERID_BY_PRODUCT.get(product);
+            assert.notEqual(found, undefined, `did find linter ${Product[product]}`);
+        }
+    });
+
+    test('All linters match linting products', async () => {
+        for (const product of LINTERID_BY_PRODUCT.keys()) {
+            const prodType = prodService.getProductType(product);
+            assert.notEqual(prodType, undefined, `${Product[product]} is not not properly registered`);
+            assert.notEqual(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
+        }
+    });
+
+    test('All linting product names match linter IDs', async () => {
+        for (const [product, linterID] of LINTERID_BY_PRODUCT) {
+            const prodName = ProductNames.get(product);
+            assert.equal(prodName, linterID, 'product name does not match linter ID');
+        }
     });
 });

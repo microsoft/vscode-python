@@ -36,16 +36,19 @@ import {
     IEnvironmentActivationService
 } from '../../client/interpreter/activation/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { LINTERS } from '../../client/linters/linterManager';
+import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import {
     ILintMessage,
+    LinterId,
     LintMessageSeverity
 } from '../../client/linters/types';
 import { deleteFile } from '../common';
 import {
     BaseTestFixture,
     getLinterID,
-    newMockDocument
+    getProductName,
+    newMockDocument,
+    throwUnknownProduct
 } from './common';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
@@ -53,16 +56,16 @@ const workspaceUri = Uri.file(workspaceDir);
 const pythonFilesDir = path.join(workspaceDir, 'pythonFiles', 'linting');
 const fileToLint = path.join(pythonFilesDir, 'file.py');
 
-const linterConfigDirs = {
-    flake8: path.join(pythonFilesDir, 'flake8config'),
-    pep8: path.join(pythonFilesDir, 'pep8config'),
-    pydocstyle: path.join(pythonFilesDir, 'pydocstyleconfig27'),
-    pylint: path.join(pythonFilesDir, 'pylintconfig')
-};
-const linterConfigRCFiles = {
-    pylint: '.pylintrc',
-    pydocstyle: '.pydocstyle'
-};
+const linterConfigDirs = new Map<LinterId, string>([
+    ['flake8', path.join(pythonFilesDir, 'flake8config')],
+    ['pep8', path.join(pythonFilesDir, 'pep8config')],
+    ['pydocstyle', path.join(pythonFilesDir, 'pydocstyleconfig27')],
+    ['pylint', path.join(pythonFilesDir, 'pylintconfig')]
+]);
+const linterConfigRCFiles = new Map<LinterId, string>([
+    ['pylint', '.pylintrc'],
+    ['pydocstyle', '.pydocstyle']
+]);
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
@@ -149,16 +152,18 @@ function getMessages(product: Product): ILintMessage[] {
             return pydocstyleMessagesToBeReturned;
         }
         default: {
-            throw Error(`unsupported linter ${product}`);
+            throwUnknownProduct(product);
+            return [];  // to quiet tslint
         }
     }
 }
 
 async function getInfoForConfig(product: Product) {
     const prodID = getLinterID(product);
-    const dirname = linterConfigDirs[prodID];
+    const dirname = linterConfigDirs.get(prodID);
+    assert.notEqual(dirname, undefined, `tests not set up for ${Product[product]}`);
 
-    const filename = path.join(dirname, product === Product.pylint ? 'file2.py' : 'file.py');
+    const filename = path.join(dirname!, product === Product.pylint ? 'file2.py' : 'file.py');
     let messagesToBeReceived: ILintMessage[] = [];
     switch (product) {
         case Product.flake8: {
@@ -171,11 +176,11 @@ async function getInfoForConfig(product: Product) {
         }
         default: { break; }
     }
-    const basename = linterConfigRCFiles[prodID];
+    const basename = linterConfigRCFiles.get(prodID);
     return {
         filename,
         messagesToBeReceived,
-        origRCFile: basename ? path.join(dirname, basename) : ''
+        origRCFile: basename ? path.join(dirname!, basename) : ''
     };
 }
 
@@ -202,6 +207,7 @@ class TestFixture extends BaseTestFixture {
             ),
             configService,
             serviceContainer,
+            false,
             workspaceDir,
             printLogs
         );
@@ -292,13 +298,11 @@ suite('Linting Functional Tests', () => {
             }
         }
     }
-    for (const prodID of Object.keys(LINTERS)) {
-        const product = LINTERS[prodID];
-        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
-        test(productName, async function() {
+    for (const product of LINTERID_BY_PRODUCT.keys()) {
+        test(getProductName(product), async function() {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Add coverage for these linters.
-            if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
+            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
@@ -308,14 +312,12 @@ suite('Linting Functional Tests', () => {
             await testLinterMessages(fixture, product, fileToLint, messagesToBeReturned);
         });
     }
-    for (const prodID of Object.keys(LINTERS)) {
-        const product = LINTERS[prodID];
-        const productName = prodID.charAt(0).toUpperCase() + prodID.slice(1);
+    for (const product of LINTERID_BY_PRODUCT.keys()) {
         // tslint:disable-next-line:max-func-body-length
-        test(`${productName} with config in root`, async function() {
+        test(`${getProductName(product)} with config in root`, async function() {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Add coverage for these linters.
-            if (['bandit', 'mypy', 'pylama', 'prospector'].some(id => id === prodID)) {
+            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }

@@ -15,6 +15,7 @@ import {
     IWorkspaceService
 } from '../../client/common/application/types';
 import { Product } from '../../client/common/installer/productInstaller';
+import { ProductNames } from '../../client/common/installer/productNames';
 import {
     IFileSystem,
     IPlatformService
@@ -35,7 +36,8 @@ import {
     IPythonSettings
 } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { LinterManager, LINTERS } from '../../client/linters/linterManager';
+import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
+import { LinterManager } from '../../client/linters/linterManager';
 import {
     ILinter,
     ILinterManager,
@@ -63,12 +65,27 @@ export function linterMessageAsLine(msg: ILintMessage): string {
 }
 
 export function getLinterID(product: Product): LinterId {
-    for (const id of Object.keys(LINTERS)) {
-        if (LINTERS[id] === product) {
-            return id as LinterId;
-        }
+    const linterID = LINTERID_BY_PRODUCT.get(product);
+    if (!linterID) {
+        throwUnknownProduct(product);
     }
-    throw Error(`unsupported product ${product}`);
+    return linterID!;
+}
+
+export function getProductName(product: Product, capitalize = true): string {
+    let prodName = ProductNames.get(product);
+    if (!prodName) {
+        prodName = Product[product];
+    }
+    if (capitalize) {
+        return prodName.charAt(0).toUpperCase() + prodName.slice(1);
+    } else {
+        return prodName;
+    }
+}
+
+export function throwUnknownProduct(product: Product) {
+    throw Error(`unsupported product ${Product[product]} (${product})`);
 }
 
 export class LintingSettings {
@@ -198,6 +215,7 @@ export class BaseTestFixture {
         pythonExecFactory: IPythonExecutionFactory,
         configService?: TypeMoq.IMock<IConfigurationService>,
         serviceContainer?: TypeMoq.IMock<IServiceContainer>,
+        ignoreConfigUpdates = false,
         public readonly workspaceDir = '.',
         protected readonly printLogs = false
     ) {
@@ -240,7 +258,7 @@ export class BaseTestFixture {
             .returns(() => this.pythonSettings.object);
         this.pythonSettings.setup(s => s.linting)
             .returns(() => this.lintingSettings);
-        this.initConfig();
+        this.initConfig(ignoreConfigUpdates);
 
         // data
 
@@ -311,9 +329,12 @@ export class BaseTestFixture {
             .returns(() => Promise.resolve(undefined));
     }
 
-    private initConfig(): void {
+    private initConfig(ignoreUpdates = false): void {
         this.configService.setup(c => c.updateSetting(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((setting, value) => {
+                if (ignoreUpdates) {
+                    return;
+                }
                 const prefix = 'linting.';
                 if (setting.startsWith(prefix)) {
                     this.lintingSettings[setting.substring(prefix.length)] = value;
