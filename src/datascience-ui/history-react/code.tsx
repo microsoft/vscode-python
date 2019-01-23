@@ -101,16 +101,16 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         );
     }
 
-    private getWatermarkString = () : string => {
-        return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
-    }
-
     public onParentClick(ev: React.MouseEvent<HTMLDivElement>) {
         const readOnly = this.props.testMode || this.props.readOnly;
         if (this.codeMirror && !readOnly) {
             ev.stopPropagation();
             this.codeMirror.focus();
         }
+    }
+
+    private getWatermarkString = () : string => {
+        return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
     }
 
     private onCursorActivity = (codeMirror: CodeMirror.Editor) => {
