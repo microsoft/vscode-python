@@ -31,7 +31,7 @@ suite('Activation - ActivationManager', () => {
         }
         // tslint:disable-next-line:no-unnecessary-override
         public async activateWorkspace(resource: Resource) {
-            super.activateWorkspace(resource);
+            await super.activateWorkspace(resource);
         }
         // tslint:disable-next-line:no-unnecessary-override
         public addRemoveDocOpenedHandlers() {
