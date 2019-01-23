@@ -35,6 +35,7 @@ interface ICellProps {
     autoFocus: boolean;
     maxTextSize?: number;
     history: string [];
+    showWatermark: boolean;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -184,6 +185,7 @@ export class Cell extends React.Component<ICellProps> {
                         codeTheme={this.props.codeTheme}
                         testMode={this.props.testMode ? true : false}
                         readOnly={!this.props.cellVM.editable}
+                        showWatermark={this.props.showWatermark}
                         onSubmit={this.props.submitNewCode}
                         onChangeLineCount={this.onChangeLineCount}
                         />

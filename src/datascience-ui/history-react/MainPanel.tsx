@@ -37,7 +37,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], historyStack: []};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], historyStack: [], submittedText: false};
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -209,6 +209,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     submitNewCode={this.submitInput}
                     baseTheme={this.props.baseTheme}
                     codeTheme={this.props.codeTheme}
+                    showWatermark={!this.state.submittedText}
                     gotoCode={() => this.gotoCellCode(index)}
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
@@ -633,7 +634,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,
-                historyStack: newHistory
+                historyStack: newHistory,
+                submittedText: true
             });
 
             // Send a message to execute this code if necessary.
