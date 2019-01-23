@@ -1,4 +1,5 @@
 # List of requirements for functional tests
+versioneer
 jupyter
 numpy
 matplotlib
