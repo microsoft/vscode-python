@@ -33,6 +33,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             const disposable = this.disposables.shift();
             disposable.dispose();
         }
+        if (this. docOpenedHandler){
+            this.docOpenedHandler.dispose();
+            this.docOpenedHandler = undefined;
+        }
     }
     public async activate(): Promise<void> {
         await this.initialize();
