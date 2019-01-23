@@ -101,6 +101,9 @@ export class History implements IWebPanelMessageListener, IHistory {
             // Make sure we're loaded first
             await this.loadPromise;
 
+            // Make sure we have at least the initial sys info
+            await this.addSysInfo(SysInfoReason.Start);
+
             // Then show our web panel.
             if (this.webPanel && this.jupyterServer) {
                 await this.webPanel.show();

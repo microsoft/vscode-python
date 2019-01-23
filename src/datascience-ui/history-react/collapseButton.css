@@ -12,7 +12,10 @@
 }
 
 .collapse-input {
-    margin-left:50%;
+    grid-column: 2;
+    padding: 1px;
+    margin-top: 2px;
+    height: min-content;
 }
 
 .remove-style {
