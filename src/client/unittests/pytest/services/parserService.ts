@@ -4,10 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import '../../../common/extensions';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
 import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
-
-const DELIMITER = '\'';
 
 @injectable()
 export class TestsParser implements ITestsParser {
