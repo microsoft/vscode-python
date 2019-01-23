@@ -22,17 +22,3 @@ export function detectBaseTheme() : 'vscode-light' | 'vscode-dark' | 'vscode-hig
 
     return 'vscode-light';
 }
-
-export function detectCodeTheme() : string {
-    const headChildren = document.head.children;
-    if (headChildren) {
-        // Find the meta tag that has id = 'theme'
-        for (let i = 0; i < headChildren.length; i += 1) {
-            if (headChildren[i].id === 'theme') {
-                return headChildren[i]['content'];
-            }
-        }
-    }
-
-    return 'light_vs';
-}

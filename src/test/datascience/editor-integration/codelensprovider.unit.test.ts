@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, TextDocument } from 'vscode';
+
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../client/datascience/types';
@@ -16,8 +15,10 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let codeLensProvider: IDataScienceCodeLensProvider;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-    const tokenSource = new CancellationTokenSource();
+    let tokenSource : CancellationTokenSource;
+
     setup(() => {
+        tokenSource = new CancellationTokenSource();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
 

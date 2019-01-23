@@ -17,7 +17,13 @@ import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/co
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
-import { IConnection, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../client/datascience/types';
+import {
+    ICell,
+    IConnection,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    IJupyterSessionManager
+} from '../../client/datascience/types';
 import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
 import { noop, sleep } from '../core';
@@ -52,7 +58,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private pythonServices: MockPythonService[] = [];
     private activeInterpreter: PythonInterpreter | undefined;
     private sessionTimeout: number | undefined;
-    private cellDictionary = {};
+    private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs : {name: string; dir: string}[] = [];
 
     constructor(serviceManager: IServiceManager) {
@@ -155,7 +161,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 data.outputs = [...data.outputs, taggedResult];
 
                 // Tag on our extra data
-                taggedResult['resultGenerator'] = async (t) => {
+                (taggedResult as any)['resultGenerator'] = async (t: CancellationToken) => {
                     const result = await resultGenerator(t);
                     return {
                         result: this.createStreamResult(result.result),
@@ -248,7 +254,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             };
         } else if (typeof result === 'string') {
             const data = {};
-            data[mimeType ? mimeType : 'text/plain'] = result;
+            (data as any)[mimeType ? mimeType : 'text/plain'] = result;
             return {
                 output_type: 'execute_result',
                 execution_count: 1,
@@ -291,7 +297,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result = TypeMoq.Mock.ofType<T>();
-        result['tag'] = tag;
+        (result as any)['tag'] = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }

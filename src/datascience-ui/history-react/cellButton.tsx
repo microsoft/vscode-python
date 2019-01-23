@@ -14,7 +14,7 @@ interface ICellButtonProps {
 }
 
 export class CellButton extends React.Component<ICellButtonProps> {
-    constructor(props) {
+    constructor(props: ICellButtonProps) {
         super(props);
     }
 

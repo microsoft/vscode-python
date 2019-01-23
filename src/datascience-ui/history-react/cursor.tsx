@@ -17,7 +17,7 @@ export interface ICursorProps {
 
 export class Cursor extends React.Component<ICursorProps> {
 
-    constructor(props) {
+    constructor(props: ICursorProps) {
         super(props);
     }
 

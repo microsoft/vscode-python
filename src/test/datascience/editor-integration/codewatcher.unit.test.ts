@@ -3,12 +3,11 @@
 'use strict';
 // tslint:disable:max-func-body-length no-trailing-whitespace no-multiline-string
 // Disable whitespace / multiline as we use that to pass in our fake file strings
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Range, Selection, TextEditor } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
+import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { ILogger } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
@@ -17,7 +16,6 @@ import { createDocument } from './helpers';
 
 suite('DataScience Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
-    let commandManager: TypeMoq.IMock<ICommandManager>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let logger: TypeMoq.IMock<ILogger>;
     let historyProvider: TypeMoq.IMock<IHistoryProvider>;
@@ -25,7 +23,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
     setup(() => {
-        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         logger = TypeMoq.Mock.ofType<ILogger>();
         historyProvider = TypeMoq.Mock.ofType<IHistoryProvider>();

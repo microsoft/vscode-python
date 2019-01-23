@@ -89,7 +89,7 @@ interface IImageProps {
 }
 
 export class Image extends React.Component<IImageProps> {
-    constructor(props) {
+    constructor(props: IImageProps) {
         super(props);
     }
 

@@ -20,7 +20,7 @@ export interface IDataScience extends Disposable {
 
 export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
 export interface IDataScienceCommandListener {
-    register(commandManager: ICommandManager);
+    register(commandManager: ICommandManager): void;
 }
 
 // Connection information for talking to a jupyter notebook process
@@ -105,24 +105,24 @@ export interface IHistory extends Disposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
-    postMessage(type: string, payload?: any);
-    undoCells();
-    redoCells();
-    removeAllCells();
-    interruptKernel();
-    restartKernel();
-    expandAllCells();
-    collapseAllCells();
-    exportCells();
+    postMessage(type: string, payload?: any): void;
+    undoCells(): void;
+    redoCells(): void;
+    removeAllCells(): void;
+    interruptKernel(): void;
+    restartKernel(): void;
+    expandAllCells(): void;
+    collapseAllCells(): void;
+    exportCells(): void;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
 export const IPostOffice = Symbol('IPostOffice');
 export interface IPostOffice {
     // tslint:disable-next-line:no-any
-    post(message: string, params: any[] | undefined);
+    post(message: string, params: any[] | undefined): void;
     // tslint:disable-next-line:no-any
-    listen(message: string, listener: (args: any[] | undefined) => void);
+    listen(message: string, listener: (args: any[] | undefined) => void) : void;
 }
 
 // Wraps the vscode CodeLensProvider base class
@@ -134,14 +134,14 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
-    addFile(document: TextDocument);
+    addFile(document: TextDocument): void;
     getFileName() : string;
     getVersion() : number;
     getCodeLenses() : CodeLens[];
-    runAllCells();
-    runCell(range: Range);
-    runCurrentCell();
-    runCurrentCellAndAdvance();
+    runAllCells(): void;
+    runCell(range: Range): void;
+    runCurrentCell(): void;
+    runCurrentCellAndAdvance(): void;
 }
 
 export enum CellState {

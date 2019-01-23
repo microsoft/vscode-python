@@ -121,7 +121,7 @@ suite('History output tests', () => {
             };
         };
         // tslint:disable-next-line:no-string-literal
-        global['acquireVsCodeApi'] = globalAcquireVsCodeApi;
+        (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
     });
 
     teardown(async () => {
@@ -136,7 +136,7 @@ suite('History output tests', () => {
             }
         }
         await ioc.dispose();
-        delete global['ascquireVsCodeApi'];
+        delete (global as any)['ascquireVsCodeApi'];
     });
 
     function addMockData(code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
@@ -481,15 +481,17 @@ for _ in range(50):
         await addCode(wrapper, 'a=1\na');
 
         // Now verify if we undo, we have no cells
-        let afterUndo = await getCellResults(wrapper, 1, async () => {
-            await history.undoCells();
+        let afterUndo = await getCellResults(wrapper, 1, () => {
+            history.undoCells();
+            return Promise.resolve();
         });
 
         assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
 
         // Redo should put the cells back
-        const afterRedo = await getCellResults(wrapper, 1, async () => {
-            await history.redoCells();
+        const afterRedo = await getCellResults(wrapper, 1, () => {
+            history.redoCells();
+            return Promise.resolve();
         });
         assert.equal(afterRedo.length, 1, 'Redo should put cells back');
 
@@ -498,14 +500,16 @@ for _ in range(50):
         assert.equal(afterAdd.length, 2, 'Second cell did not get added');
 
         // Clear everything
-        const afterClear = await getCellResults(wrapper, 1, async () => {
-            await history.removeAllCells();
+        const afterClear = await getCellResults(wrapper, 1, () => {
+            history.removeAllCells();
+            return Promise.resolve();
         });
         assert.equal(afterClear.length, 0, 'Clear didn\'t work');
 
         // Undo should put them back
-        afterUndo = await getCellResults(wrapper, 1, async () => {
-            await history.undoCells();
+        afterUndo = await getCellResults(wrapper, 1, () => {
+            history.undoCells();
+            return Promise.resolve();
         });
 
         assert.equal(afterUndo.length, 2, `Undo should put cells back`);
