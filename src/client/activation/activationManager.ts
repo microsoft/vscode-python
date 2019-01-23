@@ -48,8 +48,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
     protected addRemoveDocOpenedHandlers() {
-        if (this.hasMultipleWorkspaces() && !this.docOpenedHandler) {
-            this.docOpenedHandler = this.documentManager.onDidOpenTextDocument(this.onDocOpened, this);
+        if (this.hasMultipleWorkspaces()) {
+            if (!this.docOpenedHandler) {
+                this.docOpenedHandler = this.documentManager.onDidOpenTextDocument(this.onDocOpened, this);
+            }
             return;
         }
         if (this.docOpenedHandler) {
