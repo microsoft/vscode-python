@@ -50,14 +50,14 @@ import {
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
-const pythonFilesPath = path.join(workspaceDir, 'pythonFiles', 'linting');
-const fileToLint = path.join(pythonFilesPath, 'file.py');
+const pythonFilesDir = path.join(workspaceDir, 'pythonFiles', 'linting');
+const fileToLint = path.join(pythonFilesDir, 'file.py');
 
 const linterConfigDirs = {
-    flake8: path.join(pythonFilesPath, 'flake8config'),
-    pep8: path.join(pythonFilesPath, 'pep8config'),
-    pydocstyle: path.join(pythonFilesPath, 'pydocstyleconfig27'),
-    pylint: path.join(pythonFilesPath, 'pylintconfig')
+    flake8: path.join(pythonFilesDir, 'flake8config'),
+    pep8: path.join(pythonFilesDir, 'pep8config'),
+    pydocstyle: path.join(pythonFilesDir, 'pydocstyleconfig27'),
+    pylint: path.join(pythonFilesDir, 'pylintconfig')
 };
 const linterConfigRCFiles = {
     pylint: '.pylintrc',
@@ -345,26 +345,37 @@ suite('Linting Functional Tests', () => {
         });
     }
 
-//    async function testLinterMessageCount(
-//        product: Product,
-//        pythonFile: string,
-//        messageCountToBeReceived: number
-//    ) {
-//        const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-//        const cancelToken = new CancellationTokenSource();
-//        const document = await workspace.openTextDocument(pythonFile);
-//
-//        await linterManager.setActiveLintersAsync([product], document.uri);
-//        const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
-//
-//        const messages = await linter.lint(document, cancelToken.token);
-//        assert.equal(messages.length, messageCountToBeReceived, 'Expected number of lint errors does not match lint error count');
-//    }
-//    test('Three line output counted as one message', async () => {
-//        const threeLineLintsPath = path.join(pythonFilesPath, 'threeLineLints.py');
-//        const maxErrors = 5;
-//        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-//        await configService.updateSetting('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
-//        await testLinterMessageCount(Product.pylint, threeLineLintsPath, maxErrors);
-//    });
+    async function testLinterMessageCount(
+        fixture: TestFixture,
+        product: Product,
+        pythonFile: string,
+        messageCountToBeReceived: number
+    ) {
+        const doc = fixture.makeDocument(pythonFile);
+        await fixture.linterManager.setActiveLintersAsync([product], doc.uri);
+        const linter = await fixture.linterManager.createLinter(
+            product,
+            fixture.outputChannel.object,
+            fixture.serviceContainer.object
+        );
+
+        const messages = await linter.lint(
+            doc,
+            (new CancellationTokenSource()).token
+        );
+
+        assert.equal(messages.length, messageCountToBeReceived,
+                     'Expected number of lint errors does not match lint error count');
+    }
+    test('Three line output counted as one message', async () => {
+        const maxErrors = 5;
+        const fixture = new TestFixture();
+        fixture.lintingSettings.maxNumberOfProblems = maxErrors;
+        await testLinterMessageCount(
+            fixture,
+            Product.pylint,
+            path.join(pythonFilesDir, 'threeLineLints.py'),
+            maxErrors
+        );
+    });
 });
