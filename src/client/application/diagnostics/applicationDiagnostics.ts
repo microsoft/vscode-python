@@ -22,30 +22,27 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
     }
     public async performPreStartupHealthCheck(resource: Resource): Promise<void> {
         const diagnosticsServices = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
-
+        const diagnosticsServicesRunInForeground = diagnosticsServices.filter(diagnosticsService => !diagnosticsService.runInBackground);
+        const diagnosticsServicesRunInBackground = diagnosticsServices.filter(diagnosticsService => diagnosticsService.runInBackground);
         // Perform these validation checks in the foreground.
         await Promise.all(
-            diagnosticsServices.map(async diagnosticsService => {
+            diagnosticsServicesRunInForeground.map(async diagnosticsService => {
                 const diagnostics = await diagnosticsService.diagnose(resource);
-                if (diagnostics.length > 0 && !diagnosticsService.runInBackground) {
+                if (diagnostics.length > 0) {
                     this.log(diagnostics);
                     await diagnosticsService.handle(diagnostics);
-                } else {
-                    return;
                 }
             })
         );
 
         // Perform these validation checks in the background.
-        diagnosticsServices.map(diagnosticsService => {
+        diagnosticsServicesRunInBackground.map(diagnosticsService => {
             diagnosticsService
                 .diagnose(resource)
                 .then(diagnostics => {
-                    if (diagnostics.length > 0 && diagnosticsService.runInBackground) {
+                    if (diagnostics.length > 0) {
                         this.log(diagnostics);
                         diagnosticsService.handle(diagnostics).ignoreErrors();
-                    } else {
-                        return;
                     }
                 }).ignoreErrors();
         });
