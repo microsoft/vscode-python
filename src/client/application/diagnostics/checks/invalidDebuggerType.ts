@@ -40,11 +40,10 @@ const CommandName = 'python.debugger.replaceExperimental';
 
 @injectable()
 export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsService {
-    public readonly runInBackground: Boolean = true;
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     protected readonly fs: IFileSystem;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer);
+        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, true);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
             DiagnosticCommandPromptHandlerServiceId

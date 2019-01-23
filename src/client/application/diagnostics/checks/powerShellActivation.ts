@@ -38,12 +38,12 @@ export const PowerShellActivationHackDiagnosticsServiceId =
 
 @injectable()
 export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsService {
-    public readonly runInBackground: Boolean = true;
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(
             [DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic],
-            serviceContainer
+            serviceContainer,
+            true
         );
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,

@@ -51,7 +51,6 @@ export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebugger
 @injectable()
 export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
     implements IInvalidPythonPathInDebuggerService {
-    public readonly runInBackground: Boolean = true;
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -67,7 +66,8 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                 DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
                 DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
             ],
-            serviceContainer
+            serviceContainer,
+            true
         );
     }
     public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {

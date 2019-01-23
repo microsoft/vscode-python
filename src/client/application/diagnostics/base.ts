@@ -23,11 +23,11 @@ export abstract class BaseDiagnostic implements IDiagnostic {
 @injectable()
 export abstract class BaseDiagnosticsService implements IDiagnosticsService {
     protected static handledDiagnosticCodeKeys: string[] = [];
-    public abstract readonly runInBackground: Boolean;
     protected readonly filterService: IDiagnosticFilterService;
     constructor(
         @unmanaged() private readonly supportedDiagnosticCodes: string[],
-        @unmanaged() protected serviceContainer: IServiceContainer
+        @unmanaged() protected serviceContainer: IServiceContainer,
+        @unmanaged() public readonly runInBackground: Boolean = false
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
     }

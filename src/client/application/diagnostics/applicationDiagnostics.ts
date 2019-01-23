@@ -21,31 +21,20 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
     }
     public async performPreStartupHealthCheck(resource: Resource): Promise<void> {
-        const diagnosticsServices = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
-        const diagnosticsServicesRunInForeground = diagnosticsServices.filter(diagnosticsService => !diagnosticsService.runInBackground);
-        const diagnosticsServicesRunInBackground = diagnosticsServices.filter(diagnosticsService => diagnosticsService.runInBackground);
+        const services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
         // Perform these validation checks in the foreground.
-        await Promise.all(
-            diagnosticsServicesRunInForeground.map(async diagnosticsService => {
-                const diagnostics = await diagnosticsService.diagnose(resource);
-                if (diagnostics.length > 0) {
-                    this.log(diagnostics);
-                    await diagnosticsService.handle(diagnostics);
-                }
-            })
-        );
-
+        await this.runDiagnostics(services.filter(item => !item.runInBackground), resource);
         // Perform these validation checks in the background.
-        diagnosticsServicesRunInBackground.map(diagnosticsService => {
-            diagnosticsService
-                .diagnose(resource)
-                .then(diagnostics => {
-                    if (diagnostics.length > 0) {
-                        this.log(diagnostics);
-                        diagnosticsService.handle(diagnostics).ignoreErrors();
-                    }
-                }).ignoreErrors();
-        });
+        this.runDiagnostics(services.filter(item => item.runInBackground), resource).ignoreErrors();
+    }
+    private async runDiagnostics(diagnosticServices: IDiagnosticsService[], resource: Resource): Promise<void>{
+        await Promise.all(diagnosticServices.map(async diagnosticService => {
+            const diagnostics = await diagnosticService.diagnose(resource);
+            if (diagnostics.length > 0) {
+                this.log(diagnostics);
+                await diagnosticService.handle(diagnostics);
+            }
+        }));
     }
     private log(diagnostics: IDiagnostic[]): void {
         const logger = this.serviceContainer.get<ILogger>(ILogger);

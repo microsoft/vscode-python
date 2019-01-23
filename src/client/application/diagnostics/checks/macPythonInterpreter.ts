@@ -34,7 +34,6 @@ export const InvalidMacPythonInterpreterServiceId = 'InvalidMacPythonInterpreter
 
 @injectable()
 export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
-    public readonly runInBackground: Boolean = true;
     protected changeThrottleTimeout = 1000;
     private timeOut?: NodeJS.Timer;
     constructor(
@@ -48,7 +47,8 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
                 DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
             ],
-            serviceContainer
+            serviceContainer,
+            true
         );
         this.addPythonPathChangedHandler();
     }

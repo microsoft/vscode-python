@@ -32,14 +32,14 @@ export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServic
 
 @injectable()
 export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
-    public readonly runInBackground: Boolean = false;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(
             [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
             ],
-            serviceContainer
+            serviceContainer,
+            false
         );
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {

@@ -36,11 +36,10 @@ export const EnvironmentPathVariableDiagnosticsServiceId = 'EnvironmentPathVaria
 
 @injectable()
 export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsService {
-    public readonly runInBackground: Boolean = true;
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     private readonly platform: IPlatformService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer);
+        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, true);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
