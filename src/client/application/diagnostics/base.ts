@@ -17,12 +17,13 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService, IDiagnosticsSer
 export abstract class BaseDiagnostic implements IDiagnostic {
     constructor(public readonly code: DiagnosticCodes, public readonly message: string,
         public readonly severity: DiagnosticSeverity, public readonly scope: DiagnosticScope,
-        public readonly resource: Resource, public readonly runInBackground: Boolean) { }
+        public readonly resource: Resource) { }
 }
 
 @injectable()
 export abstract class BaseDiagnosticsService implements IDiagnosticsService {
     protected static handledDiagnosticCodeKeys: string[] = [];
+    public abstract readonly runInBackground: Boolean;
     protected readonly filterService: IDiagnosticFilterService;
     constructor(
         @unmanaged() private readonly supportedDiagnosticCodes: string[],

@@ -22,14 +22,13 @@ const PowershellActivationNotSupportedWithBatchFilesMessage =
     'Activation of the selected Python environment is not supported in PowerShell. Consider changing your shell to Command Prompt.';
 
 export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
-    constructor(resource: Resource, runInBackground: Boolean) {
+    constructor(resource: Resource) {
         super(
             DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic,
             PowershellActivationNotSupportedWithBatchFilesMessage,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource,
-            runInBackground
+            resource
         );
     }
 }
@@ -39,6 +38,7 @@ export const PowerShellActivationHackDiagnosticsServiceId =
 
 @injectable()
 export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsService {
+    public readonly runInBackground: Boolean = true;
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(

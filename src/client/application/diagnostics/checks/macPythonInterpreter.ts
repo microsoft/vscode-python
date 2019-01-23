@@ -25,8 +25,8 @@ const messages = {
 };
 
 export class InvalidMacPythonInterpreterDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, resource: Resource, runInBackground: Boolean) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, runInBackground);
+    constructor(code: DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, resource: Resource) {
+        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
     }
 }
 
@@ -34,6 +34,7 @@ export const InvalidMacPythonInterpreterServiceId = 'InvalidMacPythonInterpreter
 
 @injectable()
 export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
+    public readonly runInBackground: Boolean = true;
     protected changeThrottleTimeout = 1000;
     private timeOut?: NodeJS.Timer;
     constructor(
@@ -83,8 +84,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             return [
                 new InvalidMacPythonInterpreterDiagnostic(
                     DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-                    resource,
-                    true
+                    resource
                 )
             ];
         }
@@ -92,8 +92,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         return [
             new InvalidMacPythonInterpreterDiagnostic(
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                resource,
-                true
+                resource
             )
         ];
     }

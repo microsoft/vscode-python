@@ -16,14 +16,13 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
 export class LSNotSupportedDiagnostic extends BaseDiagnostic {
-    constructor(message: string, resource: Resource, runInBackground: Boolean) {
+    constructor(message: string, resource: Resource) {
         super(
             DiagnosticCodes.LSNotSupportedDiagnostic,
             message,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource,
-            runInBackground
+            resource
         );
     }
 }
@@ -31,6 +30,7 @@ export class LSNotSupportedDiagnostic extends BaseDiagnostic {
 export const LSNotSupportedDiagnosticServiceId = 'LSNotSupportedDiagnosticServiceId';
 
 export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
+    public readonly runInBackground: Boolean = false;
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ILanguageServerCompatibilityService)
@@ -45,7 +45,7 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         if (await this.lsCompatibility.isSupported()) {
             return [];
         } else {
-            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource, false)];
+            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource)];
         }
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {

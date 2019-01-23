@@ -27,7 +27,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         await Promise.all(
             diagnosticsServices.map(async diagnosticsService => {
                 const diagnostics = await diagnosticsService.diagnose(resource);
-                if (diagnostics.length > 0 && !diagnostics[0].runInBackground) {
+                if (diagnostics.length > 0 && !diagnosticsService.runInBackground) {
                     this.log(diagnostics);
                     await diagnosticsService.handle(diagnostics);
                 } else {
@@ -41,7 +41,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
             diagnosticsService
                 .diagnose(resource)
                 .then(diagnostics => {
-                    if (diagnostics.length > 0 && diagnostics[0].runInBackground) {
+                    if (diagnostics.length > 0 && diagnosticsService.runInBackground) {
                         this.log(diagnostics);
                         diagnosticsService.handle(diagnostics).ignoreErrors();
                     } else {

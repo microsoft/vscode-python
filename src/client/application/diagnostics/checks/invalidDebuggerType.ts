@@ -23,14 +23,13 @@ const InvalidDebuggerTypeMessage =
     'not work. Would you like to automatically update your launch.json file now?';
 
 export class InvalidDebuggerTypeDiagnostic extends BaseDiagnostic {
-    constructor(message: string, resource: Resource, runInBackground: Boolean) {
+    constructor(message: string, resource: Resource) {
         super(
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             message,
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
-            resource,
-            runInBackground
+            resource
         );
     }
 }
@@ -41,6 +40,7 @@ const CommandName = 'python.debugger.replaceExperimental';
 
 @injectable()
 export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsService {
+    public readonly runInBackground: Boolean = true;
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     protected readonly fs: IFileSystem;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -55,7 +55,7 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.isExperimentalDebuggerUsed()) {
-            return [new InvalidDebuggerTypeDiagnostic(InvalidDebuggerTypeMessage, resource, true)];
+            return [new InvalidDebuggerTypeDiagnostic(InvalidDebuggerTypeMessage, resource)];
         } else {
             return [];
         }

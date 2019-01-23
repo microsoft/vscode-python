@@ -35,14 +35,13 @@ const messages = {
 };
 
 export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource: Resource, runInBackground: Boolean) {
+    constructor(code: DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource: Resource) {
         super(
             code,
             messages[code],
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
-            resource,
-            runInBackground
+            resource
         );
     }
 }
@@ -52,6 +51,7 @@ export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebugger
 @injectable()
 export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
     implements IInvalidPythonPathInDebuggerService {
+    public readonly runInBackground: Boolean = true;
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -86,11 +86,11 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         }
         traceError(`Invalid Python Path '${pythonPath}'`);
         if (pathInLaunchJson) {
-            this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic, resource, true)])
+            this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic, resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();
         } else {
-            this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource, true)])
+            this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in settings.json debugger', ex))
                 .ignoreErrors();
         }

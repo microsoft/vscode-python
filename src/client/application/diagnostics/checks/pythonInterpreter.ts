@@ -23,8 +23,8 @@ const messages = {
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.NoPythonInterpretersDiagnostic | DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, resource: Resource, runInBackground: Boolean) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, runInBackground);
+    constructor(code: DiagnosticCodes.NoPythonInterpretersDiagnostic | DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, resource: Resource) {
+        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
     }
 }
 
@@ -32,6 +32,7 @@ export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServic
 
 @injectable()
 export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
+    public readonly runInBackground: Boolean = false;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(
             [
@@ -52,7 +53,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         const hasInterpreters = await interpreterService.hasInterpreters;
 
         if (!hasInterpreters) {
-            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, resource, false)];
+            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, resource)];
         }
 
         const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
@@ -60,8 +61,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             return [
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
-                    resource,
-                    false
+                    resource
                 )
             ];
         }

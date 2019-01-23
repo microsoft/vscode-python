@@ -23,12 +23,12 @@ export interface IDiagnostic {
     readonly severity: DiagnosticSeverity;
     readonly scope: DiagnosticScope;
     readonly resource: Resource;
-    readonly runInBackground: Boolean;
 }
 
 export const IDiagnosticsService = Symbol('IDiagnosticsService');
 
 export interface IDiagnosticsService {
+    readonly runInBackground: Boolean;
     diagnose(resource: Resource): Promise<IDiagnostic[]>;
     canHandle(diagnostic: IDiagnostic): Promise<boolean>;
     handle(diagnostics: IDiagnostic[]): Promise<void>;
