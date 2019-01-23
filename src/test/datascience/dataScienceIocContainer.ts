@@ -5,7 +5,16 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    Disposable,
+    Event,
+    EventEmitter,
+    FileSystemWatcher,
+    Uri,
+    WorkspaceConfiguration,
+    WorkspaceFolder
+} from 'vscode';
 
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -163,6 +172,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private jupyterMock: MockJupyterManager | undefined;
     private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
+    private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
 
     constructor() {
         super();
@@ -252,6 +262,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+        workspaceService.setup(w => w.onDidChangeConfiguration).returns(() => this.configChangeEvent.event);
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
         class MockFileSystemWatcher implements FileSystemWatcher {
@@ -297,6 +308,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const folders = ['Envs', '.virtualenvs'];
         this.pythonSettings.venvFolders = folders;
         this.pythonSettings.venvPath = path.join('~', 'foo');
+        this.pythonSettings.terminal = {
+            executeInFileDir: false,
+            launchArgs: [],
+            activateEnvironment: true
+        };
 
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
         condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
@@ -344,7 +360,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, PythonPathUpdaterService);
-        this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
@@ -397,8 +412,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.pythonSettings;
     }
 
-    public forceSettingsChanged() {
+    public forceSettingsChanged(newPath: string) {
+        this.pythonSettings.pythonPath = newPath;
         this.pythonSettings.fireChangeEvent();
+        this.configChangeEvent.fire({
+            affectsConfiguration(s: string, r?: Uri) : boolean {
+                return true;
+            }
+        });
     }
 
     public get mockJupyter(): MockJupyterManager | undefined {

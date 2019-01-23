@@ -232,6 +232,24 @@ export function getOSType(platform: string = process.platform): OSType {
 }
 
 /**
+ * Update a string that represents a path in any OS to the string representation of
+ * that same path in a different OS. Note: Does not handle drive letter if the path
+ * is intended for a root.
+ *
+ * @param pathToCorrect The string representation of a path from a specific OS.
+ * @param os The OS representation to switch to - if left undefined the current OS is used.
+ */
+export function correctPathForOsType(pathToCorrect: string, os?: OSType): string {
+    if (os === undefined) {
+        os = getOSType();
+    }
+    const pathSep: string = os === OSType.Windows ? '\\' : '/';
+    const replacePathSepRegex: RegExp = os === OSType.Windows ? /\//g : /\\/g;
+
+    return pathToCorrect.replace(replacePathSepRegex, pathSep);
+}
+
+/**
  * Get the current Python interpreter version.
  *
  * @param {procService} IProcessService Optionally specify the IProcessService implementation to use to execute with.

@@ -8,24 +8,20 @@
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationChangeEvent, Disposable } from 'vscode';
-import { ExtensionActivationService } from '../../client/activation/activationService';
+import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
-    ExtensionActivators, FolderVersionPair,
-    IExtensionActivationService, IExtensionActivator,
+    FolderVersionPair,
+    IExtensionActivationService,
+    ILanguageServerActivator,
     ILanguageServerCompatibilityService,
-    ILanguageServerFolderService
+    ILanguageServerFolderService,
+    LanguageServerActivator
 } from '../../client/activation/types';
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../../client/application/diagnostics/types';
-import {
-    IApplicationShell, ICommandManager,
-    IWorkspaceService
-} from '../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
-import {
-    IConfigurationService, IDisposableRegistry,
-    IOutputChannel, IPythonSettings
-} from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Activation - ActivationService', () => {
@@ -57,27 +53,55 @@ suite('Activation - ActivationService', () => {
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-                langFolderServiceMock.setup(l => l.getCurrentLanguageServerDirectory()).returns(() => Promise.resolve(folderVer));
+                langFolderServiceMock
+                    .setup(l => l.getCurrentLanguageServerDirectory())
+                    .returns(() => Promise.resolve(folderVer));
 
                 const output = TypeMoq.Mock.ofType<IOutputChannel>();
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny())).returns(() => output.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
+                    .returns(() => output.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+                    .returns(() => workspaceService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell)))
+                    .returns(() => appShell.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => langFolderServiceMock.object);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsService), TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId))).returns(() => lsNotSupportedDiagnosticService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                    .returns(() => configService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(ICommandManager)))
+                    .returns(() => cmdManager.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                    .returns(() => platformService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
+                    .returns(() => langFolderServiceMock.object);
+                serviceContainer
+                    .setup(s =>
+                        s.get(
+                            TypeMoq.It.isValue(IDiagnosticsService),
+                            TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId)
+                        )
+                    )
+                    .returns(() => lsNotSupportedDiagnosticService.object);
             });
 
-            async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>, lsSupported: boolean = true) {
+            async function testActivation(
+                activationService: IExtensionActivationService,
+                activator: TypeMoq.IMock<ILanguageServerActivator>,
+                lsSupported: boolean = true
+            ) {
                 activator
-                    .setup(a => a.activate()).returns(() => Promise.resolve())
+                    .setup(a => a.activate())
+                    .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
-                let activatorName = ExtensionActivators.Jedi;
+                let activatorName = LanguageServerActivator.Jedi;
                 if (lsSupported && !jediIsEnabled) {
-                    activatorName = ExtensionActivators.DotNet;
+                    activatorName = LanguageServerActivator.DotNet;
                 }
                 let diagnostics;
                 if (!lsSupported && !jediIsEnabled) {
@@ -85,14 +109,18 @@ suite('Activation - ActivationService', () => {
                 } else {
                     diagnostics = [];
                 }
-                lsNotSupportedDiagnosticService.setup(l => l.diagnose(undefined)).returns(() => Promise.resolve(diagnostics));
-                lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
+                lsNotSupportedDiagnosticService
+                    .setup(l => l.diagnose(undefined))
+                    .returns(() => Promise.resolve(diagnostics));
+                lsNotSupportedDiagnosticService
+                    .setup(l => l.handle(TypeMoq.It.isValue(diagnostics)))
+                    .returns(() => Promise.resolve());
                 serviceContainer
-                    .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(activatorName)))
+                    .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(activatorName)))
                     .returns(() => activator.object)
                     .verifiable(TypeMoq.Times.once());
 
-                await activationService.activate();
+                await activationService.activate(undefined);
 
                 activator.verifyAll();
                 serviceContainer.verifyAll();
@@ -101,16 +129,16 @@ suite('Activation - ActivationService', () => {
             test('LS is supported', async () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator, true);
             });
             test('LS is not supported', async () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(false));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator, false);
             });
@@ -118,21 +146,22 @@ suite('Activation - ActivationService', () => {
             test('Activatory must be activated', async () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator);
             });
             test('Activatory must be deactivated', async () => {
                 lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 await testActivation(activationService, activator);
 
                 activator
-                    .setup(a => a.dispose()).returns(() => Promise.resolve())
+                    .setup(a => a.dispose())
+                    .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
 
                 activationService.dispose();
@@ -144,25 +173,28 @@ suite('Activation - ActivationService', () => {
                 let jediIsEnabledValueInSetting = jediIsEnabled;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .callback(cb => callbackHandler = cb)
+                    .callback(cb => (callbackHandler = cb))
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-                event.setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
+                event
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => true)
                     .verifiable(TypeMoq.Times.atLeastOnce());
-                appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
+                appShell
+                    .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
                     .returns(() => Promise.resolve('Reload'))
                     .verifiable(TypeMoq.Times.once());
-                cmdManager.setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
+                cmdManager
+                    .setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
                     .verifiable(TypeMoq.Times.once());
 
                 // Toggle the value in the setting and invoke the callback.
@@ -179,25 +211,28 @@ suite('Activation - ActivationService', () => {
                 let jediIsEnabledValueInSetting = jediIsEnabled;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .callback(cb => callbackHandler = cb)
+                    .callback(cb => (callbackHandler = cb))
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-                event.setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
+                event
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => true)
                     .verifiable(TypeMoq.Times.atLeastOnce());
-                appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
+                appShell
+                    .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.once());
-                cmdManager.setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
+                cmdManager
+                    .setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
                     .verifiable(TypeMoq.Times.never());
 
                 // Toggle the value in the setting and invoke the callback.
@@ -213,25 +248,28 @@ suite('Activation - ActivationService', () => {
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .callback(cb => callbackHandler = cb)
+                    .callback(cb => (callbackHandler = cb))
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-                event.setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
+                event
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => true)
                     .verifiable(TypeMoq.Times.atLeastOnce());
-                appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
+                appShell
+                    .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
-                cmdManager.setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
+                cmdManager
+                    .setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
                     .verifiable(TypeMoq.Times.never());
 
                 // Invoke the config changed callback.
@@ -246,25 +284,28 @@ suite('Activation - ActivationService', () => {
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .callback(cb => callbackHandler = cb)
+                    .callback(cb => (callbackHandler = cb))
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
-                const activationService = new ExtensionActivationService(serviceContainer.object);
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-                event.setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
+                event
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => false)
                     .verifiable(TypeMoq.Times.atLeastOnce());
-                appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
+                appShell
+                    .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
-                cmdManager.setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
+                cmdManager
+                    .setup(c => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
                     .verifiable(TypeMoq.Times.never());
 
                 // Invoke the config changed callback.
@@ -278,28 +319,44 @@ suite('Activation - ActivationService', () => {
                 test('Revert to jedi when LS activation fails', async () => {
                     lanagueServerSupportedService.setup(ls => ls.isSupported()).returns(() => Promise.resolve(true));
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                    const activatorDotNet = TypeMoq.Mock.ofType<IExtensionActivator>();
-                    const activatorJedi = TypeMoq.Mock.ofType<IExtensionActivator>();
-                    const activationService = new ExtensionActivationService(serviceContainer.object);
+                    const activatorDotNet = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                    const activatorJedi = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
                     const diagnostics = [];
-                    lsNotSupportedDiagnosticService.setup(l => l.diagnose(undefined)).returns(() => Promise.resolve(diagnostics));
-                    lsNotSupportedDiagnosticService.setup(l => l.handle(TypeMoq.It.isValue(diagnostics))).returns(() => Promise.resolve());
+                    lsNotSupportedDiagnosticService
+                        .setup(l => l.diagnose(undefined))
+                        .returns(() => Promise.resolve(diagnostics));
+                    lsNotSupportedDiagnosticService
+                        .setup(l => l.handle(TypeMoq.It.isValue(diagnostics)))
+                        .returns(() => Promise.resolve());
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(ExtensionActivators.DotNet)))
+                        .setup(c =>
+                            c.get(
+                                TypeMoq.It.isValue(ILanguageServerActivator),
+                                TypeMoq.It.isValue(LanguageServerActivator.DotNet)
+                            )
+                        )
                         .returns(() => activatorDotNet.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorDotNet
-                        .setup(a => a.activate()).returns(() => Promise.reject(new Error('')))
+                        .setup(a => a.activate())
+                        .returns(() => Promise.reject(new Error('')))
                         .verifiable(TypeMoq.Times.once());
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(ExtensionActivators.Jedi)))
+                        .setup(c =>
+                            c.get(
+                                TypeMoq.It.isValue(ILanguageServerActivator),
+                                TypeMoq.It.isValue(LanguageServerActivator.Jedi)
+                            )
+                        )
                         .returns(() => activatorJedi.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorJedi
-                        .setup(a => a.activate()).returns(() => Promise.resolve())
+                        .setup(a => a.activate())
+                        .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
 
-                    await activationService.activate();
+                    await activationService.activate(undefined);
 
                     activatorDotNet.verifyAll();
                     activatorJedi.verifyAll();

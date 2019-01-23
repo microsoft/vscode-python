@@ -39,7 +39,7 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     private readonly platform: IPlatformService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer);
+        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, true);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,

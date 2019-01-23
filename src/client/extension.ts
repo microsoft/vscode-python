@@ -33,7 +33,7 @@ import {
 } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationService } from './activation/types';
+import { IExtensionActivationManager } from './activation/types';
 import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
@@ -126,14 +126,9 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     registerServices(context, serviceManager, serviceContainer);
     initializeServices(context, serviceManager, serviceContainer);
 
-    const autoSelection = serviceContainer.get<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService);
-    await autoSelection.autoSelectInterpreter(undefined);
-
-    // When testing, do not perform health checks, as modal dialogs can be displayed.
-    if (!isTestExecution()) {
-        const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
-        await appDiagnostics.performPreStartupHealthCheck(undefined);
-    }
+    const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
+    context.subscriptions.push(manager);
+    const activationPromise = manager.activate();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
@@ -142,10 +137,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const standardOutputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
-    const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
-    const lsActivationPromise = activationService.activate();
-    displayProgress(lsActivationPromise);
-
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
 
@@ -153,7 +144,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     // tslint:disable-next-line:no-suspicious-comment
     // TODO: Move this down to right before durations.endActivateTime is set.
-    sendStartupTelemetry(Promise.all([activationDeferred.promise, lsActivationPromise]), serviceContainer).ignoreErrors();
+    sendStartupTelemetry(Promise.all([activationDeferred.promise, activationPromise]), serviceContainer).ignoreErrors();
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -222,7 +213,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(Promise.all([activationDeferred.promise, lsActivationPromise]));
+    const api = buildApi(Promise.all([activationDeferred.promise, activationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable:no-any
@@ -299,12 +290,6 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
-
-    // Get latest interpreter list.
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
-    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
 }
 
 // tslint:disable-next-line:no-any

@@ -4,10 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import '../../../common/extensions';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
 import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
-
-const DELIMITER = '\'';
 
 @injectable()
 export class TestsParser implements ITestsParser {
@@ -38,7 +37,7 @@ export class TestsParser implements ITestsParser {
 
             const trimmedLine: string = line.trim();
 
-            if (trimmedLine.startsWith('<Package \'')) {
+            if (trimmedLine.startsWith('<Package ')) {
                 // Process the previous lines.
                 this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
                 logOutputLines = [''];
@@ -46,7 +45,7 @@ export class TestsParser implements ITestsParser {
                 packagePrefix = this.extractPackageName(trimmedLine, options.cwd);
             }
 
-            if (trimmedLine.startsWith('<Module \'') || index === lines.length - 1) {
+            if (trimmedLine.startsWith('<Module ') || index === lines.length - 1) {
                 // Process the previous lines.
                 this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
                 logOutputLines = [''];
@@ -120,7 +119,7 @@ export class TestsParser implements ITestsParser {
      * @param rootDir Value is pytest's `--rootdir=` parameter.
      */
     private extractPackageName(packageLine: string, rootDir: string): string {
-        const packagePath: string = extractBetweenDelimiters(packageLine, DELIMITER, DELIMITER);
+        const packagePath: string = extractBetweenDelimiters(packageLine, '<Package ', '>').trimQuotes();
         let packageName: string = path.normalize(packagePath);
         const tmpRoot: string = path.normalize(rootDir);
 
@@ -149,10 +148,11 @@ export class TestsParser implements ITestsParser {
 
         lines.forEach(line => {
             const trimmedLine = line.trim();
-            let name: string = extractBetweenDelimiters(trimmedLine, DELIMITER, DELIMITER);
+            let name: string = '';
             const indent = line.indexOf('<');
 
-            if (trimmedLine.startsWith('<Module \'')) {
+            if (trimmedLine.startsWith('<Module ')) {
+                name = extractBetweenDelimiters(trimmedLine, '<Module ', '>').trimQuotes();
                 if (packagePrefix && packagePrefix.length > 0) {
                     name = packagePrefix.concat('/', name);
                 }
@@ -169,8 +169,15 @@ export class TestsParser implements ITestsParser {
 
             const parentNode = this.findParentOfCurrentItem(indent, parentNodes);
 
-            if (parentNode && trimmedLine.startsWith('<Class \'') || trimmedLine.startsWith('<UnitTestCase \'')) {
-                const isUnitTest = trimmedLine.startsWith('<UnitTestCase \'');
+            if (parentNode && trimmedLine.startsWith('<Class ') || trimmedLine.startsWith('<UnitTestCase ')) {
+                const isUnitTest = trimmedLine.startsWith('<UnitTestCase ');
+                if (isUnitTest) {
+                    name = extractBetweenDelimiters(trimmedLine, '<UnitTestCase ', '>');
+                } else {
+                    name = extractBetweenDelimiters(trimmedLine, '<Class ', '>');
+                }
+                name = name.trimQuotes();
+
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
                 const xmlName = `${parentNode!.item.xmlName}.${name}`;
                 const testSuite: TestSuite = { name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
@@ -178,7 +185,8 @@ export class TestsParser implements ITestsParser {
                 parentNodes.push({ indent: indent, item: testSuite });
                 return;
             }
-            if (parentNode && trimmedLine.startsWith('<Instance \'')) {
+            if (parentNode && trimmedLine.startsWith('<Instance ')) {
+                name = extractBetweenDelimiters(trimmedLine, '<Instance ', '>').trimQuotes();
                 // tslint:disable-next-line:prefer-type-cast
                 const suite = (parentNode!.item as TestSuite);
                 // suite.rawName = suite.rawName + '::()';
@@ -186,7 +194,14 @@ export class TestsParser implements ITestsParser {
                 suite.isInstance = true;
                 return;
             }
-            if (parentNode && trimmedLine.startsWith('<TestCaseFunction \'') || trimmedLine.startsWith('<Function \'')) {
+            if (parentNode && trimmedLine.startsWith('<TestCaseFunction ') || trimmedLine.startsWith('<Function ')) {
+                if (trimmedLine.startsWith('<Function ')) {
+                    name = extractBetweenDelimiters(trimmedLine, '<Function ', '>');
+                } else {
+                    name = extractBetweenDelimiters(trimmedLine, '<TestCaseFunction ', '>');
+                }
+                name = name.trimQuotes();
+
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
                 const fn: TestFunction = { name: name, nameToRun: rawName, time: 0 };
                 parentNode!.item.functions.push(fn);
@@ -209,37 +224,37 @@ export class TestsParser implements ITestsParser {
     }
 }
 
-    /* Sample output from pytest --collect-only
-    <Module 'test_another.py'>
-      <Class 'Test_CheckMyApp'>
+/* Sample output from pytest --collect-only
+<Module 'test_another.py'>
+  <Class 'Test_CheckMyApp'>
+    <Instance '()'>
+      <Function 'test_simple_check'>
+      <Function 'test_complex_check'>
+<Module 'test_one.py'>
+  <UnitTestCase 'Test_test1'>
+    <TestCaseFunction 'test_A'>
+    <TestCaseFunction 'test_B'>
+<Module 'test_two.py'>
+  <UnitTestCase 'Test_test1'>
+    <TestCaseFunction 'test_A2'>
+    <TestCaseFunction 'test_B2'>
+<Module 'testPasswords/test_Pwd.py'>
+  <UnitTestCase 'Test_Pwd'>
+    <TestCaseFunction 'test_APwd'>
+    <TestCaseFunction 'test_BPwd'>
+<Module 'testPasswords/test_multi.py'>
+  <Class 'Test_CheckMyApp'>
+    <Instance '()'>
+      <Function 'test_simple_check'>
+      <Function 'test_complex_check'>
+      <Class 'Test_NestedClassA'>
         <Instance '()'>
-          <Function 'test_simple_check'>
-          <Function 'test_complex_check'>
-    <Module 'test_one.py'>
-      <UnitTestCase 'Test_test1'>
-        <TestCaseFunction 'test_A'>
-        <TestCaseFunction 'test_B'>
-    <Module 'test_two.py'>
-      <UnitTestCase 'Test_test1'>
-        <TestCaseFunction 'test_A2'>
-        <TestCaseFunction 'test_B2'>
-    <Module 'testPasswords/test_Pwd.py'>
-      <UnitTestCase 'Test_Pwd'>
-        <TestCaseFunction 'test_APwd'>
-        <TestCaseFunction 'test_BPwd'>
-    <Module 'testPasswords/test_multi.py'>
-      <Class 'Test_CheckMyApp'>
-        <Instance '()'>
-          <Function 'test_simple_check'>
-          <Function 'test_complex_check'>
-          <Class 'Test_NestedClassA'>
+          <Function 'test_nested_class_methodB'>
+          <Class 'Test_nested_classB_Of_A'>
             <Instance '()'>
-              <Function 'test_nested_class_methodB'>
-              <Class 'Test_nested_classB_Of_A'>
-                <Instance '()'>
-                  <Function 'test_d'>
-      <Function 'test_username'>
-      <Function 'test_parametrized_username[one]'>
-      <Function 'test_parametrized_username[two]'>
-      <Function 'test_parametrized_username[three]'>
-    */
+              <Function 'test_d'>
+  <Function 'test_username'>
+  <Function 'test_parametrized_username[one]'>
+  <Function 'test_parametrized_username[two]'>
+  <Function 'test_parametrized_username[three]'>
+*/

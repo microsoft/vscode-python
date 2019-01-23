@@ -123,7 +123,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                 const cells = generateCellsFromDocument(activeEditor.document);
                 if (cells) {
                     const filtersKey = localize.DataScience.exportDialogFilter();
-                    const filtersObject = {};
+                    const filtersObject: { [name: string]: string[] } = {};
                     filtersObject[filtersKey] = ['ipynb'];
 
                     // Bring up the save file dialog box
@@ -230,7 +230,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
     private async showExportDialog() : Promise<string | undefined> {
         const filtersKey = localize.DataScience.exportDialogFilter();
-        const filtersObject = {};
+        const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
         // Bring up the save file dialog box
@@ -347,7 +347,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
     private async importNotebook() : Promise<void> {
         const filtersKey = localize.DataScience.importDialogFilter();
-        const filtersObject = {};
+        const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
         const uris = await this.applicationShell.showOpenDialog(

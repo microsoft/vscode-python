@@ -14,7 +14,7 @@ interface IMenuBarProps {
 // Simple 'bar'. Came up with the css by playing around here:
 // https://www.w3schools.com/cssref/tryit.asp?filename=trycss_float
 export class MenuBar extends React.Component<IMenuBarProps> {
-    constructor(props) {
+    constructor(props: IMenuBarProps) {
         super(props);
     }
 

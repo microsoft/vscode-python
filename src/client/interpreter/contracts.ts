@@ -83,6 +83,7 @@ export type WorkspacePythonPath = {
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
+    onDidChangeInterpreterInformation: Event<PythonInterpreter>;
     hasInterpreters: Promise<boolean>;
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;

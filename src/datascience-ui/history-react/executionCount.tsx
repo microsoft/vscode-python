@@ -12,7 +12,7 @@ interface IExecutionCountProps {
 }
 
 export class ExecutionCount extends React.Component<IExecutionCountProps> {
-    constructor(props) {
+    constructor(props: IExecutionCountProps) {
         super(props);
     }
 

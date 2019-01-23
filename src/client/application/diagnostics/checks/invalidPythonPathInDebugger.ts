@@ -27,23 +27,18 @@ import {
     IInvalidPythonPathInDebuggerService
 } from '../types';
 
-export class InvalidPythonPathInDebuggerSettingsDiagnostic extends BaseDiagnostic {
-    constructor(resource: Resource) {
-        super(
-            DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-            Diagnostics.invalidPythonPathInDebuggerSettings(),
-            DiagnosticSeverity.Error,
-            DiagnosticScope.WorkspaceFolder,
-            resource
-        );
-    }
-}
+const messages = {
+    [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]:
+        Diagnostics.invalidPythonPathInDebuggerSettings(),
+    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]:
+        Diagnostics.invalidPythonPathInDebuggerLaunch()
+};
 
-export class InvalidPythonPathInDebuggerLaunchDiagnostic extends BaseDiagnostic {
-    constructor(resource: Resource) {
+export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
+    constructor(code: DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource: Resource) {
         super(
-            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
-            Diagnostics.invalidPythonPathInDebuggerLaunch(),
+            code,
+            messages[code],
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
             resource
@@ -71,7 +66,8 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                 DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
                 DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
             ],
-            serviceContainer
+            serviceContainer,
+            true
         );
     }
     public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
@@ -90,11 +86,11 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         }
         traceError(`Invalid Python Path '${pythonPath}'`);
         if (pathInLaunchJson) {
-            this.handle([new InvalidPythonPathInDebuggerLaunchDiagnostic(resource)])
+            this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic, resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();
         } else {
-            this.handle([new InvalidPythonPathInDebuggerSettingsDiagnostic(resource)])
+            this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in settings.json debugger', ex))
                 .ignoreErrors();
         }

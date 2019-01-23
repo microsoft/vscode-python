@@ -42,7 +42,8 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(
             [DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic],
-            serviceContainer
+            serviceContainer,
+            true
         );
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,

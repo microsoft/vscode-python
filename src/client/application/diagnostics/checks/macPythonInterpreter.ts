@@ -47,7 +47,8 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
                 DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
             ],
-            serviceContainer
+            serviceContainer,
+            true
         );
         this.addPythonPathChangedHandler();
     }

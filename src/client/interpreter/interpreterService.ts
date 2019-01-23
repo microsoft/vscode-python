@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import * as md5 from 'md5';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
@@ -6,7 +7,7 @@ import { IDocumentManager, IWorkspaceService } from '../common/application/types
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
@@ -26,6 +27,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
+    private readonly didChangeInterpreterInformation = new EventEmitter<PythonInterpreter>();
     private pythonPathSetting: string = '';
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
@@ -63,17 +65,28 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const interpreters = await this.locator.getInterpreters(resource);
         await Promise.all(interpreters
             .filter(item => !item.displayName)
-            .map(async item => item.displayName = await this.getDisplayName(item, resource)));
+            .map(async item => {
+                item.displayName = await this.getDisplayName(item, resource);
+                // Always keep information up to date with latest details.
+                if (!item.cachedEntry) {
+                    this.updateCachedInterpreterInformation(item).ignoreErrors();
+                }
+            }));
         return interpreters;
     }
 
     public dispose(): void {
         this.locator.dispose();
         this.didChangeInterpreterEmitter.dispose();
+        this.didChangeInterpreterInformation.dispose();
     }
 
     public get onDidChangeInterpreter(): Event<void> {
         return this.didChangeInterpreterEmitter.event;
+    }
+
+    public get onDidChangeInterpreterInformation(): Event<PythonInterpreter> {
+        return this.didChangeInterpreterInformation.event;
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
@@ -99,10 +112,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
             }
         }
 
-        const fileHash = await this.fs.getFileHash(pythonPath).catch(() => '') || '';
-        const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v5`, undefined, EXPITY_DURATION);
-        if (store.value && fileHash && store.value.fileHash === fileHash) {
-            return store.value;
+        const store = await this.getInterpreterCache(pythonPath);
+        if (store.value && store.value.info) {
+            return store.value.info;
         }
 
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
@@ -135,13 +147,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         // tslint:disable-next-line:no-any
         if (interpreterInfo && (interpreterInfo as any).__store) {
-            await store.updateValue({ ...interpreterInfo, path: pythonPath, fileHash });
+            await this.updateCachedInterpreterInformation(interpreterInfo);
         } else {
             // If we got information from option1, then when option2 finishes cache it for later use (ignoring erors);
-            option2.then(info => {
+            option2.then(async info => {
                 // tslint:disable-next-line:no-any
                 if (info && (info as any).__store) {
-                    return store.updateValue({ ...info, path: pythonPath, fileHash });
+                    await this.updateCachedInterpreterInformation(info);
                 }
             }).ignoreErrors();
         }
@@ -157,8 +169,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
         const fileHash = (info.path ? await this.fs.getFileHash(info.path).catch(() => '') : '') || '';
-        const store = this.persistentStateFactory.createGlobalPersistentState<{ fileHash: string; displayName: string }>(`${info.path}${fileHash}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
-        if (store.value && store.value.fileHash === fileHash && store.value.displayName) {
+        const interpreterHash = `${fileHash}-${md5(JSON.stringify(info))}`;
+        const store = this.persistentStateFactory.createGlobalPersistentState<{ hash: string; displayName: string }>(`${info.path}${interpreterHash}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
+        if (store.value && store.value.hash === interpreterHash && store.value.displayName) {
             return store.value.displayName;
         }
         const displayNameParts: string[] = ['Python'];
@@ -194,10 +207,23 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         // If dealing with cached entry, then do not store the display name in cache.
         if (!info.cachedEntry) {
-            await store.updateValue({ displayName, fileHash });
+            await store.updateValue({ displayName, hash: interpreterHash });
         }
 
         return displayName;
+    }
+    protected async getInterpreterCache(pythonPath: string): Promise<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>> {
+        const fileHash = (pythonPath ? await this.fs.getFileHash(pythonPath).catch(() => '') : '') || '';
+        const store = this.persistentStateFactory.createGlobalPersistentState<{ fileHash: string; info?: PythonInterpreter }>(`${pythonPath}.interpreter.Details.v6`, undefined, EXPITY_DURATION);
+        if (!store.value || store.value.fileHash !== fileHash) {
+            await store.updateValue({ fileHash });
+        }
+        return store;
+    }
+    protected async updateCachedInterpreterInformation(info: PythonInterpreter): Promise<void>{
+        this.didChangeInterpreterInformation.fire(info);
+        const state = await this.getInterpreterCache(info.path);
+        await state.updateValue({ fileHash: state.value.fileHash, info });
     }
     private onConfigChanged = () => {
         // Check if we actually changed our python path

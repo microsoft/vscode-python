@@ -38,7 +38,7 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
     ) {
-        super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer);
+        super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer, false);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.lsCompatibility.isSupported()) {

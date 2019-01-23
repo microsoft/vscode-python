@@ -3,11 +3,12 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any
+// tslint:disable:max-func-body-length no-any no-unnecessary-override
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { Container } from 'inversify';
+import * as md5 from 'md5';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
@@ -16,7 +17,7 @@ import { IDocumentManager, IWorkspaceService } from '../../client/common/applica
 import { getArchitectureDisplayName } from '../../client/common/platform/registry';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import * as EnumEx from '../../client/common/utils/enum';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
@@ -228,6 +229,7 @@ suite('Interpreters service', () => {
             const pythonPath = '1234';
             const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
             const fileHash = 'File_Hash';
+            const hash = `${fileHash}-${md5(JSON.stringify(interpreterInfo))}`;
             fileSystem
                 .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
@@ -238,7 +240,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     const state = {
                         updateValue: () => Promise.resolve(),
-                        value: { fileHash, displayName: expectedDisplayName }
+                        value: { hash, displayName: expectedDisplayName }
                     };
                     return state as any;
                 })
@@ -362,6 +364,102 @@ suite('Interpreters service', () => {
                     });
                 });
             });
+        });
+    });
+
+    suite('Interprter Cache', () => {
+        class InterpreterServiceTest extends InterpreterService {
+            public async getInterpreterCache(pythonPath: string): Promise<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>> {
+                return super.getInterpreterCache(pythonPath);
+            }
+            public async updateCachedInterpreterInformation(info: PythonInterpreter): Promise<void> {
+                return super.updateCachedInterpreterInformation(info);
+            }
+        }
+        setup(() => {
+            setupSuite();
+            fileSystem.reset();
+            persistentStateFactory.reset();
+        });
+        test('Ensure cache is returned', async () => {
+            const fileHash = 'file_hash';
+            const pythonPath = 'Some Python Path';
+            fileSystem
+                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+                .returns(() => Promise.resolve(fileHash))
+                .verifiable(TypeMoq.Times.once());
+
+            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
+            const info = { path: 'hell', type: InterpreterType.Venv };
+            state
+                .setup(s => s.value)
+                .returns(() => {
+                    return {
+                        fileHash,
+                        info: info as any
+                    };
+                })
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            state
+                .setup(s => s.updateValue(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.never());
+            state
+                .setup(s => (s as any).then)
+                .returns(() => undefined);
+            persistentStateFactory
+                .setup(f => f.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => state.object)
+                .verifiable(TypeMoq.Times.once());
+
+            const service = new InterpreterServiceTest(serviceContainer);
+
+            const store = await service.getInterpreterCache(pythonPath);
+
+            expect(store.value).to.deep.equal({ fileHash, info });
+            state.verifyAll();
+            persistentStateFactory.verifyAll();
+            fileSystem.verifyAll();
+        });
+        test('Ensure cache is cleared if file hash is different', async () => {
+            const fileHash = 'file_hash';
+            const pythonPath = 'Some Python Path';
+            fileSystem
+                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+                .returns(() => Promise.resolve('different value'))
+                .verifiable(TypeMoq.Times.once());
+
+            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
+            const info = { path: 'hell', type: InterpreterType.Venv };
+            state
+                .setup(s => s.value)
+                .returns(() => {
+                    return {
+                        fileHash,
+                        info: info as any
+                    };
+                })
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            state
+                .setup(s => s.updateValue(TypeMoq.It.isValue({fileHash: 'different value'})))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            state
+                .setup(s => (s as any).then)
+                .returns(() => undefined);
+            persistentStateFactory
+                .setup(f => f.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => state.object)
+                .verifiable(TypeMoq.Times.once());
+
+            const service = new InterpreterServiceTest(serviceContainer);
+
+            const store = await service.getInterpreterCache(pythonPath);
+
+            expect(store.value.info).to.deep.equal(info);
+            state.verifyAll();
+            persistentStateFactory.verifyAll();
+            fileSystem.verifyAll();
         });
     });
 });

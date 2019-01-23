@@ -43,7 +43,7 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     protected readonly fs: IFileSystem;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer);
+        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, true);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
             DiagnosticCommandPromptHandlerServiceId

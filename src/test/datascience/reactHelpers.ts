@@ -9,37 +9,38 @@ import { JSDOM } from 'jsdom';
 import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
 
+// tslint:disable:no-string-literal no-any
+
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost'});
     const { window } = dom;
 
-    // tslint:disable-next-line:no-string-literal
-    global['window'] = window;
-    // tslint:disable-next-line:no-string-literal
-    global['document'] = window.document;
-    // tslint:disable-next-line:no-string-literal
-    global['navigator'] = {
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['window'] = window;
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['document'] = window.document;
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['navigator'] = {
         userAgent: 'node.js',
         platform: 'node'
     };
-    // tslint:disable-next-line:no-string-literal
-    global['self'] = window;
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['self'] = window;
     copyProps(window, global);
 
     // Special case. Transform needs createRange
-    // tslint:disable-next-line:no-string-literal
-    global['document'].createRange = () => ({
-        createContextualFragment: str => JSDOM.fragment(str),
-        setEnd : (endNode, endOffset) => noop(),
-        setStart : (startNode, startOffset) => noop(),
+    (global as any)['document'].createRange = () => ({
+        createContextualFragment: (str: string) => JSDOM.fragment(str),
+        setEnd : (endNode: any, endOffset: any) => noop(),
+        setStart : (startNode: any, startOffset: any) => noop(),
         getBoundingClientRect : () => null,
         getClientRects: () => []
     });
 
     // Another special case. CodeMirror needs selection
-    // tslint:disable-next-line:no-string-literal
-    global['document'].selection = {
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['document'].selection = {
         anchorNode: null,
         anchorOffset: 0,
         baseNode: null,
@@ -70,24 +71,25 @@ export function setUpDomEnvironment() {
     };
 
     // For Jupyter server to load correctly. It expects the window object to not be defined
-    // tslint:disable-next-line:no-eval
+    // tslint:disable-next-line:no-eval no-any
     const fetchMod = eval('require')('node-fetch');
-    // tslint:disable-next-line:no-string-literal
-    global['fetch'] = fetchMod;
-    // tslint:disable-next-line:no-string-literal
-    global['Request'] = fetchMod.Request;
-    // tslint:disable-next-line:no-string-literal
-    global['Headers'] = fetchMod.Headers;
-    // tslint:disable-next-line:no-string-literal no-eval
-    global['WebSocket'] = eval('require')('ws');
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['fetch'] = fetchMod;
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['Request'] = fetchMod.Request;
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['Headers'] = fetchMod.Headers;
+    // tslint:disable-next-line:no-string-literal no-eval no-any
+    (global as any)['WebSocket'] = eval('require')('ws');
 
     // For the loc test to work, we have to have a global getter for loc strings
-    // tslint:disable-next-line:no-string-literal no-eval
-    global['getLocStrings'] = () => {
+    // tslint:disable-next-line:no-string-literal no-eval no-any
+    (global as any)['getLocStrings'] = () => {
         return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
     };
 
-    global['getInitialSettings'] = () => {
+    // tslint:disable-next-line:no-string-literal no-eval no-any
+    (global as any)['getInitialSettings'] = () => {
         return {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
@@ -106,7 +108,7 @@ export function setUpDomEnvironment() {
     configure({ adapter: new Adapter() });
 }
 
-function copyProps(src, target) {
+function copyProps(src: any, target: any) {
     const props = Object.getOwnPropertyNames(src)
         .filter(prop => typeof target[prop] === undefined);
     props.forEach((p : string) => {

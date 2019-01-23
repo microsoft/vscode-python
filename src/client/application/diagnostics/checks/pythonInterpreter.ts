@@ -38,7 +38,8 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
             ],
-            serviceContainer
+            serviceContainer,
+            false
         );
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {

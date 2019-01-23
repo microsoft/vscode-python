@@ -26,7 +26,8 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService {
     protected readonly filterService: IDiagnosticFilterService;
     constructor(
         @unmanaged() private readonly supportedDiagnosticCodes: string[],
-        @unmanaged() protected serviceContainer: IServiceContainer
+        @unmanaged() protected serviceContainer: IServiceContainer,
+        @unmanaged() public readonly runInBackground: Boolean = false
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
     }

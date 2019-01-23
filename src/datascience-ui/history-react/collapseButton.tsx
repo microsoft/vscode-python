@@ -14,7 +14,7 @@ interface ICollapseButtonProps {
 }
 
 export class CollapseButton extends React.Component<ICollapseButtonProps> {
-    constructor(props) {
+    constructor(props: ICollapseButtonProps) {
         super(props);
     }
 

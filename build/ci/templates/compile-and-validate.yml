@@ -145,7 +145,7 @@ jobs:
       inputs:
         filename: python
 
-        arguments: '-m pip install --upgrade pip'
+        arguments: '-m pip install --upgrade "pip<19"'
 
 
     - task: CmdLine@1

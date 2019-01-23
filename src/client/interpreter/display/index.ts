@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { IDisposableRegistry, IPathUtils } from '../../common/types';
+import '../../common/extensions';
+import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../contracts';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, PythonInterpreter } from '../contracts';
 
 // tslint:disable-next-line:completed-docs
 @injectable()
@@ -13,6 +14,8 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly workspaceService: IWorkspaceService;
     private readonly pathUtils: IPathUtils;
     private readonly interpreterService: IInterpreterService;
+    private currentlySelectedInterpreterPath?: string;
+    private currentlySelectedWorkspaceFolder: Resource;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
@@ -26,6 +29,8 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.statusBar = application.createStatusBarItem(StatusBarAlignment.Left, 100);
         this.statusBar.command = 'python.setInterpreter';
         disposableRegistry.push(this.statusBar);
+
+        this.interpreterService.onDidChangeInterpreterInformation(this.onDidChangeInterpreterInformation, this, disposableRegistry);
     }
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
@@ -38,16 +43,24 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
         await this.updateDisplay(resource);
     }
+    private onDidChangeInterpreterInformation(info: PythonInterpreter) {
+        if (this.currentlySelectedInterpreterPath === info.path) {
+            this.updateDisplay(this.currentlySelectedWorkspaceFolder).ignoreErrors();
+        }
+    }
     private async updateDisplay(workspaceFolder?: Uri) {
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
+        this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
             this.statusBar.color = '';
             this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder ? workspaceFolder.fsPath : undefined);
             this.statusBar.text = interpreter.displayName!;
+            this.currentlySelectedInterpreterPath = interpreter.path;
         } else {
             this.statusBar.tooltip = '';
             this.statusBar.color = 'yellow';
             this.statusBar.text = '$(alert) Select Python Interpreter';
+            this.currentlySelectedInterpreterPath = undefined;
         }
         this.statusBar.show();
     }
