@@ -68,7 +68,7 @@ export function getLinterID(product: Product): LinterId {
             return id as LinterId;
         }
     }
-    throw Error(`unsupprted product ${product}`);
+    throw Error(`unsupported product ${product}`);
 }
 
 export class LintingSettings {
