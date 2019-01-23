@@ -110,6 +110,7 @@ export class Cell extends React.Component<ICellProps> {
         const results: JSX.Element[] = this.renderResults();
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || (results && results.length > 0);
+        const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
 
         // Only render if we are allowed to.
         if (shouldRender) {
@@ -123,10 +124,8 @@ export class Cell extends React.Component<ICellProps> {
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
                         </CellButton>
                     </MenuBar>
-                    <div className='cell-outer'>
-                        <div className='controls-div'>
-                            {this.renderControls()}
-                        </div>
+                    <div className={cellOuterClass}>
+                        {this.renderControls()}
                         <div className='content-div'>
                             <div className='cell-result-container'>
                                 {this.renderInputs()}
@@ -167,20 +166,28 @@ export class Cell extends React.Component<ICellProps> {
         const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '0';
-        const afterExecution = this.props.cellVM.editable ?
-            <CommandPrompt /> :
-            <CollapseButton theme={this.props.baseTheme}
+
+        // Only code cells have controls. Markdown should be empty
+        if (this.isCodeCell()) {
+
+            return this.props.cellVM.editable ?
+                (
+                    <div className='controls-div'>
+                        <CommandPrompt />
+                    </div>
+                ) : (
+                    <div className='controls-div'>
+                        <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
+                        <CollapseButton theme={this.props.baseTheme}
                             visible={collapseVisible}
                             open={this.props.cellVM.inputBlockOpen}
                             onClick={this.toggleInputBlock}
-                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>;
-
-        return (
-            <div className='controls-flex'>
-                <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()}/>
-                {afterExecution}
-            </div>
-        );
+                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')} />
+                    </div>
+                );
+        } else {
+            return null;
+        }
     }
 
     private updateCodeRef = (ref: Code) => {
