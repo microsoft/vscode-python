@@ -30,23 +30,20 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    InterruptResult,
+    InterruptResult
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
-import { IS_VSTS } from '../ciConstants';
-import { isOs, OSType } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
@@ -378,7 +375,7 @@ suite('Jupyter notebook tests', () => {
         }
     });
 
-    runTest('Restart kernel', async function () {
+    runTest('Restart kernel', async () => {
         addMockData(`a=1${os.EOL}a`, 1);
         addMockData(`a+=1${os.EOL}a`, 2);
         addMockData(`a+=4${os.EOL}a`, 6);
@@ -446,7 +443,7 @@ suite('Jupyter notebook tests', () => {
         return true;
     }
 
-    runTest('Cancel execution', async function () {
+    runTest('Cancel execution', async () => {
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(2000);
             addMockData(`a=1${os.EOL}a`, 1);
@@ -515,7 +512,7 @@ suite('Jupyter notebook tests', () => {
         return result;
     }
 
-    runTest('Interrupt kernel', async function () {
+    runTest('Interrupt kernel', async () => {
         const returnable =
             `import signal
 import _thread

@@ -4,7 +4,7 @@
 'use strict';
 
 import * as TypeMoq from 'typemoq';
-import { TextDocument } from 'vscode';
+import { CancellationTokenSource, TextDocument } from 'vscode';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../client/datascience/types';
@@ -16,6 +16,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let codeLensProvider: IDataScienceCodeLensProvider;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    const tokenSource = new CancellationTokenSource();
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -39,7 +40,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher.setup(tc => tc.getCodeLenses()).returns(() => []).verifiable(TypeMoq.Times.once());
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.once());
 
-        codeLensProvider.provideCodeLenses(document.object, undefined);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
         targetCodeWatcher.verifyAll();
         serviceContainer.verifyAll();
@@ -57,8 +58,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher.setup(tc => tc.getVersion()).returns(() => 1);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.once());
 
-        codeLensProvider.provideCodeLenses(document.object, undefined);
-        codeLensProvider.provideCodeLenses(document.object, undefined);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
         // getCodeLenses should be called twice, but getting the code watcher only once due to same doc
         targetCodeWatcher.verifyAll();
@@ -85,9 +86,9 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher.setup(tc => tc.getVersion()).returns(() => 1);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.exactly(3));
 
-        codeLensProvider.provideCodeLenses(document.object, undefined);
-        codeLensProvider.provideCodeLenses(document2.object, undefined);
-        codeLensProvider.provideCodeLenses(document3.object, undefined);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document3.object, tokenSource.token);
 
         // service container get should be called three times as the names and versions don't match
         targetCodeWatcher.verifyAll();

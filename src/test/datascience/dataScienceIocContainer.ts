@@ -5,7 +5,16 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration, WorkspaceFolder, ConfigurationChangeEvent } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    Disposable,
+    Event,
+    EventEmitter,
+    FileSystemWatcher,
+    Uri,
+    WorkspaceConfiguration,
+    WorkspaceFolder
+} from 'vscode';
 
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -165,7 +174,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
 
-
     constructor() {
         super();
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
@@ -301,8 +309,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.venvFolders = folders;
         this.pythonSettings.venvPath = path.join('~', 'foo');
         this.pythonSettings.terminal = {
-            executeInFileDir: undefined,
-            launchArgs: undefined,
+            executeInFileDir: false,
+            launchArgs: [],
             activateEnvironment: true
         };
 
