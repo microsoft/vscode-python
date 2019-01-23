@@ -115,7 +115,7 @@ export class Cell extends React.Component<ICellProps> {
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className='cell-wrapper' onClick={this.onMouseClick}>
+                <div className='cell-wrapper' role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
@@ -147,7 +147,6 @@ export class Cell extends React.Component<ICellProps> {
             this.code.onParentClick(ev);
         }
     }
-
 
     private showInputs = () : boolean => {
         return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
