@@ -43,7 +43,7 @@ export class Cursor extends React.Component<ICursorProps> {
     private getRenderText() : string {
         // Verify that we have some non-whitespace letter. slice(0,1) is legal on empty string
         let renderText = this.props.text.slice(0, 1).trim();
-        if (renderText.trim() === '') {
+        if (renderText.length === 0) {
             renderText = 'A';
         }
 
