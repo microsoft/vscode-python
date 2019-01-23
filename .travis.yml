@@ -65,7 +65,7 @@ install:
   - travis_wait 5 npm ci
   - npm run clean
   - npx gulp prePublishNonBundle
-  - python -m pip install --upgrade pip
+  - python -m pip install --upgrade 'pip<19'
   - python -m pip install --upgrade -r ./build/test-requirements.txt
   - npx gulp installPythonLibs
 

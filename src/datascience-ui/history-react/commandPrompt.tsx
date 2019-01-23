@@ -6,7 +6,7 @@ import * as React from 'react';
 import './commandPrompt.css';
 
 export class CommandPrompt extends React.Component {
-    constructor(props) {
+    constructor(props: {}) {
         super(props);
     }
 

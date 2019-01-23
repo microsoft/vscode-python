@@ -28,7 +28,7 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, ILogger } from '../../client/common/types';
+import { IConfigurationService, IDisposable, ILogger } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { HistoryCommandListener } from '../../client/datascience/historycommandlistener';
@@ -52,7 +52,7 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
     const result = TypeMoq.Mock.ofType<T>();
-    result['tag'] = tag;
+    (result as any)['tag'] = tag;
     result.setup((x: any) => x.then).returns(() => undefined);
     return result;
 }
@@ -140,7 +140,7 @@ suite('History command listener', async () => {
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
     const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
-    const disposableRegistry = [];
+    const disposableRegistry: IDisposable[] = [];
     const historyProvider = mock(HistoryProvider);
     const notebookImporter = mock(JupyterImporter);
     const notebookExporter = mock(JupyterExporter);

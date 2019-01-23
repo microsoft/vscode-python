@@ -7,7 +7,7 @@ import * as React from 'react';
 
 export class Progress extends React.Component {
 
-    constructor(props) {
+    constructor(props: {}) {
         super(props);
     }
 
