@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 ## 2019.1.1 (22 Jan 2019)
 
@@ -154,6 +154,8 @@ part of!
 1. Fix a type in generated header comment when importing a notebook: `DataSciece` --> `DataScience`.
    (thanks [sunt05](https://github.com/sunt05))
    ([#4048](https://github.com/Microsoft/vscode-python/issues/4048))
+1. Cursor in Interactive Windows now appears on whitespace
+   ([#4081](https://github.com/Microsoft/vscode-python/issues/4081))
 
 ### Code Health
 
