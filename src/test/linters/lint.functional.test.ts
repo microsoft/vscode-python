@@ -4,11 +4,13 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
     TextDocument,
+    TextLine,
     Uri
 } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
@@ -256,6 +258,16 @@ class TestFixture extends BaseTestFixture {
 
     public makeDocument(filename: string): TextDocument {
         const doc = newMockDocument(filename);
+        doc.setup(d => d.lineAt(TypeMoq.It.isAny()))
+            .returns(lno => {
+                const lines = fs.readFileSync(filename)
+                    .toString()
+                    .split(os.EOL);
+                const textline = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
+                textline.setup(t => t.text)
+                    .returns(() => lines[lno]);
+                return textline.object;
+            });
         return doc.object;
     }
 }
@@ -272,9 +284,6 @@ suite('Linting Functional Tests', () => {
         pythonFile: string,
         messagesToBeReceived: ILintMessage[]
     ) {
-        if (product !== Product.pylint) {
-            return;
-        }
         const doc = fixture.makeDocument(pythonFile);
         await fixture.linterManager.setActiveLintersAsync([product], doc.uri);
         const linter = await fixture.linterManager.createLinter(

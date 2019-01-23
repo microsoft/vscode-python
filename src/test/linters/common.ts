@@ -132,7 +132,7 @@ export class LintingSettings {
         this.maxNumberOfProblems = 100;
 
         this.flake8Enabled = false;
-        this.flake8Path = 'flake';
+        this.flake8Path = 'flake8';
         this.flake8Args = [];
         this.flake8CategorySeverity = {
             E: DiagnosticSeverity.Error,
