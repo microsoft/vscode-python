@@ -18,7 +18,7 @@ import { IExtensionActivationManager, IExtensionActivationService } from './type
 export class ExtensionActivationManager implements IExtensionActivationManager {
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
-    private readonly activatedWorksapces = new Set<string>();
+    private readonly activatedWorkspaces = new Set<string>();
     constructor(
         @multiInject(IExtensionActivationService) private readonly activationServices: IExtensionActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
@@ -67,7 +67,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     protected onDocOpened(doc: TextDocument) {
         const key = this.getWorkspaceKey(doc.uri);
-        if (this.activatedWorksapces.has(key)) {
+        if (this.activatedWorkspaces.has(key)) {
             return;
         }
         const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
@@ -76,7 +76,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     @traceDecorators.error('Failed to activate a worksapce')
     protected async activateWorkspace(resource: Resource) {
         const key = this.getWorkspaceKey(resource);
-        this.activatedWorksapces.add(key);
+        this.activatedWorkspaces.add(key);
 
         await Promise.all(this.activationServices.map(item => item.activate(resource)));
 

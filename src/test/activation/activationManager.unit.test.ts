@@ -143,7 +143,7 @@ suite('Activation - ActivationManager', () => {
         verify(activationService1.activate(resource)).once();
         verify(activationService2.activate(resource)).once();
     });
-    test('Function activateWorkspace() works as expected', async () => {
+    test('Function activateWorkspace() will be filtered to current resource', async () => {
         const resource = Uri.parse('two');
         const folder = { name: 'two', uri: resource, index: 2 };
 
@@ -206,7 +206,6 @@ suite('Activation - ActivationManager', () => {
 
         workspaceFoldersChangedHandler.call(managerTest);
 
-        verify(workspaceService.onDidChangeWorkspaceFolders).once();
         verify(workspaceService.workspaceFolders).twice();
         verify(workspaceService.hasWorkspaceFolders).twice();
     });
