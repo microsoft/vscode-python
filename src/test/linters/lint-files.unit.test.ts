@@ -255,7 +255,10 @@ class TestFixture extends BaseTestFixture {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Linting - functional (with real files)', () => {
+suite('Linting Functional Tests', () => {
+    // These are integration tests that mock out everything except
+    // the filesystem and process execution.
+
     // tslint:disable-next-line:no-any
     async function testLinterMessages(
         fixture: TestFixture,

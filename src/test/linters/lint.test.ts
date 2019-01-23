@@ -23,7 +23,7 @@ import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
 
-suite('Linting - settings', () => {
+suite('Linting Settings', () => {
     let ioc: UnitTestIocContainer;
     let linterManager: ILinterManager;
     let configService: IConfigurationService;

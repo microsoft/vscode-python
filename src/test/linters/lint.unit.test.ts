@@ -202,7 +202,9 @@ class TestFixture extends BaseTestFixture {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Linting - functional (mocked)', () => {
+suite('Linting Scenarios', () => {
+    // Note that these aren't actually unit tests.  Instead they are
+    // integration tests with heavy usage of mocks.
 
     test('No linting with PyLint (enabled) when disabled at top-level', async () => {
         const product = Product.pylint;
