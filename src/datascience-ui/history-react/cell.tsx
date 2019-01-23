@@ -52,8 +52,11 @@ export interface ICellViewModel {
 }
 
 export class Cell extends React.Component<ICellProps> {
+    private code: Code | undefined;
+
     constructor(prop: ICellProps) {
         super(prop);
+        this.state = {focused: this.props.autoFocus};
     }
 
     public render() {
@@ -111,7 +114,7 @@ export class Cell extends React.Component<ICellProps> {
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className='cell-wrapper'>
+                <div className='cell-wrapper' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
@@ -138,6 +141,14 @@ export class Cell extends React.Component<ICellProps> {
         // Shouldn't be rendered because not allowing empty input and not a direct input cell
         return null;
     }
+
+    private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
+        // When we receive a click, tell the code element.
+        if (this.code) {
+            this.code.onParentClick(ev);
+        }
+    }
+
 
     private showInputs = () : boolean => {
         return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
@@ -172,6 +183,10 @@ export class Cell extends React.Component<ICellProps> {
         );
     }
 
+    private updateCodeRef = (ref: Code) => {
+        this.code = ref;
+    }
+
     private renderInputs = () => {
         if (this.showInputs()) {
             return (
@@ -186,6 +201,7 @@ export class Cell extends React.Component<ICellProps> {
                         readOnly={!this.props.cellVM.editable}
                         onSubmit={this.props.submitNewCode}
                         onChangeLineCount={this.onChangeLineCount}
+                        ref={this.updateCodeRef}
                         />
                 </div>
             );

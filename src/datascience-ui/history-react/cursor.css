@@ -2,6 +2,7 @@
     position: absolute;
     z-index:1005;
     font-family: var(--code-font-family);
+    pointer-events: none;
 }
 
 .cursor-block {
