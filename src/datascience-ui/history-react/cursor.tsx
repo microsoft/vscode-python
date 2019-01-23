@@ -41,12 +41,18 @@ export class Cursor extends React.Component<ICursorProps> {
     }
 
     private getRenderText() : string {
-        return this.props.text.length > 0 ? this.props.text.slice(0, 1) : 'A';
+        // Verify that we have some non-whitespace letter. slice(0,1) is legal on empty string
+        let renderText = this.props.text.slice(0, 1).trim();
+        if (renderText.length === 0) {
+            renderText = 'A';
+        }
+
+        return renderText;
     }
 
     private renderInFocus = (style: React.CSSProperties) => {
         const cursorClass = `cursor-top cursor-${this.props.cursorType}-overlay`;
-        const textClass = this.props.cursorType !== 'block' || this.props.text.length === 0 ? 'cursor-measure' : 'cursor-text';
+        const textClass = this.props.cursorType !== 'block' || this.props.text.slice(0,1).trim().length === 0 ? 'cursor-measure' : 'cursor-text';
         return <div className={cursorClass} style={style}><div className={textClass}>{this.getRenderText()}</div></div>;
     }
 

@@ -1,5 +1,5 @@
 .cell-wrapper {
-    margin: 10px;
+    margin: 0px;
     padding: 2px;
     display: block;
     border-bottom-color: var(--vscode-editorGroupHeader-tabsBackground);
@@ -14,19 +14,28 @@
 }
 
 .cell-outer {
-    display:flex;
-    flex-direction: row;
-    justify-content: left;
+    display:grid;
+    grid-template-columns: auto 1fr;
+    grid-column-gap: 3px;
+    width: 100%;
+}
+
+.cell-outer-editable {
+    display:grid;
+    grid-template-columns: auto 1fr;
+    grid-column-gap: 3px;
     width: 100%;
 }
 
 .content-div {
-    float: left;
+    grid-column: 2;
     width: 100%;
 }
 
 .controls-div {
-    float: left;
+    grid-column: 1;
+    grid-template-columns: auto;
+    display: grid;
 }
 
 .hide {
@@ -96,11 +105,6 @@
 }
 .cell-output * + table {
   margin-top: 1em;
-}
-
-.controls-flex {
-    display:flex;
-    min-width: 45px;
 }
 
 .center-img {

@@ -88,7 +88,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
                             cursorBlinkRate: -1,
-                            readOnly: readOnly ? 'nocursor' : false
+                            readOnly: readOnly ? 'nocursor' : false,
+                            lineWrapping: true
                         }
                     }
                     ref={this.updateCodeMirror}
@@ -102,6 +103,14 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private getWatermarkString = () : string => {
         return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
+    }
+
+    public onParentClick(ev: React.MouseEvent<HTMLDivElement>) {
+        const readOnly = this.props.testMode || this.props.readOnly;
+        if (this.codeMirror && !readOnly) {
+            ev.stopPropagation();
+            this.codeMirror.focus();
+        }
     }
 
     private onCursorActivity = (codeMirror: CodeMirror.Editor) => {

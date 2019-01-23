@@ -71,7 +71,7 @@ jobs:
     Platform: 'Windows'
     PythonVersion: '3.5'
 
-- template: templates/test-phase-job.yml
+- template: templates/test-phase-job-3-4.yml
   parameters:
     pool:
       name: 'Hosted VS2017'
@@ -106,7 +106,7 @@ jobs:
     Platform: 'Linux'
     PythonVersion: '3.5'
 
-- template: templates/test-phase-job.yml
+- template: templates/test-phase-job-3-4.yml
   parameters:
     pool:
       name: 'Hosted Ubuntu 1604'
@@ -141,7 +141,7 @@ jobs:
     Platform: 'macOS'
     PythonVersion: '3.5'
 
-- template: templates/test-phase-job.yml
+- template: templates/test-phase-job-3-4.yml
   parameters:
     pool:
       name: 'Hosted macOS'

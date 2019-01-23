@@ -16,6 +16,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let tokenSource : CancellationTokenSource;
+
     setup(() => {
         tokenSource = new CancellationTokenSource();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();

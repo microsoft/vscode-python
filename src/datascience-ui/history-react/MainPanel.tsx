@@ -95,7 +95,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 </MenuBar>
                 <div className='top-spacing'/>
                 {progressBar}
-                {this.renderCells()}
+                <div className='cell-table'>
+                    <div className='cell-table-body'>
+                        {this.renderCells()}
+                    </div>
+                </div>
                 <div ref={this.updateBottom}/>
             </div>
         );
