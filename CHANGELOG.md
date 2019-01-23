@@ -130,7 +130,7 @@ part of!
    ([#3767](https://github.com/Microsoft/vscode-python/issues/3767))
 1. Address problem with Python Interactive icons not working in insider's build. VS Code is more restrictive on what files can load in a webview.
    ([#3775](https://github.com/Microsoft/vscode-python/issues/3775))
-1. Fix output so that it wraps '<' entries in <xmp> to allow html like tags to be output.
+1. Fix output so that it wraps '<' entries in &lt;xmp&gt; to allow html like tags to be output.
    ([#3824](https://github.com/Microsoft/vscode-python/issues/3824))
 1. Keep the Jupyter remote server URI input box open so you can copy and paste into it easier
    ([#3856](https://github.com/Microsoft/vscode-python/issues/3856))
@@ -156,6 +156,14 @@ part of!
    ([#4048](https://github.com/Microsoft/vscode-python/issues/4048))
 1. Cursor in Interactive Windows now appears on whitespace
    ([#4081](https://github.com/Microsoft/vscode-python/issues/4081))
+1. Allow clicking anywhere in an input cell to give focus to the input box for the Python Interactive window
+   ([#4076](https://github.com/Microsoft/vscode-python/issues/4076))
+1. Fix problem with double scrollbars when typing in the input window. Make code wrap instead.
+   ([#4084](https://github.com/Microsoft/vscode-python/issues/4084))
+1. Remove execution count from the prompt cell.
+   ([#4086](https://github.com/Microsoft/vscode-python/issues/4086))
+1. Make sure showing a plain Python Interactive window lists out the sys info
+   ([#4088](https://github.com/Microsoft/vscode-python/issues/4088))
 
 ### Code Health
 
