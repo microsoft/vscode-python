@@ -55,6 +55,10 @@ export class InputHistory {
             this.up = currentPos + 1;
         } else {
             this.up = this.historyStack.length;
+
+            // If we go off the end, don't make the down go up to the last.
+            // CMD prompt behaves this way. Down is always one off.
+            currentPos = this.historyStack.length - 1;
         }
         if (currentPos > 0) {
             this.down = currentPos - 1;

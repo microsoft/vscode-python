@@ -62,10 +62,9 @@ suite('Data Science Tests', () => {
         assert.equal(history.completeUp(''), '1');
         assert.equal(history.completeUp(''), '');
         assert.equal(history.completeUp('1'), '1');
-        assert.equal(history.completeDown('1'), '1');
-        assert.equal(history.completeDown('2'), '2');
-        assert.equal(history.completeDown('3'), '3');
-        assert.equal(history.completeDown(''), '4');
+        assert.equal(history.completeDown('1'), '2');
+        assert.equal(history.completeDown('2'), '3');
+        assert.equal(history.completeDown('3'), '4');
         assert.equal(history.completeDown(''), '');
         history.add('5');
         assert.equal(history.completeUp('1'), '5');
@@ -73,6 +72,8 @@ suite('Data Science Tests', () => {
         assert.equal(history.completeUp('1'), '3');
         assert.equal(history.completeUp('1'), '2');
         assert.equal(history.completeUp('1'), '1');
+        assert.equal(history.completeUp('1'), '1');
+        assert.equal(history.completeDown('1'), '2');
     });
 
 });
