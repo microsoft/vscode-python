@@ -194,7 +194,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.linting = this.linting ? this.linting : {
             enabled: false,
             ignorePatterns: [],
-            flake8Args: [], flake8Enabled: false, flake8Path: 'flake8',
+            flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
             lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
             banditArgs: [], banditEnabled: false, banditPath: 'bandit',
