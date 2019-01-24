@@ -2,34 +2,64 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { noop } from '../../client/common/utils/misc';
+
 export class InputHistory {
 
     private history: string [];
-    private pos: number = 0;
+    private pos: number | undefined;
     constructor(history: string []) {
-        // Make an implicit blank that we start at.
-        this.history = ['', ...history];
+        // History is a stack with 0 being the top
+        this.history = history;
     }
 
-    public completeUp() : string {
-        if (this.history.length) {
-            this.pos = this.pos >= this.history.length - 1 ? this.history.length - 1 : this.pos + 1;
-            return this.history[this.pos];
+    public completeUp(code: string) : string {
+        // If going up, only move if anything in the history
+        if (this.history.length > 0) {
+            if (this.pos === undefined) {
+                this.pos = 0;
+            } else {
+                this.move(1);
+            }
+            const result = this.history[this.pos];
+            this.push(code);
+            return result;
+        } else {
+            return code;
         }
-
-        return '';
     }
 
-    public completeDown() : string {
-        if (this.history.length) {
-            this.pos = this.pos > 0 ? this.pos - 1 : 0;
-            return this.history[this.pos];
+    public completeDown(code: string) : string {
+        // If going down, move and then return something if we have a position
+        if (this.history.length > 0 && this.pos !== undefined) {
+            this.move(-1);
+            if (this.pos !== undefined) {
+                this.push(code);
+                return this.history[this.pos];
+            }
         }
 
-        return '';
+        return code;
     }
 
     public onChange() {
-        this.pos = 0;
+        noop();
+    }
+
+    private push(code: string) {
+        if (code.trim().length > 0 && this.history.indexOf(code) < 0) {
+            this.history.push(code);
+        }
+    }
+
+    private move(dir: number) {
+        let result = this.pos + dir;
+        if (result >= this.history.length - 1) {
+            result = this.history.length - 1;
+        }
+        if (result < 0) {
+            result = undefined;
+        }
+        this.pos = result;
     }
 }

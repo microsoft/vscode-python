@@ -219,16 +219,30 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private arrowUp = (instance: CodeMirror.Editor) => {
-        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch === 0) {
-            instance.getDoc().setValue(this.history.completeUp());
+        const doc = instance.getDoc();
+        const cursor = doc ? doc.getCursor() : undefined;
+        if (cursor && cursor.line === 0) {
+            const currentValue = doc.getValue();
+            const newValue = this.history.completeUp(currentValue);
+            if (newValue !== currentValue) {
+                doc.setValue(newValue);
+                doc.setCursor(0, doc.getLine(0).length);
+            }
             return;
         }
         return CodeMirror.Pass;
     }
 
     private arrowDown = (instance: CodeMirror.Editor) => {
-        if (instance.getDoc().getCursor().line === 0 && instance.getDoc().getCursor().ch === 0) {
-            instance.getDoc().setValue(this.history.completeDown());
+        const doc = instance.getDoc();
+        const cursor = doc ? doc.getCursor() : undefined;
+        if (cursor && cursor.line === doc.lastLine()) {
+            const currentValue = doc.getValue();
+            const newValue = this.history.completeDown(currentValue);
+            if (newValue !== currentValue) {
+                doc.setValue(newValue);
+                doc.setCursor(doc.lastLine(), doc.getLine(doc.lastLine()).length);
+            }
             return;
         }
         return CodeMirror.Pass;

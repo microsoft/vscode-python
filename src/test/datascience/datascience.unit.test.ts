@@ -4,6 +4,7 @@
 import { assert } from 'chai';
 
 import { formatStreamText } from '../../client/datascience/common';
+import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
 
 suite('Data Science Tests', () => {
 
@@ -17,5 +18,51 @@ suite('Data Science Tests', () => {
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 8\rExecute 9\r\r'), 'Execute\n');
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 10\rExecute 11\r\n'), 'Execute\nExecute 11\n');
     });
+
+    test('input history', async () => {
+        let history = new InputHistory([]);
+        assert.equal(history.completeDown('5'), '5');
+        history.onChange();
+        assert.equal(history.completeUp(''), '');
+        history.onChange();
+        history = new InputHistory([ '4', '3', '2', '1']);
+        assert.equal(history.completeUp('5'), '4');
+        history.onChange();
+        assert.equal(history.completeUp('4'), '3');
+        history.onChange();
+        assert.equal(history.completeUp('3'), '2');
+        history.onChange();
+        assert.equal(history.completeUp('2'), '1');
+        history.onChange();
+        assert.equal(history.completeUp('1'), '5');
+        history.onChange();
+        assert.equal(history.completeUp('5'), '5');
+        history = new InputHistory([ '4', '3', '2', '1']);
+        assert.equal(history.completeDown('5'), '5');
+        history.onChange();
+        assert.equal(history.completeDown(''), '');
+        history.onChange();
+        assert.equal(history.completeUp('1'), '4');
+        history.onChange();
+        assert.equal(history.completeDown('4'), '4');
+        history.onChange();
+        assert.equal(history.completeDown('4'), '4');
+        history.onChange();
+        assert.equal(history.completeUp('1'), '4');
+        history.onChange();
+        assert.equal(history.completeUp('4'), '3');
+        history.onChange();
+        assert.equal(history.completeDown('3'), '4');
+        assert.equal(history.completeDown(''), '');
+        assert.equal(history.completeUp('1'), '4');
+        assert.equal(history.completeUp('4'), '3');
+        assert.equal(history.completeUp('3'), '2');
+        assert.equal(history.completeUp('2'), '1');
+        assert.equal(history.completeUp('1'), '1');
+        assert.equal(history.completeDown('1'), '2');
+        assert.equal(history.completeDown('2'), '3');
+        assert.equal(history.completeDown('3'), '4');
+        assert.equal(history.completeDown(''), '');
+    })
 
 });

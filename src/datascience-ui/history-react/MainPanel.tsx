@@ -623,8 +623,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // hide all inputs turned on.
             editCell.directInput = true;
 
-            // Compute our new history (skip adding dupes)
-            const newHistory = this.state.historyStack.indexOf(code) >= 0 ? this.state.historyStack : [code, ...this.state.historyStack];
+            // Compute our new history (dupes should reorder adding dupes)
+            const dupeIndex = this.state.historyStack.indexOf(code);
+            const newHistory = dupeIndex >= 0 ? [code, ...this.state.historyStack.filter((v, i) => i !== dupeIndex)] : [code, ...this.state.historyStack];
 
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
