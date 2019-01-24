@@ -23,6 +23,7 @@ export interface IDiagnostic {
     readonly severity: DiagnosticSeverity;
     readonly scope: DiagnosticScope;
     readonly resource: Resource;
+    readonly invokeHandler: 'always' | 'default';
 }
 
 export const IDiagnosticsService = Symbol('IDiagnosticsService');

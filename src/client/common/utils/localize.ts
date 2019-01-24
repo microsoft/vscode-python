@@ -118,6 +118,7 @@ export namespace DataScience {
     export const pythonInterruptFailedHeader = localize('DataScience.pythonInterruptFailedHeader', 'Keyboard interrupt crashed the kernel. Kernel restarted.');
     export const sysInfoURILabel = localize('DataScience.sysInfoURILabel', 'Jupyter Server URI: ');
     export const executingCodeFailure = localize('DataScience.executingCodeFailure', 'Executing code failed : {0}');
+    export const inputWatermark = localize('DataScience.inputWatermark', 'Shift-enter to run');
 }
 
 export namespace DebugConfigurationPrompts {

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-//tslint:disable:trailing-comma no-any no-multiline-string
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
@@ -12,6 +10,7 @@ import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
+
 import {
     IApplicationShell,
     IDocumentManager,
@@ -24,7 +23,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture, OSType } from '../../client/common/utils/platform';
+import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -32,13 +31,12 @@ import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
-import { IS_VSTS } from '../ciConstants';
-import { isOs } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { waitForUpdate } from './reactHelpers';
 
+//tslint:disable:trailing-comma no-any no-multiline-string
 enum CellInputState {
     Hidden,
     Visible,
@@ -62,7 +60,6 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
-    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -179,7 +176,7 @@ suite('History output tests', () => {
                 // tslint:disable-next-line:no-console
                 console.log(`${name} skipped, no Jupyter installed.`);
             }
-        }).timeout(60000);
+        });
     }
 
     function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
@@ -423,12 +420,7 @@ suite('History output tests', () => {
         return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
     }
 
-    runMountedTest('Mime Types', async function (wrapper) {
-        // This test hasn't yet succeeded in Linux on AzDO. See #3973
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
+    runMountedTest('Mime Types', async (wrapper) => {
 
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -443,7 +435,7 @@ import time
 
 def spinning_cursor():
     while True:
-        for cursor in '|/-\\':
+        for cursor in '|/-\\\\':
             yield cursor
 
 spinner = spinning_cursor()
@@ -451,9 +443,9 @@ for _ in range(50):
     sys.stdout.write(next(spinner))
     sys.stdout.flush()
     time.sleep(0.1)
-    sys.stdout.write('\r')`;
+    sys.stdout.write('\\r')`;
 
-        addMockData(badPanda, `pd has no attribute 'read'`, 'text/html', 'error');
+        addMockData(badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
         addMockData(goodPanda, `<td>A table</td>`, 'text/html');
         addMockData(matPlotLib, matPlotLibResults, 'text/html');
         const cursors = ['|', '/', '-', '\\'];
@@ -470,7 +462,7 @@ for _ in range(50):
         });
 
         await addCode(wrapper, badPanda, 4);
-        verifyHtmlOnCell(wrapper, `pd has no attribute 'read'`, CellPosition.Last);
+        verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
 
         await addCode(wrapper, goodPanda);
         verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
@@ -478,8 +470,8 @@ for _ in range(50):
         await addCode(wrapper, matPlotLib);
         verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
-        await addCode(wrapper, spinningCursor, 4 + (cursors.length * 3));
-        verifyHtmlOnCell(wrapper, '<xmp>\\</xmp>', CellPosition.Last);
+        await addCode(wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
     });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {

@@ -90,12 +90,12 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return this.globallyPreferredInterpreter.value;
     }
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined) {
-        await this.storeAutoSelectedInterperter(resource, interpreter);
+        await this.storeAutoSelectedInterpreter(resource, interpreter);
     }
     public async setGlobalInterpreter(interpreter: PythonInterpreter) {
-        await this.storeAutoSelectedInterperter(undefined, interpreter);
+        await this.storeAutoSelectedInterpreter(undefined, interpreter);
     }
-    protected async storeAutoSelectedInterperter(resource: Resource, interpreter: PythonInterpreter | undefined) {
+    protected async storeAutoSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
         const workspaceFolderPath = this.getWorkspacePathKey(resource);
         if (workspaceFolderPath === workspacePathNameForGlobalWorkspaces) {
             // Update store only if this version is better.

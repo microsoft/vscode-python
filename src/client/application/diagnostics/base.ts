@@ -17,7 +17,8 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService, IDiagnosticsSer
 export abstract class BaseDiagnostic implements IDiagnostic {
     constructor(public readonly code: DiagnosticCodes, public readonly message: string,
         public readonly severity: DiagnosticSeverity, public readonly scope: DiagnosticScope,
-        public readonly resource: Resource) { }
+        public readonly resource: Resource,
+        public readonly invokeHandler: 'always' | 'default' = 'default') { }
 }
 
 @injectable()
@@ -37,6 +38,9 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService {
             return;
         }
         const diagnosticsToHandle = diagnostics.filter(item => {
+            if (item.invokeHandler && item.invokeHandler === 'always') {
+                return true;
+            }
             const key = this.getDiagnosticsKey(item);
             if (BaseDiagnosticsService.handledDiagnosticCodeKeys.indexOf(key) !== -1) {
                 return false;

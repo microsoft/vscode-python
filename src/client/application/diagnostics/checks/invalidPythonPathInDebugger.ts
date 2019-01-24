@@ -41,7 +41,8 @@ export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
             messages[code],
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
-            resource
+            resource,
+            'always'
         );
     }
 }

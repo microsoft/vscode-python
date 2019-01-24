@@ -4,27 +4,37 @@
 'use strict';
 
 import { expect } from 'chai';
-import { instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
-import { ILanguageClientFactory, ILanguageServer } from '../../../client/activation/types';
+import { ILanguageClientFactory } from '../../../client/activation/types';
 import '../../../client/common/extensions';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
+import { UnitTestManagementService } from '../../../client/unittests/main';
+import { IUnitTestManagementService } from '../../../client/unittests/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
 suite('Language Server - LanguageServer', () => {
+    class LanguageServerTest extends LanguageServer{
+        // tslint:disable-next-line:no-unnecessary-override
+        public async registerTestServices() {
+            return super.registerTestServices();
+        }
+    }
     let clientFactory: ILanguageClientFactory;
-    let server: ILanguageServer;
+    let server: LanguageServerTest;
     let client: typemoq.IMock<LanguageClient>;
+    let testManager: IUnitTestManagementService;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(BaseLanguageClientFactory);
-        server = new LanguageServer(instance(clientFactory));
+        testManager = mock(UnitTestManagementService);
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager));
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());
@@ -77,6 +87,8 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         await sleep(120);
 
+        verify(testManager.activate()).once();
+        verify(testManager.activateCodeLenses(anything())).once();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.atLeast(2));
     });
     test('Send telemetry when LS has started and disposes appropriately', async () => {
@@ -117,6 +129,9 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => true as any)
             .verifiable(typemoq.Times.once());
         await sleep(120);
+
+        verify(testManager.activate()).once();
+        verify(testManager.activateCodeLenses(anything())).once();
         expect(() => server.loadExtension(loadExtensionArgs)).to.not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
         client.verify(c => c.stop(), typemoq.Times.never());
@@ -126,5 +141,8 @@ suite('Language Server - LanguageServer', () => {
 
         client.verify(c => c.stop(), typemoq.Times.once());
         startDisposable.verify(d => d.dispose(), typemoq.Times.once());
+    });
+    test('Ensure Errors raised when starting test manager are not bubbled up', async () => {
+        await server.registerTestServices();
     });
 });

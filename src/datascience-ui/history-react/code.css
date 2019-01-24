@@ -36,3 +36,17 @@
 .code-area-editable {
     margin-bottom: 10px;
 }
+
+.code-watermark {
+    position: absolute;
+    top: 0;
+    left: 30px;
+    z-index: 500;
+    font-style: italic;
+    color: var(--vscode-pickerGroup-border);
+}
+
+.hide {
+    visibility: hidden;
+}
+

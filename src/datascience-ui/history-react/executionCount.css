@@ -1,9 +1,12 @@
 .execution-count {
+    grid-column: 1;
     font-weight: bold;
+    display:flex;
     color: var(--code-comment-color);
  }
 
  .execution-count-busy-outer {
+    grid-column: 1;
     font-weight: bold;
     color: var(--code-comment-color);
     display:flex;

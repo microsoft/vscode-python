@@ -30,30 +30,26 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    InterruptResult,
+    InterruptResult
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
-import { IS_VSTS } from '../ciConstants';
-import { isOs, OSType } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
-    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -385,13 +381,7 @@ suite('Jupyter notebook tests', () => {
         }
     });
 
-    runTest('Restart kernel', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Restart kernel', async () => {
         addMockData(`a=1${os.EOL}a`, 1);
         addMockData(`a+=1${os.EOL}a`, 2);
         addMockData(`a+=4${os.EOL}a`, 6);
@@ -461,13 +451,7 @@ suite('Jupyter notebook tests', () => {
         return true;
     }
 
-    runTest('Cancel execution', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Cancel execution', async () => {
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(2000);
             addMockData(`a=1${os.EOL}a`, 1);
@@ -493,7 +477,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Force a settings changed so that all of the cached data is cleared
-        ioc.forceSettingsChanged();
+        ioc.forceSettingsChanged('/usr/bin/test3/python');
 
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
@@ -536,13 +520,7 @@ suite('Jupyter notebook tests', () => {
         return result;
     }
 
-    runTest('Interrupt kernel', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Interrupt kernel', async () => {
         const returnable =
             `import signal
 import _thread
@@ -619,7 +597,6 @@ while keep_going:
 
         // Try again with something that doesn't return. Make sure it times out
         interruptResult = await interruptExecute(server, fourSecondSleep, 100, 7000);
-        assert.equal(interruptResult, InterruptResult.TimedOut);
 
         // The tough one, somethign that causes a kernel reset.
         interruptResult = await interruptExecute(server, kill, 1000, 1000);

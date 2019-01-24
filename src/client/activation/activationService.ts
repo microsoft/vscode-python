@@ -4,36 +4,25 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import {
-    ConfigurationChangeEvent,
-    Disposable, OutputChannel, Uri
-} from 'vscode';
+import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
-import {
-    IApplicationShell, ICommandManager,
-    IWorkspaceService
-} from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
-import {
-    IConfigurationService, IDisposableRegistry,
-    IOutputChannel, IPythonSettings
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import {
-    ExtensionActivators, IExtensionActivationService,
-    IExtensionActivator
-} from './types';
+import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
-type ActivatorInfo = { jedi: boolean; activator: IExtensionActivator };
+type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 
 @injectable()
-export class ExtensionActivationService implements IExtensionActivationService, Disposable {
+export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
     private currentActivator?: ActivatorInfo;
+    private activatedOnce: boolean;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
@@ -43,22 +32,26 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
+        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
+            IDiagnosticsService,
+            LSNotSupportedDiagnosticServiceId
+        );
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
 
-    public async activate(): Promise<void> {
-        if (this.currentActivator) {
+    public async activate(_resource: Resource): Promise<void> {
+        if (this.currentActivator || this.activatedOnce) {
             return;
         }
+        this.activatedOnce = true;
 
         let jedi = this.useJedi();
         if (!jedi) {
             const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
             this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length){
+            if (diagnostic.length) {
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
                 jedi = true;
             }
@@ -66,8 +59,8 @@ export class ExtensionActivationService implements IExtensionActivationService, 
 
         await this.logStartup(jedi);
 
-        let activatorName = jedi ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
-        let activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
+        let activatorName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
+        let activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
         this.currentActivator = { jedi, activator };
 
         try {
@@ -80,8 +73,8 @@ export class ExtensionActivationService implements IExtensionActivationService, 
             //Language server fails, reverting to jedi
             jedi = true;
             await this.logStartup(jedi);
-            activatorName = ExtensionActivators.Jedi;
-            activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
+            activatorName = LanguageServerActivator.Jedi;
+            activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
             this.currentActivator = { jedi, activator };
             await activator.activate();
         }
@@ -94,12 +87,16 @@ export class ExtensionActivationService implements IExtensionActivationService, 
     }
 
     private async logStartup(isJedi: boolean): Promise<void> {
-        const outputLine = isJedi ? 'Starting Jedi Python language engine.' : 'Starting Microsoft Python language server.';
+        const outputLine = isJedi
+            ? 'Starting Jedi Python language engine.'
+            : 'Starting Microsoft Python language server.';
         this.output.appendLine(outputLine);
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri) : [undefined];
+        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+            : [undefined];
         if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
             return;
         }
@@ -108,13 +105,18 @@ export class ExtensionActivationService implements IExtensionActivationService, 
             return;
         }
 
-        const item = await this.appShell.showInformationMessage('Please reload the window switching between language engines.', 'Reload');
+        const item = await this.appShell.showInformationMessage(
+            'Please reload the window switching between language engines.',
+            'Reload'
+        );
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
     }
     private useJedi(): boolean {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(item => item.uri) : [undefined];
+        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders!.map(item => item.uri)
+            : [undefined];
         const configuraionService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         return workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;
     }

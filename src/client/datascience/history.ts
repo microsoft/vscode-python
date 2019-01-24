@@ -101,6 +101,9 @@ export class History implements IWebPanelMessageListener, IHistory {
             // Make sure we're loaded first
             await this.loadPromise;
 
+            // Make sure we have at least the initial sys info
+            await this.addSysInfo(SysInfoReason.Start);
+
             // Then show our web panel.
             if (this.webPanel && this.jupyterServer) {
                 await this.webPanel.show();
@@ -509,7 +512,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                 await this.jupyterServer.shutdown();
             }
         }
-        this.loadPromise = this.loadJupyterServer(true);
+        this.loadPromise = this.load();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -780,19 +783,20 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private loadWebPanel = async (): Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
+        if (this.webPanel === undefined) {
+            // Figure out the name of our main bundle. Should be in our output directory
+            const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
 
-        // Figure out the name of our main bundle. Should be in our output directory
-        const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
+            // Generate a css to put into the webpanel for viewing code
+            const css = await this.cssGenerator.generateThemeCss();
 
-        // Generate a css to put into the webpanel for viewing code
-        const css = await this.cssGenerator.generateThemeCss();
+            // Get our settings to pass along to the react control
+            const settings = this.generateDataScienceExtraSettings();
 
-        // Get our settings to pass along to the react control
-        const settings = this.generateDataScienceExtraSettings();
-
-        // Use this script to create our web view panel. It should contain all of the necessary
-        // script to communicate with this class.
-        this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+            // Use this script to create our web view panel. It should contain all of the necessary
+            // script to communicate with this class.
+            this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+        }
     }
 
     private load = async (): Promise<void> => {

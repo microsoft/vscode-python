@@ -29,7 +29,8 @@ export class InvalidDebuggerTypeDiagnostic extends BaseDiagnostic {
             message,
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
-            resource
+            resource,
+            'always'
         );
     }
 }

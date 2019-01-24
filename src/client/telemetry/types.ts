@@ -12,9 +12,14 @@ import { PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
+    pythonVersion: string | undefined;
+    interpreterType: InterpreterType | undefined;
     terminal: TerminalShellType;
-    hasUserDefinedInterpreter: boolean;
-    isAutoSelectedWorkspaceInterpreterUsed: boolean;
+    workspaceFolderCount: number;
+    hasPython3: boolean;
+    usingUserDefinedInterpreter: boolean;
+    usingAutoSelectedWorkspaceInterpreter: boolean;
+    usingGlobalInterpreter: boolean;
 };
 export type FormatTelemetry = {
     tool: 'autopep8' | 'black' | 'yapf';

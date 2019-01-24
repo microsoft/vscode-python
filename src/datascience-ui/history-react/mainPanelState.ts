@@ -10,6 +10,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ICellViewModel } from './cell';
+import { InputHistory } from './inputHistory';
 
 export interface IMainPanelState {
     cellVMs: ICellViewModel[];
@@ -17,7 +18,8 @@ export interface IMainPanelState {
     skipNextScroll? : boolean;
     undoStack : ICellViewModel[][];
     redoStack : ICellViewModel[][];
-    historyStack: string[];
+    submittedText: boolean;
+    history: InputHistory;
 }
 
 // This function generates test state when running under a browser instead of inside of
@@ -28,7 +30,8 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         skipNextScroll : false,
         undoStack : [],
         redoStack : [],
-        historyStack: []
+        submittedText: false,
+        history: new InputHistory()
     };
 }
 
@@ -121,7 +124,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
         },
         {
             cell_type: 'code',
-            execution_count: 4,
+            execution_count: 467,
             metadata: {
                 slideshow: {
                     slide_type: '-'

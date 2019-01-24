@@ -120,6 +120,7 @@
     "DataScience.pythonVersionHeaderNoPyKernel": "Python version may not match, no ipykernel found:",
     "DataScience.pythonRestartHeader": "Restarted Kernel:",
     "DataScience.executingCodeFailure" : "Executing code failed : {0}",
+    "DataScience.inputWatermark" : "Shift-enter to run",
     "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
     "Linter.replaceWithSelectedLinter": "Multiple linters are enabled in settings. Replace with '{0}'?",
     "DataScience.jupyterSelectURILaunchLocal": "Launch a local Jupyter server when needed",
