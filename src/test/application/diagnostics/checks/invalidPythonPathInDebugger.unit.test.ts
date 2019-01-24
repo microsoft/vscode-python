@@ -271,7 +271,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .returns(() => Promise.resolve({}))
             .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath, Uri.parse('something'));
+        const valid = await diagnosticService.validatePythonPath(pythonPath, 'settings', Uri.parse('something'));
 
         configService.verifyAll();
         helper.verifyAll();
@@ -362,7 +362,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath);
+        const valid = await diagnosticService.validatePythonPath(pythonPath, 'launch');
 
         helper.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');
@@ -394,7 +394,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath);
+        const valid = await diagnosticService.validatePythonPath(pythonPath, 'settings');
 
         helper.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');

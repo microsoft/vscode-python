@@ -19,6 +19,7 @@ import { IDebugConfigurationResolver } from '../types';
 
 @injectable()
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration> implements IDebugConfigurationResolver<T> {
+    protected pythonPathSource: 'settings'|'launch';
     constructor(protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
         protected readonly configurationService: IConfigurationService) { }
@@ -54,6 +55,9 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         if (debugConfiguration.pythonPath === '${config:python.pythonPath}' || !debugConfiguration.pythonPath) {
             const pythonPath = this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = pythonPath;
+            this.pythonPathSource = 'settings';
+        } else{
+            this.pythonPathSource = 'launch';
         }
     }
     protected debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {

@@ -35,10 +35,6 @@ export interface IDiagnosticsService {
     handle(diagnostics: IDiagnostic[]): Promise<void>;
 }
 
-export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
-    validatePythonPath(pythonPath?: string, resource?: Uri): Promise<boolean>;
-}
-
 export const IDiagnosticFilterService = Symbol('IDiagnosticFilterService');
 
 export interface IDiagnosticFilterService {
@@ -60,7 +56,7 @@ export interface IDiagnosticCommand {
 export const IInvalidPythonPathInDebuggerService = Symbol('IInvalidPythonPathInDebuggerService');
 
 export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
-    validatePythonPath(pythonPath?: string, resource?: Uri): Promise<boolean>;
+    validatePythonPath(pythonPath?: string, pythonPathSource?: 'settings'|'launch', resource?: Uri): Promise<boolean>;
 }
 export const ISourceMapSupportService = Symbol('ISourceMapSupportService');
 export interface ISourceMapSupportService {
