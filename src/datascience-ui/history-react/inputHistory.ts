@@ -22,7 +22,6 @@ export class InputHistory {
                 this.move(1);
             }
             const result = this.history[this.pos];
-            this.push(code);
             return result;
         } else {
             return code;
@@ -34,7 +33,6 @@ export class InputHistory {
         if (this.history.length > 0 && this.pos !== undefined) {
             this.move(-1);
             if (this.pos !== undefined) {
-                this.push(code);
                 return this.history[this.pos];
             }
         }
@@ -44,12 +42,6 @@ export class InputHistory {
 
     public onChange() {
         noop();
-    }
-
-    private push(code: string) {
-        if (code.trim().length > 0 && this.history.indexOf(code) < 0) {
-            this.history.push(code);
-        }
     }
 
     private move(dir: number) {

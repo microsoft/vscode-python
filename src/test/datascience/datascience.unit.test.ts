@@ -34,9 +34,9 @@ suite('Data Science Tests', () => {
         history.onChange();
         assert.equal(history.completeUp('2'), '1');
         history.onChange();
-        assert.equal(history.completeUp('1'), '5');
+        assert.equal(history.completeUp('1'), '1');
         history.onChange();
-        assert.equal(history.completeUp('5'), '5');
+        assert.equal(history.completeUp('5'), '1');
         history = new InputHistory([ '4', '3', '2', '1']);
         assert.equal(history.completeDown('5'), '5');
         history.onChange();
