@@ -655,6 +655,26 @@ df.head()`,
                 verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
             },
             {
+                // Important to test as multiline cell magics only work if they are the first item in the cell
+                code:
+                    `#%% Cell Comment
+%%bash
+echo 'hello'`,
+                mimeType: 'text/plain',
+                cellType: 'code',
+                result: 'hello',
+                verifyValue: (d) => assert.equal(d, 'hello', 'Multiline cell magic incorrect')
+            },
+            {
+                // Test shell command should work on PC / Mac / Linux
+                code:
+                    `!echo world`,
+                mimeType: 'text/plain',
+                cellType: 'code',
+                result: 'world',
+                verifyValue: (d) => assert.equal(d, 'world', 'Cell command incorrect')
+            },
+            {
                 // Plotly
                 code:
                     `import matplotlib.pyplot as plt

@@ -20,7 +20,7 @@ import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
-import { concatMultilineString } from '../common';
+import { concatMultilineString, stripComments } from '../common';
 import {
     CellState,
     ICell,
@@ -480,7 +480,7 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
 
-            const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), false);
+            const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), false);
 
             // tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
