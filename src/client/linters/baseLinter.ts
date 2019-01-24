@@ -142,7 +142,7 @@ export abstract class BaseLinter implements ILinter {
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {
-            this.handleError(error, document.uri, executionInfo);
+            await this.handleError(error, document.uri, executionInfo);
             return [];
         }
     }
@@ -152,11 +152,11 @@ export abstract class BaseLinter implements ILinter {
         return this.parseLines(outputLines, regEx);
     }
 
-    protected handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
+    protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
         if (isTestExecution()) {
-            this.errorHandler.handleError(error, resource, execInfo);
+            await this.errorHandler.handleError(error, resource, execInfo);
         } else {
-            this.errorHandler.handleError(error, resource, execInfo)
+            await this.errorHandler.handleError(error, resource, execInfo)
                 .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
         }
     }

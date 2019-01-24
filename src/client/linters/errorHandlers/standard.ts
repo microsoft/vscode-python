@@ -1,4 +1,4 @@
-import { OutputChannel, Uri, window } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -21,7 +21,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
         this.outputChannel.appendLine(`Linting with ${info.id} failed.`);
         this.outputChannel.appendLine(error.toString());
 
-        this.displayLinterError(info.id, resource);
+        await this.displayLinterError(info.id, resource);
         return true;
     }
     private async displayLinterError(linterId: LinterId, resource: Uri) {
