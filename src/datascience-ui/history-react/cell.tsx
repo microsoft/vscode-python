@@ -23,6 +23,7 @@ import { CollapseButton } from './collapseButton';
 import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
+import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
@@ -34,7 +35,7 @@ interface ICellProps {
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
-    history: string [];
+    history: InputHistory | undefined;
     showWatermark: boolean;
     gotoCode(): void;
     delete(): void;

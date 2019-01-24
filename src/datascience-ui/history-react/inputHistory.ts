@@ -2,57 +2,64 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { noop } from '../../client/common/utils/misc';
-
 export class InputHistory {
 
-    private history: string [];
-    private pos: number | undefined;
-    constructor(history: string []) {
-        // History is a stack with 0 being the top
-        this.history = history;
-    }
+    private historyStack: string [] = [];
+    private up: number | undefined;
+    private down: number | undefined;
 
     public completeUp(code: string) : string {
         // If going up, only move if anything in the history
-        if (this.history.length > 0) {
-            if (this.pos === undefined) {
-                this.pos = 0;
-            } else {
-                this.move(1);
+        if (this.historyStack.length > 0) {
+            if (this.up === undefined) {
+                this.up = 0;
             }
-            return this.history[this.pos];
-        } else {
-            return code;
-        }
-    }
 
-    public completeDown(code: string) : string {
-        // If going down, move and then return something if we have a position
-        if (this.history.length > 0 && this.pos !== undefined) {
-            this.move(-1);
-            if (this.pos !== undefined) {
-                return this.history[this.pos];
-            }
+            const result = this.up < this.historyStack.length ? this.historyStack[this.up] : code;
+            this.adjustCursors(this.up);
+            return result;
         }
 
         return code;
     }
 
-    public onChange() {
-        noop();
+    public completeDown(code: string) : string {
+        // If going down, move and then return something if we have a position
+        if (this.historyStack.length > 0 && this.down !== undefined) {
+            const result = this.historyStack[this.down];
+            this.adjustCursors(this.down);
+            return result;
+        }
+
+        return code;
     }
 
-    private move(dir: number) {
-        if (this.pos !== undefined) {
-            let result : number | undefined = this.pos + dir;
-            if (result >= this.history.length - 1) {
-                result = this.history.length - 1;
-            }
-            if (result < 0) {
-                result = undefined;
-            }
-            this.pos = result;
+    public add(code: string) {
+        // Compute our new history (dupes should reorder adding dupes)
+        const dupeIndex = this.historyStack.indexOf(code);
+        this.historyStack = dupeIndex >= 0 ? this.historyStack : [code, ...this.historyStack];
+
+        // Reset position if new code
+        if (dupeIndex < 0) {
+            this.reset();
+        }
+    }
+
+    private reset() {
+        this.up = undefined;
+        this.down = undefined;
+    }
+
+    private adjustCursors(currentPos: number) {
+        if (currentPos < this.historyStack.length) {
+            this.up = currentPos + 1;
+        } else {
+            this.up = this.historyStack.length;
+        }
+        if (currentPos > 0) {
+            this.down = currentPos - 1;
+        } else {
+            this.down = undefined;
         }
     }
 }

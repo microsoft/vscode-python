@@ -17,6 +17,7 @@ import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
+import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
@@ -29,7 +30,6 @@ export interface IMainPanelProps {
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
-
     private bottom: HTMLDivElement | undefined;
 
     // tslint:disable-next-line:max-func-body-length
@@ -37,7 +37,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], historyStack: [], submittedText: false};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory()};
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -205,7 +205,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
-                    history={cellVM.editable ? this.state.historyStack : []}
+                    history={cellVM.editable ? this.state.history : undefined}
                     maxTextSize={maxTextSize}
                     autoFocus={document.hasFocus()}
                     testMode={this.props.testMode}
@@ -628,10 +628,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // hide all inputs turned on.
             editCell.directInput = true;
 
-            // Compute our new history (dupes should reorder adding dupes)
-            const dupeIndex = this.state.historyStack.indexOf(code);
-            const newHistory = dupeIndex >= 0 ? [code, ...this.state.historyStack.filter((v, i) => i !== dupeIndex)] : [code, ...this.state.historyStack];
-
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
@@ -639,7 +635,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,
-                historyStack: newHistory,
                 submittedText: true
             });
 
