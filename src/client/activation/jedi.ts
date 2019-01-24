@@ -21,10 +21,10 @@ import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';
 import { OnEnterFormatter } from '../typeFormatters/onEnterFormatter';
 import { IUnitTestManagementService } from '../unittests/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
-import { IExtensionActivator } from './types';
+import { ILanguageServerActivator } from './types';
 
 @injectable()
-export class JediExtensionActivator implements IExtensionActivator {
+export class JediExtensionActivator implements ILanguageServerActivator {
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
@@ -36,19 +36,36 @@ export class JediExtensionActivator implements IExtensionActivator {
     public async activate(): Promise<void> {
         const context = this.context;
 
-        const jediFactory = this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
+        const jediFactory = (this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager));
         context.subscriptions.push(jediFactory);
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
         context.subscriptions.push(jediFactory);
-        context.subscriptions.push(languages.registerRenameProvider(this.documentSelector, new PythonRenameProvider(this.serviceManager)));
+        context.subscriptions.push(
+            languages.registerRenameProvider(this.documentSelector, new PythonRenameProvider(this.serviceManager))
+        );
         const definitionProvider = new PythonDefinitionProvider(jediFactory);
 
         context.subscriptions.push(languages.registerDefinitionProvider(this.documentSelector, definitionProvider));
-        context.subscriptions.push(languages.registerHoverProvider(this.documentSelector, new PythonHoverProvider(jediFactory)));
-        context.subscriptions.push(languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory)));
-        context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
-        context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
+        context.subscriptions.push(
+            languages.registerHoverProvider(this.documentSelector, new PythonHoverProvider(jediFactory))
+        );
+        context.subscriptions.push(
+            languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory))
+        );
+        context.subscriptions.push(
+            languages.registerCompletionItemProvider(
+                this.documentSelector,
+                new PythonCompletionItemProvider(jediFactory, this.serviceManager),
+                '.'
+            )
+        );
+        context.subscriptions.push(
+            languages.registerCodeLensProvider(
+                this.documentSelector,
+                this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)
+            )
+        );
 
         const onTypeDispatcher = new OnTypeFormattingDispatcher({
             '\n': new OnEnterFormatter(),
@@ -56,7 +73,14 @@ export class JediExtensionActivator implements IExtensionActivator {
         });
         const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
         if (onTypeTriggers) {
-            context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, onTypeDispatcher, onTypeTriggers.first, ...onTypeTriggers.more));
+            context.subscriptions.push(
+                languages.registerOnTypeFormattingEditProvider(
+                    PYTHON,
+                    onTypeDispatcher,
+                    onTypeTriggers.first,
+                    ...onTypeTriggers.more
+                )
+            );
         }
 
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
@@ -67,13 +91,23 @@ export class JediExtensionActivator implements IExtensionActivator {
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
         if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-            context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
+            context.subscriptions.push(
+                languages.registerSignatureHelpProvider(
+                    this.documentSelector,
+                    new PythonSignatureProvider(jediFactory),
+                    '(',
+                    ','
+                )
+            );
         }
 
-        context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
+        context.subscriptions.push(
+            languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer))
+        );
 
         const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
-        testManagementService.activate()
+        testManagementService
+            .activate()
             .then(() => testManagementService.activateCodeLenses(symbolProvider))
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
     }

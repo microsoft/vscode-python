@@ -48,8 +48,8 @@ suite('Interpreters - Auto Selection', () => {
         public initializeStore(): Promise<void> {
             return super.initializeStore();
         }
-        public storeAutoSelectedInterperter(resource: Resource, interpreter: PythonInterpreter | undefined) {
-            return super.storeAutoSelectedInterperter(resource, interpreter);
+        public storeAutoSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
+            return super.storeAutoSelectedInterpreter(resource, interpreter);
         }
     }
     setup(() => {
@@ -169,7 +169,7 @@ suite('Interpreters - Auto Selection', () => {
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
 
         await autoSelectionService.initializeStore();
-        await autoSelectionService.storeAutoSelectedInterperter(undefined, interpreterInfo);
+        await autoSelectionService.storeAutoSelectedInterpreter(undefined, interpreterInfo);
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(undefined);
 
         verify(state.updateValue(interpreterInfo)).once();
@@ -187,7 +187,7 @@ suite('Interpreters - Auto Selection', () => {
         when(state.value).thenReturn(interpreterInfoInState);
 
         await autoSelectionService.initializeStore();
-        await autoSelectionService.storeAutoSelectedInterperter(undefined, interpreterInfo);
+        await autoSelectionService.storeAutoSelectedInterpreter(undefined, interpreterInfo);
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(undefined);
 
         verify(state.updateValue(anything())).never();
@@ -205,7 +205,7 @@ suite('Interpreters - Auto Selection', () => {
         when(state.value).thenReturn(interpreterInfoInState);
 
         await autoSelectionService.initializeStore();
-        await autoSelectionService.storeAutoSelectedInterperter(undefined, interpreterInfo);
+        await autoSelectionService.storeAutoSelectedInterpreter(undefined, interpreterInfo);
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(undefined);
 
         verify(state.updateValue(anything())).once();
@@ -234,7 +234,7 @@ suite('Interpreters - Auto Selection', () => {
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
 
         await autoSelectionService.initializeStore();
-        await autoSelectionService.storeAutoSelectedInterperter(resource, interpreterInfo);
+        await autoSelectionService.storeAutoSelectedInterpreter(resource, interpreterInfo);
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(resource);
 
         verify(state.updateValue(interpreterInfo)).never();
@@ -263,7 +263,7 @@ suite('Interpreters - Auto Selection', () => {
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
 
         await autoSelectionService.initializeStore();
-        await autoSelectionService.storeAutoSelectedInterperter(resource, interpreterInfo);
+        await autoSelectionService.storeAutoSelectedInterpreter(resource, interpreterInfo);
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(undefined);
 
         verify(state.updateValue(interpreterInfo)).never();
@@ -278,7 +278,7 @@ suite('Interpreters - Auto Selection', () => {
         const globalInterpreterInfo = { path: 'global Value' };
         when(state.value).thenReturn(globalInterpreterInfo as any);
         await autoSelectionService.initializeStore();
-        await autoSelectionService.storeAutoSelectedInterperter(resource, interpreterInfo);
+        await autoSelectionService.storeAutoSelectedInterpreter(resource, interpreterInfo);
         const anotherResourceOfAnotherWorkspace = Uri.parse('Some other workspace');
         const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(anotherResourceOfAnotherWorkspace);
 
@@ -287,13 +287,13 @@ suite('Interpreters - Auto Selection', () => {
         verify(state.updateValue(interpreterInfo)).never();
         expect(selectedInterpreter).to.deep.equal(globalInterpreterInfo);
     });
-    test('setWorkspaceInterpreter will invoke storeAutoSelectedInterperter with same args', async () => {
+    test('setWorkspaceInterpreter will invoke storeAutoSelectedInterpreter with same args', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
         const resource = Uri.parse('one');
         const moq = typemoq.Mock.ofInstance(autoSelectionService, typemoq.MockBehavior.Loose, false);
         moq
-            .setup(m => m.storeAutoSelectedInterperter(typemoq.It.isValue(resource), typemoq.It.isValue(interpreterInfo)))
+            .setup(m => m.storeAutoSelectedInterpreter(typemoq.It.isValue(resource), typemoq.It.isValue(interpreterInfo)))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         moq.callBase = true;
@@ -301,12 +301,12 @@ suite('Interpreters - Auto Selection', () => {
 
         moq.verifyAll();
     });
-    test('setGlobalInterpreter will invoke storeAutoSelectedInterperter with same args and without a resource', async () => {
+    test('setGlobalInterpreter will invoke storeAutoSelectedInterpreter with same args and without a resource', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
         const moq = typemoq.Mock.ofInstance(autoSelectionService, typemoq.MockBehavior.Loose, false);
         moq
-            .setup(m => m.storeAutoSelectedInterperter(typemoq.It.isValue(undefined), typemoq.It.isValue(interpreterInfo)))
+            .setup(m => m.storeAutoSelectedInterpreter(typemoq.It.isValue(undefined), typemoq.It.isValue(interpreterInfo)))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         moq.callBase = true;

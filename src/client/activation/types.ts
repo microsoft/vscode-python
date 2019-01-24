@@ -10,18 +10,23 @@ import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, LanguageServerDownloadChannels, Resource } from '../common/types';
 
-export const IExtensionActivationService = Symbol('IExtensionActivationService');
-export interface IExtensionActivationService {
+export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
+export interface IExtensionActivationManager extends IDisposable {
     activate(): Promise<void>;
 }
 
-export enum ExtensionActivators {
+export const IExtensionActivationService = Symbol('IExtensionActivationService');
+export interface IExtensionActivationService {
+    activate(resource: Resource): Promise<void>;
+}
+
+export enum LanguageServerActivator {
     Jedi = 'Jedi',
     DotNet = 'DotNet'
 }
 
-export const IExtensionActivator = Symbol('IExtensionActivator');
-export interface IExtensionActivator extends IDisposable {
+export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
+export interface ILanguageServerActivator extends IDisposable {
     activate(): Promise<void>;
 }
 

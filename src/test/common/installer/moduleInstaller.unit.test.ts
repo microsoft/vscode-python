@@ -194,7 +194,7 @@ suite('Module Installer', () => {
                             }
 
                             if (installerClass === PipInstaller) {
-                                test(`Ensure getActiveInterperter is used in PipInstaller (${product.name})`, async () => {
+                                test(`Ensure getActiveInterpreter is used in PipInstaller (${product.name})`, async () => {
                                     setActiveInterpreter();
                                     try {
                                         await installer.installModule(product.name, resource);

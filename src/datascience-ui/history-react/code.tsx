@@ -11,6 +11,7 @@ import * as RCM from 'react-codemirror';
 
 import './code.css';
 
+import { getLocString } from '../react-common/locReactSide';
 import { Cursor } from './cursor';
 import { InputHistory } from './inputHistory';
 
@@ -22,6 +23,7 @@ export interface ICodeProps {
     readOnly: boolean;
     history: string[];
     cursorType: string;
+    showWatermark: boolean;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
 
@@ -33,6 +35,7 @@ interface ICodeState {
     cursorTop: number;
     cursorBottom: number;
     charUnderCursor: string;
+    allowWatermark: boolean;
 }
 
 export class Code extends React.Component<ICodeProps, ICodeState> {
@@ -43,7 +46,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     constructor(prop: ICodeProps) {
         super(prop);
-        this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: ''};
+        this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: '', allowWatermark: true};
         this.history = new InputHistory(this.props.history);
     }
 
@@ -57,6 +60,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     public render() {
         const readOnly = this.props.testMode || this.props.readOnly;
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
+        const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         return (
             <div className={classes}>
                 <Cursor
@@ -84,15 +88,29 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
                             cursorBlinkRate: -1,
-                            readOnly: readOnly ? 'nocursor' : false
+                            readOnly: readOnly ? 'nocursor' : false,
+                            lineWrapping: true
                         }
                     }
                     ref={this.updateCodeMirror}
                     onFocusChange={this.onFocusChange}
                     onCursorActivity={this.onCursorActivity}
                 />
+                <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>
         );
+    }
+
+    public onParentClick(ev: React.MouseEvent<HTMLDivElement>) {
+        const readOnly = this.props.testMode || this.props.readOnly;
+        if (this.codeMirror && !readOnly) {
+            ev.stopPropagation();
+            this.codeMirror.focus();
+        }
+    }
+
+    private getWatermarkString = () : string => {
+        return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
     }
 
     private onCursorActivity = (codeMirror: CodeMirror.Editor) => {
@@ -250,5 +268,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private onChange = (newValue: string, change: CodeMirror.EditorChange) => {
         this.history.onChange();
+        this.setState({allowWatermark: false});
     }
 }

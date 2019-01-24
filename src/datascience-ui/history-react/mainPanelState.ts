@@ -18,6 +18,7 @@ export interface IMainPanelState {
     undoStack : ICellViewModel[][];
     redoStack : ICellViewModel[][];
     historyStack: string[];
+    submittedText: boolean;
 }
 
 // This function generates test state when running under a browser instead of inside of
@@ -28,7 +29,8 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         skipNextScroll : false,
         undoStack : [],
         redoStack : [],
-        historyStack: []
+        historyStack: [],
+        submittedText: false
     };
 }
 
@@ -121,7 +123,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
         },
         {
             cell_type: 'code',
-            execution_count: 4,
+            execution_count: 467,
             metadata: {
                 slideshow: {
                     slide_type: '-'
