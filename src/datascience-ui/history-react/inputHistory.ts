@@ -21,8 +21,7 @@ export class InputHistory {
             } else {
                 this.move(1);
             }
-            const result = this.history[this.pos];
-            return result;
+            return this.history[this.pos];
         } else {
             return code;
         }
@@ -45,13 +44,15 @@ export class InputHistory {
     }
 
     private move(dir: number) {
-        let result = this.pos + dir;
-        if (result >= this.history.length - 1) {
-            result = this.history.length - 1;
+        if (this.pos !== undefined) {
+            let result : number | undefined = this.pos + dir;
+            if (result >= this.history.length - 1) {
+                result = this.history.length - 1;
+            }
+            if (result < 0) {
+                result = undefined;
+            }
+            this.pos = result;
         }
-        if (result < 0) {
-            result = undefined;
-        }
-        this.pos = result;
     }
 }

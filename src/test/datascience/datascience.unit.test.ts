@@ -63,6 +63,6 @@ suite('Data Science Tests', () => {
         assert.equal(history.completeDown('2'), '3');
         assert.equal(history.completeDown('3'), '4');
         assert.equal(history.completeDown(''), '');
-    })
+    });
 
 });
