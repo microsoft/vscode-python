@@ -13,7 +13,6 @@ import {
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
-import { LINTERID_BY_PRODUCT } from './constants';
 import { Flake8 } from './flake8';
 import { LinterInfo, PylintLinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
@@ -49,24 +48,17 @@ export class LinterManager implements ILinterManager {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.linters = [];
-        for (const [prod, linterID] of LINTERID_BY_PRODUCT) {
-            let info: ILinterInfo;
-            if (prod === Product.pylint) {
-                info = new PylintLinterInfo(
-                    this.configService,
-                    this.workspaceService,
-                    ['.pylintrc', 'pylintrc']
-                );
-            } else {
-                info = new LinterInfo(
-                    prod,
-                    linterID,
-                    this.configService
-                );
-            }
-            this.linters.push(info);
-        }
+        // Note that we use unit tests to ensure all the linters are here.
+        this.linters = [
+            new LinterInfo(Product.bandit, 'bandit', this.configService),
+            new LinterInfo(Product.flake8, 'flake8', this.configService),
+            new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
+            new LinterInfo(Product.mypy, 'mypy', this.configService),
+            new LinterInfo(Product.pep8, 'pep8', this.configService),
+            new LinterInfo(Product.prospector, 'prospector', this.configService),
+            new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
+            new LinterInfo(Product.pylama, 'pylama', this.configService)
+        ];
     }
 
     public getAllLinterInfos(): ILinterInfo[] {
@@ -78,7 +70,7 @@ export class LinterManager implements ILinterManager {
         if (x >= 0) {
             return this.linters[x];
         }
-        throw new Error('Invalid linter');
+        throw new Error(`Invalid linter '${Product[product]}'`);
     }
 
     public async isLintingEnabled(silent: boolean, resource?: Uri): Promise<boolean> {
