@@ -374,7 +374,7 @@ suite('Linting Products', () => {
         for (const product of LINTERID_BY_PRODUCT.keys()) {
             const prodType = prodService.getProductType(product);
             assert.notEqual(prodType, undefined, `${Product[product]} is not not properly registered`);
-            assert.notEqual(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
+            assert.equal(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
         }
     });
 
