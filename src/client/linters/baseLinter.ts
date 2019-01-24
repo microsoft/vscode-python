@@ -154,10 +154,12 @@ export abstract class BaseLinter implements ILinter {
 
     protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
         if (isTestExecution()) {
-            await this.errorHandler.handleError(error, resource, execInfo);
+            this.errorHandler.handleError(error, resource, execInfo)
+                .ignoreErrors();
         } else {
-            await this.errorHandler.handleError(error, resource, execInfo)
-                .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
+            this.errorHandler.handleError(error, resource, execInfo)
+                .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'))
+                .ignoreErrors();
         }
     }
 

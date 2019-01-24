@@ -21,7 +21,8 @@ export class StandardErrorHandler extends BaseErrorHandler {
         this.outputChannel.appendLine(`Linting with ${info.id} failed.`);
         this.outputChannel.appendLine(error.toString());
 
-        await this.displayLinterError(info.id, resource);
+        this.displayLinterError(info.id, resource)
+            .ignoreErrors();
         return true;
     }
     private async displayLinterError(linterId: LinterId, resource: Uri) {
