@@ -2,10 +2,11 @@
     position: absolute;
     z-index:1005;
     font-family: var(--code-font-family);
+    pointer-events: none;
 }
 
 .cursor-block {
-    border: 1px solid var(--vscode-editor-foreground);
+    border: .05px solid var(--vscode-editor-foreground);
     min-width: 5px;
     margin-left: -1px;
     margin-right: -1px;

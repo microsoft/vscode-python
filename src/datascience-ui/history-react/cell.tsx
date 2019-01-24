@@ -52,8 +52,11 @@ export interface ICellViewModel {
 }
 
 export class Cell extends React.Component<ICellProps> {
+    private code: Code | undefined;
+
     constructor(prop: ICellProps) {
         super(prop);
+        this.state = {focused: this.props.autoFocus};
     }
 
     public render() {
@@ -107,11 +110,12 @@ export class Cell extends React.Component<ICellProps> {
         const results: JSX.Element[] = this.renderResults();
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || (results && results.length > 0);
+        const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
 
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className='cell-wrapper'>
+                <div className='cell-wrapper' role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
@@ -120,10 +124,8 @@ export class Cell extends React.Component<ICellProps> {
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
                         </CellButton>
                     </MenuBar>
-                    <div className='cell-outer'>
-                        <div className='controls-div'>
-                            {this.renderControls()}
-                        </div>
+                    <div className={cellOuterClass}>
+                        {this.renderControls()}
                         <div className='content-div'>
                             <div className='cell-result-container'>
                                 {this.renderInputs()}
@@ -137,6 +139,13 @@ export class Cell extends React.Component<ICellProps> {
 
         // Shouldn't be rendered because not allowing empty input and not a direct input cell
         return null;
+    }
+
+    private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
+        // When we receive a click, tell the code element.
+        if (this.code) {
+            this.code.onParentClick(ev);
+        }
     }
 
     private showInputs = () : boolean => {
@@ -156,20 +165,32 @@ export class Cell extends React.Component<ICellProps> {
         const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '0';
-        const afterExecution = this.props.cellVM.editable ?
-            <CommandPrompt /> :
-            <CollapseButton theme={this.props.baseTheme}
+
+        // Only code cells have controls. Markdown should be empty
+        if (this.isCodeCell()) {
+
+            return this.props.cellVM.editable ?
+                (
+                    <div className='controls-div'>
+                        <CommandPrompt />
+                    </div>
+                ) : (
+                    <div className='controls-div'>
+                        <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
+                        <CollapseButton theme={this.props.baseTheme}
                             visible={collapseVisible}
                             open={this.props.cellVM.inputBlockOpen}
                             onClick={this.toggleInputBlock}
-                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>;
+                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')} />
+                    </div>
+                );
+        } else {
+            return null;
+        }
+    }
 
-        return (
-            <div className='controls-flex'>
-                <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()}/>
-                {afterExecution}
-            </div>
-        );
+    private updateCodeRef = (ref: Code) => {
+        this.code = ref;
     }
 
     private renderInputs = () => {
@@ -186,6 +207,7 @@ export class Cell extends React.Component<ICellProps> {
                         readOnly={!this.props.cellVM.editable}
                         onSubmit={this.props.submitNewCode}
                         onChangeLineCount={this.onChangeLineCount}
+                        ref={this.updateCodeRef}
                         />
                 </div>
             );
