@@ -313,6 +313,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
+    [Telemetry.RunSelectionOrLine]: never | undefined;
     [Telemetry.RunCell]: never | undefined;
     [Telemetry.RunCurrentCell]: never | undefined;
     [Telemetry.RunCurrentCellAndAdvance]: never | undefined;

@@ -142,6 +142,7 @@ export interface ICodeWatcher {
     runCell(range: Range): void;
     runCurrentCell(): void;
     runCurrentCellAndAdvance(): void;
+    runSelectionOrLine(activeEditor: TextEditor | undefined): void;
 }
 
 export enum CellState {
