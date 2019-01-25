@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.1.1 (22 Jan 2019)
+## 2019.1.0 (29 Jan 2019)
 
 ### Thanks
 
@@ -55,6 +55,10 @@ part of!
 
 ### Enhancements
 
+1. Perform all validation checks in the background
+   ([#3019](https://github.com/Microsoft/vscode-python/issues/3019))
+1. Watermark for Python Interactive input prompt
+   ([#4111](https://github.com/Microsoft/vscode-python/issues/4111))
 1. Create diagnostics for failed/skipped tests that were run with pytest.
    (thanks [Chris NeJame](https://github.com/SalmonMode/))
    ([#120](https://github.com/Microsoft/vscode-python/issues/120))
@@ -99,6 +103,24 @@ part of!
 
 ### Fixes
 
+1. Auto-select virtual environment in multi-root workspaces
+   ([#3501](https://github.com/Microsoft/vscode-python/issues/3501))
+1. Validate interpreter in multi-root workspaces
+   ([#3502](https://github.com/Microsoft/vscode-python/issues/3502))
+1. Allow clicking anywhere in an input cell to give focus to the input box for the Python Interactive window
+   ([#4076](https://github.com/Microsoft/vscode-python/issues/4076))
+1. Cursor in Interactive Windows now appears on whitespace
+   ([#4081](https://github.com/Microsoft/vscode-python/issues/4081))
+1. Fix problem with double scrollbars when typing in the input window. Make code wrap instead.
+   ([#4084](https://github.com/Microsoft/vscode-python/issues/4084))
+1. Remove execution count from the prompt cell.
+   ([#4086](https://github.com/Microsoft/vscode-python/issues/4086))
+1. Make sure showing a plain Python Interactive window lists out the sys info
+   ([#4088](https://github.com/Microsoft/vscode-python/issues/4088))
+1. Fix python interactive window up/down arrows in the input prompt to behave like a terminal.
+   ([#4092](https://github.com/Microsoft/vscode-python/issues/4092))
+1. Handle stdout changes with updates to pytest 4.1.x series (without breaking 4.0.x series parsing).
+   ([#4099](https://github.com/Microsoft/vscode-python/issues/4099))
 1. Fix bug affecting multiple linters used in a workspace.
    (thanks [Ilia Novoselov](https://github.com/nullie))
    ([#2571](https://github.com/Microsoft/vscode-python/issues/2571))
