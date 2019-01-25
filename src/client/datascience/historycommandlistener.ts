@@ -134,7 +134,13 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
                     await this.waitForStatus(async () => {
                         if (uri) {
-                            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+                            let directoryChange;
+                            const settings = this.configuration.getSettings();
+                            if (settings.datascience.changeDirOnImportExport) {
+                                directoryChange = uri.fsPath;
+                            }
+
+                            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
                             await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
                         }
                     }, localize.DataScience.exportingFormat(), file);
@@ -218,7 +224,12 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                 })));
 
             // Then save them to the file
-            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+            let directoryChange;
+            if (settings.datascience.changeDirOnImportExport) {
+                directoryChange = file;
+            }
+
+            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
             await this.fileSystem.writeFile(file, JSON.stringify(notebook));
 
         } finally {
