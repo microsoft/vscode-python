@@ -40,7 +40,7 @@ export enum InterruptResult {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
@@ -56,7 +56,7 @@ export interface IJupyterExecution {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
+    connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
@@ -190,7 +190,7 @@ export interface IStatusProvider {
     set(message: string, timeout?: number) : Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void) : Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void, skipHistory?: boolean) : Promise<T>;
 }
 
 export interface IJupyterCommand {

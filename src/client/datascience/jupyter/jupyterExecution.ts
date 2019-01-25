@@ -113,7 +113,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return Cancellation.race(() => this.isCommandSupported(KernelSpecCommand), cancelToken);
     }
 
-    public connectToNotebookServer(uri: string | undefined, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
+    public connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let connection: IConnection;
@@ -151,7 +151,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
                 // Try to connect to our jupyter process
                 const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
-                await result.connect(connection, kernelSpec, cancelToken, workingDir);
+                await result.connect(connection, kernelSpec, usingDarkTheme, cancelToken, workingDir);
                 sendTelemetryEvent(uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
                 return result;
             } catch (err) {
