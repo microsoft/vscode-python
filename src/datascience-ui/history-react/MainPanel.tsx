@@ -6,8 +6,9 @@ import './mainPanel.css';
 import { min } from 'lodash';
 import * as React from 'react';
 
-import { concatMultilineString, generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages, RegExpValues } from '../../client/datascience/constants';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
+import { HistoryMessages } from '../../client/datascience/constants';
 import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -18,7 +19,7 @@ import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
-import { createCellVM, createEditableCellVM, generateTestState, IMainPanelState } from './mainPanelState';
+import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
 export interface IMainPanelProps {
@@ -392,7 +393,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         if (payload) {
             const cell = payload as ICell;
-            let cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
+            let cellVM: ICellViewModel = createCellVM(cell, getSettings(), this.inputBlockToggled);
 
             // Set initial cell visibility and collapse
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
@@ -504,13 +505,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (cellVM.inputBlockOpen !== expanded && cellVM.inputBlockCollapseNeeded && cellVM.inputBlockShow) {
                 if (expanded) {
                     // Expand the cell
-                    const newText = this.extractInputText(cellVM.cell);
+                    const newText = extractInputText(cellVM.cell, getSettings());
 
                     newCellVM.inputBlockOpen = true;
                     newCellVM.inputBlockText = newText;
                 } else {
                     // Collapse the cell
-                    let newText = this.extractInputText(cellVM.cell);
+                    let newText = extractInputText(cellVM.cell, getSettings());
                     if (newText.length > 0) {
                         newText = newText.split('\n', 1)[0];
                         newText = newText.slice(0, 255); // Slice to limit length, slicing past length is fine
@@ -526,10 +527,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return cellVM;
-    }
-
-    private extractInputText = (cell: ICell) => {
-        return concatMultilineString(cell.data.source);
     }
 
     private sendInfo = () => {
@@ -613,14 +610,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Change type to markdown if necessary
             const split = code.splitLines({trim: false});
             const firstLine = split[0];
-            if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
+            const matcher = new CellMatcher(getSettings());
+            if (matcher.isMarkdown(firstLine)) {
                 editCell.cell.data.cell_type = 'markdown';
                 editCell.cell.data.source = generateMarkdownFromCodeLines(split);
                 editCell.cell.state = CellState.finished;
             }
 
             // Update input controls (always show expanded since we just edited it.)
-            editCell = createCellVM(editCell.cell, this.inputBlockToggled);
+            editCell = createCellVM(editCell.cell, getSettings(), this.inputBlockToggled);
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
             editCell = this.alterCellVM(editCell, true, !collapseInputs);
 

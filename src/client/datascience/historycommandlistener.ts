@@ -120,7 +120,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
-                const cells = generateCellsFromDocument(activeEditor.document);
+                const cells = generateCellsFromDocument(activeEditor.document, this.configuration.getSettings().datascience);
                 if (cells) {
                     const filtersKey = localize.DataScience.exportDialogFilter();
                     const filtersObject: { [name: string]: string[] } = {};

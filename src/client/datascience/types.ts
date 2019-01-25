@@ -134,10 +134,11 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
-    addFile(document: TextDocument): void;
+    setDocument(document: TextDocument): void;
     getFileName() : string;
     getVersion() : number;
     getCodeLenses() : CodeLens[];
+    getCachedSettings() : IDataScienceSettings | undefined;
     runAllCells(): void;
     runCell(range: Range): void;
     runCurrentCell(): void;

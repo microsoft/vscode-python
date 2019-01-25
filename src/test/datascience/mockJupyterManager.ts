@@ -150,7 +150,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{result: string; haveMore: boolean}>) {
-        const cells = generateCells(code, 'foo.py', 1, true);
+        const cells = generateCells(undefined, code, 'foo.py', 1, true);
         cells.forEach(c => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
@@ -181,7 +181,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
-        const cells = generateCells(code, 'foo.py', 1, true);
+        const cells = generateCells(undefined, code, 'foo.py', 1, true);
         cells.forEach(c => {
             const key = concatMultilineString(stripComments(c.data.source)).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {

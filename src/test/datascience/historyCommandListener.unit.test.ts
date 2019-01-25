@@ -301,7 +301,7 @@ suite('History command listener', async () => {
         await documentManager.showTextDocument(doc);
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
         server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny())).returns(() => {
-            return Promise.resolve(generateCells('a=1', 'bar.py', 0, false));
+            return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false));
         });
 
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));

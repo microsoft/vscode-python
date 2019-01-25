@@ -164,7 +164,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    function testMimeTypes(types: { code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
+    function testMimeTypes(types: { markdownRegEx: string | undefined; code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
         runTest('MimeTypes', async () => {
             // Prefill with the output (This is only necessary for mocking)
             types.forEach(t => {
@@ -180,6 +180,7 @@ suite('Jupyter notebook tests', () => {
                     statusCount += 1;
                 });
                 for (let i = 0; i < types.length; i += 1) {
+                    ioc.getSettings().datascience.markdownRegularExpression = types[i].markdownRegEx;
                     const prevCount = statusCount;
                     await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
                     if (types[i].cellType !== 'markdown') {
@@ -605,6 +606,7 @@ while keep_going:
     testMimeTypes(
         [
             {
+                markdownRegEx: undefined,
                 code:
                     `a=1
 a`,
@@ -614,6 +616,7 @@ a`,
                 verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -625,6 +628,7 @@ df.head()`,
                 verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -635,6 +639,7 @@ df.head()`,
                 verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `#%% [markdown]#
 # #HEADER`,
@@ -644,7 +649,18 @@ df.head()`,
                 verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
             },
             {
+                markdownRegEx: '\\s*#\\s*<markdowncell>',
+                code:
+                    `# <markdowncell>
+# #HEADER`,
+                mimeType: 'text/plain',
+                cellType: 'markdown',
+                result: '#HEADER',
+                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+            },
+            {
                 // Test relative directories too.
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read_csv("./DefaultSalesReport.csv")
@@ -656,6 +672,7 @@ df.head()`,
             },
             {
                 // Important to test as multiline cell magics only work if they are the first item in the cell
+                markdownRegEx: undefined,
                 code:
                     `#%% Cell Comment
 %%bash
@@ -667,6 +684,7 @@ echo 'hello'`,
             },
             {
                 // Test shell command should work on PC / Mac / Linux
+                markdownRegEx: undefined,
                 code:
                     `!echo world`,
                 mimeType: 'text/plain',
@@ -676,6 +694,7 @@ echo 'hello'`,
             },
             {
                 // Plotly
+                markdownRegEx: undefined,
                 code:
                     `import matplotlib.pyplot as plt
 import matplotlib as mpl

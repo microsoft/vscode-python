@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
 
@@ -33,29 +33,35 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // See if we already have a watcher for this file and version
-        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.fileName, document.version);
+        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
         if (codeWatcher) {
             return codeWatcher.getCodeLenses();
         }
 
         // Create a new watcher for this file
         const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
-        newCodeWatcher.addFile(document);
+        newCodeWatcher.setDocument(document);
         this.activeCodeWatchers.push(newCodeWatcher);
         return newCodeWatcher.getCodeLenses();
     }
 
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
-        return this.matchWatcher(document.fileName, document.version);
+        return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
     }
 
-    private matchWatcher(fileName: string, version: number) : ICodeWatcher | undefined {
+    private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings) : ICodeWatcher | undefined {
         const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === fileName);
         if (index >= 0) {
             const item = this.activeCodeWatchers[index];
             if (item.getVersion() === version) {
-                return item;
+                // Also make sure the cached settings are the same. Otherwise these code lenses
+                // were created with old settings
+                const settingsStr = JSON.stringify(settings);
+                const itemSettings = JSON.stringify(item.getCachedSettings());
+                if (settingsStr === itemSettings) {
+                    return item;
+                }
             }
             // If we have an old version remove it from the active list
             this.activeCodeWatchers.splice(index, 1);

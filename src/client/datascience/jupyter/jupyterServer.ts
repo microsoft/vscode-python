@@ -15,7 +15,13 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger
+} from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -122,6 +128,7 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager) {
         this.asyncRegistry.push(this);
     }
@@ -203,7 +210,7 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
-            const cells = generateCells(code, file, line, true, id);
+            const cells = generateCells(this.configService.getSettings().datascience, code, file, line, true, id);
 
             // Might have more than one (markdown might be split)
             if (cells.length > 1) {
