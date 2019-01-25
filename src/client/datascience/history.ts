@@ -602,6 +602,16 @@ export class History implements IWebPanelMessageListener, IHistory {
         let workingDir: string | undefined;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
         const status = this.setStatus(localize.DataScience.connectingToJupyter());
+        // Check for dark theme, if so set matplot lib to use dark_background settings
+        let darkTheme: boolean = false;
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        if (workbench) {
+            const theme = workbench.get<string>('colorTheme');
+            if (theme) {
+                darkTheme = /dark/i.test(theme);
+            }
+        }
+
         try {
             // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
             if (serverURI === Settings.JupyterServerLocalLaunch) {
@@ -609,7 +619,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
                 workingDir = await this.calculateWorkingDirectory();
             }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, useDefaultConfig, undefined, workingDir);
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {

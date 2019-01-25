@@ -97,6 +97,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Setup our default cells that happen for everything
         this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt');
+        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')');
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');

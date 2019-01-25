@@ -18,6 +18,7 @@ export class MockJupyterSession implements IJupyterSession {
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
+    private executes: string[] = [];
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -45,6 +46,9 @@ export class MockJupyterSession implements IJupyterSession {
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture {
         // Content should have the code
         const cell = this.findCell(content.code);
+        if (cell) {
+            this.executes.push(content.code);
+        }
 
         // Create a new dummy request
         this.executionCount += 1;
@@ -62,6 +66,10 @@ export class MockJupyterSession implements IJupyterSession {
 
     public async dispose(): Promise<void> {
         await sleep(10);
+    }
+
+    public getExecutes() : string [] {
+        return this.executes;
     }
 
     private findCell = (code : string) : ICell => {

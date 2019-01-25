@@ -13,7 +13,6 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
@@ -116,20 +115,21 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
     private onStatusChangedEvent: vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
+    private usingDarkTheme: boolean | undefined;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
         @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager) {
         this.asyncRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken, workingDir?: string): Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> => {
         // Save connection info. Determines if we need to change directory or not
         this.connInfo = connInfo;
         this.workingDir = workingDir;
+        this.usingDarkTheme = usingDarkTheme;
 
         // Start our session
         this.session = await this.sessionManager.startNew(connInfo, kernelSpec, cancelToken);
@@ -415,18 +415,8 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
             this.changeDirectoryIfPossible(this.workingDir).ignoreErrors();
         }
 
-        // Check for dark theme, if so set matplot lib to use dark_background settings
-        let darkTheme: boolean = false;
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        if (workbench) {
-            const theme = workbench.get<string>('colorTheme');
-            if (theme) {
-                darkTheme = /dark/i.test(theme);
-            }
-        }
-
         this.executeSilently(
-            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${darkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${this.usingDarkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
             cancelToken
         ).ignoreErrors();
     }

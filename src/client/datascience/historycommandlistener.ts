@@ -183,7 +183,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                             return Promise.resolve();
                         }, localize.DataScience.exportingFormat(), file, () => {
                             cancelSource.cancel();
-                        });
+                        }, true);
 
                         // When all done, show a notice that it completed.
                         const openQuestion = localize.DataScience.exportOpenQuestion();
@@ -209,7 +209,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
             // Try starting a server.
-            server = await this.jupyterExecution.connectToNotebookServer(undefined, useDefaultConfig, cancelToken);
+            server = await this.jupyterExecution.connectToNotebookServer(undefined, false, useDefaultConfig, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
@@ -339,9 +339,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         return active.show();
     }
 
-    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void) : Promise<T> {
+    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void, skipHistory?: boolean) : Promise<T> {
         const message = file ? format.format(file) : format;
-        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
+        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled, skipHistory);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
