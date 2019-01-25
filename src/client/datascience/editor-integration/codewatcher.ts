@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType } from 'vscode';
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
@@ -23,6 +24,7 @@ export class CodeWatcher implements ICodeWatcher {
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
                 @inject(ILogger) private logger: ILogger,
                 @inject(IHistoryProvider) private historyProvider : IHistoryProvider,
+                @inject(IFileSystem) private fileSystem: IFileSystem,
                 @inject(IDocumentManager) private documentManager : IDocumentManager) {}
 
     public addFile(document: TextDocument) {
@@ -86,6 +88,29 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 const code = this.document.getText();
                 await activeHistory.addCode(code, this.getFileName(), 0);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunSelectionOrLine)
+    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
+        const activeHistory = this.historyProvider.getOrCreateActive();
+
+        if (this.document && activeEditor &&
+            this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
+
+            // Get just the text of the selection or the current line if none
+            let code: string;
+            if (activeEditor.selection.start.line === activeEditor.selection.end.line &&
+                activeEditor.selection.start.character === activeEditor.selection.end.character) {
+                const line = this.document.lineAt(activeEditor.selection.start.line);
+                code = line.text;
+            } else {
+                code = this.document.getText(new Range(activeEditor.selection.start, activeEditor.selection.end));
+            }
+
+            if (code && code.trim().length) {
+                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
             }
         }
     }

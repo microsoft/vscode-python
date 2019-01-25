@@ -61,10 +61,11 @@ import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } 
 import { InterpreterWatcherBuilder } from './locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './locators/services/KnownPathsService';
 import { PipEnvService } from './locators/services/pipEnvService';
+import { PipEnvServiceHelper } from './locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './locators/services/workspaceVirtualEnvWatcherService';
-import { IPythonInPathCommandProvider } from './locators/types';
+import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from './locators/types';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
@@ -74,6 +75,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+    serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
 

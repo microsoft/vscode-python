@@ -22,11 +22,12 @@ type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
     private currentActivator?: ActivatorInfo;
-    private activatedOnce: boolean;
+    private activatedOnce: boolean = false;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
     private readonly lsNotSupportedDiagnosticService: IDiagnosticsService;
+    private resource!: Resource;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -41,10 +42,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
 
-    public async activate(_resource: Resource): Promise<void> {
+    public async activate(resource: Resource): Promise<void> {
         if (this.currentActivator || this.activatedOnce) {
             return;
         }
+        this.resource = resource;
         this.activatedOnce = true;
 
         let jedi = this.useJedi();
@@ -114,10 +116,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
     }
     private useJedi(): boolean {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders!.map(item => item.uri)
-            : [undefined];
-        const configuraionService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        return workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        return configurationService.getSettings(this.resource).jediEnabled;
     }
 }

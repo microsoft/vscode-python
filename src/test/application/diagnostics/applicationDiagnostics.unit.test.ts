@@ -88,8 +88,9 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             message: 'Error',
             scope: undefined,
             severity: undefined,
-            resource: undefined
-        };
+            resource: undefined,
+            invokeHandler: 'default'
+        } as any;
         envHealthCheck.setup(e => e.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([diagnostic]))
             .verifiable(typemoq.Times.once());
@@ -125,7 +126,8 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 message: `Error${i}`,
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Error,
-                resource: undefined
+                resource: undefined,
+                invokeHandler: 'default'
             };
             diagnostics.push(diagnostic);
         }
@@ -135,7 +137,8 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 message: `Warning${i}`,
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Warning,
-                resource: undefined
+                resource: undefined,
+                invokeHandler: 'default'
             };
             diagnostics.push(diagnostic);
         }
@@ -145,7 +148,8 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
                 message: `Info${i}`,
                 scope: i % 2 === 0 ? DiagnosticScope.Global : DiagnosticScope.WorkspaceFolder,
                 severity: DiagnosticSeverity.Information,
-                resource: undefined
+                resource: undefined,
+                invokeHandler: 'default'
             };
             diagnostics.push(diagnostic);
         }

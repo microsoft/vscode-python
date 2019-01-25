@@ -13,12 +13,14 @@ import { IExtensionActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { IDisposable, Resource } from '../../client/common/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { IDisposable } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
+import { sleep } from '../core';
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:max-func-body-length no-any
 suite('Activation - ActivationManager', () => {
     class ExtensionActivationManagerTest extends ExtensionActivationManager {
         // tslint:disable-next-line:no-unnecessary-override
@@ -28,10 +30,6 @@ suite('Activation - ActivationManager', () => {
         // tslint:disable-next-line:no-unnecessary-override
         public async initialize() {
             return super.initialize();
-        }
-        // tslint:disable-next-line:no-unnecessary-override
-        public async activateWorkspace(resource: Resource) {
-            await super.activateWorkspace(resource);
         }
         // tslint:disable-next-line:no-unnecessary-override
         public addRemoveDocOpenedHandlers() {
@@ -46,11 +44,7 @@ suite('Activation - ActivationManager', () => {
     let documentManager: typemoq.IMock<IDocumentManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
-    const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
-    const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
     setup(() => {
-        process.env.VSC_PYTHON_UNIT_TEST = undefined;
-        process.env.VSC_PYTHON_CI_TEST = undefined;
         workspaceService = mock(WorkspaceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
@@ -58,37 +52,73 @@ suite('Activation - ActivationManager', () => {
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
-        managerTest = new ExtensionActivationManagerTest([instance(activationService1), instance(activationService2)],
+        managerTest = new ExtensionActivationManagerTest(
+            [instance(activationService1), instance(activationService2)],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,
             appDiagnostics.object,
-            instance(workspaceService));
-    });
-    teardown(() => {
-        process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
-        process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
+            instance(workspaceService)
+        );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
         const disposable = typemoq.Mock.ofType<IDisposable>();
+        const disposable2 = typemoq.Mock.ofType<IDisposable>();
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(() => disposable.object);
+        when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        const eventDef = () => disposable2.object;
+        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
 
-        when(workspaceService.workspaceFolders).thenReturn([]);
-        when(interpreterService.getInterpreters(undefined)).thenResolve([]);
-        documentManager.setup(d => d.activeTextEditor).returns(() => undefined).verifiable(typemoq.Times.once());
         await managerTest.initialize();
 
-        verify(workspaceService.onDidChangeWorkspaceFolders).once();
         verify(workspaceService.workspaceFolders).once();
-        verify(interpreterService.getInterpreters(undefined)).once();
+        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.onDidChangeWorkspaceFolders).once();
 
         documentManager.verifyAll();
 
         disposable.setup(d => d.dispose()).verifiable(typemoq.Times.once());
+        disposable2.setup(d => d.dispose()).verifiable(typemoq.Times.once());
 
         managerTest.dispose();
 
         disposable.verifyAll();
+        disposable2.verifyAll();
+    });
+    test('Remove text document opened handler if there is only one workspace', async () => {
+        const disposable = typemoq.Mock.ofType<IDisposable>();
+        const disposable2 = typemoq.Mock.ofType<IDisposable>();
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(() => disposable.object);
+        when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        const eventDef = () => disposable2.object;
+        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        disposable.setup(d => d.dispose());
+        disposable2.setup(d => d.dispose());
+
+        await managerTest.initialize();
+
+        verify(workspaceService.workspaceFolders).once();
+        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.onDidChangeWorkspaceFolders).once();
+        documentManager.verifyAll();
+        disposable.verify(d => d.dispose(), typemoq.Times.never());
+        disposable2.verify(d => d.dispose(), typemoq.Times.never());
+
+        when(workspaceService.workspaceFolders).thenReturn([]);
+        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+
+        await managerTest.initialize();
+
+        verify(workspaceService.hasWorkspaceFolders).twice();
+        disposable.verify(d => d.dispose(), typemoq.Times.never());
+        disposable2.verify(d => d.dispose(), typemoq.Times.once());
+
+        managerTest.dispose();
+
+        disposable.verify(d => d.dispose(), typemoq.Times.atLeast(1));
+        disposable2.verify(d => d.dispose(), typemoq.Times.once());
     });
     test('Activate workspace specific to the resource in case of Multiple workspaces when a file is opened', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
@@ -98,8 +128,12 @@ suite('Activation - ActivationManager', () => {
         const documentUri = Uri.file('a');
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup(d => d.uri).returns(() => documentUri);
+        document.setup(d => d.languageId).returns(() => PYTHON_LANGUAGE);
 
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => { workspaceFoldersChangedHandler = cb; return disposable1.object; });
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => {
+            workspaceFoldersChangedHandler = cb;
+            return disposable1.object;
+        });
         documentManager
             .setup(w => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
             .callback(cb => (fileOpenedHandler = cb))
@@ -109,6 +143,7 @@ suite('Activation - ActivationManager', () => {
         const resource = Uri.parse('two');
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
         const folder2 = { name: 'two', uri: resource, index: 2 };
+        when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenReturn('one');
         when(workspaceService.workspaceFolders).thenReturn([folder1, folder2]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.getWorkspaceFolder(document.object.uri)).thenReturn(folder2);
@@ -116,6 +151,7 @@ suite('Activation - ActivationManager', () => {
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(folder2);
         when(activationService1.activate(resource)).thenResolve();
         when(activationService2.activate(resource)).thenResolve();
+        when(interpreterService.getInterpreters(anything())).thenResolve();
         autoSelection
             .setup(a => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
@@ -134,22 +170,21 @@ suite('Activation - ActivationManager', () => {
 
         // Check if activate workspace is called on opening a file
         fileOpenedHandler.call(managerTest, document.object);
+        await sleep(1);
 
         documentManager.verifyAll();
         verify(workspaceService.onDidChangeWorkspaceFolders).once();
         verify(workspaceService.workspaceFolders).once();
         verify(workspaceService.hasWorkspaceFolders).once();
-        verify(workspaceService.getWorkspaceFolder(anything())).thrice();
+        verify(workspaceService.getWorkspaceFolder(anything())).atLeast(1);
         verify(activationService1.activate(resource)).once();
         verify(activationService2.activate(resource)).once();
     });
     test('Function activateWorkspace() will be filtered to current resource', async () => {
         const resource = Uri.parse('two');
-        const folder = { name: 'two', uri: resource, index: 2 };
-
-        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(folder);
         when(activationService1.activate(resource)).thenResolve();
         when(activationService2.activate(resource)).thenResolve();
+        when(interpreterService.getInterpreters(anything())).thenResolve();
         autoSelection
             .setup(a => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
@@ -161,7 +196,6 @@ suite('Activation - ActivationManager', () => {
 
         await managerTest.activateWorkspace(resource);
 
-        verify(workspaceService.getWorkspaceFolder(resource)).once();
         verify(activationService1.activate(resource)).once();
         verify(activationService2.activate(resource)).once();
     });

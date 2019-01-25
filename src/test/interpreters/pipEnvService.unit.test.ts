@@ -9,6 +9,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
@@ -26,13 +27,15 @@ import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
+import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
+import { IPipEnvServiceHelper } from '../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 enum OS {
     Mac, Windows, Linux
 }
 
-suite('Interpreters - PipEnv', () => {
+suite('xInterpreters - PipEnv', () => {
     const rootWorkspace = Uri.file(path.join('usr', 'desktop', 'wkspc1')).fsPath;
     getNamesAndValues(OS).forEach(os => {
         [undefined, Uri.file(path.join(rootWorkspace, 'one.py'))].forEach(resource => {
@@ -53,6 +56,7 @@ suite('Interpreters - PipEnv', () => {
             let config: TypeMoq.IMock<IConfigurationService>;
             let settings: TypeMoq.IMock<IPythonSettings>;
             let pipenvPathSetting: string;
+            let pipEnvServiceHelper: IPipEnvServiceHelper;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -66,6 +70,7 @@ suite('Interpreters - PipEnv', () => {
                 procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                 logger = TypeMoq.Mock.ofType<ILogger>();
                 platformService = TypeMoq.Mock.ofType<IPlatformService>();
+                pipEnvServiceHelper = mock(PipEnvServiceHelper);
                 processService.setup((x: any) => x.then).returns(() => undefined);
                 procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
 
@@ -92,7 +97,9 @@ suite('Interpreters - PipEnv', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => config.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPipEnvServiceHelper), TypeMoq.It.isAny())).returns(() => instance(pipEnvServiceHelper));
 
+                when(pipEnvServiceHelper.trackWorkspaceFolder(anything(), anything())).thenResolve();
                 config = TypeMoq.Mock.ofType<IConfigurationService>();
                 settings = TypeMoq.Mock.ofType<IPythonSettings>();
                 config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
@@ -151,6 +158,7 @@ suite('Interpreters - PipEnv', () => {
                 interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true)).verifiable();
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true)).verifiable();
+
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.lengthOf(1);

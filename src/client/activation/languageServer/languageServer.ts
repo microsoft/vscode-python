@@ -9,9 +9,12 @@ import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
 import { Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
+import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { IUnitTestManagementService } from '../../unittests/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
 import { ProgressReporting } from './progress';
 
@@ -26,7 +29,8 @@ export class LanguageServer implements ILanguageServer {
     constructor(
         @inject(ILanguageClientFactory)
         @named(LanguageClientFactory.base)
-        private readonly factory: ILanguageClientFactory
+        private readonly factory: ILanguageClientFactory,
+        @inject(IUnitTestManagementService) private readonly testManager: IUnitTestManagementService
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -58,6 +62,7 @@ export class LanguageServer implements ILanguageServer {
             const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
             sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
         });
+        await this.registerTestServices();
     }
     @traceDecorators.error('Failed to load Language Server extension')
     public loadExtension(args?: {}) {
@@ -74,10 +79,18 @@ export class LanguageServer implements ILanguageServer {
             .ignoreErrors();
     }
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)
-    private async serverReady(): Promise<void> {
+    protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient!.initializeResult) {
             await sleep(100);
         }
         this.startupCompleted.resolve();
+    }
+    @swallowExceptions('Activating Unit Tests Manager for Language Server')
+    protected async registerTestServices() {
+        if (!this.languageClient) {
+            throw new Error('languageClient not initialized');
+        }
+        await this.testManager.activate();
+        await this.testManager.activateCodeLenses(new LanguageServerSymbolProvider(this.languageClient!));
     }
 }

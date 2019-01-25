@@ -21,6 +21,7 @@ export namespace Commands {
     export const ExpandAllCells = 'python.datascience.expandallcells';
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
+    export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
 }
 
 export namespace EditorContexts {
@@ -29,6 +30,7 @@ export namespace EditorContexts {
     export const HaveInteractiveCells = 'python.datascience.haveinteractivecells';
     export const HaveRedoableCells = 'python.datascience.haveredoablecells';
     export const HaveInteractive = 'python.datascience.haveinteractive';
+    export const OwnsSelection = 'python.datascience.ownsSelection';
 }
 
 export namespace RegExpValues {
@@ -65,6 +67,7 @@ export enum Telemetry {
     RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL',
     RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE',
     RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS',
+    RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',

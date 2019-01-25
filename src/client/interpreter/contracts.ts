@@ -120,7 +120,7 @@ export interface IPipEnvService {
 
 export const IInterpreterLocatorHelper = Symbol('IInterpreterLocatorHelper');
 export interface IInterpreterLocatorHelper {
-    mergeInterpreters(interpreters: PythonInterpreter[]): PythonInterpreter[];
+    mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]>;
 }
 
 export const IInterpreterWatcher = Symbol('IInterpreterWatcher');

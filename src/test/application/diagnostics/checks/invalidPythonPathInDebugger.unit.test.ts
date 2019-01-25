@@ -25,6 +25,7 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
+import { PythonPathSource } from '../../../../client/debugger/extension/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
@@ -96,7 +97,8 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     });
     test('Can not handle non-InvalidPythonPathInDebugger diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
-        diagnostic.setup(d => d.code)
+        diagnostic
+            .setup(d => d.code)
             .returns(() => 'Something Else' as any)
             .verifiable(typemoq.Times.atLeastOnce());
 
@@ -126,6 +128,68 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .verifiable(typemoq.Times.once());
         messageHandler.setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.once());
 
+        await diagnosticService.handle([diagnostic.object]);
+
+        diagnostic.verifyAll();
+        commandFactory.verifyAll();
+        messageHandler.verifyAll();
+    });
+    test('InvalidPythonPathInDebuggerSettings diagnostic should display message once if invoked twice', async () => {
+        const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
+        diagnostic
+            .setup(d => d.code)
+            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic)
+            .verifiable(typemoq.Times.atLeastOnce());
+        diagnostic
+            .setup(d => d.invokeHandler)
+            .returns(() => 'default')
+            .verifiable(typemoq.Times.atLeastOnce());
+        const interpreterSelectionCommand = typemoq.Mock.ofType<IDiagnosticCommand>();
+        commandFactory
+            .setup(f =>
+                f.createCommand(
+                    typemoq.It.isAny(),
+                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })
+                )
+            )
+            .returns(() => interpreterSelectionCommand.object)
+            .verifiable(typemoq.Times.exactly(1));
+        messageHandler
+            .setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.exactly(1));
+
+        await diagnosticService.handle([diagnostic.object]);
+        await diagnosticService.handle([diagnostic.object]);
+
+        diagnostic.verifyAll();
+        commandFactory.verifyAll();
+        messageHandler.verifyAll();
+    });
+    test('InvalidPythonPathInDebuggerSettings diagnostic should display message twice if invoked twice', async () => {
+        const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
+        diagnostic
+            .setup(d => d.code)
+            .returns(() => DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic)
+            .verifiable(typemoq.Times.atLeastOnce());
+        diagnostic
+            .setup(d => d.invokeHandler)
+            .returns(() => 'always')
+            .verifiable(typemoq.Times.atLeastOnce());
+        const interpreterSelectionCommand = typemoq.Mock.ofType<IDiagnosticCommand>();
+        commandFactory
+            .setup(f =>
+                f.createCommand(
+                    typemoq.It.isAny(),
+                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })
+                )
+            )
+            .returns(() => interpreterSelectionCommand.object)
+            .verifiable(typemoq.Times.exactly(2));
+        messageHandler
+            .setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.exactly(2));
+
+        await diagnosticService.handle([diagnostic.object]);
         await diagnosticService.handle([diagnostic.object]);
 
         diagnostic.verifyAll();
@@ -208,7 +272,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .returns(() => Promise.resolve({}))
             .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath, Uri.parse('something'));
+        const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson, Uri.parse('something'));
 
         configService.verifyAll();
         helper.verifyAll();
@@ -299,7 +363,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath);
+        const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.launchJson);
 
         helper.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');
@@ -331,7 +395,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath);
+        const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson);
 
         helper.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');

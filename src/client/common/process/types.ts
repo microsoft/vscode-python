@@ -73,6 +73,7 @@ export type InterpreterInfomation = {
     sysVersion: string;
     architecture: Architecture;
     sysPrefix: string;
+    pipEnvWorkspaceFolder?: string;
 };
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 

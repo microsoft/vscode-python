@@ -29,3 +29,8 @@ export enum DebugConfigurationType {
     launchModule = 'launchModule',
     launchPyramid = 'launchPyramid'
 }
+
+export enum PythonPathSource {
+    launchJson = 'launch.json',
+    settingsJson = 'settings.json'
+}

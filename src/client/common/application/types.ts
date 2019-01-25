@@ -586,7 +586,7 @@ export interface IWorkspaceService {
      * @returns {string}
      * @memberof IWorkspaceService
      */
-    getWorkspaceFolderIdentifier(resource: Uri | undefined): string;
+    getWorkspaceFolderIdentifier(resource: Uri | undefined, defaultValue?: string): string;
     /**
      * Returns a path that is relative to the workspace folder or folders.
      *

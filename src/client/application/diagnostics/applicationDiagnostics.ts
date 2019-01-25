@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { ILogger, IOutputChannel, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
@@ -21,6 +21,10 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
     }
     public async performPreStartupHealthCheck(resource: Resource): Promise<void> {
+        // When testing, do not perform health checks, as modal dialogs can be displayed.
+        if (!isTestExecution()) {
+            return;
+        }
         const services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
         // Perform these validation checks in the foreground.
         await this.runDiagnostics(services.filter(item => !item.runInBackground), resource);

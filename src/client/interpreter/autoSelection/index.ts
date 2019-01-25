@@ -10,7 +10,8 @@ import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
-import { captureTelemetry } from '../../telemetry';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterHelper, PythonInterpreter } from '../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from './types';
@@ -20,6 +21,7 @@ const workspacePathNameForGlobalWorkspaces = '';
 
 @injectable()
 export class InterpreterAutoSelectionService implements IInterpreterAutoSelectionService {
+    protected readonly autoSelectedWorkspacePromises = new Map<string, Deferred<void>>();
     private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<void>();
     private readonly autoSelectedInterpreterByWorkspace = new Map<string, PythonInterpreter | undefined>();
     private globallyPreferredInterpreter!: IPersistentState<PythonInterpreter | undefined>;
@@ -65,10 +67,18 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     }
     @captureTelemetry(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, { rule: AutoSelectionRule.all }, true)
     public async autoSelectInterpreter(resource: Resource): Promise<void> {
-        await this.initializeStore();
-        await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
-        this.didAutoSelectedInterpreterEmitter.fire();
-        Promise.all(this.rules.map(item => item.autoSelectInterpreter(undefined))).ignoreErrors();
+        const key = this.getWorkspacePathKey(resource);
+        if (!this.autoSelectedWorkspacePromises.has(key)) {
+            const deferred = createDeferred<void>();
+            this.autoSelectedWorkspacePromises.set(key, deferred);
+            await this.initializeStore(resource);
+            await this.clearWorkspaceStoreIfInvalid(resource);
+            await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
+            this.didAutoSelectedInterpreterEmitter.fire();
+            Promise.all(this.rules.map(item => item.autoSelectInterpreter(resource))).ignoreErrors();
+            deferred.resolve();
+        }
+        return this.autoSelectedWorkspacePromises.get(key)!.promise;
     }
     public get onDidChangeAutoSelectedInterpreter(): Event<void> {
         return this.didAutoSelectedInterpreterEmitter.event;
@@ -90,10 +100,24 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return this.globallyPreferredInterpreter.value;
     }
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined) {
+        // We can only update the stored interpreter once we have done the necessary
+        // work of auto selecting the interpreters.
+        if (!this.autoSelectedWorkspacePromises.has(this.getWorkspacePathKey(resource)) ||
+            !this.autoSelectedWorkspacePromises.get(this.getWorkspacePathKey(resource))!.completed) {
+            return;
+        }
+
         await this.storeAutoSelectedInterpreter(resource, interpreter);
     }
     public async setGlobalInterpreter(interpreter: PythonInterpreter) {
         await this.storeAutoSelectedInterpreter(undefined, interpreter);
+    }
+    protected async clearWorkspaceStoreIfInvalid(resource: Resource) {
+        const stateStore = this.getWorkspaceState(resource);
+        if (stateStore && stateStore.value && !await this.fs.fileExists(stateStore.value.path)) {
+            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, { interpreterMissing: true });
+            await stateStore.updateValue(undefined);
+        }
     }
     protected async storeAutoSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
         const workspaceFolderPath = this.getWorkspacePathKey(resource);
@@ -117,7 +141,11 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             this.autoSelectedInterpreterByWorkspace.set(workspaceFolderPath, interpreter);
         }
     }
-    protected async initializeStore() {
+    protected async initializeStore(resource: Resource) {
+        const workspaceFolderPath = this.getWorkspacePathKey(resource);
+        // Since we're initializing for this resource,
+        // Ensure any cached information for this workspace have been removed.
+        this.autoSelectedInterpreterByWorkspace.delete(workspaceFolderPath);
         if (this.globallyPreferredInterpreter) {
             return;
         }
@@ -130,8 +158,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         }
     }
     private getWorkspacePathKey(resource: Resource): string {
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        return workspaceFolder ? workspaceFolder.uri.fsPath : workspacePathNameForGlobalWorkspaces;
+        return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
     }
     private getWorkspaceState(resource: Resource): undefined | IPersistentState<PythonInterpreter | undefined> {
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);

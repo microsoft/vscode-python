@@ -28,7 +28,8 @@ export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
             PowershellActivationNotSupportedWithBatchFilesMessage,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource
+            resource,
+            'always'
         );
     }
 }

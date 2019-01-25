@@ -24,13 +24,14 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
     // Next add the lines in
     document.setup(d => d.lineCount).returns(() => inputLines.length).verifiable(times);
 
-    inputLines.forEach((line, index) => {
+    const textLines = inputLines.map((line, index) => {
         const textLine = TypeMoq.Mock.ofType<TextLine>();
         const testRange = new Range(index, 0, index, line.length);
         textLine.setup(l => l.text).returns(() => line);
         textLine.setup(l => l.range).returns(() => testRange);
-        document.setup(d => d.lineAt(TypeMoq.It.isValue(index))).returns(() => textLine.object).verifiable(TypeMoq.Times.atLeastOnce());
+        return textLine;
     });
+    document.setup(d => d.lineAt(TypeMoq.It.isAnyNumber())).returns((index: number) => textLines[index].object);
 
     // Get text is a bit trickier
     if (implementGetText) {

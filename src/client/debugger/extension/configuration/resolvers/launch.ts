@@ -124,6 +124,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
     protected async validateLaunchConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
-        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath, folder ? folder.uri : undefined);
+        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath, this.pythonPathSource, folder ? folder.uri : undefined);
     }
 }

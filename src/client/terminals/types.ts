@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { TextEditor, Uri } from 'vscode';
+import { IDisposable } from '../common/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
@@ -27,6 +28,6 @@ export interface ICodeExecutionManager {
 }
 
 export const ITerminalAutoActivation = Symbol('ITerminalAutoActivation');
-export interface ITerminalAutoActivation {
+export interface ITerminalAutoActivation extends IDisposable {
     register(): void;
 }

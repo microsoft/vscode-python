@@ -143,6 +143,7 @@ import {
     KnownSearchPathsForInterpreters
 } from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
+import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
@@ -151,7 +152,7 @@ import {
 import {
     WorkspaceVirtualEnvWatcherService
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
-import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -219,6 +220,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
+        this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {

@@ -35,7 +35,7 @@ import {
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
 
-suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
+suite('xInterpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let rule: WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
@@ -304,7 +304,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const nextInvoked = createDeferred();
         rule.next = () => Promise.resolve(nextInvoked.resolve());
         rule.getWorkspaceVirtualEnvInterpreters = () => virtualEnvPromise.promise;
-        when(pipEnvLocator.getInterpreters(folderUri)).thenResolve([interpreterInfo]);
+        when(pipEnvLocator.getInterpreters(folderUri, true)).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
 
         rule.cacheSelectedInterpreter = () => Promise.resolve();
@@ -335,7 +335,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const nextInvoked = createDeferred();
         rule.next = () => Promise.resolve(nextInvoked.resolve());
         rule.getWorkspaceVirtualEnvInterpreters = () => Promise.resolve([interpreterInfo]);
-        when(pipEnvLocator.getInterpreters(folderUri)).thenResolve([interpreterInfo]);
+        when(pipEnvLocator.getInterpreters(folderUri, true)).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
 
         rule.cacheSelectedInterpreter = () => Promise.resolve();
@@ -366,7 +366,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const nextInvoked = createDeferred();
         rule.next = () => Promise.resolve(nextInvoked.resolve());
         rule.getWorkspaceVirtualEnvInterpreters = () => virtualEnvPromise.promise;
-        when(pipEnvLocator.getInterpreters(folderUri)).thenResolve([]);
+        when(pipEnvLocator.getInterpreters(folderUri, true)).thenResolve([]);
         when(helper.getBestInterpreter(deepEqual(anything()))).thenReturn(interpreterInfo);
 
         rule.cacheSelectedInterpreter = () => Promise.resolve();
@@ -397,7 +397,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const nextInvoked = createDeferred();
         rule.next = () => Promise.resolve(nextInvoked.resolve());
         rule.getWorkspaceVirtualEnvInterpreters = () => Promise.resolve([]);
-        when(pipEnvLocator.getInterpreters(folderUri)).thenResolve([]);
+        when(pipEnvLocator.getInterpreters(folderUri, true)).thenResolve([]);
         when(helper.getBestInterpreter(deepEqual(anything()))).thenReturn(interpreterInfo);
 
         rule.cacheSelectedInterpreter = () => Promise.resolve();

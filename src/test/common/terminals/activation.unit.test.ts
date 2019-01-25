@@ -3,59 +3,105 @@
 
 'use strict';
 import { expect } from 'chai';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Terminal } from 'vscode';
-import { ITerminalManager } from '../../../client/common/application/types';
-import { ITerminalActivator, ITerminalHelper } from '../../../client/common/terminal/types';
-import { IDisposableRegistry } from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { Terminal, Uri } from 'vscode';
+import { TerminalManager } from '../../../client/common/application/terminalManager';
+import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
+import { TerminalActivator } from '../../../client/common/terminal/activator';
+import { ITerminalActivator } from '../../../client/common/terminal/types';
+import { IDisposable } from '../../../client/common/types';
 import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 
 suite('Terminal Auto Activation', () => {
-    let activator: TypeMoq.IMock<ITerminalActivator>;
-    let terminalManager: TypeMoq.IMock<ITerminalManager>;
+    let activator: ITerminalActivator;
+    let terminalManager: ITerminalManager;
     let terminalAutoActivation: ITerminalAutoActivation;
+    let workspaceService: IWorkspaceService;
 
     setup(() => {
-        terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
-        activator = TypeMoq.Mock.ofType<ITerminalActivator>();
-        const disposables = [];
+        terminalManager = mock(TerminalManager);
+        activator = mock(TerminalActivator);
+        workspaceService = mock(WorkspaceService);
 
-        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny()))
-            .returns(() => terminalManager.object);
-        serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny()))
-            .returns(() => activator.object);
-        serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
-            .returns(() => disposables);
-
-        terminalAutoActivation = new TerminalAutoActivation(serviceContainer.object, activator.object);
+        terminalAutoActivation = new TerminalAutoActivation(
+            instance(terminalManager),
+            [],
+            instance(activator),
+            instance(workspaceService)
+        );
     });
 
     test('New Terminals should be activated', async () => {
-        let eventHandler: undefined | ((e: Terminal) => void);
+        type EventHandler = (e: Terminal) => void;
+        let handler: undefined | EventHandler;
+        const handlerDisposable = TypeMoq.Mock.ofType<IDisposable>();
         const terminal = TypeMoq.Mock.ofType<Terminal>();
-        terminalManager
-            .setup(m => m.onDidOpenTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(handler => {
-                eventHandler = handler;
-                return { dispose: noop };
-            });
-        activator
-            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .verifiable(TypeMoq.Times.once());
+        const onDidOpenTerminal = (cb: EventHandler) => {
+            handler = cb;
+            return handlerDisposable.object;
+        };
+        when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
+        when(activator.activateEnvironmentInTerminal(anything(), anything(), anything())).thenResolve();
+        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
 
         terminalAutoActivation.register();
 
-        expect(eventHandler).not.to.be.an('undefined', 'event handler not initialized');
+        expect(handler).not.to.be.an('undefined', 'event handler not initialized');
 
-        eventHandler!.bind(terminalAutoActivation)(terminal.object);
+        handler!.bind(terminalAutoActivation)(terminal.object);
 
-        activator.verifyAll();
+        verify(activator.activateEnvironmentInTerminal(terminal.object, undefined)).once();
+    });
+    test('New Terminals should be activated with resource of single workspace', async () => {
+        type EventHandler = (e: Terminal) => void;
+        let handler: undefined | EventHandler;
+        const handlerDisposable = TypeMoq.Mock.ofType<IDisposable>();
+        const terminal = TypeMoq.Mock.ofType<Terminal>();
+        const onDidOpenTerminal = (cb: EventHandler) => {
+            handler = cb;
+            return handlerDisposable.object;
+        };
+        const resource = Uri.file(__filename);
+        when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
+        when(activator.activateEnvironmentInTerminal(anything(), anything(), anything())).thenResolve();
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: resource }]);
+
+        terminalAutoActivation.register();
+
+        expect(handler).not.to.be.an('undefined', 'event handler not initialized');
+
+        handler!.bind(terminalAutoActivation)(terminal.object);
+
+        verify(activator.activateEnvironmentInTerminal(terminal.object, resource)).once();
+    });
+    test('New Terminals should be activated with resource of main workspace', async () => {
+        type EventHandler = (e: Terminal) => void;
+        let handler: undefined | EventHandler;
+        const handlerDisposable = TypeMoq.Mock.ofType<IDisposable>();
+        const terminal = TypeMoq.Mock.ofType<Terminal>();
+        const onDidOpenTerminal = (cb: EventHandler) => {
+            handler = cb;
+            return handlerDisposable.object;
+        };
+        const resource = Uri.file(__filename);
+        when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
+        when(activator.activateEnvironmentInTerminal(anything(), anything(), anything())).thenResolve();
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn([
+            { index: 0, name: '', uri: resource },
+            { index: 2, name: '2', uri: Uri.file('1234') }
+        ]);
+
+        terminalAutoActivation.register();
+
+        expect(handler).not.to.be.an('undefined', 'event handler not initialized');
+
+        handler!.bind(terminalAutoActivation)(terminal.object);
+
+        verify(activator.activateEnvironmentInTerminal(terminal.object, resource)).once();
     });
 });

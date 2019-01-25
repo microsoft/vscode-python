@@ -115,6 +115,17 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public async runSelectionOrLine(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeCodeWatcher) {
+            return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor);
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
         const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
@@ -165,13 +176,16 @@ export class DataScience implements IDataScience {
     private onSettingsChanged = () => {
         const settings = this.configuration.getSettings();
         const enabled = settings.datascience.enabled;
-        const editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
+        let editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
         editorContext.set(enabled).catch();
+        const ownsSelection = settings.datascience.sendSelectionToInteractiveWindow;
+        editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
+        editorContext.set(ownsSelection && enabled).catch();
     }
 
     // Get our matching code watcher for the active document
     private getCurrentCodeWatcher(): ICodeWatcher | undefined {
-        const activeEditor = vscode.window.activeTextEditor;
+        const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor || !activeEditor.document) {
             return undefined;
         }
@@ -188,6 +202,8 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunCurrentCell, this.runCurrentCell, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.ExecSelectionInInteractiveWindow, this.runSelectionOrLine, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterURI, this);
         this.disposableRegistry.push(disposable);

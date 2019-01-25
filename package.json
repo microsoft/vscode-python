@@ -103,7 +103,12 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.hascodecells"
+                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection"
+            },
+            {
+                "command": "python.datascience.execSelectionInteractive",
+                "key": "shift+enter",
+                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
@@ -248,6 +253,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.execSelectionInteractive",
+                "title": "%python.command.python.datascience.execSelectionInteractive.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python"
@@ -347,7 +357,7 @@
                 {
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python"
+                    "when": "editorFocus && editorLangId == python && !python.datascience.ownsSelection"
                 },
                 {
                     "command": "python.execSelectionInDjangoShell",
@@ -355,7 +365,7 @@
                     "when": "editorHasSelection && editorLangId == python && python.isDjangoProject"
                 },
                 {
-                    "when": "resourceLangId == python",
+                    "when": "resourceLangId == python && !python.datascience.ownsSelection",
                     "command": "python.execInTerminal",
                     "group": "Python"
                 },
@@ -373,6 +383,16 @@
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcelladvance",
                     "group": "Python"
+                },
+                {
+                    "command": "python.datascience.runallcells",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                },
+                {
+                    "command": "python.datascience.execSelectionInteractive",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && python.datascience.featureenabled",
@@ -1016,6 +1036,12 @@
                     "type": "number",
                     "default": 400,
                     "description": "Maximum size (in pixels) of text output in the Python Interactive window before a scrollbar appears. Set to -1 for infinity.",
+                    "scope": "resource"
+                },
+                "python.dataScience.sendSelectionToInteractiveWindow": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Determines if selected code in a python file will go to the terminal or the Python Interactive window when hitting shift+enter",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

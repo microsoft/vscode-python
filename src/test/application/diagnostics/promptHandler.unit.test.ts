@@ -30,7 +30,14 @@ suite('Application Diagnostics - PromptHandler', () => {
 
     getNamesAndValues<DiagnosticSeverity>(DiagnosticSeverity).forEach(severity => {
         test(`Handling a diagnositic of severity '${severity.name}' should display a message without any buttons`, async () => {
-            const diagnostic: IDiagnostic = { code: '1' as any, message: 'one', scope: DiagnosticScope.Global, severity: severity.value, resource: undefined };
+            const diagnostic: IDiagnostic = {
+                code: '1' as any,
+                message: 'one',
+                scope: DiagnosticScope.Global,
+                severity: severity.value,
+                resource: undefined,
+                invokeHandler: 'default'
+            };
             switch (severity.value) {
                 case DiagnosticSeverity.Error: {
                     appShell.setup(a => a.showErrorMessage(typemoq.It.isValue(diagnostic.message)))
@@ -53,7 +60,14 @@ suite('Application Diagnostics - PromptHandler', () => {
             appShell.verifyAll();
         });
         test(`Handling a diagnositic of severity '${severity.name}' should display a custom message with buttons`, async () => {
-            const diagnostic: IDiagnostic = { code: '1' as any, message: 'one', scope: DiagnosticScope.Global, severity: severity.value, resource: undefined };
+            const diagnostic: IDiagnostic = {
+                code: '1' as any,
+                message: 'one',
+                scope: DiagnosticScope.Global,
+                severity: severity.value,
+                resource: undefined,
+                invokeHandler: 'default'
+            };
             const options: MessageCommandPrompt = {
                 commandPrompts: [
                     { prompt: 'Yes' },
@@ -87,7 +101,14 @@ suite('Application Diagnostics - PromptHandler', () => {
             appShell.verifyAll();
         });
         test(`Handling a diagnositic of severity '${severity.name}' should display a custom message with buttons and invoke selected command`, async () => {
-            const diagnostic: IDiagnostic = { code: '1' as any, message: 'one', scope: DiagnosticScope.Global, severity: severity.value, resource: undefined };
+            const diagnostic: IDiagnostic = {
+                code: '1' as any,
+                message: 'one',
+                scope: DiagnosticScope.Global,
+                severity: severity.value,
+                resource: undefined,
+                invokeHandler: 'default'
+            };
             const command = typemoq.Mock.ofType<IDiagnosticCommand>();
             const options: MessageCommandPrompt = {
                 commandPrompts: [

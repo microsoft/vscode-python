@@ -8,6 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { Range, Selection, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { ILogger } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
@@ -22,6 +23,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let activeHistory: TypeMoq.IMock<IHistory>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         logger = TypeMoq.Mock.ofType<ILogger>();
@@ -29,6 +31,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         activeHistory = TypeMoq.Mock.ofType<IHistory>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
 
         // Setup our active history instance
         historyProvider.setup(h => h.getOrCreateActive()).returns(() => activeHistory.object);
@@ -36,7 +39,10 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup our active text editor
         documentManager.setup(dm => dm.activeTextEditor).returns(() => textEditor.object);
 
-        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, documentManager.object);
+        // Setup the file system
+        fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+
+        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, documentManager.object);
     });
 
     test('Add a file with just a #%% mark to a code watcher', () => {
@@ -225,6 +231,38 @@ testing2`;
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runCurrentCell();
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunSelection command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2`;
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
+
+        codeWatcher.addFile(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(3),
+                                TypeMoq.It.is((ed: TextEditor) => {
+                                    return textEditor.object === ed;
+                                }))).verifiable(TypeMoq.Times.once());
+
+        // For this test we need to set up a document selection point
+        textEditor.setup(te => te.document).returns(() => document.object);
+        textEditor.setup(te => te.selection).returns(() => new Selection(3, 0, 3, 0));
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runSelectionOrLine(textEditor.object);
 
         // Verify function calls
         activeHistory.verifyAll();

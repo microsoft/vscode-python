@@ -6,13 +6,17 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService, InterpreterType, IPipEnvService } from '../../../interpreter/contracts';
+import { IWorkspaceService } from '../../application/types';
+import { IFileSystem } from '../../platform/types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export class PipEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPipEnvService) private readonly pipenvService: IPipEnvService
+        @inject(IPipEnvService) private readonly pipenvService: IPipEnvService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) { }
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
@@ -24,7 +28,12 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         if (!interpreter || interpreter.type !== InterpreterType.Pipenv) {
             return;
         }
-
+        // Activate using `pipenv shell` only if the current folder relates pipenv environment.
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        if (workspaceFolder && interpreter.pipEnvWorkspaceFolder &&
+            !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)) {
+            return;
+        }
         const execName = this.pipenvService.executable;
         return [`${execName.fileToCommandArgument()} shell`];
     }
