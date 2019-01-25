@@ -53,6 +53,10 @@ import {
     throwUnknownProduct
 } from './common';
 
+// CI sets "python" to Python 3, but running locally it would be
+// Python 2.  The env var allos local test execution against Python 3.
+const PYTHON = process.env.PVSC_TEST_PYTHON_EXE ? process.env.PVSC_TEST_PYTHON_EXE : 'python';
+
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
 const pythonFilesDir = path.join(workspaceDir, 'pythonFiles', 'linting');
@@ -215,7 +219,7 @@ class TestFixture extends BaseTestFixture {
         );
 
         this.pythonSettings.setup(s => s.pythonPath)
-            .returns(() => 'python2');
+            .returns(() => PYTHON);
     }
 
     private static newPythonToolExecService(
