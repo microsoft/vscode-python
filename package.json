@@ -108,7 +108,7 @@
             {
                 "command": "python.datascience.execSelectionInteractive",
                 "key": "shift+enter",
-                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection"
+                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
@@ -387,12 +387,12 @@
                 {
                     "command": "python.datascience.runallcells",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
                 },
                 {
                     "command": "python.datascience.execSelectionInteractive",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && python.datascience.featureenabled",

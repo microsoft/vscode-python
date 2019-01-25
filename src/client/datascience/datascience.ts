@@ -180,7 +180,7 @@ export class DataScience implements IDataScience {
         editorContext.set(enabled).catch();
         const ownsSelection = settings.datascience.sendSelectionToInteractiveWindow;
         editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
-        editorContext.set(ownsSelection).catch();
+        editorContext.set(ownsSelection && enabled).catch();
     }
 
     // Get our matching code watcher for the active document
