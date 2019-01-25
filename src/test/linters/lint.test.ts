@@ -14,6 +14,7 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, ProductType } from '../../client/common/types';
+import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager } from '../../client/linters/types';
 import { rootWorkspaceUri } from '../common';
@@ -23,6 +24,7 @@ import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
 
+// tslint:disable-next-line:max-func-body-length
 suite('Linting Settings', () => {
     let ioc: UnitTestIocContainer;
     let linterManager: ILinterManager;
@@ -73,44 +75,32 @@ suite('Linting Settings', () => {
         });
     }
 
-    test('Linting settings (set/get)', async () => {
-        const settings = configService.getSettings();
-
-        // Don't run these updates in parallel, as they are updating the same file.
-        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-
-        await configService.updateSetting('linting.enabled', true, rootWorkspaceUri, target);
-        assert.equal(settings.linting.enabled, true, 'mismatch');
-        await configService.updateSetting('linting.enabled', false, rootWorkspaceUri, target);
-        assert.equal(settings.linting.enabled, false, 'mismatch');
-
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', true, workspaceUri);
-        assert.equal(settings.linting.pylintUseMinimalCheckers, true, 'mismatch');
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
-        assert.equal(settings.linting.pylintUseMinimalCheckers, false, 'mismatch');
-
-        linterManager.getAllLinterInfos().forEach(async (x) => {
-            const settingKey = `linting.${x.enabledSettingName}`;
-            await configService.updateSetting(settingKey, true, rootWorkspaceUri, target);
-            assert.equal(settings.linting[x.enabledSettingName], true, 'mismatch');
-            await configService.updateSetting(settingKey, false, rootWorkspaceUri, target);
-            assert.equal(settings.linting[x.enabledSettingName], false, 'mismatch');
-        });
-    });
-
-    test('enable through manager', async () => {
+    test('enable through manager (global)', async () => {
         const settings = configService.getSettings();
         await resetSettings(false);
 
-        await linterManager.setActiveLintersAsync([Product.pylint]);
-        await linterManager.enableLintingAsync(true);
+        await linterManager.enableLintingAsync(false);
+        assert.equal(settings.linting.enabled, false, 'mismatch');
 
+        await linterManager.enableLintingAsync(true);
         assert.equal(settings.linting.enabled, true, 'mismatch');
-        assert.equal(settings.linting.pylintEnabled, true, 'mismatch');
-        linterManager.getAllLinterInfos().forEach(async (x) => {
-            if (x.product !== Product.pylint) {
-                assert.equal(settings.linting[x.enabledSettingName], false, 'mismatch');
-            }
-        });
     });
+
+    for (const product of LINTERID_BY_PRODUCT.keys()) {
+        test(`enable through manager (${Product[product]})`, async () => {
+            const settings = configService.getSettings();
+            await resetSettings();
+
+            assert.equal(settings.linting[`${Product[product]}Enabled`], false, 'mismatch');
+
+            await linterManager.setActiveLintersAsync([product]);
+
+            assert.equal(settings.linting[`${Product[product]}Enabled`], true, 'mismatch');
+            linterManager.getAllLinterInfos().forEach(async (x) => {
+                if (x.product !== product) {
+                    assert.equal(settings.linting[x.enabledSettingName], false, 'mismatch');
+                }
+            });
+        });
+    }
 });
