@@ -32,7 +32,6 @@ export interface IMainPanelProps {
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
     private bottom: HTMLDivElement | undefined;
-    private cellRefs : { [key: number] : Cell } = {};
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IMainPanelState) {
@@ -216,15 +215,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     baseTheme={this.props.baseTheme}
                     codeTheme={this.props.codeTheme}
                     showWatermark={!this.state.submittedText}
-                    ref={(r: Cell) => this.saveCellRef(index, r)}
                     gotoCode={() => this.gotoCellCode(index)}
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
-    }
-
-    private saveCellRef(index: number, cell: Cell) {
-        this.cellRefs[index] = cell;
     }
 
     private addMarkdown = () => {
