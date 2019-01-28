@@ -7,6 +7,10 @@ import * as assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
+import { IWorkspaceService } from '../../../../client/common/application/types';
+import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../../../client/common/platform/types';
 import { PipEnvActivationCommandProvider } from '../../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
@@ -22,12 +26,19 @@ suite('Terminals Activation - Pipenv', () => {
             let activationProvider: ITerminalActivationCommandProvider;
             let interpreterService: IInterpreterService;
             let pipenvService: TypeMoq.IMock<IPipEnvService>;
+            let workspaceService: IWorkspaceService;
+            let fs: IFileSystem;
             setup(() => {
+                interpreterService = mock(InterpreterService);
+                fs = mock(FileSystem);
+                workspaceService = mock(WorkspaceService);
                 interpreterService = mock(InterpreterService);
                 pipenvService = TypeMoq.Mock.ofType<IPipEnvService>();
                 activationProvider = new PipEnvActivationCommandProvider(
                     instance(interpreterService),
-                    pipenvService.object
+                    pipenvService.object,
+                    instance(workspaceService),
+                    instance(fs)
                 );
 
                 pipenvService.setup(p => p.executable).returns(() => pipenvExecFile);

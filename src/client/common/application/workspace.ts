@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import { CancellationToken, ConfigurationChangeEvent, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Resource } from '../types';
 import { IWorkspaceService } from './types';
 
 @injectable()
@@ -37,8 +38,8 @@ export class WorkspaceService implements IWorkspaceService {
     public findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]> {
         return workspace.findFiles(include, exclude, maxResults, token);
     }
-    public getWorkspaceFolderIdentifier(resource: Uri): string {
+    public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        return workspaceFolder ? workspaceFolder.uri.fsPath : '';
+        return workspaceFolder ? workspaceFolder.uri.fsPath : defaultValue;
     }
 }

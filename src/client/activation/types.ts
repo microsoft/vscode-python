@@ -13,6 +13,7 @@ import { IDisposable, LanguageServerDownloadChannels, Resource } from '../common
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 export interface IExtensionActivationManager extends IDisposable {
     activate(): Promise<void>;
+    activateWorkspace(resource: Resource): Promise<void>;
 }
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');

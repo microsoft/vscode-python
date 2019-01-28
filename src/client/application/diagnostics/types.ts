@@ -5,6 +5,7 @@
 
 import { DiagnosticSeverity, Uri } from 'vscode';
 import { Resource } from '../../common/types';
+import { PythonPathSource } from '../../debugger/extension/types';
 import { DiagnosticCodes } from './constants';
 
 export enum DiagnosticScope {
@@ -35,10 +36,6 @@ export interface IDiagnosticsService {
     handle(diagnostics: IDiagnostic[]): Promise<void>;
 }
 
-export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
-    validatePythonPath(pythonPath?: string, resource?: Uri): Promise<boolean>;
-}
-
 export const IDiagnosticFilterService = Symbol('IDiagnosticFilterService');
 
 export interface IDiagnosticFilterService {
@@ -60,7 +57,7 @@ export interface IDiagnosticCommand {
 export const IInvalidPythonPathInDebuggerService = Symbol('IInvalidPythonPathInDebuggerService');
 
 export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
-    validatePythonPath(pythonPath?: string, resource?: Uri): Promise<boolean>;
+    validatePythonPath(pythonPath?: string, pythonPathSource?: PythonPathSource, resource?: Uri): Promise<boolean>;
 }
 export const ISourceMapSupportService = Symbol('ISourceMapSupportService');
 export interface ISourceMapSupportService {

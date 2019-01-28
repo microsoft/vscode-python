@@ -65,7 +65,7 @@ export class PythonSettings implements IPythonSettings {
         return this.changed.event;
     }
 
-    constructor(workspaceFolder: Uri | undefined, private readonly InterpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+    constructor(workspaceFolder: Uri | undefined, private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
@@ -129,9 +129,9 @@ export class PythonSettings implements IPythonSettings {
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
         // If user has defined a custom value, use it else try to get the best interpreter ourselves.
         if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
-            const autoSelectedPythonInterpreter = this.InterpreterAutoSelectionService.getAutoSelectedInterpreter(this.workspaceRoot);
+            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(this.workspaceRoot);
             if (autoSelectedPythonInterpreter) {
-                this.InterpreterAutoSelectionService.setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter).ignoreErrors();
+                this.interpreterAutoSelectionService.setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter).ignoreErrors();
             }
             this.pythonPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : this.pythonPath;
         }
@@ -382,7 +382,7 @@ export class PythonSettings implements IPythonSettings {
             // Let's defer the change notification.
             this.debounceChangeNotification();
         };
-        this.disposables.push(this.InterpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)));
+        this.disposables.push(this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)));
         this.disposables.push(this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
             if (event.affectsConfiguration('python')) {
                 onDidChange();

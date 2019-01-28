@@ -66,7 +66,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             return deferred.promise;
         }
 
-        const cachedInterpreters = this.getCachedInterpreters(resource);
+        const cachedInterpreters = ignoreCache ? undefined : this.getCachedInterpreters(resource);
         return Array.isArray(cachedInterpreters) ? cachedInterpreters : deferred.promise;
     }
     protected async addHandlersForInterpreterWatchers(cacheKey: string, resource: Uri | undefined): Promise<void> {

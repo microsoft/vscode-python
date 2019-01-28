@@ -60,7 +60,7 @@ suite('Debugging - Config Resolver Launch', () => {
         factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
         helper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
         diagnosticsService
-            .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
 
         const configProviderUtils = new ConfigurationProviderUtils(factory.object, fileSystem.object, appShell.object);
@@ -425,7 +425,7 @@ suite('Debugging - Config Resolver Launch', () => {
 
         diagnosticsService.reset();
         diagnosticsService
-            .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny()))
+            .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
 
@@ -443,7 +443,7 @@ suite('Debugging - Config Resolver Launch', () => {
 
         diagnosticsService.reset();
         diagnosticsService
-            .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny()))
+            .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 

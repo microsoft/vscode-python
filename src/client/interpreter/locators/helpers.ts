@@ -3,8 +3,8 @@ import * as path from 'path';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { fsReaddirAsync } from '../../common/utils/fs';
-import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
+import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -19,13 +19,13 @@ export function lookForInterpretersInDirectory(pathToCheck: string): Promise<str
 
 @injectable()
 export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
-    private readonly fs: IFileSystem;
-
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
+    ) {
     }
-    public mergeInterpreters(interpreters: PythonInterpreter[]) {
-        return interpreters
+    public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
+        const items = interpreters
             .map(item => { return { ...item }; })
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
@@ -58,5 +58,15 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                 }
                 return accumulator;
             }, []);
+        // This stuff needs to be fast.
+        await Promise.all(items.map(async item => {
+            const info = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
+            if (info) {
+                item.type = InterpreterType.Pipenv;
+                item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
+                item.envName = info.envName || item.envName;
+            }
+        }));
+        return items;
     }
 }

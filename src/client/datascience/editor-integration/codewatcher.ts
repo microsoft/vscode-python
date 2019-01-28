@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType } from 'vscode';
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { ILogger } from '../../common/types';
+import { IFileSystem } from '../../common/platform/types';
+import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { generateCellRanges } from '../cellFactory';
@@ -19,21 +20,25 @@ export class CodeWatcher implements ICodeWatcher {
     private version: number = -1;
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
+    private cachedSettings: IDataScienceSettings | undefined;
 
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
                 @inject(ILogger) private logger: ILogger,
                 @inject(IHistoryProvider) private historyProvider : IHistoryProvider,
+                @inject(IFileSystem) private fileSystem: IFileSystem,
+                @inject(IConfigurationService) private configService: IConfigurationService,
                 @inject(IDocumentManager) private documentManager : IDocumentManager) {}
 
-    public addFile(document: TextDocument) {
+    public setDocument(document: TextDocument) {
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated
         this.fileName = document.fileName;
         this.version = document.version;
 
-        // Get document cells here
-        const cells = generateCellRanges(document);
+        // Get document cells here. Make a copy of our settings.
+        this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings().datascience));
+        const cells = generateCellRanges(document, this.cachedSettings);
 
         this.codeLenses = [];
         cells.forEach(cell => {
@@ -58,6 +63,10 @@ export class CodeWatcher implements ICodeWatcher {
 
     public getVersion() {
         return this.version;
+    }
+
+    public getCachedSettings() : IDataScienceSettings | undefined {
+        return this.cachedSettings;
     }
 
     public getCodeLenses() {
@@ -86,6 +95,29 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 const code = this.document.getText();
                 await activeHistory.addCode(code, this.getFileName(), 0);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunSelectionOrLine)
+    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
+        const activeHistory = this.historyProvider.getOrCreateActive();
+
+        if (this.document && activeEditor &&
+            this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
+
+            // Get just the text of the selection or the current line if none
+            let code: string;
+            if (activeEditor.selection.start.line === activeEditor.selection.end.line &&
+                activeEditor.selection.start.character === activeEditor.selection.end.character) {
+                const line = this.document.lineAt(activeEditor.selection.start.line);
+                code = line.text;
+            } else {
+                code = this.document.getText(new Range(activeEditor.selection.start, activeEditor.selection.end));
+            }
+
+            if (code && code.trim().length) {
+                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
             }
         }
     }

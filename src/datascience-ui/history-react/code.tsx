@@ -53,6 +53,11 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         if (this.codeMirror && this.props.readOnly && this.codeMirror.getValue() !== this.props.code) {
             this.codeMirror.setValue(this.props.code);
         }
+        // If we are suddenly changing a readonly to not, somebody is reusing a different control. Update
+        // to be empty
+        if (this.codeMirror && !this.props.readOnly && prevProps.readOnly) {
+            this.codeMirror.setValue('');
+        }
     }
 
     public render() {
@@ -70,7 +75,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     top={this.state.cursorTop}
                     bottom={this.state.cursorBottom}/>
                 <RCM
-                    key={1}
                     value={this.props.code}
                     autoFocus={this.props.autoFocus}
                     onChange={this.onChange}

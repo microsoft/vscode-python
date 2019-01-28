@@ -13,6 +13,7 @@ import { traceError } from '../../../common/logger';
 import { IConfigurationService, Resource } from '../../../common/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
+import { PythonPathSource } from '../../../debugger/extension/types';
 import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -74,19 +75,17 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
     public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
         return [];
     }
-    public async validatePythonPath(pythonPath?: string, resource?: Uri) {
+    public async validatePythonPath(pythonPath?: string, pythonPathSource?: PythonPathSource, resource?: Uri) {
         pythonPath = pythonPath ? this.resolveVariables(pythonPath, resource) : undefined;
-        let pathInLaunchJson = true;
         // tslint:disable-next-line:no-invalid-template-strings
         if (pythonPath === '${config:python.pythonPath}' || !pythonPath) {
-            pathInLaunchJson = false;
             pythonPath = this.configService.getSettings(resource).pythonPath;
         }
         if (await this.interpreterHelper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
             return true;
         }
         traceError(`Invalid Python Path '${pythonPath}'`);
-        if (pathInLaunchJson) {
+        if (pythonPathSource === PythonPathSource.launchJson) {
             this.handle([new InvalidPythonPathInDebuggerDiagnostic(DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic, resource)])
                 .catch(ex => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();

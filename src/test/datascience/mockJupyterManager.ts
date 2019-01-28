@@ -16,7 +16,7 @@ import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, Outpu
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineString, stripComments } from '../../client/datascience/common';
 import {
     ICell,
     IConnection,
@@ -97,6 +97,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Setup our default cells that happen for everything
         this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt');
+        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')');
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');
@@ -150,7 +151,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{result: string; haveMore: boolean}>) {
-        const cells = generateCells(code, 'foo.py', 1, true);
+        const cells = generateCells(undefined, code, 'foo.py', 1, true);
         cells.forEach(c => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
@@ -181,9 +182,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
-        const cells = generateCells(code, 'foo.py', 1, true);
+        const cells = generateCells(undefined, code, 'foo.py', 1, true);
         cells.forEach(c => {
-            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
+            const key = concatMultilineString(stripComments(c.data.source)).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;

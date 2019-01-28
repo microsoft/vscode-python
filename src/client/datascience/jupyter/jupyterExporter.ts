@@ -3,16 +3,17 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import * as uuid from 'uuid/v4';
-
 import * as os from 'os';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
+
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { ILogger } from '../../common/types';
+import { IConfigurationService, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { CodeSnippits, RegExpValues } from '../constants';
+import { CellMatcher } from '../cellMatcher';
+import { CodeSnippits } from '../constants';
 import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from '../types';
 
 @injectable()
@@ -22,6 +23,7 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem) {
     }
 
@@ -56,9 +58,12 @@ export class JupyterExporter implements INotebookExporter {
             version: pythonNumber
         };
 
+        // Create an object for matching cell definitions
+        const matcher = new CellMatcher(this.configService.getSettings().datascience);
+
         // Combine this into a JSON object
         return {
-            cells: this.pruneCells(cells),
+            cells: this.pruneCells(cells, matcher),
             nbformat: 4,
             nbformat_minor: 2,
             metadata: metadata
@@ -133,30 +138,30 @@ export class JupyterExporter implements INotebookExporter {
         }
     }
 
-    private pruneCells = (cells: ICell[]): nbformat.IBaseCell[] => {
+    private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these
         return cells.filter(c => c.data.cell_type !== 'sys_info')
             // Then prune each cell down to just the cell data.
-            .map(this.pruneCell);
+            .map(c => this.pruneCell(c, cellMatcher));
     }
 
-    private pruneCell = (cell: ICell): nbformat.IBaseCell => {
+    private pruneCell = (cell: ICell, cellMatcher: CellMatcher): nbformat.IBaseCell => {
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
         const copy = { ...cell.data };
-        copy.source = this.pruneSource(cell.data.source);
+        copy.source = this.pruneSource(cell.data.source, cellMatcher);
         return copy;
     }
 
-    private pruneSource = (source: nbformat.MultilineString): nbformat.MultilineString => {
+    private pruneSource = (source: nbformat.MultilineString, cellMatcher: CellMatcher): nbformat.MultilineString => {
 
         if (Array.isArray(source) && source.length > 0) {
-            if (RegExpValues.PythonCellMarker.test(source[0])) {
+            if (cellMatcher.isCell(source[0])) {
                 return source.slice(1);
             }
         } else {
             const array = source.toString().split('\n').map(s => `${s}\n`);
-            if (array.length > 0 && RegExpValues.PythonCellMarker.test(array[0])) {
+            if (array.length > 0 && cellMatcher.isCell(array[0])) {
                 return array.slice(1);
             }
         }

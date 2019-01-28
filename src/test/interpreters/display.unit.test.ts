@@ -1,12 +1,15 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPathUtils, IPythonSettings } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
+import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
@@ -40,6 +43,7 @@ suite('Interpreters Display', () => {
     let interpreterDisplay: IInterpreterDisplay;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
+    let autoSelection: IInterpreterAutoSelectionService;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -53,6 +57,7 @@ suite('Interpreters Display', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
+        autoSelection = mock(InterpreterAutoSelectionService);
 
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => applicationShell.object);
@@ -63,6 +68,7 @@ suite('Interpreters Display', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterAutoSelectionService))).returns(() => instance(autoSelection));
 
         applicationShell.setup(a => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100))).returns(() => statusBar.object);
         pathUtils.setup(p => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(p => p);
@@ -93,11 +99,13 @@ suite('Interpreters Display', () => {
             path: path.join('user', 'development', 'env', 'bin', 'python')
         };
         setupWorkspaceFolder(resource, workspaceFolder);
+        when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
         interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(activeInterpreter));
 
         await interpreterDisplay.refresh(resource);
 
+        verify(autoSelection.autoSelectInterpreter(anything())).once();
         statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
         statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!, TypeMoq.Times.once());
     });

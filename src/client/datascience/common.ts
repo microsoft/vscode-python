@@ -20,6 +20,21 @@ export function concatMultilineString(str : nbformat.MultilineString) : string {
     return str.toString().trim();
 }
 
+// Strip out comment lines from code
+export function stripComments(str : nbformat.MultilineString): nbformat.MultilineString {
+    if (Array.isArray(str)) {
+        return str.filter((value: string) => {
+            if (value.trim().startsWith('#')) {
+                return false;
+            }
+
+            return true;
+        });
+    } else {
+        return str;
+    }
+}
+
 export function formatStreamText(str: string) : string {
     // Go through the string, looking for \r's that are not followed by \n. This is
     // a special case that means replace the string before. This is necessary to
