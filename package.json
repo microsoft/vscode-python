@@ -1044,6 +1044,18 @@
                     "description": "Determines if selected code in a python file will go to the terminal or the Python Interactive window when hitting shift+enter",
                     "scope": "resource"
                 },
+                "python.dataScience.codeRegularExpression": {
+                    "type": "string",
+                    "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+                    "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell. \nDefaults to '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])' if left blank",
+                    "scope": "resource"
+                },
+                "python.dataScience.markdownRegularExpression": {
+                    "type": "string",
+                    "default": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
+                    "description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown. \nDefaults to '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)' if left blank",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,

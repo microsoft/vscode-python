@@ -120,7 +120,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
-                const cells = generateCellsFromDocument(activeEditor.document);
+                const cells = generateCellsFromDocument(activeEditor.document, this.configuration.getSettings().datascience);
                 if (cells) {
                     const filtersKey = localize.DataScience.exportDialogFilter();
                     const filtersObject: { [name: string]: string[] } = {};
@@ -134,7 +134,13 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
                     await this.waitForStatus(async () => {
                         if (uri) {
-                            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+                            let directoryChange;
+                            const settings = this.configuration.getSettings();
+                            if (settings.datascience.changeDirOnImportExport) {
+                                directoryChange = uri.fsPath;
+                            }
+
+                            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
                             await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
                         }
                     }, localize.DataScience.exportingFormat(), file);
@@ -183,7 +189,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                             return Promise.resolve();
                         }, localize.DataScience.exportingFormat(), file, () => {
                             cancelSource.cancel();
-                        });
+                        }, true);
 
                         // When all done, show a notice that it completed.
                         const openQuestion = localize.DataScience.exportOpenQuestion();
@@ -209,7 +215,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
             // Try starting a server.
-            server = await this.jupyterExecution.connectToNotebookServer(undefined, useDefaultConfig, cancelToken);
+            server = await this.jupyterExecution.connectToNotebookServer(undefined, false, useDefaultConfig, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
@@ -218,7 +224,12 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                 })));
 
             // Then save them to the file
-            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+            let directoryChange;
+            if (settings.datascience.changeDirOnImportExport) {
+                directoryChange = file;
+            }
+
+            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
             await this.fileSystem.writeFile(file, JSON.stringify(notebook));
 
         } finally {
@@ -339,9 +350,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         return active.show();
     }
 
-    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void) : Promise<T> {
+    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void, skipHistory?: boolean) : Promise<T> {
         const message = file ? format.format(file) : format;
-        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
+        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled, skipHistory);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)

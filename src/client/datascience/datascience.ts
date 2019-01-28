@@ -216,10 +216,11 @@ export class DataScience implements IDataScience {
         // Setup the editor context for the cells
         const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
         const activeEditor = this.documentManager.activeTextEditor;
+
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
             // Inform the editor context that we have cells, fire and forget is ok on the promise here
             // as we don't care to wait for this context to be set and we can't do anything if it fails
-            editorContext.set(hasCells(activeEditor.document)).catch();
+            editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings().datascience)).catch();
         } else {
             editorContext.set(false).catch();
         }

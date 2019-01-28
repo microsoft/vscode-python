@@ -43,6 +43,7 @@ import { generateTestState } from '../../datascience-ui/history-react/mainPanelS
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
+import { MockJupyterSession } from './mockJupyterSession';
 
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
@@ -164,7 +165,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    function testMimeTypes(types: { code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
+    function testMimeTypes(types: { markdownRegEx: string | undefined; code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
         runTest('MimeTypes', async () => {
             // Prefill with the output (This is only necessary for mocking)
             types.forEach(t => {
@@ -180,6 +181,7 @@ suite('Jupyter notebook tests', () => {
                     statusCount += 1;
                 });
                 for (let i = 0; i < types.length; i += 1) {
+                    ioc.getSettings().datascience.markdownRegularExpression = types[i].markdownRegEx;
                     const prevCount = statusCount;
                     await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
                     if (types[i].cellType !== 'markdown') {
@@ -202,11 +204,11 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean): Promise<INotebookServer | undefined> {
+    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean, useDarkTheme?: boolean): Promise<INotebookServer | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer(undefined, useDefaultConfig, undefined, testDir);
+            const server = await jupyterExecution.connectToNotebookServer(undefined, useDarkTheme, useDefaultConfig, undefined, testDir);
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -254,7 +256,7 @@ suite('Jupyter notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer(uri!, true);
+            const server = await jupyterExecution.connectToNotebookServer(uri!, false, true);
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
@@ -458,7 +460,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Try different timeouts, canceling after the timeout on each
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, true, t), 'Cancel did not cancel start after {0}ms'));
+        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, false, true, t), 'Cancel did not cancel start after {0}ms'));
 
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(undefined);
@@ -466,7 +468,7 @@ suite('Jupyter notebook tests', () => {
 
         // Make sure doing normal start still works
         const nonCancelSource = new CancellationTokenSource();
-        const server = await jupyterExecution.connectToNotebookServer(undefined, true, nonCancelSource.token);
+        const server = await jupyterExecution.connectToNotebookServer(undefined, false, true, nonCancelSource.token);
         assert.ok(server, 'Server not found with a cancel token that does not cancel');
 
         // Make sure can run some code too
@@ -605,6 +607,7 @@ while keep_going:
     testMimeTypes(
         [
             {
+                markdownRegEx: undefined,
                 code:
                     `a=1
 a`,
@@ -614,6 +617,7 @@ a`,
                 verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -625,6 +629,7 @@ df.head()`,
                 verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -635,6 +640,7 @@ df.head()`,
                 verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `#%% [markdown]#
 # #HEADER`,
@@ -644,7 +650,18 @@ df.head()`,
                 verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
             },
             {
+                markdownRegEx: '\\s*#\\s*<markdowncell>',
+                code:
+                    `# <markdowncell>
+# #HEADER`,
+                mimeType: 'text/plain',
+                cellType: 'markdown',
+                result: '#HEADER',
+                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+            },
+            {
                 // Test relative directories too.
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read_csv("./DefaultSalesReport.csv")
@@ -656,6 +673,7 @@ df.head()`,
             },
             {
                 // Important to test as multiline cell magics only work if they are the first item in the cell
+                markdownRegEx: undefined,
                 code:
                     `#%% Cell Comment
 %%bash
@@ -667,6 +685,7 @@ echo 'hello'`,
             },
             {
                 // Test shell command should work on PC / Mac / Linux
+                markdownRegEx: undefined,
                 code:
                     `!echo world`,
                 mimeType: 'text/plain',
@@ -676,6 +695,7 @@ echo 'hello'`,
             },
             {
                 // Plotly
+                markdownRegEx: undefined,
                 code:
                     `import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -748,6 +768,26 @@ plt.show()`,
             assert.ok(server, 'Never connected to a default server with a bad default config');
 
             await verifySimple(server, `a=1${os.EOL}a`, 1);
+        }
+    });
+
+    runTest('Theme modifies execution', async () => {
+        if (ioc.mockJupyter) {
+            let server = await createNotebookServer(true, false, false);
+            let session = (server as any)['session'] as MockJupyterSession;
+
+            const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
+            const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
+
+            assert.ok(session.getExecutes().indexOf(light) >= 0, 'light not found');
+            assert.ok(session.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
+            await server.dispose();
+
+            server = await createNotebookServer(true, false, true);
+            session = (server as any)['session'] as MockJupyterSession;
+            assert.ok(session.getExecutes().indexOf(dark) >= 0, 'dark not found');
+            assert.ok(session.getExecutes().indexOf(light) < 0, 'light found when not allowed');
+            await server.dispose();
         }
     });
 

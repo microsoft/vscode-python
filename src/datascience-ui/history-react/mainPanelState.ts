@@ -5,6 +5,8 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 
+import { IDataScienceSettings } from '../../client/common/types';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
@@ -61,16 +63,24 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
     };
 }
 
-export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) : ICellViewModel {
-    let inputLinesCount = 0;
+export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined) : string {
     let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
+    const matcher = new CellMatcher(settings);
 
     // Eliminate the #%% on the front if it has nothing else on the line
-    if (source.length > 0 && /^\s*#\s*%%\s*$/.test(source[0].trim())) {
-        source = source.slice(1);
+    if (source.length > 0) {
+        const title = matcher.exec(source[0].trim());
+        if (title !== undefined && title.length <= 0) {
+            source = source.slice(1);
+        }
     }
 
-    const inputText = inputCell.data.cell_type === 'code' ? concatMultilineString(source) : '';
+    return concatMultilineString(source);
+}
+
+export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled : (id: string) => void) : ICellViewModel {
+    let inputLinesCount = 0;
+    const inputText = inputCell.data.cell_type === 'code' ? extractInputText(inputCell, settings) : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }
@@ -89,7 +99,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
 function generateVMs(inputBlockToggled : (id: string) => void, filePath: string) : ICellViewModel [] {
     const cells = generateCells(filePath);
     return cells.map((cell : ICell) => {
-        return createCellVM(cell, inputBlockToggled);
+        return createCellVM(cell, undefined, inputBlockToggled);
     });
 }
 
