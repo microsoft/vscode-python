@@ -190,8 +190,26 @@ async function getInfoForConfig(product: Product) {
     };
 }
 
+function resolveExecutable(filename: string): string {
+    if (fs.existsSync(filename)) {
+        return filename;
+    }
+    if (filename.indexOf(path.sep) > -1) {
+        throw Error(`could not find executable '${filename}'`);
+    }
+    const pathSep = process.platform === 'win32' ? ';' : ':';
+    for (const entry of process.env.PATH!.split(pathSep)) {
+        const resolved = path.join(entry, filename);
+        if (fs.existsSync(resolved)) {
+            return resolved;
+        }
+    }
+    throw Error(`could not find executable '${filename}'`);
+}
+
 class TestFixture extends BaseTestFixture {
     constructor(
+        python: string,
         printLogs = false
     ) {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -219,7 +237,7 @@ class TestFixture extends BaseTestFixture {
         );
 
         this.pythonSettings.setup(s => s.pythonPath)
-            .returns(() => PYTHON);
+            .returns(() => python);
     }
 
     private static newPythonToolExecService(
@@ -281,6 +299,15 @@ suite('Linting Functional Tests', () => {
     // These are integration tests that mock out everything except
     // the filesystem and process execution.
 
+    let pythonExecutable = '';
+
+    function getPython(): string {
+        if (pythonExecutable === '') {
+            pythonExecutable = resolveExecutable(PYTHON);
+        }
+        return pythonExecutable;
+    }
+
     // tslint:disable-next-line:no-any
     async function testLinterMessages(
         fixture: TestFixture,
@@ -320,7 +347,9 @@ suite('Linting Functional Tests', () => {
                 this.skip();
             }
 
-            const fixture = new TestFixture();
+            const fixture = new TestFixture(
+                getPython()
+            );
             const messagesToBeReturned = getMessages(product);
             await testLinterMessages(fixture, product, fileToLint, messagesToBeReturned);
         });
@@ -335,7 +364,9 @@ suite('Linting Functional Tests', () => {
                 this.skip();
             }
 
-            const fixture = new TestFixture();
+            const fixture = new TestFixture(
+                getPython()
+            );
             if (product === Product.pydocstyle) {
                 fixture.lintingSettings.pylintUseMinimalCheckers = false;
             }
@@ -384,7 +415,9 @@ suite('Linting Functional Tests', () => {
     }
     test('Three line output counted as one message', async () => {
         const maxErrors = 5;
-        const fixture = new TestFixture();
+        const fixture = new TestFixture(
+            getPython()
+        );
         fixture.lintingSettings.maxNumberOfProblems = maxErrors;
         await testLinterMessageCount(
             fixture,
