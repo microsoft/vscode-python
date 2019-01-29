@@ -6,7 +6,7 @@
 // tslint:disable:no-any max-func-body-length
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
-import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { IConfigurationService, IDataScienceSettings, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
 import { IJupyterExecution } from '../../client/datascience/types';
 
@@ -82,6 +82,14 @@ function loadBanner(
             return enabledState.object;
         });
 
+    // Config settings
+    const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+    const dataScienceSettings = typemoq.Mock.ofType<IDataScienceSettings>();
+    dataScienceSettings.setup(d => d.enabled).returns(() => true);
+    dataScienceSettings.setup(d => d.sendSelectionToInteractiveWindow).returns(() => false);
+    pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
+    config.setup(c => c.getSettings(typemoq.It.isAny())).returns(() => pythonSettings.object);
+
     // Config Jupyter
     jupyterExecution.setup(j => j.isNotebookSupported()).returns(() => {
         return Promise.resolve(jupyterFound);
@@ -102,5 +110,5 @@ function loadBanner(
         .returns(() => Promise.resolve())
         .verifiable(configCalled ? typemoq.Times.once() : typemoq.Times.never());
 
-    return new InteractiveShiftEnterBanner(appShell.object, persistService.object, jupyterExecution.object, config.object); 
+    return new InteractiveShiftEnterBanner(appShell.object, persistService.object, jupyterExecution.object, config.object);
 }
