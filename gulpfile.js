@@ -183,12 +183,14 @@ async function updateBuildNumber(args) {
         // Write back to the package json
         await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 
-        // Update the changelog.md if we can find a <version_number> entry
-        const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
-        const fixedContents = changeLogContents.replace(/\<build_version\>/, buildNumberPortion);
+        // Update the changelog.md if we are told to (this should happen on the release branch)
+        if (args.updateChangelog) {
+            const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+            const fixedContents = changeLogContents.replace(/##\s*(\d+)\.(\d+)\.(\d+)\s*\(/, `## $1.$2.${buildNumberPortion} (`);
 
-        // Write back to changelog.md
-        await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+            // Write back to changelog.md
+            await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+        }
     } else {
         throw Error('buildNumber argument required for updateBuildNumber task')
     }
