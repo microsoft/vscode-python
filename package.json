@@ -1892,7 +1892,8 @@
         "clean": "gulp clean",
         "cover:enable": "gulp cover:enable",
         "debugger-coverage": "gulp debugger-coverage",
-        "cover:inlinesource": "gulp inlinesource"
+        "cover:inlinesource": "gulp inlinesource",
+        "updateBuildNumber": "gulp updateBuildNumber"
     },
     "dependencies": {
         "@jupyterlab/services": "^3.1.4",

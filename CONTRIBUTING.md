@@ -238,11 +238,12 @@ Starting in 2018, the extension switched to
 auto-updates and thus there is no need to track its version
 number for backwards-compatibility. As such, the major version
 is the current year, the minor version is the month when feature
-freeze was reached, and the micro version is how many releases there
-have been in that month (starting at 0). For example
-the release made when we reach feature freeze in July 2018
-would be `2018.7.0`, and if there is a second release in that month
-it would be `2018.7.1`.
+freeze was reached, the micro version is how many releases there
+have been in that month (starting at 0), and the build number is the
+epoch time on the build machine when a build was generated.
+For example the release made when we reach feature freeze in July 2018
+would be `2018.7.0.<some number>`, and if there is a second release in that month
+it would be `2018.7.1.<some number>`.
 
 ## Releasing
 
