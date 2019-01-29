@@ -198,6 +198,11 @@ function resolveExecutable(filename: string): string {
         throw Error(`could not find executable '${filename}'`);
     }
     const pathSep = process.platform === 'win32' ? ';' : ':';
+    if (process.platform === 'win32') {
+        if (!filename.endsWith('.exe')) {
+            filename += '.exe';
+        }
+    }
     for (const entry of process.env.PATH!.split(pathSep)) {
         const resolved = path.join(entry, filename);
         if (fs.existsSync(resolved)) {
