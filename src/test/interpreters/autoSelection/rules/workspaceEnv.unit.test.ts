@@ -35,7 +35,7 @@ import {
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
 
-suite('xInterpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
+suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let rule: WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;

@@ -90,7 +90,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
                             cursorBlinkRate: -1,
-                            readOnly: readOnly ? 'nocursor' : false,
+                            readOnly: readOnly ? true : false,
                             lineWrapping: true
                         }
                     }

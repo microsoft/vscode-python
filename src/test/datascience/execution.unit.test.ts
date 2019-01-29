@@ -516,7 +516,12 @@ suite('Jupyter Execution', async () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: !skipSearch,
             showCellInputCode: true,
-            collapseCellInputCodeByDefault: true
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning

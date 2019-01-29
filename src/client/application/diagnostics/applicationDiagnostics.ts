@@ -22,7 +22,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
     }
     public async performPreStartupHealthCheck(resource: Resource): Promise<void> {
         // When testing, do not perform health checks, as modal dialogs can be displayed.
-        if (!isTestExecution()) {
+        if (isTestExecution()) {
             return;
         }
         const services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
@@ -31,7 +31,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         // Perform these validation checks in the background.
         this.runDiagnostics(services.filter(item => item.runInBackground), resource).ignoreErrors();
     }
-    private async runDiagnostics(diagnosticServices: IDiagnosticsService[], resource: Resource): Promise<void>{
+    private async runDiagnostics(diagnosticServices: IDiagnosticsService[], resource: Resource): Promise<void> {
         await Promise.all(diagnosticServices.map(async diagnosticService => {
             const diagnostics = await diagnosticService.diagnose(resource);
             if (diagnostics.length > 0) {

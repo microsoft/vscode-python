@@ -8,7 +8,7 @@ import { URL } from 'url';
 import * as vscode from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { PYTHON, PYTHON_LANGUAGE } from '../common/constants';
+import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import {
     BANNER_NAME_DS_SURVEY,
@@ -48,7 +48,7 @@ export class DataScience implements IDataScience {
 
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider(
-                PYTHON, this.dataScienceCodeLensProvider
+                PYTHON_ALLFILES, this.dataScienceCodeLensProvider
             )
         );
 

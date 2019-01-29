@@ -44,7 +44,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id?: s
 
 }
 
-export function generateCells(settings: IDataScienceSettings, code: string, file: string, line: number, splitMarkdown?: boolean, id?: string) : ICell[] {
+export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown?: boolean, id?: string) : ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({trim: false});
     const firstLine = split[0];

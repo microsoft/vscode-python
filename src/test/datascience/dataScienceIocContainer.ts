@@ -251,7 +251,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             searchForJupyter: true,
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
-            markdownRegularExpression : undefined
+            allowInput: true,
+            maxOutputSize: 400,
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();

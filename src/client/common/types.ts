@@ -289,13 +289,13 @@ export interface IDataScienceSettings {
     changeDirOnImportExport: boolean;
     useDefaultConfigForJupyter: boolean;
     searchForJupyter: boolean;
-    allowInput?: boolean;
+    allowInput: boolean;
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
-    maxOutputSize? : number;
-    sendSelectionToInteractiveWindow? : boolean;
-    markdownRegularExpression? : string;
-    codeRegularExpression? : string;
+    maxOutputSize: number;
+    sendSelectionToInteractiveWindow : boolean;
+    markdownRegularExpression: string;
+    codeRegularExpression: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

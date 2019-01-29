@@ -11,7 +11,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { sendTelemetryEvent } from '../../client/telemetry';
 import { correctPathForOsType } from '../common';
 
-suite('xTelemetry', () => {
+suite('Telemetry', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
     setup(() => {
