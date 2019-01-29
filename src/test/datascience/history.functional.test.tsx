@@ -377,7 +377,12 @@ suite('History output tests', () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCodeByDefault: true
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };
     }
 

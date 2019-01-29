@@ -61,7 +61,11 @@ suite('DataScience Code Watcher Unit Tests', () => {
             searchForJupyter: true,
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
-            markdownRegularExpression : undefined
+            allowInput: true,
+            maxOutputSize: 400,
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };
 
         // Setup the service container to return code watchers
