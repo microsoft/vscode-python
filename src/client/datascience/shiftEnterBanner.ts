@@ -12,7 +12,6 @@ import { IConfigurationService, IPersistentStateFactory,
 import * as localize from '../common/utils/localize';
 import { IJupyterExecution } from './types';
 
-// persistent state names, exported to make use of in testing
 export enum InteractiveShiftEnterStateKeys {
     ShowBanner = 'InteractiveShiftEnterBanner'
 }
@@ -22,6 +21,7 @@ enum InteractiveShiftEnterLabelIndex {
     No
 }
 
+// Create a banner to ask users if they want to send shift-enter to the interactive window or not
 @injectable()
 export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
@@ -44,11 +44,11 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         }
         this.initialized = true;
 
-        // Don't even bother adding handlers if banner has been turned off.
         if (!this.enabled) {
             return;
         }
     }
+
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, true).value;
     }
@@ -63,11 +63,11 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
             return;
         }
 
-        // This check is independent from shouldShowBanner, that just checks the persistent state. 
-        // The Jupyter check should only happen once and should disable the banner if it fails (don't reprompt)
+        // This check is independent from shouldShowBanner, that just checks the persistent state.
+        // The Jupyter check should only happen once and should disable the banner if it fails (don't reprompt and don't recheck)
         const jupyterFound = await this.jupyterExecution.isNotebookSupported();
         if (!jupyterFound) {
-            this.disable();
+            await this.disable();
             return;
         }
 

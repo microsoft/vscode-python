@@ -470,7 +470,7 @@
                 },
                 {
                     "command": "python.datascience.exportfileasnotebook",
-                    "title": "%python.command.python.datascience.exportfilesasnotebook.title%",
+                    "title": "%python.command.python.datascience.exportfileasnotebook.title%",
                     "category": "Python",
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },

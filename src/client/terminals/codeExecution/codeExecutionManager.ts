@@ -46,6 +46,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
 
         await this.executeSelection(executionService);
+        // Prompt one time to ask if they want to send shift-enter to the Interactive Window
         this.shiftEnterBanner.showBanner().ignoreErrors();
     }
 
