@@ -158,7 +158,6 @@ gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--confi
 
 gulp.task('webpack', async () => {
     await buildWebPack('production', []);
-    await buildWebPack('sourceMaps', ['--config', './build/webpack/webpack.extension.sourceMaps.config.js']);
     await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
     await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
 });
@@ -221,8 +220,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js'
             ];
-        case 'sourceMaps':
-            return [];
         case 'extension':
             return [];
         case 'debugAdapter':

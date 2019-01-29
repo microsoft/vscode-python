@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.1.0-alpha",
-    "languageServerVersion": "0.1.75",
+    "version": "2019.1.0",
+    "languageServerVersion": "0.1.78",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1897,7 +1897,6 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.1.4",
-        "@types/strip-json-comments": "0.0.30",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -1982,6 +1981,7 @@
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^4.3.0",
         "@types/stack-trace": "0.0.29",
+        "@types/strip-json-comments": "0.0.30",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",

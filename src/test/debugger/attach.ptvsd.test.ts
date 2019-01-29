@@ -61,7 +61,7 @@ suite('Debugging - Attach Debugger', () => {
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
         env['PYTHONPATH'] = PTVSD_PATH;
-        const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
+        const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, fileToDebug.fileToCommandArgument()];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         const exited = new Promise(resolve => proc.once('close', resolve));
         await sleep(3000);
