@@ -30,7 +30,8 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, serviceContainer.object);
+        // IANHU: fix up tests if imp is ok
+        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, undefined, serviceContainer.object);
     });
     teardown(() => {
         disposables.forEach(disposable => {
