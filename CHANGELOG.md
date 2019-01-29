@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.1.0.<build_version> (29 Jan 2019)
+## 2019.1.<build_version> (29 Jan 2019)
 
 todo: put next version here. <build_version> will be replaced
 

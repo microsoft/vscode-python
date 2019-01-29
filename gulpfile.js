@@ -31,6 +31,7 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+const argv = require('yargs').argv;
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -163,30 +164,34 @@ gulp.task('webpack', async () => {
 });
 
 gulp.task('updateBuildNumber', async () => {
-    await updateBuildNumber()
+    await updateBuildNumber(argv)
 });
 
-async function updateBuildNumber() {
-    // Use epoch time as build number
-    var nowEpoch = Date.now();
+async function updateBuildNumber(args) {
+    if (args && args.buildNumber) {
 
-    // Edit the version number from the package.json
-    const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
-    const packageJson = JSON.parse(packageJsonContents);
+        // Edit the version number from the package.json
+        const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+        const packageJson = JSON.parse(packageJsonContents);
 
-    // Change version number
-    const versionParts = packageJson['version'].split('.');
-    packageJson['version'] = versionParts.length >= 3 ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2]}.${nowEpoch}` : packageJson['version'];
+        // Change version number
+        const versionParts = packageJson['version'].split('.');
+        const buildNumberPortion = versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
+        const newVersion = versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}` : packageJson['version'];
+        packageJson['version'] = newVersion;
 
-    // Write back to the package json
-    await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+        // Write back to the package json
+        await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 
-    // Update the changelog.md if we can find a <version_number> entry
-    const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
-    const fixedContents = changeLogContents.replace(/\<build_version\>/, nowEpoch.toString());
+        // Update the changelog.md if we can find a <version_number> entry
+        const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+        const fixedContents = changeLogContents.replace(/\<build_version\>/, buildNumberPortion);
 
-    // Write back to changelog.md
-    await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+        // Write back to changelog.md
+        await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+    } else {
+        throw Error('buildNumber argument required for updateBuildNumber task')
+    }
 }
 
 async function buildWebPack(webpackConfigName, args) {
