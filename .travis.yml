@@ -68,7 +68,7 @@ install:
   - python -m pip install --upgrade 'pip<19'
   - python -m pip install --upgrade -r ./build/test-requirements.txt
   - npx gulp installPythonLibs
-  - python -m pip install --upgrade git+https://github.com/Microsoft/ptvsd
+  - python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps  --upgrade git+https://github.com/Microsoft/ptvsd
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
