@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { getUnicodeCategory, UnicodeCategory } from './unicode';

@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
+
 import { Container, injectable, interfaces } from 'inversify';
 
 import { Abstract, ClassType, IServiceManager, Newable } from './types';

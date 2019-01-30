@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:no-var-requires no-require-imports no-any
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';

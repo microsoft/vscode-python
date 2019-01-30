@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { CancellationToken, CancellationTokenSource, Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, Disposable, languages, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';

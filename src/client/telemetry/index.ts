@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
 import { basename as pathBasename, sep as pathSep } from 'path';
@@ -115,10 +117,10 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
     failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this

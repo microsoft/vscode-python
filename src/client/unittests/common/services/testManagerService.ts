@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { Disposable, Uri } from 'vscode';
 import { IConfigurationService, IDisposableRegistry, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';

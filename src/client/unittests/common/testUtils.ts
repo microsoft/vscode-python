@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Uri, window, workspace } from 'vscode';

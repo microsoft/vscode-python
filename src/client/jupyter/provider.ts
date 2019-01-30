@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { Position, Range, TextDocument, window } from 'vscode';
 
 export class JupyterProvider {

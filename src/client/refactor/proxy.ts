@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 // tslint:disable:no-any no-empty member-ordering prefer-const prefer-template no-var-self
 
 import { ChildProcess } from 'child_process';

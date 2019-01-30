@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import * as fs from 'fs';
 import { injectable } from 'inversify';
 import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';

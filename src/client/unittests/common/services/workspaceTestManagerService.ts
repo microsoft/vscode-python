@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable, named } from 'inversify';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../../common/types';
@@ -7,7 +12,7 @@ import { ITestManager, ITestManagerService, ITestManagerServiceFactory, IWorkspa
 @injectable()
 export class WorkspaceTestManagerService implements IWorkspaceTestManagerService, Disposable {
     private workspaceTestManagers = new Map<string, ITestManagerService>();
-    constructor( @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
+    constructor(@inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
         @inject(ITestManagerServiceFactory) private testManagerServiceFactory: ITestManagerServiceFactory,
         @inject(IDisposableRegistry) disposables: Disposable[]) {
         disposables.push(this);

@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { Disposable, Uri, workspace } from 'vscode';
 import { IServiceContainer } from '../ioc/types';
 import { ICommandResult, JediProxy, JediProxyHandler } from '../providers/jediProxy';
