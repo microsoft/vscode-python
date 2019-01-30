@@ -10,7 +10,6 @@ import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
-import * as jsdom from 'jsdom';
 
 import {
     IApplicationShell,
@@ -35,7 +34,7 @@ import { updateSettings } from '../../datascience-ui/react-common/settingsReactS
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
-import { waitForUpdate, createKeyboardEvent, createInputEvent, blurWindow } from './reactHelpers';
+import { blurWindow, createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 enum CellInputState {
@@ -61,7 +60,7 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
-    let mainPanel: MainPanel;
+    let mainPanel: MainPanel | undefined;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -189,7 +188,7 @@ suite('History output tests', () => {
         // Skip the edit cell
         const foundResult = wrapper.find('Cell');
         assert.ok(foundResult.length >= 2, 'Didn\'t find any cells being rendered');
-        return foundResult.at(foundResult.length-2);
+        return foundResult.at(foundResult.length - 2);
     }
 
     function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
@@ -312,15 +311,15 @@ suite('History output tests', () => {
         // 1) keydown
         // 2) keypress
         // 3) keyup
-        let event = createKeyboardEvent('keydown',{ key, code: key, shiftKey: shiftDown });
+        let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown });
 
         // Dispatch. Result can be swallowed. If so skip the next event.
         let result = domNode.dispatchEvent(event);
         if (result) {
-            event = createKeyboardEvent('keypress',{ key, code: key, shiftKey: shiftDown });
+            event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown });
             result = domNode.dispatchEvent(event);
             if (result) {
-                event = createKeyboardEvent('keyup',{ key, code: key, shiftKey: shiftDown });
+                event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown });
                 domNode.dispatchEvent(event);
 
                 // Dispatch an input event so we update the textarea
@@ -359,17 +358,18 @@ suite('History output tests', () => {
         const lastCell = cells.last();
         const rcm = lastCell.find('div.ReactCodeMirror');
         const rcmDom = rcm.getDOMNode();
-        const textArea = rcmDom.querySelector('.CodeMirror').querySelector('textarea');
-        assert.ok(textArea, 'Cannot find the textarea inside the code mirror');
-        textArea.focus();
+        assert.ok(rcmDom, 'rcm DOM object not found');
+        const textArea = rcmDom!.querySelector('.CodeMirror')!.querySelector('textarea');
+        assert.ok(textArea!, 'Cannot find the textarea inside the code mirror');
+        textArea!.focus();
 
         // Now simulate entering all of the keys
-        for (let i=0; i<code.length; i+=1) {
-            await enterKey(wrapper, textArea, code.charAt(i));
+        for (let i = 0; i < code.length; i += 1) {
+            enterKey(wrapper, textArea!, code.charAt(i));
         }
 
         // Now simulate a shift enter. This should cause a new cell to be added
-        await submitInput(wrapper, textArea);
+        await submitInput(wrapper, textArea!);
 
         // Return the result
         return wrapper.find('Cell');
@@ -677,7 +677,7 @@ for _ in range(50):
         assert.equal(afterUndo.length, 3, `Undo should put cells back`);
 
         // find the buttons on the cell itself
-        const cellButtons = afterUndo.at(afterUndo.length-2).find(CellButton);
+        const cellButtons = afterUndo.at(afterUndo.length - 2).find(CellButton);
         assert.equal(cellButtons.length, 2, 'Cell buttons not found');
         const goto = cellButtons.at(1);
         const deleteButton = cellButtons.at(0);
@@ -860,6 +860,4 @@ for _ in range(50):
         await enterInput(wrapper, 'print("hello")');
         verifyHtmlOnCell(wrapper, '<span>hello</span>', CellPosition.Last);
     });
-
-
 });

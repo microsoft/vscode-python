@@ -1,18 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
-import { ComponentClass, configure, ReactWrapper  } from 'enzyme';
+import { ComponentClass, configure, ReactWrapper } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
-import { JSDOM, DOMWindow } from 'jsdom';
+import { DOMWindow, JSDOM } from 'jsdom';
 import * as React from 'react';
-import { noop } from '../../client/common/utils/misc';
-import { strictEqual } from 'assert';
-import { ITestResultsService } from '../../client/unittests/common/types';
-import { LinterProductPathService } from '../../client/common/installer/productPath';
 
-// tslint:disable:no-string-literal no-any
+import { noop } from '../../client/common/utils/misc';
+
+// tslint:disable:no-string-literal no-any object-literal-key-quotes
 
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
@@ -200,7 +196,7 @@ export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mai
 // this is necessary to generate keypress/keydown events.
 // There doesn't seem to be an official way to do this (according to stack overflow)
 // so just hardcoding it here.
-const keyMap : { [key: string] : { code: number, shift: boolean }} = {
+const keyMap : { [key: string] : { code: number; shift: boolean }} = {
     'A' : { code: 65, shift: false },
     'B' : { code: 66, shift: false },
     'C' : { code: 67, shift: false },
@@ -266,9 +262,9 @@ const keyMap : { [key: string] : { code: number, shift: boolean }} = {
     '`' : { code: 192, shift: false },
     '~' : { code: 192, shift: true },
     ' ' : { code: 32, shift: false },
-    '\n' :{ code: 13, shift: false },
-    '\r' :{ code: 0, shift: false } // remove \r from the text.
-}
+    '\n' : { code: 13, shift: false },
+    '\r' : { code: 0, shift: false } // remove \r from the text.
+};
 
 export function createKeyboardEvent(type: string, options: KeyboardEventInit) : KeyboardEvent {
     const domWindow = window as DOMWindow;
@@ -279,8 +275,8 @@ export function createKeyboardEvent(type: string, options: KeyboardEventInit) : 
     // This is the key (on an english qwerty keyboard) that would have to be hit to generate the key
     // This site was a great help with the mapping:
     // https://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
-    const upper = options.key.toUpperCase();
-    const keyCode = keyMap.hasOwnProperty(upper) ? keyMap[upper].code : options.key.charCodeAt(0);
+    const upper = options.key!.toUpperCase();
+    const keyCode = keyMap.hasOwnProperty(upper) ? keyMap[upper].code : options.key!.charCodeAt(0);
     const shift = keyMap.hasOwnProperty(upper) ? keyMap[upper].shift || options.shiftKey : options.shiftKey;
 
     // JSDOM doesn't support typescript so well. The options are supposed to be flexible to support just about anything, but
