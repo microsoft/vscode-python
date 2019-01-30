@@ -35,7 +35,7 @@ import { updateSettings } from '../../datascience-ui/react-common/settingsReactS
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
-import { waitForUpdate, createKeyboardEvent, createInputEvent } from './reactHelpers';
+import { waitForUpdate, createKeyboardEvent, createInputEvent, blurWindow } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 enum CellInputState {
@@ -172,6 +172,9 @@ suite('History output tests', () => {
                 try {
                     await testFunc(wrapper);
                 } finally {
+                    // Blur window focus so we don't have editors polling
+                    blurWindow();
+
                     // Make sure to unmount the wrapper or it will interfere with other tests
                     wrapper.unmount();
                 }

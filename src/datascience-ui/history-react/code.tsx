@@ -41,6 +41,7 @@ interface ICodeState {
 export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private codeMirror: CodeMirror.Editor | undefined;
+    private codeMirrorOwner: HTMLDivElement | undefined;
     private baseIndentation : number | undefined;
 
     constructor(prop: ICodeProps) {
@@ -60,12 +61,21 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         }
     }
 
+    public componentWillUnmount() {
+        if (this.codeMirrorOwner) {
+            const activeElement = document.activeElement as HTMLElement;
+            if (activeElement && this.codeMirrorOwner.contains(activeElement)) {
+                activeElement.blur();
+            }
+        }
+    }
+
     public render() {
         const readOnly = this.props.readOnly;
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         return (
-            <div className={classes}>
+            <div className={classes} ref={this.updateRoot}>
                 <Cursor
                     hidden={readOnly}
                     codeInFocus={this.state.focused}
@@ -109,6 +119,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             ev.stopPropagation();
             this.codeMirror.focus();
         }
+    }
+
+    private updateRoot = (div: HTMLDivElement) => {
+        this.codeMirrorOwner = div;
     }
 
     private getWatermarkString = () : string => {

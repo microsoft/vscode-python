@@ -210,3 +210,10 @@ export function createInputEvent() : Event {
     const domWindow = window as DOMWindow;
     return new domWindow.Event('input', {bubbles: true, cancelable: false});
 }
+
+export function blurWindow() {
+    // blur isn't implemented. We just need to dispatch the blur event
+    const domWindow = window as DOMWindow;
+    const blurEvent = new domWindow.Event('blur', {bubbles: true});
+    domWindow.dispatchEvent(blurEvent);
+}
