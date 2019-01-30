@@ -192,7 +192,7 @@ export class PythonSettings implements IPythonSettings {
             this.sortImports = sortImportSettings;
         }
         // Support for travis.
-        this.sortImports = this.sortImports ? this.sortImports : { path: '', args: [] };
+        this.sortImports = this.sortImports ? this.sortImports : { enabled: true, path: '', args: [] };
         // Support for travis.
         this.linting = this.linting ? this.linting : {
             enabled: false,

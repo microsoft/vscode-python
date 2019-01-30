@@ -163,6 +163,7 @@ export interface IPythonSettings {
     readonly onDidChange: Event<void>;
 }
 export interface ISortImportSettings {
+    readonly enabled: boolean;
     readonly path: string;
     readonly args: string[];
 }

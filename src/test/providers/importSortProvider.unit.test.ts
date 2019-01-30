@@ -210,6 +210,54 @@ suite('Import Sort Provider', () => {
         shell.verifyAll();
         documentManager.verifyAll();
     });
+    test('Ensure no automated (provider method) edits are provided when automatic sorting is disabled', async () => {
+        const uri = Uri.file('TestDoc');
+        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+        mockDoc.setup((d: any) => d.then).returns(() => undefined);
+        mockDoc.setup(d => d.lineCount)
+            .returns(() => 10)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+
+        const lastLine = TypeMoq.Mock.ofType<TextLine>();
+        let editApplied: WorkspaceEdit | undefined;
+        lastLine.setup(l => l.text)
+            .returns(() => '1234')
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        lastLine.setup(l => l.range)
+            .returns(() => new Range(1, 0, 10, 1))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        mockDoc.setup(d => d.lineAt(TypeMoq.It.isValue(9)))
+            .returns(() => lastLine.object)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        documentManager
+            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .callback(e => editApplied = e)
+            .returns(() => Promise.resolve(mockDoc.object))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        documentManager
+            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .returns(() => Promise.resolve(mockDoc.object))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        shell
+            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+        pythonSettings.setup(s => s.sortImports)
+            .returns(() => { return { enabled: false } as any as ISortImportSettings; })
+            .verifiable(TypeMoq.Times.once());
+
+        // Test the Provider Method
+        const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
+        expect(edit).to.be.equal(undefined, 'not undefined');
+
+        // Test the Command
+        sortProvider.provideDocumentSortImportsEdits = () => Promise.resolve(undefined);
+        await sortProvider.sortImports(uri);
+
+        expect(edit).to.be.equal(undefined, 'not undefined');
+        shell.verifyAll();
+        documentManager.verifyAll();
+    });
     test('Ensure no edits are provided when there is only one line (when using provider method)', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
@@ -283,7 +331,7 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         pythonSettings.setup(s => s.sortImports)
-            .returns(() => { return { path: 'CUSTOM_ISORT', args: ['1', '2'] } as any as ISortImportSettings; })
+            .returns(() => { return { enabled: true, path: 'CUSTOM_ISORT', args: ['1', '2'] } as any as ISortImportSettings; })
             .verifiable(TypeMoq.Times.once());
         processServiceFactory.setup(p => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object))
@@ -338,7 +386,7 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         pythonSettings.setup(s => s.sortImports)
-            .returns(() => { return { args: ['1', '2'] } as any as ISortImportSettings; })
+            .returns(() => { return { enabled: true, args: ['1', '2'] } as any as ISortImportSettings; })
             .verifiable(TypeMoq.Times.once());
 
         const processExeService = TypeMoq.Mock.ofType<IPythonExecutionService>();

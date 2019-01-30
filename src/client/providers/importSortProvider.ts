@@ -32,6 +32,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
     public async provideDocumentSortImportsEdits(uri: Uri, token?: CancellationToken): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
+        const settings = this.configurationService.getSettings(uri);
+        if (!settings.sortImports.enabled) {
+            return;
+        }
         if (!document) {
             return;
         }
@@ -48,7 +52,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         if (tmpFile) {
             await fsService.writeFile(tmpFile.filePath, document.getText());
         }
-        const settings = this.configurationService.getSettings(uri);
         const isort = settings.sortImports.path;
         const filePath = tmpFile ? tmpFile.filePath : document.uri.fsPath;
         const args = [filePath, '--diff'].concat(settings.sortImports.args);

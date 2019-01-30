@@ -1594,6 +1594,12 @@
                     "description": "Path to the pipenv executable to use for activation.",
                     "scope": "resource"
                 },
+                "python.sortImports.enabled": {
+                    "type": "boolean",
+                    "description": "Enable or disable sorting Python imports automatically",
+                    "default": true,
+                    "scope": "resource"
+                },
                 "python.sortImports.args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
