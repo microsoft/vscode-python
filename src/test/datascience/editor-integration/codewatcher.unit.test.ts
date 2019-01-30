@@ -29,8 +29,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let textEditor: TypeMoq.IMock<TextEditor>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
-    let serviceContainer : TypeMoq.IMock<IServiceContainer>;
-    let tokenSource : CancellationTokenSource;
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let tokenSource: CancellationTokenSource;
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -139,7 +139,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`first line
+            `first line
 second line
 
 #%%
@@ -183,7 +183,7 @@ fourth line`;
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`first line
+            `first line
 second line
 
 # <foobar>
@@ -238,7 +238,7 @@ fourth line
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`first line
+            `first line
 second line
 
 # <codecell>
@@ -304,11 +304,11 @@ fourth line
 
         // Set up our expected call to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString),
-                                TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(0),
-                                TypeMoq.It.is((ed: TextEditor) => {
-                                    return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isValue(fileName),
+            TypeMoq.It.isValue(0),
+            TypeMoq.It.is((ed: TextEditor) => {
+                return textEditor.object === ed;
+            }))).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
         await codeWatcher.runCell(testRange);
@@ -322,7 +322,7 @@ fourth line
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`#%%
+            `#%%
 testing1
 #%%
 testing2`; // Command tests override getText, so just need the ranges here
@@ -340,14 +340,14 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString1),
-                                TypeMoq.It.isValue('test.py'),
-                                TypeMoq.It.isValue(0)
-                                )).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(0)
+        )).verifiable(TypeMoq.Times.once());
 
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
-                                TypeMoq.It.isValue('test.py'),
-                                TypeMoq.It.isValue(2)
-                                )).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(2)
+        )).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
         await codeWatcher.runAllCells();
@@ -361,7 +361,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`#%%
+            `#%%
 testing1
 #%%
 testing2`;
@@ -372,11 +372,11 @@ testing2`;
 
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
-                                TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(2),
-                                TypeMoq.It.is((ed: TextEditor) => {
-                                    return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isValue(fileName),
+            TypeMoq.It.isValue(2),
+            TypeMoq.It.is((ed: TextEditor) => {
+                return textEditor.object === ed;
+            }))).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
@@ -393,7 +393,7 @@ testing2`;
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`#%%
+            `#%%
 testing1
 #%%
 testing2`;
@@ -403,11 +403,11 @@ testing2`;
 
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
-                                TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(3),
-                                TypeMoq.It.is((ed: TextEditor) => {
-                                    return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isValue(fileName),
+            TypeMoq.It.isValue(3),
+            TypeMoq.It.is((ed: TextEditor) => {
+                return textEditor.object === ed;
+            }))).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.document).returns(() => document.object);
@@ -425,7 +425,7 @@ testing2`;
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`testing1
+            `testing1
 #%%
 testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
@@ -434,9 +434,9 @@ testing2`;
 
         // We don't want to ever call add code here
         activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(0, 0, 0, 0));
@@ -453,7 +453,7 @@ testing2`;
         const fileName = 'test.py';
         const version = 1;
         const inputText =
-`#%%
+            `#%%
 testing1
 #%%
 testing2`; // Command tests override getText, so just need the ranges here
@@ -466,11 +466,11 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString),
-                                TypeMoq.It.isValue('test.py'),
-                                TypeMoq.It.isValue(0),
-                                TypeMoq.It.is((ed: TextEditor) => {
-                                    return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(0),
+            TypeMoq.It.is((ed: TextEditor) => {
+                return textEditor.object === ed;
+            }))).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         const selection = new Selection(0, 0, 0, 0);

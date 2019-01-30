@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
@@ -774,7 +775,7 @@ plt.show()`,
     runTest('Theme modifies execution', async () => {
         if (ioc.mockJupyter) {
             let server = await createNotebookServer(true, false, false);
-            let session = (server as any)['session'] as MockJupyterSession;
+            let session = (server as any).session as MockJupyterSession;
 
             const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
             const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
@@ -784,7 +785,7 @@ plt.show()`,
             await server.dispose();
 
             server = await createNotebookServer(true, false, true);
-            session = (server as any)['session'] as MockJupyterSession;
+            session = (server as any).session as MockJupyterSession;
             assert.ok(session.getExecutes().indexOf(dark) >= 0, 'dark not found');
             assert.ok(session.getExecutes().indexOf(light) < 0, 'light found when not allowed');
             await server.dispose();

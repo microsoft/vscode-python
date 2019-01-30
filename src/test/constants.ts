@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as path from 'path';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 

@@ -95,11 +95,11 @@ class MockJupyterServer implements INotebookServer {
         return Promise.resolve();
     }
 
-    public interruptKernel(timeout: number) : Promise<InterruptResult> {
+    public interruptKernel(timeout: number): Promise<InterruptResult> {
         throw new Error('Method not implemented');
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         if (this.conninfo) {
             this.conninfo.dispose(); // This should kill the process that's running
             this.conninfo = undefined;
@@ -123,7 +123,8 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
         this.disposables.push(disposable);
     }
 
-    public dispose = async () : Promise<void> => {
+    public dispose = async (): Promise<void> => {
+        // tslint:disable-next-line:prefer-for-of
         for (let i = 0; i < this.disposables.length; i += 1) {
             const disposable = this.disposables[i];
             if (disposable) {
@@ -212,7 +213,7 @@ suite('Jupyter Execution', async () => {
         return cleanupDisposables();
     });
 
-    function cleanupDisposables() : Promise<void> {
+    function cleanupDisposables(): Promise<void> {
         return disposableRegistry.dispose();
     }
 
@@ -258,7 +259,7 @@ suite('Jupyter Execution', async () => {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result: TypeMoq.IMock<T> = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }
@@ -303,9 +304,9 @@ suite('Jupyter Execution', async () => {
             .returns(result);
         const withModuleArgs = ['-m', module, ...args];
         service.setup(x => x.exec(
-                TypeMoq.It.is(a => argsMatch(withModuleArgs, a)),
-                TypeMoq.It.isAny()))
-                .returns(result);
+            TypeMoq.It.is(a => argsMatch(withModuleArgs, a)),
+            TypeMoq.It.isAny()))
+            .returns(result);
     }
 
     function setupPythonServiceExecObservable(service: TypeMoq.IMock<IPythonExecutionService>, module: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
@@ -632,7 +633,7 @@ suite('Jupyter Execution', async () => {
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
         const evt = {
-            affectsConfiguration(m: string) : boolean {
+            affectsConfiguration(m: string): boolean {
                 return true;
             }
         };
