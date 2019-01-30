@@ -1,6 +1,7 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
 
 import * as assert from 'assert';
 import * as fs from 'fs';
@@ -151,8 +152,8 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
         testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
         testFormatMultiline(
-// tslint:disable-next-line:no-multiline-string
-`async def fetch():
+            // tslint:disable-next-line:no-multiline-string
+            `async def fetch():
   async with aiohttp.ClientSession() as session:
     async with session.ws_connect(
         "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`, 3,

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:no-string-literal no-unused-expression chai-vague-errors max-func-body-length no-any
 
 import { expect, use } from 'chai';
@@ -85,7 +87,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const args = {
             program: '', pythonPath: '', args: [], envFile: '',
             console, env
-        // tslint:disable-next-line:no-any
+            // tslint:disable-next-line:no-any
         } as any as LaunchRequestArguments;
 
         const envVars = await helper.getEnvironmentVariables(args);
@@ -133,7 +135,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const prop2 = shortid.generate();
         const prop3 = shortid.generate();
 
-        const env : Record<string, string> = {};
+        const env: Record<string, string> = {};
         env[pathVariableName] = customPathToAppend;
         env['PYTHONPATH'] = customPythonPathToAppend;
         env[prop1] = prop1;
