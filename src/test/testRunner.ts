@@ -13,6 +13,7 @@ import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
 import { setUpDomEnvironment } from './datascience/reactHelpers';
+import { initialize } from './initialize';
 
 interface ITestRunnerOptions {
     enabled?: boolean;
@@ -87,6 +88,20 @@ export function run(testsRoot: string, callback: TestCallback): void {
         coverageRunner.setupCoverage();
     }
 
+    /**
+     * Waits until the Python Extension completes loading or a timeout.
+     * When running tests within VSC, we need to wait for the Python Extension to complete loading,
+     * this is where `initialize` comes in, we load the PVSC extension using VSC API, wait for it
+     * to complete.
+     * That's when we know out PVSC extension specific code is ready for testing.
+     * So, this code needs to run always for every test running in VS Code (what we call these `system test`) .
+     * @returns
+     */
+    function initializationScript() {
+        const ex = new Error('Failed to initialize extension for tests');
+        const failed = new Promise((_, reject) => setTimeout(() => reject(ex), 60_000));
+        return Promise.race([initialize(), failed]);
+    }
     // Run the tests.
     glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
         if (error) {
@@ -94,7 +109,9 @@ export function run(testsRoot: string, callback: TestCallback): void {
         }
         try {
             files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
-            mocha.run((failures) => callback(undefined, failures));
+            initializationScript()
+                .then(() => mocha.run((failures) => callback(undefined, failures)))
+                .catch(callback);
         } catch (error) {
             return callback(error);
         }
@@ -110,7 +127,7 @@ function getCoverageOptions(testsRoot: string): ITestRunnerOptions | undefined {
 }
 
 class CoverageRunner {
-    private coverageVar: string = `$$cov_${new Date().getTime()}$$`;
+    private readonly coverageVar: string = `$$cov_${new Date().getTime()}$$`;
     private sourceFiles: string[] = [];
     private instrumenter!: Instrumenter;
 
@@ -129,7 +146,7 @@ class CoverageRunner {
         global[this.coverageVar] = value;
     }
 
-    constructor(private options: ITestRunnerOptions, private testsRoot: string, endRunCallback: TestCallback) {
+    constructor(private readonly options: ITestRunnerOptions, private readonly testsRoot: string, endRunCallback: TestCallback) {
         if (!options.relativeSourcePath) {
             endRunCallback(new Error('Error - relativeSourcePath must be defined for code coverage to work'));
         }

@@ -3,11 +3,11 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry } from '../../common/types';
+import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IDisposableRegistry, IPythonExtensionBanner } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -18,6 +18,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     constructor(@inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
+        @inject(IPythonExtensionBanner) @named(BANNER_NAME_INTERACTIVE_SHIFTENTER) private readonly shiftEnterBanner: IPythonExtensionBanner,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
     }
@@ -45,6 +46,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
 
         await this.executeSelection(executionService);
+        // Prompt one time to ask if they want to send shift-enter to the Interactive Window
+        this.shiftEnterBanner.showBanner().ignoreErrors();
     }
 
     @captureTelemetry(EventName.EXECUTION_DJANGO, { scope: 'selection' }, false)

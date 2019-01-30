@@ -13,6 +13,8 @@
         "no-duplicate-variable": true,
         "no-unused-variable": true,
         "curly": true,
+        "non-literal-fs-path": false,
+        "newline-per-chained-call": false,
         "class-name": true,
         "semicolon": [
             true
