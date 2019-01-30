@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { Uri } from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { ArgumentsHelper } from './common/argumentsHelper';

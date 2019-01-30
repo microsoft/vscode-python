@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, TextDocument, TextEdit } from 'vscode';
 import { LineFormatter } from '../formatters/lineFormatter';
 import { TokenizerMode, TokenType } from '../language/types';

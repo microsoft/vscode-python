@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 export const PYTHON_LANGUAGE = 'python';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },

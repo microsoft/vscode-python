@@ -2,6 +2,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { Uri } from 'vscode';
 import { InterpreterType } from '../contracts';
 export const IVirtualEnvironmentManager = Symbol('VirtualEnvironmentManager');

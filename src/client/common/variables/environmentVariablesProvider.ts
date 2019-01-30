@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../application/types';

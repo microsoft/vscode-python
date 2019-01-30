@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as dotenv from 'dotenv';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';

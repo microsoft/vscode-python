@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as iconv from 'iconv-lite';
 import { injectable } from 'inversify';
 import { DEFAULT_ENCODING } from './constants';
