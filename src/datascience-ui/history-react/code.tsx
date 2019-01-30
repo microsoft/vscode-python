@@ -61,7 +61,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     public render() {
-        const readOnly = this.props.testMode || this.props.readOnly;
+        const readOnly = this.props.readOnly;
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         return (

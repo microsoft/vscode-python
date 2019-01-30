@@ -10,6 +10,7 @@ import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
+import * as jsdom from 'jsdom';
 
 import {
     IApplicationShell,
@@ -34,7 +35,7 @@ import { updateSettings } from '../../datascience-ui/react-common/settingsReactS
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
-import { waitForUpdate } from './reactHelpers';
+import { waitForUpdate, createKeyboardEvent, createInputEvent } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 enum CellInputState {
@@ -60,6 +61,7 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
+    let mainPanel: MainPanel;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -166,6 +168,7 @@ suite('History output tests', () => {
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
                 const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+                mainPanel = getMainPanel(wrapper);
                 try {
                     await testFunc(wrapper);
                 } finally {
@@ -196,7 +199,8 @@ suite('History output tests', () => {
                     break;
 
                 case CellPosition.Last:
-                    targetCell = foundResult.last();
+                    // Skip the input cell on these checks.
+                    targetCell = foundResult.at(foundResult.length - 2);
                     break;
 
                 default:
@@ -288,6 +292,78 @@ suite('History output tests', () => {
             const history = historyProvider.getOrCreateActive();
             await history.addCode(code, 'foo.py', 2);
         });
+    }
+
+    function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean) {
+        // Submit a keypress into the textarea. Simulate doesn't work here because the keydown
+        // handler is not registered in any react code. It's being handled with DOM events
+
+        // According to this:
+        // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Usage_notes
+        // The normal events are
+        // 1) keydown
+        // 2) keypress
+        // 3) keyup
+        let event = createKeyboardEvent('keydown',{ key, code: key, shiftKey: shiftDown });
+
+        // Dispatch. Result can be swallowed. If so skip the next event.
+        let result = domNode.dispatchEvent(event);
+        if (result) {
+            event = createKeyboardEvent('keypress',{ key, code: key, shiftKey: shiftDown });
+            result = domNode.dispatchEvent(event);
+            if (result) {
+                event = createKeyboardEvent('keyup',{ key, code: key, shiftKey: shiftDown });
+                domNode.dispatchEvent(event);
+
+                // Dispatch an input event so we update the textarea
+                domNode.value = domNode.value + key;
+                domNode.dispatchEvent(createInputEvent());
+            }
+        }
+
+    }
+
+    async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement) : Promise<void> {
+        // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
+        // Should be 6 - 1 for the shift+enter and 5 for the new cell.
+        const renderPromise = waitForUpdate(wrapper, MainPanel, 6);
+
+        // Submit a keypress into the textarea
+        simulateKey(textArea, '\r', true);
+
+        return renderPromise;
+    }
+
+    function enterKey(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
+        // Simulate a key press
+        simulateKey(textArea, key);
+    }
+
+    async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+
+        // First we have to type the code into the input box
+
+        // Find the last cell. It should have a CodeMirror object. We need to search
+        // through its DOM to find the actual codemirror textarea to send input to
+        // (we can't actually find it with the enzyme wrappers because they only search
+        //  React accessible nodes and the codemirror html is not react)
+        const cells = wrapper.find('Cell');
+        const lastCell = cells.last();
+        const rcm = lastCell.find('div.ReactCodeMirror');
+        const rcmDom = rcm.getDOMNode();
+        const textArea = rcmDom.querySelector('.CodeMirror').querySelector('textarea');
+        assert.ok(textArea, 'Cannot find the textaread inside the code mirror');
+
+        // Now simulate entering all of the keys
+        for (let i=0; i<code.length; i+=1) {
+            await enterKey(wrapper, textArea, code.charAt(i));
+        }
+
+        // Now simulate a shift enter. This should cause a new cell to be added
+        await submitInput(wrapper, textArea);
+
+        // Return the result
+        return wrapper.find('Cell');
     }
 
     runMountedTest('Simple text', async (wrapper) => {
@@ -392,14 +468,21 @@ suite('History output tests', () => {
         updateSettings(settingsString);
     }
 
+    function getMainPanel(wrapper: ReactWrapper<any, Readonly<{}>>) : MainPanel | undefined {
+        const mainObj = wrapper.find(MainPanel);
+        if (mainObj) {
+            return mainObj.instance() as MainPanel;
+        }
+
+        return undefined;
+    }
+
     // Update data science settings while running (goes through the UpdateSettings channel)
     function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}>>, newSettings: IDataScienceSettings) {
         const settingsString = JSON.stringify(newSettings);
-
-        const mainObj = wrapper.find(MainPanel);
-        if (mainObj) {
-            const panel = mainObj.instance() as MainPanel;
-            panel.handleMessage(HistoryMessages.UpdateSettings, settingsString);
+        mainPanel = getMainPanel(wrapper);
+        if (mainPanel) {
+            mainPanel.handleMessage(HistoryMessages.UpdateSettings, settingsString);
         }
         wrapper.update();
     }
@@ -730,10 +813,15 @@ for _ in range(50):
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
     });
 
-    // Tests to do:
-    // 1) Cell output works on different mime types. Could just use a notebook to drive
-    // 2) History commands work (export/restart/clear all)
-    // 3) Jupyter server commands work (open notebook)
-    // 4) Changing directories or loading from different directories
-    // 5) Telemetry
+    runMountedTest('Simple input', async (wrapper) => {
+        // Create a history so that it listens to the results.
+        const history = historyProvider.getOrCreateActive();
+        await history.show();
+
+        // Then enter some code.
+        await enterInput(wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+    });
+
+
 });

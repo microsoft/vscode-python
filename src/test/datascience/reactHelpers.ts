@@ -5,9 +5,11 @@
 
 import { ComponentClass, configure, ReactWrapper  } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
-import { JSDOM } from 'jsdom';
+import { JSDOM, DOMWindow } from 'jsdom';
 import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
+import { strictEqual } from 'assert';
+import { ITestResultsService } from '../../client/unittests/common/types';
 
 // tslint:disable:no-string-literal no-any
 
@@ -101,7 +103,8 @@ export function setUpDomEnvironment() {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCodeByDefault: true
+            collapseCellInputCodeByDefault: true,
+            allowInput: true
         };
     };
 
@@ -190,4 +193,20 @@ export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mai
         // Wait for the render
         await renderPromise;
     }
+}
+
+export function createKeyboardEvent(type: string, options: KeyboardEventInit) : KeyboardEvent {
+    const domWindow = window as DOMWindow;
+    options.bubbles = true;
+    options.cancelable = true;
+
+    // JSDOM doesn't support typescript so well. The options are supposed to be flexible to support just about anything, but
+    // the type KeyboardEventInit only supports the minimum. Stick in extras with some typecasting hacks
+    const charCode = options.key.charCodeAt(0);
+    return new domWindow.KeyboardEvent(type, (({ ...options, keyCode: charCode, charCode: charCode } as any) as KeyboardEventInit));
+}
+
+export function createInputEvent() : Event {
+    const domWindow = window as DOMWindow;
+    return new domWindow.Event('input', {bubbles: true, cancelable: false});
 }

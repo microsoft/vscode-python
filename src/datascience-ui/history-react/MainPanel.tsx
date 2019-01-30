@@ -32,6 +32,8 @@ export interface IMainPanelProps {
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
     private bottom: HTMLDivElement | undefined;
+    private updateCount = 0;
+    private renderCount = 0;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IMainPanelState) {
@@ -46,7 +48,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         // Add a single empty cell if it's supported
-        if (getSettings && getSettings().allowInput && !this.props.testMode) {
+        if (getSettings && getSettings().allowInput) {
             this.state.cellVMs.push(createEditableCellVM(1));
         }
 
@@ -58,9 +60,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentDidUpdate(prevProps: Readonly<IMainPanelProps>, prevState: Readonly<IMainPanelState>, snapshot?: {}) {
         this.scrollToBottom();
+
+        // If in test mode, update our outputs
+        if (this.props.testMode) {
+            this.updateCount = this.updateCount + 1;
+        }
     }
 
     public render() {
+
+        // If in test mode, update our outputs
+        if (this.props.testMode) {
+            this.renderCount = this.renderCount + 1;
+        }
 
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
