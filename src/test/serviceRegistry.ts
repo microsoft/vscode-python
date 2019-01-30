@@ -65,7 +65,8 @@ export class IocContainer {
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
     }
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
+        // tslint:disable-next-line:prefer-for-of
         for (let i = 0; i < this.disposables.length; i += 1) {
             const disposable = this.disposables[i];
             if (disposable) {

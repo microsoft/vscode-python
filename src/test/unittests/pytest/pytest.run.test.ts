@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
-import { instance, mock, anything } from 'ts-mockito';
+import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -20,8 +22,6 @@ import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 import { ITestDetails, ITestScenarioDetails, testScenarios } from './pytest_run_tests_data';
-import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
-import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
@@ -75,9 +75,9 @@ async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Test
 async function getResultsFromTestManagerRunTest(testManager: ITestManager, testsToRun: TestsToRun, failedRun: boolean = false): Promise<Tests> {
     if (failedRun) {
         return testManager.runTest(CommandSource.ui, undefined, true);
-     } else {
+    } else {
         return testManager.runTest(CommandSource.ui, testsToRun);
-     }
+    }
 }
 
 /**
@@ -346,7 +346,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     function getScenarioTestDetails(scenario: ITestScenarioDetails, failedRun: boolean): ITestDetails[] {
         if (scenario.shouldRunFailed && failedRun) {
-            return scenario.testDetails!.filter(td => {return td.status === TestStatus.Fail; })!;
+            return scenario.testDetails!.filter(td => { return td.status === TestStatus.Fail; })!;
         }
         return scenario.testDetails!;
     }

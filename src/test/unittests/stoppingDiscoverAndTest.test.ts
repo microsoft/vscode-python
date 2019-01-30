@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -67,9 +69,9 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         // This promise should never resolve nor reject.
         runningPromise
             .then(() => Promise.reject('Debugger stopped when it shouldn\'t have'))
-            .catch(error =>  deferred.reject(error));
+            .catch(error => deferred.reject(error));
 
-       discoveryPromise.then(result => {
+        discoveryPromise.then(result => {
             if (result === EmptyTests) {
                 deferred.resolve('');
             } else {
