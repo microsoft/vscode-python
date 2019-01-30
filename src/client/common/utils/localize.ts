@@ -49,6 +49,12 @@ export namespace Linters {
     export const replaceWithSelectedLinter = localize('Linter.replaceWithSelectedLinter', 'Multiple linters are enabled in settings. Replace with \'{0}\'?');
 }
 
+export namespace InteractiveShiftEnterBanner {
+    export const bannerMessage = localize('InteractiveShiftEnterBanner.bannerMessage', 'Would you like shift-enter to send code to the new Interactive Window experience?');
+    export const bannerLabelYes = localize('InteractiveShiftEnterBanner.bannerLabelYes', 'Yes');
+    export const bannerLabelNo = localize('InteractiveShiftEnterBanner.bannerLabelNo', 'No');
+}
+
 export namespace DataScienceSurveyBanner {
     export const bannerMessage = localize('DataScienceSurveyBanner.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Data Science features are working for you?');
     export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');

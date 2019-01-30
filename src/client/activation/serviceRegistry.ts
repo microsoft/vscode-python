@@ -4,8 +4,9 @@
 'use strict';
 
 import { INugetRepository } from '../common/nuget/types';
-import { BANNER_NAME_DS_SURVEY, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
+import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
+import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
@@ -35,6 +36,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);
+    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, InteractiveShiftEnterBanner, BANNER_NAME_INTERACTIVE_SHIFTENTER);
     serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, LanguageServerFolderService);
     serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, LanguageServerPackageService);
     serviceManager.addSingleton<INugetRepository>(INugetRepository, StableLanguageServerPackageRepository, LanguageServerDownloadChannel.stable);

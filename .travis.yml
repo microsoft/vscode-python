@@ -103,6 +103,7 @@ script:
     fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
+        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
@@ -111,6 +112,7 @@ script:
     fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
+        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER --updateChangelog
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;

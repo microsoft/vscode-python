@@ -31,6 +31,7 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+const argv = require('yargs').argv;
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -157,10 +158,42 @@ gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--confi
 
 gulp.task('webpack', async () => {
     await buildWebPack('production', []);
-    await buildWebPack('sourceMaps', ['--config', './build/webpack/webpack.extension.sourceMaps.config.js']);
     await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
     await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
 });
+
+gulp.task('updateBuildNumber', async () => {
+    await updateBuildNumber(argv)
+});
+
+async function updateBuildNumber(args) {
+    if (args && args.buildNumber) {
+
+        // Edit the version number from the package.json
+        const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+        const packageJson = JSON.parse(packageJsonContents);
+
+        // Change version number
+        const versionParts = packageJson['version'].split('.');
+        const buildNumberPortion = versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
+        const newVersion = versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}` : packageJson['version'];
+        packageJson['version'] = newVersion;
+
+        // Write back to the package json
+        await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+
+        // Update the changelog.md if we are told to (this should happen on the release branch)
+        if (args.updateChangelog) {
+            const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+            const fixedContents = changeLogContents.replace(/##\s*(\d+)\.(\d+)\.(\d+)\s*\(/, `## $1.$2.${buildNumberPortion} (`);
+
+            // Write back to changelog.md
+            await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+        }
+    } else {
+        throw Error('buildNumber argument required for updateBuildNumber task')
+    }
+}
 
 async function buildWebPack(webpackConfigName, args) {
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName);
@@ -187,8 +220,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js'
             ];
-        case 'sourceMaps':
-            return [];
         case 'extension':
             return [];
         case 'debugAdapter':

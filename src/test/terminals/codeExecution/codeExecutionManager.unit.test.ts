@@ -8,6 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
+import { IPythonExtensionBanner } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
@@ -20,8 +21,13 @@ suite('Terminal - Code Execution Manager', () => {
     let disposables: Disposable[] = [];
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let shiftEnterBanner: TypeMoq.IMock<IPythonExtensionBanner>;
     setup(() => {
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        shiftEnterBanner = TypeMoq.Mock.ofType<IPythonExtensionBanner>();
+        shiftEnterBanner.setup(b => b.showBanner()).returns(() => {
+            return Promise.resolve();
+        });
         workspace.setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
             return {
                 dispose: () => void 0
@@ -30,7 +36,7 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, serviceContainer.object);
+        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, shiftEnterBanner.object, serviceContainer.object);
     });
     teardown(() => {
         disposables.forEach(disposable => {
