@@ -252,16 +252,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
     }
 
+    private getNonEditCellVMs() : ICellViewModel [] {
+        return this.state.cellVMs.filter(c => !c.editable);
+    }
+
     private canCollapseAll = () => {
-        return this.state.cellVMs.length > 0;
+        return this.getNonEditCellVMs().length > 0;
     }
 
     private canExpandAll = () => {
-        return this.state.cellVMs.length > 0;
+        return this.getNonEditCellVMs().length > 0;
     }
 
     private canExport = () => {
-        return this.state.cellVMs.length > 0 ;
+        return this.getNonEditCellVMs().length > 0;
     }
 
     private canRedo = () => {
@@ -546,7 +550,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private sendInfo = () => {
         const info : IHistoryInfo = {
-            cellCount: this.state.cellVMs.length,
+            cellCount: this.getNonEditCellVMs().length,
             undoCount: this.state.undoStack.length,
             redoCount: this.state.redoStack.length
         };

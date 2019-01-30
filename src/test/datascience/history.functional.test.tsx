@@ -185,6 +185,13 @@ suite('History output tests', () => {
         });
     }
 
+    function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : ReactWrapper<any, Readonly<{}>, React.Component> {
+        // Skip the edit cell
+        const foundResult = wrapper.find('Cell');
+        assert.ok(foundResult.length >= 2, 'Didn\'t find any cells being rendered');
+        return foundResult.at(foundResult.length-2);
+    }
+
     function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
         const foundResult = wrapper.find('Cell');
         assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
@@ -203,7 +210,7 @@ suite('History output tests', () => {
 
                 case CellPosition.Last:
                     // Skip the input cell on these checks.
-                    targetCell = foundResult.at(foundResult.length - 2);
+                    targetCell = getLastOutputCell(wrapper);
                     break;
 
                 default:
@@ -230,10 +237,8 @@ suite('History output tests', () => {
     }
 
     function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, state: CellInputState) {
-        const foundResult = wrapper.find('Cell');
-        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
-        const lastCell = foundResult.last();
+        const lastCell = getLastOutputCell(wrapper);
         assert.ok(lastCell, 'Last call doesn\'t exist');
 
         const inputBlock = lastCell.find('div.cell-input');
@@ -332,7 +337,7 @@ suite('History output tests', () => {
         const renderPromise = waitForUpdate(wrapper, MainPanel, 6);
 
         // Submit a keypress into the textarea
-        simulateKey(textArea, '\r', true);
+        simulateKey(textArea, '\n', true);
 
         return renderPromise;
     }
@@ -342,7 +347,7 @@ suite('History output tests', () => {
         simulateKey(textArea, key);
     }
 
-    async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
 
         // First we have to type the code into the input box
 
@@ -355,7 +360,8 @@ suite('History output tests', () => {
         const rcm = lastCell.find('div.ReactCodeMirror');
         const rcmDom = rcm.getDOMNode();
         const textArea = rcmDom.querySelector('.CodeMirror').querySelector('textarea');
-        assert.ok(textArea, 'Cannot find the textaread inside the code mirror');
+        assert.ok(textArea, 'Cannot find the textarea inside the code mirror');
+        textArea.focus();
 
         // Now simulate entering all of the keys
         for (let i=0; i<code.length; i+=1) {
@@ -491,11 +497,8 @@ suite('History output tests', () => {
     }
 
     function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-        const foundResult = wrapper.find('Cell');
-        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
-
         // Find the last cell added
-        const lastCell = foundResult.last();
+        const lastCell = getLastOutputCell(wrapper);
         assert.ok(lastCell, 'Last call doesn\'t exist');
 
         const toggleButton = lastCell.find('button.collapse-input');
@@ -577,25 +580,25 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
+        assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
         // Redo should put the cells back
         const afterRedo = await getCellResults(wrapper, 1, () => {
             history.redoCells();
             return Promise.resolve();
         });
-        assert.equal(afterRedo.length, 1, 'Redo should put cells back');
+        assert.equal(afterRedo.length, 2, 'Redo should put cells back');
 
         // Get another cell into the list
         const afterAdd = await addCode(wrapper, 'a=1\na');
-        assert.equal(afterAdd.length, 2, 'Second cell did not get added');
+        assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
         const afterClear = await getCellResults(wrapper, 1, () => {
             history.removeAllCells();
             return Promise.resolve();
         });
-        assert.equal(afterClear.length, 0, 'Clear didn\'t work');
+        assert.equal(afterClear.length, 1, 'Clear didn\'t work');
 
         // Undo should put them back
         afterUndo = await getCellResults(wrapper, 1, () => {
@@ -603,7 +606,7 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 2, `Undo should put cells back`);
+        assert.equal(afterUndo.length, 3, `Undo should put cells back`);
     });
 
     function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
@@ -645,25 +648,25 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
+        assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
         // Redo should put the cells back
         const afterRedo = await getCellResults(wrapper, 1, async () => {
             redo!.simulate('click');
             return Promise.resolve();
         });
-        assert.equal(afterRedo.length, 1, 'Redo should put cells back');
+        assert.equal(afterRedo.length, 2, 'Redo should put cells back');
 
         // Get another cell into the list
         const afterAdd = await addCode(wrapper, 'a=1\na');
-        assert.equal(afterAdd.length, 2, 'Second cell did not get added');
+        assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
         const afterClear = await getCellResults(wrapper, 1, async () => {
             clear!.simulate('click');
             return Promise.resolve();
         });
-        assert.equal(afterClear.length, 0, 'Clear didn\'t work');
+        assert.equal(afterClear.length, 1, 'Clear didn\'t work');
 
         // Undo should put them back
         afterUndo = await getCellResults(wrapper, 1, async () => {
@@ -671,10 +674,10 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 2, `Undo should put cells back`);
+        assert.equal(afterUndo.length, 3, `Undo should put cells back`);
 
         // find the buttons on the cell itself
-        const cellButtons = afterUndo.last().find(CellButton);
+        const cellButtons = afterUndo.at(afterUndo.length-2).find(CellButton);
         assert.equal(cellButtons.length, 2, 'Cell buttons not found');
         const goto = cellButtons.at(1);
         const deleteButton = cellButtons.at(0);
@@ -689,7 +692,7 @@ for _ in range(50):
             deleteButton.simulate('click');
             return Promise.resolve();
         });
-        assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
+        assert.equal(afterDelete.length, 2, `Delete should remove a cell`);
     });
 
     runMountedTest('Export', async (wrapper) => {
@@ -726,7 +729,7 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 0, `Undo should remove cells + ${afterUndo.debug()}`);
+        assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
         // Then verify we cannot click the button (it should be disabled)
         exportCalled = false;
@@ -824,6 +827,38 @@ for _ in range(50):
         // Then enter some code.
         await enterInput(wrapper, 'a=1\na');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+    });
+
+    runMountedTest('Multiple input', async (wrapper) => {
+        // Create a history so that it listens to the results.
+        const history = historyProvider.getOrCreateActive();
+        await history.show();
+
+        // Then enter some code.
+        await enterInput(wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Then delete the node
+        const lastCell = getLastOutputCell(wrapper);
+        const cellButtons = lastCell.find(CellButton);
+        assert.equal(cellButtons.length, 2, 'Cell buttons not found');
+        const deleteButton = cellButtons.at(0);
+
+        // Make sure delete works
+        const afterDelete = await getCellResults(wrapper, 1, async () => {
+            deleteButton.simulate('click');
+            return Promise.resolve();
+        });
+        assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
+
+        // Should be able to enter again
+        await enterInput(wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Try a 3rd time with some new input
+        addMockData('print("hello")', 'hello');
+        await enterInput(wrapper, 'print("hello")');
+        verifyHtmlOnCell(wrapper, '<span>hello</span>', CellPosition.Last);
     });
 
 

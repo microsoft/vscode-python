@@ -57,6 +57,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // If we are suddenly changing a readonly to not, somebody is reusing a different control. Update
         // to be empty
         if (this.codeMirror && !this.props.readOnly && prevProps.readOnly) {
+            this.codeMirror.setOption('readOnly', false);
             this.codeMirror.setValue('');
         }
     }

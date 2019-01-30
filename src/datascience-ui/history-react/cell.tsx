@@ -297,7 +297,7 @@ export class Cell extends React.Component<ICellProps> {
                             overflowX : 'auto'
                         };
 
-                        return <div id='stylewrapper' style={style}><Transform key={index} data={data} /></div>;
+                        return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
                     } else {
                         return <Transform key={index} data={data} />;
                     }
