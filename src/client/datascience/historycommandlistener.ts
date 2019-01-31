@@ -25,7 +25,8 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider
+    IStatusProvider,
+    ICommandBroker
 } from './types';
 
 @injectable()

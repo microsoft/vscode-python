@@ -46,6 +46,7 @@ import {
     IStatusProvider,
     IJupyterExecutionFactory
 } from './types';
+import { HistoryMessageListener } from './historyMessageListener';
 
 export enum SysInfoReason {
     Start,
@@ -97,6 +98,9 @@ export class History implements IHistory {
 
         // Create a history message listener to listen to messages from our webpanel (or remote session)
         this.messageListener = new HistoryMessageListener(liveShare, this.onMessage, this.dispose);
+
+        // Create a history message listener to listen to messages from our webpanel (or remote session)
+        this.messageListener = new HistoryMessageListener(this.onMessage);
 
         // Load on a background thread.
         this.loadPromise = this.load();

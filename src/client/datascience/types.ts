@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor, TextEditorEdit } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -85,7 +85,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
 export const IJupyterExecutionFactory = Symbol('IJupyterExecutionFactory');
 export interface IJupyterExecutionFactory {
     executionChanged: Event<void>;
-    get() : IJupyterExecution;
+    create() : Promise<IJupyterExecution>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
