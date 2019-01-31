@@ -274,12 +274,8 @@ function uploadExtension(uploadBlobName){
         }));
 }
 
-gulp.task('uploadDeveloperExtension', async () => {
-    return uploadExtension('x-ms-python-insiders.vsix');
-});
-gulp.task('uploadReleaseExtension', async () => {
-    return uploadExtension(`x-ms-python-${process.env.$TRAVIS_BRANCH}.vsix`);
-});
+gulp.task('uploadDeveloperExtension',  () => uploadExtension('x-ms-python-insiders.vsix'));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`x-ms-python-${process.env.$TRAVIS_BRANCH}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
