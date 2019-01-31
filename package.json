@@ -2013,6 +2013,7 @@
         "file-loader": "^2.0.0",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
+        "gulp-azure-storage": "^0.9.0",
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-inline-source": "^3.2.0",
