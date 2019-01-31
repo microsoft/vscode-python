@@ -48,7 +48,7 @@ export class PostOffice implements IDisposable {
                 default:
                     // Default when not connected is to just call the registered callback
                     if (this.commandMap.hasOwnProperty(command)) {
-                        this.commandMap[command](this.currentRole, args);
+                        this.commandMap[command](this.currentRole, ...args);
                     }
             }
         }

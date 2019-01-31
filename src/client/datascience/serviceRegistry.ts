@@ -30,11 +30,15 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider
+    IStatusProvider,
+    ICommandBroker,
+    IJupyterExecutionFactory
 } from './types';
 import { LiveShare } from './constants';
 import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
 import { GuestJupyterExecution } from './jupyter/liveshare/guestJupyterExecution';
+import { CommandBroker } from './commandBroker';
+import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
@@ -42,7 +46,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IJupyterExecution>(IJupyterExecution, JupyterExecution);
     serviceManager.add<IJupyterExecution>(IJupyterExecution, HostJupyterExecution, LiveShare.Host);
     serviceManager.add<IJupyterExecution>(IJupyterExecution, GuestJupyterExecution, LiveShare.Guest);
+    serviceManager.addSingleton<IJupyterExecutionFactory>(IJupyterExecutionFactory, JupyterExecutionFactory);
     serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
+    serviceManager.addSingleton<ICommandBroker>(ICommandBroker, CommandBroker);
     serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
     serviceManager.add<IHistory>(IHistory, History);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
