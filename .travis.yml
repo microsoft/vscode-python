@@ -102,15 +102,15 @@ script:
         python3 tpn --npm package-lock.json --config tpn/distribution.toml /dev/null;
     fi
   - if [[ $BUNDLE == "true" ]]; then
+        npx gulp uploadDeveloperExtension;
+        npx gulp uploadReleaseExtension;
+    fi
+  - if [[ $BUNDLE == "true" ]]; then
         npm run clean;
         npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER;
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
-        npx gulp uploadDeveloperExtension;
-        npx gulp uploadReleaseExtension;
-    fi
-  - if [[ $BUNDLE == "true" ]]; then
         npx gulp uploadDeveloperExtension;
         npx gulp uploadReleaseExtension;
     fi
