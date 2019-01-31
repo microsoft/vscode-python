@@ -70,6 +70,7 @@ export class History implements IHistory {
     private jupyterServer: INotebookServer | undefined;
     private changeHandler: IDisposable | undefined;
     private messageListener : HistoryMessageListener;
+    private currentExecution : Promise<IJupyterExecution> | undefined;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -97,6 +98,7 @@ export class History implements IHistory {
 
         // Sign up for execution changes (happen as a result of connecting/disconnecting from a liveshare session)
         const executionChange = this.jupyterExecutionFactory.executionChanged(this.onExecutionChanged.bind(this));
+        this.disposables.push(executionChange);
 
         // Create a history message listener to listen to messages from our webpanel (or remote session)
         this.messageListener = new HistoryMessageListener(this.onMessage);
@@ -514,6 +516,9 @@ export class History implements IHistory {
     }
 
     private onExecutionChanged() {
+        // Clear our execution we're using
+        this.currentExecution = undefined;
+
         // Do the same thing as if we changed our interpreter
         this.onInterpreterChanged().ignoreErrors();
     }
@@ -529,8 +534,11 @@ export class History implements IHistory {
         this.loadPromise = this.load();
     }
 
-    private getJupyterExecution() : IJupyterExecution {
-        return this.jupyterExecutionFactory.get();
+    private getJupyterExecution() : Promise<IJupyterExecution> {
+        if (!this.currentExecution) {
+            this.currentExecution = this.jupyterExecutionFactory.create();
+        }
+        return this.currentExecution;
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -603,7 +611,7 @@ export class History implements IHistory {
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
                     if (str && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
-                        this.getJupyterExecution().spawnNotebook(file).ignoreErrors();
+                        this.getJupyterExecution().then(e => e.spawnNotebook(file).ignoreErrors()).ignoreErrors();
                     }
                 });
             } catch (exc) {
@@ -637,7 +645,8 @@ export class History implements IHistory {
 
                 workingDir = await this.calculateWorkingDirectory();
             }
-            this.jupyterServer = await this.getJupyterExecution().connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
+            const execution = await this.getJupyterExecution();
+            this.jupyterServer = await execution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {
@@ -756,7 +765,8 @@ export class History implements IHistory {
         switch (reason) {
             case SysInfoReason.Start:
                 // Message depends upon if ipykernel is supported or not.
-                if (!(await this.getJupyterExecution().isKernelCreateSupported())) {
+                const execution = await this.getJupyterExecution();
+                if (!execution || !(await execution.isKernelCreateSupported())) {
                     return localize.DataScience.pythonVersionHeaderNoPyKernel();
                 }
                 return localize.DataScience.pythonVersionHeader();
@@ -832,7 +842,8 @@ export class History implements IHistory {
 
         // Check to see if we support ipykernel or not
         try {
-            const usableInterpreter = await this.getJupyterExecution().getUsableJupyterPython();
+            const execution = await this.getJupyterExecution();
+            const usableInterpreter = await execution.getUsableJupyterPython();
             if (!usableInterpreter) {
                 // Not loading anymore
                 status.dispose();

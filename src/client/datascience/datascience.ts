@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 
-import { IApplicationShell, IcommandBroker, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import {

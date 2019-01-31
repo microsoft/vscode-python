@@ -13,9 +13,7 @@ import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
-
-const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
-const HttpPattern = /https?:\/\//;
+import { RegExpValues } from '../constants';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -119,7 +117,7 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private getJupyterURLFromString(data: any) {
-        const urlMatch = UrlPatternRegEx.exec(data);
+        const urlMatch = RegExpValues.UrlPatternRegEx.exec(data);
         if (urlMatch && !this.startPromise.completed) {
             // URL is not being found for some reason. Pull it in forcefully
             // tslint:disable-next-line:no-require-imports
@@ -142,7 +140,7 @@ class JupyterConnectionWaiter {
     private extractConnectionInformation = (data: any) => {
         this.output(data);
 
-        const httpMatch = HttpPattern.exec(data);
+        const httpMatch = RegExpValues.HttpPattern.exec(data);
 
         if (httpMatch && this.notebook_dir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
             // .then so that we can keep from pushing aync up to the subscribed observable function

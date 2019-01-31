@@ -41,7 +41,10 @@ export namespace RegExpValues {
     export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
     export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-
+    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    export const HttpPattern = /https?:\/\//;
+    export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
+    export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
 }
 
 export namespace HistoryMessages {
@@ -129,6 +132,7 @@ export namespace LiveShare {
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
+    export const JupyterHostName = '{0}_jupyter';
 }
 
 export namespace LiveShareJupyterCommands {

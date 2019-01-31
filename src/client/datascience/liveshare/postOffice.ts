@@ -4,9 +4,10 @@
 
 import * as vsls from 'vsls/vscode';
 import { LiveShare } from '../constants';
+import { IDisposable } from '../../common/types';
 
 // This class is used to register two communication between a host and all of its guests
-export class PostOffice {
+export class PostOffice implements IDisposable {
 
     private name: string;
     private started : Promise<vsls.LiveShare | undefined>;
@@ -18,6 +19,18 @@ export class PostOffice {
     constructor(name: string) {
         this.name = name;
         this.started = this.startCommandServer();
+    }
+
+    public role = () => {
+        return this.currentRole;
+    }
+
+    public dispose() {
+        if (this.hostServer) {
+            this.started.then(s => s.unshareService(this.name));
+            this.hostServer = undefined;
+        }
+        this.guestServer = undefined;
     }
 
     public async postCommand(command: string, ...args: any[]) : Promise<void> {

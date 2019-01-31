@@ -11,6 +11,7 @@ import { ICommand } from '../providers/jediProxy';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { LiveShare } from './constants';
+import { PostOffice } from './liveshare/postOffice';
 
 // This class acts as a broker between the VSCode command manager and a potential live share session
 // It works like so:
@@ -20,15 +21,9 @@ import { LiveShare } from './constants';
 @injectable()
 export class CommandBroker implements ICommandBroker {
 
-    private started : Promise<vsls.LiveShare | undefined>;
-    private hostServer : vsls.SharedService | undefined;
-    private guestServer : vsls.SharedServiceProxy | undefined;
-    private currentRole : vsls.Role = vsls.Role.None;
-    private commandMap : { [key: string] : (...args: any[]) => void } = {};
-
+    private postOffice : PostOffice = new PostOffice(LiveShare.CommandBrokerService);
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager) {
-        this.started = this.startCommandServer();
     }
 
     registerCommand(command: string, callback: (...args: any[]) => void, thisArg?: any): Disposable {
@@ -61,59 +56,12 @@ export class CommandBroker implements ICommandBroker {
         return this.commandManager.getCommands(filterInternal);
     }
 
-    private async startCommandServer() : Promise<vsls.LiveShare | undefined> {
-        const api = await vsls.getApiAsync();
-        if (api) {
-            api.onDidChangeSession(() => this.onChangeSession(api).ignoreErrors());
-            await this.onChangeSession(api);
-        }
-        return api;
-    }
-
-    private async onChangeSession(api: vsls.LiveShare) : Promise<void> {
-        // Startup or shutdown our connection to the other side
-        if (api.session) {
-            if (this.currentRole !== api.session.role) {
-                // We're changing our role.
-                if (this.hostServer) {
-                    api.unshareService(LiveShare.CommandBrokerService);
-                    this.hostServer = undefined;
-                }
-                if (this.guestServer) {
-                    this.guestServer = undefined;
-                }
-            }
-
-            // Startup our proxy or server
-            this.currentRole = api.session.role;
-            if (api.session.role === vsls.Role.Host) {
-                this.hostServer = await api.shareService(LiveShare.CommandBrokerService);
-            } else if (api.session.role === vsls.Role.Guest) {
-                this.guestServer = await api.getSharedService(LiveShare.CommandBrokerService);
-
-                // When we switch to guest mode, we may have to reregister all of our commands.
-                this.registerGuestCommands(api);
-            }
-        }
-    }
-
     private async registerForGuest(command: string, callback: (...args: any[]) => void) : Promise<void> {
-        const api = await this.started;
-        if (api && api.session && api.session.role === vsls.Role.Guest) {
-            this.guestServer.onNotify(command, callback);
-        }
-
-        // Always stick in the command map so that if we switch roles, we reregister
-        this.commandMap[command] = callback;
-    }
-
-    private registerGuestCommands(api: vsls.LiveShare) {
-        if (api && api.session && api.session.role === vsls.Role.Guest) {
-            const keys = Object.keys(this.commandMap);
-            keys.forEach(k => {
-                this.guestServer.onNotify(k, this.commandMap[k]);
-            })
-        }
+        this.postOffice.registerCallback(command, (r, a) => {
+            if (r === vsls.Role.Guest) {
+                callback(a);
+            }
+        });
     }
 
     private wrapCallback(command: string, callback: (...args: any[]) => void, thisArg?: any, ...args: any[]) {
@@ -141,11 +89,10 @@ export class CommandBroker implements ICommandBroker {
     }
 
     private async postCommand<T>(command: string, ...rest: any[]): Promise<void> {
-        // Make sure startup finished
-        const api = await this.started;
-        if (api && api.session && this.currentRole === vsls.Role.Host) {
+        // Make sure we're the host. Otherwise just ignore.
+        if (this.postOffice.role() === vsls.Role.Host) {
             // This means we should send this across to the other side.
-            this.hostServer.notify(command, rest);
+            this.postOffice.postCommand(command, rest);
         }
     }
 }
