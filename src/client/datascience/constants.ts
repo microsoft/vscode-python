@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { IS_WINDOWS } from '../common/platform/constants';
+
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunCell = 'python.datascience.runcell';
@@ -36,6 +38,10 @@ export namespace EditorContexts {
 export namespace RegExpValues {
     export const PythonCellMarker = /^(#\s*%%|#\s*\<codecell\>|#\s*In\[\d*?\]|#\s*In\[ \])/;
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
+    export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
+    export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
+    export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
+
 }
 
 export namespace HistoryMessages {
@@ -106,4 +112,26 @@ export namespace CodeSnippits {
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
+}
+
+export namespace JupyterCommands {
+    export const NotebookCommand = 'notebook';
+    export const ConvertCommand = 'nbconvert';
+    export const KernelSpecCommand = 'kernelspec';
+    export const KernelCreateCommand = 'ipykernel';
+
+}
+
+export namespace LiveShare {
+    export const Host = 'host';
+    export const Guest = 'guest';
+    export const JupyterExecutionService = 'jupyterExecutionService';
+}
+
+export namespace LiveShareJupyterCommands {
+    export const isNotebookSupported = 'isNotebookSupported';
+    export const isImportSupported = 'isImportSupported';
+    export const isKernelCreateSupported = 'isKernelCreateSupported';
+    export const connectToNotebookServer = 'connectToNotebookServer';
+    export const getUsableJupyterPython = 'getUsableJupyterPython';
 }

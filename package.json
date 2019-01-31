@@ -1936,6 +1936,7 @@
         "vscode-languageclient": "^4.4.0",
         "vscode-languageserver": "^4.4.0",
         "vscode-languageserver-protocol": "^3.10.3",
+        "vsls": "^0.3.967",
         "winreg": "^1.2.4",
         "xml2js": "^0.4.19"
     },

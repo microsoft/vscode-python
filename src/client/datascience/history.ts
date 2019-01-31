@@ -43,7 +43,8 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider
+    IStatusProvider,
+    IJupyterExecutionFactory
 } from './types';
 
 export enum SysInfoReason {
@@ -77,7 +78,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(ILogger) private logger: ILogger,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IJupyterExecutionFactory) private jupyterExecutionFactory: IJupyterExecutionFactory,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
@@ -91,6 +92,9 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Create our event emitter
         this.closedEvent = new EventEmitter<IHistory>();
         this.disposables.push(this.closedEvent);
+
+        // Sign up for execution changes (happen as a result of connecting/disconnecting from a liveshare session)
+        const executionChange = this.jupyterExecutionFactory.executionChanged(this.onExecutionChanged.bind(this));
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -504,6 +508,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
+    private onExecutionChanged() {
+        // Do the same thing as if we changed our interpreter
+        this.onInterpreterChanged().ignoreErrors();
+    }
+
     private onInterpreterChanged = async () => {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
@@ -513,6 +522,10 @@ export class History implements IWebPanelMessageListener, IHistory {
             }
         }
         this.loadPromise = this.load();
+    }
+
+    private getJupyterExecution() : IJupyterExecution {
+        return this.jupyterExecutionFactory.get();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -585,7 +598,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
                     if (str && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
-                        this.jupyterExecution.spawnNotebook(file).ignoreErrors();
+                        this.getJupyterExecution().spawnNotebook(file).ignoreErrors();
                     }
                 });
             } catch (exc) {
@@ -619,7 +632,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
                 workingDir = await this.calculateWorkingDirectory();
             }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
+            this.jupyterServer = await this.getJupyterExecution().connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {
@@ -738,7 +751,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         switch (reason) {
             case SysInfoReason.Start:
                 // Message depends upon if ipykernel is supported or not.
-                if (!(await this.jupyterExecution.isKernelCreateSupported())) {
+                if (!(await this.getJupyterExecution().isKernelCreateSupported())) {
                     return localize.DataScience.pythonVersionHeaderNoPyKernel();
                 }
                 return localize.DataScience.pythonVersionHeader();
@@ -814,7 +827,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
         // Check to see if we support ipykernel or not
         try {
-            const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+            const usableInterpreter = await this.getJupyterExecution().getUsableJupyterPython();
             if (!usableInterpreter) {
                 // Not loading anymore
                 status.dispose();
