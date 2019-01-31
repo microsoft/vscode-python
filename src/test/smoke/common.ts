@@ -10,28 +10,14 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { waitForCondition } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
+import { SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop, sleep } from '../core';
-import { initialize } from '../initialize';
-
-let initialized = false;
-const fileDefinitions = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'definitions.py');
-
-export async function initializeSmokeTests() {
-    if (!IS_SMOKE_TEST || initialized) {
-        return;
-    }
-    await removeLanguageServerFiles();
-    await enableJedi(false);
-    await initialize();
-    await openFileAndWaitForLS(fileDefinitions);
-    initialized = true;
-}
 
 export async function updateSetting(setting: string, value: any) {
     const resource = vscode.workspace.workspaceFolders![0].uri;
-    await vscode.workspace.getConfiguration('python', resource).update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
+    await vscode.workspace
+        .getConfiguration('python', resource)
+        .update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 export async function removeLanguageServerFiles() {
     const folders = await getLanaguageServerFolders();
@@ -62,15 +48,12 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
     // Make sure LS completes file loading and analysis.
     // In test mode it awaits for the completion before trying
     // to fetch data for completion, hover.etc.
-    await vscode.commands.executeCommand('vscode.executeCompletionItemProvider', textDocument.uri, new vscode.Position(0, 0));
-    await waitForCondition(isLanguageServerDownloaded, 30_000, 'Language Server not downloaded');
+    await vscode.commands.executeCommand(
+        'vscode.executeCompletionItemProvider',
+        textDocument.uri,
+        new vscode.Position(0, 0)
+    );
     // For for LS to get extracted.
     await sleep(10_000);
     return textDocument;
-}
-
-async function isLanguageServerDownloaded() {
-    // tslint:disable-next-line:no-unnecessary-local-variable
-    const downloaded = await getLanaguageServerFolders().then(items => items.length > 0);
-    return downloaded;
 }

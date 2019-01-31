@@ -35,7 +35,7 @@ enum OS {
     Mac, Windows, Linux
 }
 
-suite('xInterpreters - PipEnv', () => {
+suite('Interpreters - PipEnv', () => {
     const rootWorkspace = Uri.file(path.join('usr', 'desktop', 'wkspc1')).fsPath;
     getNamesAndValues(OS).forEach(os => {
         [undefined, Uri.file(path.join(rootWorkspace, 'one.py'))].forEach(resource => {

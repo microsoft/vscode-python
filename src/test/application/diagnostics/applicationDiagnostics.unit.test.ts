@@ -30,8 +30,12 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
     let outputChannel: typemoq.IMock<IOutputChannel>;
     let logger: typemoq.IMock<ILogger>;
     let appDiagnostics: IApplicationDiagnostics;
+    const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
+    const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
 
     setup(() => {
+        process.env.VSC_PYTHON_UNIT_TEST = undefined;
+        process.env.VSC_PYTHON_CI_TEST = undefined;
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         envHealthCheck = typemoq.Mock.ofType<IDiagnosticsService>();
         envHealthCheck.setup(service => service.runInBackground).returns(() => true);
@@ -50,6 +54,11 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             .returns(() => logger.object);
 
         appDiagnostics = new ApplicationDiagnostics(serviceContainer.object, outputChannel.object);
+    });
+
+    teardown(() => {
+        process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
+        process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
     });
 
     test('Register should register source maps', () => {

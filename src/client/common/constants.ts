@@ -3,6 +3,9 @@ export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
+export const PYTHON_ALLFILES = [
+    { language: PYTHON_LANGUAGE }
+];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 

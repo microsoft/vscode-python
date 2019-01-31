@@ -30,7 +30,7 @@ import { InterpreterHelper } from '../../../client/interpreter/helpers';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
 
-suite('xInterpreters - Auto Selection', () => {
+suite('Interpreters - Auto Selection', () => {
     let autoSelectionService: InterpreterAutoSelectionServiceTest;
     let workspaceService: IWorkspaceService;
     let stateFactory: IPersistentStateFactory;

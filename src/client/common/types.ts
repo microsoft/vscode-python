@@ -289,13 +289,13 @@ export interface IDataScienceSettings {
     changeDirOnImportExport: boolean;
     useDefaultConfigForJupyter: boolean;
     searchForJupyter: boolean;
-    allowInput?: boolean;
+    allowInput: boolean;
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
-    maxOutputSize? : number;
-    sendSelectionToInteractiveWindow? : boolean;
-    markdownRegularExpression? : string;
-    codeRegularExpression? : string;
+    maxOutputSize: number;
+    sendSelectionToInteractiveWindow : boolean;
+    markdownRegularExpression: string;
+    codeRegularExpression: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -354,6 +354,7 @@ export interface IPythonExtensionBanner {
 export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';
 export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
+export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
 
 export type DeprecatedSettingAndValue = {
     setting: string;

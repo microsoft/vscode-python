@@ -297,7 +297,7 @@ export class Cell extends React.Component<ICellProps> {
                             overflowX : 'auto'
                         };
 
-                        return <div id='stylewrapper' style={style}><Transform key={index} data={data} /></div>;
+                        return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
                     } else {
                         return <Transform key={index} data={data} />;
                     }
@@ -347,7 +347,7 @@ export class Cell extends React.Component<ICellProps> {
             // Output may have goofy ascii colorization chars in it. Try
             // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
-                if (formatted.includes('<')) {
+                if (!formatted.includes('<')) {
                     const converter = new ansiToHtml();
                     const html = converter.toHtml(formatted);
                     copy.data = {

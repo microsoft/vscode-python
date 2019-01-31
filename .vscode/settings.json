@@ -25,5 +25,7 @@
     "python.formatting.provider": "none",
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
-    "typescriptHero.imports.stringQuoteStyle": "'"
+    "typescriptHero.imports.stringQuoteStyle": "'",
+    "prettier.tslintIntegration": false,
+    "prettier.printWidth": 120,
 }
