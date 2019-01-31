@@ -262,6 +262,10 @@ function uploadExtension(uploadBlobName){
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
     const md5 = require('md5');
+    const key = process.env.AZURE_STORAGE_ACCESS_KEY || '';
+    console.log(`process.env.AZURE_STORAGE_ACCESS_KEY2=${process.env.AZURE_STORAGE_ACCESS_KEY2}`);
+    console.log(`process.env.AZURE_STORAGE_ACCESS_KEY3=${process.env.AZURE_STORAGE_ACCESS_KEY3}`);
+    console.log(key === '' ? 'no key' : 'has key');
     console.log(`process.env.AZURE_STORAGE_ACCOUNT=${process.env.AZURE_STORAGE_ACCOUNT}`);
     console.log(`process.env.AZURE_STORAGE_CONTAINER=${process.env.AZURE_STORAGE_CONTAINER}`);
     console.log(`process.env.AZURE_STORAGE_ACCESS_KEY=${md5(process.env.AZURE_STORAGE_ACCESS_KEY)}`);

@@ -102,6 +102,9 @@ script:
         python3 tpn --npm package-lock.json --config tpn/distribution.toml /dev/null;
     fi
   - if [[ $BUNDLE == "true" ]]; then
+        echo $AZURE_STORAGE_ACCOUNT;
+        echo $AZURE_STORAGE_ACCESS_KEY2;
+        echo $AZURE_STORAGE_ACCESS_KEY3;
         npx gulp uploadDeveloperExtension;
         npx gulp uploadReleaseExtension;
     fi
