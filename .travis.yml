@@ -110,6 +110,10 @@ script:
         npx gulp uploadDeveloperExtension;
         npx gulp uploadReleaseExtension;
     fi
+  - if [[ $BUNDLE == "true" ]]; then
+        npx gulp uploadDeveloperExtension;
+        npx gulp uploadReleaseExtension;
+    fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER --updateChangelog;

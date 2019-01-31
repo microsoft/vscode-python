@@ -265,7 +265,8 @@ function uploadExtension(uploadBlobName){
     console.log(`process.env.AZURE_STORAGE_ACCOUNT=${process.env.AZURE_STORAGE_ACCOUNT}`);
     console.log(`process.env.AZURE_STORAGE_CONTAINER=${process.env.AZURE_STORAGE_CONTAINER}`);
     console.log(`process.env.AZURE_STORAGE_ACCESS_KEY=${md5(process.env.AZURE_STORAGE_ACCESS_KEY)}`);
-    return gulp.src('python*.vsix')
+    // return gulp.src('python*.vsix')
+    return gulp.src('package.json')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
             account:    process.env.AZURE_STORAGE_ACCOUNT,
