@@ -2018,6 +2018,7 @@
         "gulp-filter": "^5.1.0",
         "gulp-inline-source": "^3.2.0",
         "gulp-json-editor": "^2.2.2",
+        "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
         "gulp-watch": "^5.0.0",

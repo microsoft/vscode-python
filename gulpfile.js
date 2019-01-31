@@ -260,8 +260,9 @@ gulp.task('installPythonLibs', async () => {
 
 function uploadExtension(uploadBlobName){
     const azure = require('gulp-azure-storage');
+    const rename = require("gulp-rename");
     return gulp.src('python*.vsix')
-        .pipe(gulp.dest(path.join('tmp', uploadBlobName)))
+        .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
             account:    process.env.AZURE_STORAGE_ACCOUNT,
             key:        process.env.AZURE_STORAGE_ACCESS_KEY,
