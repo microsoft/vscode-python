@@ -9,7 +9,7 @@ import * as path from 'path';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IPathUtils } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
-import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
+import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { getOSType } from '../../common';
 
@@ -192,5 +192,176 @@ suite('Environment Variables Service', () => {
         expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
         expect(vars).to.have.property('ONE', '1', 'Incorrect value');
         expect(vars).to.have.property('PYTHONPATH', `PYTHONPATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
+    });
+});
+
+// tslint:disable-next-line:max-func-body-length
+suite('Parsing Environment Variables Files', () => {
+
+    test('Custom variables should be parsed from env file', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+X1234PYEXTUNITTESTVAR=1234
+PYTHONPATH=../workspace5
+            `);
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(vars).to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
+        expect(vars).to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
+    });
+
+    test('PATH and PYTHONPATH from env file should be returned as is', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+X=1
+Y=2
+PYTHONPATH=/usr/one/three:/usr/one/four
+# Unix PATH variable
+PATH=/usr/x:/usr/y
+# Windows Path variable
+Path=/usr/x:/usr/y
+            `);
+
+        const expectedPythonPath = '/usr/one/three:/usr/one/four';
+        const expectedPath = '/usr/x:/usr/y';
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(5, 'Incorrect number of variables');
+        expect(vars).to.have.property('X', '1', 'X value is invalid');
+        expect(vars).to.have.property('Y', '2', 'Y value is invalid');
+        expect(vars).to.have.property('PYTHONPATH', expectedPythonPath, 'PYTHONPATH value is invalid');
+        expect(vars).to.have.property('PATH', expectedPath, 'PATH value is invalid');
+    });
+
+    test('Variable names must be alpha + alnum/underscore', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+SPAM=1234
+ham=5678
+Eggs=9012
+_bogus1=...
+1bogus2=...
+bogus 3=...
+bogus.4=...
+bogus-5=...
+bogus~6=...
+VAR1=3456
+VAR_2=7890
+            `);
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(5, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('ham', '5678', 'value is invalid');
+        expect(vars).to.have.property('Eggs', '9012', 'value is invalid');
+        expect(vars).to.have.property('VAR1', '3456', 'value is invalid');
+        expect(vars).to.have.property('VAR_2', '7890', 'value is invalid');
+    });
+
+    test('Empty values become empty string', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+SPAM=
+            `);
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '', 'value is invalid');
+    });
+
+    test('Outer quotation marks are removed', () => {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Uncomment the commented-out lines.
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+SPAM=1234
+HAM='5678'
+EGGS="9012"
+FOO='"3456"'
+BAR="'7890'"
+BAZ="\"ABCD"
+#VAR1="EFGH
+#VAR2=IJKL"
+            `);
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(6, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('HAM', '5678', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
+        expect(vars).to.have.property('FOO', '"3456"', 'value is invalid');
+        expect(vars).to.have.property('BAR', '\'7890\'', 'value is invalid');
+        expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
+        //expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
+        //expect(vars).to.have.property('VAR2', 'IJKL"  ', 'value is invalid');
+    });
+
+    test('Whitespace is ignored', () => {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Uncomment the commented-out lines.
+        // tslint:disable:no-trailing-whitespace
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+SPAM=1234
+HAM =5678
+EGGS= 9012
+FOO = 3456
+  BAR=7890
+  BAZ = ABCD
+VAR1=EFGH  ...
+VAR2=IJKL  
+#VAR3='  MNOP  '
+            `);
+        // tslint:enable:no-trailing-whitespace
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(8, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('HAM', '5678', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
+        expect(vars).to.have.property('FOO', '3456', 'value is invalid');
+        expect(vars).to.have.property('BAR', '7890', 'value is invalid');
+        expect(vars).to.have.property('BAZ', 'ABCD', 'value is invalid');
+        expect(vars).to.have.property('VAR1', 'EFGH  ...', 'value is invalid');
+        expect(vars).to.have.property('VAR2', 'IJKL', 'value is invalid');
+        //expect(vars).to.have.property('VAR3', '  MNOP  ', 'value is invalid');
+    });
+
+    test('Blank lines are ignored', () => {
+        // tslint:disable:no-trailing-whitespace
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+
+SPAM=1234
+    
+HAM=5678
+	
+
+            `);
+        // tslint:enable:no-trailing-whitespace
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('HAM', '5678', 'value is invalid');
+    });
+
+    test('Comments are ignored', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile(`
+# step 1
+SPAM=1234
+  # step 2
+HAM=5678
+#step 3
+EGGS=9012  # ...
+#  done
+            `);
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('HAM', '5678', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '9012  # ...', 'value is invalid');
     });
 });

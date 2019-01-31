@@ -21,7 +21,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!fs.lstatSync(filePath).isFile()) {
             return;
         }
-        return dotenv.parse(await fs.readFile(filePath));
+        return parseEnvFile(await fs.readFile(filePath));
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {
@@ -60,4 +60,20 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         }
         return vars;
     }
+}
+
+// tslint:disable-next-line:no-suspicious-comment
+// TODO: Support passing in substitutions?
+export function parseEnvFile(
+    lines: string | Buffer
+): EnvironmentVariables {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: This loses order, which matters for substitution.
+    const vars = dotenv.parse(lines);
+    for (const name of Object.keys(vars)) {
+        if (name.match(/^[_0-9]/) || name.match(/[-.]/)) {
+            delete vars[name];
+        }
+    }
+    return vars;
 }
