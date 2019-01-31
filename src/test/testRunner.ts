@@ -12,7 +12,7 @@ import * as Mocha from 'mocha';
 import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
-import { setUpDomEnvironment } from './datascience/reactHelpers';
+import { IS_SMOKE_TEST } from './constants';
 import { initialize } from './initialize';
 
 interface ITestRunnerOptions {
@@ -77,7 +77,10 @@ export function run(testsRoot: string, callback: TestCallback): void {
 
     // nteract/transforms-full expects to run in the browser so we have to fake
     // parts of the browser here.
-    setUpDomEnvironment();
+    if (!IS_SMOKE_TEST) {
+        const reactHelpers =  require('./datascience/reactHelpers');
+        reactHelpers.setUpDomEnvironment();
+    }
 
     // Check whether code coverage is enabled.
     const options = getCoverageOptions(testsRoot);
