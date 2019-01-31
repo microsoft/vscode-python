@@ -28,7 +28,7 @@ export enum LanguageServerActivator {
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends IDisposable {
-    activate(): Promise<void>;
+    activate(resource: Resource): Promise<void>;
 }
 
 export const IHttpClient = Symbol('IHttpClient');

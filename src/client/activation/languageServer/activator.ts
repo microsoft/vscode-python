@@ -34,14 +34,16 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         @inject(ILanguageServerFolderService)
         private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) {}
+    ) { }
     @traceDecorators.error('Failed to activate language server')
-    public async activate(): Promise<void> {
-        const mainWorkspaceUri = this.workspace.hasWorkspaceFolders
-            ? this.workspace.workspaceFolders![0].uri
-            : undefined;
-        await this.ensureLanguageServerIsAvailable(mainWorkspaceUri);
-        await this.manager.start(mainWorkspaceUri);
+    public async activate(resource: Resource): Promise<void> {
+        if (!resource) {
+            resource = this.workspace.hasWorkspaceFolders
+                ? this.workspace.workspaceFolders![0].uri
+                : undefined;
+        }
+        await this.ensureLanguageServerIsAvailable(resource);
+        await this.manager.start(resource);
     }
     public dispose(): void {
         this.manager.dispose();

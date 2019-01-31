@@ -96,7 +96,7 @@ suite('Activation - ActivationService', () => {
                 lsSupported: boolean = true
             ) {
                 activator
-                    .setup(a => a.activate())
+                    .setup(a => a.activate(undefined))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
                 let activatorName = LanguageServerActivator.Jedi;
@@ -339,7 +339,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activatorDotNet.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorDotNet
-                        .setup(a => a.activate())
+                        .setup(a => a.activate(undefined))
                         .returns(() => Promise.reject(new Error('')))
                         .verifiable(TypeMoq.Times.once());
                     serviceContainer
@@ -352,7 +352,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activatorJedi.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorJedi
-                        .setup(a => a.activate())
+                        .setup(a => a.activate(undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
 

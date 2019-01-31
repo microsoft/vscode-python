@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { DocumentFilter, languages } from 'vscode';
 import { PYTHON } from '../common/constants';
-import { IConfigurationService, IExtensionContext, ILogger } from '../common/types';
+import { IConfigurationService, IExtensionContext, ILogger, Resource } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -33,7 +33,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.documentSelector = PYTHON;
     }
 
-    public async activate(): Promise<void> {
+    public async activate(_resource: Resource): Promise<void> {
         const context = this.context;
 
         const jediFactory = (this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager));

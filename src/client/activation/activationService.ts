@@ -17,12 +17,13 @@ import { EventName } from '../telemetry/constants';
 import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+const workspacePathNameForGlobalWorkspaces = '';
 type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
+    private activatedWorkspaces = new Map<string, ILanguageServerActivator>();
     private currentActivator?: ActivatorInfo;
-    private activatedOnce: boolean = false;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
@@ -40,14 +41,14 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+        disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
 
     public async activate(resource: Resource): Promise<void> {
-        if (this.currentActivator || this.activatedOnce) {
+        if (this.activatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
             return;
         }
         this.resource = resource;
-        this.activatedOnce = true;
 
         let jedi = this.useJedi();
         if (!jedi) {
@@ -66,8 +67,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         this.currentActivator = { jedi, activator };
 
         try {
-            await activator.activate();
-            return;
+            await activator.activate(resource);
         } catch (ex) {
             if (jedi) {
                 return;
@@ -78,13 +78,26 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             activatorName = LanguageServerActivator.Jedi;
             activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
             this.currentActivator = { jedi, activator };
-            await activator.activate();
+            await activator.activate(resource);
+        } finally {
+            this.activatedWorkspaces.set(this.getWorkspacePathKey(resource), activator);
         }
     }
 
     public dispose() {
         if (this.currentActivator) {
             this.currentActivator.activator.dispose();
+        }
+    }
+
+    protected onWorkspaceFoldersChanged() {
+        if (this.workspaceService.workspaceFolders!.length < this.activatedWorkspaces.size) {
+            //No. of workspace folders has decreased, dispose activator
+            const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
+            const mapKeys = Array.from(this.activatedWorkspaces.keys());
+            const folderRemoved = mapKeys.filter(x => workspaceKeys.indexOf(x) < 0)[0];
+            this.activatedWorkspaces.get(folderRemoved).dispose();
+            this.activatedWorkspaces.delete(folderRemoved);
         }
     }
 
@@ -118,5 +131,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private useJedi(): boolean {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         return configurationService.getSettings(this.resource).jediEnabled;
+    }
+    private getWorkspacePathKey(resource: Resource): string {
+        return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
     }
 }
