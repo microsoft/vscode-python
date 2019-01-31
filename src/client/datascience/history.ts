@@ -46,6 +46,7 @@ import {
     IStatusProvider,
     IJupyterExecutionFactory
 } from './types';
+import { HistoryMessageListener } from './historyMessageListener';
 
 export enum SysInfoReason {
     Start,
@@ -54,7 +55,7 @@ export enum SysInfoReason {
 }
 
 @injectable()
-export class History implements IWebPanelMessageListener, IHistory {
+export class History implements IHistory {
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
     private loadPromise: Promise<void>;
@@ -68,6 +69,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private waitingForExportCells: boolean = false;
     private jupyterServer: INotebookServer | undefined;
     private changeHandler: IDisposable | undefined;
+    private messageListener : HistoryMessageListener;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -95,6 +97,9 @@ export class History implements IWebPanelMessageListener, IHistory {
 
         // Sign up for execution changes (happen as a result of connecting/disconnecting from a liveshare session)
         const executionChange = this.jupyterExecutionFactory.executionChanged(this.onExecutionChanged.bind(this));
+
+        // Create a history message listener to listen to messages from our webpanel (or remote session)
+        this.messageListener = new HistoryMessageListener(this.onMessage);
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -818,7 +823,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+            this.webPanel = this.provider.create(this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
         }
     }
 

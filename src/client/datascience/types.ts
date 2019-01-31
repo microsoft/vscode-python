@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor, TextEditorEdit } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -20,7 +20,7 @@ export interface IDataScience extends Disposable {
 
 export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
 export interface IDataScienceCommandListener {
-    register(commandManager: ICommandManager): void;
+    register(commandManager: ICommandBroker): void;
 }
 
 // Connection information for talking to a jupyter notebook process
@@ -65,7 +65,7 @@ export interface IJupyterExecution {
 export const IJupyterExecutionFactory = Symbol('IJupyterExecutionFactory');
 export interface IJupyterExecutionFactory {
     executionChanged: Event<void>;
-    get() : IJupyterExecution;
+    create() : Promise<IJupyterExecution>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
@@ -216,4 +216,9 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
     };
+}
+
+export const ICommandBroker = Symbol('ICommandBroker');
+
+export interface ICommandBroker extends ICommandManager {
 }

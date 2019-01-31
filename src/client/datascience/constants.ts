@@ -126,6 +126,9 @@ export namespace LiveShare {
     export const Host = 'host';
     export const Guest = 'guest';
     export const JupyterExecutionService = 'jupyterExecutionService';
+    export const CommandBrokerService = 'commmandBrokerService';
+    export const WebPanelMessageService = 'webPanelMessageService';
+    export const LiveShareBroadcastRequest = 'broadcastRequest';
 }
 
 export namespace LiveShareJupyterCommands {

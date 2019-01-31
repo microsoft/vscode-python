@@ -35,14 +35,13 @@ import {
 import { JupyterConnection, JupyterServerInfo } from '../jupyterConnection';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import * as vsls from 'vsls/vscode';
-import { number } from 'prop-types';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
 export class HostJupyterExecution implements IJupyterExecution, Disposable {
 
     private liveShareApi : Promise<vsls.LiveShare | undefined>;
-    private servers : WeakMap<Number, IJupyterServer> = new WeakMap<number,IJupyterServer>();
+    private servers : WeakMap<Number, INotebookServer> = new WeakMap<Number, INotebookServer>();
 
     constructor(@inject(IJupyterExecution) private jupyterExecution) {
         // Create the shared service for the guest(s) to listen to.

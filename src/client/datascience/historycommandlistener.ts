@@ -24,7 +24,8 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider
+    IStatusProvider,
+    ICommandBroker
 } from './types';
 
 @injectable()
@@ -47,7 +48,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry.push(disposable);
     }
 
-    public register(commandManager: ICommandManager): void {
+    public register(commandManager: ICommandBroker): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(Commands.ImportNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
