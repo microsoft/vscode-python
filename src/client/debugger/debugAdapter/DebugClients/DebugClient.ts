@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 // tslint:disable:quotemark ordered-imports no-any no-empty
 
 import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
@@ -17,7 +22,7 @@ export abstract class DebugClient<T> extends EventEmitter {
         super();
         this.debugSession = debugSession;
     }
-    public abstract CreateDebugServer(serviceContainer?: IServiceContainer): BaseDebugServer ;
+    public abstract CreateDebugServer(serviceContainer?: IServiceContainer): BaseDebugServer;
     public get DebugType(): DebugType {
         return DebugType.Local;
     }

@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 // tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
 
 import { injectable, unmanaged } from 'inversify';

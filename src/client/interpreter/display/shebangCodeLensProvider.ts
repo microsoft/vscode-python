@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, Command, Event, Position, Range, TextDocument, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
