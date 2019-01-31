@@ -36,11 +36,16 @@ import {
     INotebookServerManager,
     IStatusProvider
 } from './types';
+import { LiveShare } from './constants';
+import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
+import { GuestJupyterExecution } from './jupyter/liveshare/guestJupyterExecution';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
+    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution, LiveShare.Host);
+    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, GuestJupyterExecution, LiveShare.Guest);
     serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
     serviceManager.addSingleton<ICommandBroker>(ICommandBroker, CommandBroker);
     serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);

@@ -82,6 +82,12 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
 }
 
+export const IJupyterExecutionFactory = Symbol('IJupyterExecutionFactory');
+export interface IJupyterExecutionFactory {
+    executionChanged: Event<void>;
+    get() : IJupyterExecution;
+}
+
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;
