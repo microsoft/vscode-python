@@ -48,8 +48,8 @@ export class CommandBroker implements ICommandBroker {
     }
     executeCommand<T>(command: string, ...rest: any[]): Thenable<T> {
         // Execute the command but potentially also send to our service too
-        this.postCommand<T>(command, rest).ignoreErrors();
-        return this.commandManager.executeCommand(command, rest);
+        this.postCommand<T>(command, ...rest).ignoreErrors();
+        return this.commandManager.executeCommand(command, ...rest);
     }
     getCommands(filterInternal?: boolean): Thenable<string[]> {
         // This does not go across to the other side. Just return the command registered locally
@@ -72,7 +72,7 @@ export class CommandBroker implements ICommandBroker {
         callback(...args);
 
         // Then post a notification that the command was run
-        this.postCommand(command, args).ignoreErrors();
+        this.postCommand(command, ...args).ignoreErrors();
     }
 
     private wrapTextEditorCallback(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit,...args: any[]) => void, textEditor: TextEditor, edit: TextEditorEdit, thisArg: any, ...args: any[]) {

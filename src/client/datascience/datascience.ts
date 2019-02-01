@@ -69,23 +69,23 @@ export class DataScience implements IDataScience {
         }
     }
 
-    public async runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
+    public async runAllCells(file: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
-        let activeCodeWatcher: ICodeWatcher | undefined = codeWatcher;
-        if (!activeCodeWatcher) {
-            activeCodeWatcher = this.getCurrentCodeWatcher();
+        let codeWatcher = this.getCodeWatcher(file);
+        if (!codeWatcher) {
+            codeWatcher = this.getCurrentCodeWatcher();
         }
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.runAllCells();
+        if (codeWatcher) {
+            return codeWatcher.runAllCells();
         } else {
             return Promise.resolve();
         }
     }
 
-    public async runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
+    public async runCell(file: string, range: vscode.Range): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
+        const codeWatcher = this.getCodeWatcher(file);
         if (codeWatcher) {
             return codeWatcher.runCell(range);
         } else {
@@ -181,6 +181,15 @@ export class DataScience implements IDataScience {
         const ownsSelection = settings.datascience.sendSelectionToInteractiveWindow;
         editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandBroker);
         editorContext.set(ownsSelection && enabled).catch();
+    }
+
+    private getCodeWatcher(file: string): ICodeWatcher | undefined {
+        const possibleDocuments = this.documentManager.visibleTextEditors.map(e => e.document).filter(d => d.fileName === file);
+        if (possibleDocuments && possibleDocuments.length > 0) {
+            return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
+        }
+
+        return undefined;
     }
 
     // Get our matching code watcher for the active document

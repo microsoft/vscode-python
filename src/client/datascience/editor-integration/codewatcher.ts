@@ -43,13 +43,13 @@ export class CodeWatcher implements ICodeWatcher {
         this.codeLenses = [];
         cells.forEach(cell => {
             const cmd: Command = {
-                arguments: [this, cell.range],
+                arguments: [this.document.fileName, cell.range],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllCmd: Command = {
-                arguments: [this],
+                arguments: [this.document.fileName],
                 title: localize.DataScience.runAllCellsLensCommandTitle(),
                 command: Commands.RunAllCells
             };

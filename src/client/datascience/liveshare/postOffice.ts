@@ -6,6 +6,10 @@ import * as vsls from 'vsls/vscode';
 import { LiveShare } from '../constants';
 import { IDisposable } from '../../common/types';
 
+interface IMessageArgs {
+    args: any[];
+}
+
 // This class is used to register two communication between a host and all of its guests
 export class PostOffice implements IDisposable {
 
@@ -44,7 +48,7 @@ export class PostOffice implements IDisposable {
                     break;
                 case vsls.Role.Host:
                     // Notify everybody and call our local callback (by falling through)
-                    this.hostServer.notify(command, args);
+                    this.hostServer.notify(command, {args});
                 default:
                     // Default when not connected is to just call the registered callback
                     if (this.commandMap.hasOwnProperty(command)) {
@@ -59,7 +63,7 @@ export class PostOffice implements IDisposable {
 
         // For a guest, make sure to register the notification
         if (api && api.session && api.session.role === vsls.Role.Guest) {
-            this.guestServer.onNotify(command, (a) => callback(this.currentRole, a));
+            this.guestServer.onNotify(command, (a : IMessageArgs) => callback(this.currentRole, ...a.args));
         }
 
         // Always stick in the command map so that if we switch roles, we reregister
