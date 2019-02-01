@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -19,7 +19,7 @@ export class GuestJupyterExecution implements IJupyterExecution, IAsyncDisposabl
     private serviceProxy: Promise<vsls.SharedServiceProxy | undefined>;
     private runningServer : INotebookServer | undefined;
 
-    constructor(@inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+    constructor(@inject(IJupyterExecution) @named(LiveShare.None) private jupyterExecution: IJupyterExecution,
                 @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
         // Create the shared service proxy
         this.serviceProxy = this.startSharedProxy();

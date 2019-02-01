@@ -52,7 +52,7 @@ export interface INotebookServer extends Disposable {
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
-export interface IJupyterExecution {
+export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;

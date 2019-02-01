@@ -126,6 +126,7 @@ export namespace JupyterCommands {
 }
 
 export namespace LiveShare {
+    export const None = 'none';
     export const Host = 'host';
     export const Guest = 'guest';
     export const JupyterExecutionService = 'jupyterExecutionService';

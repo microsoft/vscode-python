@@ -30,13 +30,13 @@ export class JupyterExecutionFactory implements IJupyterExecutionFactory {
         const api = await this.apiPromise.promise;
         if (api) {
             if (api.session && api.session.role === vsls.Role.Host) {
-                return this.serviceContainer.get(IJupyterExecution, LiveShare.Host);
+                return this.serviceContainer.get<IJupyterExecution>(IJupyterExecution, LiveShare.Host);
             } else if (api.session && api.session.role === vsls.Role.Guest) {
-                return this.serviceContainer.get(IJupyterExecution, LiveShare.Guest);
+                return this.serviceContainer.get<IJupyterExecution>(IJupyterExecution, LiveShare.Guest);
             }
         }
 
-        return this.serviceContainer.get(IJupyterExecution)
+        return this.serviceContainer.get<IJupyterExecution>(IJupyterExecution)
     }
 
     private register(api: vsls.LiveShare) {

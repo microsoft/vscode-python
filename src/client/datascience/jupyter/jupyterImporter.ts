@@ -10,7 +10,8 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { CodeSnippits } from '../constants';
-import { IJupyterExecution, INotebookImporter } from '../types';
+import { IJupyterExecution, INotebookImporter, IJupyterExecutionFactory } from '../types';
+import { using, usingAsync } from '../../common/utils/misc';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -35,7 +36,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IJupyterExecutionFactory) private jupyterExecutionFactory: IJupyterExecutionFactory,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
         this.templatePromise = this.createTemplateFile();
     }
@@ -51,16 +52,18 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
-        if (await this.jupyterExecution.isImportSupported()) {
-            const fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
-            if (directoryChange) {
-                return this.addDirectoryChange(fileOutput, directoryChange);
-            } else {
-                return fileOutput;
+        return await usingAsync(await this.jupyterExecutionFactory.create(), async (exe) => {
+            if (exe && await exe.isImportSupported()) {
+                const fileOutput: string = await exe.importNotebook(file, template);
+                if (directoryChange) {
+                    return this.addDirectoryChange(fileOutput, directoryChange);
+                } else {
+                    return fileOutput;
+                }
             }
-        }
 
-        throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+            throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+        });
     }
 
     public dispose = () => {

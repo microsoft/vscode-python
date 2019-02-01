@@ -43,7 +43,7 @@ import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
-    serviceManager.add<IJupyterExecution>(IJupyterExecution, JupyterExecution);
+    serviceManager.add<IJupyterExecution>(IJupyterExecution, JupyterExecution, LiveShare.None);
     serviceManager.add<IJupyterExecution>(IJupyterExecution, HostJupyterExecution, LiveShare.Host);
     serviceManager.add<IJupyterExecution>(IJupyterExecution, GuestJupyterExecution, LiveShare.Guest);
     serviceManager.addSingleton<IJupyterExecutionFactory>(IJupyterExecutionFactory, JupyterExecutionFactory);

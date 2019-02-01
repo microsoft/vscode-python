@@ -3,7 +3,7 @@
 'use strict';
 import { Kernel } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
@@ -43,7 +43,7 @@ export class HostJupyterExecution implements IJupyterExecution, IAsyncDisposable
     private started: Promise<vsls.LiveShare | undefined>;
     private runningServer : INotebookServer | undefined;
 
-    constructor(@inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+    constructor(@inject(IJupyterExecution) @named(LiveShare.None) private jupyterExecution: IJupyterExecution,
                 @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
         // Create the shared service for the guest(s) to listen to.
         this.started = this.startSharedService();

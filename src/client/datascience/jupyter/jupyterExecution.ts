@@ -15,7 +15,7 @@ import { Cancellation, CancellationError } from '../../common/cancellation';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -36,7 +36,7 @@ import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
 @injectable()
-export class JupyterExecution implements IJupyterExecution, Disposable {
+export class JupyterExecution implements IJupyterExecution {
 
     private processServicePromise: Promise<IProcessService>;
     private commands: Record<string, IJupyterCommand> = {};
