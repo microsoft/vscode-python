@@ -33,7 +33,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.documentSelector = PYTHON;
     }
 
-    public async activate(_resource: Resource): Promise<void> {
+    public async activate(resource: Resource): Promise<void> {
         const context = this.context;
 
         const jediFactory = (this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager));
@@ -89,7 +89,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         const symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
-        const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
+        const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings(resource);
         if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
             context.subscriptions.push(
                 languages.registerSignatureHelpProvider(

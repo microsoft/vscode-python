@@ -79,7 +79,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
         let searchPaths = interpreterData ? interpreterData.searchPaths.split(path.delimiter) : [];
-        const settings = this.configuration.getSettings();
+        const settings = this.configuration.getSettings(this.resource);
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
             if (extraPaths && extraPaths.length > 0) {

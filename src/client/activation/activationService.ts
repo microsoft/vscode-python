@@ -23,6 +23,7 @@ type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
     private activatedWorkspaces = new Map<string, ILanguageServerActivator>();
+    private workspaceFoldersCount = 1;
     private currentActivator?: ActivatorInfo;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
@@ -91,13 +92,18 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     protected onWorkspaceFoldersChanged() {
-        if (this.workspaceService.workspaceFolders!.length < this.activatedWorkspaces.size) {
-            //No. of workspace folders has decreased, dispose activator
+        if (this.workspaceService.workspaceFolders!.length < this.workspaceFoldersCount) {
+            //If the removed workspace folder was activated, dispose its activator
+            this.workspaceFoldersCount += -1;
             const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
             const mapKeys = Array.from(this.activatedWorkspaces.keys());
-            const folderRemoved = mapKeys.filter(x => workspaceKeys.indexOf(x) < 0)[0];
-            this.activatedWorkspaces.get(folderRemoved).dispose();
-            this.activatedWorkspaces.delete(folderRemoved);
+            const activatedfoldersRemoved = mapKeys.filter(x => workspaceKeys.indexOf(x) < 0);
+            if (activatedfoldersRemoved.length > 0) {
+                this.activatedWorkspaces.get(activatedfoldersRemoved[0]).dispose();
+                this.activatedWorkspaces.delete(activatedfoldersRemoved[0]);
+            }
+        } else {
+            this.workspaceFoldersCount += 1;
         }
     }
 
