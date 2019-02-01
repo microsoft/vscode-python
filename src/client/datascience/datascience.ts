@@ -184,7 +184,7 @@ export class DataScience implements IDataScience {
     }
 
     private getCodeWatcher(file: string): ICodeWatcher | undefined {
-        const possibleDocuments = this.documentManager.visibleTextEditors.map(e => e.document).filter(d => d.fileName === file);
+        const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);
         if (possibleDocuments && possibleDocuments.length > 0) {
             return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
         }

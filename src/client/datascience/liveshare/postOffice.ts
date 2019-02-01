@@ -71,7 +71,7 @@ export class PostOffice implements IDisposable {
 
         // For a guest, make sure to register the notification
         if (api && api.session && api.session.role === vsls.Role.Guest) {
-            this.guestServer.onNotify(command, (a : IMessageArgs) => callback(this.currentRole, ...a.args));
+            this.guestServer.onNotify(command, (a : IMessageArgs) => this.callCallback(command, ...a.args));
         }
 
         // Always stick in the command map so that if we switch roles, we reregister
