@@ -73,7 +73,19 @@ export function parseEnvFile(
     for (const name of Object.keys(vars)) {
         if (name.match(/^[_0-9]/) || name.match(/[-.]/)) {
             delete vars[name];
+            continue;
         }
+
+        // Substitution here is inspired a little by dotenv-expand:
+        //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
+
+        let value = vars[name];
+        const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
+        for (const match of matches) {
+            const replacement = match.substring(2, match.length - 1);
+            value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`), vars[replacement] || '');
+        }
+        vars[name] = value.replace(/\\\$/g, '$');
     }
     return vars;
 }

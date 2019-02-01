@@ -364,4 +364,77 @@ EGGS=9012  # ...
         expect(vars).to.have.property('HAM', '5678', 'value is invalid');
         expect(vars).to.have.property('EGGS', '9012  # ...', 'value is invalid');
     });
+
+    // Substitution
+    // tslint:disable:no-invalid-template-strings
+
+    test('Basic substitution syntax', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+REPO=/home/user/git/foobar \n\
+PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
+            ');
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(vars).to.have.property('REPO', '/home/user/git/foobar', 'value is invalid');
+        expect(vars).to.have.property('PYTHONPATH', '/home/user/git/foobar/foo:/home/user/git/foobar/bar', 'value is invalid');
+    });
+
+    test('Curly braces are required for substitution', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+SPAM=1234 \n\
+EGGS=$SPAM \n\
+            ');
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '$SPAM', 'value is invalid');
+    });
+
+    test('Nested substitution is not supported', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+SPAM=EGGS \n\
+EGGS=??? \n\
+HAM="-- ${${SPAM}} --"\n\
+            ');
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', 'EGGS', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '???', 'value is invalid');
+        expect(vars).to.have.property('HAM', '-- ${${SPAM}} --', 'value is invalid');
+    });
+
+    test('Recursive substitution is allowed', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+REPO=/home/user/git/foobar \n\
+PYTHONPATH=${REPO}/foo \n\
+PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
+            ');
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(vars).to.have.property('REPO', '/home/user/git/foobar', 'value is invalid');
+        expect(vars).to.have.property('PYTHONPATH', '/home/user/git/foobar/foo:/home/user/git/foobar/bar', 'value is invalid');
+    });
+
+    test('Substitution may be escaped', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+SPAM=1234 \n\
+EGGS=\\${SPAM}/foo:\\${SPAM}/bar \n\
+            ');
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '${SPAM}/foo:${SPAM}/bar', 'value is invalid');
+    });
+
+    // tslint:enable:no-invalid-template-strings
 });
