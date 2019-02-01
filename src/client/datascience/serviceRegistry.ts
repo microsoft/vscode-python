@@ -3,6 +3,7 @@
 'use strict';
 import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
+import { CommandBroker } from './commandBroker';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
@@ -19,6 +20,7 @@ import { StatusProvider } from './statusProvider';
 import {
     ICodeCssGenerator,
     ICodeWatcher,
+    ICommandBroker,
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
@@ -30,23 +32,13 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
-    ICommandBroker,
-    IJupyterExecutionFactory
+    IStatusProvider
 } from './types';
-import { LiveShare } from './constants';
-import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
-import { GuestJupyterExecution } from './jupyter/liveshare/guestJupyterExecution';
-import { CommandBroker } from './commandBroker';
-import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
-    serviceManager.add<IJupyterExecution>(IJupyterExecution, JupyterExecution, LiveShare.None);
-    serviceManager.add<IJupyterExecution>(IJupyterExecution, HostJupyterExecution, LiveShare.Host);
-    serviceManager.add<IJupyterExecution>(IJupyterExecution, GuestJupyterExecution, LiveShare.Guest);
-    serviceManager.addSingleton<IJupyterExecutionFactory>(IJupyterExecutionFactory, JupyterExecutionFactory);
+    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
     serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
     serviceManager.addSingleton<ICommandBroker>(ICommandBroker, CommandBroker);
     serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);

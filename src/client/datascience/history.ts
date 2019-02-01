@@ -43,8 +43,7 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider,
-    IJupyterExecutionFactory
+    IStatusProvider
 } from './types';
 import { HistoryMessageListener } from './historyMessageListener';
 
@@ -70,7 +69,6 @@ export class History implements IHistory {
     private jupyterServer: INotebookServer | undefined;
     private changeHandler: IDisposable | undefined;
     private messageListener : HistoryMessageListener;
-    private currentExecution : Promise<IJupyterExecution> | undefined;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -81,7 +79,7 @@ export class History implements IHistory {
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(ILogger) private logger: ILogger,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
-        @inject(IJupyterExecutionFactory) private jupyterExecutionFactory: IJupyterExecutionFactory,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
@@ -95,10 +93,6 @@ export class History implements IHistory {
         // Create our event emitter
         this.closedEvent = new EventEmitter<IHistory>();
         this.disposables.push(this.closedEvent);
-
-        // Sign up for execution changes (happen as a result of connecting/disconnecting from a liveshare session)
-        const executionChange = this.jupyterExecutionFactory.executionChanged(this.onExecutionChanged.bind(this));
-        this.disposables.push(executionChange);
 
         // Create a history message listener to listen to messages from our webpanel (or remote session)
         this.messageListener = new HistoryMessageListener(this.onMessage);
@@ -515,14 +509,6 @@ export class History implements IHistory {
         }
     }
 
-    private onExecutionChanged() {
-        // Clear our execution we're using
-        this.currentExecution = undefined;
-
-        // Do the same thing as if we changed our interpreter
-        this.onInterpreterChanged().ignoreErrors();
-    }
-
     private onInterpreterChanged = async () => {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
@@ -532,13 +518,6 @@ export class History implements IHistory {
             }
         }
         this.loadPromise = this.load();
-    }
-
-    private getJupyterExecution() : Promise<IJupyterExecution> {
-        if (!this.currentExecution) {
-            this.currentExecution = this.jupyterExecutionFactory.create();
-        }
-        return this.currentExecution;
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -611,7 +590,7 @@ export class History implements IHistory {
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
                     if (str && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
-                        this.getJupyterExecution().then(e => e.spawnNotebook(file).ignoreErrors()).ignoreErrors();
+                        this.jupyterExecution.spawnNotebook(file).ignoreErrors();
                     }
                 });
             } catch (exc) {
@@ -645,8 +624,7 @@ export class History implements IHistory {
 
                 workingDir = await this.calculateWorkingDirectory();
             }
-            const execution = await this.getJupyterExecution();
-            this.jupyterServer = await execution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
 
             // If this is a restart, show our restart info
             if (restart) {
@@ -765,8 +743,7 @@ export class History implements IHistory {
         switch (reason) {
             case SysInfoReason.Start:
                 // Message depends upon if ipykernel is supported or not.
-                const execution = await this.getJupyterExecution();
-                if (!execution || !(await execution.isKernelCreateSupported())) {
+                if (!(await this.jupyterExecution.isKernelCreateSupported())) {
                     return localize.DataScience.pythonVersionHeaderNoPyKernel();
                 }
                 return localize.DataScience.pythonVersionHeader();
@@ -842,8 +819,7 @@ export class History implements IHistory {
 
         // Check to see if we support ipykernel or not
         try {
-            const execution = await this.getJupyterExecution();
-            const usableInterpreter = await execution.getUsableJupyterPython();
+            const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
             if (!usableInterpreter) {
                 // Not loading anymore
                 status.dispose();

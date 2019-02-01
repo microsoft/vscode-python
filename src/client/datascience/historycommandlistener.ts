@@ -25,8 +25,7 @@ import {
     INotebookImporter,
     INotebookServer,
     IStatusProvider,
-    ICommandBroker,
-    IJupyterExecutionFactory
+    ICommandBroker
 } from './types';
 
 @injectable()
@@ -36,7 +35,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
-        @inject(IJupyterExecutionFactory) private jupyterExecutionFactory: IJupyterExecutionFactory,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -153,7 +152,6 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                         this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
                             if (str === openQuestion) {
                                 // If the user wants to, open the notebook they just generated.
-                                const exe
                                 this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
                             }
                         });

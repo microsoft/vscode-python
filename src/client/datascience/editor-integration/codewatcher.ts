@@ -43,6 +43,8 @@ export class CodeWatcher implements ICodeWatcher {
         this.codeLenses = [];
         cells.forEach(cell => {
             const cmd: Command = {
+	            // Be careful here. These arguments will be serialized during liveshare sessions
+		        // and so shouldn't reference local objects.
                 arguments: [this.document.fileName, cell.range],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell

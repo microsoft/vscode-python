@@ -5,28 +5,61 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, ILogger, IDisposableRegistry, IConfigurationService } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
-import { PythonInterpreter } from '../../../interpreter/contracts';
+import { PythonInterpreter, IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareJupyterCommands } from '../../constants';
-import { IConnection, IJupyterExecution, INotebookServer } from '../../types';
+import { IConnection, IJupyterExecution, INotebookServer, IJupyterSessionManager, IJupyterCommandFactory } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
+import { IPythonExecutionFactory, IProcessServiceFactory } from '../../../common/process/types';
+import { IFileSystem } from '../../../common/platform/types';
+import { IWorkspaceService } from '../../../common/application/types';
+import { IServiceContainer } from '../../../ioc/types';
+import { JupyterExecutionBase } from '../jupyterExecutionBase';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
-export class GuestJupyterExecution implements IJupyterExecution, IAsyncDisposable {
+export class GuestJupyterExecution extends JupyterExecutionBase {
 
     private serviceProxy: Promise<vsls.SharedServiceProxy | undefined>;
     private runningServer : INotebookServer | undefined;
 
-    constructor(@inject(IJupyterExecution) @named(LiveShare.None) private jupyterExecution: IJupyterExecution,
-                @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
+    constructor(
+        executionFactory: IPythonExecutionFactory,
+        interpreterService: IInterpreterService,
+        processServiceFactory: IProcessServiceFactory,
+        knownSearchPaths: IKnownSearchPathsForInterpreters,
+        logger: ILogger,
+        disposableRegistry: IDisposableRegistry,
+        asyncRegistry: IAsyncDisposableRegistry,
+        fileSystem: IFileSystem,
+        sessionManager: IJupyterSessionManager,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        commandFactory : IJupyterCommandFactory,
+        serviceContainer: IServiceContainer) {
+        super(
+            executionFactory,
+            interpreterService,
+            processServiceFactory,
+            knownSearchPaths,
+            logger,
+            disposableRegistry,
+            asyncRegistry,
+            fileSystem,
+            sessionManager,
+            workspace,
+            configuration,
+            commandFactory,
+            serviceContainer);
         // Create the shared service proxy
         this.serviceProxy = this.startSharedProxy();
-        this.asyncRegistry.push(this);
+        asyncRegistry.push(this);
     }
 
-    public dispose() : Promise<void> {
+    public async dispose() : Promise<void> {
+        await super.dispose();
+
         if (this.runningServer) {
             return this.runningServer.dispose();
         }
@@ -35,12 +68,14 @@ export class GuestJupyterExecution implements IJupyterExecution, IAsyncDisposabl
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareJupyterCommands.isNotebookSupported, cancelToken);
     }
-
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareJupyterCommands.isImportSupported, cancelToken);
     }
     public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareJupyterCommands.isKernelCreateSupported, cancelToken);
+    }
+    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
+        return this.checkSupported(LiveShareJupyterCommands.isKernelSpecSupported, cancelToken);
     }
     public async connectToNotebookServer(uri: string, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer> {
         // We only have a single server at a time. This object should go away when the server goes away
@@ -53,7 +88,7 @@ export class GuestJupyterExecution implements IJupyterExecution, IAsyncDisposabl
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
                 const uri = `${connection.baseUrl}\\token?=${connection.token}`;
-                this.runningServer = await this.jupyterExecution.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken);
+                this.runningServer = await super.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken);
             } else {
                 throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
             }

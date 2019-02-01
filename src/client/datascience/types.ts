@@ -56,16 +56,11 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
-}
-
-export const IJupyterExecutionFactory = Symbol('IJupyterExecutionFactory');
-export interface IJupyterExecutionFactory {
-    executionChanged: Event<void>;
-    create() : Promise<IJupyterExecution>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
