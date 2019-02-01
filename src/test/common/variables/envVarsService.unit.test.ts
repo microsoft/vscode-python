@@ -270,8 +270,6 @@ SPAM=
     });
 
     test('Outer quotation marks are removed', () => {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: Uncomment the commented-out lines.
         // tslint:disable-next-line:no-multiline-string
         const vars = parseEnvFile(`
 SPAM=1234
@@ -280,25 +278,23 @@ EGGS="9012"
 FOO='"3456"'
 BAR="'7890'"
 BAZ="\"ABCD"
-#VAR1="EFGH
-#VAR2=IJKL"
+VAR1="EFGH
+VAR2=IJKL"
             `);
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-        expect(Object.keys(vars!)).lengthOf(6, 'Incorrect number of variables');
+        expect(Object.keys(vars!)).lengthOf(8, 'Incorrect number of variables');
         expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
         expect(vars).to.have.property('HAM', '5678', 'value is invalid');
         expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
         expect(vars).to.have.property('FOO', '"3456"', 'value is invalid');
         expect(vars).to.have.property('BAR', '\'7890\'', 'value is invalid');
         expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
-        //expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
-        //expect(vars).to.have.property('VAR2', 'IJKL"  ', 'value is invalid');
+        expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
+        expect(vars).to.have.property('VAR2', 'IJKL"', 'value is invalid');
     });
 
     test('Whitespace is ignored', () => {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: Uncomment the commented-out lines.
         // tslint:disable:no-trailing-whitespace
         // tslint:disable-next-line:no-multiline-string
         const vars = parseEnvFile(`
@@ -310,12 +306,12 @@ FOO = 3456
   BAZ = ABCD
 VAR1=EFGH  ...
 VAR2=IJKL  
-#VAR3='  MNOP  '
+VAR3='  MNOP  '
             `);
         // tslint:enable:no-trailing-whitespace
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-        expect(Object.keys(vars!)).lengthOf(8, 'Incorrect number of variables');
+        expect(Object.keys(vars!)).lengthOf(9, 'Incorrect number of variables');
         expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
         expect(vars).to.have.property('HAM', '5678', 'value is invalid');
         expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
@@ -324,7 +320,7 @@ VAR2=IJKL
         expect(vars).to.have.property('BAZ', 'ABCD', 'value is invalid');
         expect(vars).to.have.property('VAR1', 'EFGH  ...', 'value is invalid');
         expect(vars).to.have.property('VAR2', 'IJKL', 'value is invalid');
-        //expect(vars).to.have.property('VAR3', '  MNOP  ', 'value is invalid');
+        expect(vars).to.have.property('VAR3', '  MNOP  ', 'value is invalid');
     });
 
     test('Blank lines are ignored', () => {

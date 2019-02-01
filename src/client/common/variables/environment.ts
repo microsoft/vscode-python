@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as dotenv from 'dotenv';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -67,25 +66,42 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
 export function parseEnvFile(
     lines: string | Buffer
 ): EnvironmentVariables {
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: This loses order, which matters for substitution.
-    const vars = dotenv.parse(lines);
-    for (const name of Object.keys(vars)) {
-        if (name.match(/^[_0-9]/) || name.match(/[-.]/)) {
-            delete vars[name];
-            continue;
+    // Most of the following is an adaptation of the dotenv code:
+    //   https://github.com/motdotla/dotenv/blob/master/lib/main.js#L32
+    // We don't use dotenv here because it loses ordering, which is
+    // significant for substitution.
+    const vars = {};
+    lines.toString().split('\n').forEach((line, idx) => {
+        const match = line.match(/^\s*([a-zA-Z]\w*)\s*=\s*(.*)?\s*$/);
+        if (!match) {
+            return;
         }
 
-        // Substitution here is inspired a little by dotenv-expand:
-        //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
+        const name = match[1];
+        let value = match[2];
+        if (value) {
+            value = value.trim();
+            if (value[0] === '\'' && value[value.length - 1] === '\'') {
+                value = value.substring(1, value.length - 1);
+                value = value.replace(/\\n/gm, '\n');
+            } else if (value[0] === '"' && value[value.length - 1] === '"') {
+                value = value.substring(1, value.length - 1);
+                value = value.replace(/\\n/gm, '\n');
+            }
 
-        let value = vars[name];
-        const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
-        for (const match of matches) {
-            const replacement = match.substring(2, match.length - 1);
-            value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`), vars[replacement] || '');
+            // Substitution here is inspired a little by dotenv-expand:
+            //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
+
+            const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
+            for (const submatch of matches) {
+                const replacement = submatch.substring(2, submatch.length - 1);
+                value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`), vars[replacement] || '');
+            }
+            value = value.replace(/\\\$/g, '$');
+        } else {
+            value = '';
         }
-        vars[name] = value.replace(/\\\$/g, '$');
-    }
+        vars[name] = value;
+    });
     return vars;
 }
