@@ -10,7 +10,7 @@ import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory,
     IPythonExtensionBanner } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { IJupyterExecution } from './types';
+import { IJupyterExecution, IJupyterExecutionFactory } from './types';
 
 export enum InteractiveShiftEnterStateKeys {
     ShowBanner = 'InteractiveShiftEnterBanner'
@@ -32,7 +32,7 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IJupyterExecutionFactory) private jupyterExecutionFactory: IJupyterExecutionFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService)
     {
         this.initialize();
