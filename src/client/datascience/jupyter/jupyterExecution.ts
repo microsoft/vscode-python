@@ -107,7 +107,7 @@ export class JupyterExecution implements IJupyterExecution {
 
     private async loadExecution(api: vsls.LiveShare | undefined) : Promise<void> {
         // Dispose of the last execution handler
-        if (this.executionHandler.resolved) {
+        if (this.executionHandler && this.executionHandler.resolved) {
             const current = await this.executionHandler.promise;
             if (current) {
                 await current.dispose();

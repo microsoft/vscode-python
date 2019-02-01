@@ -18,11 +18,13 @@ export class PostOffice implements IDisposable {
     private hostServer : vsls.SharedService | undefined;
     private guestServer : vsls.SharedServiceProxy | undefined;
     private currentRole : vsls.Role = vsls.Role.None;
-    private commandMap : { [key: string] : (role: vsls.Role, ...args: any[]) => void } = {};
+    private commandMap : { [key: string] : { callback: (...args: any[]) => void; thisArg: any } } = {};
 
     constructor(name: string) {
         this.name = name;
         this.started = this.startCommandServer();
+
+        // Note to self, could the callbacks be keeping things alive that we don't want to be alive?
     }
 
     public role = () => {
@@ -40,25 +42,31 @@ export class PostOffice implements IDisposable {
     public async postCommand(command: string, ...args: any[]) : Promise<void> {
         // Make sure startup finished
         const api = await this.started;
+        let skipDefault = false;
+
         if (api && api.session) {
             switch (this.currentRole) {
                 case vsls.Role.Guest:
                     // Ask host to broadcast
                     this.guestServer.notify(LiveShare.LiveShareBroadcastRequest, [command, ...args]);
+                    skipDefault = true;
                     break;
                 case vsls.Role.Host:
                     // Notify everybody and call our local callback (by falling through)
                     this.hostServer.notify(command, {args});
+                    break;
                 default:
-                    // Default when not connected is to just call the registered callback
-                    if (this.commandMap.hasOwnProperty(command)) {
-                        this.commandMap[command](this.currentRole, ...args);
-                    }
+                    break;
             }
+        }
+
+        if (!skipDefault) {
+            // Default when not connected is to just call the registered callback
+            this.callCallback(command, ...args);
         }
     }
 
-    public async registerCallback(command: string, callback: (role: vsls.Role, ...args: any[]) => void) : Promise<void> {
+    public async registerCallback(command: string, callback: (...args: any[]) => void, thisArg?: any) : Promise<void> {
         const api = await this.started;
 
         // For a guest, make sure to register the notification
@@ -67,8 +75,28 @@ export class PostOffice implements IDisposable {
         }
 
         // Always stick in the command map so that if we switch roles, we reregister
-        this.commandMap[command] = callback;
+        this.commandMap[command] = { callback, thisArg };
 
+    }
+
+    private callCallback(command: string, ...args: any[]) {
+        const callback = this.getCallback(command);
+        if (callback) {
+            callback(...args);
+        }
+    }
+
+    private getCallback(command: string) : ((...args: any[]) => void) | undefined {
+        let callback = this.commandMap.hasOwnProperty(command) ? this.commandMap[command].callback : undefined;
+        if (callback) {
+            // Bind the this arg if necessary
+            const thisArg = this.commandMap[command].thisArg;
+            if (thisArg) {
+                callback = callback.bind(thisArg);
+            }
+        }
+
+        return callback;
     }
 
     private async startCommandServer() : Promise<vsls.LiveShare | undefined> {
@@ -122,7 +150,7 @@ export class PostOffice implements IDisposable {
         if (api && api.session && api.session.role === vsls.Role.Guest) {
             const keys = Object.keys(this.commandMap);
             keys.forEach(k => {
-                this.guestServer.onNotify(k, (a) => this.commandMap[k](this.currentRole, a));
+                this.guestServer.onNotify(k, (a : IMessageArgs) => this.callCallback(k, ...a.args));
             })
         }
     }

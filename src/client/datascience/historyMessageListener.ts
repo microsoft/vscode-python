@@ -13,7 +13,7 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
 
     constructor(callback: (message: string, payload: any) => void) {
         // We need to register callbacks for all history messages.
-        Object.keys(HistoryMessages).forEach(k => this.postOffice.registerCallback(k, (r, a) => callback(k, a)));
+        Object.keys(HistoryMessages).forEach(k => this.postOffice.registerCallback(HistoryMessages[k], (a : any) => callback(HistoryMessages[k], a)));
     }
 
     public dispose() {
@@ -22,6 +22,6 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
 
     public onMessage(message: string, payload: any) {
         // We received a message from the local webview. Broadcast it to everybody
-        this.postOffice.postCommand(message, payload);
+        this.postOffice.postCommand(message, payload).ignoreErrors();
     }
 }

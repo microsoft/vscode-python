@@ -384,6 +384,12 @@ export class History implements IHistory {
             const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
             try {
                 await this.loadPromise;
+            } catch (exc) {
+                // We should dispose ourselvs if the load fails. Othewise the user
+                // updates their install and we just fail again because the load promise is the same.
+                await this.dispose();
+
+                throw exc;
             } finally {
                 statusLoad.dispose();
             }

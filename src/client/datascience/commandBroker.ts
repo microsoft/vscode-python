@@ -27,22 +27,22 @@ export class CommandBroker implements ICommandBroker {
     }
 
     registerCommand(command: string, callback: (...args: any[]) => void, thisArg?: any): Disposable {
-        // Modify the callback such that it sends the command to our service if necessary
-        const disposable = this.commandManager.registerCommand(command, (...args: any[]) => this.wrapCallback(command, callback, thisArg, ...args), thisArg);
+        // Modify the callback such that it sends the command to our service
+        const disposable = this.commandManager.registerCommand(command, (...args: any[]) => this.wrapCallback(command, callback, ...args), thisArg);
 
-        // Potentially register this for notification lookup on the guest side
-        this.registerForGuest(command, callback).ignoreErrors();
+        // Register it for lookup
+        this.register(command, callback, thisArg).ignoreErrors();
 
         return disposable;
     }
     registerTextEditorCommand(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, thisArg?: any): Disposable {
-        // Modify the callback such that it sends the command to our service if necessary
+        // Modify the callback such that it sends the command to our service
         const disposable = this.commandManager.registerCommand(
             command,
-            (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => this.wrapTextEditorCallback(command, callback, textEditor, edit, thisArg, ...args), thisArg);
+            (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => this.wrapTextEditorCallback(command, callback, textEditor, edit, ...args), thisArg);
 
-        // Potentially register this for notification lookup on the guest side
-        this.registerForGuest(command, callback).ignoreErrors();
+        // Register it for lookup
+        this.register(command, callback, thisArg).ignoreErrors();
 
         return disposable;
     }
@@ -56,39 +56,23 @@ export class CommandBroker implements ICommandBroker {
         return this.commandManager.getCommands(filterInternal);
     }
 
-    private async registerForGuest(command: string, callback: (...args: any[]) => void) : Promise<void> {
-        this.postOffice.registerCallback(command, (r, ...a) => {
-            if (r === vsls.Role.Guest) {
-                callback(...a);
-            }
-        });
+    private async register(command: string, callback: (...args: any[]) => void, thisArg?: any) : Promise<void> {
+        this.postOffice.registerCallback(command, callback, thisArg);
     }
 
-    private wrapCallback(command: string, callback: (...args: any[]) => void, thisArg?: any, ...args: any[]) {
-        // First send to the host (this should happen automatically as the host is the only one that can actually register)
-        if (thisArg) {
-            callback = callback.bind(thisArg);
-        }
-        callback(...args);
-
-        // Then post a notification that the command was run
+    private wrapCallback(command: string, callback: (...args: any[]) => void, ...args: any[]) {
+        // Have the post office handle it.
         this.postCommand(command, ...args).ignoreErrors();
     }
 
-    private wrapTextEditorCallback(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit,...args: any[]) => void, textEditor: TextEditor, edit: TextEditorEdit, thisArg: any, ...args: any[]) {
-        // First send to the host (this should happen automatically as the host is the only one that can actually register)
-        if (thisArg) {
-            callback = callback.bind(thisArg);
-        }
-        callback(textEditor, edit, ...args);
-
-        // Then post a notification that the command was run
+    private wrapTextEditorCallback(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit,...args: any[]) => void, ...args: any[]) {
+        // Not really supported at the moment as we don't have a special case for the textEditor. But not using it.
         this.postCommand(command, ...args).ignoreErrors();
     }
 
     private async postCommand<T>(command: string, ...rest: any[]): Promise<void> {
-        // Make sure we're the host. Otherwise just ignore.
-        if (this.postOffice.role() === vsls.Role.Host) {
+        // Make sure we're the host (or none). Guest shouldn't be sending
+        if (this.postOffice.role() !== vsls.Role.Guest) {
             // This means we should send this across to the other side.
             this.postOffice.postCommand(command, ...rest);
         }
