@@ -34,14 +34,27 @@ export class InputHistory {
         return code;
     }
 
-    public add(code: string) {
-        // Compute our new history (dupes should reorder adding dupes)
+    public add(code: string, typed: boolean) {
+        // Compute our new history. Dupe behavior depends upon if the user typed it in or
+        // just used the arrows
         const dupeIndex = this.historyStack.indexOf(code);
-        this.historyStack = dupeIndex >= 0 ? this.historyStack : [code, ...this.historyStack];
 
-        // Reset position if new code
-        if (dupeIndex < 0) {
+        // Only skip adding a dupe if it's the same as the top item. Otherwise
+        // add it as normal.
+        this.historyStack = dupeIndex == 0 ? this.historyStack : [code, ...this.historyStack];
+
+        // Position is more complicated. If we typed something start over
+        if (typed) {
             this.reset();
+        } else {
+            // If we didn't type something, then start over if not adding a dupe (as it's at the top)
+            if (dupeIndex === 0) {
+                this.reset();
+            } else {
+                // Otherwise act like up just went to this location, so that the next up push
+                // will show up at this dupe.
+                this.adjustCursors(dupeIndex);
+            }
         }
     }
 
