@@ -7,6 +7,7 @@ export class InputHistory {
     private historyStack: string [] = [];
     private up: number | undefined;
     private down: number | undefined;
+    private last: number | undefined;
 
     public completeUp(code: string) : string {
         // If going up, only move if anything in the history
@@ -35,25 +36,26 @@ export class InputHistory {
     }
 
     public add(code: string, typed: boolean) {
-        // Compute our new history. Dupe behavior depends upon if the user typed it in or
+        // Compute our new history. Behavior depends upon if the user typed it in or
         // just used the arrows
-        const dupeIndex = this.historyStack.indexOf(code);
 
         // Only skip adding a dupe if it's the same as the top item. Otherwise
         // add it as normal.
-        this.historyStack = dupeIndex == 0 ? this.historyStack : [code, ...this.historyStack];
+        this.historyStack = this.last === 0 && this.historyStack.length > 0 && this.historyStack[this.last] === code ?
+            this.historyStack : [code, ...this.historyStack];
 
         // Position is more complicated. If we typed something start over
         if (typed) {
             this.reset();
         } else {
-            // If we didn't type something, then start over if not adding a dupe (as it's at the top)
-            if (dupeIndex === 0) {
-                this.reset();
+            // We want our next up push to match the index of the item that was
+            // actually entered.
+            if (this.last === 0) {
+                this.up = undefined;
+                this.down = undefined;
             } else {
-                // Otherwise act like up just went to this location, so that the next up push
-                // will show up at this dupe.
-                this.adjustCursors(dupeIndex);
+                this.up = this.last + 1;
+                this.down = this.last - 1;
             }
         }
     }
@@ -64,6 +66,9 @@ export class InputHistory {
     }
 
     private adjustCursors(currentPos: number) {
+        // Save last position we entered.
+        this.last = currentPos;
+
         // For a single item, ony up works. But never modify it.
         if (this.historyStack.length > 1) {
             if (currentPos < this.historyStack.length) {
