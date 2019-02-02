@@ -212,7 +212,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // Double check we don't have an entirely empty document
         if (doc.getValue('').trim().length > 0) {
             let code = doc.getValue();
-            let isClean = doc.isClean();
+            const isClean = doc.isClean();
             // We have to clear the history as this CodeMirror doesn't go away.
             doc.clearHistory();
             doc.setValue('');
