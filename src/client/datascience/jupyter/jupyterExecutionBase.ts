@@ -3,26 +3,24 @@
 'use strict';
 import { Kernel } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
-import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Disposable } from 'vscode-jsonrpc';
+import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IDisposable } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry, JupyterCommands, RegExpValues } from '../constants';
+import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
 import {
     IConnection,
     IJupyterCommand,
@@ -42,19 +40,19 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
 
-    constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-                @inject(IInterpreterService) private interpreterService: IInterpreterService,
-                @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-                @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
-                @inject(ILogger) private logger: ILogger,
-                @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-                @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
-                @inject(IFileSystem) private fileSystem: IFileSystem,
-                @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager,
-                @inject(IWorkspaceService) workspace: IWorkspaceService,
-                @inject(IConfigurationService) private configuration: IConfigurationService,
-                @inject(IJupyterCommandFactory) private commandFactory : IJupyterCommandFactory,
-                @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(private executionFactory: IPythonExecutionFactory,
+                private interpreterService: IInterpreterService,
+                private processServiceFactory: IProcessServiceFactory,
+                private knownSearchPaths: IKnownSearchPathsForInterpreters,
+                private logger: ILogger,
+                private disposableRegistry: IDisposableRegistry,
+                private asyncRegistry: IAsyncDisposableRegistry,
+                private fileSystem: IFileSystem,
+                private sessionManager: IJupyterSessionManager,
+                workspace: IWorkspaceService,
+                private configuration: IConfigurationService,
+                private commandFactory : IJupyterCommandFactory,
+                private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);

@@ -175,18 +175,10 @@ suite('Jupyter notebook tests', () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
             const server = await createNotebookServer(true);
-            let statusCount: number = 0;
             if (server) {
-                server.onStatusChanged((bool: boolean) => {
-                    statusCount += 1;
-                });
                 for (let i = 0; i < types.length; i += 1) {
                     ioc.getSettings().datascience.markdownRegularExpression = types[i].markdownRegEx;
-                    const prevCount = statusCount;
                     await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
-                    if (types[i].cellType !== 'markdown') {
-                        assert.ok(statusCount > prevCount, 'Status didnt update');
-                    }
                 }
             }
         });

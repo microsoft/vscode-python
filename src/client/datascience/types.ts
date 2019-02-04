@@ -38,8 +38,7 @@ export enum InterruptResult {
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
-export interface INotebookServer extends Disposable {
-    onStatusChanged: Event<boolean>;
+export interface INotebookServer extends IAsyncDisposable {
     connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;

@@ -63,10 +63,6 @@ class MockJupyterServer implements INotebookServer {
         }
         return Promise.reject('invalid server startup');
     }
-    //tslint:disable-next-line:no-any
-    public onStatusChanged(_listener: (e: boolean) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-        return { dispose: noop };
-    }
     public getCurrentState(): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
