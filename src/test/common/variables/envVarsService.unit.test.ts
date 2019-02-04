@@ -446,5 +446,18 @@ EGGS=\\${SPAM}/foo:\\${SPAM}/bar \n\
         expect(vars).to.have.property('EGGS', '${SPAM}/foo:${SPAM}/bar', 'value is invalid');
     });
 
+    test('base substitution variables', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
+            ', {
+                REPO: '/home/user/git/foobar'
+            });
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');
+        expect(vars).to.have.property('PYTHONPATH', '/home/user/git/foobar/foo:/home/user/git/foobar/bar', 'value is invalid');
+    });
+
     // tslint:enable:no-invalid-template-strings
 });

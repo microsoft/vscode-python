@@ -13,14 +13,14 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     constructor(@inject(IPathUtils) pathUtils: IPathUtils) {
         this.pathVariable = pathUtils.getPathVariableName();
     }
-    public async parseFile(filePath?: string): Promise<EnvironmentVariables | undefined> {
+    public async parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined> {
         if (!filePath || !await fs.pathExists(filePath)) {
             return;
         }
         if (!fs.lstatSync(filePath).isFile()) {
             return;
         }
-        return parseEnvFile(await fs.readFile(filePath));
+        return parseEnvFile(await fs.readFile(filePath), baseVars);
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {
@@ -61,11 +61,13 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     }
 }
 
-// tslint:disable-next-line:no-suspicious-comment
-// TODO: Support passing in substitutions?
 export function parseEnvFile(
-    lines: string | Buffer
+    lines: string | Buffer,
+    baseVars?: EnvironmentVariables
 ): EnvironmentVariables {
+    if (!baseVars) {
+        baseVars = {};
+    }
     // Most of the following is an adaptation of the dotenv code:
     //   https://github.com/motdotla/dotenv/blob/master/lib/main.js#L32
     // We don't use dotenv here because it loses ordering, which is
@@ -90,14 +92,14 @@ export function parseEnvFile(
 
             // Substitution here is inspired a little by dotenv-expand:
             //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
-
             if (value.match(/(?<![\\])\${([a-zA-Z]\w*)?\${/)) {
                 // Disallow nesting.
             } else {
                 const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
                 for (const submatch of matches) {
                     const replacement = submatch.substring(2, submatch.length - 1);
-                    value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`), vars[replacement] || '');
+                    value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`),
+                                          vars[replacement] || baseVars![replacement] || '');
                 }
                 value = value.replace(/\\\$/g, '$');
             }
