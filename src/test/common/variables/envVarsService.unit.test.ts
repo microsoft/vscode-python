@@ -280,10 +280,12 @@ BAR="'7890'"
 BAZ="\"ABCD"
 VAR1="EFGH
 VAR2=IJKL"
+VAR3='MN'OP'
+VAR4="QR"ST"
             `);
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-        expect(Object.keys(vars!)).lengthOf(8, 'Incorrect number of variables');
+        expect(Object.keys(vars!)).lengthOf(10, 'Incorrect number of variables');
         expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
         expect(vars).to.have.property('HAM', '5678', 'value is invalid');
         expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
@@ -292,6 +294,10 @@ VAR2=IJKL"
         expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
         expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
         expect(vars).to.have.property('VAR2', 'IJKL"', 'value is invalid');
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Should the outer marks be left?
+        expect(vars).to.have.property('VAR3', 'MN\'OP', 'value is invalid');
+        expect(vars).to.have.property('VAR4', 'QR"ST', 'value is invalid');
     });
 
     test('Whitespace is ignored', () => {
