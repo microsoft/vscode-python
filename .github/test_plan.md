@@ -83,6 +83,7 @@ print('Hello,', os.environ.get('WHO'), '!')
 # .env
 WHO=world
 PYTHONPATH=some/path/somewhere
+SPAM='hello ${WHO}'
 ````
 
 **ALWAYS**:
@@ -92,6 +93,7 @@ PYTHONPATH=some/path/somewhere
 - [ ] Environment variables in a `.env` file are exposed when running under the debugger
 - [ ] `"python.envFile"` allows for specifying an environment file manually (e.g. Jedi picks up `PYTHONPATH` changes)
 - [ ] `envFile` in a `launch.json` configuration works
+- [ ] simple variable substitution works
 
 #### [Debugging](https://code.visualstudio.com/docs/python/environments#_python-interpreter-for-debugging)
 
