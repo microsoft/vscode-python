@@ -40,12 +40,14 @@ import {
 import { JupyterServerBase } from './jupyterServerBase';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
+import { RoleBasedFactory } from './liveshare/util';
 
 
 
 @injectable()
 export class JupyterServer implements INotebookServer {
-    private serverHandler: Deferred<INotebookServer> | undefined;
+    private serverFactory: RoleBasedFactory<INotebookServer>;
+
     private connInfo : IConnection | undefined;
 
     constructor(
@@ -54,146 +56,81 @@ export class JupyterServer implements INotebookServer {
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager) {
-        this.asyncRegistry.push(this);
-        vsls.getApiAsync().then(
-            v => this.loadServer(v).ignoreErrors(),
-            r => this.loadServer(undefined).ignoreErrors()
-        );
-
+        this.serverFactory = new RoleBasedFactory<INotebookServer>(
+            JupyterServerBase,
+            HostJupyterServer,
+            GuestJupyterServer,
+            logger,
+            disposableRegistry,
+            asyncRegistry,
+            configService,
+            sessionManager
+        )
     }
 
     public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
         this.connInfo = connInfo;
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.connect(connInfo, kernelSpec, usingDarkTheme, cancelToken, workingDir);
-        }
+        const server = await this.serverFactory.get();
+        return server.connect(connInfo, kernelSpec, usingDarkTheme, cancelToken, workingDir);
     }
 
     public async shutdown(): Promise<void> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.dispose();
-        }
+        const server = await this.serverFactory.get();
+        return server.shutdown();
     }
 
     public async dispose(): Promise<void> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.dispose();
-        }
+        const server = await this.serverFactory.get();
+        return server.dispose();
     }
 
     public async waitForIdle(): Promise<void> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.waitForIdle();
-        }
+        const server = await this.serverFactory.get();
+        return server.waitForIdle();
     }
 
     public async execute(code: string, file: string, line: number, cancelToken?: CancellationToken): Promise<ICell[]> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.execute(code, file, line, cancelToken);
-        }
+        const server = await this.serverFactory.get();
+        return server.execute(code, file, line, cancelToken);
     }
 
     public async setInitialDirectory(directory: string): Promise<void> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.setInitialDirectory(directory);
-        }
+        const server = await this.serverFactory.get();
+        return server.setInitialDirectory(directory);
     }
 
     public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
-        // Create a wrapper observable around the actual server
+        // Create a wrapper observable around the actual server (because we have to wait for a promise)
         return new Observable<ICell[]>(subscriber => {
-            if (this.serverHandler) {
-                this.serverHandler.promise.then(s => {
-                    s.executeObservable(code, file, line, id).forEach(n => subscriber.next(n)).then(f => subscriber.complete());
-                },
-                r => {
-                    subscriber.error(r);
-                    subscriber.complete();
-                })
-            } else {
-                subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            this.serverFactory.get().then(s => {
+                s.executeObservable(code, file, line, id)
+                    .forEach(n => subscriber.next(n))
+                    .then(f => subscriber.complete());
+            },
+            r => {
+                subscriber.error(r);
                 subscriber.complete();
-            }
+            });
         });
     }
 
     public async executeSilently(code: string, cancelToken?: CancellationToken): Promise<void> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.dispose();
-        }
+        const server = await this.serverFactory.get();
+        return server.dispose();
     }
 
     public async restartKernel(): Promise<void> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.restartKernel();
-        }
+        const server = await this.serverFactory.get();
+        return server.restartKernel();
     }
 
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
-        if (this.serverHandler) {
-            const server = await this.serverHandler.promise;
-            return server.interruptKernel(timeoutMs);
-        }
+        const server = await this.serverFactory.get();
+        return server.interruptKernel(timeoutMs);
     }
 
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
         return this.connInfo;
     }
-
-    private async loadServer(api: vsls.LiveShare | undefined) : Promise<void> {
-        // Dispose of the last execution handler
-        if (this.serverHandler && this.serverHandler.resolved) {
-            const current = await this.serverHandler.promise;
-            if (current) {
-                await current.dispose();
-            }
-        }
-
-        // Create a new one based on our current state of our live share session
-        this.serverHandler = createDeferred<INotebookServer>();
-        if (api) {
-            api.onDidChangeSession(() => this.loadServer(api));
-            if (api.session) {
-                if (api.session.role === vsls.Role.Host) {
-                    this.serverHandler.resolve(
-                        new HostJupyterServer(
-                            this.logger,
-                            this.disposableRegistry,
-                            this.asyncRegistry,
-                            this.configService,
-                            this.sessionManager));
-                } else if (api.session.role === vsls.Role.Guest) {
-                    this.serverHandler.resolve(
-                        new GuestJupyterServer(
-                            this.logger,
-                            this.disposableRegistry,
-                            this.asyncRegistry,
-                            this.configService,
-                            this.sessionManager));
-
-                }
-            }
-        }
-
-        if (!this.serverHandler.resolved) {
-            // Just create a base one. We don't have a vsls session active
-            this.serverHandler.resolve(
-                new JupyterServerBase(
-                    this.logger,
-                    this.disposableRegistry,
-                    this.asyncRegistry,
-                    this.configService,
-                    this.sessionManager));
-        }
-    }
-
 }

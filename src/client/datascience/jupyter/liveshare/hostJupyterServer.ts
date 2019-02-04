@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
 
 import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';

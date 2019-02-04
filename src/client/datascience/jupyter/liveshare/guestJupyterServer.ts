@@ -1,22 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { Observable } from 'rxjs/Observable';
+import { Subscriber } from 'rxjs/Subscriber';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import { JupyterServerBase } from '../jupyterServerBase';
-import { Deferred, createDeferred } from '../../../common/utils/async';
-import { INotebookServer, IConnection, IJupyterSessionManager, IJupyterKernelSpec, ICell, InterruptResult } from '../../types';
-import { ILogger, IDisposableRegistry, IAsyncDisposableRegistry, IConfigurationService } from '../../../common/types';
-import { localize } from '../../../common/utils/localize';
+
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { LiveShare, LiveShareJupyterCommands } from '../../constants';
-import { ServerResponse, ServerResponseType, ExecuteResponse, InterruptResponse, ExecuteObservableResponse } from './serverResponse';
-import { Subscriber } from 'rxjs/Subscriber';
-
-
-
+import {
+    ICell,
+    IConnection,
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    INotebookServer,
+    InterruptResult
+} from '../../types';
+import {
+    ExecuteObservableResponse,
+    ExecuteResponse,
+    InterruptResponse,
+    ServerResponse,
+    ServerResponseType
+} from './serverResponse';
 
 export class GuestJupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
