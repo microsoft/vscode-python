@@ -401,14 +401,22 @@ EGGS=$SPAM \n\
         const vars = parseEnvFile('\
 SPAM=EGGS \n\
 EGGS=??? \n\
-HAM="-- ${${SPAM}} --"\n\
+HAM1="-- ${${SPAM}} --"\n\
+abcEGGSxyz=!!! \n\
+HAM2="-- ${abc${SPAM}xyz} --"\n\
+HAM3="-- ${${SPAM} --"\n\
+HAM4="-- ${${SPAM}} ${EGGS} --"\n\
             ');
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-        expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
+        expect(Object.keys(vars!)).lengthOf(7, 'Incorrect number of variables');
         expect(vars).to.have.property('SPAM', 'EGGS', 'value is invalid');
         expect(vars).to.have.property('EGGS', '???', 'value is invalid');
-        expect(vars).to.have.property('HAM', '-- ${${SPAM}} --', 'value is invalid');
+        expect(vars).to.have.property('HAM1', '-- ${${SPAM}} --', 'value is invalid');
+        expect(vars).to.have.property('abcEGGSxyz', '!!!', 'value is invalid');
+        expect(vars).to.have.property('HAM2', '-- ${abc${SPAM}xyz} --', 'value is invalid');
+        expect(vars).to.have.property('HAM3', '-- ${${SPAM} --', 'value is invalid');
+        expect(vars).to.have.property('HAM4', '-- ${${SPAM}} ${EGGS} --', 'value is invalid');
     });
 
     test('Recursive substitution is allowed', () => {

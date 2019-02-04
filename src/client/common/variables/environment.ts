@@ -91,12 +91,16 @@ export function parseEnvFile(
             // Substitution here is inspired a little by dotenv-expand:
             //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
 
-            const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
-            for (const submatch of matches) {
-                const replacement = submatch.substring(2, submatch.length - 1);
-                value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`), vars[replacement] || '');
+            if (value.match(/(?<![\\])\${([a-zA-Z]\w*)?\${/)) {
+                // Disallow nesting.
+            } else {
+                const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
+                for (const submatch of matches) {
+                    const replacement = submatch.substring(2, submatch.length - 1);
+                    value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`), vars[replacement] || '');
+                }
+                value = value.replace(/\\\$/g, '$');
             }
-            value = value.replace(/\\\$/g, '$');
         } else {
             value = '';
         }
