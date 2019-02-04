@@ -253,6 +253,7 @@ interface IEventNamePropertyMapping {
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
+    [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     [EventName.EXECUTION_CODE]: CodeExecutionTelemetry;
     [EventName.EXECUTION_DJANGO]: CodeExecutionTelemetry;
     [EventName.FORMAT]: FormatTelemetry;

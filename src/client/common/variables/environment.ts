@@ -4,6 +4,8 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
@@ -95,8 +97,11 @@ export function parseEnvFile(
             if (value.match(/(?<![\\])\${([a-zA-Z]\w*)?\${/)) {
                 // Disallow nesting.
             } else {
-                const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g) || [];
-                for (const submatch of matches) {
+                const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g);
+                if (matches) {
+                    sendTelemetryEvent(EventName.ENVFILE_VARIABLE_SUBSTITUTION);
+                }
+                for (const submatch of matches || []) {
                     const replacement = submatch.substring(2, submatch.length - 1);
                     value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`),
                                           vars[replacement] || baseVars![replacement] || '');
