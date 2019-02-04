@@ -72,7 +72,7 @@ export function parseEnvFile(
     // significant for substitution.
     const vars = {};
     lines.toString().split('\n').forEach((line, idx) => {
-        const match = line.match(/^\s*([a-zA-Z]\w*)\s*=\s*(.*)?\s*$/);
+        const match = line.match(/^\s*([a-zA-Z]\w*)\s*=\s*(.*?)?\s*$/);
         if (!match) {
             return;
         }
@@ -80,7 +80,6 @@ export function parseEnvFile(
         const name = match[1];
         let value = match[2];
         if (value) {
-            value = value.trim();
             if (value[0] === '\'' && value[value.length - 1] === '\'') {
                 value = value.substring(1, value.length - 1);
                 value = value.replace(/\\n/gm, '\n');
