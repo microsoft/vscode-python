@@ -33,7 +33,7 @@ import {
 } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager } from './activation/types';
+import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
 import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
@@ -294,6 +294,7 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
+    serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
 }
 
 // tslint:disable-next-line:no-any

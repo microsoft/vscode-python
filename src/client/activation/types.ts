@@ -88,6 +88,12 @@ export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
     start(resource: Resource): Promise<void>;
 }
+export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
+export interface ILanguageServerExtension extends IDisposable {
+    readonly invoked: Event<void>;
+    loadExtensionArgs?: {};
+    register(): Promise<void>;
+}
 export const ILanguageServer = Symbol('ILanguageServer');
 export interface ILanguageServer extends IDisposable {
     start(resource: Resource, options: LanguageClientOptions): Promise<void>;

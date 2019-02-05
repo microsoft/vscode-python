@@ -11,8 +11,8 @@ import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
-import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../../client/activation/types';
+import { LanguageServerExtension, LanguageServerManager } from '../../../client/activation/languageServer/manager';
+import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerExtension } from '../../../client/activation/types';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
@@ -26,7 +26,7 @@ use(chaiAsPromised);
 
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
-suite('Language Server - Manager', () => {
+suite('xLanguage Server - Manager', () => {
     class LanguageServerManagerTest extends LanguageServerManager {
         public static initializeExtensionArgs(args: {}) {
             LanguageServerManager.loadExtensionArgs = args;
@@ -40,7 +40,9 @@ suite('Language Server - Manager', () => {
     let analysisOptions: ILanguageServerAnalysisOptions;
     let languageServer: ILanguageServer;
     let commandManager: ICommandManager;
-    let onChangeHandler: Function;
+    let lsExtension: ILanguageServerExtension;
+    let onChangeAnalysisHandler: Function;
+    let onChangeLSExtensionHandler: Function;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     let commandRegistrationDisposable: typemoq.IMock<IDisposable>;
     setup(() => {
@@ -48,11 +50,12 @@ suite('Language Server - Manager', () => {
         analysisOptions = mock(LanguageServerAnalysisOptions);
         languageServer = mock(LanguageServer);
         commandManager = mock(CommandManager);
+        lsExtension = mock(LanguageServerExtension);
         commandRegistrationDisposable = typemoq.Mock.ofType<IDisposable>();
         manager = new LanguageServerManagerTest(
             instance(serviceContainer),
-            instance(commandManager),
-            instance(analysisOptions)
+            instance(analysisOptions),
+            instance(lsExtension)
         );
         manager.clearLoadExtensionArgs();
     });
@@ -62,15 +65,21 @@ suite('Language Server - Manager', () => {
             when(commandManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
                 commandRegistrationDisposable.object
             );
+            let invoked = false;
+            const lsExtensionChangeFn = (handler: Function) => {
+                invoked = true;
+                onChangeLSExtensionHandler = handler;
+            };
+            when(lsExtension.invoked).thenReturn(lsExtensionChangeFn as any);
 
-            let handlerRegistered = false;
-            const changeFn = (handler: Function) => {
-                handlerRegistered = true;
-                onChangeHandler = handler;
+            let analysisHandlerRegistered = false;
+            const analysisChangeFn = (handler: Function) => {
+                analysisHandlerRegistered = true;
+                onChangeAnalysisHandler = handler;
             };
             when(analysisOptions.initialize(resource)).thenResolve();
             when(analysisOptions.getAnalysisOptions()).thenResolve(languageClientOptions);
-            when(analysisOptions.onDidChange).thenReturn(changeFn as any);
+            when(analysisOptions.onDidChange).thenReturn(analysisChangeFn as any);
             when(serviceContainer.get<ILanguageServer>(ILanguageServer)).thenReturn(instance(languageServer));
             when(languageServer.start(resource, languageClientOptions)).thenResolve();
 
@@ -80,7 +89,7 @@ suite('Language Server - Manager', () => {
             verify(analysisOptions.getAnalysisOptions()).once();
             verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).once();
             verify(languageServer.start(resource, languageClientOptions)).once();
-            expect(handlerRegistered).to.be.true;
+            expect(analysisHandlerRegistered).to.be.true;
             verify(languageServer.dispose()).never();
             verify(commandManager.registerCommand(loadExtensionCommand, anything())).once();
             commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.never());
@@ -100,7 +109,7 @@ suite('Language Server - Manager', () => {
         test('Changes in analysis options must restart LS', async () => {
             await startLanguageServer();
 
-            await onChangeHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
             await sleep(1);
 
             verify(languageServer.dispose()).once();
@@ -112,15 +121,15 @@ suite('Language Server - Manager', () => {
         test('Changes in analysis options must throttled when restarting LS', async () => {
             await startLanguageServer();
 
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
             await Promise.all([
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager)
             ]);
             await sleep(1);
 
@@ -133,15 +142,15 @@ suite('Language Server - Manager', () => {
         test('Multiple changes in analysis options must restart LS twice', async () => {
             await startLanguageServer();
 
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
             await Promise.all([
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager)
             ]);
             await sleep(1);
 
@@ -151,15 +160,15 @@ suite('Language Server - Manager', () => {
             verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
             verify(languageServer.start(resource, languageClientOptions)).twice();
 
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
-            await onChangeHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
+            await onChangeAnalysisHandler.call(manager);
             await Promise.all([
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager),
-                onChangeHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager),
+                onChangeAnalysisHandler.call(manager)
             ]);
             await sleep(1);
 

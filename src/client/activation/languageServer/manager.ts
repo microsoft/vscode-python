@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { Event, EventEmitter } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import '../../common/extensions';
 import { traceDecorators } from '../../common/logger';
@@ -12,7 +13,7 @@ import { debounce } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerManager } from '../types';
+import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager } from '../types';
 
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
@@ -24,9 +25,9 @@ export class LanguageServerManager implements ILanguageServerManager {
     private disposables: IDisposable[] = [];
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions
-    ) {}
+        @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
+        @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension
+    ) { }
     public dispose() {
         if (this.languageServer) {
             this.languageServer.dispose();
@@ -46,15 +47,11 @@ export class LanguageServerManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
     protected registerCommandHandler() {
-        const disposable = this.commandManager.registerCommand(loadExtensionCommand, args => {
-            LanguageServerManager.loadExtensionArgs = args;
-            this.loadExtensionIfNecessary();
-        });
-        this.disposables.push(disposable);
+        this.lsExtension.invoked(this.loadExtensionIfNecessary, this, this.disposables);
     }
     protected loadExtensionIfNecessary() {
-        if (this.languageServer && LanguageServerManager.loadExtensionArgs) {
-            this.languageServer.loadExtension(LanguageServerManager.loadExtensionArgs);
+        if (this.languageServer && this.lsExtension.loadExtensionArgs) {
+            this.languageServer.loadExtension(this.lsExtension.loadExtensionArgs);
         }
     }
     @debounce(1000)
@@ -76,5 +73,29 @@ export class LanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions!.getAnalysisOptions();
         await this.languageServer.start(this.resource, options);
         this.loadExtensionIfNecessary();
+    }
+}
+
+export class LanguageServerExtension implements ILanguageServerExtension {
+    public loadExtensionArgs?: {};
+    protected readonly changed = new EventEmitter<void>();
+    private disposable?: IDisposable;
+    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) { }
+    public dispose() {
+        if (this.disposable) {
+            this.disposable.dispose();
+        }
+    }
+    public async register(): Promise<void> {
+        if (this.disposable) {
+            return;
+        }
+        this.disposable = this.commandManager.registerCommand(loadExtensionCommand, args => {
+            this.loadExtensionArgs = args;
+            this.changed.fire();
+        });
+    }
+    public get invoked(): Event<void> {
+        return this.changed.event;
     }
 }
