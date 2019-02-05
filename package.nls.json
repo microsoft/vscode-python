@@ -17,6 +17,7 @@
     "python.command.python.runCurrentTestFile.title": "Run Current Unit Test File",
     "python.command.python.runFailedTests.title": "Run Failed Unit Tests",
     "python.command.python.discoverTests.title": "Discover Unit Tests",
+    "python.command.python.configureTests.title": "Configure Unit Tests",
     "python.command.python.execSelectionInTerminal.title": "Run Selection/Line in Python Terminal",
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
     "python.command.python.goToPythonObject.title": "Go to Python Object",

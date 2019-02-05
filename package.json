@@ -84,6 +84,7 @@
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
         "onCommand:python.discoverTests",
+        "onCommand:python.configureTests",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.selectjupyteruri",
@@ -210,6 +211,11 @@
             {
                 "command": "python.discoverTests",
                 "title": "%python.command.python.discoverTests.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.configureTests",
+                "title": "%python.command.python.configureTests.title%",
                 "category": "Python"
             },
             {
