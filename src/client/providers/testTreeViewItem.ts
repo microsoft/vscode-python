@@ -3,7 +3,9 @@
 
 'use strict';
 
-import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+import {
+    TreeItem, TreeItemCollapsibleState
+} from 'vscode';
 import { TestStatus } from '../unittests/common/types';
 
 export enum PythonTestTreeItemType {
@@ -17,19 +19,25 @@ export enum PythonTestTreeItemType {
 export class PythonTestTreeItem extends TreeItem {
 
     constructor(
-        private kind: PythonTestTreeItemType,
+        kind: PythonTestTreeItemType,
         private myParent: PythonTestTreeItem,
         private myChildren: PythonTestTreeItem[],
-        private runId: string,
-        private name: string,
-        private testStatus: TestStatus = TestStatus.Unknown) {
+        runId: string,
+        name: string,
+        testStatus: TestStatus = TestStatus.Unknown) {
 
-        super(`[${kind}] ${name}`, kind === PythonTestTreeItemType.Function ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed);
+        super(
+            `[${kind}] ${name}`,
+            kind === PythonTestTreeItemType.Function ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed
+        );
+
+        this.contextValue = kind;
+        this.id = runId;
+        this.tooltip = `Status: ${testStatus}`;
     }
 
     public get children(): PythonTestTreeItem[] {
         return this.myChildren;
-
     }
 
     public get parent(): PythonTestTreeItem {

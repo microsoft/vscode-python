@@ -110,14 +110,14 @@ export type Tests = {
 };
 
 export enum TestStatus {
-    Unknown,
-    Discovering,
-    Idle,
-    Running,
-    Fail,
-    Error,
-    Skipped,
-    Pass
+    Unknown = 'Unknown',
+    Discovering = 'Discovering',
+    Idle = 'Idle',
+    Running = 'Running',
+    Fail = 'Fail',
+    Error = 'Error',
+    Skipped = 'Skipped',
+    Pass = 'Pass'
 }
 
 export type TestsToRun = {
