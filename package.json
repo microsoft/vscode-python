@@ -528,6 +528,12 @@
                     "category": "Python",
                     "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
                 }
+            ],
+            "view/title": [
+                {
+                    "command": "python.runtests",
+                    "group": "navigation"
+                }
             ]
         },
         "debuggers": [
@@ -1867,7 +1873,15 @@
                 "fileMatch": "meta.yaml",
                 "url": "./schemas/conda-meta.json"
             }
-        ]
+        ],
+        "views": {
+            "test": [
+                {
+                    "id": "python_tests",
+                    "name": "PYTHON"
+                }
+            ]
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package",
