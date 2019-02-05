@@ -9,6 +9,7 @@ import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '..
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { IDocumentManager } from '../../../client/common/application/types';
 
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
