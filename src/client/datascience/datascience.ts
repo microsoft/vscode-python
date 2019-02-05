@@ -86,11 +86,13 @@ export class DataScience implements IDataScience {
         }
     }
 
-    public async runCell(file: string, range: vscode.Range): Promise<void> {
+    // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any
+    // objects for parameters is because they can't be recreated when passing them through the LiveShare API
+    public async runCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         const codeWatcher = this.getCodeWatcher(file);
         if (codeWatcher) {
-            return codeWatcher.runCell(range);
+            return codeWatcher.runCell(new vscode.Range(startLine, startChar, endLine, endChar));
         } else {
             return this.runCurrentCell();
         }

@@ -128,6 +128,7 @@ export namespace DataScience {
     export const liveShareConnectFailure = localize('DataScience.liveShareConnectFailure', 'Cannot connect to host jupyter session. URI not found.');
     export const liveShareCannotSpawnNotebooks = localize('DataScience.liveShareCannotSpawnNotebooks', 'Spawning jupyter notebooks is not supported over a live share connection');
     export const liveShareCannotImportNotebooks = localize('DataScience.liveShareCannotImportNotebooks', 'Importing notebooks is not currently supported over a live share connection');
+    export const liveShareHostFormat = localize('DataScience.liveShareHostFormat', '{0} Jupyter Server');
 }
 
 export namespace DebugConfigurationPrompts {

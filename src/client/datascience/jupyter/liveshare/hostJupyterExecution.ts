@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as os from 'os';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
@@ -14,12 +14,14 @@ import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareJupyterCommands, RegExpValues } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecutionBase';
+import * as localize from '../../../common/utils/localize';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 export class HostJupyterExecution extends JupyterExecutionBase {
 
     private started: Promise<vsls.LiveShare | undefined>;
     private runningServer : INotebookServer | undefined;
+    private serverProxy : Disposable | undefined;
 
     constructor(
         executionFactory: IPythonExecutionFactory,
@@ -57,6 +59,9 @@ export class HostJupyterExecution extends JupyterExecutionBase {
 
     public async dispose() : Promise<void> {
         await super.dispose();
+        if (this.serverProxy) {
+            this.serverProxy.dispose();
+        }
 
         if (this.runningServer) {
             return this.runningServer.dispose();
@@ -76,7 +81,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
                     const connectionInfo = this.runningServer.getConnectionInfo();
                     const portMatch = RegExpValues.ExtractPortRegex.exec(connectionInfo.baseUrl);
                     if (portMatch && portMatch.length > 1) {
-                        api.shareServer({ port: parseInt(portMatch[1], 10), displayName: LiveShare.JupyterHostName.format(os.hostname()) });
+                        api.shareServer({ port: parseInt(portMatch[1], 10), displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()) });
                     }
                 }
             }
@@ -102,46 +107,41 @@ export class HostJupyterExecution extends JupyterExecutionBase {
 
         return api;
     }
-    onRemoteIsNotebookSupported(args: any[], cancellation: CancellationToken): Promise<any> {
+    onRemoteIsNotebookSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
     }
 
-    onRemoteIsImportSupported(args: any[], cancellation: CancellationToken): Promise<any> {
+    onRemoteIsImportSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
     }
 
-    onRemoteIsKernelCreateSupported(args: any[], cancellation: CancellationToken): Promise<any> {
+    onRemoteIsKernelCreateSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelCreateSupported(cancellation);
     }
-    onRemoteIsKernelSpecSupported(args: any[], cancellation: CancellationToken): Promise<any> {
+    onRemoteIsKernelSpecSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelSpecSupported(cancellation);
     }
 
-    async onRemoteConnectToNotebookServer(args: any[], cancellation: CancellationToken): Promise<IConnection> {
-        // Connect to the local server. THe local server should have started the port forwarding
+    onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection> => {
+        // Connect to the local server. THe local server should have started the port forwarding already
         const localServer = await this.connectToNotebookServer(undefined, args[0], args[1], cancellation, args[2]);
 
         // Extract the URI and token for the other side
         if (localServer) {
+            // The other side should be using 'localhost' for anything it's port forwarding. That should just remap
+            // on the guest side. However we need to eliminate the dispose method. Methods are not serializable
             const connectionInfo = localServer.getConnectionInfo();
-
-            // If local, then we change the uri to be the port forwarded one
-            if (connectionInfo.localLaunch) {
-                const newBase = connectionInfo.baseUrl.replace(RegExpValues.ConvertToRemoteUri, `$1${LiveShare.JupyterHostName.format(os.hostname())}$3`);
-                return { baseUrl : newBase, token: connectionInfo.token, localLaunch: false, dispose: () => {} };
-            } else {
-                return connectionInfo;
-            }
+            return { baseUrl: connectionInfo.baseUrl, token: connectionInfo.token, localLaunch: false, dispose: () => {} };
         }
 
         return { baseUrl : undefined, token: undefined, localLaunch: false, dispose: () => {} };
     }
 
-    onRemoteGetUsableJupyterPython(args: any[], cancellation: CancellationToken): Promise<any> {
+    onRemoteGetUsableJupyterPython = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.getUsableJupyterPython(cancellation);
     }

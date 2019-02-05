@@ -87,7 +87,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
-                const uri = `${connection.baseUrl}\\token?=${connection.token}`;
+                const uri = `${connection.baseUrl}?token=${connection.token}`;
                 this.runningServer = await super.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken);
             } else {
                 throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
@@ -106,7 +106,8 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
     }
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter> {
         const proxy = await this.serviceProxy;
-        return proxy.request(LiveShareJupyterCommands.getUsableJupyterPython, [], cancelToken);
+        const result = await proxy.request(LiveShareJupyterCommands.getUsableJupyterPython, [], cancelToken);
+        return result;
     }
 
     private async startSharedProxy() : Promise<vsls.SharedServiceProxy | undefined> {

@@ -7,9 +7,10 @@ import * as vsls from 'vsls/vscode';
 import { LiveShare } from '../constants';
 import { IDisposable } from '../../common/types';
 import { escapeCommandName, unescapeCommandName } from './util';
+import { JSONArray } from '@phosphor/coreutils';
 
 interface IMessageArgs {
-    args: any[];
+    args: string;
 }
 
 // This class is used to register two communication between a host and all of its guests
@@ -106,12 +107,23 @@ export class PostOffice implements IDisposable {
                 }
             }
         }
-        return { args };
+
+        // Make sure to eliminate all .toJSON functions on our arguments. Otherwise they're stringified incorrectly
+        for (let a = 0; a <= args.length; a += 1) {
+            // Eliminate this on only object types (https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript)
+            if (args[a] === Object(args[a])) {
+                args[a].toJSON = undefined;
+            }
+        }
+
+        // Then wrap them all up in a string.
+        return { args: JSON.stringify(args) };
     }
 
-    private onGuestNotify = (command: string, args: IMessageArgs) => {
+    private onGuestNotify = (command: string, m: IMessageArgs) => {
         const unescaped = unescapeCommandName(command);
-        this.callCallback(unescaped, ...args.args);
+        const args = JSON.parse(m.args) as JSONArray;
+        this.callCallback(unescaped, ...args);
     }
 
     private callCallback(command: string, ...args: any[]) {

@@ -117,7 +117,7 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-    private onServerResponse(args: Object) {
+    private onServerResponse = (args: Object) => {
         // Args should be of type ServerResponse. Stick in our queue if so.
         if (args.hasOwnProperty('type')) {
             this.responseQueue.push(args as ServerResponse);

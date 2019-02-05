@@ -134,7 +134,6 @@ export namespace LiveShare {
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
-    export const JupyterHostName = '{0}_jupyter';
 }
 
 export namespace LiveShareJupyterCommands {

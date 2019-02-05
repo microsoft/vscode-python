@@ -8,6 +8,7 @@ import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '..
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { IDocumentManager } from '../../../client/common/application/types';
 
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -15,12 +16,14 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let codeLensProvider: IDataScienceCodeLensProvider;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let documentManager: TypeMoq.IMock<IDocumentManager>;
     let tokenSource : CancellationTokenSource;
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
@@ -28,7 +31,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
-        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, configurationService.object);
+        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configurationService.object);
     });
 
     test('Initialize Code Lenses one document', () => {

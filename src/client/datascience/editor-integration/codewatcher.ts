@@ -45,7 +45,7 @@ export class CodeWatcher implements ICodeWatcher {
             const cmd: Command = {
 	            // Be careful here. These arguments will be serialized during liveshare sessions
 		        // and so shouldn't reference local objects.
-                arguments: [this.document.fileName, cell.range],
+                arguments: [this.document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
@@ -128,6 +128,7 @@ export class CodeWatcher implements ICodeWatcher {
     public async runCell(range: Range) {
         const activeHistory = this.historyProvider.getOrCreateActive();
         if (this.document) {
+            // Use that to get our code.
             const code = this.document.getText(range);
 
             try {
