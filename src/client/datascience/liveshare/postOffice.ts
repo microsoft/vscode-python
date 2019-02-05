@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
+import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { LiveShare } from '../constants';
 import { IDisposable } from '../../common/types';
+import { escapeCommandName, unescapeCommandName } from './util';
 
 interface IMessageArgs {
     args: any[];
@@ -53,7 +55,7 @@ export class PostOffice implements IDisposable {
                     break;
                 case vsls.Role.Host:
                     // Notify everybody and call our local callback (by falling through)
-                    this.hostServer.notify(command, {args});
+                    this.hostServer.notify(escapeCommandName(command), this.translateArgs(api, command, ...args));
                     break;
                 default:
                     break;
@@ -71,12 +73,45 @@ export class PostOffice implements IDisposable {
 
         // For a guest, make sure to register the notification
         if (api && api.session && api.session.role === vsls.Role.Guest) {
-            this.guestServer.onNotify(command, (a : IMessageArgs) => this.callCallback(command, ...a.args));
+            this.guestServer.onNotify(escapeCommandName(command), (a : IMessageArgs) => this.onGuestNotify(command, a));
         }
 
         // Always stick in the command map so that if we switch roles, we reregister
         this.commandMap[command] = { callback, thisArg };
 
+    }
+
+    private translateArgs(api: vsls.LiveShare, command: string, ...args: any[]) : IMessageArgs {
+        // Some file path args need to have their values translated to guest
+        // uri format for use on a guest. Try to find any file arguments
+        const callback = this.commandMap.hasOwnProperty(command) ? this.commandMap[command].callback : undefined;
+        if (callback) {
+            const str = callback.toString();
+
+            // Early check
+            if (str.includes('file')) {
+                const callbackArgs = str.match(/\S+\((.*)\)\s*{/);
+                if (callbackArgs && callbackArgs.length > 1) {
+                    const argNames = callbackArgs[1].match(/([^\s,]+)/g);
+                    if (argNames && argNames.length > 0) {
+                        for (let i = 0; i < args.length; i += 1) {
+                            if (argNames[i].includes('file')) {
+                                const file = args[i];
+                                if (typeof file === 'string') {
+                                    args[i] = api.convertLocalUriToShared(vscode.Uri.file(file)).fsPath;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return { args };
+    }
+
+    private onGuestNotify = (command: string, args: IMessageArgs) => {
+        const unescaped = unescapeCommandName(command);
+        this.callCallback(unescaped, ...args.args);
     }
 
     private callCallback(command: string, ...args: any[]) {
@@ -150,7 +185,7 @@ export class PostOffice implements IDisposable {
         if (api && api.session && api.session.role === vsls.Role.Guest) {
             const keys = Object.keys(this.commandMap);
             keys.forEach(k => {
-                this.guestServer.onNotify(k, (a : IMessageArgs) => this.callCallback(k, ...a.args));
+                this.guestServer.onNotify(escapeCommandName(k), (a : IMessageArgs) => this.onGuestNotify(k, a));
             })
         }
     }

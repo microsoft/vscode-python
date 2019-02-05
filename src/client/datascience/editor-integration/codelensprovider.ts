@@ -8,11 +8,13 @@ import * as vscode from 'vscode';
 import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
+import { IDocumentManager } from '../../common/application/types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider {
     private activeCodeWatchers: ICodeWatcher[] = [];
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+                @inject(IDocumentManager) private documentManager: IDocumentManager,
                 @inject(IConfigurationService) private configuration: IConfigurationService)
     {
     }
@@ -66,6 +68,16 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             // If we have an old version remove it from the active list
             this.activeCodeWatchers.splice(index, 1);
         }
+
+        // Create a new watcher for this file if we can find a matching document
+        const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === fileName);
+        if (possibleDocuments && possibleDocuments.length > 0) {
+            const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
+            newCodeWatcher.setDocument(possibleDocuments[0]);
+            this.activeCodeWatchers.push(newCodeWatcher);
+            return newCodeWatcher;
+        }
+        
         return undefined;
     }
 }
