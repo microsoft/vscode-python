@@ -30,15 +30,15 @@ suite('Unit Tests - ConfigurationService', () => {
             let appShell: typeMoq.IMock<IApplicationShell>;
             let unitTestSettings: typeMoq.IMock<IUnitTestSettings>;
             setup(() => {
-                const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-                const configurationService = typeMoq.Mock.ofType<IConfigurationService>();
-                appShell = typeMoq.Mock.ofType<IApplicationShell>();
-                const outputChannel = typeMoq.Mock.ofType<OutputChannel>();
-                const installer = typeMoq.Mock.ofType<IInstaller>();
-                workspaceService = typeMoq.Mock.ofType<IWorkspaceService>();
-                factory = typeMoq.Mock.ofType<ITestConfigurationManagerFactory>();
+                const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>(undefined, typeMoq.MockBehavior.Strict);
+                const configurationService = typeMoq.Mock.ofType<IConfigurationService>(undefined, typeMoq.MockBehavior.Strict);
+                appShell = typeMoq.Mock.ofType<IApplicationShell>(undefined, typeMoq.MockBehavior.Strict);
+                const outputChannel = typeMoq.Mock.ofType<OutputChannel>(undefined, typeMoq.MockBehavior.Strict);
+                const installer = typeMoq.Mock.ofType<IInstaller>(undefined, typeMoq.MockBehavior.Strict);
+                workspaceService = typeMoq.Mock.ofType<IWorkspaceService>(undefined, typeMoq.MockBehavior.Strict);
+                factory = typeMoq.Mock.ofType<ITestConfigurationManagerFactory>(undefined, typeMoq.MockBehavior.Strict);
                 unitTestSettings = typeMoq.Mock.ofType<IUnitTestSettings>();
-                const pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
+                const pythonSettings = typeMoq.Mock.ofType<IPythonSettings>(undefined, typeMoq.MockBehavior.Strict);
 
                 pythonSettings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
                 configurationService.setup(c => c.getSettings(workspaceUri)).returns(() => pythonSettings.object);
@@ -52,7 +52,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 testConfigService = typeMoq.Mock.ofType(UnitTestConfigurationService, typeMoq.MockBehavior.Loose, true, serviceContainer.object);
             });
             test('Enable Test when setting unitTest.promptToConfigure is enabled', async () => {
-                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
                 configMgr.setup(c => c.enable())
                     .returns(() => Promise.resolve())
                     .verifiable(typeMoq.Times.once());
@@ -61,7 +61,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
 
-                const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>();
+                const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, typeMoq.MockBehavior.Strict);
                 workspaceService.setup(w => w.getConfiguration(typeMoq.It.isValue('python'), workspaceUri))
                     .returns(() => workspaceConfig.object)
                     .verifiable(typeMoq.Times.once());
@@ -78,7 +78,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 workspaceConfig.verifyAll();
             });
             test('Enable Test when setting unitTest.promptToConfigure is disabled', async () => {
-                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
                 configMgr.setup(c => c.enable())
                     .returns(() => Promise.resolve())
                     .verifiable(typeMoq.Times.once());
@@ -87,7 +87,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
 
-                const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>();
+                const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, typeMoq.MockBehavior.Strict);
                 workspaceService.setup(w => w.getConfiguration(typeMoq.It.isValue('python'), workspaceUri))
                     .returns(() => workspaceConfig.object)
                     .verifiable(typeMoq.Times.once());
@@ -108,7 +108,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 workspaceConfig.verifyAll();
             });
             test('Enable Test when setting unitTest.promptToConfigure is disabled and fail to update the settings', async () => {
-                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
                 configMgr.setup(c => c.enable())
                     .returns(() => Promise.resolve())
                     .verifiable(typeMoq.Times.once());
@@ -117,7 +117,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
 
-                const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>();
+                const workspaceConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, typeMoq.MockBehavior.Strict);
                 workspaceService.setup(w => w.getConfiguration(typeMoq.It.isValue('python'), workspaceUri))
                     .returns(() => workspaceConfig.object)
                     .verifiable(typeMoq.Times.once());
@@ -247,7 +247,7 @@ suite('Unit Tests - ConfigurationService', () => {
                         return Promise.resolve();
                     });
 
-                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
                 factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
@@ -272,6 +272,9 @@ suite('Unit Tests - ConfigurationService', () => {
                 appShell.setup(s => s.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(typeMoq.Times.never());
+                appShell.setup(s => s.showQuickPick(typeMoq.It.isAny(), typeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(typeMoq.Times.once());
 
                 let exceptionThrown = false;
                 try {
@@ -310,7 +313,7 @@ suite('Unit Tests - ConfigurationService', () => {
                         return Promise.resolve();
                     });
 
-                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
                 factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
@@ -318,12 +321,15 @@ suite('Unit Tests - ConfigurationService', () => {
                 configMgr.setup(c => c.configure(typeMoq.It.isValue(workspaceUri)))
                     .returns(() => Promise.resolve())
                     .verifiable(typeMoq.Times.never());
+                configMgr.setup(c => c.enable())
+                    .returns(() => Promise.resolve())
+                    .verifiable(typeMoq.Times.once());
                 const configManagersToVerify: typeof configMgr[] = [configMgr];
 
                 [Product.unittest, Product.pytest, Product.nosetest]
                     .filter(prod => product !== prod)
                     .forEach(prod => {
-                        const otherTestConfigMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                        const otherTestConfigMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
                         factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(prod)))
                             .returns(() => otherTestConfigMgr.object)
                             .verifiable(typeMoq.Times.once());
