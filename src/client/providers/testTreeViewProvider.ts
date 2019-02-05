@@ -8,9 +8,6 @@ import {
     ProviderResult, TreeDataProvider
 } from 'vscode';
 import {
-    TestStatus
-} from '../unittests/common/types';
-import {
     PythonTestTreeItem,
     PythonTestTreeItemType
 } from './testTreeViewItem';
