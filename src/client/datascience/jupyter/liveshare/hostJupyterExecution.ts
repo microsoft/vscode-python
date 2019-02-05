@@ -11,7 +11,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { LiveShare, LiveShareJupyterCommands, RegExpValues } from '../../constants';
+import { LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecutionBase';
 import * as localize from '../../../common/utils/localize';
@@ -97,12 +97,12 @@ export class HostJupyterExecution extends JupyterExecutionBase {
             const service = await api.shareService(LiveShare.JupyterExecutionService);
 
             // Register handlers for all of the supported remote calls
-            service.onRequest(LiveShareJupyterCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
-            service.onRequest(LiveShareJupyterCommands.isImportSupported, this.onRemoteIsImportSupported);
-            service.onRequest(LiveShareJupyterCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
-            service.onRequest(LiveShareJupyterCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
-            service.onRequest(LiveShareJupyterCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
-            service.onRequest(LiveShareJupyterCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+            service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
+            service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
+            service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
+            service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
+            service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
+            service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
         }
 
         return api;

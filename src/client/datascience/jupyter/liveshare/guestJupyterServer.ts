@@ -8,22 +8,23 @@ import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { LiveShare, LiveShareJupyterCommands } from '../../constants';
+import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
     IConnection,
     IJupyterKernelSpec,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
+    IDataScience
 } from '../../types';
 import {
     ExecuteObservableResponse,
-    ExecuteResponse,
     InterruptResponse,
     ServerResponse,
     ServerResponseType
-} from './serverResponse';
+} from './types';
+import { CancellationError } from '../../../common/cancellation';
 
 export class GuestJupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
@@ -31,6 +32,7 @@ export class GuestJupyterServer implements INotebookServer {
     private waitingQueue : { deferred: Deferred<ServerResponse>; predicate : (r: ServerResponse) => boolean }[] = [];
 
     constructor(
+        private dataScience: IDataScience,
         private logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
@@ -57,9 +59,30 @@ export class GuestJupyterServer implements INotebookServer {
     }
 
     public async execute(code: string, file: string, line: number, cancelToken?: CancellationToken): Promise<ICell[]> {
-        // Wait for the response from the server
-        const response = await this.waitForExecuteResponse<ExecuteResponse>(code, file, line);
-        return response.cells;
+        // Create a deferred that we'll fire when we're done
+        const deferred = createDeferred<ICell[]>();
+
+        // Attempt to evaluate this cell in the jupyter notebook
+        const observable = this.executeObservable(code, file, line);
+        let output: ICell[];
+
+        observable.subscribe(
+            (cells: ICell[]) => {
+                output = cells;
+            },
+            (error) => {
+                deferred.reject(error);
+            },
+            () => {
+                deferred.resolve(output);
+            });
+
+        if (cancelToken) {
+            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+        }
+
+        // Wait for the execution to finish
+        return deferred.promise;
     }
 
     public setInitialDirectory(directory: string): Promise<void> {
@@ -71,7 +94,7 @@ export class GuestJupyterServer implements INotebookServer {
         // Create a wrapper observable around the actual server
         return new Observable<ICell[]>(subscriber => {
             // Wait for our first response
-            this.waitForExecuteResponse<ExecuteObservableResponse>(code, file, line, id)
+            this.waitForExecuteResponse(code, file, line, Date.now(), id)
                 .then(r => {
                     // This is our first response to the subscriber, but then keep listening
                     subscriber.next(r.cells);
@@ -86,12 +109,8 @@ export class GuestJupyterServer implements INotebookServer {
     }
 
     public async executeSilently(code: string, cancelToken?: CancellationToken): Promise<void> {
-        await this.waitForSpecificResponse(r => {
-            if (r.type === ServerResponseType.Execute) {
-                const er = r as ExecuteResponse;
-                return (er.cells.length > 0 && er.cells[0].data.source === code);
-            }
-        });
+        // We don't need the result from this. It should have already happened on the host side
+        return Promise.resolve();
     }
 
     public async restartKernel(): Promise<void> {
@@ -113,7 +132,10 @@ export class GuestJupyterServer implements INotebookServer {
 
         if (api) {
             const service = await api.getSharedService(LiveShare.JupyterServerSharedService);
-            service.onNotify(LiveShareJupyterCommands.serverResponse, this.onServerResponse);
+            service.onNotify(LiveShareCommands.serverResponse, this.onServerResponse);
+
+            // Request all of the responses since this guest was started. We likely missed a bunch
+            service.notify(LiveShareCommands.catchupRequest, { since: this.dataScience.activationStartTime });
         }
     }
 
@@ -143,18 +165,20 @@ export class GuestJupyterServer implements INotebookServer {
         subscriber.complete();
     }
 
-    private async waitForExecuteResponse<T extends ServerResponse>(code: string, file: string, line: number, id?: string) : Promise<T> {
+    private async waitForExecuteResponse(code: string, file: string, line: number, time: number, id?: string) : Promise<ExecuteObservableResponse> {
         const response = await this.waitForSpecificResponse(r => {
-            if (r.type === ServerResponseType.Execute) {
-                const er = r as ExecuteResponse;
-                return (er.cells.length > 0 &&
+            if (r.type === ServerResponseType.ExecuteObservable) {
+                const er = r as ExecuteObservableResponse;
+                return this.isAllowed(er, time) &&
+                    er.cells &&
+                    er.cells.length > 0 &&
                     er.cells[0].file === file &&
                     er.cells[0].line === line &&
-                    er.cells[0].data.source === code &&
-                    (!id || id === er.cells[0].id));
+                    er.code === code &&
+                    (!id || id === er.cells[0].id);
             }
         });
-        return response as T;
+        return response as ExecuteObservableResponse;
     }
 
     private waitForSpecificResponse<T extends ServerResponse>(predicate: (response: ServerResponse) => boolean) : Promise<T> {
@@ -165,7 +189,7 @@ export class GuestJupyterServer implements INotebookServer {
             const match = this.responseQueue[index];
 
             // Remove from the response queue
-            this.responseQueue = this.responseQueue.splice(index);
+            this.responseQueue = this.responseQueue.splice(index, 1);
 
             // Return this single item
             return Promise.resolve(match as T);
@@ -194,5 +218,11 @@ export class GuestJupyterServer implements INotebookServer {
                 i -= 1; // Offset the addition as we removed this item
             }
         }
+    }
+
+    private isAllowed(response: ServerResponse, time: number) : boolean {
+        const debug = /--debug|--inspect/.test(process.execArgv.join(' '));
+        const range = debug ? LiveShare.ResponseRange * 30 : LiveShare.ResponseRange;
+        return Math.abs(response.time - time) < range;
     }
 }

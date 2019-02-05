@@ -35,7 +35,8 @@ import {
     IJupyterSession,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
+    IDataScience
 } from '../types';
 import { JupyterServerBase } from './jupyterServerBase';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
@@ -51,6 +52,7 @@ export class JupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
 
     constructor(
+        @inject(IDataScience) private dataScience: IDataScience,
         @inject(ILogger) private logger: ILogger,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
@@ -60,6 +62,7 @@ export class JupyterServer implements INotebookServer {
             JupyterServerBase,
             HostJupyterServer,
             GuestJupyterServer,
+            dataScience,
             logger,
             disposableRegistry,
             asyncRegistry,

@@ -8,7 +8,7 @@ import * as vsls from 'vsls/vscode';
 import { IAsyncDisposable, IAsyncDisposableRegistry, ILogger, IDisposableRegistry, IConfigurationService } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { PythonInterpreter, IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
-import { LiveShare, LiveShareJupyterCommands } from '../../constants';
+import { LiveShare, LiveShareCommands } from '../../constants';
 import { IConnection, IJupyterExecution, INotebookServer, IJupyterSessionManager, IJupyterCommandFactory } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { IPythonExecutionFactory, IProcessServiceFactory } from '../../../common/process/types';
@@ -66,16 +66,16 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareJupyterCommands.isNotebookSupported, cancelToken);
+        return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
     }
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareJupyterCommands.isImportSupported, cancelToken);
+        return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
     }
     public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareJupyterCommands.isKernelCreateSupported, cancelToken);
+        return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
     }
     public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareJupyterCommands.isKernelSpecSupported, cancelToken);
+        return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
     }
     public async connectToNotebookServer(uri: string, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer> {
         // We only have a single server at a time. This object should go away when the server goes away
@@ -83,7 +83,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
 
             // Create the server on the remote machine. It should return an IConnection we can use to build a remote uri
             const proxy = await this.serviceProxy;
-            const connection : IConnection = await proxy.request(LiveShareJupyterCommands.connectToNotebookServer, [usingDarkTheme, useDefaultConfig, workingDir], cancelToken);
+            const connection : IConnection = await proxy.request(LiveShareCommands.connectToNotebookServer, [usingDarkTheme, useDefaultConfig, workingDir], cancelToken);
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
@@ -106,7 +106,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
     }
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter> {
         const proxy = await this.serviceProxy;
-        const result = await proxy.request(LiveShareJupyterCommands.getUsableJupyterPython, [], cancelToken);
+        const result = await proxy.request(LiveShareCommands.getUsableJupyterPython, [], cancelToken);
         return result;
     }
 

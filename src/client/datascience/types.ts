@@ -15,6 +15,7 @@ import { PythonInterpreter } from '../interpreter/contracts';
 // Main interface
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience extends Disposable {
+    activationStartTime: number;
     activate(): Promise<void>;
 }
 

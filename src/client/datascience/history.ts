@@ -705,11 +705,11 @@ export class History implements IHistory {
         if (this.jupyterServer) {
             const message = await this.generateSysInfoMessage(reason);
             // tslint:disable-next-line:no-multiline-string
-            const versionCells = await this.jupyterServer.execute(`import sys\r\nsys.version`, 'foo.py', 0);
+            const versionCells = await this.jupyterServer.execute(`import sys\r\nsys.version`, Identifiers.EmptyFileName, 0);
             // tslint:disable-next-line:no-multiline-string
-            const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, 'foo.py', 0);
+            const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, Identifiers.EmptyFileName, 0);
             // tslint:disable-next-line:no-multiline-string
-            const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, 'foo.py', 0);
+            const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, Identifiers.EmptyFileName, 0);
 
             // Both should have streamed output
             const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';

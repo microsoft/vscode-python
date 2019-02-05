@@ -134,9 +134,11 @@ export namespace LiveShare {
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
+    export const ResponseLifetime = 15000;
+    export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
 }
 
-export namespace LiveShareJupyterCommands {
+export namespace LiveShareCommands {
     export const isNotebookSupported = 'isNotebookSupported';
     export const isImportSupported = 'isImportSupported';
     export const isKernelCreateSupported = 'isKernelCreateSupported';
@@ -144,4 +146,5 @@ export namespace LiveShareJupyterCommands {
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
     export const serverResponse = 'serverResponse';
+    export const catchupRequest = 'catchupRequest';
 }

@@ -8,21 +8,24 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
-import { LiveShare, LiveShareJupyterCommands } from '../../constants';
-import { ICell, IJupyterSessionManager, InterruptResult } from '../../types';
+import { LiveShare, LiveShareCommands } from '../../constants';
+import { ICell, IJupyterSessionManager, InterruptResult, IDataScience } from '../../types';
 import { JupyterServerBase } from '../jupyterServerBase';
-import { ServerResponse, ServerResponseType } from './serverResponse';
+import { ServerResponse, ServerResponseType, IResponseMapping } from './types';
+import { ICatchupRequest } from './types';
 
 export class HostJupyterServer extends JupyterServerBase {
     private service: Promise<vsls.SharedService | undefined>;
+    private responseBacklog : { responseTime: number, response: ServerResponse }[] = [];
 
     constructor(
+        dataScience: IDataScience,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManager) {
-        super(logger, disposableRegistry, asyncRegistry, configService, sessionManager);
+        super(dataScience, logger, disposableRegistry, asyncRegistry, configService, sessionManager);
         this.service = this.startSharedService();
     }
 
@@ -32,33 +35,21 @@ export class HostJupyterServer extends JupyterServerBase {
         api.unshareService(LiveShare.JupyterServerSharedService);
     }
 
-    public async execute(code: string, file: string, line: number, cancelToken?: CancellationToken): Promise<ICell[]> {
-        try {
-            const result = await super.execute(code, file, line, cancelToken);
-
-            // Send the result to the guest side too
-            await this.postResult({ type: ServerResponseType.Execute, cells: result });
-            return result;
-        } catch(exc) {
-            await this.postResult({type: ServerResponseType.Exception, message: exc.toString()});
-            throw exc;
-        }
-    }
-
     public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
         try {
             const result = super.executeObservable(code, file, line, id);
 
             // Generate a new id or use the one passed in to identify everything that happened
             const newId = id ? id : uuid();
+            const time = Date.now();
 
             // Generate a series of responses for each result
-            result.forEach(n => this.postResult({ type: ServerResponseType.ExecuteObservable, id: newId, cells: n }))
-                .then(v => this.postResult({ type: ServerResponseType.ExecuteObservable, id: newId, cells: undefined }));
+            result.forEach(n => this.postResult(ServerResponseType.ExecuteObservable, { type: ServerResponseType.ExecuteObservable, code, time, id: newId, cells: n }))
+                .then(v => this.postResult(ServerResponseType.ExecuteObservable, { type: ServerResponseType.ExecuteObservable, code, time, id: newId, cells: undefined }));
 
             return result;
         } catch (exc) {
-            this.postResult({type: ServerResponseType.Exception, message: exc.toString()});
+            this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
             throw exc;
         }
 
@@ -66,21 +57,23 @@ export class HostJupyterServer extends JupyterServerBase {
 
     public async restartKernel(): Promise<void> {
         try {
+            const time = Date.now();
             await super.restartKernel();
-            this.postResult({type: ServerResponseType.Restart});
+            this.postResult(ServerResponseType.Restart, {type: ServerResponseType.Restart, time});
         } catch (exc) {
-            this.postResult({type: ServerResponseType.Exception, message: exc.toString()});
+            this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
             throw exc;
         }
     }
 
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
         try {
+            const time = Date.now();
             const result = await super.interruptKernel(timeoutMs);
-            this.postResult({type: ServerResponseType.Interrupt, result});
+            this.postResult(ServerResponseType.Interrupt, {type: ServerResponseType.Interrupt, time, result});
             return result;
         } catch (exc) {
-            this.postResult({type: ServerResponseType.Exception, message: exc.toString()});
+            this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
             throw exc;
         }
     }
@@ -89,14 +82,37 @@ export class HostJupyterServer extends JupyterServerBase {
         const api = await vsls.getApiAsync();
 
         if (api) {
-            return api.shareService(LiveShare.JupyterServerSharedService);
+            const service = await api.shareService(LiveShare.JupyterServerSharedService);
+
+            // Listen to the request for responses
+            service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(service, args));
+
+            return service;
         }
     }
 
-    private async postResult<T extends ServerResponse>(result: T) : Promise<void> {
-        const service = await this.service;
-        service.notify(LiveShareJupyterCommands.serverResponse, result);
+    private onCatchupRequest(service: vsls.SharedService, args: object) {
+        if (args.hasOwnProperty('since')) {
+            const request = args as ICatchupRequest;
+
+            // Send results for all of the responses that are after the start time
+            this.responseBacklog.forEach(r => {
+                if (r.responseTime >= request.since) {
+                    service.notify(LiveShareCommands.serverResponse, r.response);
+
+                    // Keep them in the response backlog as another guest may need them too
+                }
+            });
+        }
+
     }
 
+    private async postResult<R extends IResponseMapping, T extends keyof R>(type: T, result: R[T]) : Promise<void> {
+        const service = await this.service;
+        const typedResult = ((result as any) as ServerResponse);
+        service.notify(LiveShareCommands.serverResponse, typedResult);
 
+        // Need to also save in memory for those guests that are in the middle of starting up
+        this.responseBacklog.push({ responseTime: Date.now(), response: typedResult });
+    }
 }

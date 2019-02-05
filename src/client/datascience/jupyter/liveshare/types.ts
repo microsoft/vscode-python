@@ -6,39 +6,48 @@ import { ICell, InterruptResult } from '../../types';
 
 
 export enum ServerResponseType {
-    Execute,
     ExecuteObservable,
     Interrupt,
     Restart,
     Exception
 }
 
-export interface ServerResponse {
+export class ServerResponse {
     type: ServerResponseType;
+    time: number;
 }
 
 
-export class ExecuteResponse implements ServerResponse {
-    type: ServerResponseType = ServerResponseType.Execute;
-    cells: ICell[] ;
-}
-
-export class ExecuteObservableResponse implements ServerResponse {
+export class ExecuteObservableResponse extends ServerResponse {
     type: ServerResponseType = ServerResponseType.ExecuteObservable;
+    code: string;
     id: string; // Unique id so guest side can tell what observable it belongs with
     cells: ICell[];
 }
 
-export class InterruptResponse implements ServerResponse {
+export class InterruptResponse extends ServerResponse {
     type: ServerResponseType = ServerResponseType.Interrupt;
     result: InterruptResult;
 }
 
-export class RestartResponse implements ServerResponse {
+export class RestartResponse extends ServerResponse {
     type: ServerResponseType = ServerResponseType.Restart;
 }
 
-export class ExceptionResponse implements ServerResponse {
+export class ExceptionResponse extends ServerResponse {
     type: ServerResponseType = ServerResponseType.Exception;
     message: string;
 }
+
+// Map all responses to their properties
+export interface IResponseMapping {
+    [ServerResponseType.ExecuteObservable]: ExecuteObservableResponse;
+    [ServerResponseType.Interrupt]: InterruptResponse;
+    [ServerResponseType.Restart]: RestartResponse;
+    [ServerResponseType.Exception]: ExceptionResponse;
+}
+
+export interface ICatchupRequest {
+    since: number;
+}
+

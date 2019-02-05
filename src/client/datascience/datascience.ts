@@ -32,7 +32,7 @@ export class DataScience implements IDataScience {
     private readonly commandListeners: IDataScienceCommandListener[];
     private readonly dataScienceSurveyBanner: IPythonExtensionBanner;
     private changeHandler: IDisposable | undefined;
-    private liveShareApi : vsls.LiveShare | undefined;
+    private startTime: number = Date.now();
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ICommandBroker) private commandBroker: ICommandBroker,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -43,7 +43,10 @@ export class DataScience implements IDataScience {
         @inject(IApplicationShell) private appShell: IApplicationShell) {
         this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
-        vsls.getApi().then(a => this.liveShareApi = a);
+    }
+
+    public get activationStartTime() : number {
+        return this.startTime;
     }
 
     public async activate(): Promise<void> {
