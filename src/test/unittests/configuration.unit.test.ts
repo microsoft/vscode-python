@@ -183,7 +183,10 @@ suite('Unit Tests - ConfigurationService', () => {
                 let exceptionThrown = false;
                 try {
                     await testConfigService.target.displayTestFrameworkError(workspaceUri);
-                } catch {
+                } catch (exc) {
+                    if (exc !== null) {
+                        throw exc;
+                    }
                     exceptionThrown = true;
                 }
 
@@ -209,7 +212,10 @@ suite('Unit Tests - ConfigurationService', () => {
                             return Promise.resolve(undefined);
                         });
                     await testConfigService.target.displayTestFrameworkError(workspaceUri);
-                } catch {
+                } catch (exc) {
+                    if (exc !== null) {
+                        throw exc;
+                    }
                     exceptionThrown = true;
                 }
 
@@ -270,7 +276,10 @@ suite('Unit Tests - ConfigurationService', () => {
                 let exceptionThrown = false;
                 try {
                     await testConfigService.target.displayTestFrameworkError(workspaceUri);
-                } catch {
+                } catch (exc) {
+                    if (exc !== null) {
+                        throw exc;
+                    }
                     exceptionThrown = true;
                 }
 
