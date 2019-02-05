@@ -49,6 +49,7 @@ export interface INotebookServer extends IAsyncDisposable {
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
     getConnectionInfo(): IConnection | undefined;
+    getSysInfo() : Promise<ICell | undefined>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');

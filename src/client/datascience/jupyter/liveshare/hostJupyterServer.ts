@@ -86,9 +86,15 @@ export class HostJupyterServer extends JupyterServerBase {
 
             // Listen to the request for responses
             service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(service, args));
+            service.onRequest(LiveShareCommands.getSysInfo, (args: any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(service, cancellation))
 
             return service;
         }
+    }
+
+    private onGetSysInfoRequest(service: vsls.SharedService, cancellation: CancellationToken) : Promise<any> {
+        // Get the sys info from our local server
+        return super.getSysInfo();
     }
 
     private onCatchupRequest(service: vsls.SharedService, args: object) {

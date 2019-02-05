@@ -25,11 +25,13 @@ import {
     ServerResponseType
 } from './types';
 import { CancellationError } from '../../../common/cancellation';
+import { services } from 'azure-storage';
 
 export class GuestJupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
     private responseQueue : ServerResponse [] = [];
     private waitingQueue : { deferred: Deferred<ServerResponse>; predicate : (r: ServerResponse) => boolean }[] = [];
+    private sharedService: Promise<vsls.SharedServiceProxy | undefined>;
 
     constructor(
         private dataScience: IDataScience,
@@ -38,7 +40,7 @@ export class GuestJupyterServer implements INotebookServer {
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
         private sessionManager: IJupyterSessionManager) {
-        this.startSharedServiceProxy().ignoreErrors();
+        this.sharedService = this.startSharedServiceProxy();
     }
 
     public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
@@ -127,7 +129,17 @@ export class GuestJupyterServer implements INotebookServer {
         return this.connInfo;
     }
 
-    private async startSharedServiceProxy() : Promise<void> {
+    public async getSysInfo() : Promise<ICell | undefined> {
+        // This is a special case. Ask the shared server
+        const server = await this.sharedService;
+        if (server) {
+            const result = await server.request(LiveShareCommands.getSysInfo, []);
+            return (result as ICell);
+        }
+    }
+
+
+    private async startSharedServiceProxy() : Promise<vsls.SharedServiceProxy | undefined> {
         const api = await vsls.getApiAsync();
 
         if (api) {
@@ -136,6 +148,8 @@ export class GuestJupyterServer implements INotebookServer {
 
             // Request all of the responses since this guest was started. We likely missed a bunch
             service.notify(LiveShareCommands.catchupRequest, { since: this.dataScience.activationStartTime });
+
+            return service;
         }
     }
 

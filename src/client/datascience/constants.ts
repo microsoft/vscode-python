@@ -145,6 +145,7 @@ export namespace LiveShareCommands {
     export const isKernelSpecSupported = 'isKernelSpecSupported';
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
+    export const getSysInfo = 'getSysInfo';
     export const serverResponse = 'serverResponse';
     export const catchupRequest = 'catchupRequest';
 }

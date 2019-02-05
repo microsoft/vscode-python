@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
+import * as uuid from 'uuid/v4';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
@@ -35,8 +36,10 @@ import {
     IJupyterSessionManager,
     INotebookServer,
     InterruptResult,
-    IDataScience
+    IDataScience,
+    ISysInfo
 } from '../types';
+import { Identifiers } from '../constants';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -203,71 +206,68 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
+        return this.executeObservableImpl(code, file, line, id, false);
+    }
+
+    public executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
         // Do initial setup if necessary
         this.initialNotebookSetup();
 
-        // If we have a session, execute the code now.
-        if (this.session) {
-            // Generate our cells ahead of time
-            const cells = generateCells(this.configService.getSettings().datascience, code, file, line, true, id);
+        // Create a deferred that we'll fire when we're done
+        const deferred = createDeferred<ICell[]>();
 
-            // Might have more than one (markdown might be split)
-            if (cells.length > 1) {
-                // We need to combine results
-                return this.combineObservables(
-                    this.executeMarkdownObservable(cells[0]),
-                    this.executeCodeObservable(cells[1]));
-            } else if (cells.length > 0) {
-                // Either markdown or or code
-                return this.combineObservables(
-                    cells[0].data.cell_type === 'code' ? this.executeCodeObservable(cells[0]) : this.executeMarkdownObservable(cells[0]));
-            }
+        // Attempt to evaluate this cell in the jupyter notebook
+        const observable = this.executeObservableImpl(code, Identifiers.EmptyFileName, 0, uuid(), true);
+        let output: ICell[];
+
+        observable.subscribe(
+            (cells: ICell[]) => {
+                output = cells;
+            },
+            (error) => {
+                deferred.reject(error);
+            },
+            () => {
+                deferred.resolve(output);
+            });
+
+        if (cancelToken) {
+            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
         }
 
-        // Can't run because no session
-        return new Observable<ICell[]>(subscriber => {
-            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
-            subscriber.complete();
-        });
+        // Wait for the execution to finish
+        return deferred.promise;
     }
 
-    public executeSilently(code: string, cancelToken?: CancellationToken): Promise<void> {
-        return new Promise((resolve, reject) => {
+    public async getSysInfo() : Promise<ICell> {
+        const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
+        // tslint:disable-next-line:no-multiline-string
+        const pathCells = await this.executeSilently(`import sys\r\nsys.executable`);
+        // tslint:disable-next-line:no-multiline-string
+        const notebookVersionCells = await this.executeSilently(`import notebook\r\nnotebook.version_info`);
 
-            // If we cancel, reject our promise
-            if (cancelToken) {
-                this.disposableRegistry.push(cancelToken.onCancellationRequested(() => reject(new CancellationError())));
-            }
+        // Both should have streamed output
+        const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
+        const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
+        const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
 
-            // Do initial setup if necessary
-            this.initialNotebookSetup();
-
-            // If we have a session, execute the code now.
-            if (this.session) {
-                // Generate a new request and resolve when it's done.
-                const request = this.generateRequest(code, true);
-
-                if (request) {
-                    // // For debugging purposes when silently is failing.
-                    // request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                    //     try {
-                    //         this.logger.logInformation(`Execute silently message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-                    //     } catch (err) {
-                    //         this.logger.logError(err);
-                    //     }
-                    // };
-
-                    request.done.then(() => {
-                        this.logger.logInformation(`Execute for ${code} silently finished.`);
-                        resolve();
-                    }).catch(reject);
-                } else {
-                    reject(new Error(localize.DataScience.sessionDisposed()));
-                }
-            } else {
-                reject(new Error(localize.DataScience.sessionDisposed()));
-            }
-        });
+        // Combine this data together to make our sys info
+        return {
+            data: {
+                cell_type: 'sys_info',
+                version: version,
+                notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
+                path: pythonPath,
+                metadata: {},
+                source: [],
+                message: '',    // This will be filled in by the caller
+                connection: ''  // This will be filled in by the caller (before getting to the output)
+            },
+            id: uuid(),
+            file: '',
+            line: 0,
+            state: CellState.finished
+        };
     }
 
     public async restartKernel(): Promise<void> {
@@ -384,6 +384,57 @@ export class JupyterServerBase implements INotebookServer {
         };
     }
 
+    private extractStreamOutput(cell: ICell): string {
+        let result = '';
+        if (cell.state === CellState.error || cell.state === CellState.finished) {
+            const outputs = cell.data.outputs as nbformat.IOutput[];
+            if (outputs) {
+                outputs.forEach(o => {
+                    if (o.output_type === 'stream') {
+                        const stream = o as nbformat.IStream;
+                        result = result.concat(stream.text.toString());
+                    } else {
+                        const data = o.data;
+                        if (data && data.hasOwnProperty('text/plain')) {
+                            // tslint:disable-next-line:no-any
+                            result = result.concat((data as any)['text/plain']);
+                        }
+                    }
+                });
+            }
+        }
+        return result;
+    }
+
+    private executeObservableImpl(code: string, file: string, line: number, id: string | undefined, silent?: boolean) : Observable<ICell[]> {
+        // Do initial setup if necessary
+        this.initialNotebookSetup();
+
+        // If we have a session, execute the code now.
+        if (this.session) {
+            // Generate our cells ahead of time
+            const cells = generateCells(this.configService.getSettings().datascience, code, file, line, true, id);
+
+            // Might have more than one (markdown might be split)
+            if (cells.length > 1) {
+                // We need to combine results
+                return this.combineObservables(
+                    this.executeMarkdownObservable(cells[0]),
+                    this.executeCodeObservable(cells[1], silent));
+            } else if (cells.length > 0) {
+                // Either markdown or or code
+                return this.combineObservables(
+                    cells[0].data.cell_type === 'code' ? this.executeCodeObservable(cells[0], silent) : this.executeMarkdownObservable(cells[0]));
+            }
+        }
+
+        // Can't run because no session
+        return new Observable<ICell[]>(subscriber => {
+            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            subscriber.complete();
+        });
+    }
+
     private generateRequest = (code: string, silent: boolean): Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         try {
@@ -393,7 +444,7 @@ export class JupyterServerBase implements INotebookServer {
                     code: code.replace(/\r\n/g, '\n'),
                     stop_on_error: false,
                     allow_stdin: false,
-                    silent: silent
+                    store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                 },
                 true
             ) : undefined;
@@ -468,11 +519,11 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleCodeRequest = (subscriber: CellSubscriber) => {
+    private handleCodeRequest = (subscriber: CellSubscriber, silent: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
 
-            const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), false);
+            const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), silent);
 
             // tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -529,7 +580,7 @@ export class JupyterServerBase implements INotebookServer {
 
     }
 
-    private executeCodeObservable(cell: ICell): Observable<ICell> {
+    private executeCodeObservable(cell: ICell, silent: boolean): Observable<ICell> {
         return new Observable<ICell>(subscriber => {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
@@ -543,7 +594,7 @@ export class JupyterServerBase implements INotebookServer {
 
             // Attempt to change to the current directory. When that finishes
             // send our real request
-            this.handleCodeRequest(cellSubscriber);
+            this.handleCodeRequest(cellSubscriber, silent);
         });
     }
 

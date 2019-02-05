@@ -136,4 +136,9 @@ export class JupyterServer implements INotebookServer {
     public getConnectionInfo(): IConnection | undefined {
         return this.connInfo;
     }
+
+    public async getSysInfo() : Promise<ICell> {
+        const server = await this.serverFactory.get();
+        return server.getSysInfo();
+    }
 }
