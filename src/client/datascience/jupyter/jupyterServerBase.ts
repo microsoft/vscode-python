@@ -34,7 +34,8 @@ import {
     IJupyterSession,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
+    IDataScience
 } from '../types';
 
 class CellSubscriber {
@@ -122,6 +123,7 @@ export class JupyterServerBase implements INotebookServer {
     private usingDarkTheme: boolean | undefined;
 
     constructor(
+        private dataScience: IDataScience,
         private logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,

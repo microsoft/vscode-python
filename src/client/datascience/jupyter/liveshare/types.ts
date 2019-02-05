@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
 import { ICell, InterruptResult } from '../../types';
 
-// tslint:disable:max-classes-per-file
 
 export enum ServerResponseType {
     ExecuteObservable,
@@ -12,37 +12,42 @@ export enum ServerResponseType {
     Exception
 }
 
-export interface IServerResponse {
+export class ServerResponse {
     type: ServerResponseType;
     time: number;
 }
 
-export interface IExecuteObservableResponse extends IServerResponse {
-    pos: number;
+
+export class ExecuteObservableResponse extends ServerResponse {
+    type: ServerResponseType = ServerResponseType.ExecuteObservable;
     code: string;
     id: string; // Unique id so guest side can tell what observable it belongs with
-    cells: ICell[] | undefined;
+    cells: ICell[];
 }
 
-export interface IInterruptResponse extends IServerResponse {
+export class InterruptResponse extends ServerResponse {
+    type: ServerResponseType = ServerResponseType.Interrupt;
     result: InterruptResult;
 }
 
-export interface IRestartResponse extends IServerResponse {
+export class RestartResponse extends ServerResponse {
+    type: ServerResponseType = ServerResponseType.Restart;
 }
 
-export interface IExceptionResponse extends IServerResponse {
+export class ExceptionResponse extends ServerResponse {
+    type: ServerResponseType = ServerResponseType.Exception;
     message: string;
 }
 
 // Map all responses to their properties
 export interface IResponseMapping {
-    [ServerResponseType.ExecuteObservable]: IExecuteObservableResponse;
-    [ServerResponseType.Interrupt]: IInterruptResponse;
-    [ServerResponseType.Restart]: IRestartResponse;
-    [ServerResponseType.Exception]: IExceptionResponse;
+    [ServerResponseType.ExecuteObservable]: ExecuteObservableResponse;
+    [ServerResponseType.Interrupt]: InterruptResponse;
+    [ServerResponseType.Restart]: RestartResponse;
+    [ServerResponseType.Exception]: ExceptionResponse;
 }
 
 export interface ICatchupRequest {
     since: number;
 }
+
