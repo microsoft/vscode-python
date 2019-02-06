@@ -273,6 +273,11 @@ class FailingTests(unittest.TestCase):
     - [ ] `Run Test` works
     - [ ] `Debug Test` works
     - [ ] Module/suite setup methods are also run (run the `test_setup` method to verify)
+- [ ] `Configure Unit Tests` works
+  - [ ] quick pick for framework (and its settings)
+  - [ ] selected framework enabled in workspace settings
+  - [ ] framework's config added (and old config removed)
+  - [ ] other frameworks disabled in workspace settings
 
 #### [`pytest`](https://code.visualstudio.com/docs/python/unit-testing#_pytest-configuration-settings)
 ```python
