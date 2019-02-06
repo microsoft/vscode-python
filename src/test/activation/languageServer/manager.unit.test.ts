@@ -5,7 +5,7 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
@@ -89,6 +89,7 @@ suite('xLanguage Server - Manager', () => {
             verify(analysisOptions.getAnalysisOptions()).once();
             verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).once();
             verify(languageServer.start(resource, languageClientOptions)).once();
+            expect(invoked).to.be.true;
             expect(analysisHandlerRegistered).to.be.true;
             verify(languageServer.dispose()).never();
         }
@@ -176,21 +177,6 @@ suite('xLanguage Server - Manager', () => {
             verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).thrice();
             verify(languageServer.start(resource, languageClientOptions)).thrice();
         });
-        // Write system test to test this
-        // test('Must load extension when command is sent', async () => {
-        //     const args = { x: 1 };
-        //     when(lsExtension.loadExtensionArgs).thenReturn(undefined);
-        //     await startLanguageServer();
-
-        //     verify(languageServer.loadExtension(args)).never();
-
-        //     await extension.register();
-        //     const cb = capture(commandManager.registerCommand).first()[1] as Function;
-        //     cb.call(manager, args);
-
-        //     verify(languageServer.loadExtension(args)).once();
-        //     commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.never());
-        // });
         test('Must load extension when command was been sent before starting LS', async () => {
             const args = { x: 1 };
             when(lsExtension.loadExtensionArgs).thenReturn(args as any);

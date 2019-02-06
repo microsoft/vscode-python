@@ -86,7 +86,7 @@ export class LanguageServerExtension implements ILanguageServerExtension {
             this.disposable.dispose();
         }
     }
-    public async register(): Promise<void> {
+    public register(): Promise<void> {
         if (this.disposable) {
             return;
         }

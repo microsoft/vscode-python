@@ -92,7 +92,7 @@ export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
 export interface ILanguageServerExtension extends IDisposable {
     readonly invoked: Event<void>;
     loadExtensionArgs?: {};
-    register(): Promise<void>;
+    register(): void;
 }
 export const ILanguageServer = Symbol('ILanguageServer');
 export interface ILanguageServer extends IDisposable {
