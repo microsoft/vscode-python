@@ -12,14 +12,12 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { IConfigurationService, IInstaller, IOutputChannel, IPythonSettings, IUnitTestSettings, Product } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
-import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
-import { UnitTestProduct } from '../../client/unittests/common/types';
+import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../../client/unittests/common/constants';
 import { UnitTestConfigurationService } from '../../client/unittests/configuration';
 import { ITestConfigurationManager, ITestConfigurationManagerFactory } from '../../client/unittests/types';
 
 suite('Unit Tests - ConfigurationService', () => {
-    [Product.pytest, Product.unittest, Product.nosetest].forEach(prodItem => {
-        const product = prodItem as any as UnitTestProduct;
+    UNIT_TEST_PRODUCTS.forEach(product => {
         const prods = getNamesAndValues(Product);
         const productName = prods.filter(item => item.value === product)[0];
         const workspaceUri = Uri.file(__filename);

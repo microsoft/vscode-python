@@ -13,6 +13,7 @@ import { IWorkspaceService } from '../../../../client/common/application/types';
 import { Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
+import { UNIT_TEST_PRODUCTS } from '../../../../client/unittests/common/constants';
 import { TestConfigSettingsService } from '../../../../client/unittests/common/services/configSettingService';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
 
@@ -21,8 +22,7 @@ use(chaiPromise);
 const updateMethods: (keyof ITestConfigSettingsService)[] = ['updateTestArgs', 'disable', 'enable'];
 
 suite('Unit Tests - ConfigSettingsService', () => {
-    [Product.pytest, Product.unittest, Product.nosetest].forEach(prodItem => {
-        const product = prodItem as any as UnitTestProduct;
+    UNIT_TEST_PRODUCTS.forEach(product => {
         const prods = getNamesAndValues(Product);
         const productName = prods.filter(item => item.value === product)[0];
         const workspaceUri = Uri.file(__filename);
