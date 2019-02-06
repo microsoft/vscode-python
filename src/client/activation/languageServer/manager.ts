@@ -19,7 +19,6 @@ const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 @injectable()
 export class LanguageServerManager implements ILanguageServerManager {
-    protected static loadExtensionArgs?: {};
     private languageServer?: ILanguageServer;
     private resource!: Resource;
     private disposables: IDisposable[] = [];
@@ -76,6 +75,7 @@ export class LanguageServerManager implements ILanguageServerManager {
     }
 }
 
+@injectable()
 export class LanguageServerExtension implements ILanguageServerExtension {
     public loadExtensionArgs?: {};
     protected readonly changed = new EventEmitter<void>();

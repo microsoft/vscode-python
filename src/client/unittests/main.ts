@@ -32,6 +32,7 @@ import { ITestDisplay, ITestResultDisplay, IUnitTestConfigurationService, IUnitT
 @injectable()
 export class UnitTestManagementService implements IUnitTestManagementService, Disposable {
     private readonly outputChannel: OutputChannel;
+    private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
     private workspaceTestManagerService?: IWorkspaceTestManagerService;
     private documentManager: IDocumentManager;
@@ -59,6 +60,10 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         return this._onDidStatusChange.event;
     }
     public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
+        if (this.activatedOnce) {
+            return;
+        }
+        this.activatedOnce = true;
         this.workspaceTestManagerService = this.serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
 

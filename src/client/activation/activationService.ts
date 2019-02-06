@@ -22,9 +22,10 @@ type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
-    private activatedWorkspaces = new Map<string, ILanguageServerActivator>();
+    private lsActivatedWorkspaces = new Map<string, ILanguageServerActivator>();
     private workspaceFoldersCount = 1;
     private currentActivator?: ActivatorInfo;
+    private jediActivatedOnce: boolean = false;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
@@ -46,42 +47,50 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public async activate(resource: Resource): Promise<void> {
-        if (this.activatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
-            return;
-        }
-        this.resource = resource;
-
         let jedi = this.useJedi();
         if (!jedi) {
+            if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
+                return;
+            }
             const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
             this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
             if (diagnostic.length) {
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
                 jedi = true;
             }
+        } else {
+            if (this.jediActivatedOnce) {
+                return;
+            }
+            this.jediActivatedOnce = true;
         }
 
+        this.resource = resource;
         await this.logStartup(jedi);
-
         let activatorName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
         this.currentActivator = { jedi, activator };
 
         try {
             await activator.activate(resource);
+            if (!jedi) {
+                this.lsActivatedWorkspaces.set(this.getWorkspacePathKey(resource), activator);
+            }
         } catch (ex) {
             if (jedi) {
                 return;
             }
             //Language server fails, reverting to jedi
+            if (this.jediActivatedOnce) {
+                return;
+            }
+            this.jediActivatedOnce = true;
             jedi = true;
             await this.logStartup(jedi);
             activatorName = LanguageServerActivator.Jedi;
             activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
             this.currentActivator = { jedi, activator };
             await activator.activate(resource);
-        } finally {
-            this.activatedWorkspaces.set(this.getWorkspacePathKey(resource), activator);
         }
     }
 
@@ -96,11 +105,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             //If the removed workspace folder was activated, dispose its activator
             this.workspaceFoldersCount += -1;
             const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
-            const mapKeys = Array.from(this.activatedWorkspaces.keys());
-            const activatedfoldersRemoved = mapKeys.filter(x => workspaceKeys.indexOf(x) < 0);
-            if (activatedfoldersRemoved.length > 0) {
-                this.activatedWorkspaces.get(activatedfoldersRemoved[0]).dispose();
-                this.activatedWorkspaces.delete(activatedfoldersRemoved[0]);
+            const activatedWkspcKeys = Array.from(this.lsActivatedWorkspaces.keys());
+            const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
+            if (activatedWkspcFoldersRemoved.length > 0) {
+                this.lsActivatedWorkspaces.get(activatedWkspcFoldersRemoved[0]).dispose();
+                this.lsActivatedWorkspaces.delete(activatedWkspcFoldersRemoved[0]);
             }
         } else {
             this.workspaceFoldersCount += 1;

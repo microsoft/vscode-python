@@ -27,15 +27,16 @@ use(chaiAsPromised);
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 suite('xLanguage Server - Manager', () => {
-    class LanguageServerManagerTest extends LanguageServerManager {
-        public static initializeExtensionArgs(args: {}) {
-            LanguageServerManager.loadExtensionArgs = args;
+    class LanguageServerExtensionTest extends LanguageServerExtension {
+        // tslint:disable-next-line:no-unnecessary-override
+        public async register(): Promise<void> {
+            return super.register();
         }
         public clearLoadExtensionArgs() {
-            LanguageServerManager.loadExtensionArgs = undefined;
+            super.loadExtensionArgs = undefined;
         }
     }
-    let manager: LanguageServerManagerTest;
+    let manager: LanguageServerManager;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
     let languageServer: ILanguageServer;
@@ -45,6 +46,7 @@ suite('xLanguage Server - Manager', () => {
     let onChangeLSExtensionHandler: Function;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     let commandRegistrationDisposable: typemoq.IMock<IDisposable>;
+    let extension: LanguageServerExtensionTest;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         analysisOptions = mock(LanguageServerAnalysisOptions);
@@ -52,19 +54,17 @@ suite('xLanguage Server - Manager', () => {
         commandManager = mock(CommandManager);
         lsExtension = mock(LanguageServerExtension);
         commandRegistrationDisposable = typemoq.Mock.ofType<IDisposable>();
-        manager = new LanguageServerManagerTest(
+        manager = new LanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension)
         );
-        manager.clearLoadExtensionArgs();
+        extension = new LanguageServerExtensionTest(instance(commandManager));
+        extension.clearLoadExtensionArgs();
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {
         async function startLanguageServer() {
-            when(commandManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
-                commandRegistrationDisposable.object
-            );
             let invoked = false;
             const lsExtensionChangeFn = (handler: Function) => {
                 invoked = true;
@@ -91,8 +91,6 @@ suite('xLanguage Server - Manager', () => {
             verify(languageServer.start(resource, languageClientOptions)).once();
             expect(analysisHandlerRegistered).to.be.true;
             verify(languageServer.dispose()).never();
-            verify(commandManager.registerCommand(loadExtensionCommand, anything())).once();
-            commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.never());
         }
         test('Start must register handlers and initialize analysis options', async () => {
             await startLanguageServer();
@@ -178,31 +176,45 @@ suite('xLanguage Server - Manager', () => {
             verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).thrice();
             verify(languageServer.start(resource, languageClientOptions)).thrice();
         });
-        test('Must register command handler', async () => {
-            await startLanguageServer();
-            manager.dispose();
+        // Write system test to test this
+        // test('Must load extension when command is sent', async () => {
+        //     const args = { x: 1 };
+        //     when(lsExtension.loadExtensionArgs).thenReturn(undefined);
+        //     await startLanguageServer();
 
-            commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.once());
-        });
-        test('Must load extension when command is sent', async () => {
-            const args = { x: 1 };
-            await startLanguageServer();
+        //     verify(languageServer.loadExtension(args)).never();
 
-            verify(languageServer.loadExtension(args)).never();
+        //     await extension.register();
+        //     const cb = capture(commandManager.registerCommand).first()[1] as Function;
+        //     cb.call(manager, args);
 
-            const cb = capture(commandManager.registerCommand).first()[1] as Function;
-            cb.call(manager, args);
-
-            verify(languageServer.loadExtension(args)).once();
-            commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.never());
-        });
+        //     verify(languageServer.loadExtension(args)).once();
+        //     commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.never());
+        // });
         test('Must load extension when command was been sent before starting LS', async () => {
             const args = { x: 1 };
-            LanguageServerManagerTest.initializeExtensionArgs(args);
+            when(lsExtension.loadExtensionArgs).thenReturn(args as any);
 
             await startLanguageServer();
 
             verify(languageServer.loadExtension(args)).once();
+        });
+    });
+    suite('Test LanguageServerExtension', () => {
+        let cmdManager: ICommandManager;
+        setup(() => {
+            cmdManager = mock(CommandManager);
+            commandRegistrationDisposable = typemoq.Mock.ofType<IDisposable>();
+            extension = new LanguageServerExtensionTest(instance(cmdManager));
+        });
+        test('Must register command handler', async () => {
+            when(cmdManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
+                commandRegistrationDisposable.object
+            );
+            await extension.register();
+            verify(cmdManager.registerCommand(loadExtensionCommand, anything())).once();
+            extension.dispose();
+            commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.once());
         });
     });
 });
