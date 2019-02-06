@@ -15,10 +15,12 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     protected readonly testConfigSettingsService: ITestConfigSettingsService;
     constructor(protected workspace: Uri,
         protected product: UnitTestProduct,
-        protected readonly serviceContainer: IServiceContainer) {
+        protected readonly serviceContainer: IServiceContainer,
+        cfg?: ITestConfigSettingsService
+    ) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.installer = serviceContainer.get<IInstaller>(IInstaller);
-        this.testConfigSettingsService = serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
+        this.testConfigSettingsService = cfg ? cfg : serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
     }
     public abstract configure(wkspace: Uri): Promise<void>;
     public abstract requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
