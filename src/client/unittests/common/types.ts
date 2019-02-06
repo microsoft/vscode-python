@@ -184,7 +184,7 @@ export interface ITestVisitor {
 export const ITestCollectionStorageService = Symbol('ITestCollectionStorageService');
 
 export interface ITestCollectionStorageService extends Disposable {
-    onTestStoreUpdated: Event<Uri>;
+    onUpdated: Event<Uri>;
     getTests(wkspace: Uri): Tests | undefined;
     storeTests(wkspace: Uri, tests: Tests | null | undefined): void;
     findFlattendTestFunction(resource: Uri, func: TestFunction): FlattenedTestFunction | undefined;

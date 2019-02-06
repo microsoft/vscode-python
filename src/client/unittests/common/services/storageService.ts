@@ -8,14 +8,14 @@ import { FlattenedTestFunction, FlattenedTestSuite, ITestCollectionStorageServic
 
 @injectable()
 export class TestCollectionStorageService implements ITestCollectionStorageService {
-    public readonly onTestStoreUpdated: Event<Uri>;
+    public readonly onUpdated: Event<Uri>;
 
     private testsIndexedByWorkspaceUri = new Map<string, Tests | undefined>();
     private _onTestStoreUpdated: EventEmitter<Uri> = new EventEmitter<Uri>();
 
     constructor(@inject(IDisposableRegistry) disposables: Disposable[]) {
         disposables.push(this);
-        this.onTestStoreUpdated = this._onTestStoreUpdated.event;
+        this.onUpdated = this._onTestStoreUpdated.event;
     }
     public getTests(wkspace: Uri): Tests | undefined {
         const workspaceFolder = this.getWorkspaceFolderPath(wkspace) || '';

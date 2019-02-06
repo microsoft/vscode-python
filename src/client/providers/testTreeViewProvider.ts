@@ -39,7 +39,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable 
         this.root = [new TestTreeItem(TestTreeItemType.Root, undefined, undefined, '*', 'no tests discovered yet', TestStatus.Unknown, undefined)];
         this.refresh(this.workspace.workspaceFolders[0].uri);
         disposableRegistry.push(this);
-        this.disposables.push(this.testStore.onTestStoreUpdated(this.onTestStoreUpdated, this));
+        this.disposables.push(this.testStore.onUpdated(this.onTestStoreUpdated, this));
     }
 
     // tslint:disable-next-line:no-empty
