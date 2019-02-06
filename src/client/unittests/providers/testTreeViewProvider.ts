@@ -7,16 +7,18 @@ import { inject, injectable } from 'inversify';
 import {
     Event, EventEmitter, ProviderResult, Uri
 } from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
-import { traceDecorators } from '../common/logger';
-import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
+import { IWorkspaceService } from '../../common/application/types';
+import { traceDecorators } from '../../common/logger';
+import {
+    IDisposable, IDisposableRegistry, Resource
+} from '../../common/types';
+import { ITestTreeViewProvider } from '../../providers/types';
 import {
     ITestCollectionStorageService, TestFolder, Tests, TestStatus
-} from '../unittests/common/types';
+} from '../common/types';
 import {
     TestTreeItem, TestTreeItemType
 } from './testTreeViewItem';
-import { ITestTreeViewProvider as ITestTreeViewProvider } from './types';
 
 @injectable()
 export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable {

@@ -9,7 +9,7 @@ import {
 import {
     TestFile, TestFolder, TestFunction,
     TestStatus, TestSuite
-} from '../unittests/common/types';
+} from '../common/types';
 
 export enum TestTreeItemType {
     Root = 'Root',

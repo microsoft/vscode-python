@@ -3,6 +3,7 @@
 
 import { Uri } from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { ITestTreeViewProvider } from '../providers/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
@@ -18,8 +19,11 @@ import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from './common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
-    ITestCollectionStorageService, ITestConfigSettingsService, ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory,
-    ITestMessageService, ITestResultsService, ITestRunner, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
+    ITestCollectionStorageService, ITestConfigSettingsService, ITestDebugLauncher,
+    ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService,
+    ITestManagerServiceFactory, ITestMessageService, ITestResultsService, ITestRunner,
+    ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService,
+    IXUnitParser, TestProvider
 } from './common/types';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
@@ -33,13 +37,19 @@ import { TestManagerRunner as NoseTestManagerRunner } from './nosetest/runner';
 import { ArgumentsService as NoseTestArgumentsService } from './nosetest/services/argsService';
 import { TestDiscoveryService as NoseTestDiscoveryService } from './nosetest/services/discoveryService';
 import { TestsParser as NoseTestTestsParser } from './nosetest/services/parserService';
+import { TestTreeViewProvider } from './providers/testTreeViewProvider';
 import { TestManager as PyTestTestManager } from './pytest/main';
 import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from './pytest/services/parserService';
 import { TestMessageService } from './pytest/services/testMessageService';
-import { IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService } from './types';
+import {
+    IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory,
+    ITestDisplay, ITestManagerRunner, ITestResultDisplay,
+    IUnitTestConfigurationService, IUnitTestDiagnosticService,
+    IUnitTestHelper, IUnitTestManagementService
+} from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
 import { TestManagerRunner as UnitTestTestManagerRunner } from './unittest/runner';
@@ -92,6 +102,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
     serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
+    serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {

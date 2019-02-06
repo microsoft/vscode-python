@@ -7,7 +7,7 @@ import {
     CancellationToken, Event, ProviderResult,
     TreeDataProvider, Uri, WorkspaceEdit
 } from 'vscode';
-import { TestTreeItem } from './testTreeViewItem';
+import { TestTreeItem } from '../unittests/providers/testTreeViewItem';
 
 export const ISortImportsEditingProvider = Symbol('ISortImportsEditingProvider');
 export interface ISortImportsEditingProvider {

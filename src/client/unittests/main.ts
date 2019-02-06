@@ -3,24 +3,42 @@
 // tslint:disable:no-duplicate-imports no-unnecessary-callback-wrapper
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, OutputChannel, TextDocument, Uri } from 'vscode';
-import * as vscode from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import {
+    ConfigurationChangeEvent, Disposable,
+    DocumentSymbolProvider, EventEmitter,
+    OutputChannel, TextDocument, Uri, window
+} from 'vscode';
+import {
+    ICommandManager, IDocumentManager, IWorkspaceService
+} from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
-import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../common/types';
+import {
+    IConfigurationService, IDisposableRegistry,
+    ILogger, IOutputChannel
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { ITestTreeViewProvider } from '../providers/types';
 import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
-import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './common/constants';
+import {
+    CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL
+} from './common/constants';
 import { selectTestWorkspace } from './common/testUtils';
-import { ITestCollectionStorageService, ITestManager, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
-import { ITestDisplay, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestManagementService } from './types';
+import {
+    ITestCollectionStorageService, ITestManager,
+    IWorkspaceTestManagerService, TestFile,
+    TestFunction, TestStatus, TestsToRun
+} from './common/types';
+import {
+    ITestDisplay, ITestResultDisplay,
+    IUnitTestConfigurationService, IUnitTestManagementService
+} from './types';
 
 @injectable()
 export class UnitTestManagementService implements IUnitTestManagementService, Disposable {
-    private readonly outputChannel: vscode.OutputChannel;
+    private readonly outputChannel: OutputChannel;
     private readonly disposableRegistry: Disposable[];
     private workspaceTestManagerService?: IWorkspaceTestManagerService;
     private documentManager: IDocumentManager;
@@ -28,7 +46,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
     private testResultDisplay?: ITestResultDisplay;
     private autoDiscoverTimer?: NodeJS.Timer;
     private configChangedTimer?: NodeJS.Timer;
-    private readonly onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+    private readonly onDidChange: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -45,12 +63,20 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
     }
     public async activate(symboldProvider: vscode.DocumentSymbolProvider): Promise<void> {
         this.workspaceTestManagerService = this.serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
+        const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
         this.registerHandlers();
         this.registerCommands();
+
+        // register provider...
+        const testViewProvider = this.serviceContainer.get<ITestTreeViewProvider>(ITestTreeViewProvider);
+        const disposable = window.registerTreeDataProvider('python_tests', testViewProvider);
+        disposablesRegistry.push(disposable);
+
         this.autoDiscoverTests()
             .catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
         await this.registerSymbolProvider(symboldProvider);
+    public async activateCodeLenses(symboldProvider: DocumentSymbolProvider): Promise<void> {
     }
     public async getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void> {
         let wkspace: Uri | undefined;
