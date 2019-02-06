@@ -93,8 +93,9 @@ import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
-import { PythonTestTreeViewProvider } from './providers/testTreeViewProvider';
-import { ISortImportsEditingProvider } from './providers/types';
+import {
+    IPythonTestTreeViewProvider, ISortImportsEditingProvider
+} from './providers/types';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
@@ -208,7 +209,8 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
-    context.subscriptions.push(window.registerTreeDataProvider('python_tests', new PythonTestTreeViewProvider()));
+    const testViewProvider = serviceContainer.get<IPythonTestTreeViewProvider>(IPythonTestTreeViewProvider);
+    context.subscriptions.push(window.registerTreeDataProvider('python_tests', testViewProvider));
 
     serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));

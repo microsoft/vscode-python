@@ -3,16 +3,23 @@
 
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import {
-    Event, EventEmitter,
-    ProviderResult, TreeDataProvider
+    Event, EventEmitter, ProviderResult, Uri
 } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
+import { traceDecorators } from '../common/logger';
+import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import {
-    PythonTestTreeItem,
-    PythonTestTreeItemType
+    ITestCollectionStorageService, TestFolder, Tests, TestStatus
+} from '../unittests/common/types';
+import {
+    PythonTestTreeItem, PythonTestTreeItemType
 } from './testTreeViewItem';
+import { IPythonTestTreeViewProvider } from './types';
 
-export class PythonTestTreeViewProvider implements TreeDataProvider<PythonTestTreeItem> {
+@injectable()
+export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, IDisposable {
     /**
      * This will trigger the view to update the changed element/root and its children recursively (if shown).
      * To signal that root has changed, do not pass any argument or pass `undefined` or `null`.
@@ -21,11 +28,24 @@ export class PythonTestTreeViewProvider implements TreeDataProvider<PythonTestTr
 
     private _onDidChangeTreeData: EventEmitter<PythonTestTreeItem | undefined> = new EventEmitter<PythonTestTreeItem | undefined>();
     private root: PythonTestTreeItem[];
+    private disposables: IDisposable[] = [];
 
-    constructor() {
+    constructor(
+        @inject(ITestCollectionStorageService) private testStore: ITestCollectionStorageService,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
-        // set up some dummy data to just show that the test explorer loads.
-        this.root = this.getTestTree();
+        this.root = [new PythonTestTreeItem(PythonTestTreeItemType.Root, undefined, undefined, '*', 'no tests discovered yet', TestStatus.Unknown, undefined)];
+        this.refresh(this.workspace.workspaceFolders[0].uri);
+        disposableRegistry.push(this);
+        this.disposables.push(this.testStore.onTestStoreUpdated(this.onTestStoreUpdated, this));
+    }
+
+    // tslint:disable-next-line:no-empty
+    public dispose() {
+        this.disposables.forEach(d => d.dispose());
+        this._onDidChangeTreeData.dispose();
     }
 
     /**
@@ -64,42 +84,27 @@ export class PythonTestTreeViewProvider implements TreeDataProvider<PythonTestTr
         return element.parent;
     }
 
-    private getTestTree(): PythonTestTreeItem[] {
-        // create a sample tree just to get the feature up and running
-        const roots: PythonTestTreeItem[] = [];
-        const root1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Root, undefined, [], '/test', '/test');
-        roots.push(root1);
+    /**
+     * Refresh the view by rebuilding the model and signalling the tree view to update itself.
+     *
+     */
+    public refresh(resource: Resource, tests?: Tests): void {
 
-        const root1_pkg1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Package, root1, [], '/test/module1', 'module1');
-        root1.children.push(root1_pkg1);
+        if (tests === undefined) {
+            tests = this.testStore.getTests(resource);
+        }
+        if (tests && tests.testFolders) {
+            const newRoot: PythonTestTreeItem[] = [];
+            tests.testFolders.forEach((tf: TestFolder) => {
+                newRoot.push(PythonTestTreeItem.createFromFolder(tf));
+            });
+            this.root = newRoot;
+            this._onDidChangeTreeData.fire();
+        }
+    }
 
-        const root1_pkg1_file1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.File, root1_pkg1, [], '/test/module1/test_file1.py', 'test_file1.py');
-        root1_pkg1.children.push(root1_pkg1_file1);
-
-        const root1_pkg1_file1_fn1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Function, root1_pkg1_file1, undefined, '/test/module1/test_file1.py::test_function_1', 'test_function_1');
-        root1_pkg1_file1.children.push(root1_pkg1_file1_fn1);
-
-        const root1_pkg1_file1_fn2: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Function, root1_pkg1_file1, undefined, '/test/module1/test_file1.py::test_function_2', 'test_function_2');
-        root1_pkg1_file1.children.push(root1_pkg1_file1_fn2);
-
-        const root1_pkg1_file1_suite1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Suite, root1_pkg1_file1, [], '/test/module1/test_file1.py::TestSuite1', 'TestSuite1');
-        root1_pkg1_file1.children.push(root1_pkg1_file1_suite1);
-
-        const root1_pkg1_file1_suite1_fn1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Function, root1_pkg1_file1_suite1, undefined, '/test/module1/test_file1.py::TestSuite1::test_suite1_fn1', 'test_suite1_fn1');
-        root1_pkg1_file1_suite1.children.push(root1_pkg1_file1_suite1_fn1);
-
-        const root1_pkg1_file1_suite1_fn2: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Function, root1_pkg1_file1_suite1, undefined, '/test/module1/test_file1.py::TestSuite1::test_suite1_fn2', 'test_suite1_fn2');
-        root1_pkg1_file1_suite1.children.push(root1_pkg1_file1_suite1_fn2);
-
-        const root1_pkg1_file1_suite2: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Suite, root1_pkg1_file1, [], '/test/module1/test_file1.py::TestSuite2', 'TestSuite2');
-        root1_pkg1_file1.children.push(root1_pkg1_file1_suite2);
-
-        const root1_pkg1_file1_suite2_fn1: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Function, root1_pkg1_file1_suite2, undefined, '/test/module1/test_file1.py::TestSuite2::test_suite2_fn1', 'test_suite2_fn1');
-        root1_pkg1_file1_suite2.children.push(root1_pkg1_file1_suite2_fn1);
-
-        const root1_pkg1_file1_suite2_fn2: PythonTestTreeItem = new PythonTestTreeItem(PythonTestTreeItemType.Function, root1_pkg1_file1_suite2, undefined, '/test/module1/test_file1.py::TestSuite2::test_suite2_fn2', 'test_suite2_fn2');
-        root1_pkg1_file1_suite2.children.push(root1_pkg1_file1_suite2_fn2);
-
-        return roots;
+    @traceDecorators.verbose('>>>  DEREK >>> Test store is being updated...')
+    private onTestStoreUpdated(workspace: Uri): void {
+        this.refresh(workspace);
     }
 }

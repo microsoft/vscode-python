@@ -1,4 +1,7 @@
-import { CancellationToken, DiagnosticCollection, Disposable, OutputChannel, Uri } from 'vscode';
+import {
+    CancellationToken, DiagnosticCollection, Disposable,
+    Event, OutputChannel, Uri
+} from 'vscode';
 import { IUnitTestSettings, Product } from '../../common/types';
 import { IPythonUnitTestMessage } from '../types';
 import { CommandSource } from './constants';
@@ -181,6 +184,7 @@ export interface ITestVisitor {
 export const ITestCollectionStorageService = Symbol('ITestCollectionStorageService');
 
 export interface ITestCollectionStorageService extends Disposable {
+    onTestStoreUpdated: Event<Uri>;
     getTests(wkspace: Uri): Tests | undefined;
     storeTests(wkspace: Uri, tests: Tests | null | undefined): void;
     findFlattendTestFunction(resource: Uri, func: TestFunction): FlattenedTestFunction | undefined;
