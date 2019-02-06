@@ -10,11 +10,12 @@ import { OutputChannel, Uri } from 'vscode';
 import { IInstaller, IOutputChannel, Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
-import { ITestConfigSettingsService } from '../../client/unittests/common/types';
 import { TestConfigurationManagerFactory } from '../../client/unittests/configurationFactory';
 import * as nose from '../../client/unittests/nosetest/testConfigurationManager';
 import * as pytest from '../../client/unittests/pytest/testConfigurationManager';
-import { ITestConfigurationManagerFactory } from '../../client/unittests/types';
+import {
+    ITestConfigSettingsService, ITestConfigurationManagerFactory
+} from '../../client/unittests/types';
 import * as unittest from '../../client/unittests/unittest/testConfigurationManager';
 
 use(chaiAsPromised);

@@ -134,13 +134,6 @@ export type TestsToRun = {
 
 export type UnitTestProduct = Product.nosetest | Product.pytest | Product.unittest;
 
-export const ITestConfigSettingsService = Symbol('ITestConfigSettingsService');
-export interface ITestConfigSettingsService {
-    updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
-    enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
-    disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
-}
-
 export interface ITestManagerService extends Disposable {
     getTestManager(): ITestManager | undefined;
     getTestWorkingDirectory(): string;

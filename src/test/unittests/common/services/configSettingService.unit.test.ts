@@ -17,7 +17,8 @@ import { UNIT_TEST_PRODUCTS } from '../../../../client/unittests/common/constant
 import {
     DelayedTestConfigSettingsService, TestConfigSettingsService
 } from '../../../../client/unittests/common/services/configSettingService';
-import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
+import { UnitTestProduct } from '../../../../client/unittests/common/types';
+import { ITestConfigSettingsService } from '../../../../client/unittests/types';
 
 use(chaiPromise);
 

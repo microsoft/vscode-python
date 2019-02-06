@@ -12,7 +12,8 @@ import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../../../../client/unittests/common/constants';
 import { TestConfigurationManager } from '../../../../client/unittests/common/managers/testConfigurationManager';
-import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
+import { UnitTestProduct } from '../../../../client/unittests/common/types';
+import { ITestConfigSettingsService } from '../../../../client/unittests/types';
 
 class MockTestConfigurationManager extends TestConfigurationManager {
     public requiresUserToConfigure(wkspace: Uri): Promise<boolean> {

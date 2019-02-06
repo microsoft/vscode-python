@@ -5,9 +5,9 @@ import { IInstaller, IOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { getSubDirectories } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
-import { ITestConfigurationManager } from '../../types';
+import { ITestConfigSettingsService, ITestConfigurationManager } from '../../types';
 import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../constants';
-import { ITestConfigSettingsService, UnitTestProduct } from './../types';
+import { UnitTestProduct } from '../types';
 
 export abstract class TestConfigurationManager implements ITestConfigurationManager {
     protected readonly outputChannel: OutputChannel;
