@@ -309,9 +309,24 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         this.testResultDisplay.displayProgressStatus(promise, debug);
         await promise;
     }
+
     private async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
         const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.disposableRegistry.push(activateCodeLenses(this.onDidChange, symbolProvider, testCollectionStorage));
+    }
+    private async configureTests(resource?: Uri) {
+        let wkspace: Uri | undefined;
+        if (resource) {
+            const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+            wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
+        } else {
+            wkspace = await selectTestWorkspace();
+        }
+        if (!wkspace) {
+            return;
+        }
+        const configurationService = this.serviceContainer.get<IUnitTestConfigurationService>(IUnitTestConfigurationService);
+        await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }
     private registerCommands(): void {
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -321,7 +336,14 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             commandManager.registerCommand(constants.Commands.Tests_Discover, (_, cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {
                 // Ignore the exceptions returned.
                 // This command will be invoked from other places of the extension.
-                this.discoverTests(cmdSource, resource, true, true).ignoreErrors();
+                this.discoverTests(cmdSource, resource, true, true)
+                   .ignoreErrors();
+            }),
+            commandManager.registerCommand(constants.Commands.Tests_Configure, (_, cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {
+                // Ignore the exceptions returned.
+                // This command will be invoked from other places of the extension.
+                this.configureTests(resource)
+                   .ignoreErrors();
             }),
             commandManager.registerCommand(constants.Commands.Tests_Run_Failed, (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) => this.runTestsImpl(cmdSource, resource, undefined, true)),
             commandManager.registerCommand(constants.Commands.Tests_Run, (_, cmdSource: CommandSource = CommandSource.commandPalette, file: Uri, testToRun?: TestsToRun) => this.runTestsImpl(cmdSource, file, testToRun)),
@@ -346,7 +368,8 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         if (!settings.unitTest.autoTestDiscoverOnSaveEnabled) {
             return;
         }
-        this.discoverTestsForDocument(doc).ignoreErrors();
+        this.discoverTestsForDocument(doc)
+            .ignoreErrors();
     }
     private registerHandlers() {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
