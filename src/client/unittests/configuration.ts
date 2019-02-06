@@ -6,8 +6,12 @@ import { IApplicationShell, IWorkspaceService } from '../common/application/type
 import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { TEST_OUTPUT_CHANNEL } from './common/constants';
+import { DelayedTestConfigSettingsService } from './common/services/configSettingService';
 import { UnitTestProduct } from './common/types';
-import { ITestConfigurationManagerFactory, IUnitTestConfigurationService } from './types';
+import {
+    ITestConfigSettingsService, ITestConfigurationManagerFactory,
+    IUnitTestConfigurationService
+} from './types';
 
 @injectable()
 export class UnitTestConfigurationService implements IUnitTestConfigurationService {
@@ -98,17 +102,21 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         if (typeof selectedTestRunner !== 'number') {
             return Promise.reject(null);
         }
+        const delayed = new DelayedTestConfigSettingsService();
         const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
-        const configMgr = factory.create(wkspace, selectedTestRunner);
+        const configMgr = factory.create(wkspace, selectedTestRunner, delayed);
         if (enableOnly) {
-            return configMgr.enable();
+            await configMgr.enable();
+        } else {
+            // Configure everything before enabling.
+            // Cuz we don't want the test engine (in main.ts file - tests get discovered when config changes are detected)
+            // to start discovering tests when tests haven't been configured properly.
+            await configMgr.configure(wkspace)
+                .then(() => this.enableTest(wkspace, selectedTestRunner))
+                .catch(reason => { return this.enableTest(wkspace, selectedTestRunner).then(() => Promise.reject(reason)); });
         }
-
-        // Configure everything before enabling.
-        // Cuz we don't want the test engine (in main.ts file - tests get discovered when config changes are detected)
-        // to start discovering tests when tests haven't been configured properly.
-        return configMgr.configure(wkspace)
-            .then(() => this.enableTest(wkspace, selectedTestRunner))
-            .catch(reason => { return this.enableTest(wkspace, selectedTestRunner).then(() => Promise.reject(reason)); });
+        const cfg = this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
+        delayed.apply(cfg)
+            .catch(ex => console.error('Python Extension: applying unit test config updates', ex));
     }
 }

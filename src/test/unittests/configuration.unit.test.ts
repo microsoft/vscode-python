@@ -246,7 +246,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     });
 
                 const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
-                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
+                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product), typeMoq.It.isAny()))
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
 
@@ -312,7 +312,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     });
 
                 const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
-                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
+                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product), typeMoq.It.isAny()))
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
 
