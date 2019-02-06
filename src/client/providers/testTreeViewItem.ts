@@ -28,7 +28,7 @@ export class PythonTestTreeItem extends TreeItem {
         runId: string,
         name: string,
         testStatus: TestStatus = TestStatus.Unknown,
-        // tslint:disable-next-line:
+        // tslint:disable-next-line:no-unused-variable
         private data: TestFolder | TestFile | TestSuite | TestFunction
     ) {
 
