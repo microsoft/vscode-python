@@ -23,7 +23,6 @@ type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
     private lsActivatedWorkspaces = new Map<string, ILanguageServerActivator>();
-    private workspaceFoldersCount = 1;
     private currentActivator?: ActivatorInfo;
     private jediActivatedOnce: boolean = false;
     private readonly workspaceService: IWorkspaceService;
@@ -101,18 +100,13 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     protected onWorkspaceFoldersChanged() {
-        if (this.workspaceService.workspaceFolders!.length < this.workspaceFoldersCount) {
-            //If the removed workspace folder was activated, dispose its activator
-            this.workspaceFoldersCount += -1;
-            const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
-            const activatedWkspcKeys = Array.from(this.lsActivatedWorkspaces.keys());
-            const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
-            if (activatedWkspcFoldersRemoved.length > 0) {
-                this.lsActivatedWorkspaces.get(activatedWkspcFoldersRemoved[0]).dispose();
-                this.lsActivatedWorkspaces.delete(activatedWkspcFoldersRemoved[0]);
-            }
-        } else {
-            this.workspaceFoldersCount += 1;
+        //If an activated workspace folder was removed, dispose its activator
+        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
+        const activatedWkspcKeys = Array.from(this.lsActivatedWorkspaces.keys());
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
+        if (activatedWkspcFoldersRemoved.length > 0) {
+            this.lsActivatedWorkspaces.get(activatedWkspcFoldersRemoved[0]).dispose();
+            this.lsActivatedWorkspaces.delete(activatedWkspcFoldersRemoved[0]);
         }
     }
 

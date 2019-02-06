@@ -77,6 +77,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
     }
     protected onWorkspaceFoldersChanged() {
+        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspaceKey(workspaceFolder.uri));
+        const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
+        if (activatedWkspcFoldersRemoved.length > 0){
+            this.activatedWorkspaces.delete(activatedWkspcFoldersRemoved[0]);
+        }
         this.addRemoveDocOpenedHandlers();
     }
     protected hasMultipleWorkspaces() {
