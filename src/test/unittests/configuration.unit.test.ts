@@ -324,21 +324,6 @@ suite('Unit Tests - ConfigurationService', () => {
                 configMgr.setup(c => c.enable())
                     .returns(() => Promise.resolve())
                     .verifiable(typeMoq.Times.once());
-                const configManagersToVerify: typeof configMgr[] = [configMgr];
-
-                [Product.unittest, Product.pytest, Product.nosetest]
-                    .filter(prod => product !== prod)
-                    .forEach(prod => {
-                        const otherTestConfigMgr = typeMoq.Mock.ofType<ITestConfigurationManager>(undefined, typeMoq.MockBehavior.Strict);
-                        factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(prod)))
-                            .returns(() => otherTestConfigMgr.object)
-                            .verifiable(typeMoq.Times.once());
-                        otherTestConfigMgr.setup(c => c.disable())
-                            .returns(() => Promise.resolve())
-                            .verifiable(typeMoq.Times.once());
-
-                        configManagersToVerify.push(otherTestConfigMgr);
-                    });
 
                 await testConfigService.target.displayTestFrameworkError(workspaceUri);
 
@@ -346,9 +331,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 expect(enableTestInvoked).to.be.equal(false, 'Enable Test is invoked');
                 factory.verifyAll();
                 appShell.verifyAll();
-                for (const item of configManagersToVerify) {
-                    item.verifyAll();
-                }
+                configMgr.verifyAll();
             });
 
             test('Prompt to enable and configure selected test framework', async () => {

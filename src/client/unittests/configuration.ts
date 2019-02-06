@@ -101,13 +101,6 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
         const configMgr = factory.create(wkspace, selectedTestRunner);
         if (enableOnly) {
-            // Ensure others are disabled
-            [Product.unittest, Product.pytest, Product.nosetest]
-                .filter(prod => selectedTestRunner !== prod)
-                .forEach(prod => {
-                    factory.create(wkspace, prod).disable()
-                        .catch(ex => console.error('Python Extension: createTestConfigurationManager.disable', ex));
-                });
             return configMgr.enable();
         }
 
