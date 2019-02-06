@@ -61,7 +61,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             this.workspaceTestManagerService.dispose();
         }
     }
-    public async activate(symboldProvider: vscode.DocumentSymbolProvider): Promise<void> {
+    public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
         this.workspaceTestManagerService = this.serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
@@ -75,9 +75,14 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
 
         this.autoDiscoverTests()
             .catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
-        await this.registerSymbolProvider(symboldProvider);
-    public async activateCodeLenses(symboldProvider: DocumentSymbolProvider): Promise<void> {
+        await this.registerSymbolProvider(symbolProvider);
     }
+
+    public async activateCodeLenses(symbolProvider: DocumentSymbolProvider): Promise<void> {
+        const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
+        this.disposableRegistry.push(activateCodeLenses(this.onDidChange, symbolProvider, testCollectionStorage));
+    }
+
     public async getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void> {
         let wkspace: Uri | undefined;
         if (resource) {
@@ -304,9 +309,9 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         this.testResultDisplay.displayProgressStatus(promise, debug);
         await promise;
     }
-    private async registerSymbolProvider(symboldProvider: vscode.DocumentSymbolProvider): Promise<void> {
+    private async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
         const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
-        this.disposableRegistry.push(activateCodeLenses(this.onDidChange, symboldProvider, testCollectionStorage));
+        this.disposableRegistry.push(activateCodeLenses(this.onDidChange, symbolProvider, testCollectionStorage));
     }
     private registerCommands(): void {
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
