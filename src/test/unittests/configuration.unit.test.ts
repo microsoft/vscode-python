@@ -350,6 +350,50 @@ suite('Unit Tests - ConfigurationService', () => {
                     item.verifyAll();
                 }
             });
+
+            test('Prompt to enable and configure selected test framework', async () => {
+                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => false);
+                unitTestSettings.setup(u => u.unittestEnabled).returns(() => false);
+                unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => false);
+
+                appShell.setup(s => s.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny()))
+                    .verifiable(typeMoq.Times.never());
+
+                let selectTestRunnerInvoked = false;
+                testConfigService.callBase = false;
+                testConfigService.setup(t => t.selectTestRunner(typeMoq.It.isAny()))
+                    .returns(() => {
+                        selectTestRunnerInvoked = true;
+                        return Promise.resolve(product as any);
+                    });
+
+                let enableTestInvoked = false;
+                testConfigService.setup(t => t.enableTest(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
+                    .returns(() => {
+                        enableTestInvoked = true;
+                        return Promise.resolve();
+                    });
+
+                const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
+                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
+                    .returns(() => configMgr.object)
+                    .verifiable(typeMoq.Times.once());
+
+                configMgr.setup(c => c.configure(typeMoq.It.isValue(workspaceUri)))
+                    .returns(() => Promise.resolve())
+                    .verifiable(typeMoq.Times.once());
+                const configManagersToVerify: typeof configMgr[] = [configMgr];
+
+                await testConfigService.target.promptToEnableAndConfigureTestFramework(workspaceUri);
+
+                expect(selectTestRunnerInvoked).to.be.equal(true, 'Select Test Runner not invoked');
+                expect(enableTestInvoked).to.be.equal(true, 'Enable Test not invoked');
+                appShell.verifyAll();
+                factory.verifyAll();
+                for (const item of configManagersToVerify) {
+                    item.verifyAll();
+                }
+            });
         });
     });
 });
