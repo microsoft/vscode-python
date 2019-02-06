@@ -20,7 +20,7 @@ import {
 import { IServiceContainer } from '../ioc/types';
 import { ITestTreeViewProvider } from '../providers/types';
 import { EventName } from '../telemetry/constants';
-import { sendTelemetryEvent } from '../telemetry/index';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
 import {
     CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL
@@ -314,6 +314,8 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.disposableRegistry.push(activateCodeLenses(this.onDidChange, symbolProvider, testCollectionStorage));
     }
+
+    @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
     private async configureTests(resource?: Uri) {
         let wkspace: Uri | undefined;
         if (resource) {
