@@ -72,7 +72,7 @@ export interface ITestConfigurationManager {
 
 export const ITestConfigurationManagerFactory = Symbol('ITestConfigurationManagerFactory');
 export interface ITestConfigurationManagerFactory {
-    create(wkspace: Uri, product: Product): ITestConfigurationManager;
+    create(wkspace: Uri, product: Product, cfg?: ITestConfigSettingsService): ITestConfigurationManager;
 }
 
 export enum TestFilter {
