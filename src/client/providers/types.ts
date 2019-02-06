@@ -7,7 +7,7 @@ import {
     CancellationToken, Event, ProviderResult,
     TreeDataProvider, Uri, WorkspaceEdit
 } from 'vscode';
-import { PythonTestTreeItem } from './testTreeViewItem';
+import { TestTreeItem } from './testTreeViewItem';
 
 export const ISortImportsEditingProvider = Symbol('ISortImportsEditingProvider');
 export interface ISortImportsEditingProvider {
@@ -16,9 +16,9 @@ export interface ISortImportsEditingProvider {
     registerCommands(): void;
 }
 
-export const IPythonTestTreeViewProvider = Symbol('IPythonTestTreeViewProvider');
-export interface IPythonTestTreeViewProvider extends TreeDataProvider<PythonTestTreeItem> {
-    onDidChangeTreeData: Event<PythonTestTreeItem | undefined>;
-    getTreeItem(element: PythonTestTreeItem): Promise<PythonTestTreeItem>;
-    getChildren(element?: PythonTestTreeItem): ProviderResult<PythonTestTreeItem[]>;
+export const ITestTreeViewProvider = Symbol('ITestTreeViewProvider');
+export interface ITestTreeViewProvider extends TreeDataProvider<TestTreeItem> {
+    onDidChangeTreeData: Event<TestTreeItem | undefined>;
+    getTreeItem(element: TestTreeItem): Promise<TestTreeItem>;
+    getChildren(element?: TestTreeItem): ProviderResult<TestTreeItem[]>;
 }

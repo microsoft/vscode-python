@@ -11,7 +11,7 @@ import {
     TestStatus, TestSuite
 } from '../unittests/common/types';
 
-export enum PythonTestTreeItemType {
+export enum TestTreeItemType {
     Root = 'Root',
     Package = 'Package',
     File = 'File',
@@ -19,22 +19,22 @@ export enum PythonTestTreeItemType {
     Function = 'Function'
 }
 
-export class PythonTestTreeItem extends TreeItem {
+export class TestTreeItem extends TreeItem {
 
     constructor(
-        kind: PythonTestTreeItemType,
-        private myParent: PythonTestTreeItem,
-        private myChildren: PythonTestTreeItem[],
+        kind: TestTreeItemType,
+        private readonly myParent: TestTreeItem,
+        private readonly myChildren: TestTreeItem[],
         runId: string,
         name: string,
         testStatus: TestStatus = TestStatus.Unknown,
         // tslint:disable-next-line:no-unused-variable
-        private data: TestFolder | TestFile | TestSuite | TestFunction
+        private readonly data: TestFolder | TestFile | TestSuite | TestFunction
     ) {
 
         super(
             `[${kind}] ${name}`,
-            kind === PythonTestTreeItemType.Function ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed
+            kind === TestTreeItemType.Function ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed
         );
 
         this.contextValue = kind;
@@ -44,11 +44,11 @@ export class PythonTestTreeItem extends TreeItem {
 
     public static createFromFolder(
         folder: TestFolder,
-        parent?: PythonTestTreeItem
-    ): PythonTestTreeItem {
+        parent?: TestTreeItem
+    ): TestTreeItem {
 
-        const folderItem = new PythonTestTreeItem(
-            PythonTestTreeItemType.Package,
+        const folderItem = new TestTreeItem(
+            TestTreeItemType.Package,
             parent,
             [],
             folder.nameToRun,
@@ -58,7 +58,7 @@ export class PythonTestTreeItem extends TreeItem {
         );
 
         folder.testFiles.forEach((testFile: TestFile) => {
-            folderItem.children.push(PythonTestTreeItem.createFromFile(testFile, folderItem));
+            folderItem.children.push(TestTreeItem.createFromFile(testFile, folderItem));
         });
 
         return folderItem;
@@ -66,11 +66,11 @@ export class PythonTestTreeItem extends TreeItem {
 
     public static createFromFile(
         testFile: TestFile,
-        parent?: PythonTestTreeItem
-    ): PythonTestTreeItem {
+        parent?: TestTreeItem
+    ): TestTreeItem {
 
-        const fileItem = new PythonTestTreeItem(
-            PythonTestTreeItemType.File,
+        const fileItem = new TestTreeItem(
+            TestTreeItemType.File,
             parent,
             [],
             testFile.nameToRun,
@@ -80,10 +80,10 @@ export class PythonTestTreeItem extends TreeItem {
         );
 
         testFile.functions.forEach((fn: TestFunction) => {
-            fileItem.children.push(PythonTestTreeItem.createFromFunction(fn, fileItem));
+            fileItem.children.push(TestTreeItem.createFromFunction(fn, fileItem));
         });
         testFile.suites.forEach((suite: TestSuite) => {
-            fileItem.children.push(PythonTestTreeItem.createFromSuite(suite, fileItem));
+            fileItem.children.push(TestTreeItem.createFromSuite(suite, fileItem));
         });
 
         return fileItem;
@@ -91,11 +91,11 @@ export class PythonTestTreeItem extends TreeItem {
 
     public static createFromSuite(
         suite: TestSuite,
-        parent: PythonTestTreeItem
-    ): PythonTestTreeItem {
+        parent: TestTreeItem
+    ): TestTreeItem {
 
-        const suiteItem = new PythonTestTreeItem(
-            PythonTestTreeItemType.Suite,
+        const suiteItem = new TestTreeItem(
+            TestTreeItemType.Suite,
             parent,
             [],
             suite.nameToRun,
@@ -105,10 +105,10 @@ export class PythonTestTreeItem extends TreeItem {
         );
 
         suite.suites.forEach((subSuite: TestSuite) => {
-            suiteItem.children.push(PythonTestTreeItem.createFromSuite(subSuite, suiteItem));
+            suiteItem.children.push(TestTreeItem.createFromSuite(subSuite, suiteItem));
         });
         suite.functions.forEach((fn: TestFunction) => {
-            suiteItem.children.push(PythonTestTreeItem.createFromFunction(fn, suiteItem));
+            suiteItem.children.push(TestTreeItem.createFromFunction(fn, suiteItem));
         });
 
         return suiteItem;
@@ -116,12 +116,12 @@ export class PythonTestTreeItem extends TreeItem {
 
     public static createFromFunction(
         fn: TestFunction,
-        parent: PythonTestTreeItem
-    ): PythonTestTreeItem {
+        parent: TestTreeItem
+    ): TestTreeItem {
 
         // tslint:disable-next-line:no-unnecessary-local-variable
-        const funcItem = new PythonTestTreeItem(
-            PythonTestTreeItemType.Function,
+        const funcItem = new TestTreeItem(
+            TestTreeItemType.Function,
             parent,
             undefined,
             fn.nameToRun,
@@ -133,11 +133,11 @@ export class PythonTestTreeItem extends TreeItem {
         return funcItem;
     }
 
-    public get children(): PythonTestTreeItem[] {
+    public get children(): TestTreeItem[] {
         return this.myChildren;
     }
 
-    public get parent(): PythonTestTreeItem {
+    public get parent(): TestTreeItem {
         return this.myParent;
     }
 }

@@ -5,12 +5,12 @@
 
 import { IServiceManager } from '../ioc/types';
 import { SortImportsEditingProvider } from './importSortProvider';
-import { PythonTestTreeViewProvider } from './testTreeViewProvider';
+import { TestTreeViewProvider } from './testTreeViewProvider';
 import {
-    IPythonTestTreeViewProvider, ISortImportsEditingProvider
+    ISortImportsEditingProvider, ITestTreeViewProvider
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ISortImportsEditingProvider>(ISortImportsEditingProvider, SortImportsEditingProvider);
-    serviceManager.addSingleton<IPythonTestTreeViewProvider>(IPythonTestTreeViewProvider, PythonTestTreeViewProvider);
+    serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
 }

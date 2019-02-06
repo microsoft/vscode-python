@@ -14,20 +14,20 @@ import {
     ITestCollectionStorageService, TestFolder, Tests, TestStatus
 } from '../unittests/common/types';
 import {
-    PythonTestTreeItem, PythonTestTreeItemType
+    TestTreeItem, TestTreeItemType
 } from './testTreeViewItem';
-import { IPythonTestTreeViewProvider } from './types';
+import { ITestTreeViewProvider as ITestTreeViewProvider } from './types';
 
 @injectable()
-export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, IDisposable {
+export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable {
     /**
      * This will trigger the view to update the changed element/root and its children recursively (if shown).
      * To signal that root has changed, do not pass any argument or pass `undefined` or `null`.
      */
-    public readonly onDidChangeTreeData: Event<PythonTestTreeItem | undefined>;
+    public readonly onDidChangeTreeData: Event<TestTreeItem | undefined>;
 
-    private _onDidChangeTreeData: EventEmitter<PythonTestTreeItem | undefined> = new EventEmitter<PythonTestTreeItem | undefined>();
-    private root: PythonTestTreeItem[];
+    private _onDidChangeTreeData: EventEmitter<TestTreeItem | undefined> = new EventEmitter<TestTreeItem | undefined>();
+    private root: TestTreeItem[];
     private disposables: IDisposable[] = [];
 
     constructor(
@@ -36,7 +36,7 @@ export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, 
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
-        this.root = [new PythonTestTreeItem(PythonTestTreeItemType.Root, undefined, undefined, '*', 'no tests discovered yet', TestStatus.Unknown, undefined)];
+        this.root = [new TestTreeItem(TestTreeItemType.Root, undefined, undefined, '*', 'no tests discovered yet', TestStatus.Unknown, undefined)];
         this.refresh(this.workspace.workspaceFolders[0].uri);
         disposableRegistry.push(this);
         this.disposables.push(this.testStore.onTestStoreUpdated(this.onTestStoreUpdated, this));
@@ -54,7 +54,7 @@ export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, 
      * @param element The element for which [TreeItem](#TreeItem) representation is asked for.
      * @return [TreeItem](#TreeItem) representation of the element
      */
-    public async getTreeItem(element: PythonTestTreeItem): Promise<PythonTestTreeItem> {
+    public async getTreeItem(element: TestTreeItem): Promise<TestTreeItem> {
         return element;
     }
 
@@ -64,7 +64,7 @@ export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, 
      * @param element The element from which the provider gets children. Can be `undefined`.
      * @return Children of `element` or root if no element is passed.
      */
-    public getChildren(element?: PythonTestTreeItem): ProviderResult<PythonTestTreeItem[]> {
+    public getChildren(element?: TestTreeItem): ProviderResult<TestTreeItem[]> {
         if (element === undefined) {
             return this.root;
         }
@@ -80,7 +80,7 @@ export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, 
      * @param element The element for which the parent has to be returned.
      * @return Parent of `element`.
      */
-    public getParent?(element: PythonTestTreeItem): ProviderResult<PythonTestTreeItem> {
+    public getParent?(element: TestTreeItem): ProviderResult<TestTreeItem> {
         return element.parent;
     }
 
@@ -94,9 +94,9 @@ export class PythonTestTreeViewProvider implements IPythonTestTreeViewProvider, 
             tests = this.testStore.getTests(resource);
         }
         if (tests && tests.testFolders) {
-            const newRoot: PythonTestTreeItem[] = [];
+            const newRoot: TestTreeItem[] = [];
             tests.testFolders.forEach((tf: TestFolder) => {
-                newRoot.push(PythonTestTreeItem.createFromFolder(tf));
+                newRoot.push(TestTreeItem.createFromFolder(tf));
             });
             this.root = newRoot;
             this._onDidChangeTreeData.fire();
