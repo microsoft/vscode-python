@@ -14,7 +14,7 @@ import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../../client/unittests/common/constants';
 import { UnitTestConfigurationService } from '../../client/unittests/configuration';
-import { ITestConfigurationManager, ITestConfigurationManagerFactory } from '../../client/unittests/types';
+import { ITestConfigSettingsService, ITestConfigurationManager, ITestConfigurationManagerFactory } from '../../client/unittests/types';
 
 suite('Unit Tests - ConfigurationService', () => {
     UNIT_TEST_PRODUCTS.forEach(product => {
@@ -25,6 +25,7 @@ suite('Unit Tests - ConfigurationService', () => {
             let testConfigService: typeMoq.IMock<UnitTestConfigurationService>;
             let workspaceService: typeMoq.IMock<IWorkspaceService>;
             let factory: typeMoq.IMock<ITestConfigurationManagerFactory>;
+            let testSettingsService: typeMoq.IMock<ITestConfigSettingsService>;
             let appShell: typeMoq.IMock<IApplicationShell>;
             let unitTestSettings: typeMoq.IMock<IUnitTestSettings>;
             setup(() => {
@@ -35,6 +36,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 const installer = typeMoq.Mock.ofType<IInstaller>(undefined, typeMoq.MockBehavior.Strict);
                 workspaceService = typeMoq.Mock.ofType<IWorkspaceService>(undefined, typeMoq.MockBehavior.Strict);
                 factory = typeMoq.Mock.ofType<ITestConfigurationManagerFactory>(undefined, typeMoq.MockBehavior.Strict);
+                testSettingsService = typeMoq.Mock.ofType<ITestConfigSettingsService>(undefined, typeMoq.MockBehavior.Strict);
                 unitTestSettings = typeMoq.Mock.ofType<IUnitTestSettings>();
                 const pythonSettings = typeMoq.Mock.ofType<IPythonSettings>(undefined, typeMoq.MockBehavior.Strict);
 
@@ -47,6 +49,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 serviceContainer.setup(c => c.get(typeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
                 serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
                 serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestConfigurationManagerFactory))).returns(() => factory.object);
+                serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestConfigSettingsService))).returns(() => testSettingsService.object);
                 testConfigService = typeMoq.Mock.ofType(UnitTestConfigurationService, typeMoq.MockBehavior.Loose, true, serviceContainer.object);
             });
             test('Enable Test when setting unitTest.promptToConfigure is enabled', async () => {
@@ -356,7 +359,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     });
 
                 const configMgr = typeMoq.Mock.ofType<ITestConfigurationManager>();
-                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product)))
+                factory.setup(f => f.create(typeMoq.It.isValue(workspaceUri), typeMoq.It.isValue(product), typeMoq.It.isAny()))
                     .returns(() => configMgr.object)
                     .verifiable(typeMoq.Times.once());
 
