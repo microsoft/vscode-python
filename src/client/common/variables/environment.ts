@@ -67,51 +67,70 @@ export function parseEnvFile(
     lines: string | Buffer,
     baseVars?: EnvironmentVariables
 ): EnvironmentVariables {
-    if (!baseVars) {
-        baseVars = {};
-    }
+    const globalVars = baseVars ? baseVars : {};
+    const vars = {};
+    lines.toString().split('\n').forEach((line, idx) => {
+        const [name, value] = parseEnvLine(line);
+        if (name === '') {
+            return;
+        }
+        vars[name] = substituteEnvVars(value, vars, globalVars);
+    });
+    return vars;
+}
+
+function parseEnvLine(line: string): [string, string] {
     // Most of the following is an adaptation of the dotenv code:
     //   https://github.com/motdotla/dotenv/blob/master/lib/main.js#L32
     // We don't use dotenv here because it loses ordering, which is
     // significant for substitution.
-    const vars = {};
-    lines.toString().split('\n').forEach((line, idx) => {
-        const match = line.match(/^\s*([a-zA-Z]\w*)\s*=\s*(.*?)?\s*$/);
-        if (!match) {
-            return;
-        }
+    const match = line.match(/^\s*([a-zA-Z]\w*)\s*=\s*(.*?)?\s*$/);
+    if (!match) {
+        return ['', ''];
+    }
 
-        const name = match[1];
-        let value = match[2];
-        if (value) {
-            if (value[0] === '\'' && value[value.length - 1] === '\'') {
-                value = value.substring(1, value.length - 1);
-                value = value.replace(/\\n/gm, '\n');
-            } else if (value[0] === '"' && value[value.length - 1] === '"') {
-                value = value.substring(1, value.length - 1);
-                value = value.replace(/\\n/gm, '\n');
-            }
-
-            // Substitution here is inspired a little by dotenv-expand:
-            //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
-            if (value.match(/(?<![\\])\${([a-zA-Z]\w*)?\${/)) {
-                // Disallow nesting.
-            } else {
-                const matches = value.match(/(?<![\\])(\${[a-zA-Z]\w*})/g);
-                if (matches) {
-                    sendTelemetryEvent(EventName.ENVFILE_VARIABLE_SUBSTITUTION);
-                }
-                for (const submatch of matches || []) {
-                    const replacement = submatch.substring(2, submatch.length - 1);
-                    value = value.replace(RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`),
-                                          vars[replacement] || baseVars![replacement] || '');
-                }
-                value = value.replace(/\\\$/g, '$');
-            }
-        } else {
-            value = '';
+    const name = match[1];
+    let value = match[2];
+    if (value && value !== '') {
+        if (value[0] === '\'' && value[value.length - 1] === '\'') {
+            value = value.substring(1, value.length - 1);
+            value = value.replace(/\\n/gm, '\n');
+        } else if (value[0] === '"' && value[value.length - 1] === '"') {
+            value = value.substring(1, value.length - 1);
+            value = value.replace(/\\n/gm, '\n');
         }
-        vars[name] = value;
-    });
-    return vars;
+    } else {
+        value = '';
+    }
+
+    return [name, value];
+}
+
+const INVALID_REGEX = /(?<![\\])\${([a-zA-Z]\w*)?\${/;
+const SUBST_REGEX = /(?<![\\])(\${[a-zA-Z]\w*})/g;
+
+function substituteEnvVars(
+    value: string,
+    localVars: EnvironmentVariables,
+    globalVars: EnvironmentVariables
+): string {
+    // Substitution here is inspired a little by dotenv-expand:
+    //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
+
+    if (value.match(INVALID_REGEX)) {
+        // No substitution for a value with bad syntax.
+        return value;
+    }
+
+    const matches = value.match(SUBST_REGEX);
+    if (matches) {
+        sendTelemetryEvent(EventName.ENVFILE_VARIABLE_SUBSTITUTION);
+    }
+    for (const submatch of matches || []) {
+        const replacement = submatch.substring(2, submatch.length - 1);
+        const regex = RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`);
+        value = value.replace(regex,
+                              localVars[replacement] || globalVars[replacement] || '');
+    }
+    return value.replace(/\\\$/g, '$');
 }
