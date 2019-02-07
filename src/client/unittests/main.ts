@@ -9,7 +9,7 @@ import {
     OutputChannel, TextDocument, Uri, window
 } from 'vscode';
 import {
-    ICommandManager, IDocumentManager, IWorkspaceService
+    IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService
 } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
@@ -89,7 +89,8 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
             wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
         } else {
-            wkspace = await selectTestWorkspace();
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            wkspace = await selectTestWorkspace(appShell);
         }
         if (!wkspace) {
             return;
@@ -322,7 +323,8 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
             wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
         } else {
-            wkspace = await selectTestWorkspace();
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            wkspace = await selectTestWorkspace(appShell);
         }
         if (!wkspace) {
             return;

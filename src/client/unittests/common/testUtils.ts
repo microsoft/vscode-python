@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { Uri, window, workspace } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IUnitTestSettings, Product } from '../../common/types';
@@ -9,14 +9,13 @@ import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, UnitTestProduct } from './types';
 
-export async function selectTestWorkspace(): Promise<Uri | undefined> {
+export async function selectTestWorkspace(appShell: IApplicationShell): Promise<Uri | undefined> {
     if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
         return undefined;
     } else if (workspace.workspaceFolders.length === 1) {
         return workspace.workspaceFolders[0].uri;
     } else {
-        // tslint:disable-next-line:no-any prefer-type-cast
-        const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
+        const workspaceFolder = await appShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
         return workspaceFolder ? workspaceFolder.uri : undefined;
     }
 }
