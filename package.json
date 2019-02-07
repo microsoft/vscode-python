@@ -1056,6 +1056,12 @@
                     "description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown. \nDefaults to '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)' if left blank",
                     "scope": "resource"
                 },
+                "python.dataScience.allowLiveShare": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow the Python Interactive window to be shared during a Live Share session (experimental)",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
