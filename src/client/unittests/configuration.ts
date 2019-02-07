@@ -60,6 +60,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             detail: 'https://nose.readthedocs.io/'
         }];
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: placeHolderMessage

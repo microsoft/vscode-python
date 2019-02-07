@@ -39,6 +39,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     }
     protected selectTestDir(rootDir: string, subDirs: string[], customOptions: QuickPickItem[] = []): Promise<string> {
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: 'Select the directory containing the unit tests'
@@ -74,6 +75,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
 
     protected selectTestFilePattern(): Promise<string> {
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: 'Select the pattern to identify test files'
