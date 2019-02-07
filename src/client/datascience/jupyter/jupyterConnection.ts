@@ -14,7 +14,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
 import { IConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
-import { RegExpValues } from '../constants';
 
 export type JupyterServerInfo = {
     base_url: string;
