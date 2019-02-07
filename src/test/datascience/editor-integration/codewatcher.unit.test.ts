@@ -507,6 +507,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         const version = 1;
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
+        documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
         const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

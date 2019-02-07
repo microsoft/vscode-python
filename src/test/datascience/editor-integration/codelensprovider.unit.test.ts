@@ -43,6 +43,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
         targetCodeWatcher.setup(tc => tc.getCodeLenses()).returns(() => []).verifiable(TypeMoq.Times.once());
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.once());
+        documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
@@ -61,6 +62,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher.setup(tc => tc.getFileName()).returns(() => 'test.py');
         targetCodeWatcher.setup(tc => tc.getVersion()).returns(() => 1);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.once());
+        documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
@@ -89,6 +91,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher.setup(tc => tc.getFileName()).returns(() => 'test.py');
         targetCodeWatcher.setup(tc => tc.getVersion()).returns(() => 1);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.exactly(3));
+        documentManager.setup(d => d.textDocuments).returns(() => [document.object, document2.object, document3.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);

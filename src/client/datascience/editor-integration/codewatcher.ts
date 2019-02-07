@@ -83,8 +83,8 @@ export class CodeWatcher implements ICodeWatcher {
         // run them one by one
         for (const lens of this.codeLenses) {
             // Make sure that we have the correct command (RunCell) lenses
-            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 2) {
-                const range: Range = lens.command.arguments[1];
+            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 5) {
+                const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
                     await activeHistory.addCode(code, this.getFileName(), range.start.line);
