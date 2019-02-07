@@ -31,6 +31,7 @@ import {
     Platform,
     PythonInterpreterTelemetry,
     TerminalTelemetry,
+    TestConfiguringTelemetry,
     TestDiscoverytTelemetry,
     TestRunTelemetry
 } from './types';
@@ -289,6 +290,7 @@ interface IEventNamePropertyMapping {
     [EventName.SIGNATURE]: never | undefined;
     [EventName.SYMBOL]: never | undefined;
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
+    [EventName.UNITTEST_CONFIGURING]: TestConfiguringTelemetry;
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;

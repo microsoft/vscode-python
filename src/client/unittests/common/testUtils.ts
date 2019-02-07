@@ -30,6 +30,28 @@ export function convertFileToPackage(filePath: string): string {
     return filePath.substring(0, lastIndex).replace(/\//g, '.').replace(/\\/g, '.');
 }
 
+export function parseProviderName(product: UnitTestProduct): TestProvider {
+    switch (product) {
+        case Product.nosetest: return 'nosetest';
+        case Product.pytest: return 'pytest';
+        case Product.unittest: return 'unittest';
+        default: {
+            throw new Error(`Unknown Test Product ${product}`);
+        }
+    }
+}
+
+export function parseProduct(provider: TestProvider): UnitTestProduct {
+    switch (provider) {
+        case 'nosetest': return Product.nosetest;
+        case 'pytest': return Product.pytest;
+        case 'unittest': return Product.unittest;
+        default: {
+            throw new Error(`Unknown Test Provider ${provider}`);
+        }
+    }
+}
+
 @injectable()
 export class TestsHelper implements ITestsHelper {
     private readonly appShell: IApplicationShell;
@@ -40,24 +62,10 @@ export class TestsHelper implements ITestsHelper {
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
     public parseProviderName(product: UnitTestProduct): TestProvider {
-        switch (product) {
-            case Product.nosetest: return 'nosetest';
-            case Product.pytest: return 'pytest';
-            case Product.unittest: return 'unittest';
-            default: {
-                throw new Error(`Unknown Test Product ${product}`);
-            }
-        }
+        return parseProviderName(product);
     }
     public parseProduct(provider: TestProvider): UnitTestProduct {
-        switch (provider) {
-            case 'nosetest': return Product.nosetest;
-            case 'pytest': return Product.pytest;
-            case 'unittest': return Product.unittest;
-            default: {
-                throw new Error(`Unknown Test Provider ${provider}`);
-            }
-        }
+        return parseProduct(provider);
     }
     public getSettingsPropertyNames(product: UnitTestProduct): TestSettingsPropertyNames {
         const id = this.parseProviderName(product);
