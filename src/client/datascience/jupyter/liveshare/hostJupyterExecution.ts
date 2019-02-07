@@ -83,6 +83,8 @@ export class HostJupyterExecution extends JupyterExecutionBase {
             this.runningServer = await super.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir);
 
             // Then using the liveshare api, port forward whatever port is being used by the server
+            // Note: Liveshare can actually change this value on the guest. So on the guest side we need to listen
+            // to an event they are going to add to their api.
             if (!uri && this.runningServer) {
                 const api = await this.started;
                 if (api && api.session && api.session.role === vsls.Role.Host) {
