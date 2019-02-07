@@ -188,7 +188,7 @@ export class GuestJupyterServer implements INotebookServer {
             const match = this.responseQueue[index];
 
             // Remove from the response queue if necessary
-            this.responseQueue = this.responseQueue.length > 1 ? this.responseQueue.splice(index, 1) : [];
+            this.responseQueue.splice(index, 1);
 
             // Return this single item
             return Promise.resolve(match as T);
@@ -213,7 +213,7 @@ export class GuestJupyterServer implements INotebookServer {
             if (matchIndex >= 0) {
                 this.waitingQueue[matchIndex].deferred.resolve(response);
                 this.waitingQueue = this.waitingQueue.splice(matchIndex);
-                this.responseQueue = this.responseQueue.splice(i);
+                this.responseQueue.splice(i, 1);
                 i -= 1; // Offset the addition as we removed this item
             }
         }
