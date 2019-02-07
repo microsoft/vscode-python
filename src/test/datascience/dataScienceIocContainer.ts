@@ -80,6 +80,7 @@ import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterS
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import {
     ICodeCssGenerator,
+    IDataScience,
     IHistory,
     IHistoryProvider,
     IJupyterCommandFactory,
@@ -88,8 +89,7 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
-    IDataScience
+    IStatusProvider
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -397,7 +397,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             dispose: () => { return; }
         };
 
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e;});
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);

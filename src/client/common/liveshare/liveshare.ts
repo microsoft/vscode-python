@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-// tslint:disable:no-any unified-signatures
-
-import { injectable, inject } from 'inversify';
-import { ILiveShareApi, IWorkspaceService } from '../application/types';
+'use strict';
+import { inject, injectable } from 'inversify';
 import * as vsls from 'vsls/vscode';
+
+import { ILiveShareApi, IWorkspaceService } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 
+// tslint:disable:no-any unified-signatures
 
 @injectable()
 export class LiveShareApi implements ILiveShareApi {
 
     private supported : boolean = false;
-    private apiPromise : Promise<vsls.LiveShare | null>;
+    private apiPromise : Promise<vsls.LiveShare | null> | undefined;
 
     constructor(
         @inject(IDisposableRegistry) disposableRegistry : IDisposableRegistry,
@@ -31,13 +31,16 @@ export class LiveShareApi implements ILiveShareApi {
     }
 
     public getApi(): Promise<vsls.LiveShare | null> {
-        return this.apiPromise;
+        return this.apiPromise!;
     }
 
     private onSettingsChanged() {
         const supported = this.configService.getSettings().datascience.allowLiveShare;
-        if (supported != this.supported) {
+        if (supported !== this.supported) {
+            this.supported = supported ? true : false;
             this.apiPromise = supported ? vsls.getApi() : Promise.resolve(null);
+        } else if (!this.apiPromise) {
+            this.apiPromise = Promise.resolve(null);
         }
     }
 }

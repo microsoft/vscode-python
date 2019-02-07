@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
@@ -21,6 +19,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
     ICell,
@@ -38,6 +37,7 @@ import {
     InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
+import { ClassType } from '../../client/ioc/types';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
@@ -45,6 +45,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockJupyterSession } from './mockJupyterSession';
 
+// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
@@ -764,22 +765,32 @@ plt.show()`,
         }
     });
 
+    async function getNotebookSession(server: INotebookServer | undefined) : Promise<MockJupyterSession | undefined> {
+        if (server) {
+            // This is kinda fragile. It reliese on impl details to get to the session. Might
+            // just expose it?
+            const innerServerFactory = (server as any)['serverFactory'] as RoleBasedFactory<INotebookServer, ClassType<INotebookServer>>;
+            const innerServer = await innerServerFactory.get();
+            assert.ok(innerServer, 'Cannot find the inner server');
+            return (innerServer as any)['session'] as MockJupyterSession;
+        }
+    }
+
     runTest('Theme modifies execution', async () => {
         if (ioc.mockJupyter) {
             let server = await createNotebookServer(true, false, false);
-            let session = (server as any)['session'] as MockJupyterSession;
-
+            let session = await getNotebookSession(server);
             const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
             const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
 
-            assert.ok(session.getExecutes().indexOf(light) >= 0, 'light not found');
-            assert.ok(session.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
+            assert.ok(session!.getExecutes().indexOf(light) >= 0, 'light not found');
+            assert.ok(session!.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
             await server!.dispose();
 
             server = await createNotebookServer(true, false, true);
-            session = (server as any)['session'] as MockJupyterSession;
-            assert.ok(session.getExecutes().indexOf(dark) >= 0, 'dark not found');
-            assert.ok(session.getExecutes().indexOf(light) < 0, 'light found when not allowed');
+            session = await getNotebookSession(server);
+            assert.ok(session!.getExecutes().indexOf(dark) >= 0, 'dark not found');
+            assert.ok(session!.getExecutes().indexOf(light) < 0, 'light found when not allowed');
             await server!.dispose();
         }
     });
