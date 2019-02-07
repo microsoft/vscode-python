@@ -12,6 +12,7 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { ILiveShareApi } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
@@ -31,7 +32,6 @@ import {
     INotebookServer,
     InterruptResult
 } from '../types';
-import { ILiveShareApi } from '../../common/application/types';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
