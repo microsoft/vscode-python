@@ -83,7 +83,8 @@ enum Type {
     ViewTestOutput = 7,
     Null = 8,
     SelectAndRunMethod = 9,
-    DebugMethod = 10
+    DebugMethod = 10,
+    Configure = 11
 }
 const statusIconMapping = new Map<TestStatus, string>();
 statusIconMapping.set(TestStatus.Pass, constants.Octicons.Test_Pass);
@@ -126,6 +127,7 @@ function buildItems(tests?: Tests): TestItem[] {
     items.push({ description: '', label: 'Run All Unit Tests', type: Type.RunAll });
     items.push({ description: '', label: 'Discover Unit Tests', type: Type.ReDiscover });
     items.push({ description: '', label: 'Run Unit Test Method ...', type: Type.SelectAndRunMethod });
+    items.push({ description: '', label: 'Configure Unit Tests', type: Type.Configure });
 
     const summary = getSummary(tests);
     items.push({ description: '', label: 'View Unit Test Output', type: Type.ViewTestOutput, detail: summary });
@@ -247,6 +249,10 @@ function onItemSelected(cmdSource: CommandSource, wkspace: Uri, selection: TestI
             // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
             args.push({ testFunction: [selection.fn!.testFunction] } as TestsToRun);
             args.push(true);
+            break;
+        }
+        case Type.Configure: {
+            cmd = constants.Commands.Tests_Configure;
             break;
         }
         default: {
