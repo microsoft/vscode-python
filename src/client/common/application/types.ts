@@ -45,6 +45,7 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
+import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable } from '../types';
 
@@ -863,4 +864,10 @@ export interface IWebPanelProvider {
      * @return A IWebPanel that can be used to show html pages.
      */
     create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+}
+
+// Wraps the vsls liveshare API
+export const ILiveShareApi = Symbol('ILiveShareApi');
+export interface ILiveShareApi {
+    getApi(): Promise<vsls.LiveShare | null>;
 }

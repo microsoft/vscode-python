@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
+import { ILiveShareApi } from '../../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -24,6 +25,7 @@ export class HostJupyterServer extends JupyterServerBase {
     private responseBacklog : { responseTime: number; response: IServerResponse }[] = [];
 
     constructor(
+        private liveShare: ILiveShareApi,
         dataScience: IDataScience,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
@@ -36,7 +38,7 @@ export class HostJupyterServer extends JupyterServerBase {
 
     public async dispose(): Promise<void> {
         await super.dispose();
-        const api = await vsls.getApi();
+        const api = await this.liveShare.getApi();
         if (api !== null) {
             return api.unshareService(LiveShare.JupyterServerSharedService);
         }
@@ -88,7 +90,7 @@ export class HostJupyterServer extends JupyterServerBase {
     }
 
     private async startSharedService() : Promise<vsls.SharedService | undefined> {
-        const api = await vsls.getApiAsync();
+        const api = await this.liveShare.getApi();
 
         if (api) {
             const service = await waitForHostService(api, LiveShare.JupyterServerSharedService);
@@ -133,7 +135,7 @@ export class HostJupyterServer extends JupyterServerBase {
     private wrapObservableResult(code: string, observable: Observable<ICell[]>, id?: string) : Observable<ICell[]> {
         return new Observable(subscriber => {
             // We need the api to translate cells
-            vsls.getApi().then((api) => {
+            this.liveShare.getApi().then((api) => {
                 // Generate a new id or use the one passed in to identify everything that happened
                 const newId = id ? id : uuid();
                 let pos = 0;

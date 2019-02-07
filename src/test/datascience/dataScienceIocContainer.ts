@@ -21,6 +21,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    ILiveShareApi,
     ITerminalManager,
     IWorkspaceService
 } from '../../client/common/application/types';
@@ -159,6 +160,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockJupyterManager } from './mockJupyterManager';
+import { MockLiveShareApi } from './mockLiveShare';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -199,6 +201,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
+        this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);

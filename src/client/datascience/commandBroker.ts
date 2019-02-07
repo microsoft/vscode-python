@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ICommandManager } from '../common/application/types';
+import { ICommandManager, ILiveShareApi } from '../common/application/types';
 import { LiveShare } from './constants';
 import { PostOffice } from './liveshare/postOffice';
 import { ICommandBroker } from './types';
@@ -20,9 +20,11 @@ import { ICommandBroker } from './types';
 @injectable()
 export class CommandBroker implements ICommandBroker {
 
-    private postOffice : PostOffice = new PostOffice(LiveShare.CommandBrokerService);
+    private postOffice : PostOffice;
     constructor(
+        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(ICommandManager) private commandManager: ICommandManager) {
+        this.postOffice = new PostOffice(LiveShare.CommandBrokerService, liveShare);
     }
 
     public registerCommand(command: string, callback: (...args: any[]) => void, thisArg?: any): Disposable {

@@ -18,6 +18,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
+import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
@@ -142,6 +143,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
 suite('Jupyter Execution', async () => {
     const interpreterService = mock(InterpreterService);
     const executionFactory = mock(PythonExecutionFactory);
+    const liveShare = mock(LiveShareApi);
     const configService = mock(ConfigurationService);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
@@ -496,6 +498,8 @@ suite('Jupyter Execution', async () => {
         when(executionFactory.createActivatedEnvironment(argThat(o => !o || o.interpreter === activeInterpreter))).thenResolve(activeService);
         when(processServiceFactory.create()).thenResolve(processService.object);
 
+        when(liveShare.getApi()).thenResolve(null);
+
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
@@ -521,7 +525,8 @@ suite('Jupyter Execution', async () => {
             maxOutputSize: 400,
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            allowLiveShare: false
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -546,6 +551,7 @@ suite('Jupyter Execution', async () => {
         const mockSessionManager = new MockJupyterManager(instance(serviceManager));
 
         return new JupyterExecution(
+            instance(liveShare),
             instance(executionFactory),
             instance(interpreterService),
             instance(processServiceFactory),

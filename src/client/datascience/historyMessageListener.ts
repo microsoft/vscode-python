@@ -3,7 +3,7 @@
 'use strict';
 import '../common/extensions';
 
-import { IWebPanelMessageListener } from '../common/application/types';
+import { ILiveShareApi, IWebPanelMessageListener } from '../common/application/types';
 import { HistoryMessages, LiveShare } from './constants';
 import { PostOffice } from './liveshare/postOffice';
 
@@ -11,10 +11,12 @@ import { PostOffice } from './liveshare/postOffice';
 
 // This class listens to messages that come from the local Python Interactive window
 export class HistoryMessageListener implements IWebPanelMessageListener {
-    private postOffice : PostOffice = new PostOffice(LiveShare.WebPanelMessageService);
+    private postOffice : PostOffice;
     private disposedCallback : () => void;
 
-    constructor(callback: (message: string, payload: any) => void, disposed: () => void) {
+    constructor(liveShare: ILiveShareApi, callback: (message: string, payload: any) => void, disposed: () => void) {
+        this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare);
+
         // Save our dispose callback so we remove our history window
         this.disposedCallback = disposed;
 

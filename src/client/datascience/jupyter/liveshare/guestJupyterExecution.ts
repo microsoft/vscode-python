@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { IWorkspaceService } from '../../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
@@ -26,6 +26,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
     private runningServer : INotebookServer | undefined;
 
     constructor(
+        private liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
@@ -40,6 +41,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
         commandFactory : IJupyterCommandFactory,
         serviceContainer: IServiceContainer) {
         super(
+            liveShare,
             executionFactory,
             interpreterService,
             processServiceFactory,
@@ -117,7 +119,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
     }
 
     private async startSharedProxy() : Promise<vsls.SharedServiceProxy | null> {
-        const api = await vsls.getApiAsync();
+        const api = await this.liveShare.getApi();
         if (api) {
             return waitForGuestService(api, LiveShare.JupyterExecutionService);
         }

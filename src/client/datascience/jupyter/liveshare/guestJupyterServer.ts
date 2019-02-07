@@ -6,6 +6,7 @@ import { Subscriber } from 'rxjs/Subscriber';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
+import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -30,6 +31,7 @@ export class GuestJupyterServer implements INotebookServer {
     private sharedService: Promise<vsls.SharedServiceProxy | null>;
 
     constructor(
+        private liveShare: ILiveShareApi,
         private dataScience: IDataScience,
         logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
@@ -129,7 +131,7 @@ export class GuestJupyterServer implements INotebookServer {
     }
 
     private async startSharedServiceProxy() : Promise<vsls.SharedServiceProxy | null> {
-        const api = await vsls.getApiAsync();
+        const api = await this.liveShare.getApi();
 
         if (api) {
             // Wait for the host to be setup too.

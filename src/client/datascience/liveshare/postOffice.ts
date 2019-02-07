@@ -5,6 +5,7 @@ import { JSONArray } from '@phosphor/coreutils';
 import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
+import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposable } from '../../common/types';
 import { LiveShare } from '../constants';
 
@@ -24,7 +25,7 @@ export class PostOffice implements IAsyncDisposable {
     private currentRole : vsls.Role = vsls.Role.None;
     private commandMap : { [key: string] : { thisArg: any; callback(...args: any[]) : void } } = {};
 
-    constructor(name: string) {
+    constructor(name: string, private liveShareApi: ILiveShareApi) {
         this.name = name;
         this.started = this.startCommandServer();
 
@@ -169,7 +170,7 @@ export class PostOffice implements IAsyncDisposable {
     }
 
     private async startCommandServer() : Promise<vsls.LiveShare | null> {
-        const api = await vsls.getApi();
+        const api = await this.liveShareApi.getApi();
         if (api !== null) {
             api.onDidChangeSession(() => this.onChangeSession(api).ignoreErrors());
             await this.onChangeSession(api);

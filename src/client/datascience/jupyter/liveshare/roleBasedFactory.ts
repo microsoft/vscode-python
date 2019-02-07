@@ -3,6 +3,7 @@
 'use strict';
 import * as vsls from 'vsls/vscode';
 
+import { ILiveShareApi } from '../../../common/application/types';
 import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
 
@@ -12,7 +13,7 @@ export class RoleBasedFactory<T extends IAsyncDisposable> {
     private firstTime : boolean = true;
     private createPromise : Promise<T> | undefined;
 
-    constructor(private noneCtor : ClassType<T>, private hostCtor: ClassType<T>, private guestCtor: ClassType<T>, ...args: any[]) {
+    constructor(private liveShare: ILiveShareApi, private noneCtor : ClassType<T>, private hostCtor: ClassType<T>, private guestCtor: ClassType<T>, ...args: any[]) {
         this.ctorArgs = args;
     }
 
@@ -28,7 +29,7 @@ export class RoleBasedFactory<T extends IAsyncDisposable> {
     private async createBasedOnRole() : Promise<T> {
 
         // Figure out our role to compute the object to create
-        const api = await vsls.getApi();
+        const api = await this.liveShare.getApi();
         let ctor : ClassType<T> = this.noneCtor;
 
         if (api) {

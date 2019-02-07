@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import {
     ICell,
@@ -29,6 +30,7 @@ export class JupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
 
     constructor(
+        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IDataScience) dataScience: IDataScience,
         @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -36,9 +38,11 @@ export class JupyterServer implements INotebookServer {
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
         this.serverFactory = new RoleBasedFactory<INotebookServer>(
+            liveShare,
             JupyterServerBase,
             HostJupyterServer,
             GuestJupyterServer,
+            liveShare,
             dataScience,
             logger,
             disposableRegistry,

@@ -7,7 +7,7 @@ import * as os from 'os';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { IWorkspaceService } from '../../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
@@ -29,6 +29,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
     private runningServer : INotebookServer | undefined;
 
     constructor(
+        private liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
@@ -43,6 +44,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
         commandFactory : IJupyterCommandFactory,
         serviceContainer: IServiceContainer) {
         super(
+            liveShare,
             executionFactory,
             interpreterService,
             processServiceFactory,
@@ -99,7 +101,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
     }
 
     private async startSharedService() : Promise<vsls.LiveShare | null> {
-        const api = await vsls.getApi();
+        const api = await this.liveShare.getApi();
 
         if (api) {
             const service = await waitForHostService(api, LiveShare.JupyterExecutionService);

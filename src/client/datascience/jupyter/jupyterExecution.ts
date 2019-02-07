@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 
-import { IWorkspaceService } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
@@ -21,7 +21,8 @@ export class JupyterExecution implements IJupyterExecution {
 
     private executionFactory: RoleBasedFactory<IJupyterExecution>;
 
-    constructor(@inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
+    constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
+                @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
                 @inject(IInterpreterService) interpreterService: IInterpreterService,
                 @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
                 @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
@@ -35,9 +36,11 @@ export class JupyterExecution implements IJupyterExecution {
                 @inject(IJupyterCommandFactory) commandFactory : IJupyterCommandFactory,
                 @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.executionFactory = new RoleBasedFactory(
+            liveShare,
             JupyterExecutionBase,
             HostJupyterExecution,
             GuestJupyterExecution,
+            liveShare,
             pythonFactory,
             interpreterService,
             processServiceFactory,

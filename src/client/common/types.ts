@@ -296,6 +296,7 @@ export interface IDataScienceSettings {
     sendSelectionToInteractiveWindow : boolean;
     markdownRegularExpression: string;
     codeRegularExpression: string;
+    allowLiveShare? : boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

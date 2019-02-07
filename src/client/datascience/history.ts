@@ -13,6 +13,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    ILiveShareApi,
     IWebPanel,
     IWebPanelProvider,
     IWorkspaceService
@@ -67,6 +68,7 @@ export class History implements IHistory {
     private messageListener : HistoryMessageListener;
 
     constructor(
+        @inject(ILiveShareApi) liveShare : ILiveShareApi,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -91,7 +93,7 @@ export class History implements IHistory {
         this.disposables.push(this.closedEvent);
 
         // Create a history message listener to listen to messages from our webpanel (or remote session)
-        this.messageListener = new HistoryMessageListener(this.onMessage, this.dispose);
+        this.messageListener = new HistoryMessageListener(liveShare, this.onMessage, this.dispose);
 
         // Load on a background thread.
         this.loadPromise = this.load();
