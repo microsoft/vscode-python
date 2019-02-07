@@ -9,7 +9,7 @@ import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IWorkspaceService } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
@@ -40,7 +40,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
 
-    constructor(private executionFactory: IPythonExecutionFactory,
+    constructor(liveShare: ILiveShareApi,
+                private executionFactory: IPythonExecutionFactory,
                 private interpreterService: IInterpreterService,
                 private processServiceFactory: IProcessServiceFactory,
                 private knownSearchPaths: IKnownSearchPathsForInterpreters,
