@@ -163,7 +163,8 @@ export class GuestJupyterServer implements INotebookServer {
     private async waitForObservable(subscriber: Subscriber<ICell[]>, code: string, file: string, line: number, id?: string) : Promise<void> {
         let pos = 0;
         let foundId = id;
-        while (pos >= 0) {
+        let cells: ICell[] = [];
+        while (cells !== undefined) {
             // Find all matches in order
             const response = await this.waitForSpecificResponse<ExecuteObservableResponse>(r => {
                 return (r.pos === pos) &&
@@ -176,6 +177,7 @@ export class GuestJupyterServer implements INotebookServer {
                 pos += 1;
                 foundId = response.id;
             }
+            cells = response.cells;
         }
         subscriber.complete();
     }
@@ -212,7 +214,7 @@ export class GuestJupyterServer implements INotebookServer {
             const matchIndex = this.waitingQueue.findIndex(w => w.predicate(response));
             if (matchIndex >= 0) {
                 this.waitingQueue[matchIndex].deferred.resolve(response);
-                this.waitingQueue = this.waitingQueue.splice(matchIndex);
+                this.waitingQueue.splice(matchIndex, 1);
                 this.responseQueue.splice(i, 1);
                 i -= 1; // Offset the addition as we removed this item
             }
