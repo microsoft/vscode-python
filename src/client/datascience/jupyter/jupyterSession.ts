@@ -132,7 +132,7 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private onStatusChanged(s: Session.ISession, a: Kernel.Status) {
-        if (a === 'starting') {
+        if (a === 'starting' && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }
     }
@@ -162,7 +162,9 @@ export class JupyterSession implements IJupyterSession {
                 if (this.session) {
                     // Shutdown may fail if the process has been killed
                     await Promise.race([this.session.shutdown(), sleep(100)]);
-                    this.session.dispose();
+                    if (this.session) {
+                        this.session.dispose();
+                    }
                 }
                 if (this.sessionManager) {
                     this.sessionManager.dispose();

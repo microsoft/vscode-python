@@ -51,7 +51,7 @@ export class PostOffice implements IDisposable {
             switch (this.currentRole) {
                 case vsls.Role.Guest:
                     // Ask host to broadcast
-                    this.guestServer.notify(LiveShare.LiveShareBroadcastRequest, [command, ...args]);
+                    this.guestServer.notify(LiveShare.LiveShareBroadcastRequest, {args: [command, ...args]});
                     skipDefault = true;
                     break;
                 case vsls.Role.Host:
@@ -175,7 +175,7 @@ export class PostOffice implements IDisposable {
                 this.hostServer = await api.shareService(this.name);
 
                 // When we start the host, listen for the broadcast message
-                this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, this.onBroadcastRequest);
+                this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, (a : IMessageArgs) => this.onBroadcastRequest(...a.args));
             } else if (api.session.role === vsls.Role.Guest) {
                 this.guestServer = await api.getSharedService(this.name);
 

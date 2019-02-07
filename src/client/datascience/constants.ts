@@ -148,4 +148,5 @@ export namespace LiveShareCommands {
     export const getSysInfo = 'getSysInfo';
     export const serverResponse = 'serverResponse';
     export const catchupRequest = 'catchupRequest';
+    export const syncRequest = 'synchronize';
 }

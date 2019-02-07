@@ -17,7 +17,7 @@ import { IJupyterCommandFactory, IJupyterExecution, IJupyterSessionManager, INot
 import { JupyterExecutionBase } from './jupyterExecutionBase';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
-import { RoleBasedFactory } from './liveshare/util';
+import { RoleBasedFactory } from './liveshare/roleBasedFactory';
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution {

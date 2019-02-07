@@ -20,6 +20,7 @@ export class ServerResponse {
 
 export class ExecuteObservableResponse extends ServerResponse {
     type: ServerResponseType = ServerResponseType.ExecuteObservable;
+    pos: number;
     code: string;
     id: string; // Unique id so guest side can tell what observable it belongs with
     cells: ICell[];

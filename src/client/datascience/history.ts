@@ -94,7 +94,7 @@ export class History implements IHistory {
         this.disposables.push(this.closedEvent);
 
         // Create a history message listener to listen to messages from our webpanel (or remote session)
-        this.messageListener = new HistoryMessageListener(this.onMessage);
+        this.messageListener = new HistoryMessageListener(this.onMessage, this.dispose);
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -191,13 +191,18 @@ export class History implements IHistory {
         }
     }
 
-    public async dispose() {
+    public dispose = async () => {
         if (!this.disposed) {
             this.disposed = true;
-            this.interpreterChangedDisposable.dispose();
-            this.closedEvent.fire(this);
+            if (this.interpreterChangedDisposable) {
+                this.interpreterChangedDisposable.dispose();
+                this.interpreterChangedDisposable = undefined;
+            }
+            if (this.closedEvent) {
+                this.closedEvent.fire(this);
+            }
             if (this.jupyterServer) {
-                await this.jupyterServer.shutdown();
+                await this.jupyterServer.dispose();
             }
             this.updateContexts();
         }
@@ -792,8 +797,12 @@ export class History implements IHistory {
                 }
             }
 
-            // Otherwise we continue loading
-            await Promise.all([this.loadJupyterServer(), this.loadWebPanel()]);
+            // Get the web panel to show first
+            await this.loadWebPanel();
+
+            // Then load the jupyter server
+            return this.loadJupyterServer();
+
         } finally {
             status.dispose();
         }

@@ -16,6 +16,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { JupyterExecutionBase } from '../jupyterExecutionBase';
+import { waitForGuestService } from './utils';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
@@ -113,7 +114,7 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
     private async startSharedProxy() : Promise<vsls.SharedServiceProxy | undefined> {
         const api = await vsls.getApiAsync();
         if (api) {
-            return api.getSharedService(LiveShare.JupyterExecutionService);
+            return await waitForGuestService(api, LiveShare.JupyterExecutionService);
         }
     }
 

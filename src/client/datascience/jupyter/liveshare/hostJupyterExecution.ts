@@ -15,13 +15,13 @@ import { LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecutionBase';
 import * as localize from '../../../common/utils/localize';
+import { waitForHostService } from './utils';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 export class HostJupyterExecution extends JupyterExecutionBase {
 
     private started: Promise<vsls.LiveShare | undefined>;
     private runningServer : INotebookServer | undefined;
-    private serverProxy : Disposable | undefined;
 
     constructor(
         executionFactory: IPythonExecutionFactory,
@@ -59,8 +59,9 @@ export class HostJupyterExecution extends JupyterExecutionBase {
 
     public async dispose() : Promise<void> {
         await super.dispose();
-        if (this.serverProxy) {
-            this.serverProxy.dispose();
+        const api = await this.started;
+        if (api) {
+            api.unshareService(LiveShare.JupyterExecutionService);
         }
 
         if (this.runningServer) {
@@ -94,7 +95,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
         const api = await vsls.getApiAsync();
 
         if (api) {
-            const service = await api.shareService(LiveShare.JupyterExecutionService);
+            const service = await waitForHostService(api, LiveShare.JupyterExecutionService);
 
             // Register handlers for all of the supported remote calls
             service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);

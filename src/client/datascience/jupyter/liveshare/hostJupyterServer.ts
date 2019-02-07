@@ -6,6 +6,7 @@ import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+import * as vscode from 'vscode';
 
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -13,6 +14,7 @@ import { ICell, IJupyterSessionManager, InterruptResult, IDataScience } from '..
 import { JupyterServerBase } from '../jupyterServerBase';
 import { ServerResponse, ServerResponseType, IResponseMapping } from './types';
 import { ICatchupRequest } from './types';
+import { waitForHostService } from './utils';
 
 export class HostJupyterServer extends JupyterServerBase {
     private service: Promise<vsls.SharedService | undefined>;
@@ -37,19 +39,13 @@ export class HostJupyterServer extends JupyterServerBase {
 
     public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
         try {
-            const result = super.executeObservable(code, file, line, id);
+            const inner = super.executeObservable(code, file, line, id);
 
-            // Generate a new id or use the one passed in to identify everything that happened
-            const newId = id ? id : uuid();
-            const time = Date.now();
+            // Wrap the observable returned so we can listen to it too
+            return this.wrapObservableResult(code, inner, id);
 
-            // Generate a series of responses for each result
-            result.forEach(n => this.postResult(ServerResponseType.ExecuteObservable, { type: ServerResponseType.ExecuteObservable, code, time, id: newId, cells: n }))
-                .then(v => this.postResult(ServerResponseType.ExecuteObservable, { type: ServerResponseType.ExecuteObservable, code, time, id: newId, cells: undefined }));
-
-            return result;
         } catch (exc) {
-            this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
+            this.postException(exc);
             throw exc;
         }
 
@@ -61,7 +57,7 @@ export class HostJupyterServer extends JupyterServerBase {
             await super.restartKernel();
             this.postResult(ServerResponseType.Restart, {type: ServerResponseType.Restart, time});
         } catch (exc) {
-            this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
+            this.postException(exc);
             throw exc;
         }
     }
@@ -73,23 +69,34 @@ export class HostJupyterServer extends JupyterServerBase {
             this.postResult(ServerResponseType.Interrupt, {type: ServerResponseType.Interrupt, time, result});
             return result;
         } catch (exc) {
-            this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
+            this.postException(exc);
             throw exc;
         }
+    }
+
+    private translateCellForGuest(api: vsls.LiveShare, cell: ICell) : ICell {
+        const copy = {...cell};
+        copy.file = api.convertLocalUriToShared(vscode.Uri.file(copy.file)).fsPath;
+        return copy;
     }
 
     private async startSharedService() : Promise<vsls.SharedService | undefined> {
         const api = await vsls.getApiAsync();
 
         if (api) {
-            const service = await api.shareService(LiveShare.JupyterServerSharedService);
+            const service = await waitForHostService(api, LiveShare.JupyterServerSharedService);
 
-            // Listen to the request for responses
-            service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(service, args));
+            // Attach event handlers to different requests
+            service.onRequest(LiveShareCommands.syncRequest, (args: object, cancellation: CancellationToken) => this.onSync());
             service.onRequest(LiveShareCommands.getSysInfo, (args: any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(service, cancellation))
+            service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(service, args));
 
             return service;
         }
+    }
+
+    private onSync() : Promise<any> {
+        return Promise.resolve(true);
     }
 
     private onGetSysInfoRequest(service: vsls.SharedService, cancellation: CancellationToken) : Promise<any> {
@@ -110,7 +117,49 @@ export class HostJupyterServer extends JupyterServerBase {
                 }
             });
         }
+    }
 
+    private wrapObservableResult(code: string, observable: Observable<ICell[]>, id?: string) : Observable<ICell[]> {
+        return new Observable(subscriber => {
+            // We need the api to translate cells
+            vsls.getApi().then((api) => {
+                // Generate a new id or use the one passed in to identify everything that happened
+                const newId = id ? id : uuid();
+                let pos = 0;
+
+                // Listen to all of the events on the observable passed in.
+                observable.subscribe(cells => {
+                    // Forward to the next listener
+                    subscriber.next(cells);
+
+                    // Send across to the guest side
+                    const translated = cells.map(c => this.translateCellForGuest(api, c));
+                    this.postObservableNext(code, pos, translated, newId);
+                    pos += 1;
+                },
+                e => {
+                    subscriber.error(e);
+                    this.postException(e);
+                },
+                () => {
+                    subscriber.complete();
+                    this.postObservableComplete(code, pos, newId);
+                });
+
+            }).ignoreErrors();
+        })
+    }
+
+    private postObservableNext(code: string, pos: number, cells: ICell[], id: string) {
+        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells, id, time: Date.now() });
+    }
+
+    private postObservableComplete(code: string, pos: number, id: string) {
+        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells: undefined, id, time: Date.now() });
+    }
+
+    private postException(exc: any) {
+        this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
     }
 
     private async postResult<R extends IResponseMapping, T extends keyof R>(type: T, result: R[T]) : Promise<void> {

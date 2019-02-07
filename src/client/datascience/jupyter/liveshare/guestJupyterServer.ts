@@ -6,26 +6,21 @@ import { Subscriber } from 'rxjs/Subscriber';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
+import { CancellationError } from '../../../common/cancellation';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
     IConnection,
+    IDataScience,
     IJupyterKernelSpec,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult,
-    IDataScience
+    InterruptResult
 } from '../../types';
-import {
-    ExecuteObservableResponse,
-    InterruptResponse,
-    ServerResponse,
-    ServerResponseType
-} from './types';
-import { CancellationError } from '../../../common/cancellation';
-import { services } from 'azure-storage';
+import { ExecuteObservableResponse, InterruptResponse, ServerResponse, ServerResponseType } from './types';
+import { waitForGuestService } from './utils';
 
 export class GuestJupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
@@ -95,14 +90,8 @@ export class GuestJupyterServer implements INotebookServer {
     public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
         // Create a wrapper observable around the actual server
         return new Observable<ICell[]>(subscriber => {
-            // Wait for our first response
-            this.waitForExecuteResponse(code, file, line, Date.now(), id)
-                .then(r => {
-                    // This is our first response to the subscriber, but then keep listening
-                    subscriber.next(r.cells);
-
-                    this.waitForObservable(subscriber, r.id).catch(e => subscriber.error(e));
-                })
+            // Wait for the observable responses to come in
+            this.waitForObservable(subscriber, code, file, line, id)
                 .catch(e => {
                     subscriber.error(e);
                     subscriber.complete();
@@ -138,12 +127,20 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-
     private async startSharedServiceProxy() : Promise<vsls.SharedServiceProxy | undefined> {
         const api = await vsls.getApiAsync();
 
         if (api) {
-            const service = await api.getSharedService(LiveShare.JupyterServerSharedService);
+            // Wait for the host to be setup too.
+            const service = await waitForGuestService(api, LiveShare.JupyterServerSharedService);
+
+            // Wait for sync up
+            const synced = await service.request(LiveShareCommands.syncRequest, []);
+            if (!synced) {
+                throw new Error('Synchronization failing on startup');
+            }
+
+            // Listen to responses
             service.onNotify(LiveShareCommands.serverResponse, this.onServerResponse);
 
             // Request all of the responses since this guest was started. We likely missed a bunch
@@ -163,47 +160,35 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-    private async waitForObservable(subscriber: Subscriber<ICell[]>, id: string) : Promise<void> {
-        let cells : ICell[] = [];
-        while (cells !== undefined) {
+    private async waitForObservable(subscriber: Subscriber<ICell[]>, code: string, file: string, line: number, id?: string) : Promise<void> {
+        let pos = 0;
+        let foundId = id;
+        while (pos >= 0) {
+            // Find all matches in order
             const response = await this.waitForSpecificResponse<ExecuteObservableResponse>(r => {
-                if (r.type === ServerResponseType.ExecuteObservable) {
-                    return (r as ExecuteObservableResponse).id === id;
-                }
+                return (r.pos === pos) &&
+                    (foundId === r.id || !foundId) &&
+                    (code === r.code) &&
+                    (!r.cells || (r.cells && r.cells[0].file === file && r.cells[0].line === line));
             });
-            cells = response.cells;
-            if (cells !== undefined) {
-                subscriber.next(cells);
+            if (response.cells) {
+                subscriber.next(response.cells);
+                pos += 1;
+                foundId = response.id;
             }
         }
         subscriber.complete();
     }
 
-    private async waitForExecuteResponse(code: string, file: string, line: number, time: number, id?: string) : Promise<ExecuteObservableResponse> {
-        const response = await this.waitForSpecificResponse(r => {
-            if (r.type === ServerResponseType.ExecuteObservable) {
-                const er = r as ExecuteObservableResponse;
-                return this.isAllowed(er, time) &&
-                    er.cells &&
-                    er.cells.length > 0 &&
-                    er.cells[0].file === file &&
-                    er.cells[0].line === line &&
-                    er.code === code &&
-                    (!id || id === er.cells[0].id);
-            }
-        });
-        return response as ExecuteObservableResponse;
-    }
-
-    private waitForSpecificResponse<T extends ServerResponse>(predicate: (response: ServerResponse) => boolean) : Promise<T> {
+    private waitForSpecificResponse<T extends ServerResponse>(predicate: (response: T) => boolean) : Promise<T> {
         // See if we have any responses right now with this type
         const index = this.responseQueue.findIndex(predicate);
         if (index >= 0) {
             // Pull off the match
             const match = this.responseQueue[index];
 
-            // Remove from the response queue
-            this.responseQueue = this.responseQueue.splice(index, 1);
+            // Remove from the response queue if necessary
+            this.responseQueue = this.responseQueue.length > 1 ? this.responseQueue.splice(index, 1) : [];
 
             // Return this single item
             return Promise.resolve(match as T);

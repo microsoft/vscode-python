@@ -41,7 +41,7 @@ import {
 import { JupyterServerBase } from './jupyterServerBase';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
-import { RoleBasedFactory } from './liveshare/util';
+import { RoleBasedFactory } from './liveshare/roleBasedFactory';
 
 
 
