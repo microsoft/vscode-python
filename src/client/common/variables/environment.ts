@@ -106,7 +106,7 @@ function parseEnvLine(line: string): [string, string] {
     return [name, value];
 }
 
-const INVALID_REGEX = /(?<![\\])\${([a-zA-Z]\w*)?\${/;
+const INVALID_REGEX = /[^\\]?\${([a-zA-Z]\w*)?[^}\w]/;
 const SUBST_REGEX = /\${([a-zA-Z]\w*)}/g;
 
 function substituteEnvVars(
