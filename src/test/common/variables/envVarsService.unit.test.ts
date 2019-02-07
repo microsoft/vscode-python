@@ -432,6 +432,27 @@ HAM4="-- ${${SPAM}} ${EGGS} --"\n\
         expect(vars).to.have.property('HAM4', '-- ${${SPAM}} ${EGGS} --', 'value is invalid');
     });
 
+    test('Other bad substitution syntax', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const vars = parseEnvFile('\
+SPAM=EGGS \n\
+EGGS=??? \n\
+HAM1=${} \n\
+HAM2=${ \n\
+HAM3=${SPAM+EGGS} \n\
+HAM4=$SPAM \n\
+            ');
+
+        expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+        expect(Object.keys(vars!)).lengthOf(6, 'Incorrect number of variables');
+        expect(vars).to.have.property('SPAM', 'EGGS', 'value is invalid');
+        expect(vars).to.have.property('EGGS', '???', 'value is invalid');
+        expect(vars).to.have.property('HAM1', '${}', 'value is invalid');
+        expect(vars).to.have.property('HAM2', '${', 'value is invalid');
+        expect(vars).to.have.property('HAM3', '${SPAM+EGGS}', 'value is invalid');
+        expect(vars).to.have.property('HAM4', '$SPAM', 'value is invalid');
+    });
+
     test('Recursive substitution is allowed', () => {
         // tslint:disable-next-line:no-multiline-string
         const vars = parseEnvFile('\
@@ -451,12 +472,14 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
         const vars = parseEnvFile('\
 SPAM=1234 \n\
 EGGS=\\${SPAM}/foo:\\${SPAM}/bar \n\
+HAM=\$ ... $$ \n\
             ');
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-        expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
+        expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
         expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
         expect(vars).to.have.property('EGGS', '${SPAM}/foo:${SPAM}/bar', 'value is invalid');
+        expect(vars).to.have.property('HAM', '$ ... $$', 'value is invalid');
     });
 
     test('base substitution variables', () => {

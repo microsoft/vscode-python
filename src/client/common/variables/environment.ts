@@ -106,8 +106,7 @@ function parseEnvLine(line: string): [string, string] {
     return [name, value];
 }
 
-const INVALID_REGEX = /[^\\]?\${([a-zA-Z]\w*)?[^}\w]/;
-const SUBST_REGEX = /\${([a-zA-Z]\w*)}/g;
+const SUBST_REGEX = /\${([a-zA-Z]\w*)?([^}\w].*)?}/g;
 
 function substituteEnvVars(
     value: string,
@@ -118,20 +117,20 @@ function substituteEnvVars(
     // Substitution here is inspired a little by dotenv-expand:
     //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
 
-    if (value.match(INVALID_REGEX)) {
-        // No substitution for a value with bad syntax.
-        return value;
-    }
-
-    let replaced = false;
-    value = value.replace(SUBST_REGEX, (match, substName, offset, orig) => {
+    let invalid = false;
+    let replacement = value;
+    replacement = replacement.replace(SUBST_REGEX, (match, substName, bogus, offset, orig) => {
         if (offset > 0 && orig[offset - 1] === '\\') {
             return match;
         }
-        replaced = true;
+        if ((bogus && bogus !== '') || !substName || substName === '') {
+            invalid = true;
+            return match;
+        }
         return localVars[substName] || globalVars[substName] || missing;
     });
-    if (replaced) {
+    if (!invalid && replacement !== value) {
+        value = replacement;
         sendTelemetryEvent(EventName.ENVFILE_VARIABLE_SUBSTITUTION);
     }
 
