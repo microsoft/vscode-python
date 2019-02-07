@@ -107,12 +107,13 @@ function parseEnvLine(line: string): [string, string] {
 }
 
 const INVALID_REGEX = /(?<![\\])\${([a-zA-Z]\w*)?\${/;
-const SUBST_REGEX = /(?<![\\])(\${[a-zA-Z]\w*})/g;
+const SUBST_REGEX = /\${([a-zA-Z]\w*)}/g;
 
 function substituteEnvVars(
     value: string,
     localVars: EnvironmentVariables,
-    globalVars: EnvironmentVariables
+    globalVars: EnvironmentVariables,
+    missing = ''
 ): string {
     // Substitution here is inspired a little by dotenv-expand:
     //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
@@ -122,15 +123,17 @@ function substituteEnvVars(
         return value;
     }
 
-    const matches = value.match(SUBST_REGEX);
-    if (matches) {
+    let replaced = false;
+    value = value.replace(SUBST_REGEX, (match, substName, offset, orig) => {
+        if (offset > 0 && orig[offset - 1] === '\\') {
+            return match;
+        }
+        replaced = true;
+        return localVars[substName] || globalVars[substName] || missing;
+    });
+    if (replaced) {
         sendTelemetryEvent(EventName.ENVFILE_VARIABLE_SUBSTITUTION);
     }
-    for (const submatch of matches || []) {
-        const replacement = submatch.substring(2, submatch.length - 1);
-        const regex = RegExp(`(?<![\\\\])\\${'$'}{${replacement}}`);
-        value = value.replace(regex,
-                              localVars[replacement] || globalVars[replacement] || '');
-    }
+
     return value.replace(/\\\$/g, '$');
 }
