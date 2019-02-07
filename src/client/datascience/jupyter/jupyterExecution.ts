@@ -16,10 +16,27 @@ import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { RoleBasedFactory } from './liveshare/roleBasedFactory';
 
+type JupyterExecutionClassType = {
+    new(liveShare: ILiveShareApi,
+        executionFactory: IPythonExecutionFactory,
+        interpreterService: IInterpreterService,
+        processServiceFactory: IProcessServiceFactory,
+        knownSearchPaths: IKnownSearchPathsForInterpreters,
+        logger: ILogger,
+        disposableRegistry: IDisposableRegistry,
+        asyncRegistry: IAsyncDisposableRegistry,
+        fileSystem: IFileSystem,
+        sessionManager: IJupyterSessionManager,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        commandFactory : IJupyterCommandFactory,
+        serviceContainer: IServiceContainer): IJupyterExecution;
+};
+
 @injectable()
 export class JupyterExecution implements IJupyterExecution {
 
-    private executionFactory: RoleBasedFactory<IJupyterExecution>;
+    private executionFactory: RoleBasedFactory<IJupyterExecution, JupyterExecutionClassType>;
 
     constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
                 @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,

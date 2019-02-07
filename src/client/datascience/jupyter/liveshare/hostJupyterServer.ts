@@ -32,7 +32,7 @@ export class HostJupyterServer extends JupyterServerBase {
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManager) {
-        super(dataScience, logger, disposableRegistry, asyncRegistry, configService, sessionManager);
+        super(liveShare, dataScience, logger, disposableRegistry, asyncRegistry, configService, sessionManager);
         this.service = this.startSharedService();
     }
 

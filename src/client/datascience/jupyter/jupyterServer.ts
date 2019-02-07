@@ -23,9 +23,19 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { RoleBasedFactory } from './liveshare/roleBasedFactory';
 
+type JupyterServerClassType = {
+    new(liveShare: ILiveShareApi,
+        dataScience: IDataScience,
+        logger: ILogger,
+        disposableRegistry: IDisposableRegistry,
+        asyncRegistry: IAsyncDisposableRegistry,
+        configService: IConfigurationService,
+        sessionManager: IJupyterSessionManager): INotebookServer;
+};
+
 @injectable()
 export class JupyterServer implements INotebookServer {
-    private serverFactory: RoleBasedFactory<INotebookServer>;
+    private serverFactory: RoleBasedFactory<INotebookServer, JupyterServerClassType>;
 
     private connInfo : IConnection | undefined;
 
@@ -37,7 +47,7 @@ export class JupyterServer implements INotebookServer {
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
-        this.serverFactory = new RoleBasedFactory<INotebookServer>(
+        this.serverFactory = new RoleBasedFactory<INotebookServer, JupyterServerClassType>(
             liveShare,
             JupyterServerBase,
             HostJupyterServer,
@@ -88,7 +98,7 @@ export class JupyterServer implements INotebookServer {
         return new Observable<ICell[]>(subscriber => {
             this.serverFactory.get().then(s => {
                 s.executeObservable(code, file, line, id)
-                    .forEach(n => subscriber.next(n))
+                    .forEach(n => subscriber.next(n), Promise)
                     .then(f => subscriber.complete())
                     .catch(e => subscriber.error(e));
             },

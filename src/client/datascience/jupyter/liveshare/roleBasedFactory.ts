@@ -8,12 +8,12 @@ import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
 
 // tslint:disable:no-any
-export class RoleBasedFactory<T extends IAsyncDisposable> {
+export class RoleBasedFactory<T extends IAsyncDisposable, CtorType extends ClassType<T>> {
     private ctorArgs : any[];
     private firstTime : boolean = true;
     private createPromise : Promise<T> | undefined;
 
-    constructor(private liveShare: ILiveShareApi, private noneCtor : ClassType<T>, private hostCtor: ClassType<T>, private guestCtor: ClassType<T>, ...args: any[]) {
+    constructor(private liveShare: ILiveShareApi, private noneCtor : CtorType, private hostCtor: CtorType, private guestCtor: CtorType, ...args: any[]) {
         this.ctorArgs = args;
     }
 
@@ -30,7 +30,7 @@ export class RoleBasedFactory<T extends IAsyncDisposable> {
 
         // Figure out our role to compute the object to create
         const api = await this.liveShare.getApi();
-        let ctor : ClassType<T> = this.noneCtor;
+        let ctor : CtorType = this.noneCtor;
 
         if (api) {
             // Create based on role.
