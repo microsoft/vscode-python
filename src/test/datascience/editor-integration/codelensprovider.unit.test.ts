@@ -4,11 +4,11 @@
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, TextDocument } from 'vscode';
 
+import { IDocumentManager } from '../../../client/common/application/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { IDocumentManager } from '../../../client/common/application/types';
 
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

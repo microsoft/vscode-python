@@ -1,24 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../../common/extensions';
 
 import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';
+import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import * as vscode from 'vscode';
 
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, IJupyterSessionManager, InterruptResult, IDataScience } from '../../types';
+import { ICell, IDataScience, IJupyterSessionManager, InterruptResult } from '../../types';
 import { JupyterServerBase } from '../jupyterServerBase';
-import { ServerResponse, ServerResponseType, IResponseMapping } from './types';
-import { ICatchupRequest } from './types';
+import { ICatchupRequest, IResponseMapping, IServerResponse, ServerResponseType } from './types';
 import { waitForHostService } from './utils';
+
+// tslint:disable:no-any
 
 export class HostJupyterServer extends JupyterServerBase {
     private service: Promise<vsls.SharedService | undefined>;
-    private responseBacklog : { responseTime: number, response: ServerResponse }[] = [];
+    private responseBacklog : { responseTime: number; response: IServerResponse }[] = [];
 
     constructor(
         dataScience: IDataScience,
@@ -33,8 +36,10 @@ export class HostJupyterServer extends JupyterServerBase {
 
     public async dispose(): Promise<void> {
         await super.dispose();
-        const api = await vsls.getApiAsync();
-        api.unshareService(LiveShare.JupyterServerSharedService);
+        const api = await vsls.getApi();
+        if (api !== null) {
+            return api.unshareService(LiveShare.JupyterServerSharedService);
+        }
     }
 
     public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
@@ -55,7 +60,7 @@ export class HostJupyterServer extends JupyterServerBase {
         try {
             const time = Date.now();
             await super.restartKernel();
-            this.postResult(ServerResponseType.Restart, {type: ServerResponseType.Restart, time});
+            return this.postResult(ServerResponseType.Restart, {type: ServerResponseType.Restart, time});
         } catch (exc) {
             this.postException(exc);
             throw exc;
@@ -66,7 +71,7 @@ export class HostJupyterServer extends JupyterServerBase {
         try {
             const time = Date.now();
             const result = await super.interruptKernel(timeoutMs);
-            this.postResult(ServerResponseType.Interrupt, {type: ServerResponseType.Interrupt, time, result});
+            await this.postResult(ServerResponseType.Interrupt, {type: ServerResponseType.Interrupt, time, result});
             return result;
         } catch (exc) {
             this.postException(exc);
@@ -74,9 +79,11 @@ export class HostJupyterServer extends JupyterServerBase {
         }
     }
 
-    private translateCellForGuest(api: vsls.LiveShare, cell: ICell) : ICell {
+    private translateCellForGuest(api: vsls.LiveShare | null, cell: ICell) : ICell {
         const copy = {...cell};
-        copy.file = api.convertLocalUriToShared(vscode.Uri.file(copy.file)).fsPath;
+        if (api !== null) {
+            copy.file = api.convertLocalUriToShared(vscode.Uri.file(copy.file)).fsPath;
+        }
         return copy;
     }
 
@@ -87,9 +94,13 @@ export class HostJupyterServer extends JupyterServerBase {
             const service = await waitForHostService(api, LiveShare.JupyterServerSharedService);
 
             // Attach event handlers to different requests
-            service.onRequest(LiveShareCommands.syncRequest, (args: object, cancellation: CancellationToken) => this.onSync());
-            service.onRequest(LiveShareCommands.getSysInfo, (args: any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(service, cancellation))
-            service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(service, args));
+            if (service !== null) {
+                service.onRequest(LiveShareCommands.syncRequest, (args: object, cancellation: CancellationToken) => this.onSync());
+                service.onRequest(LiveShareCommands.getSysInfo, (args: any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(service, cancellation));
+                service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(service, args));
+            } else {
+                throw new Error(localize.DataScience.liveShareServiceFailure().format(LiveShare.JupyterServerSharedService));
+            }
 
             return service;
         }
@@ -134,7 +145,7 @@ export class HostJupyterServer extends JupyterServerBase {
 
                     // Send across to the guest side
                     const translated = cells.map(c => this.translateCellForGuest(api, c));
-                    this.postObservableNext(code, pos, translated, newId);
+                    this.postObservableNext(code, pos, translated, newId).catch(e => subscriber.error(e));
                     pos += 1;
                 },
                 e => {
@@ -147,27 +158,31 @@ export class HostJupyterServer extends JupyterServerBase {
                 });
 
             }).ignoreErrors();
-        })
+        });
     }
 
-    private postObservableNext(code: string, pos: number, cells: ICell[], id: string) {
-        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells, id, time: Date.now() });
+    private postObservableNext(code: string, pos: number, cells: ICell[], id: string) : Promise<void> {
+        return this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells, id, time: Date.now() });
     }
 
     private postObservableComplete(code: string, pos: number, id: string) {
-        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells: undefined, id, time: Date.now() });
+        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells: undefined, id, time: Date.now() }).ignoreErrors();
     }
 
     private postException(exc: any) {
-        this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
+        this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()}).ignoreErrors();
     }
 
     private async postResult<R extends IResponseMapping, T extends keyof R>(type: T, result: R[T]) : Promise<void> {
         const service = await this.service;
-        const typedResult = ((result as any) as ServerResponse);
-        service.notify(LiveShareCommands.serverResponse, typedResult);
+        if (service) {
+            const typedResult = ((result as any) as IServerResponse);
+            if (typedResult) {
+                service.notify(LiveShareCommands.serverResponse, typedResult);
 
-        // Need to also save in memory for those guests that are in the middle of starting up
-        this.responseBacklog.push({ responseTime: Date.now(), response: typedResult });
+                // Need to also save in memory for those guests that are in the middle of starting up
+                this.responseBacklog.push({ responseTime: Date.now(), response: typedResult });
+            }
+        }
     }
 }

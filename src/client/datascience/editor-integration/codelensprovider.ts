@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+
+import { IDocumentManager } from '../../common/application/types';
 import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
-import { IDocumentManager } from '../../common/application/types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider {
@@ -77,7 +76,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             this.activeCodeWatchers.push(newCodeWatcher);
             return newCodeWatcher;
         }
-        
+
         return undefined;
     }
 }

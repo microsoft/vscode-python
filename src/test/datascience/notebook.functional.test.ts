@@ -177,7 +177,8 @@ suite('Jupyter notebook tests', () => {
             const server = await createNotebookServer(true);
             if (server) {
                 for (let i = 0; i < types.length; i += 1) {
-                    ioc.getSettings().datascience.markdownRegularExpression = types[i].markdownRegEx;
+                    const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
+                    ioc.getSettings().datascience.markdownRegularExpression = markdownRegex!;
                     await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
                 }
             }
@@ -200,7 +201,7 @@ suite('Jupyter notebook tests', () => {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer(undefined, useDarkTheme, useDefaultConfig, undefined, testDir);
+            const server = await jupyterExecution.connectToNotebookServer(undefined, useDarkTheme ? true : false, useDefaultConfig, undefined, testDir);
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -773,13 +774,13 @@ plt.show()`,
 
             assert.ok(session.getExecutes().indexOf(light) >= 0, 'light not found');
             assert.ok(session.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
-            await server.dispose();
+            await server!.dispose();
 
             server = await createNotebookServer(true, false, true);
             session = (server as any)['session'] as MockJupyterSession;
             assert.ok(session.getExecutes().indexOf(dark) >= 0, 'dark not found');
             assert.ok(session.getExecutes().indexOf(light) < 0, 'light found when not allowed');
-            await server.dispose();
+            await server!.dispose();
         }
     });
 

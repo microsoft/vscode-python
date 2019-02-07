@@ -61,7 +61,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const disposable = workspace.onDidChangeConfiguration(e => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
-                    this.dispose();
+                    this.onSettingsChanged();
                 }
             });
             this.disposableRegistry.push(disposable);
@@ -70,8 +70,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public dispose() : Promise<void> {
         // Clear our usableJupyterInterpreter
-        this.usablePythonInterpreter = undefined;
-        this.commands = {};
+        this.onSettingsChanged();
         return Promise.resolve();
     }
 
@@ -323,9 +322,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private onSettingsChanged() {
-        // Do the same thing as dispose so that we regenerate
-        // all of our commands
-        this.dispose();
+        this.usablePythonInterpreter = undefined;
+        this.commands = {};
     }
 
     private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {

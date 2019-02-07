@@ -1,26 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../../common/extensions';
+
 import * as os from 'os';
-import { CancellationToken, Disposable } from 'vscode';
+import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecutionBase';
-import * as localize from '../../../common/utils/localize';
 import { waitForHostService } from './utils';
+
+// tslint:disable:no-any
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 export class HostJupyterExecution extends JupyterExecutionBase {
 
-    private started: Promise<vsls.LiveShare | undefined>;
+    private started: Promise<vsls.LiveShare | null>;
     private runningServer : INotebookServer | undefined;
 
     constructor(
@@ -61,7 +66,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
         await super.dispose();
         const api = await this.started;
         if (api) {
-            api.unshareService(LiveShare.JupyterExecutionService);
+            await api.unshareService(LiveShare.JupyterExecutionService);
         }
 
         if (this.runningServer) {
@@ -69,7 +74,7 @@ export class HostJupyterExecution extends JupyterExecutionBase {
         }
     }
 
-    public async connectToNotebookServer(uri: string, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer> {
+    public async connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
         // We only have a single server at a time. This object should go away when the server goes away
         if (!this.runningServer) {
             // Create the server
@@ -80,9 +85,11 @@ export class HostJupyterExecution extends JupyterExecutionBase {
                 const api = await this.started;
                 if (api && api.session && api.session.role === vsls.Role.Host) {
                     const connectionInfo = this.runningServer.getConnectionInfo();
-                    const portMatch = RegExpValues.ExtractPortRegex.exec(connectionInfo.baseUrl);
-                    if (portMatch && portMatch.length > 1) {
-                        api.shareServer({ port: parseInt(portMatch[1], 10), displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()) });
+                    if (connectionInfo) {
+                        const portMatch = RegExpValues.ExtractPortRegex.exec(connectionInfo.baseUrl);
+                        if (portMatch && portMatch.length > 1) {
+                            await api.shareServer({ port: parseInt(portMatch[1], 10), displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()) });
+                        }
                     }
                 }
             }
@@ -91,43 +98,47 @@ export class HostJupyterExecution extends JupyterExecutionBase {
         return this.runningServer;
     }
 
-    private async startSharedService() : Promise<vsls.LiveShare | undefined> {
-        const api = await vsls.getApiAsync();
+    private async startSharedService() : Promise<vsls.LiveShare | null> {
+        const api = await vsls.getApi();
 
         if (api) {
             const service = await waitForHostService(api, LiveShare.JupyterExecutionService);
 
             // Register handlers for all of the supported remote calls
-            service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
-            service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
-            service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
-            service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
-            service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
-            service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+            if (service !== null) {
+                service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
+                service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
+                service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
+                service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
+                service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
+                service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+            } else {
+                throw new Error(localize.DataScience.liveShareServiceFailure().format(LiveShare.JupyterExecutionService));
+            }
         }
 
         return api;
     }
-    onRemoteIsNotebookSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsNotebookSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
     }
 
-    onRemoteIsImportSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsImportSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
     }
 
-    onRemoteIsKernelCreateSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsKernelCreateSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelCreateSupported(cancellation);
     }
-    onRemoteIsKernelSpecSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsKernelSpecSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelSpecSupported(cancellation);
     }
 
-    onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection> => {
+    private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {
         // Connect to the local server. THe local server should have started the port forwarding already
         const localServer = await this.connectToNotebookServer(undefined, args[0], args[1], cancellation, args[2]);
 
@@ -136,13 +147,13 @@ export class HostJupyterExecution extends JupyterExecutionBase {
             // The other side should be using 'localhost' for anything it's port forwarding. That should just remap
             // on the guest side. However we need to eliminate the dispose method. Methods are not serializable
             const connectionInfo = localServer.getConnectionInfo();
-            return { baseUrl: connectionInfo.baseUrl, token: connectionInfo.token, localLaunch: false, dispose: () => {} };
+            if (connectionInfo) {
+                return { baseUrl: connectionInfo.baseUrl, token: connectionInfo.token, localLaunch: false, dispose: noop };
+            }
         }
-
-        return { baseUrl : undefined, token: undefined, localLaunch: false, dispose: () => {} };
     }
 
-    onRemoteGetUsableJupyterPython = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteGetUsableJupyterPython = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.getUsableJupyterPython(cancellation);
     }

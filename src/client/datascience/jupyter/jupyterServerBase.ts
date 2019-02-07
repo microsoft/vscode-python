@@ -6,40 +6,31 @@ import '../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
-import * as uuid from 'uuid/v4';
-import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
-import * as vscode from 'vscode';
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { CancellationError } from '../../common/cancellation';
-import {
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    ILogger
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
 import { concatMultilineString, stripComments } from '../common';
+import { Identifiers } from '../constants';
 import {
     CellState,
     ICell,
     IConnection,
+    IDataScience,
     IJupyterKernelSpec,
     IJupyterSession,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult,
-    IDataScience,
-    ISysInfo
+    InterruptResult
 } from '../types';
-import { Identifiers } from '../constants';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -126,7 +117,7 @@ export class JupyterServerBase implements INotebookServer {
     private usingDarkTheme: boolean | undefined;
 
     constructor(
-        private dataScience: IDataScience,
+        dataScience: IDataScience,
         private logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
@@ -240,6 +231,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async getSysInfo() : Promise<ICell> {
+        // tslint:disable-next-line:no-multiline-string
         const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
         // tslint:disable-next-line:no-multiline-string
         const pathCells = await this.executeSilently(`import sys\r\nsys.executable`);
@@ -435,7 +427,7 @@ export class JupyterServerBase implements INotebookServer {
         });
     }
 
-    private generateRequest = (code: string, silent: boolean): Kernel.IFuture | undefined => {
+    private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         try {
             return this.session ? this.session.requestExecute(
@@ -519,7 +511,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleCodeRequest = (subscriber: CellSubscriber, silent: boolean) => {
+    private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
 
@@ -580,7 +572,7 @@ export class JupyterServerBase implements INotebookServer {
 
     }
 
-    private executeCodeObservable(cell: ICell, silent: boolean): Observable<ICell> {
+    private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
         return new Observable<ICell>(subscriber => {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.

@@ -2,48 +2,25 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../common/extensions';
-import * as vsls from 'vsls/vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
-import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { CancellationError } from '../../common/cancellation';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import {
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    ILogger
-} from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { generateCells } from '../cellFactory';
-import { concatMultilineString, stripComments } from '../common';
-import {
-    CellState,
     ICell,
     IConnection,
+    IDataScience,
     IJupyterKernelSpec,
-    IJupyterSession,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult,
-    IDataScience
+    InterruptResult
 } from '../types';
 import { JupyterServerBase } from './jupyterServerBase';
-import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
+import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { RoleBasedFactory } from './liveshare/roleBasedFactory';
-
-
 
 @injectable()
 export class JupyterServer implements INotebookServer {
@@ -52,12 +29,12 @@ export class JupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
 
     constructor(
-        @inject(IDataScience) private dataScience: IDataScience,
-        @inject(ILogger) private logger: ILogger,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager) {
+        @inject(IDataScience) dataScience: IDataScience,
+        @inject(ILogger) logger: ILogger,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
         this.serverFactory = new RoleBasedFactory<INotebookServer>(
             JupyterServerBase,
             HostJupyterServer,
@@ -68,7 +45,7 @@ export class JupyterServer implements INotebookServer {
             asyncRegistry,
             configService,
             sessionManager
-        )
+        );
     }
 
     public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
@@ -108,7 +85,8 @@ export class JupyterServer implements INotebookServer {
             this.serverFactory.get().then(s => {
                 s.executeObservable(code, file, line, id)
                     .forEach(n => subscriber.next(n))
-                    .then(f => subscriber.complete());
+                    .then(f => subscriber.complete())
+                    .catch(e => subscriber.error(e));
             },
             r => {
                 subscriber.error(r);
@@ -137,7 +115,7 @@ export class JupyterServer implements INotebookServer {
         return this.connInfo;
     }
 
-    public async getSysInfo() : Promise<ICell> {
+    public async getSysInfo() : Promise<ICell | undefined> {
         const server = await this.serverFactory.get();
         return server.getSysInfo();
     }

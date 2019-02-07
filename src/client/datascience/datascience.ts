@@ -6,7 +6,6 @@ import '../common/extensions';
 import { inject, injectable } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
-import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
@@ -24,7 +23,13 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, ICommandBroker } from './types';
+import {
+    ICodeWatcher,
+    ICommandBroker,
+    IDataScience,
+    IDataScienceCodeLensProvider,
+    IDataScienceCommandListener
+} from './types';
 
 @injectable()
 export class DataScience implements IDataScience {

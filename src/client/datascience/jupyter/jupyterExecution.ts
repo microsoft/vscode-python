@@ -3,16 +3,13 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import * as vsls from 'vsls/vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { LiveShare } from '../constants';
 import { IJupyterCommandFactory, IJupyterExecution, IJupyterSessionManager, INotebookServer } from '../types';
 import { JupyterExecutionBase } from './jupyterExecutionBase';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
@@ -73,9 +70,9 @@ export class JupyterExecution implements IJupyterExecution {
         const execution = await this.executionFactory.get();
         return execution.isKernelSpecSupported(cancelToken);
     }
-    public async connectToNotebookServer(uri: string, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer> {
+    public async connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
-        return execution.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir)
+        return execution.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir);
     }
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();
@@ -85,11 +82,10 @@ export class JupyterExecution implements IJupyterExecution {
         const execution = await this.executionFactory.get();
         return execution.importNotebook(file, template);
     }
-    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter> {
+    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
         const execution = await this.executionFactory.get();
         return execution.getUsableJupyterPython(cancelToken);
     }
-
     public async dispose(): Promise<void> {
         const execution = await this.executionFactory.get();
         return execution.dispose();

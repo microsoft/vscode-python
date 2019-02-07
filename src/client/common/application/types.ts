@@ -45,7 +45,8 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
-import { IDisposable } from '../types';
+
+import { IAsyncDisposable } from '../types';
 
 // tslint:disable:no-any unified-signatures
 
@@ -809,7 +810,7 @@ export interface IApplicationEnvironment {
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
-export interface IWebPanelMessageListener extends IDisposable {
+export interface IWebPanelMessageListener extends IAsyncDisposable {
     /**
      * Listens to web panel messages
      * @param message: the message being sent

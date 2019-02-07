@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
-import { IDisposable, IAsyncDisposable } from '../types';
-
+import { IAsyncDisposable, IDisposable } from '../types';
 
 // tslint:disable-next-line:no-empty
 export function noop() { }

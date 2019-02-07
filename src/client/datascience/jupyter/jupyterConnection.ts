@@ -11,9 +11,9 @@ import { IConfigurationService, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
+import { RegExpValues } from '../constants';
 import { IConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
-import { RegExpValues } from '../constants';
 
 export type JupyterServerInfo = {
     base_url: string;

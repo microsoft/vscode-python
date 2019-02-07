@@ -41,17 +41,17 @@ export class CodeWatcher implements ICodeWatcher {
         const cells = generateCellRanges(document, this.cachedSettings);
 
         this.codeLenses = [];
+        // Be careful here. These arguments will be serialized during liveshare sessions
+        // and so shouldn't reference local objects.
         cells.forEach(cell => {
             const cmd: Command = {
-	            // Be careful here. These arguments will be serialized during liveshare sessions
-		        // and so shouldn't reference local objects.
-                arguments: [this.document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllCmd: Command = {
-                arguments: [this.document.fileName],
+                arguments: [document.fileName],
                 title: localize.DataScience.runAllCellsLensCommandTitle(),
                 command: Commands.RunAllCells
             };

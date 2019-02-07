@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -18,14 +18,14 @@ import { CommandSource } from '../unittests/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from './cellFactory';
 import { Commands, Telemetry } from './constants';
 import {
+    ICommandBroker,
     IDataScienceCommandListener,
     IHistoryProvider,
     IJupyterExecution,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
-    ICommandBroker
+    IStatusProvider
 } from './types';
 
 @injectable()
@@ -235,7 +235,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
         } finally {
             if (server) {
-                server.dispose();
+                await server.dispose();
             }
         }
     }

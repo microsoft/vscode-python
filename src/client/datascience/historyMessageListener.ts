@@ -7,6 +7,8 @@ import { IWebPanelMessageListener } from '../common/application/types';
 import { HistoryMessages, LiveShare } from './constants';
 import { PostOffice } from './liveshare/postOffice';
 
+// tslint:disable:no-any
+
 // This class listens to messages that come from the local Python Interactive window
 export class HistoryMessageListener implements IWebPanelMessageListener {
     private postOffice : PostOffice = new PostOffice(LiveShare.WebPanelMessageService);
@@ -18,14 +20,14 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
 
         // We need to register callbacks for all history messages. Well except for send info
         Object.keys(HistoryMessages).forEach(k => {
-            if (k != HistoryMessages.SendInfo) {
-                this.postOffice.registerCallback(HistoryMessages[k], (a : any) => callback(HistoryMessages[k], a));
+            if (k !== HistoryMessages.SendInfo) {
+                this.postOffice.registerCallback(HistoryMessages[k], (a : any) => callback(HistoryMessages[k], a)).ignoreErrors();
             }
         });
     }
 
-    public dispose() {
-        this.postOffice.dispose();
+    public async dispose() {
+        await this.postOffice.dispose();
         this.disposedCallback();
     }
 

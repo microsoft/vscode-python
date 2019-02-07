@@ -2,16 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-
-import { IDisposableRegistry } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { IHistory, IHistoryProvider, ICommandBroker } from './types';
-import { ICommandManager } from '../common/application/types';
-import { ICommand } from '../providers/jediProxy';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import * as vsls from 'vsls/vscode';
+
+import { ICommandManager } from '../common/application/types';
 import { LiveShare } from './constants';
 import { PostOffice } from './liveshare/postOffice';
+import { ICommandBroker } from './types';
+
+// tslint:disable:no-any
 
 // This class acts as a broker between the VSCode command manager and a potential live share session
 // It works like so:
@@ -26,7 +25,7 @@ export class CommandBroker implements ICommandBroker {
         @inject(ICommandManager) private commandManager: ICommandManager) {
     }
 
-    registerCommand(command: string, callback: (...args: any[]) => void, thisArg?: any): Disposable {
+    public registerCommand(command: string, callback: (...args: any[]) => void, thisArg?: any): Disposable {
         // Modify the callback such that it sends the command to our service
         const disposable = this.commandManager.registerCommand(command, (...args: any[]) => this.wrapCallback(command, callback, ...args), thisArg);
 
@@ -35,7 +34,7 @@ export class CommandBroker implements ICommandBroker {
 
         return disposable;
     }
-    registerTextEditorCommand(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, thisArg?: any): Disposable {
+    public registerTextEditorCommand(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, thisArg?: any): Disposable {
         // Modify the callback such that it sends the command to our service
         const disposable = this.commandManager.registerCommand(
             command,
@@ -46,18 +45,18 @@ export class CommandBroker implements ICommandBroker {
 
         return disposable;
     }
-    executeCommand<T>(command: string, ...rest: any[]): Thenable<T> {
+    public executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined> {
         // Execute the command but potentially also send to our service too
         this.postCommand<T>(command, ...rest).ignoreErrors();
         return this.commandManager.executeCommand(command, ...rest);
     }
-    getCommands(filterInternal?: boolean): Thenable<string[]> {
+    public getCommands(filterInternal?: boolean): Thenable<string[]> {
         // This does not go across to the other side. Just return the command registered locally
         return this.commandManager.getCommands(filterInternal);
     }
 
     private async register(command: string, callback: (...args: any[]) => void, thisArg?: any) : Promise<void> {
-        this.postOffice.registerCallback(command, callback, thisArg);
+        return this.postOffice.registerCallback(command, callback, thisArg);
     }
 
     private wrapCallback(command: string, callback: (...args: any[]) => void, ...args: any[]) {
@@ -65,7 +64,7 @@ export class CommandBroker implements ICommandBroker {
         this.postCommand(command, ...args).ignoreErrors();
     }
 
-    private wrapTextEditorCallback(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit,...args: any[]) => void, ...args: any[]) {
+    private wrapTextEditorCallback(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, ...args: any[]) {
         // Not really supported at the moment as we don't have a special case for the textEditor. But not using it.
         this.postCommand(command, ...args).ignoreErrors();
     }
@@ -74,7 +73,7 @@ export class CommandBroker implements ICommandBroker {
         // Make sure we're the host (or none). Guest shouldn't be sending
         if (this.postOffice.role() !== vsls.Role.Guest) {
             // This means we should send this across to the other side.
-            this.postOffice.postCommand(command, ...rest);
+            return this.postOffice.postCommand(command, ...rest);
         }
     }
 }

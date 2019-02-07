@@ -3,11 +3,9 @@
 'use strict';
 import '../common/extensions';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
@@ -16,7 +14,6 @@ import {
     ICommandManager,
     IDocumentManager,
     IWebPanel,
-    IWebPanelMessageListener,
     IWebPanelProvider,
     IWorkspaceService
 } from '../common/application/types';
@@ -30,6 +27,7 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, HistoryMessages, Identifiers, Settings, Telemetry } from './constants';
+import { HistoryMessageListener } from './historyMessageListener';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
     CellState,
@@ -45,7 +43,6 @@ import {
     InterruptResult,
     IStatusProvider
 } from './types';
-import { HistoryMessageListener } from './historyMessageListener';
 
 export enum SysInfoReason {
     Start,
@@ -196,7 +193,6 @@ export class History implements IHistory {
             this.disposed = true;
             if (this.interpreterChangedDisposable) {
                 this.interpreterChangedDisposable.dispose();
-                this.interpreterChangedDisposable = undefined;
             }
             if (this.closedEvent) {
                 this.closedEvent.fire(this);

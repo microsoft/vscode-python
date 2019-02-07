@@ -9,6 +9,7 @@ import * as vsls from 'vsls/vscode';
 import { CancellationError } from '../../../common/cancellation';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
@@ -19,22 +20,22 @@ import {
     INotebookServer,
     InterruptResult
 } from '../../types';
-import { ExecuteObservableResponse, InterruptResponse, ServerResponse, ServerResponseType } from './types';
+import { IExecuteObservableResponse, IInterruptResponse, IServerResponse, ServerResponseType } from './types';
 import { waitForGuestService } from './utils';
 
 export class GuestJupyterServer implements INotebookServer {
     private connInfo : IConnection | undefined;
-    private responseQueue : ServerResponse [] = [];
-    private waitingQueue : { deferred: Deferred<ServerResponse>; predicate : (r: ServerResponse) => boolean }[] = [];
-    private sharedService: Promise<vsls.SharedServiceProxy | undefined>;
+    private responseQueue : IServerResponse [] = [];
+    private waitingQueue : { deferred: Deferred<IServerResponse>; predicate(r: IServerResponse) : boolean }[] = [];
+    private sharedService: Promise<vsls.SharedServiceProxy | null>;
 
     constructor(
         private dataScience: IDataScience,
-        private logger: ILogger,
+        logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
-        private asyncRegistry: IAsyncDisposableRegistry,
-        private configService: IConfigurationService,
-        private sessionManager: IJupyterSessionManager) {
+        asyncRegistry: IAsyncDisposableRegistry,
+        configService: IConfigurationService,
+        sessionManager: IJupyterSessionManager) {
         this.sharedService = this.startSharedServiceProxy();
     }
 
@@ -110,7 +111,7 @@ export class GuestJupyterServer implements INotebookServer {
 
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
         const response = await this.waitForResponse(ServerResponseType.Restart);
-        return (response as InterruptResponse).result;
+        return (response as IInterruptResponse).result;
     }
 
     // Return a copy of the connection information that this server used to connect with
@@ -127,7 +128,7 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-    private async startSharedServiceProxy() : Promise<vsls.SharedServiceProxy | undefined> {
+    private async startSharedServiceProxy() : Promise<vsls.SharedServiceProxy | null> {
         const api = await vsls.getApiAsync();
 
         if (api) {
@@ -135,25 +136,28 @@ export class GuestJupyterServer implements INotebookServer {
             const service = await waitForGuestService(api, LiveShare.JupyterServerSharedService);
 
             // Wait for sync up
-            const synced = await service.request(LiveShareCommands.syncRequest, []);
+            const synced = service !== null ? await service.request(LiveShareCommands.syncRequest, []) : undefined;
             if (!synced) {
-                throw new Error('Synchronization failing on startup');
+                throw new Error(localize.DataScience.liveShareSyncFailure());
             }
 
-            // Listen to responses
-            service.onNotify(LiveShareCommands.serverResponse, this.onServerResponse);
+            if (service !== null) {
+                // Listen to responses
+                service.onNotify(LiveShareCommands.serverResponse, this.onServerResponse);
 
-            // Request all of the responses since this guest was started. We likely missed a bunch
-            service.notify(LiveShareCommands.catchupRequest, { since: this.dataScience.activationStartTime });
-
+                // Request all of the responses since this guest was started. We likely missed a bunch
+                service.notify(LiveShareCommands.catchupRequest, { since: this.dataScience.activationStartTime });
+            }
             return service;
         }
+
+        return null;
     }
 
     private onServerResponse = (args: Object) => {
         // Args should be of type ServerResponse. Stick in our queue if so.
         if (args.hasOwnProperty('type')) {
-            this.responseQueue.push(args as ServerResponse);
+            this.responseQueue.push(args as IServerResponse);
 
             // Check for any waiters.
             this.dispatchResponses();
@@ -163,10 +167,10 @@ export class GuestJupyterServer implements INotebookServer {
     private async waitForObservable(subscriber: Subscriber<ICell[]>, code: string, file: string, line: number, id?: string) : Promise<void> {
         let pos = 0;
         let foundId = id;
-        let cells: ICell[] = [];
+        let cells: ICell[] | undefined = [];
         while (cells !== undefined) {
             // Find all matches in order
-            const response = await this.waitForSpecificResponse<ExecuteObservableResponse>(r => {
+            const response = await this.waitForSpecificResponse<IExecuteObservableResponse>(r => {
                 return (r.pos === pos) &&
                     (foundId === r.id || !foundId) &&
                     (code === r.code) &&
@@ -182,9 +186,9 @@ export class GuestJupyterServer implements INotebookServer {
         subscriber.complete();
     }
 
-    private waitForSpecificResponse<T extends ServerResponse>(predicate: (response: T) => boolean) : Promise<T> {
+    private waitForSpecificResponse<T extends IServerResponse>(predicate: (response: T) => boolean) : Promise<T> {
         // See if we have any responses right now with this type
-        const index = this.responseQueue.findIndex(predicate);
+        const index = this.responseQueue.findIndex(r => predicate(r as T));
         if (index >= 0) {
             // Pull off the match
             const match = this.responseQueue[index];
@@ -202,7 +206,7 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-    private waitForResponse(type: ServerResponseType) : Promise<ServerResponse> {
+    private waitForResponse(type: ServerResponseType) : Promise<IServerResponse> {
         return this.waitForSpecificResponse(r => r.type === type);
     }
 
@@ -221,7 +225,10 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-    private isAllowed(response: ServerResponse, time: number) : boolean {
+    // Should turn this back on to make sure we aren't matching responses from too long ago. Our
+    // match is imperfect at the moment.
+    // tslint:disable-next-line:no-unused-variable
+    private isAllowed(response: IServerResponse, time: number) : boolean {
         const debug = /--debug|--inspect/.test(process.execArgv.join(' '));
         const range = debug ? LiveShare.ResponseRange * 30 : LiveShare.ResponseRange;
         return Math.abs(response.time - time) < range;

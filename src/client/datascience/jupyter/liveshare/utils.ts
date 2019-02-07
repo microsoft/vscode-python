@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-import * as vsls from 'vsls/vscode';
-import { createDeferred } from '../../../common/utils/async';
 import { Disposable, Event } from 'vscode';
+import * as vsls from 'vsls/vscode';
 
-export async function waitForHostService(api: vsls.LiveShare, name: string) : Promise<vsls.SharedService> {
+import { createDeferred } from '../../../common/utils/async';
+
+export async function waitForHostService(api: vsls.LiveShare, name: string) : Promise<vsls.SharedService | null> {
     const service = await api.shareService(name);
-    if (!service.isServiceAvailable) {
+    if (service !== null && !service.isServiceAvailable) {
         return waitForAvailability(service);
     }
     return service;
 }
 
-export async function waitForGuestService(api: vsls.LiveShare, name: string) : Promise<vsls.SharedServiceProxy> {
+export async function waitForGuestService(api: vsls.LiveShare, name: string) : Promise<vsls.SharedServiceProxy | null> {
     const service = await api.getSharedService(name);
-    if (!service.isServiceAvailable) {
+    if (service !== null && !service.isServiceAvailable) {
         return waitForAvailability(service);
     }
     return service;
@@ -28,7 +28,7 @@ interface IChangeWatchable {
 
 async function waitForAvailability<T extends IChangeWatchable>(service: T) : Promise<T> {
     const deferred = createDeferred<T>();
-    let disposable : Disposable;
+    let disposable : Disposable | undefined;
     try {
         disposable = service.onDidChangeIsServiceAvailable(e => {
             if (e) {
@@ -37,7 +37,9 @@ async function waitForAvailability<T extends IChangeWatchable>(service: T) : Pro
         });
         await deferred.promise;
     } finally {
-        disposable.dispose();
+        if (disposable) {
+            disposable.dispose();
+        }
     }
     return service;
 }

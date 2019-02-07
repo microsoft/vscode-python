@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import * as vsls from 'vsls/vscode';
+
 import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
 
+// tslint:disable:no-any
 export class RoleBasedFactory<T extends IAsyncDisposable> {
     private ctorArgs : any[];
     private firstTime : boolean = true;
@@ -48,7 +48,7 @@ export class RoleBasedFactory<T extends IAsyncDisposable> {
         obj.dispose = () => {
             this.createPromise = undefined;
             return oldDispose();
-        }
+        };
 
         // If the session changes, also dispose
         if (api && this.firstTime) {
@@ -59,5 +59,3 @@ export class RoleBasedFactory<T extends IAsyncDisposable> {
         return obj;
     }
 }
-
-
