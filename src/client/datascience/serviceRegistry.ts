@@ -11,10 +11,10 @@ import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
-import { JupyterExecution } from './jupyter/jupyterExecution';
+import { JupyterExecution } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
-import { JupyterServer } from './jupyter/jupyterServer';
+import { JupyterServer } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
 import { StatusProvider } from './statusProvider';
 import {

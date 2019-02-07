@@ -18,7 +18,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,

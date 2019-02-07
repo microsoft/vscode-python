@@ -14,7 +14,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { ICell, IDataScience, IJupyterSessionManager, InterruptResult } from '../../types';
-import { JupyterServerBase } from '../jupyterServerBase';
+import { JupyterServerBase } from '../jupyterServer';
 import { ICatchupRequest, IResponseMapping, IServerResponse, ServerResponseType } from './types';
 import { waitForHostService } from './utils';
 

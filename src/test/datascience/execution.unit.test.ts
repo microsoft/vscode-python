@@ -35,7 +35,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';

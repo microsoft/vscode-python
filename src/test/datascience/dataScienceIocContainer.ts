@@ -72,10 +72,10 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { JupyterServer } from '../../client/datascience/jupyter/jupyterServer';
+import { JupyterServer } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import {

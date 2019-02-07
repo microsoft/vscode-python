@@ -17,7 +17,7 @@ import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
-import { JupyterExecutionBase } from '../jupyterExecutionBase';
+import { JupyterExecutionBase } from '../jupyterExecution';
 import { waitForHostService } from './utils';
 
 // tslint:disable:no-any

@@ -15,7 +15,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
-import { JupyterExecutionBase } from '../jupyterExecutionBase';
+import { JupyterExecutionBase } from '../jupyterExecution';
 import { waitForGuestService } from './utils';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
