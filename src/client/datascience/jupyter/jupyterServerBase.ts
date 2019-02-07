@@ -31,6 +31,7 @@ import {
     INotebookServer,
     InterruptResult
 } from '../types';
+import { ILiveShareApi } from '../../common/application/types';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -117,6 +118,7 @@ export class JupyterServerBase implements INotebookServer {
     private usingDarkTheme: boolean | undefined;
 
     constructor(
+        liveShare: ILiveShareApi,
         dataScience: IDataScience,
         private logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
