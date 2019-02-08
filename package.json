@@ -170,12 +170,20 @@
             {
                 "command": "python.runtests",
                 "title": "%python.command.python.runtests.title%",
-                "category": "Python"
+                "category": "Python",
+				"icon": {
+					"light": "resources/light/play.png",
+					"dark": "resources/dark/play.png"
+				}
             },
             {
                 "command": "python.debugtests",
                 "title": "%python.command.python.debugtests.title%",
-                "category": "Python"
+                "category": "Python",
+				"icon": {
+					"light": "resources/light/debugger.png",
+					"dark": "resources/dark/debugger.png"
+				}
             },
             {
                 "command": "python.execInTerminal",
@@ -230,12 +238,20 @@
             {
                 "command": "python.runFailedTests",
                 "title": "%python.command.python.runFailedTests.title%",
-                "category": "Python"
+                "category": "Python",
+				"icon": {
+					"light": "resources/light/playfailed.png",
+					"dark": "resources/dark/playfailed.png"
+				}
             },
             {
                 "command": "python.discoverTests",
                 "title": "%python.command.python.discoverTests.title%",
-                "category": "Python"
+                "category": "Python",
+				"icon": {
+					"light": "resources/light/discover.png",
+					"dark": "resources/dark/discover.png"
+				}
             },
             {
                 "command": "python.configureTests",
@@ -579,7 +595,19 @@
             ],
             "view/title": [
                 {
+                    "command": "python.debugtests",
+                    "group": "navigation"
+                },
+                {
                     "command": "python.runtests",
+                    "group": "navigation"
+                },
+                {
+                    "command": "python.discoverTests",
+                    "group": "navigation"
+                },
+                {
+                    "command": "python.runFailedTests",
                     "group": "navigation"
                 }
             ],
