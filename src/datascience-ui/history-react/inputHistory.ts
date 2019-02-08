@@ -53,7 +53,7 @@ export class InputHistory {
             if (this.last === 0) {
                 this.up = undefined;
                 this.down = undefined;
-            } else {
+            } else if (this.last) {
                 this.up = this.last + 1;
                 this.down = this.last - 1;
             }
