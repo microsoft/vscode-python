@@ -18,7 +18,7 @@ import {
 } from '../../../client/interpreter/contracts';
 import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { deleteFiles, isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
+import { deleteFiles, getOSType, isPythonVersionInProcess, OSType, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { sleep } from '../../core';
 import { initialize, multirootPath } from '../../initialize';
@@ -42,8 +42,11 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         const watcher = (await builder.getWorkspaceVirtualEnvInterpreterWatcher(
             workspaceUri
         )) as WorkspaceVirtualEnvWatcherService;
+        const binDir = getOSType() === OSType.Windows ? 'Scripts' : 'bin';
+        const executable = getOSType() === OSType.Windows ? 'python.exe' : 'python';
         while (!deferred.completed && stopWatch.elapsedTime < timeoutMs - 10_000) {
-            watcher.createHandler(workspaceUri).ignoreErrors();
+            const pythonPath = path.join(workspaceUri.fsPath, binDir, executable);
+            watcher.createHandler(Uri.file(pythonPath)).ignoreErrors();
             await sleep(1000);
         }
     }

@@ -10,26 +10,34 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
-import { closeActiveWindows, initializeTest } from '../initialize';
-import { initializeSmokeTests } from './common';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
-suite('Smoke Test: Run Python File In Terminal', function () {
-    // Large value to allow for LS to get downloaded.
-    this.timeout(4 * 60_000);
-
-    suiteSetup(async function () {
+suite('Smoke Test: Run Python File In Terminal', () => {
+    suiteSetup(async function() {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
-        await initializeSmokeTests();
+        await initialize();
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
     test('Exec', async () => {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
-        const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'testMultiRootWkspc',
+            'smokeTests',
+            'testExecInTerminal.py'
+        );
+        const outputFile = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'testMultiRootWkspc',
+            'smokeTests',
+            'testExecInTerminal.log'
+        );
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }

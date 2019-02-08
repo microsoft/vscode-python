@@ -20,7 +20,7 @@ import { IUnitTestManagementService } from '../../../client/unittests/types';
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
 suite('Language Server - LanguageServer', () => {
-    class LanguageServerTest extends LanguageServer{
+    class LanguageServerTest extends LanguageServer {
         // tslint:disable-next-line:no-unnecessary-override
         public async registerTestServices() {
             return super.registerTestServices();
@@ -87,8 +87,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         await sleep(120);
 
-        verify(testManager.activate()).once();
-        verify(testManager.activateCodeLenses(anything())).once();
+        verify(testManager.activate(anything())).once();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.atLeast(2));
     });
     test('Send telemetry when LS has started and disposes appropriately', async () => {
@@ -130,8 +129,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
         await sleep(120);
 
-        verify(testManager.activate()).once();
-        verify(testManager.activateCodeLenses(anything())).once();
+        verify(testManager.activate(anything())).once();
         expect(() => server.loadExtension(loadExtensionArgs)).to.not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
         client.verify(c => c.stop(), typemoq.Times.never());

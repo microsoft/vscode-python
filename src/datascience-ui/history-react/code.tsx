@@ -41,6 +41,7 @@ interface ICodeState {
 export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private codeMirror: CodeMirror.Editor | undefined;
+    private codeMirrorOwner: HTMLDivElement | undefined;
     private baseIndentation : number | undefined;
 
     constructor(prop: ICodeProps) {
@@ -56,16 +57,26 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // If we are suddenly changing a readonly to not, somebody is reusing a different control. Update
         // to be empty
         if (this.codeMirror && !this.props.readOnly && prevProps.readOnly) {
+            this.codeMirror.setOption('readOnly', false);
             this.codeMirror.setValue('');
         }
     }
 
+    public componentWillUnmount() {
+        if (this.codeMirrorOwner) {
+            const activeElement = document.activeElement as HTMLElement;
+            if (activeElement && this.codeMirrorOwner.contains(activeElement)) {
+                activeElement.blur();
+            }
+        }
+    }
+
     public render() {
-        const readOnly = this.props.testMode || this.props.readOnly;
+        const readOnly = this.props.readOnly;
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         return (
-            <div className={classes}>
+            <div className={classes} ref={this.updateRoot}>
                 <Cursor
                     hidden={readOnly}
                     codeInFocus={this.state.focused}
@@ -109,6 +120,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             ev.stopPropagation();
             this.codeMirror.focus();
         }
+    }
+
+    private updateRoot = (div: HTMLDivElement) => {
+        this.codeMirrorOwner = div;
     }
 
     private getWatermarkString = () : string => {
@@ -197,6 +212,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // Double check we don't have an entirely empty document
         if (doc.getValue('').trim().length > 0) {
             let code = doc.getValue();
+            const isClean = doc.isClean();
             // We have to clear the history as this CodeMirror doesn't go away.
             doc.clearHistory();
             doc.setValue('');
@@ -208,7 +224,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
             // Send to the input history too if necessary
             if (this.props.history) {
-                this.props.history.add(code);
+                this.props.history.add(code, !isClean);
             }
 
             this.props.onSubmit(code);
@@ -252,6 +268,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             if (newValue !== currentValue) {
                 doc.setValue(newValue);
                 doc.setCursor(0, doc.getLine(0).length);
+                doc.markClean();
             }
             return;
         }
@@ -267,6 +284,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             if (newValue !== currentValue) {
                 doc.setValue(newValue);
                 doc.setCursor(doc.lastLine(), doc.getLine(doc.lastLine()).length);
+                doc.markClean();
             }
             return;
         }

@@ -7,6 +7,7 @@ export class InputHistory {
     private historyStack: string [] = [];
     private up: number | undefined;
     private down: number | undefined;
+    private last: number | undefined;
 
     public completeUp(code: string) : string {
         // If going up, only move if anything in the history
@@ -34,14 +35,28 @@ export class InputHistory {
         return code;
     }
 
-    public add(code: string) {
-        // Compute our new history (dupes should reorder adding dupes)
-        const dupeIndex = this.historyStack.indexOf(code);
-        this.historyStack = dupeIndex >= 0 ? this.historyStack : [code, ...this.historyStack];
+    public add(code: string, typed: boolean) {
+        // Compute our new history. Behavior depends upon if the user typed it in or
+        // just used the arrows
 
-        // Reset position if new code
-        if (dupeIndex < 0) {
+        // Only skip adding a dupe if it's the same as the top item. Otherwise
+        // add it as normal.
+        this.historyStack = this.last === 0 && this.historyStack.length > 0 && this.historyStack[this.last] === code ?
+            this.historyStack : [code, ...this.historyStack];
+
+        // Position is more complicated. If we typed something start over
+        if (typed) {
             this.reset();
+        } else {
+            // We want our next up push to match the index of the item that was
+            // actually entered.
+            if (this.last === 0) {
+                this.up = undefined;
+                this.down = undefined;
+            } else {
+                this.up = this.last + 1;
+                this.down = this.last - 1;
+            }
         }
     }
 
@@ -51,6 +66,9 @@ export class InputHistory {
     }
 
     private adjustCursors(currentPos: number) {
+        // Save last position we entered.
+        this.last = currentPos;
+
         // For a single item, ony up works. But never modify it.
         if (this.historyStack.length > 1) {
             if (currentPos < this.historyStack.length) {

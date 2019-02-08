@@ -13,6 +13,7 @@ export interface IUnitTestConfigurationService {
     displayTestFrameworkError(wkspace: Uri): Promise<void>;
     selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined>;
     enableTest(wkspace: Uri, product: UnitTestProduct);
+    promptToEnableAndConfigureTestFramework(wkspace: Uri);
 }
 
 export const ITestResultDisplay = Symbol('ITestResultDisplay');
@@ -35,8 +36,8 @@ export interface ITestDisplay {
 
 export const IUnitTestManagementService = Symbol('IUnitTestManagementService');
 export interface IUnitTestManagementService {
-    activate(): Promise<void>;
-    activateCodeLenses(symboldProvider: DocumentSymbolProvider): Promise<void>;
+    readonly onDidStatusChange: Event<WorkspaceTestStatus>;
+    activate(symbolProvider: DocumentSymbolProvider): Promise<void>;
     getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
     discoverTestsForDocument(doc: TextDocument): Promise<void>;
     autoDiscoverTests(): Promise<void>;
@@ -136,3 +137,5 @@ export interface ILocationStackFrameDetails {
     location: Location;
     lineText: string;
 }
+
+export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };

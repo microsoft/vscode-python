@@ -3,11 +3,12 @@
 'use strict';
 
 import { Socket } from 'net';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
-export interface IOutputChannel extends OutputChannel { }
+export interface IOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
+export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
@@ -293,7 +294,7 @@ export interface IDataScienceSettings {
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
     maxOutputSize: number;
-    sendSelectionToInteractiveWindow : boolean;
+    sendSelectionToInteractiveWindow: boolean;
     markdownRegularExpression: string;
     codeRegularExpression: string;
     allowLiveShare? : boolean;
@@ -314,7 +315,7 @@ export interface ISocketServer extends Disposable {
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');
-export interface IExtensionContext extends ExtensionContext { }
+export interface IExtensionContext extends ExtensionContext {}
 
 export const IExtensions = Symbol('IExtensions');
 export interface IExtensions {

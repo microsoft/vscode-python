@@ -1,22 +1,21 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { Uri, window, workspace } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IUnitTestSettings, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
-import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, UnitTestProduct } from './types';
+import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestFunction, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, TestSuite, UnitTestProduct } from './types';
 
-export async function selectTestWorkspace(): Promise<Uri | undefined> {
+export async function selectTestWorkspace(appShell: IApplicationShell): Promise<Uri | undefined> {
     if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
         return undefined;
     } else if (workspace.workspaceFolders.length === 1) {
         return workspace.workspaceFolders[0].uri;
     } else {
-        // tslint:disable-next-line:no-any prefer-type-cast
-        const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
+        const workspaceFolder = await appShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
         return workspaceFolder ? workspaceFolder.uri : undefined;
     }
 }
@@ -205,5 +204,23 @@ export class TestsHelper implements ITestsHelper {
         }
 
         return true;
+    }
+    public getTestFile(test: TestFile | TestFolder | TestSuite | TestFunction): TestFile | undefined {
+        // Only TestFile has a `fullPath` property.
+        return Array.isArray((test as TestFile).fullPath) ? test as TestFile : undefined;
+    }
+    public getTestSuite(test: TestFile | TestFolder | TestSuite | TestFunction): TestSuite | undefined {
+        // Only TestSuite has a `suites` property.
+        return Array.isArray((test as TestSuite).suites) ? test as TestSuite : undefined;
+    }
+    public getTestFolder(test: TestFile | TestFolder | TestSuite | TestFunction): TestFolder | undefined {
+        // Only TestFolder has a `folders` property.
+        return Array.isArray((test as TestFolder).folders) ? test as TestFolder : undefined;
+    }
+    public getTestFunction(test: TestFile | TestFolder | TestSuite | TestFunction): TestFunction | undefined {
+        if (this.getTestFile(test) || this.getTestSuite(test) || this.getTestSuite(test)) {
+            return;
+        }
+        return test as TestFunction;
     }
 }

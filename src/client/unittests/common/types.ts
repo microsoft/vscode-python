@@ -1,4 +1,4 @@
-import { CancellationToken, DiagnosticCollection, Disposable, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, DiagnosticCollection, Disposable, Event, OutputChannel, Uri } from 'vscode';
 import { IUnitTestSettings, Product } from '../../common/types';
 import { IPythonUnitTestMessage } from '../types';
 import { CommandSource } from './constants';
@@ -34,7 +34,12 @@ export type TestFolder = TestResult & {
     status?: TestStatus;
     folders: TestFolder[];
 };
-
+export enum TestType {
+    testFile = 'testFile',
+    testFolder = 'testFolder',
+    testSuite = 'testSuite',
+    testFunction = 'testFunction'
+}
 export type TestFile = TestResult & {
     name: string;
     fullPath: string;
@@ -110,14 +115,14 @@ export type Tests = {
 };
 
 export enum TestStatus {
-    Unknown,
-    Discovering,
-    Idle,
-    Running,
-    Fail,
-    Error,
-    Skipped,
-    Pass
+    Unknown = 'Unknown',
+    Discovering = 'Discovering',
+    Idle = 'Idle',
+    Running = 'Running',
+    Fail = 'Fail',
+    Error = 'Error',
+    Skipped = 'Skipped',
+    Pass = 'Pass'
 }
 
 export type TestsToRun = {
@@ -183,6 +188,8 @@ export const ITestCollectionStorageService = Symbol('ITestCollectionStorageServi
 export interface ITestCollectionStorageService extends Disposable {
     getTests(wkspace: Uri): Tests | undefined;
     storeTests(wkspace: Uri, tests: Tests | null | undefined): void;
+    findFlattendTestFunction(resource: Uri, func: TestFunction): FlattenedTestFunction | undefined;
+    findFlattendTestSuite(resource: Uri, func: TestSuite): FlattenedTestSuite | undefined;
 }
 
 export const ITestResultsService = Symbol('ITestResultsService');
@@ -226,6 +233,7 @@ export interface ITestManager extends Disposable {
     readonly workingDirectory: string;
     readonly workspaceFolder: Uri;
     diagnosticCollection: DiagnosticCollection;
+    readonly onDidStatusChange: Event<TestStatus>;
     stop(): void;
     resetTestResults(): void;
     discoverTests(cmdSource: CommandSource, ignoreCache?: boolean, quietMode?: boolean, userInitiated?: boolean): Promise<Tests>;

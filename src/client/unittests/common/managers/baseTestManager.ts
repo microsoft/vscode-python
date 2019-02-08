@@ -1,4 +1,4 @@
-import { CancellationToken, CancellationTokenSource, Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, Disposable, languages, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, Disposable, Event, EventEmitter, languages, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';
 import { IFileSystem } from '../../../common/platform/types';
@@ -38,6 +38,7 @@ export abstract class BaseTestManager implements ITestManager {
     private testRunnerCancellationTokenSource?: CancellationTokenSource;
     private _installer!: IInstaller;
     private discoverTestsPromise?: Promise<Tests>;
+    private _onDidStatusChange = new EventEmitter<TestStatus>();
     private get installer(): IInstaller {
         if (!this._installer) {
             this._installer = this.serviceContainer.get<IInstaller>(IInstaller);
@@ -46,7 +47,7 @@ export abstract class BaseTestManager implements ITestManager {
     }
     constructor(public readonly testProvider: TestProvider, private product: Product, public readonly workspaceFolder: Uri, protected rootDirectory: string,
         protected serviceContainer: IServiceContainer) {
-        this._status = TestStatus.Unknown;
+        this.updateStatus(TestStatus.Unknown);
         const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.settings = configService.getSettings(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
         const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -70,6 +71,9 @@ export abstract class BaseTestManager implements ITestManager {
     public get status(): TestStatus {
         return this._status;
     }
+    public get onDidStatusChange(): Event<TestStatus> {
+        return this._onDidStatusChange.event;
+    }
     public get workingDirectory(): string {
         return this.settings.unitTest.cwd && this.settings.unitTest.cwd.length > 0 ? this.settings.unitTest.cwd : this.rootDirectory;
     }
@@ -82,8 +86,8 @@ export abstract class BaseTestManager implements ITestManager {
         }
     }
     public reset() {
-        this._status = TestStatus.Unknown;
         this.tests = undefined;
+        this.updateStatus(TestStatus.Unknown);
     }
     public resetTestResults() {
         if (!this.tests) {
@@ -98,11 +102,10 @@ export abstract class BaseTestManager implements ITestManager {
         }
 
         if (!ignoreCache && this.tests! && this.tests!.testFunctions.length > 0) {
-            this._status = TestStatus.Idle;
+            this.updateStatus(TestStatus.Idle);
             return Promise.resolve(this.tests!);
         }
-        this._status = TestStatus.Discovering;
-
+        this.updateStatus(TestStatus.Discovering);
         // If ignoreCache is true, its an indication of the fact that its a user invoked operation.
         // Hence we can stop the debugger.
         if (userInitiated) {
@@ -121,8 +124,8 @@ export abstract class BaseTestManager implements ITestManager {
         return discoveryService.discoverTests(discoveryOptions)
             .then(tests => {
                 this.tests = tests;
-                this._status = TestStatus.Idle;
                 this.resetTestResults();
+                this.updateStatus(TestStatus.Idle);
                 this.discoverTestsPromise = undefined;
 
                 // have errors in Discovering
@@ -155,11 +158,11 @@ export abstract class BaseTestManager implements ITestManager {
                 this.discoverTestsPromise = undefined;
                 if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
                     reason = CANCELLATION_REASON;
-                    this._status = TestStatus.Idle;
+                    this.updateStatus(TestStatus.Idle);
                 } else {
                     telementryProperties.failed = true;
                     sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
-                    this._status = TestStatus.Error;
+                    this.updateStatus(TestStatus.Error);
                     this.outputChannel.appendLine('Test Discovery failed: ');
                     // tslint:disable-next-line:prefer-template
                     this.outputChannel.appendLine(reason.toString());
@@ -211,7 +214,7 @@ export abstract class BaseTestManager implements ITestManager {
             this.resetTestResults();
         }
 
-        this._status = TestStatus.Running;
+        this.updateStatus(TestStatus.Running);
         if (this.testRunnerCancellationTokenSource) {
             this.testRunnerCancellationTokenSource.cancel();
         }
@@ -235,16 +238,16 @@ export abstract class BaseTestManager implements ITestManager {
                 this.createCancellationToken(CancellationTokenType.testRunner);
                 return this.runTestImpl(tests, testsToRun, runFailedTests, debug);
             }).then(() => {
-                this._status = TestStatus.Idle;
+                this.updateStatus(TestStatus.Idle);
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
                 return this.tests!;
             }).catch(reason => {
                 if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
                     reason = CANCELLATION_REASON;
-                    this._status = TestStatus.Idle;
+                    this.updateStatus(TestStatus.Idle);
                 } else {
-                    this._status = TestStatus.Error;
+                    this.updateStatus(TestStatus.Error);
                     telementryProperties.failed = true;
                     sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
                 }
@@ -291,6 +294,15 @@ export abstract class BaseTestManager implements ITestManager {
     // tslint:disable-next-line:no-any
     protected abstract runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any>;
     protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
+    private updateStatus(status: TestStatus): void {
+        if (status === this._status) {
+            return;
+        }
+        this._status = status;
+        // Fire after 1ms, let existing code run to completion,
+        // We need to allow for code to get into a consistent state.
+        setTimeout(() => this._onDidStatusChange.fire(status), 1);
+    }
     private createCancellationToken(tokenType: CancellationTokenType) {
         this.disposeCancellationToken(tokenType);
         if (tokenType === CancellationTokenType.testDiscovery) {
