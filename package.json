@@ -2007,7 +2007,8 @@
             "test": [
                 {
                     "id": "python_tests",
-                    "name": "PYTHON"
+                    "name": "PYTHON",
+                    "when": "extensionActivated"
                 }
             ]
         }

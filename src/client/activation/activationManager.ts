@@ -6,7 +6,7 @@
 import { inject, injectable, multiInject } from 'inversify';
 import { TextDocument, workspace } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
-import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { traceDecorators } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
@@ -25,7 +25,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
 
     public dispose() {
@@ -41,6 +42,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     public async activate(): Promise<void> {
         await this.initialize();
         await this.activateWorkspace(this.getActiveResource());
+        await this.commandManager.executeCommand('setContext', 'extensionActivated', true);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
     @traceDecorators.error('Failed to activate a workspace')
