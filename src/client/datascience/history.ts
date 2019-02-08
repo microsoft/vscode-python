@@ -126,9 +126,9 @@ export class History implements IHistory {
         return this.closedEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public addCode(code: string, file: string, line: number, version: number, editor?: TextEditor) : Promise<void> {
         // Call the internal method.
-        return this.submitCode(code, file, line, editor);
+        return this.submitCode(code, file, line, version, editor);
     }
 
     // tslint:disable-next-line: no-any no-empty
@@ -373,7 +373,7 @@ export class History implements IHistory {
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, editor?: TextEditor, id?: string) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, version: number, editor?: TextEditor, id?: string) : Promise<void> {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
@@ -417,7 +417,7 @@ export class History implements IHistory {
                 }
 
                 // Attempt to evaluate this cell in the jupyter notebook
-                const observable = this.jupyterServer.executeObservable(code, file, line, id);
+                const observable = this.jupyterServer.executeObservable(code, file, line, version, id);
 
                 // Sign up for cell changes
                 observable.subscribe(

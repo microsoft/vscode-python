@@ -80,10 +80,10 @@ export class DataScience implements IDataScience {
         }
     }
 
-    public async runAllCells(file: string): Promise<void> {
+    public async runAllCells(file: string, version: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
-        let codeWatcher = this.getCodeWatcher(file);
+        let codeWatcher = this.getCodeWatcher(file, version);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
         }
@@ -96,9 +96,9 @@ export class DataScience implements IDataScience {
 
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any
     // objects for parameters is because they can't be recreated when passing them through the LiveShare API
-    public async runCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
+    public async runCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number, version: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        const codeWatcher = this.getCodeWatcher(file);
+        const codeWatcher = this.getCodeWatcher(file, version);
         if (codeWatcher) {
             return codeWatcher.runCell(new vscode.Range(startLine, startChar, endLine, endChar));
         } else {
@@ -196,8 +196,8 @@ export class DataScience implements IDataScience {
         editorContext.set(ownsSelection && enabled).catch();
     }
 
-    private getCodeWatcher(file: string): ICodeWatcher | undefined {
-        const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);
+    private getCodeWatcher(file: string, version: number): ICodeWatcher | undefined {
+        const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file && d.version === version);
         if (possibleDocuments && possibleDocuments.length === 1) {
             return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
         } else if (possibleDocuments && possibleDocuments.length > 1) {

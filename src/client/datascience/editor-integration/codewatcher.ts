@@ -45,13 +45,13 @@ export class CodeWatcher implements ICodeWatcher {
         // and so shouldn't reference local objects.
         cells.forEach(cell => {
             const cmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character, document.version],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllCmd: Command = {
-                arguments: [document.fileName],
+                arguments: [document.fileName, document.version],
                 title: localize.DataScience.runAllCellsLensCommandTitle(),
                 command: Commands.RunAllCells
             };
@@ -87,7 +87,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
-                    await activeHistory.addCode(code, this.getFileName(), range.start.line);
+                    await activeHistory.addCode(code, this.getFileName(), range.start.line, this.document.version);
                 }
             }
         }
@@ -96,7 +96,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (this.codeLenses.length === 0) {
             if (this.document) {
                 const code = this.document.getText();
-                await activeHistory.addCode(code, this.getFileName(), 0);
+                await activeHistory.addCode(code, this.getFileName(), 0, this.document.version);
             }
         }
     }
@@ -119,7 +119,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             if (code && code.trim().length) {
-                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor.document.version, activeEditor);
             }
         }
     }
@@ -132,7 +132,7 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText(range);
 
             try {
-                await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
+                await activeHistory.addCode(code, this.getFileName(), range.start.line, this.document.version, this.documentManager.activeTextEditor);
             } catch (err) {
                 this.handleError(err);
             }

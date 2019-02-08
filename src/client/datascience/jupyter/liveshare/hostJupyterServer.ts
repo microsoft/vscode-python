@@ -44,9 +44,9 @@ export class HostJupyterServer extends JupyterServerBase {
         }
     }
 
-    public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, version: number, id?: string): Observable<ICell[]> {
         try {
-            const inner = super.executeObservable(code, file, line, id);
+            const inner = super.executeObservable(code, file, line, version, id);
 
             // Wrap the observable returned so we can listen to it too
             return this.wrapObservableResult(code, inner, id);

@@ -58,12 +58,12 @@ export class GuestJupyterServer implements INotebookServer {
         return Promise.resolve();
     }
 
-    public async execute(code: string, file: string, line: number, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public async execute(code: string, file: string, line: number, version: number,  cancelToken?: CancellationToken): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
         // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservable(code, file, line);
+        const observable = this.executeObservable(code, file, line, version);
         let output: ICell[];
 
         observable.subscribe(
@@ -90,11 +90,11 @@ export class GuestJupyterServer implements INotebookServer {
         return Promise.resolve();
     }
 
-    public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, version: number, id?: string): Observable<ICell[]> {
         // Create a wrapper observable around the actual server
         return new Observable<ICell[]>(subscriber => {
             // Wait for the observable responses to come in
-            this.waitForObservable(subscriber, code, file, line, id)
+            this.waitForObservable(subscriber, code, file, line, version, id)
                 .catch(e => {
                     subscriber.error(e);
                     subscriber.complete();
@@ -174,7 +174,7 @@ export class GuestJupyterServer implements INotebookServer {
         }
     }
 
-    private async waitForObservable(subscriber: Subscriber<ICell[]>, code: string, file: string, line: number, id?: string) : Promise<void> {
+    private async waitForObservable(subscriber: Subscriber<ICell[]>, code: string, file: string, line: number, version: number, id?: string) : Promise<void> {
         let pos = 0;
         let foundId = id;
         let cells: ICell[] | undefined = [];
@@ -184,7 +184,7 @@ export class GuestJupyterServer implements INotebookServer {
                 return (r.pos === pos) &&
                     (foundId === r.id || !foundId) &&
                     (code === r.code) &&
-                    (!r.cells || (r.cells && r.cells[0].file === file && r.cells[0].line === line));
+                    (!r.cells || (r.cells && r.cells[0].file === file && r.cells[0].line === line && r.cells[0].version === version));
             });
             if (response.cells) {
                 subscriber.next(response.cells);

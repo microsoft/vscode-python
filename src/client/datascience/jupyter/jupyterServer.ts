@@ -158,7 +158,7 @@ export class JupyterServerBase implements INotebookServer {
         return this.session ? this.session.waitForIdle() : Promise.resolve();
     }
 
-    public execute(code: string, file: string, line: number, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public execute(code: string, file: string, line: number, version: number, cancelToken?: CancellationToken): Promise<ICell[]> {
         // Do initial setup if necessary
         this.initialNotebookSetup();
 
@@ -166,7 +166,7 @@ export class JupyterServerBase implements INotebookServer {
         const deferred = createDeferred<ICell[]>();
 
         // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservable(code, file, line);
+        const observable = this.executeObservable(code, file, line, version);
         let output: ICell[];
 
         observable.subscribe(
@@ -196,8 +196,8 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
-        return this.executeObservableImpl(code, file, line, id, false);
+    public executeObservable(code: string, file: string, line: number, version: number, id?: string): Observable<ICell[]> {
+        return this.executeObservableImpl(code, file, line, version, id, false);
     }
 
     public executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
@@ -208,7 +208,7 @@ export class JupyterServerBase implements INotebookServer {
         const deferred = createDeferred<ICell[]>();
 
         // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservableImpl(code, Identifiers.EmptyFileName, 0, uuid(), true);
+        const observable = this.executeObservableImpl(code, Identifiers.EmptyFileName, 0, 0, uuid(), true);
         let output: ICell[];
 
         observable.subscribe(
@@ -258,6 +258,7 @@ export class JupyterServerBase implements INotebookServer {
             id: uuid(),
             file: '',
             line: 0,
+            version: 0,
             state: CellState.finished
         };
     }
@@ -406,14 +407,14 @@ export class JupyterServerBase implements INotebookServer {
         return result;
     }
 
-    private executeObservableImpl(code: string, file: string, line: number, id: string | undefined, silent?: boolean) : Observable<ICell[]> {
+    private executeObservableImpl(code: string, file: string, line: number, version: number, id: string | undefined, silent?: boolean) : Observable<ICell[]> {
         // Do initial setup if necessary
         this.initialNotebookSetup();
 
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
-            const cells = generateCells(this.configService.getSettings().datascience, code, file, line, true, id);
+            const cells = generateCells(this.configService.getSettings().datascience, code, file, line, version, true, id);
 
             // Might have more than one (markdown might be split)
             if (cells.length > 1) {
