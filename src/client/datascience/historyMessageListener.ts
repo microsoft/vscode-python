@@ -13,12 +13,16 @@ import { PostOffice } from './liveshare/postOffice';
 export class HistoryMessageListener implements IWebPanelMessageListener {
     private postOffice : PostOffice;
     private disposedCallback : () => void;
+    private callback :  (message: string, payload: any) => void;
 
     constructor(liveShare: ILiveShareApi, callback: (message: string, payload: any) => void, disposed: () => void) {
         this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare);
 
         // Save our dispose callback so we remove our history window
         this.disposedCallback = disposed;
+
+        // Save our local callback so we can handle the non broadcast case(s)
+        this.callback = callback;
 
         // We need to register callbacks for all history messages. Well except for send info
         Object.keys(HistoryMessages).forEach(k => {
@@ -34,7 +38,12 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
     }
 
     public onMessage(message: string, payload: any) {
-        // We received a message from the local webview. Broadcast it to everybody
-        this.postOffice.postCommand(message, payload).ignoreErrors();
+        // We received a message from the local webview. Broadcast it to everybody unless it's a sendinfo
+        if (message !== HistoryMessages.SendInfo) {
+            this.postOffice.postCommand(message, payload).ignoreErrors();
+        } else {
+            // Send to just our local callback.
+            this.callback(message, payload);
+        }
     }
 }

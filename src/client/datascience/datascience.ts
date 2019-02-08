@@ -198,8 +198,10 @@ export class DataScience implements IDataScience {
 
     private getCodeWatcher(file: string): ICodeWatcher | undefined {
         const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);
-        if (possibleDocuments && possibleDocuments.length > 0) {
+        if (possibleDocuments && possibleDocuments.length === 1) {
             return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
+        } else if (possibleDocuments && possibleDocuments.length > 1) {
+            throw new Error(localize.DataScience.documentMismatch().format(file));
         }
 
         return undefined;
