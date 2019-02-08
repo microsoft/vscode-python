@@ -217,7 +217,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
         testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspaceFolder, testManager.workingDirectory, file, testFunctions, debug);
     }
-    public viewOutput(cmdSource: CommandSource) {
+    public viewOutput(_cmdSource: CommandSource) {
         sendTelemetryEvent(EventName.UNITTEST_VIEW_OUTPUT);
         this.outputChannel.show();
     }

@@ -4,8 +4,9 @@
 'use strict';
 
 import {
-    TreeItem, TreeItemCollapsibleState, Uri
+    Command, TreeItem, TreeItemCollapsibleState, Uri
 } from 'vscode';
+import { Commands } from '../../common/constants';
 import { TestsHelper } from '../common/testUtils';
 import {
     TestFile, TestFolder, TestFunction,
@@ -30,7 +31,8 @@ export class TestTreeItem extends TreeItem {
         runId: string,
         label: string,
         testStatus: TestStatus = TestStatus.Unknown,
-        public readonly data: Readonly<TestFile> | Readonly<TestFolder> | Readonly<TestSuite> | Readonly<TestFunction>
+        public readonly data: Readonly<TestFile> | Readonly<TestFolder> | Readonly<TestSuite> | Readonly<TestFunction>,
+        public readonly command?: Command
     ) {
 
         super(
@@ -138,7 +140,12 @@ export class TestTreeItem extends TreeItem {
             fn.nameToRun,
             fn.name,
             fn.status,
-            fn
+            fn,
+            {
+                command: Commands.Tests_ViewOutput,
+                title: '',
+                arguments: []
+            }
         );
 
         return funcItem;
