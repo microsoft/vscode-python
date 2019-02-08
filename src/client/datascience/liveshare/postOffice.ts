@@ -7,7 +7,7 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposable } from '../../common/types';
-import { LiveShare } from '../constants';
+import { LiveShare, RegExpValues } from '../constants';
 
 // tslint:disable:no-any
 
@@ -104,9 +104,9 @@ export class PostOffice implements IAsyncDisposable {
 
             // Early check
             if (str.includes('file')) {
-                const callbackArgs = str.match(/\S+\((.*)\)\s*{/);
+                const callbackArgs = str.match(RegExpValues.ParamsExractorRegEx);
                 if (callbackArgs && callbackArgs.length > 1) {
-                    const argNames = callbackArgs[1].match(/([^\s,]+)/g);
+                    const argNames = callbackArgs[1].match(RegExpValues.ArgsSplitterRegEx);
                     if (argNames && argNames.length > 0) {
                         for (let i = 0; i < args.length; i += 1) {
                             if (argNames[i].includes('file')) {

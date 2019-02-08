@@ -45,6 +45,8 @@ export namespace RegExpValues {
     export const HttpPattern = /https?:\/\//;
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
+    export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
+    export const ArgsSplitterRegEx = /([^\s,]+)/g;
 }
 
 export namespace HistoryMessages {
