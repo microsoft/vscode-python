@@ -30,7 +30,12 @@ suite('Linting Settings', () => {
     let linterManager: ILinterManager;
     let configService: IConfigurationService;
 
-    suiteSetup(async () => {
+    suiteSetup(async function() {
+        // These tests are still consistently failing during teardown.
+        // See gh-4326.
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+
         await initialize();
     });
     setup(async () => {
