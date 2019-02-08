@@ -11,7 +11,7 @@ import { ExtensionActivationManager } from '../../client/activation/activationMa
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { IExtensionActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IDisposable } from '../../client/common/types';
@@ -42,7 +42,6 @@ suite('Activation - ActivationManager', () => {
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
     let interpreterService: IInterpreterService;
     let documentManager: typemoq.IMock<IDocumentManager>;
-    let cmdManager: typemoq.IMock<ICommandManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     setup(() => {
@@ -51,7 +50,6 @@ suite('Activation - ActivationManager', () => {
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
         interpreterService = mock(InterpreterService);
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
-        cmdManager = typemoq.Mock.ofType<ICommandManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
@@ -60,8 +58,7 @@ suite('Activation - ActivationManager', () => {
             instance(interpreterService),
             autoSelection.object,
             appDiagnostics.object,
-            instance(workspaceService),
-            cmdManager.object
+            instance(workspaceService)
         );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
