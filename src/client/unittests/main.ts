@@ -167,7 +167,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         // tslint:disable-next-line:no-empty
         this.discoverTests(CommandSource.auto, this.workspaceService.workspaceFolders![0].uri, true).then(
             _tests => this.commandManager.executeCommand('setContext', 'testsDiscovered', true)
-        );
+        ).ignoreErrors();
     }
     public async discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean) {
         const testManager = await this.getTestManager(true, resource);
