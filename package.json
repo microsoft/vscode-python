@@ -171,19 +171,19 @@
                 "command": "python.runtests",
                 "title": "%python.command.python.runtests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/start.svg",
-					"dark": "resources/dark/start.svg"
-				}
+                "icon": {
+                    "light": "resources/light/start.svg",
+                    "dark": "resources/dark/start.svg"
+                }
             },
             {
                 "command": "python.debugtests",
                 "title": "%python.command.python.debugtests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/debug.svg",
-					"dark": "resources/dark/debug.svg"
-				}
+                "icon": {
+                    "light": "resources/light/debug.svg",
+                    "dark": "resources/dark/debug.svg"
+                }
             },
             {
                 "command": "python.execInTerminal",
@@ -239,19 +239,19 @@
                 "command": "python.runFailedTests",
                 "title": "%python.command.python.runFailedTests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/start-failed.svg",
-					"dark": "resources/dark/start-failed.svg"
-				}
+                "icon": {
+                    "light": "resources/light/start-failed.svg",
+                    "dark": "resources/dark/start-failed.svg"
+                }
             },
             {
                 "command": "python.discoverTests",
                 "title": "%python.command.python.discoverTests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             },
             {
                 "command": "python.configureTests",
@@ -2007,7 +2007,8 @@
             "test": [
                 {
                     "id": "python_tests",
-                    "name": "PYTHON"
+                    "name": "PYTHON",
+                    "when": "testsDiscovered"
                 }
             ]
         }
