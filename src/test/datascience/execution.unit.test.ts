@@ -54,7 +54,6 @@ class MockJupyterServer implements INotebookServer {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
     private notebookFile: TemporaryFile | undefined;
-    //public connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec): Promise<void> {
     public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
         if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
             this.launchInfo = launchInfo;

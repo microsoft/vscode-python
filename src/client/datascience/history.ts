@@ -201,9 +201,6 @@ export class History implements IHistory {
             if (this.closedEvent) {
                 this.closedEvent.fire(this);
             }
-            //if (this.jupyterServer) {
-                //await this.jupyterServer.dispose();
-            //}
             this.updateContexts();
         }
         if (this.changeHandler) {

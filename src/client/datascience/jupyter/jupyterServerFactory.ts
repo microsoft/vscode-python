@@ -62,15 +62,9 @@ export class JupyterServer implements INotebookServer {
         );
     }
 
-    //public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
-        //this.connInfo = connInfo;
-        //const server = await this.serverFactory.get();
-        //return server.connect(connInfo, kernelSpec, usingDarkTheme, cancelToken, workingDir);
-    //}
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
         this.launchInfo = launchInfo;
         const server = await this.serverFactory.get();
-        //return server.connect(connInfo, kernelSpec, usingDarkTheme, cancelToken, workingDir);
         return server.connect(launchInfo, cancelToken);
     }
 

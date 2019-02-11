@@ -41,7 +41,6 @@ export class GuestJupyterServer implements INotebookServer {
         this.sharedService = this.startSharedServiceProxy();
     }
 
-    //public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
         this.launchInfo = launchInfo;
         return Promise.resolve();
