@@ -41,6 +41,7 @@ import {
     IJupyterExecution,
     INotebookExporter,
     INotebookServer,
+    INotebookServerManager,
     InterruptResult,
     IStatusProvider
 } from './types';
@@ -82,6 +83,7 @@ export class History implements IHistory {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
+        @inject(INotebookServerManager) private jupyterServerManager: INotebookServerManager,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         // Sign up for configuration changes
@@ -199,9 +201,9 @@ export class History implements IHistory {
             if (this.closedEvent) {
                 this.closedEvent.fire(this);
             }
-            if (this.jupyterServer) {
-                await this.jupyterServer.dispose();
-            }
+            //if (this.jupyterServer) {
+                //await this.jupyterServer.dispose();
+            //}
             this.updateContexts();
         }
         if (this.changeHandler) {
@@ -511,6 +513,7 @@ export class History implements IHistory {
         }
     }
 
+    // IANHU: Need to fix this case to update interpreter on the launch info
     private onInterpreterChanged = async () => {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
@@ -602,42 +605,46 @@ export class History implements IHistory {
         }
     }
 
-    private loadJupyterServer = async (restart?: boolean): Promise<void> => {
-        // Startup our jupyter server
-        const settings = this.configuration.getSettings();
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        let workingDir: string | undefined;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-        const status = this.setStatus(localize.DataScience.connectingToJupyter());
-        // Check for dark theme, if so set matplot lib to use dark_background settings
-        let darkTheme: boolean = false;
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        if (workbench) {
-            const theme = workbench.get<string>('colorTheme');
-            if (theme) {
-                darkTheme = /dark/i.test(theme);
-            }
-        }
-
-        try {
-            // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-            if (serverURI === Settings.JupyterServerLocalLaunch) {
-                serverURI = undefined;
-
-                workingDir = await this.calculateWorkingDirectory();
-            }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
-
-            // If this is a restart, show our restart info
-            if (restart) {
-                await this.addSysInfo(SysInfoReason.Restart);
-            }
-        } finally {
-            if (status) {
-                status.dispose();
-            }
-        }
+    private async loadJupyterServer(restart?: boolean): Promise<void> {
+        this.jupyterServer = await this.jupyterServerManager.getOrCreateServer();
     }
+
+    //private loadJupyterServer = async (restart?: boolean): Promise<void> => {
+        //// Startup our jupyter server
+        //const settings = this.configuration.getSettings();
+        //let serverURI: string | undefined = settings.datascience.jupyterServerURI;
+        //let workingDir: string | undefined;
+        //const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+        //const status = this.setStatus(localize.DataScience.connectingToJupyter());
+        //// Check for dark theme, if so set matplot lib to use dark_background settings
+        //let darkTheme: boolean = false;
+        //const workbench = this.workspaceService.getConfiguration('workbench');
+        //if (workbench) {
+            //const theme = workbench.get<string>('colorTheme');
+            //if (theme) {
+                //darkTheme = /dark/i.test(theme);
+            //}
+        //}
+
+        //try {
+            //// For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
+            //if (serverURI === Settings.JupyterServerLocalLaunch) {
+                //serverURI = undefined;
+
+                //workingDir = await this.calculateWorkingDirectory();
+            //}
+            //this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
+
+            //// If this is a restart, show our restart info
+            //if (restart) {
+                //await this.addSysInfo(SysInfoReason.Restart);
+            //}
+        //} finally {
+            //if (status) {
+                //status.dispose();
+            //}
+        //}
+    //}
 
     // Calculate the working directory that we should move into when starting up our Jupyter server locally
     private calculateWorkingDirectory = async (): Promise<string | undefined> => {

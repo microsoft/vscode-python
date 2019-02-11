@@ -30,6 +30,7 @@ import {
     IJupyterSession,
     IJupyterSessionManager,
     INotebookServer,
+    INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
 
@@ -109,6 +110,9 @@ class CellSubscriber {
 // https://www.npmjs.com/package/@jupyterlab/services
 
 export class JupyterServerBase implements INotebookServer {
+    // IANHU: if this change looks good remove the lower level items
+    // and just keep the launch info
+    private launchInfo: INotebookServerLaunchInfo | undefined;
     private session: IJupyterSession | undefined;
     private connInfo: IConnection | undefined;
     private workingDir: string | undefined;
@@ -128,14 +132,35 @@ export class JupyterServerBase implements INotebookServer {
         this.asyncRegistry.push(this);
     }
 
-    public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
+    //public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
+        //// Save connection info. Determines if we need to change directory or not
+        //this.connInfo = connInfo;
+        //this.workingDir = workingDir;
+        //this.usingDarkTheme = usingDarkTheme;
+
+        //// Start our session
+        //this.session = await this.sessionManager.startNew(connInfo, kernelSpec, cancelToken);
+
+        //// Setup our start time. We reject anything that comes in before this time during execute
+        //this.sessionStartTime = Date.now();
+
+        //// Wait for it to be ready
+        //await this.session.waitForIdle();
+
+        //// Run our initial setup and plot magics
+        //this.initialNotebookSetup(cancelToken);
+    //}
+    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) {
         // Save connection info. Determines if we need to change directory or not
-        this.connInfo = connInfo;
-        this.workingDir = workingDir;
-        this.usingDarkTheme = usingDarkTheme;
+
+        // IANHU: When this is working remove the individual saving here and just access the base
+        // launch info
+        this.connInfo = launchInfo.connectionInfo;
+        this.workingDir = launchInfo.workingDir;
+        this.usingDarkTheme = launchInfo.usingDarkTheme;
 
         // Start our session
-        this.session = await this.sessionManager.startNew(connInfo, kernelSpec, cancelToken);
+        this.session = await this.sessionManager.startNew(launchInfo.connectionInfo, launchInfo.kernelSpec, cancelToken);
 
         // Setup our start time. We reject anything that comes in before this time during execute
         this.sessionStartTime = Date.now();
@@ -363,6 +388,14 @@ export class JupyterServerBase implements INotebookServer {
         }
 
         throw new Error(localize.DataScience.sessionDisposed());
+    }
+
+    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
+        if (!this.launchInfo) {
+            return undefined;
+        }
+
+        return this.launchInfo;
     }
 
     // Return a copy of the connection information that this server used to connect with

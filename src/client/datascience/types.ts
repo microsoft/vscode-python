@@ -37,10 +37,34 @@ export enum InterruptResult {
     Restarted = 2
 }
 
+// Information used to launch a notebook server
+export interface INotebookServerLaunchInfo
+{
+    connectionInfo: IConnection | undefined;
+    // IANHU: using the interpreter that we launched with
+    // this means that we don't have to check for kernel specs on relaunch
+    // but we might restart a server that didn't need to restart if we change 
+    // interpreter but end up on the same kernel spec. Seems ok to me
+    currentInterpreter: PythonInterpreter | undefined;
+    uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
+    kernelSpec: IJupyterKernelSpec | undefined;
+    usingDarkTheme: boolean;
+    workingDir: string | undefined;
+}
+
+// Manage our running notebook server instances
+export const INotebookServerManager = Symbol('INotebookServerFactory');
+export interface INotebookServerManager {
+    getOrCreateServer(): Promise<INotebookServer>;
+    getActiveServer(): INotebookServer | undefined;
+    shutdownServers(): Promise<void>;
+}
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
+    //connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
+    connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
@@ -48,6 +72,8 @@ export interface INotebookServer extends IAsyncDisposable {
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
+    // IANHU: if change is looking good remove getConnectionInfo and just use this
+    getLaunchInfo(): INotebookServerLaunchInfo | undefined;
     getConnectionInfo(): IConnection | undefined;
     getSysInfo() : Promise<ICell | undefined>;
 }
