@@ -26,15 +26,10 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     public abstract requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
     public async enable() {
         // Disable other test frameworks.
-        const promises: Promise<void>[] = [];
-        UNIT_TEST_PRODUCTS.filter(prod => prod !== this.product)
-            .forEach(prod => {
-                promises.push(
-                    this.testConfigSettingsService.disable(this.workspace, prod));
-            });
-        promises.push(
-            this.testConfigSettingsService.enable(this.workspace, this.product));
-        await Promise.all(promises);
+        await Promise.all(UNIT_TEST_PRODUCTS
+            .filter(prod => prod !== this.product)
+            .map(prod => this.testConfigSettingsService.disable(this.workspace, prod)));
+        await this.testConfigSettingsService.enable(this.workspace, this.product);
     }
     // tslint:disable-next-line:no-any
     public async disable() {
