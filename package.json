@@ -213,7 +213,11 @@
             {
                 "command": "python.viewTestOutput",
                 "title": "%python.command.python.viewTestOutput.title%",
-                "category": "Python"
+                "category": "Python",
+				"icon": {
+					"light": "resources/light/repl.svg",
+					"dark": "resources/dark/repl.svg"
+				}
             },
             {
                 "command": "python.selectAndRunTestMethod",
@@ -608,6 +612,10 @@
                 },
                 {
                     "command": "python.runFailedTests",
+                    "group": "navigation"
+                },
+                {
+                    "command": "python.viewTestOutput",
                     "group": "navigation"
                 }
             ],
