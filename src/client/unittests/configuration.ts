@@ -3,6 +3,7 @@
 import { inject, injectable } from 'inversify';
 import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
@@ -137,7 +138,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             try {
                 await delayed.apply(cfg);
             } catch (exc) {
-                console.error('Python Extension: applying unit test config updates', exc);
+                traceError('Python Extension: applying unit test config updates', exc);
                 telemetryProps.failed = true;
             }
         } finally {
