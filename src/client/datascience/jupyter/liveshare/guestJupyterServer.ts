@@ -16,11 +16,10 @@ import {
     ICell,
     IConnection,
     IDataScience,
-    IJupyterKernelSpec,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult,
-    INotebookServerLaunchInfo
+    INotebookServerLaunchInfo,
+    InterruptResult
 } from '../../types';
 import { IExecuteObservableResponse, IInterruptResponse, IServerResponse, ServerResponseType } from './types';
 import { waitForGuestService } from './utils';
@@ -44,7 +43,6 @@ export class GuestJupyterServer implements INotebookServer {
 
     //public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        // IANHU: if change is good just save / return launch info
         this.launchInfo = launchInfo;
         return Promise.resolve();
     }
@@ -120,7 +118,6 @@ export class GuestJupyterServer implements INotebookServer {
     }
 
     // Return a copy of the connection information that this server used to connect with
-    // IANHU: remove if we just want to return the launch info
     public getConnectionInfo(): IConnection | undefined {
         if (this.launchInfo) {
             return this.launchInfo.connectionInfo;

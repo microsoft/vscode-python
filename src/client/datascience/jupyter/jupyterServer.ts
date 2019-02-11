@@ -26,7 +26,6 @@ import {
     ICell,
     IConnection,
     IDataScience,
-    IJupyterKernelSpec,
     IJupyterSession,
     IJupyterSessionManager,
     INotebookServer,
@@ -110,16 +109,11 @@ class CellSubscriber {
 // https://www.npmjs.com/package/@jupyterlab/services
 
 export class JupyterServerBase implements INotebookServer {
-    // IANHU: if this change looks good remove the lower level items
-    // and just keep the launch info
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private session: IJupyterSession | undefined;
-    private connInfo: IConnection | undefined;
-    private workingDir: string | undefined;
     private sessionStartTime: number | undefined;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
-    private usingDarkTheme: boolean | undefined;
 
     constructor(
         liveShare: ILiveShareApi,
@@ -132,44 +126,23 @@ export class JupyterServerBase implements INotebookServer {
         this.asyncRegistry.push(this);
     }
 
-    //public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
-        //// Save connection info. Determines if we need to change directory or not
-        //this.connInfo = connInfo;
-        //this.workingDir = workingDir;
-        //this.usingDarkTheme = usingDarkTheme;
-
-        //// Start our session
-        //this.session = await this.sessionManager.startNew(connInfo, kernelSpec, cancelToken);
-
-        //// Setup our start time. We reject anything that comes in before this time during execute
-        //this.sessionStartTime = Date.now();
-
-        //// Wait for it to be ready
-        //await this.session.waitForIdle();
-
-        //// Run our initial setup and plot magics
-        //this.initialNotebookSetup(cancelToken);
-    //}
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) {
-        // Save connection info. Determines if we need to change directory or not
-
-        // IANHU: When this is working remove the individual saving here and just access the base
-        // launch info
-        this.connInfo = launchInfo.connectionInfo;
-        this.workingDir = launchInfo.workingDir;
-        this.usingDarkTheme = launchInfo.usingDarkTheme;
+        // Save our launch info
+        this.launchInfo = launchInfo;
 
         // Start our session
         this.session = await this.sessionManager.startNew(launchInfo.connectionInfo, launchInfo.kernelSpec, cancelToken);
 
-        // Setup our start time. We reject anything that comes in before this time during execute
-        this.sessionStartTime = Date.now();
+        if (this.session) {
+            // Setup our start time. We reject anything that comes in before this time during execute
+            this.sessionStartTime = Date.now();
 
-        // Wait for it to be ready
-        await this.session.waitForIdle();
+            // Wait for it to be ready
+            await this.session.waitForIdle();
 
-        // Run our initial setup and plot magics
-        this.initialNotebookSetup(cancelToken);
+            // Run our initial setup and plot magics
+            this.initialNotebookSetup(cancelToken);
+        }
     }
 
     public shutdown(): Promise<void> {
@@ -217,9 +190,9 @@ export class JupyterServerBase implements INotebookServer {
 
     public async setInitialDirectory(directory: string): Promise<void> {
         // If we launched local and have no working directory call this on add code to change directory
-        if (!this.workingDir && this.connInfo && this.connInfo.localLaunch) {
+        if (this.launchInfo && !this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
             await this.changeDirectoryIfPossible(directory);
-            this.workingDir = directory;
+            this.launchInfo.workingDir = directory;
         }
     }
 
@@ -400,13 +373,13 @@ export class JupyterServerBase implements INotebookServer {
 
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
-        if (!this.connInfo) {
+        if (!this.launchInfo) {
             return undefined;
         }
 
         // Return a copy with a no-op for dispose
         return {
-            ...this.connInfo,
+            ...this.launchInfo.connectionInfo,
             dispose: noop
         };
     }
@@ -491,12 +464,12 @@ export class JupyterServerBase implements INotebookServer {
         this.ranInitialSetup = true;
 
         // When we start our notebook initial, change to our workspace or user specified root directory
-        if (this.connInfo && this.connInfo.localLaunch && this.workingDir) {
-            this.changeDirectoryIfPossible(this.workingDir).ignoreErrors();
+        if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
+            this.changeDirectoryIfPossible(this.launchInfo.workingDir).ignoreErrors();
         }
 
         this.executeSilently(
-            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${this.usingDarkTheme ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
             cancelToken
         ).ignoreErrors();
     }
@@ -541,7 +514,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private changeDirectoryIfPossible = async (directory: string): Promise<void> => {
-        if (this.connInfo && this.connInfo.localLaunch && await fs.pathExists(directory)) {
+        if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && await fs.pathExists(directory)) {
             await this.executeSilently(`%cd "${directory}"`);
         }
     }

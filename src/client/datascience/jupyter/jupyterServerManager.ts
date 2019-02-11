@@ -2,24 +2,22 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../common/extensions';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable } from 'vscode-jsonrpc';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService } from '../../common/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IJupyterExecution, INotebookServer, INotebookServerManager, IStatusProvider, INotebookServerLaunchInfo } from '../types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { Settings } from '../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IJupyterExecution, INotebookServer, INotebookServerManager, IStatusProvider } from '../types';
 
 @injectable()
 export class JupyterServerManager implements INotebookServerManager, IAsyncDisposable {
-    // Currently coding this as just a single server instance. 
+    // Currently coding this as just a single server instance.
     // It's encapsulated here so we can add support for multiple servers as needed pretty easily
     private activeServer: INotebookServer | undefined;
-    // IANHU: we need to actually use this on shutdown
-    private potentiallyUnfinishedStatus: Disposable[] = [];
 
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
@@ -33,7 +31,7 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
     }
 
     // Either return our current active server or create a new one from our settings if needed
-    public async getOrCreateServer(): Promise<INotebookServer> {
+    public async getOrCreateServer(): Promise<INotebookServer | undefined> {
         // Find the settings that we are going to launch our server with
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
@@ -66,7 +64,7 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
                 this.activeServer = undefined;
             }
 
-            const status = this.setStatus(localize.DataScience.connectingToJupyter());
+            const status = this.statusProvider.set(localize.DataScience.connectingToJupyter());
 
             try {
                 this.activeServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
@@ -79,51 +77,38 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
         }
     }
 
-    // Return the active server if we have one or undefined if we don't have one
-    public getActiveServer(): INotebookServer | undefined {
-        return this.activeServer;
-    }
-
-    public async shutdownServers(): Promise<void> {
-        // IANHU: implement, do we need this? hook up a command
-        Promise.resolve();
+    public dispose(): Promise<void> {
+        if (this.activeServer) {
+            return this.activeServer.dispose();
+        } else {
+            return Promise.resolve();
+        }
     }
 
     // Given our launch parameters, is this server already the active server?
     private async isActiveServer(serverURI: string | undefined, workingDir: string | undefined,
         usingDarkTheme: boolean): Promise<boolean> {
-        if(!this.activeServer || !this.activeServer.getLaunchInfo()) {
+        if (!this.activeServer || !this.activeServer.getLaunchInfo()) {
             return false;
         }
 
         const launchInfo = this.activeServer.getLaunchInfo();
 
         // Check here to see if we have the same settings as a server that we already have running
-        // Note: we are not looking at the kernel spec here this saves us from having to enumerate 
+        // Note: we are not looking at the kernel spec here this saves us from having to enumerate
         // kernel specs when looking for a similar server, instead we just look if the interpreter is different
         // however this could mean that if you add a new kernel spec while a server is running then we won't
         // detect that launch could give you a different server in that case
-        if (launchInfo.uri === serverURI && launchInfo.usingDarkTheme === usingDarkTheme
-            && launchInfo.workingDir === workingDir) {
+        // ! ok as we have already exited if get launch info is undefined
+        if (launchInfo!.uri === serverURI && launchInfo!.usingDarkTheme === usingDarkTheme
+            && launchInfo!.workingDir === workingDir) {
             const info = await this.interpreterService.getActiveInterpreter();
-            if (info === launchInfo.currentInterpreter) {
+            if (info === launchInfo!.currentInterpreter) {
                 return true;
             }
         }
-        
+
         return false;
-    }
-
-    private setStatus = (message: string): Disposable => {
-        const result = this.statusProvider.set(message);
-        this.potentiallyUnfinishedStatus.push(result);
-        return result;
-    }
-
-    public dispose(): Promise<void> {
-        if (this.activeServer) {
-            return this.activeServer.dispose();
-        }
     }
 
     // Calculate the working directory that we should move into when starting up our Jupyter server locally

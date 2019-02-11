@@ -13,11 +13,10 @@ import {
     ICell,
     IConnection,
     IDataScience,
-    IJupyterKernelSpec,
     IJupyterSessionManager,
     INotebookServer,
-    InterruptResult,
-    INotebookServerLaunchInfo
+    INotebookServerLaunchInfo,
+    InterruptResult
 } from '../types';
 import { JupyterServerBase } from './jupyterServer';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
@@ -131,7 +130,6 @@ export class JupyterServer implements INotebookServer {
         return server.interruptKernel(timeoutMs);
     }
 
-    // IANHU: possibly return this?
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
         if (this.launchInfo) {

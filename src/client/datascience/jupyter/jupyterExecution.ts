@@ -142,9 +142,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                 // Try to connect to our jupyter process
                 const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
-                //await result.connect(connection, kernelSpec, usingDarkTheme, cancelToken, workingDir);
-                // IANHU: compress this if working
                 const info = await this.interpreterService.getActiveInterpreter();
+                // Populate the launch info that we are starting our server with
                 const launchInfo: INotebookServerLaunchInfo = {
                     connectionInfo: connection,
                     currentInterpreter: info,
@@ -152,7 +151,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     usingDarkTheme: usingDarkTheme,
                     workingDir: workingDir,
                     uri: uri
-                }
+                };
                 await result.connect(launchInfo, cancelToken);
                 sendTelemetryEvent(uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
                 return result;

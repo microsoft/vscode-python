@@ -40,11 +40,7 @@ export enum InterruptResult {
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo
 {
-    connectionInfo: IConnection | undefined;
-    // IANHU: using the interpreter that we launched with
-    // this means that we don't have to check for kernel specs on relaunch
-    // but we might restart a server that didn't need to restart if we change 
-    // interpreter but end up on the same kernel spec. Seems ok to me
+    connectionInfo: IConnection;
     currentInterpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
@@ -55,9 +51,7 @@ export interface INotebookServerLaunchInfo
 // Manage our running notebook server instances
 export const INotebookServerManager = Symbol('INotebookServerFactory');
 export interface INotebookServerManager {
-    getOrCreateServer(): Promise<INotebookServer>;
-    getActiveServer(): INotebookServer | undefined;
-    shutdownServers(): Promise<void>;
+    getOrCreateServer(): Promise<INotebookServer | undefined>;
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -72,7 +66,6 @@ export interface INotebookServer extends IAsyncDisposable {
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
-    // IANHU: if change is looking good remove getConnectionInfo and just use this
     getLaunchInfo(): INotebookServerLaunchInfo | undefined;
     getConnectionInfo(): IConnection | undefined;
     getSysInfo() : Promise<ICell | undefined>;

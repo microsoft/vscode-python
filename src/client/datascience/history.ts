@@ -27,7 +27,7 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, HistoryMessages, Identifiers, Settings, Telemetry } from './constants';
+import { EditorContexts, HistoryMessages, Identifiers, Telemetry } from './constants';
 import { HistoryMessageListener } from './historyMessageListener';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
@@ -513,7 +513,6 @@ export class History implements IHistory {
         }
     }
 
-    // IANHU: Need to fix this case to update interpreter on the launch info
     private onInterpreterChanged = async () => {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
@@ -607,77 +606,6 @@ export class History implements IHistory {
 
     private async loadJupyterServer(restart?: boolean): Promise<void> {
         this.jupyterServer = await this.jupyterServerManager.getOrCreateServer();
-    }
-
-    //private loadJupyterServer = async (restart?: boolean): Promise<void> => {
-        //// Startup our jupyter server
-        //const settings = this.configuration.getSettings();
-        //let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        //let workingDir: string | undefined;
-        //const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-        //const status = this.setStatus(localize.DataScience.connectingToJupyter());
-        //// Check for dark theme, if so set matplot lib to use dark_background settings
-        //let darkTheme: boolean = false;
-        //const workbench = this.workspaceService.getConfiguration('workbench');
-        //if (workbench) {
-            //const theme = workbench.get<string>('colorTheme');
-            //if (theme) {
-                //darkTheme = /dark/i.test(theme);
-            //}
-        //}
-
-        //try {
-            //// For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-            //if (serverURI === Settings.JupyterServerLocalLaunch) {
-                //serverURI = undefined;
-
-                //workingDir = await this.calculateWorkingDirectory();
-            //}
-            //this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
-
-            //// If this is a restart, show our restart info
-            //if (restart) {
-                //await this.addSysInfo(SysInfoReason.Restart);
-            //}
-        //} finally {
-            //if (status) {
-                //status.dispose();
-            //}
-        //}
-    //}
-
-    // Calculate the working directory that we should move into when starting up our Jupyter server locally
-    private calculateWorkingDirectory = async (): Promise<string | undefined> => {
-        let workingDir: string | undefined;
-        // For a local launch calculate the working directory that we should switch into
-        const settings = this.configuration.getSettings();
-        const fileRoot = settings.datascience.notebookFileRoot;
-
-        // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
-        // so only do this setting if we actually have a valid workspace open
-        if (fileRoot && this.workspaceService.hasWorkspaceFolders) {
-            const workspaceFolderPath = this.workspaceService.workspaceFolders![0].uri.fsPath;
-            if (path.isAbsolute(fileRoot)) {
-                if (await this.fileSystem.directoryExists(fileRoot)) {
-                    // User setting is absolute and exists, use it
-                    workingDir = fileRoot;
-                } else {
-                    // User setting is absolute and doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            } else {
-                // fileRoot is a relative path, combine it with the workspace folder
-                const combinedPath = path.join(workspaceFolderPath, fileRoot);
-                if (await this.fileSystem.directoryExists(combinedPath)) {
-                    // combined path exists, use it
-                    workingDir = combinedPath;
-                } else {
-                    // Combined path doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            }
-        }
-        return workingDir;
     }
 
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
