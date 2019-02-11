@@ -107,8 +107,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
 
         const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
         testManagementService
-            .activate()
-            .then(() => testManagementService.activateCodeLenses(symbolProvider))
+            .activate(symbolProvider)
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
     }
 

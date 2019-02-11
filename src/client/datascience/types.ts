@@ -15,12 +15,13 @@ import { PythonInterpreter } from '../interpreter/contracts';
 // Main interface
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience extends Disposable {
+    activationStartTime: number;
     activate(): Promise<void>;
 }
 
 export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
 export interface IDataScienceCommandListener {
-    register(commandManager: ICommandManager): void;
+    register(commandManager: ICommandBroker): void;
 }
 
 // Connection information for talking to a jupyter notebook process
@@ -38,8 +39,7 @@ export enum InterruptResult {
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
-export interface INotebookServer extends Disposable {
-    onStatusChanged: Event<boolean>;
+export interface INotebookServer extends IAsyncDisposable {
     connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
@@ -49,13 +49,15 @@ export interface INotebookServer extends Disposable {
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
     getConnectionInfo(): IConnection | undefined;
+    getSysInfo() : Promise<ICell | undefined>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
-export interface IJupyterExecution {
+export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
@@ -210,4 +212,9 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
     };
+}
+
+export const ICommandBroker = Symbol('ICommandBroker');
+
+export interface ICommandBroker extends ICommandManager {
 }

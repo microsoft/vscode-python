@@ -253,6 +253,7 @@ interface IEventNamePropertyMapping {
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
+    [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     [EventName.EXECUTION_CODE]: CodeExecutionTelemetry;
     [EventName.EXECUTION_DJANGO]: CodeExecutionTelemetry;
     [EventName.FORMAT]: FormatTelemetry;
@@ -288,6 +289,7 @@ interface IEventNamePropertyMapping {
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
     [EventName.SIGNATURE]: never | undefined;
     [EventName.SYMBOL]: never | undefined;
+    [EventName.UNITTEST_CONFIGURE]: never | undefined;
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
@@ -324,4 +326,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: never | undefined;
 }

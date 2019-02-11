@@ -18,6 +18,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
+import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
@@ -34,7 +35,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -63,10 +64,6 @@ class MockJupyterServer implements INotebookServer {
         }
         return Promise.reject('invalid server startup');
     }
-    //tslint:disable-next-line:no-any
-    public onStatusChanged(_listener: (e: boolean) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-        return { dispose: noop };
-    }
     public getCurrentState(): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
@@ -93,6 +90,10 @@ class MockJupyterServer implements INotebookServer {
     }
     public async shutdown() {
         return Promise.resolve();
+    }
+
+    public getSysInfo() : Promise<ICell | undefined> {
+        return Promise.resolve(undefined);
     }
 
     public interruptKernel(timeout: number) : Promise<InterruptResult> {
@@ -142,6 +143,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
 suite('Jupyter Execution', async () => {
     const interpreterService = mock(InterpreterService);
     const executionFactory = mock(PythonExecutionFactory);
+    const liveShare = mock(LiveShareApi);
     const configService = mock(ConfigurationService);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
@@ -496,6 +498,8 @@ suite('Jupyter Execution', async () => {
         when(executionFactory.createActivatedEnvironment(argThat(o => !o || o.interpreter === activeInterpreter))).thenResolve(activeService);
         when(processServiceFactory.create()).thenResolve(processService.object);
 
+        when(liveShare.getApi()).thenResolve(null);
+
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
@@ -521,7 +525,8 @@ suite('Jupyter Execution', async () => {
             maxOutputSize: 400,
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            allowLiveShare: false
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -546,6 +551,7 @@ suite('Jupyter Execution', async () => {
         const mockSessionManager = new MockJupyterManager(instance(serviceManager));
 
         return new JupyterExecution(
+            instance(liveShare),
             instance(executionFactory),
             instance(interpreterService),
             instance(processServiceFactory),

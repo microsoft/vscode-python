@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -18,6 +18,7 @@ import { CommandSource } from '../unittests/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from './cellFactory';
 import { Commands, Telemetry } from './constants';
 import {
+    ICommandBroker,
     IDataScienceCommandListener,
     IHistoryProvider,
     IJupyterExecution,
@@ -47,7 +48,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry.push(disposable);
     }
 
-    public register(commandManager: ICommandManager): void {
+    public register(commandManager: ICommandBroker): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(Commands.ImportNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
@@ -234,7 +235,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
         } finally {
             if (server) {
-                server.dispose();
+                await server.dispose();
             }
         }
     }

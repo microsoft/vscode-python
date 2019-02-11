@@ -108,7 +108,7 @@ suite('Common Utils - CacheUtils', () => {
             const pythonPath = 'Some Python Path';
             const vsc = createMockVSC(pythonPath);
             const resource = Uri.parse('a');
-            vsc.workspace.workspaceFolders = [{ index: 0, name: '1', uri: Uri.parse('wkfolder') }];
+            (vsc.workspace as any).workspaceFolders = [{ index: 0, name: '1', uri: Uri.parse('wkfolder') }];
             vsc.workspace.getWorkspaceFolder = () => vsc.workspace.workspaceFolders![0];
             const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
 
@@ -142,7 +142,7 @@ suite('Common Utils - CacheUtils', () => {
             const vsc = createMockVSC(pythonPath);
             const resource = Uri.parse('a');
             const anotherResource = Uri.parse('b');
-            vsc.workspace.workspaceFolders = [{ index: 0, name: '1', uri: Uri.parse('wkfolder') }];
+            (vsc.workspace as any).workspaceFolders = [{ index: 0, name: '1', uri: Uri.parse('wkfolder') }];
             vsc.workspace.getWorkspaceFolder = () => vsc.workspace.workspaceFolders![0];
             const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
             const cache2 = new InMemoryInterpreterSpecificCache('Something', 10000, [anotherResource], vsc);
@@ -162,7 +162,7 @@ suite('Common Utils - CacheUtils', () => {
             const vsc = createMockVSC(pythonPath);
             const resource = Uri.parse('a');
             const anotherResource = Uri.parse('b');
-            vsc.workspace.workspaceFolders = [
+            (vsc.workspace as any).workspaceFolders = [
                 { index: 0, name: '1', uri: Uri.parse('wkfolder1') },
                 { index: 1, name: '2', uri: Uri.parse('wkfolder2') }
             ];

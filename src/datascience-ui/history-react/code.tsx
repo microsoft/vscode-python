@@ -212,6 +212,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // Double check we don't have an entirely empty document
         if (doc.getValue('').trim().length > 0) {
             let code = doc.getValue();
+            const isClean = doc.isClean();
             // We have to clear the history as this CodeMirror doesn't go away.
             doc.clearHistory();
             doc.setValue('');
@@ -223,7 +224,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
             // Send to the input history too if necessary
             if (this.props.history) {
-                this.props.history.add(code);
+                this.props.history.add(code, !isClean);
             }
 
             this.props.onSubmit(code);
@@ -267,6 +268,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             if (newValue !== currentValue) {
                 doc.setValue(newValue);
                 doc.setCursor(0, doc.getLine(0).length);
+                doc.markClean();
             }
             return;
         }
@@ -282,6 +284,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             if (newValue !== currentValue) {
                 doc.setValue(newValue);
                 doc.setCursor(doc.lastLine(), doc.getLine(doc.lastLine()).length);
+                doc.markClean();
             }
             return;
         }

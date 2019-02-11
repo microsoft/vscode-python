@@ -5,7 +5,8 @@ export enum CommandSource {
     auto = 'auto',
     ui = 'ui',
     codelens = 'codelens',
-    commandPalette = 'commandpalette'
+    commandPalette = 'commandpalette',
+    testExplorer = 'testExplorer'
 }
 export const TEST_OUTPUT_CHANNEL = 'TEST_OUTPUT_CHANNEL';
 export const NOSETEST_PROVIDER: TestProvider = 'nosetest';

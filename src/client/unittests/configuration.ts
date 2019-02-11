@@ -29,12 +29,12 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         enabledCount += settings.unitTest.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.unitTest.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
-            return this.promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
+            return this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
         } else {
             const option = 'Enable and configure a Test Framework';
             const item = await this.appShell.showInformationMessage('No test framework configured (unittest, pytest or nosetest)', option);
             if (item === option) {
-                return this.promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel);
+                return this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel);
             }
             return Promise.reject(null);
         }
@@ -60,6 +60,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             detail: 'https://nose.readthedocs.io/'
         }];
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: placeHolderMessage
@@ -82,7 +83,17 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         });
     }
 
-    private async  promptToEnableAndConfigureTestFramework(wkspace: Uri, installer: IInstaller, outputChannel: OutputChannel, messageToDisplay: string = 'Select a test framework/tool to enable', enableOnly: boolean = false) {
+    public async promptToEnableAndConfigureTestFramework(wkspace: Uri) {
+        await this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel, undefined, false);
+    }
+
+    private async _promptToEnableAndConfigureTestFramework(
+        wkspace: Uri,
+        installer: IInstaller,
+        outputChannel: OutputChannel,
+        messageToDisplay: string = 'Select a test framework/tool to enable',
+        enableOnly: boolean = false
+    ) {
         const selectedTestRunner = await this.selectTestRunner(messageToDisplay);
         if (typeof selectedTestRunner !== 'number') {
             return Promise.reject(null);

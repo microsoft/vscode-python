@@ -1,22 +1,21 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { Uri, window, workspace } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IUnitTestSettings, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
-import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, UnitTestProduct } from './types';
+import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestFunction, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, TestSuite, TestType, UnitTestProduct } from './types';
 
-export async function selectTestWorkspace(): Promise<Uri | undefined> {
+export async function selectTestWorkspace(appShell: IApplicationShell): Promise<Uri | undefined> {
     if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
         return undefined;
     } else if (workspace.workspaceFolders.length === 1) {
         return workspace.workspaceFolders[0].uri;
     } else {
-        // tslint:disable-next-line:no-any prefer-type-cast
-        const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
+        const workspaceFolder = await appShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
         return workspaceFolder ? workspaceFolder.uri : undefined;
     }
 }
@@ -39,6 +38,51 @@ export class TestsHelper implements ITestsHelper {
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    }
+    public static getTestType(test: TestFile | TestFolder | TestSuite | TestFunction): TestType {
+        if (TestsHelper.getTestFile(test)) {
+            return TestType.testFile;
+        }
+        if (TestsHelper.getTestFolder(test)) {
+            return TestType.testFolder;
+        }
+        if (TestsHelper.getTestSuite(test)) {
+            return TestType.testSuite;
+        }
+        if (TestsHelper.getTestFunction(test)) {
+            return TestType.testFunction;
+        }
+        throw new Error('Unknown test type');
+    }
+    public static getTestFile(test: TestFile | TestFolder | TestSuite | TestFunction): TestFile | undefined {
+        if (!test) {
+            return;
+        }
+        // Only TestFile has a `fullPath` property.
+        return typeof (test as TestFile).fullPath === 'string' ? test as TestFile : undefined;
+    }
+    public static getTestSuite(test: TestFile | TestFolder | TestSuite | TestFunction): TestSuite | undefined {
+        if (!test) {
+            return;
+        }
+        // Only TestSuite has a `suites` property.
+        return Array.isArray((test as TestSuite).suites) ? test as TestSuite : undefined;
+    }
+    public static getTestFolder(test: TestFile | TestFolder | TestSuite | TestFunction): TestFolder | undefined {
+        if (!test) {
+            return;
+        }
+        // Only TestFolder has a `folders` property.
+        return Array.isArray((test as TestFolder).folders) ? test as TestFolder : undefined;
+    }
+    public static getTestFunction(test: TestFile | TestFolder | TestSuite | TestFunction): TestFunction | undefined {
+        if (!test) {
+            return;
+        }
+        if (TestsHelper.getTestFile(test) || TestsHelper.getTestSuite(test) || TestsHelper.getTestSuite(test)) {
+            return;
+        }
+        return test as TestFunction;
     }
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {

@@ -97,7 +97,7 @@ export type TestRunTelemetry = {
     tool: 'nosetest' | 'pytest' | 'unittest';
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
     debugging: boolean;
-    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto';
+    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {

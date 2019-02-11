@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { OutputChannel, QuickPickItem, Uri, window } from 'vscode';
+import { OutputChannel, QuickPickItem, Uri } from 'vscode';
+import { IApplicationShell } from '../../../common/application/types';
 import { IInstaller, IOutputChannel, Product } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { getSubDirectories } from '../../../common/utils/fs';
@@ -38,6 +39,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     }
     protected selectTestDir(rootDir: string, subDirs: string[], customOptions: QuickPickItem[] = []): Promise<string> {
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: 'Select the directory containing the unit tests'
@@ -59,7 +61,8 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         items = [{ label: '.', description: 'Root directory' }, ...items];
         items = customOptions.concat(items);
         const def = createDeferred<string>();
-        window.showQuickPick(items, options).then(item => {
+        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        appShell.showQuickPick(items, options).then(item => {
             if (!item) {
                 return def.resolve();
             }
@@ -72,6 +75,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
 
     protected selectTestFilePattern(): Promise<string> {
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: 'Select the pattern to identify test files'
@@ -85,7 +89,8 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         ];
 
         const def = createDeferred<string>();
-        window.showQuickPick(items, options).then(item => {
+        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        appShell.showQuickPick(items, options).then(item => {
             if (!item) {
                 return def.resolve();
             }

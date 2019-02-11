@@ -27,5 +27,6 @@
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
     "prettier.tslintIntegration": false,
-    "prettier.printWidth": 120,
+    "prettier.printWidth": 180,
+    "prettier.singleQuote": true
 }

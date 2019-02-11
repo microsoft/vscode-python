@@ -41,15 +41,17 @@ export class CodeWatcher implements ICodeWatcher {
         const cells = generateCellRanges(document, this.cachedSettings);
 
         this.codeLenses = [];
+        // Be careful here. These arguments will be serialized during liveshare sessions
+        // and so shouldn't reference local objects.
         cells.forEach(cell => {
             const cmd: Command = {
-                arguments: [this, cell.range],
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllCmd: Command = {
-                arguments: [this],
+                arguments: [document.fileName],
                 title: localize.DataScience.runAllCellsLensCommandTitle(),
                 command: Commands.RunAllCells
             };
@@ -81,8 +83,8 @@ export class CodeWatcher implements ICodeWatcher {
         // run them one by one
         for (const lens of this.codeLenses) {
             // Make sure that we have the correct command (RunCell) lenses
-            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 2) {
-                const range: Range = lens.command.arguments[1];
+            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 5) {
+                const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
                     await activeHistory.addCode(code, this.getFileName(), range.start.line);
@@ -126,6 +128,7 @@ export class CodeWatcher implements ICodeWatcher {
     public async runCell(range: Range) {
         const activeHistory = this.historyProvider.getOrCreateActive();
         if (this.document) {
+            // Use that to get our code.
             const code = this.document.getText(range);
 
             try {

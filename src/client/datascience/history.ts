@@ -3,11 +3,9 @@
 'use strict';
 import '../common/extensions';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
@@ -15,8 +13,8 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    ILiveShareApi,
     IWebPanel,
-    IWebPanelMessageListener,
     IWebPanelProvider,
     IWorkspaceService
 } from '../common/application/types';
@@ -30,6 +28,7 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, HistoryMessages, Identifiers, Settings, Telemetry } from './constants';
+import { HistoryMessageListener } from './historyMessageListener';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
     CellState,
@@ -53,7 +52,7 @@ export enum SysInfoReason {
 }
 
 @injectable()
-export class History implements IWebPanelMessageListener, IHistory {
+export class History implements IHistory {
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
     private loadPromise: Promise<void>;
@@ -63,12 +62,13 @@ export class History implements IWebPanelMessageListener, IHistory {
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
     private addedSysInfo: boolean = false;
-    private ignoreCount: number = 0;
     private waitingForExportCells: boolean = false;
     private jupyterServer: INotebookServer | undefined;
     private changeHandler: IDisposable | undefined;
+    private messageListener : HistoryMessageListener;
 
     constructor(
+        @inject(ILiveShareApi) liveShare : ILiveShareApi,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -91,6 +91,9 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Create our event emitter
         this.closedEvent = new EventEmitter<IHistory>();
         this.disposables.push(this.closedEvent);
+
+        // Create a history message listener to listen to messages from our webpanel (or remote session)
+        this.messageListener = new HistoryMessageListener(liveShare, this.onMessage, this.dispose);
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -187,13 +190,17 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public async dispose() {
+    public dispose = async () => {
         if (!this.disposed) {
             this.disposed = true;
-            this.interpreterChangedDisposable.dispose();
-            this.closedEvent.fire(this);
+            if (this.interpreterChangedDisposable) {
+                this.interpreterChangedDisposable.dispose();
+            }
+            if (this.closedEvent) {
+                this.closedEvent.fire(this);
+            }
             if (this.jupyterServer) {
-                await this.jupyterServer.shutdown();
+                await this.jupyterServer.dispose();
             }
             this.updateContexts();
         }
@@ -379,6 +386,12 @@ export class History implements IWebPanelMessageListener, IHistory {
             const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
             try {
                 await this.loadPromise;
+            } catch (exc) {
+                // We should dispose ourselvs if the load fails. Othewise the user
+                // updates their install and we just fail again because the load promise is the same.
+                await this.dispose();
+
+                throw exc;
             } finally {
                 statusLoad.dispose();
             }
@@ -439,14 +452,8 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private sendCell(cell: ICell, message: string) {
-        // Remove our ignore count from the execution count prior to sending
-        const copy = JSON.parse(JSON.stringify(cell));
-        if (copy.data && copy.data.execution_count !== null && copy.data.execution_count > 0) {
-            const count = cell.data.execution_count as number;
-            copy.data.execution_count = count - this.ignoreCount;
-        }
         if (this.webPanel) {
-            this.webPanel.postMessage({ type: message, payload: copy });
+            this.webPanel.postMessage({ type: message, payload: cell });
         }
     }
 
@@ -666,71 +673,27 @@ export class History implements IWebPanelMessageListener, IHistory {
         return workingDir;
     }
 
-    private extractStreamOutput(cell: ICell): string {
-        let result = '';
-        if (cell.state === CellState.error || cell.state === CellState.finished) {
-            const outputs = cell.data.outputs as nbformat.IOutput[];
-            if (outputs) {
-                outputs.forEach(o => {
-                    if (o.output_type === 'stream') {
-                        const stream = o as nbformat.IStream;
-                        result = result.concat(stream.text.toString());
-                    } else {
-                        const data = o.data;
-                        if (data && data.hasOwnProperty('text/plain')) {
-                            // tslint:disable-next-line:no-any
-                            result = result.concat((data as any)['text/plain']);
-                        }
-                    }
-                });
-            }
-        }
-        return result;
-    }
-
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
         if (this.jupyterServer) {
             const message = await this.generateSysInfoMessage(reason);
-            // tslint:disable-next-line:no-multiline-string
-            const versionCells = await this.jupyterServer.execute(`import sys\r\nsys.version`, 'foo.py', 0);
-            // tslint:disable-next-line:no-multiline-string
-            const pathCells = await this.jupyterServer.execute(`import sys\r\nsys.executable`, 'foo.py', 0);
-            // tslint:disable-next-line:no-multiline-string
-            const notebookVersionCells = await this.jupyterServer.execute(`import notebook\r\nnotebook.version_info`, 'foo.py', 0);
 
-            // Both should have streamed output
-            const version = versionCells.length > 0 ? this.extractStreamOutput(versionCells[0]).trimQuotes() : '';
-            const notebookVersion = notebookVersionCells.length > 0 ? this.extractStreamOutput(notebookVersionCells[0]).trimQuotes() : '';
-            const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
+            // The server handles getting this data.
+            const sysInfo = await this.jupyterServer.getSysInfo();
+            if (sysInfo) {
+                // Connection string only for our initial start, not restart or interrupt
+                let connectionString: string = '';
+                if (reason === SysInfoReason.Start) {
+                    connectionString = this.generateConnectionInfoString(this.jupyterServer.getConnectionInfo());
+                }
 
-            // Both should influence our ignore count. We don't want them to count against execution
-            this.ignoreCount = this.ignoreCount + 3;
+                // Update our sys info with our locally applied data.
+                sysInfo.data.message = message;
+                sysInfo.data.connection = connectionString;
 
-            // Connection string only for our initial start, not restart or interrupt
-            let connectionString: string = '';
-            if (reason === SysInfoReason.Start) {
-                connectionString = this.generateConnectionInfoString(this.jupyterServer.getConnectionInfo());
+                return sysInfo;
             }
-
-            // Combine this data together to make our sys info
-            return {
-                data: {
-                    cell_type: 'sys_info',
-                    message: message,
-                    version: version,
-                    notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
-                    path: pythonPath,
-                    connection: connectionString,
-                    metadata: {},
-                    source: []
-                },
-                id: uuid(),
-                file: '',
-                line: 0,
-                state: CellState.finished
-            };
         }
     }
 
@@ -770,7 +733,6 @@ export class History implements IWebPanelMessageListener, IHistory {
     private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
         if (!this.addedSysInfo || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
             this.addedSysInfo = true;
-            this.ignoreCount = 0;
 
             // Generate a new sys info cell and send it to the web panel.
             const sysInfo = await this.generateSysInfoCell(reason);
@@ -805,7 +767,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+            this.webPanel = this.provider.create(this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
         }
     }
 
@@ -833,8 +795,12 @@ export class History implements IWebPanelMessageListener, IHistory {
                 }
             }
 
-            // Otherwise we continue loading
-            await Promise.all([this.loadJupyterServer(), this.loadWebPanel()]);
+            // Get the web panel to show first
+            await this.loadWebPanel();
+
+            // Then load the jupyter server
+            return this.loadJupyterServer();
+
         } finally {
             status.dispose();
         }

@@ -3,16 +3,14 @@
 'use strict';
 import { Kernel } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
-import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Disposable } from 'vscode-jsonrpc';
+import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IWorkspaceService } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
@@ -22,7 +20,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
 import {
     IConnection,
     IJupyterCommand,
@@ -35,35 +33,27 @@ import {
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
-const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
-const NotebookCommand = 'notebook';
-const ConvertCommand = 'nbconvert';
-const KernelSpecCommand = 'kernelspec';
-const KernelCreateCommand = 'ipykernel';
-const PyKernelOutputRegEx = /.*\s+(.+)$/m;
-const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-
-@injectable()
-export class JupyterExecution implements IJupyterExecution, Disposable {
+export class JupyterExecutionBase implements IJupyterExecution {
 
     private processServicePromise: Promise<IProcessService>;
     private commands: Record<string, IJupyterCommand> = {};
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
 
-    constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-                @inject(IInterpreterService) private interpreterService: IInterpreterService,
-                @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-                @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
-                @inject(ILogger) private logger: ILogger,
-                @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-                @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry,
-                @inject(IFileSystem) private fileSystem: IFileSystem,
-                @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager,
-                @inject(IWorkspaceService) workspace: IWorkspaceService,
-                @inject(IConfigurationService) private configuration: IConfigurationService,
-                @inject(IJupyterCommandFactory) private commandFactory : IJupyterCommandFactory,
-                @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(liveShare: ILiveShareApi,
+                private executionFactory: IPythonExecutionFactory,
+                private interpreterService: IInterpreterService,
+                private processServiceFactory: IProcessServiceFactory,
+                private knownSearchPaths: IKnownSearchPathsForInterpreters,
+                private logger: ILogger,
+                private disposableRegistry: IDisposableRegistry,
+                private asyncRegistry: IAsyncDisposableRegistry,
+                private fileSystem: IFileSystem,
+                private sessionManager: IJupyterSessionManager,
+                workspace: IWorkspaceService,
+                private configuration: IConfigurationService,
+                private commandFactory : IJupyterCommandFactory,
+                private serviceContainer: IServiceContainer) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -72,22 +62,22 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const disposable = workspace.onDidChangeConfiguration(e => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
-                    this.dispose();
+                    this.onSettingsChanged();
                 }
             });
             this.disposableRegistry.push(disposable);
         }
     }
 
-    public dispose() {
+    public dispose() : Promise<void> {
         // Clear our usableJupyterInterpreter
-        this.usablePythonInterpreter = undefined;
-        this.commands = {};
+        this.onSettingsChanged();
+        return Promise.resolve();
     }
 
     public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
-        return Cancellation.race(() => this.isCommandSupported(NotebookCommand, cancelToken), cancelToken);
+        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.NotebookCommand, cancelToken), cancelToken);
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
@@ -98,19 +88,19 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.usablePythonInterpreter;
     }
 
-    public isImportSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
+    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command nbconvert
-        return Cancellation.race(() => this.isCommandSupported(ConvertCommand), cancelToken);
+        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.ConvertCommand), cancelToken);
     }
 
-    public isKernelCreateSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
+    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command ipykernel
-        return Cancellation.race(() => this.isCommandSupported(KernelCreateCommand), cancelToken);
+        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelCreateCommand), cancelToken);
     }
 
-    public isKernelSpecSupported = async (cancelToken?: CancellationToken): Promise<boolean> => {
+    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command kernelspec
-        return Cancellation.race(() => this.isCommandSupported(KernelSpecCommand), cancelToken);
+        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelSpecCommand), cancelToken);
     }
 
     public connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
@@ -162,7 +152,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }, cancelToken);
     }
 
-    public spawnNotebook = async (file: string): Promise<void> => {
+    public async spawnNotebook(file: string): Promise<void> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand('notebook');
         if (!notebookCommand) {
@@ -175,9 +165,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         notebookCommand.exec(args, { throwOnStdErr: false, encoding: 'utf8' }).ignoreErrors();
     }
 
-    public importNotebook = async (file: string, template: string): Promise<string> => {
+    public async importNotebook(file: string, template: string): Promise<string> {
         // First we find a way to start a nbconvert
-        const convert = await this.findBestCommand(ConvertCommand);
+        const convert = await this.findBestCommand(JupyterCommands.ConvertCommand);
         if (!convert) {
             throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
         }
@@ -235,7 +225,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand(NotebookCommand, cancelToken);
+        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         if (!notebookCommand) {
             throw new Error(localize.DataScience.jupyterNotSupported());
         }
@@ -302,7 +292,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
         // This should be the best interpreter for notebooks
-        const found = await this.findBestCommand(NotebookCommand, cancelToken);
+        const found = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         if (found) {
             return found.interpreter();
         }
@@ -333,14 +323,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     private onSettingsChanged() {
-        // Do the same thing as dispose so that we regenerate
-        // all of our commands
-        this.dispose();
+        // Clear our usableJupyterInterpreter so that we recompute our values
+        this.usablePythonInterpreter = undefined;
+        this.commands = {};
     }
 
     private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {
         const displayName = localize.DataScience.historyTitle();
-        const ipykernelCommand = await this.findBestCommand(KernelCreateCommand, cancelToken);
+        const ipykernelCommand = await this.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
 
         // If this fails, then we just skip this spec
         try {
@@ -351,7 +341,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 const result = await ipykernelCommand.exec(['install', '--user', '--name', name, '--display-name', `'${displayName}'`], { throwOnStdErr: true, encoding: 'utf8', token: cancelToken });
 
                 // Result should have our file name.
-                const match = PyKernelOutputRegEx.exec(result.stdout);
+                const match = RegExpValues.PyKernelOutputRegEx.exec(result.stdout);
                 const diskPath = match && match !== null && match.length > 1 ? path.join(match[1], 'kernel.json') : await this.findSpecPath(name);
 
                 // Make sure we delete this file at some point. When we close VS code is probably good. It will also be destroy when
@@ -527,7 +517,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     private async readSpec(kernelSpecOutputLine: string) : Promise<JupyterKernelSpec | undefined> {
-        const match = KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
+        const match = RegExpValues.KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
         if (match && match !== null && match.length > 2) {
             // Second match should be our path to the kernel spec
             const file = path.join(match[2], 'kernel.json');
@@ -544,7 +534,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private enumerateSpecs = async (cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
-            const kernelSpecCommand = await this.findBestCommand(KernelSpecCommand);
+            const kernelSpecCommand = await this.findBestCommand(JupyterCommands.KernelSpecCommand);
 
             if (kernelSpecCommand) {
                 try {
@@ -575,7 +565,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         if (interpreter && await this.doesModuleExist(command, interpreter, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
 
             // Our command args are different based on the command. ipykernel is not a jupyter command
-            const args = command === KernelCreateCommand ? ['-m', command] : ['-m', 'jupyter', command];
+            const args = command === JupyterCommands.KernelCreateCommand ? ['-m', command] : ['-m', 'jupyter', command];
             return this.commandFactory.createInterpreterCommand(args, interpreter);
         }
 
@@ -585,7 +575,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private lookForJupyterInDirectory = async (pathToCheck: string): Promise<string[]> => {
         try {
             const files = await this.fileSystem.getFiles(pathToCheck);
-            return files ? files.filter(s => CheckJupyterRegEx.test(path.basename(s))) : [];
+            return files ? files.filter(s => RegExpValues.CheckJupyterRegEx.test(path.basename(s))) : [];
         } catch (err) {
             this.logger.logWarning('Python Extension (fileSystem.getFiles):', err);
         }
@@ -701,8 +691,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter });
             try {
                 // Special case for ipykernel
-                const actualModule = module === KernelCreateCommand ? module : 'jupyter';
-                const args = module === KernelCreateCommand ? ['--version'] : [module, '--version'];
+                const actualModule = module === JupyterCommands.KernelCreateCommand ? module : 'jupyter';
+                const args = module === JupyterCommands.KernelCreateCommand ? ['--version'] : [module, '--version'];
 
                 const result = await pythonService.execModule(actualModule, args, newOptions);
                 return !result.stderr;
