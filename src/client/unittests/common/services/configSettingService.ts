@@ -71,9 +71,12 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     }
 }
 
+@injectable()
 export class DelayedTestConfigSettingsService implements ITestConfigSettingsService {
     private ops: [ string, string | Uri, UnitTestProduct, string[] ][];
-    constructor() {
+    constructor(
+        @inject(ITestConfigSettingsService) private config: ITestConfigSettingsService
+    ) {
         this.ops = [];
     }
 
@@ -89,7 +92,7 @@ export class DelayedTestConfigSettingsService implements ITestConfigSettingsServ
         this.ops.push(['disable', testDirectory, product, []]);
     }
 
-    public async apply(cfg: ITestConfigSettingsService) {
+    public async apply() {
         const ops = this.ops;
         this.ops = [];
         // Note that earlier ops do not get rolled back if a later
@@ -97,13 +100,13 @@ export class DelayedTestConfigSettingsService implements ITestConfigSettingsServ
         for (const [op, testDir, prod, args] of ops) {
             switch (op) {
                 case 'updateTestArgs':
-                    await cfg.updateTestArgs(testDir, prod, args);
+                    await this.config.updateTestArgs(testDir, prod, args);
                     break;
                 case 'enable':
-                    await cfg.enable(testDir, prod);
+                    await this.config.enable(testDir, prod);
                     break;
                 case 'disable':
-                    await cfg.disable(testDir, prod);
+                    await this.config.disable(testDir, prod);
                     break;
                 default:
                     break;

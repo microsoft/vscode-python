@@ -216,12 +216,12 @@ suite('Unit Tests - DelayedTestConfigSettingsService', () => {
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
 
-        const delayed = new DelayedTestConfigSettingsService();
+        const delayed = new DelayedTestConfigSettingsService(cfg.object);
         await delayed.updateTestArgs(testDir, Product.pytest, newArgs);
         await delayed.disable(testDir, Product.unittest);
         await delayed.disable(testDir, Product.nosetest);
         await delayed.enable(testDir, Product.pytest);
-        await delayed.apply(cfg.object);
+        await delayed.apply();
 
         // Ideally we would verify that the ops were applied in their
         // original order.  Unfortunately, the version of TypeMoq we're
@@ -235,10 +235,10 @@ suite('Unit Tests - DelayedTestConfigSettingsService', () => {
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
 
-        const delayed = new DelayedTestConfigSettingsService();
+        const delayed = new DelayedTestConfigSettingsService(cfg.object);
         await delayed.enable('/my/project', Product.pytest);
-        await delayed.apply(cfg.object);
-        await delayed.apply(cfg.object);
+        await delayed.apply();
+        await delayed.apply();
 
         cfg.verifyAll();
     });
