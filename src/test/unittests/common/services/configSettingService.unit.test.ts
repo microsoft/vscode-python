@@ -15,7 +15,7 @@ import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/unittests/common/constants';
 import {
-    DelayedTestConfigSettingsService, TestConfigSettingsService
+    BufferedTestConfigSettingsService, TestConfigSettingsService
 } from '../../../../client/unittests/common/services/configSettingService';
 import { UnitTestProduct } from '../../../../client/unittests/common/types';
 import { ITestConfigSettingsService } from '../../../../client/unittests/types';
@@ -198,7 +198,7 @@ suite('Unit Tests - ConfigSettingsService', () => {
     });
 });
 
-suite('Unit Tests - DelayedTestConfigSettingsService', () => {
+suite('Unit Tests - BufferedTestConfigSettingsService', () => {
     test('config changes are pushed when apply() is called', async () => {
         const testDir = '/my/project';
         const newArgs: string[] = ['-x', '--spam=42'];
@@ -216,7 +216,7 @@ suite('Unit Tests - DelayedTestConfigSettingsService', () => {
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
 
-        const delayed = new DelayedTestConfigSettingsService();
+        const delayed = new BufferedTestConfigSettingsService();
         await delayed.updateTestArgs(testDir, Product.pytest, newArgs);
         await delayed.disable(testDir, Product.unittest);
         await delayed.disable(testDir, Product.nosetest);
@@ -235,7 +235,7 @@ suite('Unit Tests - DelayedTestConfigSettingsService', () => {
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
 
-        const delayed = new DelayedTestConfigSettingsService();
+        const delayed = new BufferedTestConfigSettingsService();
         await delayed.enable('/my/project', Product.pytest);
         await delayed.apply(cfg.object);
         await delayed.apply(cfg.object);

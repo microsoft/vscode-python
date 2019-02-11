@@ -10,7 +10,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TestConfiguringTelemetry, TestTool } from '../telemetry/types';
 import { TEST_OUTPUT_CHANNEL } from './common/constants';
-import { DelayedTestConfigSettingsService } from './common/services/configSettingService';
+import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
 import { ITestsHelper, UnitTestProduct } from './common/types';
 import {
     ITestConfigSettingsService, ITestConfigurationManagerFactory,
@@ -121,7 +121,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             }
             const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
             telemetryProps.tool = helper.parseProviderName(selectedTestRunner) as TestTool;
-            const delayed = new DelayedTestConfigSettingsService();
+            const delayed = new BufferedTestConfigSettingsService();
             const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
             const configMgr = factory.create(wkspace, selectedTestRunner, delayed);
             if (enableOnly) {

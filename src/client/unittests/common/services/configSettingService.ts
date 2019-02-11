@@ -71,7 +71,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     }
 }
 
-export class DelayedTestConfigSettingsService implements ITestConfigSettingsService {
+export class BufferedTestConfigSettingsService implements ITestConfigSettingsService {
     private ops: [ string, string | Uri, UnitTestProduct, string[] ][];
     constructor() {
         this.ops = [];
