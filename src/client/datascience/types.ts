@@ -49,7 +49,7 @@ export interface INotebookServerLaunchInfo
 }
 
 // Manage our running notebook server instances
-export const INotebookServerManager = Symbol('INotebookServerFactory');
+export const INotebookServerManager = Symbol('INotebookServerManager');
 export interface INotebookServerManager {
     getOrCreateServer(): Promise<INotebookServer | undefined>;
 }
@@ -57,7 +57,6 @@ export interface INotebookServerManager {
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
-    //connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<void>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
