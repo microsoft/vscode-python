@@ -867,6 +867,15 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "label": "Python: Unit Tests",
+                        "description": "%python.snippet.launch.unitTests.description%",
+                        "body": {
+                            "name": "Unit Tests",
+                            "type": "python",
+                            "request": "test"
+                        }
                     }
                 ],
                 "configurationAttributes": {
@@ -986,6 +995,59 @@
                             "subProcess": {
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
+                                "default": false
+                            }
+                        }
+                    },
+                    "test": {
+                        "properties": {
+                            "pythonPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
+                                "default": "${config:python.pythonPath}"
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": false
+                            },
+                            "showReturnValue": {
+                                "type": "boolean",
+                                "description": "Show return value of functions when stepping.",
+                                "default": false
+                            },
+                            "console": {
+                                "enum": [
+                                    "none",
+                                    "integratedTerminal",
+                                    "externalTerminal"
+                                ],
+                                "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
+                                "default": "integratedTerminal"
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
+                                "default": "${workspaceFolder}"
+                            },
+                            "env": {
+                                "type": "object",
+                                "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
+                                "default": {}
+                            },
+                            "envFile": {
+                                "type": "string",
+                                "description": "Absolute path to a file containing environment variable definitions.",
+                                "default": "${workspaceFolder}/.env"
+                            },
+                            "redirectOutput": {
+                                "type": "boolean",
+                                "description": "Redirect output.",
+                                "default": true
+                            },
+                            "debugStdLib": {
+                                "type": "boolean",
+                                "description": "Debug standard library code.",
                                 "default": false
                             }
                         }
