@@ -121,9 +121,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             }
             const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
             telemetryProps.tool = helper.parseProviderName(selectedTestRunner) as TestTool;
-            const delayed = new DelayedTestConfigSettingsService(
-                this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService)
-            );
+            const delayed = new DelayedTestConfigSettingsService();
             const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
             const configMgr = factory.create(wkspace, selectedTestRunner, delayed);
             if (enableOnly) {
@@ -136,8 +134,9 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
                     .then(() => this.enableTest(wkspace, selectedTestRunner))
                     .catch(reason => { return this.enableTest(wkspace, selectedTestRunner).then(() => Promise.reject(reason)); });
             }
+            const cfg = this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
             try {
-                await delayed.apply();
+                await delayed.apply(cfg);
             } catch (exc) {
                 traceError('Python Extension: applying unit test config updates', exc);
                 telemetryProps.failed = true;
