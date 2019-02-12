@@ -377,10 +377,7 @@ export class PythonSettings implements IPythonSettings {
         //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this.workspace.workspaceFolders!.map(workspaceFolder => workspaceFolder.uri.fsPath);
         const activatedWkspcKeys = Array.from(PythonSettings.pythonSettings.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
-        if (activatedWkspcFoldersRemoved.length > 0) {
-            PythonSettings.pythonSettings.delete(activatedWkspcFoldersRemoved[0]);
-        }
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
                 PythonSettings.pythonSettings.delete(folder);

@@ -21,10 +21,11 @@ import { InterpreterDataService } from './languageServer/interpreterDataService'
 import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from './languageServer/languageClientFactory';
 import { LanguageServer } from './languageServer/languageServer';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
+import { LanguageServerExtension } from './languageServer/languageServerExtension';
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
-import { LanguageServerExtension, LanguageServerManager } from './languageServer/manager';
+import { LanguageServerManager } from './languageServer/manager';
 import { PlatformData } from './languageServer/platformData';
 import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IInterpreterDataService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
 

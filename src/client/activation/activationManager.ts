@@ -77,9 +77,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
     }
     protected onWorkspaceFoldersChanged() {
+        //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspaceKey(workspaceFolder.uri));
         const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
                 this.activatedWorkspaces.delete(folder);

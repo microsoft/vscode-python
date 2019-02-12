@@ -5,17 +5,14 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
-import * as typemoq from 'typemoq';
+import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
-import { LanguageServerExtension, LanguageServerManager } from '../../../client/activation/languageServer/manager';
+import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
+import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerExtension } from '../../../client/activation/types';
-import { CommandManager } from '../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../client/common/application/types';
-import { IDisposable } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { sleep } from '../../core';
@@ -24,43 +21,24 @@ use(chaiAsPromised);
 
 // tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
 
-const loadExtensionCommand = 'python._loadLanguageServerExtension';
-
-suite('xLanguage Server - Manager', () => {
-    class LanguageServerExtensionTest extends LanguageServerExtension {
-        // tslint:disable-next-line:no-unnecessary-override
-        public async register(): Promise<void> {
-            return super.register();
-        }
-        public clearLoadExtensionArgs() {
-            super.loadExtensionArgs = undefined;
-        }
-    }
+suite('Language Server - Manager', () => {
     let manager: LanguageServerManager;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
     let languageServer: ILanguageServer;
-    let commandManager: ICommandManager;
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
-    let onChangeLSExtensionHandler: Function;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
-    let commandRegistrationDisposable: typemoq.IMock<IDisposable>;
-    let extension: LanguageServerExtensionTest;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         analysisOptions = mock(LanguageServerAnalysisOptions);
         languageServer = mock(LanguageServer);
-        commandManager = mock(CommandManager);
         lsExtension = mock(LanguageServerExtension);
-        commandRegistrationDisposable = typemoq.Mock.ofType<IDisposable>();
         manager = new LanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension)
         );
-        extension = new LanguageServerExtensionTest(instance(commandManager));
-        extension.clearLoadExtensionArgs();
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {
@@ -68,7 +46,6 @@ suite('xLanguage Server - Manager', () => {
             let invoked = false;
             const lsExtensionChangeFn = (handler: Function) => {
                 invoked = true;
-                onChangeLSExtensionHandler = handler;
             };
             when(lsExtension.invoked).thenReturn(lsExtensionChangeFn as any);
 
@@ -184,23 +161,6 @@ suite('xLanguage Server - Manager', () => {
             await startLanguageServer();
 
             verify(languageServer.loadExtension(args)).once();
-        });
-    });
-    suite('Test LanguageServerExtension', () => {
-        let cmdManager: ICommandManager;
-        setup(() => {
-            cmdManager = mock(CommandManager);
-            commandRegistrationDisposable = typemoq.Mock.ofType<IDisposable>();
-            extension = new LanguageServerExtensionTest(instance(cmdManager));
-        });
-        test('Must register command handler', async () => {
-            when(cmdManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
-                commandRegistrationDisposable.object
-            );
-            await extension.register();
-            verify(cmdManager.registerCommand(loadExtensionCommand, anything())).once();
-            extension.dispose();
-            commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.once());
         });
     });
 });

@@ -4,8 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
-import { ICommandManager } from '../../common/application/types';
 import '../../common/extensions';
 import { traceDecorators } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
@@ -14,8 +12,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager } from '../types';
-
-const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 @injectable()
 export class LanguageServerManager implements ILanguageServerManager {
@@ -72,30 +68,5 @@ export class LanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions!.getAnalysisOptions();
         await this.languageServer.start(this.resource, options);
         this.loadExtensionIfNecessary();
-    }
-}
-
-@injectable()
-export class LanguageServerExtension implements ILanguageServerExtension {
-    public loadExtensionArgs?: {};
-    protected readonly changed = new EventEmitter<void>();
-    private disposable?: IDisposable;
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) { }
-    public dispose() {
-        if (this.disposable) {
-            this.disposable.dispose();
-        }
-    }
-    public register(): Promise<void> {
-        if (this.disposable) {
-            return;
-        }
-        this.disposable = this.commandManager.registerCommand(loadExtensionCommand, args => {
-            this.loadExtensionArgs = args;
-            this.changed.fire();
-        });
-    }
-    public get invoked(): Event<void> {
-        return this.changed.event;
     }
 }
