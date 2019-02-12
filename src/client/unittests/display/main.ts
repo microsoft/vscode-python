@@ -1,7 +1,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { isNotInstalledError } from '../../common/helpers';
 import { IConfigurationService } from '../../common/types';
@@ -22,6 +22,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     private readonly didChange = new EventEmitter<void>();
     private readonly appShell: IApplicationShell;
     private readonly testsHelper: ITestsHelper;
+    private readonly cmdManager: ICommandManager;
     public get onDidChange(): Event<void> {
         return this.didChange.event;
     }
@@ -31,6 +32,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.statusBar = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
         this.testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
+        this.cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
     public dispose() {
         this.clearProgressTicker();
@@ -164,10 +166,12 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
 
         if (!haveTests && !quietMode) {
-            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests').then(item => {
+            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests', 'Configure Test Framework').then(item => {
                 if (item === 'Disable Tests') {
                     this.disableTests()
                         .catch(ex => console.error('Python Extension: disableTests', ex));
+                } else if (item === 'Configure Test Framework'){
+                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure);
                 }
             });
         }
