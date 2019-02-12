@@ -37,7 +37,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable 
     constructor(
         @inject(ITestCollectionStorageService) private testStore: ITestCollectionStorageService,
         @inject(IUnitTestManagementService) private testService: IUnitTestManagementService,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -54,8 +54,8 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable 
         this.root = [new TestFolderTreeItem(undefined, undefined, m)];
 
         this.cachedItems.set(m, this.root[0]);
-        if (this.workspace.workspaceFolders.length > 0) {
-            this.refresh(this.workspace.workspaceFolders[0].uri);
+        if (workspace.workspaceFolders.length > 0) {
+            this.refresh(workspace.workspaceFolders[0].uri);
         }
         disposableRegistry.push(this);
         this.disposables.push(this.testService.onDidStatusChange(this.onTestStatusChanged, this));
@@ -89,7 +89,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable 
      * @param element The element from which the provider gets children. Can be `undefined`.
      * @return Children of `element` or root if no element is passed.
      */
-    public getChildren(element?: TestDataItem): ProviderResult<TestDataItem[]> {
+    public getChildren(element?: TestDataItem): TestDataItem[] {
         if (element === undefined) {
             return this.root.map((treeItem: TestTreeItem) => treeItem.data);
         }
