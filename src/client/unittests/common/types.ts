@@ -1,5 +1,10 @@
-import { CancellationToken, DiagnosticCollection, Disposable, Event, OutputChannel, Uri } from 'vscode';
+import {
+    CancellationToken, DebugConfiguration, DiagnosticCollection,
+    Disposable, Event, OutputChannel, Uri
+} from 'vscode';
 import { IUnitTestSettings, Product } from '../../common/types';
+import { DebuggerTypeName } from '../../debugger/constants';
+import { ConsoleType } from '../../debugger/types';
 import { IPythonUnitTestMessage } from '../types';
 import { CommandSource } from './constants';
 
@@ -286,4 +291,21 @@ export type PythonVersionInformation = {
 export const ITestMessageService = Symbol('ITestMessageService');
 export interface ITestMessageService {
     getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]>;
+}
+
+export interface ITestDebugConfig extends DebugConfiguration {
+    type: typeof DebuggerTypeName;
+    request: 'test';
+
+    pythonPath?: string;
+    console?: ConsoleType;
+    cwd?: string;
+    env?:  Record<string, string | undefined>;
+    envFile?: string;
+
+    // converted to DebugOptions:
+    stopOnEntry?: boolean;
+    showReturnValue?: boolean;
+    redirectOutput?: boolean;  // default: true
+    debugStdLib?: boolean;
 }
