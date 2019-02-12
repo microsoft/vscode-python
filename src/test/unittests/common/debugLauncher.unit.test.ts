@@ -109,7 +109,7 @@ suite('Unit Tests - Debug Launcher', () => {
         debugConfig.envFile = envFile;
         debugConfig.args = debugArgs;
 
-        debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isObjectWith(debugConfig)))
+        debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(debugConfig)))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(TypeMoq.Times.once());
     }
@@ -160,7 +160,14 @@ suite('Unit Tests - Debug Launcher', () => {
                     cwd: workspaceFolders[0].uri.fsPath,
                     args: options.args,
                     console: 'none',
-                    debugOptions: [DebugOptions.RedirectOutput]
+                    redirectOutput: true,
+
+                    // added by LaunchConfigurationResolver:
+                    pythonPath: 'python',
+                    debugOptions: [DebugOptions.RedirectOutput],
+                    stopOnEntry: false,
+                    showReturnValue: false,
+                    workspaceFolder: workspaceFolders[0].uri.fsPath
                 },
                 testProvider
             );

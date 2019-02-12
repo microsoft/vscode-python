@@ -5,7 +5,7 @@ import { IDebugService, IWorkspaceService } from '../../common/application/types
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
-import { DebugOptions, LaunchRequestArguments } from '../../debugger/types';
+import { LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 
@@ -68,7 +68,7 @@ export class DebugLauncher implements ITestDebugLauncher {
 
             console: 'none',
             envFile: configSettings.envFile,
-            debugOptions: [DebugOptions.RedirectOutput]
+            redirectOutput: true
         };
         const launchArgs = await this.launchResolver.resolveDebugConfiguration(
             workspaceFolder,
