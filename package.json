@@ -1023,7 +1023,7 @@
                                     "externalTerminal"
                                 ],
                                 "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-                                "default": "integratedTerminal"
+                                "default": "none"
                             },
                             "cwd": {
                                 "type": "string",
