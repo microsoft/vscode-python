@@ -381,6 +381,11 @@ export class PythonSettings implements IPythonSettings {
         if (activatedWkspcFoldersRemoved.length > 0) {
             PythonSettings.pythonSettings.delete(activatedWkspcFoldersRemoved[0]);
         }
+        if (activatedWkspcFoldersRemoved.length > 0) {
+            for (const folder of activatedWkspcFoldersRemoved) {
+                PythonSettings.pythonSettings.delete(folder);
+            }
+        }
     }
     protected initialize(): void {
         const onDidChange = () => {

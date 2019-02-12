@@ -80,8 +80,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspaceKey(workspaceFolder.uri));
         const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(x => workspaceKeys.indexOf(x) < 0);
-        if (activatedWkspcFoldersRemoved.length > 0){
-            this.activatedWorkspaces.delete(activatedWkspcFoldersRemoved[0]);
+        if (activatedWkspcFoldersRemoved.length > 0) {
+            for (const folder of activatedWkspcFoldersRemoved) {
+                this.activatedWorkspaces.delete(folder);
+            }
         }
         this.addRemoveDocOpenedHandlers();
     }
