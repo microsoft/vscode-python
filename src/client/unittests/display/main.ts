@@ -5,6 +5,7 @@ import { IApplicationShell, ICommandManager } from '../../common/application/typ
 import * as constants from '../../common/constants';
 import { isNotInstalledError } from '../../common/helpers';
 import { IConfigurationService } from '../../common/types';
+import { UnitTests } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { CANCELLATION_REASON } from '../common/constants';
@@ -166,11 +167,11 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
 
         if (!haveTests && !quietMode) {
-            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests', 'Configure Test Framework').then(item => {
-                if (item === 'Disable Tests') {
+            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', UnitTests.disableTests(), UnitTests.configureTests()).then(item => {
+                if (item === UnitTests.disableTests()) {
                     this.disableTests()
                         .catch(ex => console.error('Python Extension: disableTests', ex));
-                } else if (item === 'Configure Test Framework'){
+                } else if (item === UnitTests.configureTests()) {
                     this.cmdManager.executeCommand(constants.Commands.Tests_Configure);
                 }
             });

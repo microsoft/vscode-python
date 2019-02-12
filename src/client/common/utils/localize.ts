@@ -176,6 +176,8 @@ export namespace UnitTests {
     export const testErrorDiagnosticMessage = localize('UnitTests.testErrorDiagnosticMessage', 'Error');
     export const testFailDiagnosticMessage = localize('UnitTests.testFailDiagnosticMessage', 'Fail');
     export const testSkippedDiagnosticMessage = localize('UnitTests.testSkippedDiagnosticMessage', 'Skipped');
+    export const configureTests = localize('UnitTests.configureTests', 'Configure Test Framework');
+    export const disableTests = localize('UnitTests.disableTests', 'Disable Tests');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

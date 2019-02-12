@@ -12,6 +12,7 @@ import { IApplicationShell, ICommandManager } from '../../../client/common/appli
 import { Commands } from '../../../client/common/constants';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
+import { UnitTests } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../../client/unittests/common/constants';
@@ -295,7 +296,7 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell.setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => Promise.resolve('Disable Tests'))
+            .returns(() => Promise.resolve(UnitTests.disableTests()))
             .verifiable(typeMoq.Times.once());
 
         for (const setting of ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
@@ -331,7 +332,7 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell.setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => Promise.resolve('Configure Test Framework'))
+            .returns(() => Promise.resolve(UnitTests.configureTests()))
             .verifiable(typeMoq.Times.once());
 
         cmdManager.setup(c => c.executeCommand(typeMoq.It.isValue(Commands.Tests_Configure)))
