@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
+import * as uuid from 'uuid/v4';
 import {
     Disposable,
     Event,
@@ -33,7 +34,7 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { HistoryCommandListener } from '../../client/datascience/historycommandlistener';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { IHistory, INotebookServer, IStatusProvider } from '../../client/datascience/types';
@@ -145,7 +146,7 @@ suite('History command listener', async () => {
     const notebookImporter = mock(JupyterImporter);
     const notebookExporter = mock(JupyterExporter);
     const applicationShell = mock(ApplicationShell);
-    const jupyterExecution = mock(JupyterExecution);
+    const jupyterExecution = mock(JupyterExecutionFactory);
     const documentManager = new MockDocumentManager();
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
@@ -305,8 +306,8 @@ suite('History command listener', async () => {
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(jupyterExecution.connectToNotebookServer(anything(), anything(), anything())).thenResolve(server.object);
-        server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny())).returns(() => {
-            return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false));
+        server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
+            return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
         });
 
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));

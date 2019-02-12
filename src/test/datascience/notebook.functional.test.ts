@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
@@ -18,8 +19,8 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
     ICell,
@@ -44,6 +45,10 @@ import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockJupyterSession } from './mockJupyterSession';
+
+interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
+
+}
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('Jupyter notebook tests', () => {
@@ -102,7 +107,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any): Promise<void> {
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -121,7 +126,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string): Promise<void> {
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -135,7 +140,7 @@ suite('Jupyter notebook tests', () => {
 
     async function verifyCell(jupyterServer: INotebookServer | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue: (data: any) => void): Promise<void> {
         // Verify results of an execute
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
         if (cellType === 'code') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -275,7 +280,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Failure', async () => {
         // Make a dummy class that will fail during launch
-        class FailedProcess extends JupyterExecution {
+        class FailedProcess extends JupyterExecutionFactory {
             public isNotebookSupported = (): Promise<boolean> => {
                 return Promise.resolve(false);
             }
@@ -486,7 +491,7 @@ suite('Jupyter notebook tests', () => {
         let finishedBefore = false;
         const finishedPromise = createDeferred();
         let error;
-        const observable = server!.executeObservable(code, 'foo.py', 0);
+        const observable = server!.executeObservable(code, 'foo.py', 0, uuid());
         let cells: ICell[] = [];
         observable.subscribe(c => {
             cells = c;
@@ -769,7 +774,7 @@ plt.show()`,
         if (server) {
             // This is kinda fragile. It reliese on impl details to get to the session. Might
             // just expose it?
-            const innerServerFactory = (server as any)['serverFactory'] as RoleBasedFactory<INotebookServer, ClassType<INotebookServer>>;
+            const innerServerFactory = (server as any)['serverFactory'] as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
             const innerServer = await innerServerFactory.get();
             assert.ok(innerServer, 'Cannot find the inner server');
             return (innerServer as any)['session'] as MockJupyterSession;
@@ -798,7 +803,7 @@ plt.show()`,
     runTest('Invalid kernel spec works', async () => {
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
-            class FailedKernelSpec extends JupyterExecution {
+            class FailedKernelSpec extends JupyterExecutionFactory {
                 protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);
                 }

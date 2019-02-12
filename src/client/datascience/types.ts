@@ -58,8 +58,8 @@ export interface INotebookServerManager {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
-    executeObservable(code: string, file: string, line: number, id?: string) : Observable<ICell[]>;
-    execute(code: string, file: string, line: number, cancelToken?: CancellationToken) : Promise<ICell[]>;
+    executeObservable(code: string, file: string, line: number, id: string) : Observable<ICell[]>;
+    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
     shutdown() : Promise<void>;
@@ -123,7 +123,7 @@ export const IHistory = Symbol('IHistory');
 export interface IHistory extends Disposable {
     closed: Event<IHistory>;
     show() : Promise<void>;
-    addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
+    addCode(code: string, file: string, line: number, id: string, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
     postMessage(type: string, payload?: any): void;
     undoCells(): void;
@@ -159,11 +159,11 @@ export interface ICodeWatcher {
     getVersion() : number;
     getCodeLenses() : CodeLens[];
     getCachedSettings() : IDataScienceSettings | undefined;
-    runAllCells(): void;
-    runCell(range: Range): void;
-    runCurrentCell(): void;
-    runCurrentCellAndAdvance(): void;
-    runSelectionOrLine(activeEditor: TextEditor | undefined): void;
+    runAllCells(id: string): void;
+    runCell(range: Range, id: string): void;
+    runCurrentCell(id: string): void;
+    runCurrentCellAndAdvance(id: string): void;
+    runSelectionOrLine(activeEditor: TextEditor | undefined, id: string): void;
 }
 
 export enum CellState {
@@ -176,7 +176,7 @@ export enum CellState {
 
 // Basic structure for a cell from a notebook
 export interface ICell {
-    id: string;
+    id: string; // This value isn't unique. File and line are needed to.
     file: string;
     line: number;
     state: CellState;

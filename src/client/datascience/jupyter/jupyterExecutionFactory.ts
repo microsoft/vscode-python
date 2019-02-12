@@ -11,10 +11,13 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IJupyterCommandFactory, IJupyterExecution, IJupyterSessionManager, INotebookServer } from '../types';
-import { JupyterExecutionBase } from './jupyterExecution';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
-import { RoleBasedFactory } from './liveshare/roleBasedFactory';
+import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+
+interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {
+
+}
 
 type JupyterExecutionClassType = {
     new(liveShare: ILiveShareApi,
@@ -30,13 +33,13 @@ type JupyterExecutionClassType = {
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         commandFactory : IJupyterCommandFactory,
-        serviceContainer: IServiceContainer): IJupyterExecution;
+        serviceContainer: IServiceContainer): IJupyterExecutionInterface;
 };
 
 @injectable()
-export class JupyterExecution implements IJupyterExecution {
+export class JupyterExecutionFactory implements IJupyterExecution {
 
-    private executionFactory: RoleBasedFactory<IJupyterExecution, JupyterExecutionClassType>;
+    private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
 
     constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
                 @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
@@ -52,9 +55,8 @@ export class JupyterExecution implements IJupyterExecution {
                 @inject(IConfigurationService) configuration: IConfigurationService,
                 @inject(IJupyterCommandFactory) commandFactory : IJupyterCommandFactory,
                 @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.executionFactory = new RoleBasedFactory(
+        this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
             liveShare,
-            JupyterExecutionBase,
             HostJupyterExecution,
             GuestJupyterExecution,
             liveShare,

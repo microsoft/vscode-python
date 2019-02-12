@@ -3,7 +3,6 @@
 'use strict';
 import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
@@ -16,17 +15,14 @@ import { LiveShare, LiveShareCommands } from '../../constants';
 import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
-import { waitForGuestService } from './utils';
+import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
-export class GuestJupyterExecution extends JupyterExecutionBase {
-
-    private serviceProxy: Promise<vsls.SharedServiceProxy | null>;
-    private runningServer : INotebookServer | undefined;
+export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExecutionBase, LiveShare.JupyterExecutionService) {
 
     constructor(
-        private liveShare: ILiveShareApi,
+        liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
@@ -55,17 +51,11 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
             configuration,
             commandFactory,
             serviceContainer);
-        // Create the shared service proxy
-        this.serviceProxy = this.startSharedProxy();
         asyncRegistry.push(this);
     }
 
     public async dispose() : Promise<void> {
         await super.dispose();
-
-        if (this.runningServer) {
-            return this.runningServer.dispose();
-        }
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
@@ -81,27 +71,25 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
         return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
     }
     public async connectToNotebookServer(uri: string, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer> {
-        // We only have a single server at a time. This object should go away when the server goes away
-        if (!this.runningServer) {
+        let result: INotebookServer | undefined ;
 
-            // Create the server on the remote machine. It should return an IConnection we can use to build a remote uri
-            const proxy = await this.serviceProxy;
-            if (proxy) {
-                const connection : IConnection = await proxy.request(LiveShareCommands.connectToNotebookServer, [usingDarkTheme, useDefaultConfig, workingDir], cancelToken);
+        // Create the server on the remote machine. It should return an IConnection we can use to build a remote uri
+        const service = await this.waitForService();
+        if (service) {
+            const connection: IConnection = await service.request(LiveShareCommands.connectToNotebookServer, [usingDarkTheme, useDefaultConfig, workingDir], cancelToken);
 
-                // If that works, then treat this as a remote server and connect to it
-                if (connection && connection.baseUrl) {
-                    const newUri = `${connection.baseUrl}?token=${connection.token}`;
-                    this.runningServer = await super.connectToNotebookServer(newUri, usingDarkTheme, useDefaultConfig, cancelToken);
-                }
-            }
-
-            if (!this.runningServer) {
-                throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
+            // If that works, then treat this as a remote server and connect to it
+            if (connection && connection.baseUrl) {
+                const newUri = `${connection.baseUrl}?token=${connection.token}`;
+                result = await super.connectToNotebookServer(newUri, usingDarkTheme, useDefaultConfig, cancelToken);
             }
         }
 
-        return this.runningServer;
+        if (!result) {
+            throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
+        }
+
+        return result;
     }
     public spawnNotebook(file: string): Promise<void> {
         // Not supported in liveshare
@@ -112,25 +100,18 @@ export class GuestJupyterExecution extends JupyterExecutionBase {
         throw new Error(localize.DataScience.liveShareCannotImportNotebooks());
     }
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        const proxy = await this.serviceProxy;
-        if (proxy) {
-            return proxy.request(LiveShareCommands.getUsableJupyterPython, [], cancelToken);
+        const service = await this.waitForService();
+        if (service) {
+            return service.request(LiveShareCommands.getUsableJupyterPython, [], cancelToken);
         }
-    }
-
-    private async startSharedProxy() : Promise<vsls.SharedServiceProxy | null> {
-        const api = await this.liveShare.getApi();
-        if (api) {
-            return waitForGuestService(api, LiveShare.JupyterExecutionService);
-        }
-        return null;
     }
 
     private async checkSupported(command: string, cancelToken?: CancellationToken) : Promise<boolean> {
+        const service = await this.waitForService();
+
         // Make a remote call on the proxy
-        const proxy = await this.serviceProxy;
-        if (proxy) {
-            const result = await proxy.request(command, [], cancelToken);
+        if (service) {
+            const result = await service.request(command, [], cancelToken);
             return result as boolean;
         }
 

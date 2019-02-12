@@ -35,7 +35,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -88,7 +88,7 @@ class MockJupyterServer implements INotebookServer {
         throw new Error('Method not implemented');
     }
     public getConnectionInfo(): IConnection | undefined {
-        throw new Error('Method not implemented');
+        return this.conninfo;
     }
     public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
         throw new Error('Method not implemented');
@@ -462,7 +462,7 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
     }
 
-    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecution {
+    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecutionFactory {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
@@ -555,7 +555,7 @@ suite('Jupyter Execution', async () => {
 
         const mockSessionManager = new MockJupyterManager(instance(serviceManager));
 
-        return new JupyterExecution(
+        return new JupyterExecutionFactory(
             instance(liveShare),
             instance(executionFactory),
             instance(interpreterService),

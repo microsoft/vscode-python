@@ -6,14 +6,19 @@ import * as vsls from 'vsls/vscode';
 import { ILiveShareApi } from '../../../common/application/types';
 import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
+import { ILiveShareParticipant } from './types';
+
+export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {
+
+}
 
 // tslint:disable:no-any
-export class RoleBasedFactory<T extends IAsyncDisposable, CtorType extends ClassType<T>> {
+export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> {
     private ctorArgs : any[];
     private firstTime : boolean = true;
     private createPromise : Promise<T> | undefined;
 
-    constructor(private liveShare: ILiveShareApi, private noneCtor : CtorType, private hostCtor: CtorType, private guestCtor: CtorType, ...args: any[]) {
+    constructor(private liveShare: ILiveShareApi, private hostCtor: CtorType, private guestCtor: CtorType, ...args: any[]) {
         this.ctorArgs = args;
     }
 
@@ -28,9 +33,12 @@ export class RoleBasedFactory<T extends IAsyncDisposable, CtorType extends Class
 
     private async createBasedOnRole() : Promise<T> {
 
-        // Figure out our role to compute the object to create
+        // Figure out our role to compute the object to create. Default is host. This
+        // allows for the host object to keep existing if we suddenly start a new session.
+        // For a guest, starting a new session resets the entire workspace.
         const api = await this.liveShare.getApi();
-        let ctor : CtorType = this.noneCtor;
+        let ctor : CtorType = this.hostCtor;
+        let role : vsls.Role = vsls.Role.Host;
 
         if (api) {
             // Create based on role.
@@ -38,6 +46,7 @@ export class RoleBasedFactory<T extends IAsyncDisposable, CtorType extends Class
                 ctor = this.hostCtor;
             } else if (api.session && api.session.role === vsls.Role.Guest) {
                 ctor = this.guestCtor;
+                role = vsls.Role.Guest;
             }
         }
 
@@ -51,10 +60,23 @@ export class RoleBasedFactory<T extends IAsyncDisposable, CtorType extends Class
             return oldDispose();
         };
 
-        // If the session changes, also dispose
+        // If the session changes, tell the listener
         if (api && this.firstTime) {
             this.firstTime = false;
-            api.onDidChangeSession((a) => obj.dispose());
+            api.onDidChangeSession((a) => {
+                // Dispose the object if the role changes
+                const newRole = api !== null && api.session && api.session.role === vsls.Role.Guest ?
+                    vsls.Role.Guest : vsls.Role.Host;
+                if (newRole !== role) {
+                    obj.dispose().ignoreErrors();
+                }
+
+                // Update the object with respect to the api
+                obj.onSessionChange(api).ignoreErrors();
+            });
+            api.onDidChangePeers((e) => {
+                obj.onPeerChange(e).ignoreErrors();
+            });
         }
 
         return obj;

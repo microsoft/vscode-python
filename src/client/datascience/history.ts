@@ -23,11 +23,11 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, HistoryMessages, Identifiers, Telemetry } from './constants';
+import { EditorContexts, HistoryMessages, HistoryNonLiveShareMessages, Identifiers, Settings, Telemetry } from './constants';
 import { HistoryMessageListener } from './historyMessageListener';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
@@ -58,6 +58,7 @@ export enum SysInfoReason {
 export class History implements IHistory {
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
+    private webPanelInit: Deferred<void>;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
     private closedEvent: EventEmitter<IHistory>;
@@ -100,8 +101,9 @@ export class History implements IHistory {
         // Create a history message listener to listen to messages from our webpanel (or remote session)
         this.messageListener = new HistoryMessageListener(liveShare, this.onMessage, this.dispose);
 
-        // Create a history message listener to listen to messages from our webpanel (or remote session)
-        this.messageListener = new HistoryMessageListener(this.onMessage);
+        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
+        // react control.
+        this.webPanelInit = createDeferred();
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -126,9 +128,9 @@ export class History implements IHistory {
         return this.closedEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, version: number, editor?: TextEditor) : Promise<void> {
+    public addCode(code: string, file: string, line: number, id: string, editor?: TextEditor) : Promise<void> {
         // Call the internal method.
-        return this.submitCode(code, file, line, version, editor);
+        return this.submitCode(code, file, line, id, editor);
     }
 
     // tslint:disable-next-line: no-any no-empty
@@ -161,7 +163,11 @@ export class History implements IHistory {
                 this.export(payload);
                 break;
 
-            case HistoryMessages.SendInfo:
+            case HistoryNonLiveShareMessages.Started:
+                this.webPanelRendered(payload);
+                break;
+
+            case HistoryNonLiveShareMessages.SendInfo:
                 this.updateContexts(payload);
                 break;
 
@@ -341,6 +347,13 @@ export class History implements IHistory {
     }
 
     // tslint:disable-next-line:no-any
+    private webPanelRendered(payload? : any) {
+        if (!this.webPanelInit.resolved) {
+            this.webPanelInit.resolve();
+        }
+    }
+
+    // tslint:disable-next-line:no-any
     private updateContexts = (payload?: any) => {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
@@ -369,17 +382,17 @@ export class History implements IHistory {
     private submitNewCell(payload?: any) {
         // If there's any payload, it has the code and the id
         if (payload && payload.code && payload.id) {
-            this.submitCode(payload.code, Identifiers.EmptyFileName, 0, undefined, payload.id).ignoreErrors();
+            this.submitCode(payload.code, Identifiers.EmptyFileName, 0, payload.id, undefined).ignoreErrors();
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, version: number, editor?: TextEditor, id?: string) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id: string, editor?: TextEditor) : Promise<void> {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
         // Create a deferred object that will wait until the status is disposed
         const finishedAddingCode = createDeferred<void>();
-        const actualDispose = status.dispose;
+        const actualDispose = status.dispose.bind(status);
         status.dispose = () => {
             finishedAddingCode.resolve();
             actualDispose();
@@ -417,7 +430,7 @@ export class History implements IHistory {
                 }
 
                 // Attempt to evaluate this cell in the jupyter notebook
-                const observable = this.jupyterServer.executeObservable(code, file, line, version, id);
+                const observable = this.jupyterServer.executeObservable(code, file, line, id);
 
                 // Sign up for cell changes
                 observable.subscribe(
@@ -722,6 +735,11 @@ export class History implements IHistory {
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
             this.webPanel = this.provider.create(this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+
+            // Wait for our web panel initialization message to appear. VS code doesn't give us a way
+            // to wait for the html to load. If we start interacting with the webpanel before it's ready, we
+            // miss out on handling messages.
+            await this.webPanelInit.promise;
         }
     }
 

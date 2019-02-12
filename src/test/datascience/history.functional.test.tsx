@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
+import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
 
 import {
@@ -24,8 +25,9 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { EditorContexts, HistoryMessages } from '../../client/datascience/constants';
-import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { EditorContexts, HistoryMessages, HistoryNonLiveShareMessages } from '../../client/datascience/constants';
+import { HistoryMessageListener } from '../../client/datascience/historyMessageListener';
+import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
@@ -139,6 +141,17 @@ suite('History output tests', () => {
         await ioc.dispose();
         delete (global as any)['ascquireVsCodeApi'];
     });
+
+    function getOrCreateHistory() : IHistory {
+        const result = historyProvider.getOrCreateActive();
+
+        // During testing the MainPanel sends the init message before our history is created.
+        // Pretend like it's happening now
+        const listener = ((result as any)['messageListener']) as HistoryMessageListener;
+        listener.onMessage(HistoryNonLiveShareMessages.Started, {});
+
+        return result;
+    }
 
     function addMockData(code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
         if (ioc.mockJupyter) {
@@ -296,8 +309,8 @@ suite('History output tests', () => {
         // 4) Output message (if there's only one)
         // 5) Status finished
         return getCellResults(wrapper, expectedRenderCount, async () => {
-            const history = historyProvider.getOrCreateActive();
-            await history.addCode(code, 'foo.py', 2);
+            const history = getOrCreateHistory();
+            await history.addCode(code, 'foo.py', 2, uuid());
         });
     }
 
@@ -569,7 +582,7 @@ for _ in range(50):
     });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {
-        const history = historyProvider.getOrCreateActive();
+        const history = getOrCreateHistory();
 
         // Get a cell into the list
         await addCode(wrapper, 'a=1\na');
@@ -713,7 +726,7 @@ for _ in range(50):
 
         // Make sure to create the history after the rebind or it gets the wrong application shell.
         await addCode(wrapper, 'a=1\na');
-        const history = historyProvider.getOrCreateActive();
+        const history = getOrCreateHistory();
 
         // Export should cause exportCalled to change to true
         await waitForMessageResponse(() => history.exportCells());
@@ -742,11 +755,11 @@ for _ in range(50):
     test('Dispose test', async () => {
         // tslint:disable-next-line:no-any
         if (await jupyterExecution.isNotebookSupported()) {
-            const history = historyProvider.getOrCreateActive();
+            const history = getOrCreateHistory();
             await history.show(); // Have to wait for the load to finish
             await history.dispose();
             // tslint:disable-next-line:no-any
-            const h2 = historyProvider.getOrCreateActive();
+            const h2 = getOrCreateHistory();
             // Check equal and then dispose so the test goes away
             const equal = Object.is(history, h2);
             await h2.show();
@@ -759,7 +772,7 @@ for _ in range(50):
 
     runMountedTest('Editor Context', async (wrapper) => {
         // Verify we can send different commands to the UI and it will respond
-        const history = historyProvider.getOrCreateActive();
+        const history = getOrCreateHistory();
 
         // Before we have any cells, verify our contexts are not set
         assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
@@ -770,7 +783,7 @@ for _ in range(50):
         const updatePromise = waitForUpdate(wrapper, MainPanel);
 
         // Send some code to the history
-        await history.addCode('a=1\na', 'foo.py', 2);
+        await history.addCode('a=1\na', 'foo.py', 2, uuid());
 
         // Wait for the render to go through
         await updatePromise;
@@ -821,7 +834,7 @@ for _ in range(50):
 
     runMountedTest('Simple input', async (wrapper) => {
         // Create a history so that it listens to the results.
-        const history = historyProvider.getOrCreateActive();
+        const history = getOrCreateHistory();
         await history.show();
 
         // Then enter some code.
@@ -831,7 +844,7 @@ for _ in range(50):
 
     runMountedTest('Multiple input', async (wrapper) => {
         // Create a history so that it listens to the results.
-        const history = historyProvider.getOrCreateActive();
+        const history = getOrCreateHistory();
         await history.show();
 
         // Then enter some code.
