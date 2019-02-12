@@ -18,7 +18,7 @@ import { TestTreeItem } from '../../../client/unittests/explorer/testTreeViewIte
 import { ITestExplorerCommandHandler } from '../../../client/unittests/navigation/types';
 
 // tslint:disable:no-any max-func-body-length
-suite('Unit Tests - Test Explorer Command Hanlder', () => {
+suite('Unit Tests - Test Explorer Command Handler', () => {
     let commandHandler: ITestExplorerCommandHandler;
     let cmdManager: ICommandManager;
 
