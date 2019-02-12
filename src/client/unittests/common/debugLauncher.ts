@@ -3,66 +3,69 @@ import * as path from 'path';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IPythonSettings } from '../../common/types';
 import { DebugOptions } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
+    private readonly configService: IConfigurationService;
+    private readonly workspaceService: IWorkspaceService;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
-    ) { }
+    ) {
+        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    }
 
     public async launchDebugger(options: LaunchOptions) {
         if (options.token && options.token!.isCancellationRequested) {
             return;
         }
-        const cwdUri = options.cwd ? Uri.file(options.cwd) : undefined;
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        if (!workspaceService.hasWorkspaceFolders) {
-            throw new Error('Please open a workspace');
-        }
-        let workspaceFolder = workspaceService.getWorkspaceFolder(cwdUri!);
-        if (!workspaceFolder) {
-            workspaceFolder = workspaceService.workspaceFolders![0];
-        }
 
+        const workspaceFolder = this.resolveWorkspaceFolder(options.cwd);
         const debugConfig = this.getDebugConfig(
-            workspaceFolder,
             options,
-            cwdUri
+            workspaceFolder,
+            this.configService.getSettings(workspaceFolder.uri)
         );
-
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
         return debugManager.startDebugging(workspaceFolder, debugConfig)
             .then(() => void (0));
     }
 
+    private resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            throw new Error('Please open a workspace');
+        }
+
+        const cwdUri = cwd ? Uri.file(cwd) : undefined;
+        let workspaceFolder = this.workspaceService.getWorkspaceFolder(cwdUri!);
+        if (!workspaceFolder) {
+            workspaceFolder = this.workspaceService.workspaceFolders![0];
+        }
+        return workspaceFolder;
+    }
+
     private getDebugConfig(
-        workspaceFolder: WorkspaceFolder,
         options: LaunchOptions,
-        cwdUri?: Uri
+        workspaceFolder: WorkspaceFolder,
+        configSettings: IPythonSettings
     ): DebugConfiguration {
-        const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
-
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const configSettings = configService.getSettings(Uri.file(cwd));
-        const envFile = configSettings.envFile;
-
-        const debugArgs = this.fixArgs(options.args, options.testProvider);
-
         const program = this.getTestLauncherScript(options.testProvider);
-
+        const debugArgs = this.fixArgs(options.args, options.testProvider);
         return {
             name: 'Debug Unit Test',
             type: 'python',
             request: 'launch',
-            program,
-            cwd,
+
+            program: program,
+            cwd: workspaceFolder.uri.fsPath,
             args: debugArgs,
+
             console: 'none',
-            envFile,
+            envFile: configSettings.envFile,
             debugOptions: [DebugOptions.RedirectOutput]
         };
     }
