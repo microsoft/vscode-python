@@ -157,16 +157,19 @@ suite('Unit Tests - Debug Launcher', () => {
                     type: debuggerType,
                     request: 'launch',
                     program: testLaunchScript,
-                    cwd: workspaceFolders[0].uri.fsPath,
                     args: options.args,
                     console: 'none',
+                    cwd: workspaceFolders[0].uri.fsPath,
+                    env: {},
+                    envFile: __filename,
+                    stopOnEntry: false,
+                    showReturnValue: false,
                     redirectOutput: true,
+                    debugStdLib: false,
 
                     // added by LaunchConfigurationResolver:
                     pythonPath: 'python',
                     debugOptions: [DebugOptions.RedirectOutput],
-                    stopOnEntry: false,
-                    showReturnValue: false,
                     workspaceFolder: workspaceFolders[0].uri.fsPath
                 },
                 testProvider
