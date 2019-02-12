@@ -15,6 +15,7 @@ import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
+import { JupyterServerManager } from './jupyter/jupyterServerManager';
 import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
 import { StatusProvider } from './statusProvider';
 import {
@@ -35,9 +36,6 @@ import {
     INotebookServerManager,
     IStatusProvider
 } from './types';
-import { LiveShare } from './constants';
-import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
-import { GuestJupyterExecution } from './jupyter/liveshare/guestJupyterExecution';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);

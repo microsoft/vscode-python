@@ -33,7 +33,7 @@ import {
 export class GuestJupyterServer
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
     implements INotebookServer, ILiveShareParticipant {
-    private connInfo : IConnection | undefined;
+    private launchInfo : INotebookServerLaunchInfo | undefined;
     private responseQueue : IServerResponse [] = [];
     private waitingQueue : { deferred: Deferred<IServerResponse>; predicate(r: IServerResponse) : boolean }[] = [];
 

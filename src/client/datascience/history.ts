@@ -27,7 +27,7 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, HistoryMessages, HistoryNonLiveShareMessages, Identifiers, Settings, Telemetry } from './constants';
+import { EditorContexts, HistoryMessages, HistoryNonLiveShareMessages, Identifiers, Telemetry } from './constants';
 import { HistoryMessageListener } from './historyMessageListener';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
@@ -43,10 +43,8 @@ import {
     INotebookServer,
     INotebookServerManager,
     InterruptResult,
-    IStatusProvider,
-    IJupyterExecutionFactory
+    IStatusProvider
 } from './types';
-import { HistoryMessageListener } from './historyMessageListener';
 
 export enum SysInfoReason {
     Start,
@@ -70,7 +68,6 @@ export class History implements IHistory {
     private jupyterServer: INotebookServer | undefined;
     private changeHandler: IDisposable | undefined;
     private messageListener : HistoryMessageListener;
-    private currentExecution : Promise<IJupyterExecution> | undefined;
 
     constructor(
         @inject(ILiveShareApi) liveShare : ILiveShareApi,
@@ -82,7 +79,7 @@ export class History implements IHistory {
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(ILogger) private logger: ILogger,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
-        @inject(IJupyterExecutionFactory) private jupyterExecutionFactory: IJupyterExecutionFactory,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,

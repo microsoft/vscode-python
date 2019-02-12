@@ -75,8 +75,8 @@ import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterC
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { JupyterServerManager } from '../../client/datascience/jupyter/jupyterServerManager';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
+import { JupyterServerManager } from '../../client/datascience/jupyter/jupyterServerManager';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import {
