@@ -8,13 +8,13 @@
 import * as path from 'path';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IWorkspaceService } from '../../client/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../client/common/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { JupyterServerManager } from '../../client/datascience/jupyter/jupyterServerManager';
 import { IJupyterExecution, INotebookServer, INotebookServerLaunchInfo, IStatusProvider } from '../../client/datascience/types';
+import { IInterpreterService, InterpreterType } from '../../client/interpreter/contracts';
 
 suite('JupyterServerManager unit tests', () => {
     let disposableRegistry: typemoq.IMock<IAsyncDisposableRegistry>;
@@ -54,15 +54,15 @@ suite('JupyterServerManager unit tests', () => {
         workspace
             .setup(w => w.workspaceFolders)
             .returns(() => ws as any);
-        
+
         // Tell our file system that the directory exists
-        fileSystem.setup(fs => fs.directoryExists(typemoq.It.isAny())).returns(() => { return Promise.resolve(true)});
+        fileSystem.setup(fs => fs.directoryExists(typemoq.It.isAny())).returns(() => { return Promise.resolve(true); });
 
         // Get our interpreter service set
         currentInterpreter = { type: InterpreterType.Unknown };
         interpreter
             .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
-            .returns(() => { return Promise.resolve(currentInterpreter as any); })
+            .returns(() => { return Promise.resolve(currentInterpreter as any); });
 
         // Get our default settings prepped
         const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
@@ -89,7 +89,7 @@ suite('JupyterServerManager unit tests', () => {
             return Promise.resolve(fakeServer.object);
         }).verifiable(typemoq.Times.once());
 
-        const myServer = await serverManager.getOrCreateServer();
+        await serverManager.getOrCreateServer();
 
         execution.verifyAll();
     });
@@ -104,11 +104,11 @@ suite('JupyterServerManager unit tests', () => {
         fakeLaunchInfo.setup(li => li.usingDarkTheme).returns(() => false).verifiable(typemoq.Times.once());
         const workspacePath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         fakeLaunchInfo.setup(li => li.workingDir).returns(() => workspacePath).verifiable(typemoq.Times.once());
-        fakeLaunchInfo.setup(li => li.currentInterpreter).returns(() => { return currentInterpreter as any;}).verifiable(typemoq.Times.once());
+        fakeLaunchInfo.setup(li => li.currentInterpreter).returns(() => { return currentInterpreter as any; }).verifiable(typemoq.Times.once());
 
         // Set our fake server to return this launch info
         fakeServer.setup(fs => fs.getLaunchInfo()).returns(() => {
-           return fakeLaunchInfo.object; 
+           return fakeLaunchInfo.object;
         });
 
         // Set our execution
@@ -117,8 +117,8 @@ suite('JupyterServerManager unit tests', () => {
             return Promise.resolve(fakeServer.object);
         }).verifiable(typemoq.Times.once());
 
-        const firstServer = await serverManager.getOrCreateServer();
-        const secondServer = await serverManager.getOrCreateServer();
+        await serverManager.getOrCreateServer();
+        await serverManager.getOrCreateServer();
 
         // Execution should only have been called once, not twice
         execution.verifyAll();
@@ -135,11 +135,11 @@ suite('JupyterServerManager unit tests', () => {
         fakeLaunchInfo.setup(li => li.usingDarkTheme).returns(() => false).verifiable(typemoq.Times.once());
         const workspacePath = path.join(EXTENSION_ROOT_DIR, 'src', 'test'); // Change the ws path so we don't reuse
         fakeLaunchInfo.setup(li => li.workingDir).returns(() => workspacePath).verifiable(typemoq.Times.once());
-        fakeLaunchInfo.setup(li => li.currentInterpreter).returns(() => { return currentInterpreter as any;}).verifiable(typemoq.Times.never());// Never
+        fakeLaunchInfo.setup(li => li.currentInterpreter).returns(() => { return currentInterpreter as any; }).verifiable(typemoq.Times.never()); // Never
 
         // Set our fake server to return this launch info
         fakeServer.setup(fs => fs.getLaunchInfo()).returns(() => {
-           return fakeLaunchInfo.object; 
+           return fakeLaunchInfo.object;
         });
 
         // Set our execution
@@ -148,10 +148,10 @@ suite('JupyterServerManager unit tests', () => {
             return Promise.resolve(fakeServer.object);
         }).verifiable(typemoq.Times.exactly(2)); // Twice
 
-        const firstServer = await serverManager.getOrCreateServer();
-        const secondServer = await serverManager.getOrCreateServer();
+        await serverManager.getOrCreateServer();
+        await serverManager.getOrCreateServer();
 
-        // Execution should only have been called once, not twice
+        // Execution should be called twice
         execution.verifyAll();
         fakeLaunchInfo.verifyAll();
     });
