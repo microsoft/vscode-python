@@ -7,6 +7,7 @@ import {
     CancellationToken, Event, ProviderResult,
     TreeDataProvider, Uri, WorkspaceEdit
 } from 'vscode';
+import { TestFile, TestFolder, TestFunction, TestSuite } from '../unittests/common/types';
 import { TestTreeItem } from '../unittests/providers/testTreeViewItem';
 
 export const ISortImportsEditingProvider = Symbol('ISortImportsEditingProvider');
@@ -16,9 +17,11 @@ export interface ISortImportsEditingProvider {
     registerCommands(): void;
 }
 
+export type TestDataItem = TestFolder | TestFile | TestSuite | TestFunction;
+
 export const ITestTreeViewProvider = Symbol('ITestTreeViewProvider');
-export interface ITestTreeViewProvider extends TreeDataProvider<TestTreeItem> {
-    onDidChangeTreeData: Event<TestTreeItem | undefined>;
-    getTreeItem(element: TestTreeItem): Promise<TestTreeItem>;
-    getChildren(element?: TestTreeItem): ProviderResult<TestTreeItem[]>;
+export interface ITestTreeViewProvider extends TreeDataProvider<TestDataItem> {
+    onDidChangeTreeData: Event<TestDataItem | undefined>;
+    getTreeItem(element: TestDataItem): Promise<TestTreeItem>;
+    getChildren(element?: TestDataItem): ProviderResult<TestDataItem[]>;
 }
