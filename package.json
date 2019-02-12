@@ -665,53 +665,6 @@
                     "when": "view == python_tests && viewItem == testSuite",
                     "group": "inline"
                 }
-            ],
-            "view/item/context": [
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == testFunction",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testFunction",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testFunction",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == testFile",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testFile",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testFile",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == testSuite",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testSuite",
-                    "group": "inline"
-                },
-                {
-                    "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testSuite",
-                    "group": "inline"
-                }
             ]
         },
         "debuggers": [
