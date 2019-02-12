@@ -169,7 +169,7 @@ export class TestsParser implements ITestsParser {
 
             const parentNode = this.findParentOfCurrentItem(indent, parentNodes);
 
-            if (parentNode && trimmedLine.startsWith('<Class ') || trimmedLine.startsWith('<UnitTestCase ')) {
+            if (parentNode && (trimmedLine.startsWith('<Class ') || trimmedLine.startsWith('<UnitTestCase '))) {
                 const isUnitTest = trimmedLine.startsWith('<UnitTestCase ');
                 if (isUnitTest) {
                     name = extractBetweenDelimiters(trimmedLine, '<UnitTestCase ', '>');
@@ -194,7 +194,7 @@ export class TestsParser implements ITestsParser {
                 suite.isInstance = true;
                 return;
             }
-            if (parentNode && trimmedLine.startsWith('<TestCaseFunction ') || trimmedLine.startsWith('<Function ')) {
+            if (parentNode && (trimmedLine.startsWith('<TestCaseFunction ') || trimmedLine.startsWith('<Function '))) {
                 if (trimmedLine.startsWith('<Function ')) {
                     name = extractBetweenDelimiters(trimmedLine, '<Function ', '>');
                 } else {
