@@ -46,13 +46,6 @@ export abstract class TestTreeItem extends TreeItem {
     }
 
     /**
-     * The unique identifyer for this node, which in Python test parlance should be 'nameToRun'.
-     */
-    public get id(): string {
-        return this.data.nameToRun;
-    }
-
-    /**
      * Tooltip for our tree nodes will be the test status (until we get icons up and running)
      */
     public get tooltip(): string {
@@ -227,7 +220,7 @@ export function createTreeViewItemFrom(
             break;
         }
         default: {
-            traceError(`Cannot create test view item for unknown test Data Type "${testDataType}"`);
+            traceError(`Cannot create test view item for unknown test Data Type "${testDataType}". This item will not appear in the Test Explorer.`);
             break;
         }
     }
