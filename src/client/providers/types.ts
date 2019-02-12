@@ -8,7 +8,7 @@ import {
     TreeDataProvider, Uri, WorkspaceEdit
 } from 'vscode';
 import { TestFile, TestFolder, TestFunction, TestSuite } from '../unittests/common/types';
-import { TestTreeItem } from '../unittests/providers/testTreeViewItem';
+import { TestTreeItem } from '../unittests/explorer/testTreeViewItem';
 
 export const ISortImportsEditingProvider = Symbol('ISortImportsEditingProvider');
 export interface ISortImportsEditingProvider {

@@ -13,9 +13,9 @@ import { Commands } from '../../../client/common/constants';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
 import { TestFile, TestFunction, TestsToRun, TestSuite } from '../../../client/unittests/common/types';
+import { TestExplorerCommandHandler } from '../../../client/unittests/explorer/commandHandlers';
+import { TestTreeItem } from '../../../client/unittests/explorer/testTreeViewItem';
 import { ITestExplorerCommandHandler } from '../../../client/unittests/navigation/types';
-import { TestExplorerCommandHandler } from '../../../client/unittests/providers/commandHandlers';
-import { TestTreeItem } from '../../../client/unittests/providers/testTreeViewItem';
 
 // tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Test Explorer Command Hanlder', () => {
