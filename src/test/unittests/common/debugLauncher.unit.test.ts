@@ -12,15 +12,24 @@ import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource, DebugConfiguration, Uri, WorkspaceFolder
 } from 'vscode';
-import { IDebugService, IWorkspaceService } from '../../../client/common/application/types';
+import {
+    IInvalidPythonPathInDebuggerService
+} from '../../../client/application/diagnostics/types';
+import {
+    IDebugService, IDocumentManager, IWorkspaceService
+} from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
+import { IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { IDebugConfigurationResolver } from '../../../client/debugger/extension/configuration/types';
 import {
-    DebugOptions, LaunchRequestArguments
-} from '../../../client/debugger/types';
+    LaunchConfigurationResolver
+} from '../../../client/debugger/extension/configuration/resolvers/launch';
+import {
+    IConfigurationProviderUtils
+} from '../../../client/debugger/extension/configuration/types';
+import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/unittests/common/debugLauncher';
 import { LaunchOptions, TestProvider } from '../../../client/unittests/common/types';
@@ -33,40 +42,68 @@ suite('Unit Tests - Debug Launcher', () => {
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let platformService: TypeMoq.IMock<IPlatformService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
-    let resolver: TypeMoq.IMock<IDebugConfigurationResolver<LaunchRequestArguments>>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .returns(() => configService.object);
 
         debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugService)))
+            .returns(() => debugService.object);
 
         hasWorkspaceFolders = true;
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceService.setup(u => u.hasWorkspaceFolders)
             .returns(() => hasWorkspaceFolders);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
+
+        platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
-        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny()))
+            .returns(() => settings.object);
 
         unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>(undefined, TypeMoq.MockBehavior.Strict);
-        settings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
+        settings.setup(p => p.unitTest)
+            .returns(() => unitTestSettings.object);
 
-        resolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
-
-        debugLauncher = new DebugLauncher(serviceContainer.object, resolver.object);
+        debugLauncher = new DebugLauncher(
+            serviceContainer.object,
+            getNewResolver(configService.object)
+        );
     });
+    function getNewResolver(configService: IConfigurationService) {
+        const validator = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>(undefined, TypeMoq.MockBehavior.Strict);
+        validator.setup(v => v.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true));
+        return new LaunchConfigurationResolver(
+            workspaceService.object,
+            TypeMoq.Mock.ofType<IDocumentManager>(undefined, TypeMoq.MockBehavior.Strict).object,
+            TypeMoq.Mock.ofType<IConfigurationProviderUtils>(undefined, TypeMoq.MockBehavior.Strict).object,
+            validator.object,
+            platformService.object,
+            configService
+        );
+    }
     function setupDebugManager(
         workspaceFolder: WorkspaceFolder,
         debugConfig: DebugConfiguration,
         testProvider: TestProvider
     ) {
+        platformService.setup(p => p.isWindows)
+            .returns(() => /^win/.test(process.platform));
+        settings.setup(p => p.pythonPath)
+            .returns(() => 'python');
         const envFile = __filename;
-        settings.setup(p => p.envFile).returns(() => envFile);
+        settings.setup(p => p.envFile)
+            .returns(() => envFile);
         const args = debugConfig.args;
         const debugArgs = testProvider === 'unittest' ? args.filter(item => item !== '--debug') : args;
         debugConfig.envFile = envFile;
@@ -112,8 +149,6 @@ suite('Unit Tests - Debug Launcher', () => {
                 .returns(() => workspaceFolders);
             workspaceService.setup(u => u.getWorkspaceFolder(TypeMoq.It.isAny()))
                 .returns(() => workspaceFolders[0]);
-            resolver.setup(r => r.resolveDebugConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .returns((_1, cfg, _2) => cfg);
 
             setupDebugManager(
                 workspaceFolders[0],
@@ -141,7 +176,6 @@ suite('Unit Tests - Debug Launcher', () => {
 
             await debugLauncher.launchDebugger(options);
 
-            resolver.verifyAll();
             debugService.verifyAll();
         });
         test(`Must launch debugger with arguments ${testTitleSuffix}`, async () => {
@@ -154,7 +188,6 @@ suite('Unit Tests - Debug Launcher', () => {
 
             await debugLauncher.launchDebugger(options);
 
-            resolver.verifyAll();
             debugService.verifyAll();
         });
         test(`Must not launch debugger if cancelled ${testTitleSuffix}`, async () => {
@@ -171,7 +204,6 @@ suite('Unit Tests - Debug Launcher', () => {
                 debugLauncher.launchDebugger(options)
             ).to.be.eventually.equal(undefined, 'not undefined');
 
-            resolver.verifyAll();
             debugService.verifyAll();
         });
         test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
@@ -186,7 +218,6 @@ suite('Unit Tests - Debug Launcher', () => {
                 debugLauncher.launchDebugger(options)
             ).to.eventually.rejectedWith('Please open a workspace');
 
-            resolver.verifyAll();
             debugService.verifyAll();
         });
     });
