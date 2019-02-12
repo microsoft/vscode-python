@@ -57,14 +57,23 @@ export class DebugLauncher implements ITestDebugLauncher {
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings
     ): Promise<LaunchRequestArguments> {
-        const debugConfig: ITestDebugConfig = {
+        let debugConfig = await this.readDebugConfig(workspaceFolder);
+        if (!debugConfig) {
+            debugConfig = {
                 name: 'Debug Unit Test',
                 type: 'python',
                 request: 'test'
-        };
-        this.applyDefaults(debugConfig, workspaceFolder, configSettings);
+            };
+        }
+        this.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
-        return this.convertConfigToArgs(debugConfig, workspaceFolder, options);
+        return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
+    }
+
+    private async readDebugConfig(
+        workspaceFolder: WorkspaceFolder
+    ): Promise<ITestDebugConfig | undefined> {
+        return Promise.resolve(undefined);
     }
 
     private applyDefaults(
