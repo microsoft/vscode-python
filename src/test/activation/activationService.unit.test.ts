@@ -427,6 +427,38 @@ suite('Activation - ActivationService', () => {
                     workspaceService.verifyAll();
                     activator3.verifyAll();
                 });
+            } else {
+                test('Jedi is only activated once', async () => {
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                    const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
+                    const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+                    const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerActivator.Jedi)))
+                        .returns(() => activator1.object)
+                        .verifiable(TypeMoq.Times.once());
+                    activator1
+                        .setup(a => a.activate(folder1.uri))
+                        .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.once());
+                    await activationService.activate(folder1.uri);
+                    activator1.verifyAll();
+                    serviceContainer.verifyAll();
+
+                    const activator2 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerActivator.Jedi)))
+                        .returns(() => activator2.object)
+                        .verifiable(TypeMoq.Times.once());
+                    activator2
+                        .setup(a => a.activate(folder2.uri))
+                        .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.never());
+                    await activationService.activate(folder2.uri);
+                    serviceContainer.verifyAll();
+                    activator2.verifyAll();
+                });
             }
         });
     });
