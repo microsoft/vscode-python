@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
@@ -10,7 +10,10 @@ import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+    ) { }
+
     public async launchDebugger(options: LaunchOptions) {
         if (options.token && options.token!.isCancellationRequested) {
             return;
@@ -25,12 +28,33 @@ export class DebugLauncher implements ITestDebugLauncher {
             workspaceFolder = workspaceService.workspaceFolders![0];
         }
 
-        const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
-        const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(Uri.file(cwd));
+        const debugConfig = this.getDebugConfig(
+            workspaceFolder,
+            options,
+            cwdUri
+        );
+
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
+        return debugManager.startDebugging(workspaceFolder, debugConfig)
+            .then(() => void (0));
+    }
+
+    private getDebugConfig(
+        workspaceFolder: WorkspaceFolder,
+        options: LaunchOptions,
+        cwdUri?: Uri
+    ): DebugConfiguration {
+        const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
+
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const configSettings = configService.getSettings(Uri.file(cwd));
+        const envFile = configSettings.envFile;
+
         const debugArgs = this.fixArgs(options.args, options.testProvider);
+
         const program = this.getTestLauncherScript(options.testProvider);
-        return debugManager.startDebugging(workspaceFolder, {
+
+        return {
             name: 'Debug Unit Test',
             type: 'python',
             request: 'launch',
@@ -38,10 +62,11 @@ export class DebugLauncher implements ITestDebugLauncher {
             cwd,
             args: debugArgs,
             console: 'none',
-            envFile: configSettings.envFile,
+            envFile,
             debugOptions: [DebugOptions.RedirectOutput]
-        }).then(() => void (0));
+        };
     }
+
     private fixArgs(args: string[], testProvider: TestProvider): string[] {
         if (testProvider === 'unittest') {
             return args.filter(item => item !== '--debug');
@@ -49,6 +74,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             return args;
         }
     }
+
     private getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
