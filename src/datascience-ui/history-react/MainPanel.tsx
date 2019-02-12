@@ -565,7 +565,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
-        const index = this.state.cellVMs.findIndex((c : ICellViewModel) => c.cell.id === cell.id && c.cell.line === cell.line);
+        const index = this.state.cellVMs.findIndex((c : ICellViewModel) => {
+            return c.cell.id === cell.id &&
+                   c.cell.line === cell.line &&
+                   c.cell.file === cell.file;
+            });
         if (index >= 0) {
             // Update this cell
             this.state.cellVMs[index].cell = cell;
