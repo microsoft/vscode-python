@@ -74,7 +74,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
     }
-    protected sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
+    protected sendTelemetry(trigger: 'launch' | 'attach' | 'test', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         const name = debugConfiguration.name || '';
         const moduleName = debugConfiguration.module || '';
         const telemetryProps: DebuggerTelemetry = {

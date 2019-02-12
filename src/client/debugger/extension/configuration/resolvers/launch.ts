@@ -119,7 +119,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.pyramid) {
             debugConfiguration.program = (await this.configurationProviderUtils.getPyramidStartupScriptFilePath(workspaceFolder))!;
         }
-        this.sendTelemetry('launch', debugConfiguration);
+        this.sendTelemetry(
+            debugConfiguration.request as 'launch' | 'test',
+            debugConfiguration
+        );
     }
 
     protected async validateLaunchConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments): Promise<boolean> {
