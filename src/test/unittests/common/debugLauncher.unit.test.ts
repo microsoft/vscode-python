@@ -33,23 +33,23 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
-        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
 
-        debugService = TypeMoq.Mock.ofType<IDebugService>();
+        debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
 
         hasWorkspaceFolders = true;
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceService.setup(u => u.hasWorkspaceFolders)
             .returns(() => hasWorkspaceFolders);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
 
-        settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        settings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
-        unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>();
+        unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>(undefined, TypeMoq.MockBehavior.Strict);
         settings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
 
         debugLauncher = new DebugLauncher(serviceContainer.object);
