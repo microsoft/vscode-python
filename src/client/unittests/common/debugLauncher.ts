@@ -1,10 +1,11 @@
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
-import { DebugOptions } from '../../debugger/types';
+import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
+import { DebugOptions, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 
@@ -13,7 +14,8 @@ export class DebugLauncher implements ITestDebugLauncher {
     private readonly configService: IConfigurationService;
     private readonly workspaceService: IWorkspaceService;
     constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>
     ) {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -25,7 +27,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
 
         const workspaceFolder = this.resolveWorkspaceFolder(options.cwd);
-        const debugConfig = this.getDebugConfig(
+        const debugConfig = await this.getDebugConfig(
             options,
             workspaceFolder,
             this.configService.getSettings(workspaceFolder.uri)
@@ -48,14 +50,14 @@ export class DebugLauncher implements ITestDebugLauncher {
         return workspaceFolder;
     }
 
-    private getDebugConfig(
+    private async getDebugConfig(
         options: LaunchOptions,
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings
-    ): DebugConfiguration {
+    ): Promise<DebugConfiguration> {
         const program = this.getTestLauncherScript(options.testProvider);
         const debugArgs = this.fixArgs(options.args, options.testProvider);
-        return {
+        const debugConfig = {
             name: 'Debug Unit Test',
             type: 'python',
             request: 'launch',
@@ -68,6 +70,15 @@ export class DebugLauncher implements ITestDebugLauncher {
             envFile: configSettings.envFile,
             debugOptions: [DebugOptions.RedirectOutput]
         };
+        const launchArgs = await this.launchResolver.resolveDebugConfiguration(
+            workspaceFolder,
+            debugConfig as LaunchRequestArguments,
+            options.token
+        );
+        if (!launchArgs) {
+            throw Error(`Invalid debug config "${debugConfig.name}"`);
+        }
+        return Promise.resolve(launchArgs!);
     }
 
     private fixArgs(args: string[], testProvider: TestProvider): string[] {

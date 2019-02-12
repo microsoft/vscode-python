@@ -17,7 +17,10 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { DebugOptions } from '../../../client/debugger/types';
+import { IDebugConfigurationResolver } from '../../../client/debugger/extension/configuration/types';
+import {
+    DebugOptions, LaunchRequestArguments
+} from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/unittests/common/debugLauncher';
 import { LaunchOptions, TestProvider } from '../../../client/unittests/common/types';
@@ -31,6 +34,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
+    let resolver: TypeMoq.IMock<IDebugConfigurationResolver<LaunchRequestArguments>>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -52,7 +56,9 @@ suite('Unit Tests - Debug Launcher', () => {
         unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>(undefined, TypeMoq.MockBehavior.Strict);
         settings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
 
-        debugLauncher = new DebugLauncher(serviceContainer.object);
+        resolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
+
+        debugLauncher = new DebugLauncher(serviceContainer.object, resolver.object);
     });
     function setupDebugManager(
         workspaceFolder: WorkspaceFolder,
@@ -106,6 +112,8 @@ suite('Unit Tests - Debug Launcher', () => {
                 .returns(() => workspaceFolders);
             workspaceService.setup(u => u.getWorkspaceFolder(TypeMoq.It.isAny()))
                 .returns(() => workspaceFolders[0]);
+            resolver.setup(r => r.resolveDebugConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((_1, cfg, _2) => cfg);
 
             setupDebugManager(
                 workspaceFolders[0],
@@ -133,6 +141,7 @@ suite('Unit Tests - Debug Launcher', () => {
 
             await debugLauncher.launchDebugger(options);
 
+            resolver.verifyAll();
             debugService.verifyAll();
         });
         test(`Must launch debugger with arguments ${testTitleSuffix}`, async () => {
@@ -145,6 +154,7 @@ suite('Unit Tests - Debug Launcher', () => {
 
             await debugLauncher.launchDebugger(options);
 
+            resolver.verifyAll();
             debugService.verifyAll();
         });
         test(`Must not launch debugger if cancelled ${testTitleSuffix}`, async () => {
@@ -161,6 +171,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 debugLauncher.launchDebugger(options)
             ).to.be.eventually.equal(undefined, 'not undefined');
 
+            resolver.verifyAll();
             debugService.verifyAll();
         });
         test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
@@ -175,6 +186,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 debugLauncher.launchDebugger(options)
             ).to.eventually.rejectedWith('Please open a workspace');
 
+            resolver.verifyAll();
             debugService.verifyAll();
         });
     });
