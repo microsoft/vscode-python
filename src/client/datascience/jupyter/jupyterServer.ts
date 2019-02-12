@@ -685,9 +685,4 @@ export class JupyterServerBase implements INotebookServer {
         this.addToCellData(cell, output);
         cell.state = CellState.error;
     }
-
-    public async getSysInfo() : Promise<ICell> {
-        const server = await this.serverFactory.get();
-        return server.getSysInfo();
-    }
 }

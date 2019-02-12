@@ -529,14 +529,6 @@ export class History implements IHistory {
         }
     }
 
-    private onExecutionChanged() {
-        // Clear our execution we're using
-        this.currentExecution = undefined;
-
-        // Do the same thing as if we changed our interpreter
-        this.onInterpreterChanged().ignoreErrors();
-    }
-
     private onInterpreterChanged = async () => {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
@@ -546,13 +538,6 @@ export class History implements IHistory {
             }
         }
         this.loadPromise = this.load();
-    }
-
-    private getJupyterExecution() : Promise<IJupyterExecution> {
-        if (!this.currentExecution) {
-            this.currentExecution = this.jupyterExecutionFactory.create();
-        }
-        return this.currentExecution;
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -625,7 +610,7 @@ export class History implements IHistory {
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
                     if (str && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
-                        this.getJupyterExecution().then(e => e.spawnNotebook(file).ignoreErrors()).ignoreErrors();
+                        this.jupyterExecution.spawnNotebook(file).ignoreErrors();
                     }
                 });
             } catch (exc) {
@@ -667,8 +652,7 @@ export class History implements IHistory {
         switch (reason) {
             case SysInfoReason.Start:
                 // Message depends upon if ipykernel is supported or not.
-                const execution = await this.getJupyterExecution();
-                if (!execution || !(await execution.isKernelCreateSupported())) {
+                if (!(await this.jupyterExecution.isKernelCreateSupported())) {
                     return localize.DataScience.pythonVersionHeaderNoPyKernel();
                 }
                 return localize.DataScience.pythonVersionHeader();
@@ -748,8 +732,7 @@ export class History implements IHistory {
 
         // Check to see if we support ipykernel or not
         try {
-            const execution = await this.getJupyterExecution();
-            const usableInterpreter = await execution.getUsableJupyterPython();
+            const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
             if (!usableInterpreter) {
                 // Not loading anymore
                 status.dispose();

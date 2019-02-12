@@ -3,9 +3,6 @@
 'use strict';
 import { IAsyncDisposable, IDisposable } from '../types';
 
-import { IDisposable, IAsyncDisposable } from '../types';
-
-
 // tslint:disable-next-line:no-empty
 export function noop() { }
 
