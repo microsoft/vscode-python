@@ -600,23 +600,23 @@
             "view/title": [
                 {
                     "command": "python.debugtests",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "python.runtests",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "python.discoverTests",
-                    "group": "navigation"
+                    "group": "navigation@3"
                 },
                 {
                     "command": "python.runFailedTests",
-                    "group": "navigation"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "python.viewTestOutput",
-                    "group": "navigation"
+                    "group": "navigation@5"
                 }
             ],
             "view/item/context": [
