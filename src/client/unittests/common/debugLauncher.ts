@@ -1,9 +1,13 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { Uri, WorkspaceFolder } from 'vscode';
+import * as stripJsonComments from 'strip-json-comments';
+import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
+import { DebuggerTypeName } from '../../debugger/constants';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -15,12 +19,14 @@ import {
 export class DebugLauncher implements ITestDebugLauncher {
     private readonly configService: IConfigurationService;
     private readonly workspaceService: IWorkspaceService;
+    private readonly fs: IFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>
     ) {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
     public async launchDebugger(options: LaunchOptions) {
@@ -57,7 +63,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings
     ): Promise<LaunchRequestArguments> {
-        let debugConfig = await this.readDebugConfig(workspaceFolder);
+        let debugConfig = await this.readDebugConfig();
         if (!debugConfig) {
             debugConfig = {
                 name: 'Debug Unit Test',
@@ -70,10 +76,30 @@ export class DebugLauncher implements ITestDebugLauncher {
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
 
-    private async readDebugConfig(
-        workspaceFolder: WorkspaceFolder
-    ): Promise<ITestDebugConfig | undefined> {
+    private async readDebugConfig(): Promise<ITestDebugConfig | undefined> {
+        const configs = await this.readAllDebugConfigs();
+        for (const cfg of configs) {
+            if (!cfg.name || cfg.type !== DebuggerTypeName || cfg.request !== 'test') {
+                continue;
+            }
+            // Return the first one.
+            return Promise.resolve(cfg as ITestDebugConfig);
+        }
         return Promise.resolve(undefined);
+    }
+
+    private async readAllDebugConfigs(): Promise<DebugConfiguration[]> {
+        const workspaceFolder = this.workspaceService.workspaceFolders![0];
+        const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
+        let configs: DebugConfiguration[] = [];
+        try {
+            let text = await this.fs.readFile(filename);
+            text = stripJsonComments(text);
+            configs = JSON.parse(text);
+        } catch (exc) {
+            traceError('could not get debug config', exc);
+        }
+        return Promise.resolve(configs);
     }
 
     private applyDefaults(

@@ -20,7 +20,7 @@ import {
 } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { IPlatformService } from '../../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import {
@@ -43,6 +43,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
+    let filesystem: TypeMoq.IMock<IFileSystem>;
     let settings: TypeMoq.IMock<IPythonSettings>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
@@ -65,6 +66,10 @@ suite('Unit Tests - Debug Launcher', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
             .returns(() => platformService.object);
+
+        filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem)))
+            .returns(() => filesystem.object);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny()))
@@ -135,12 +140,16 @@ suite('Unit Tests - Debug Launcher', () => {
         }
     }
     const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
+    // tslint:disable-next-line:max-func-body-length
     testProviders.forEach(testProvider => {
         const testTitleSuffix = `(Test Framework '${testProvider}')`;
         const testLaunchScript = getTestLauncherScript(testProvider);
         const debuggerType = DebuggerTypeName;
 
-        function setupSuccess(options: LaunchOptions) {
+        function setupSuccess(
+            options: LaunchOptions,
+            debugConfigs?: string | DebugConfiguration
+        ) {
             const workspaceFolders = [
                 createWorkspaceFolder(options.cwd),
                 createWorkspaceFolder('five/six/seven')
@@ -149,6 +158,17 @@ suite('Unit Tests - Debug Launcher', () => {
                 .returns(() => workspaceFolders);
             workspaceService.setup(u => u.getWorkspaceFolder(TypeMoq.It.isAny()))
                 .returns(() => workspaceFolders[0]);
+
+            if (!debugConfigs) {
+                filesystem.setup(fs => fs.readFile(TypeMoq.It.isAny()))
+                    .throws(new Error('file not found'));
+            } else {
+                if (typeof debugConfigs !== 'string') {
+                    debugConfigs = JSON.stringify(debugConfigs);
+                }
+                filesystem.setup(fs => fs.readFile(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(debugConfigs as string));
+            }
 
             setupDebugManager(
                 workspaceFolders[0],
