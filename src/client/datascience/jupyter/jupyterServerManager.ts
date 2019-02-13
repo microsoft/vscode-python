@@ -5,6 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService } from '../../common/types';
@@ -12,6 +13,13 @@ import * as localize from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { Settings } from '../constants';
 import { IJupyterExecution, INotebookServer, INotebookServerManager, IStatusProvider } from '../types';
+
+interface ILaunchParameters {
+    serverURI: string | undefined;
+    workingDir: string | undefined;
+    darkTheme : boolean;
+    useDefaultConfig : boolean;
+}
 
 @injectable()
 export class JupyterServerManager implements INotebookServerManager, IAsyncDisposable {
@@ -32,6 +40,56 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
 
     // Either return our current active server or create a new one from our settings if needed
     public async getOrCreateServer(): Promise<INotebookServer | undefined> {
+        // Find the settings that we are going to launch our server with
+        const launchParameters = await this.getLaunchParameters();
+        if (await this.isActiveServer(launchParameters)) {
+            // If we already have a server of these settings, just return it
+            return this.activeServer;
+        } else {
+            // If not shutdown the old server and start up a new one
+            if (this.activeServer) {
+                await this.activeServer.dispose();
+                this.activeServer = undefined;
+            }
+
+            const status = this.statusProvider.set(localize.DataScience.connectingToJupyter());
+
+            try {
+                this.activeServer = await this.jupyterExecution.connectToNotebookServer(
+                    launchParameters.serverURI,
+                    launchParameters.darkTheme,
+                    launchParameters.useDefaultConfig,
+                    undefined,
+                    launchParameters.workingDir);
+
+                return this.activeServer;
+            } finally {
+                if (status) {
+                    status.dispose();
+                }
+            }
+        }
+    }
+
+    public async getServer() : Promise<INotebookServer | undefined> {
+        // Compute launch parameters.
+        const launchParameters = await this.getLaunchParameters();
+
+        if (await this.isActiveServer(launchParameters)) {
+            // If we already have a server of these settings, just return it
+            return this.activeServer;
+        }
+    }
+
+    public dispose(): Promise<void> {
+        if (this.activeServer) {
+            return this.activeServer.dispose();
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    private async getLaunchParameters() : Promise<ILaunchParameters> {
         // Find the settings that we are going to launch our server with
         const settings = this.configuration.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
@@ -54,40 +112,16 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
             workingDir = await this.calculateWorkingDirectory();
         }
 
-        if (await this.isActiveServer(serverURI, workingDir, darkTheme)) {
-            // If we already have a server of these settings, just return it
-            return this.activeServer;
-        } else {
-            // If not shutdown the old server and start up a new one
-            if (this.activeServer) {
-                await this.activeServer.dispose();
-                this.activeServer = undefined;
-            }
-
-            const status = this.statusProvider.set(localize.DataScience.connectingToJupyter());
-
-            try {
-                this.activeServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
-                return this.activeServer;
-            } finally {
-                if (status) {
-                    status.dispose();
-                }
-            }
-        }
-    }
-
-    public dispose(): Promise<void> {
-        if (this.activeServer) {
-            return this.activeServer.dispose();
-        } else {
-            return Promise.resolve();
-        }
+        return {
+            serverURI,
+            workingDir,
+            useDefaultConfig,
+            darkTheme
+        };
     }
 
     // Given our launch parameters, is this server already the active server?
-    private async isActiveServer(serverURI: string | undefined, workingDir: string | undefined,
-        usingDarkTheme: boolean): Promise<boolean> {
+    private async isActiveServer(launchParameters: ILaunchParameters): Promise<boolean> {
         if (!this.activeServer || !this.activeServer.getLaunchInfo()) {
             return false;
         }
@@ -100,8 +134,8 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
         // however this could mean that if you add a new kernel spec while a server is running then we won't
         // detect that launch could give you a different server in that case
         // ! ok as we have already exited if get launch info is undefined
-        if (launchInfo!.uri === serverURI && launchInfo!.usingDarkTheme === usingDarkTheme
-            && launchInfo!.workingDir === workingDir) {
+        if (launchInfo!.uri === launchParameters.serverURI && launchInfo!.usingDarkTheme ===  launchParameters.darkTheme
+            && launchInfo!.workingDir ===  launchParameters.workingDir) {
             const info = await this.interpreterService.getActiveInterpreter();
             if (info === launchInfo!.currentInterpreter) {
                 return true;

@@ -398,17 +398,14 @@ export class History implements IHistory {
         try {
 
             // Make sure we're loaded first.
-            const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
             try {
                 await this.loadPromise;
             } catch (exc) {
-                // We should dispose ourselvs if the load fails. Othewise the user
+                // We should dispose ourselves if the load fails. Othewise the user
                 // updates their install and we just fail again because the load promise is the same.
                 await this.dispose();
 
                 throw exc;
-            } finally {
-                statusLoad.dispose();
             }
 
             // Then show our webpanel
@@ -725,7 +722,9 @@ export class History implements IHistory {
     }
 
     private load = async (): Promise<void> => {
-        const status = this.setStatus(localize.DataScience.startingJupyter());
+        // Status depends upon if we're about to connect to existing server or not.
+        const status = (await this.jupyterServerManager.getServer()) ?
+            this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
 
         // Check to see if we support ipykernel or not
         try {

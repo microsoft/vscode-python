@@ -52,6 +52,7 @@ export interface INotebookServerLaunchInfo
 export const INotebookServerManager = Symbol('INotebookServerManager');
 export interface INotebookServerManager {
     getOrCreateServer(): Promise<INotebookServer | undefined>;
+    getServer() : Promise<INotebookServer | undefined>;
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
