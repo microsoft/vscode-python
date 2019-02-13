@@ -240,9 +240,7 @@ export abstract class BaseTestManager implements ITestManager {
                 this.createCancellationToken(CancellationTokenType.testRunner);
                 return this.runTestImpl(tests, testsToRun, runFailedTests, debug);
             }).then((testResults) => {
-                if (testResults.summary.failures !== 0) {
-                    this.commandManager.executeCommand('setContext', 'hasFailedTests', true);
-                }
+                this.commandManager.executeCommand('setContext', 'hasFailedTests', testResults.summary.failures > 0);
                 this.updateStatus(TestStatus.Idle);
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
