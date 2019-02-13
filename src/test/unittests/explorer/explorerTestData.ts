@@ -26,6 +26,15 @@ import { IUnitTestManagementService } from '../../../client/unittests/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
 /**
+ * Disposable class that doesn't do anything, help for event-registration against
+ * IUnitTestManagementService.
+ */
+export class ExplorerTestsDisposable implements IDisposable {
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
+}
+
+/**
  * Return a basic hierarchy of test data items for use in testing.
  *
  * @returns Array containing the items broken out from the hierarchy (all items are linked to one another)
@@ -127,10 +136,6 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
  */
 export function createMockUnitTestMgmtService(): typemoq.IMock<IUnitTestManagementService> {
     const unitTestMgmtSrvMoq = typemoq.Mock.ofType<IUnitTestManagementService>();
-    class ExplorerTestsDisposable implements IDisposable {
-        // tslint:disable-next-line:no-empty
-        public dispose() { }
-    }
     unitTestMgmtSrvMoq.setup(u => u.onDidStatusChange(typemoq.It.isAny()))
         .returns(() => new ExplorerTestsDisposable());
     return unitTestMgmtSrvMoq;
@@ -196,7 +201,8 @@ export function createMockTestExplorer(
     // tslint:disable-next-line:no-unnecessary-local-variable
     const viewProvider: TestTreeViewProvider =
         new TestTreeViewProvider(
-            testStore, unitTestMgmtService, workspaceService, dispRegMoq.object);
+            testStore, unitTestMgmtService, workspaceService, dispRegMoq.object
+        );
 
     return viewProvider;
 }
