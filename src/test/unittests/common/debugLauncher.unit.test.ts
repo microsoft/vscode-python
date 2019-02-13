@@ -16,7 +16,7 @@ import {
     IInvalidPythonPathInDebuggerService
 } from '../../../client/application/diagnostics/types';
 import {
-    IDebugService, IDocumentManager, IWorkspaceService
+    IApplicationShell, IDebugService, IDocumentManager, IWorkspaceService
 } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
@@ -70,6 +70,12 @@ suite('Unit Tests - Debug Launcher', () => {
         filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem)))
             .returns(() => filesystem.object);
+
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell)))
+            .returns(() => appShell.object);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny()))

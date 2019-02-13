@@ -2,7 +2,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
-import { IDebugService, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -103,6 +103,8 @@ export class DebugLauncher implements ITestDebugLauncher {
             configs = parsed.configurations;
         } catch (exc) {
             traceError('could not get debug config', exc);
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            await appShell.showErrorMessage('could not load unit test config from launch.json');
         }
         return configs;
     }
