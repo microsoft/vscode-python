@@ -9,6 +9,8 @@ import { ITestConfigSettingsService, ITestConfigurationManager } from '../../typ
 import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../constants';
 import { UnitTestProduct } from '../types';
 
+export const CANCELLED_ERR = Error('cancelled');
+
 export abstract class TestConfigurationManager implements ITestConfigurationManager {
     protected readonly outputChannel: OutputChannel;
     protected readonly installer: IInstaller;
@@ -62,7 +64,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         appShell.showQuickPick(items, options).then(item => {
             if (!item) {
-                return def.resolve();
+                throw CANCELLED_ERR;
             }
 
             def.resolve(item.label);
@@ -90,7 +92,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         appShell.showQuickPick(items, options).then(item => {
             if (!item) {
-                return def.resolve();
+                throw CANCELLED_ERR;
             }
 
             def.resolve(item.label);
