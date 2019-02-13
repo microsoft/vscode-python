@@ -173,7 +173,10 @@ suite('Unit Tests - Debug Launcher', () => {
                 .throws(new Error('file not found'));
         } else {
             if (typeof debugConfigs !== 'string') {
-                debugConfigs = JSON.stringify(debugConfigs);
+                debugConfigs = JSON.stringify({
+                    version: '0.1.0',
+                    configurations: debugConfigs
+                });
             }
             filesystem.setup(fs => fs.readFile(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(debugConfigs as string));
@@ -371,25 +374,52 @@ suite('Unit Tests - Debug Launcher', () => {
         debugService.verifyAll();
     });
 
-    test('Handles bad debug config array', async () => {
-        const options: LaunchOptions = {
-            cwd: 'one/two/three',
-            args: ['/one/two/three/testfile.py'],
-            testProvider: 'unittest'
-        };
-        const expected = getDefaultDebugConfig();
-        setupSuccess(options, 'unittest', expected, ' \n\
+    const malformedFiles = [
+        '// test 1',
+        '// test 2 \n\
 { \n\
     "name": "spam", \n\
     "type": "python", \n\
     "request": "test" \n\
 } \n\
-        ');
+        ',
+        '// test 3 \n\
+[ \n\
+    { \n\
+        "name": "spam", \n\
+        "type": "python", \n\
+        "request": "test" \n\
+    } \n\
+] \n\
+        ',
+        '// test 4 \n\
+{ \n\
+    "configurations": [ \n\
+        { \n\
+            "name": "spam", \n\
+            "type": "python", \n\
+            "request": "test" \n\
+        } \n\
+    ] \n\
+} \n\
+        '
+    ];
+    for (const text of malformedFiles) {
+        const testID = text.split('\n')[0].substring(3).trim();
+        test(`Handles malformed launch.json - ${testID}`, async () => {
+            const options: LaunchOptions = {
+                cwd: 'one/two/three',
+                args: ['/one/two/three/testfile.py'],
+                testProvider: 'unittest'
+            };
+            const expected = getDefaultDebugConfig();
+            setupSuccess(options, 'unittest', expected, text);
 
-        await debugLauncher.launchDebugger(options);
+            await debugLauncher.launchDebugger(options);
 
-        debugService.verifyAll();
-    });
+            debugService.verifyAll();
+        });
+    }
 
     test('Handles bad debug config items', async () => {
         const options: LaunchOptions = {
@@ -496,17 +526,20 @@ suite('Unit Tests - Debug Launcher', () => {
         expected.name = 'spam';
         expected.stopOnEntry = true;
         setupSuccess(options, 'unittest', expected, ' \n\
-[ \n\
-    // my thing \n\
-    { \n\
-        // "test" debug config \n\
-        "name": "spam",  /* non-empty */ \n\
-        "type": "python",  /* must be "python" */ \n\
-        "request": "test",  /* must be "test" */ \n\
-        // extra stuff here: \n\
-        "stopOnEntry": true \n\
-    } \n\
-] \n\
+{ \n\
+    "version": "0.1.0", \n\
+    "configurations": [ \n\
+        // my thing \n\
+        { \n\
+            // "test" debug config \n\
+            "name": "spam",  /* non-empty */ \n\
+            "type": "python",  /* must be "python" */ \n\
+            "request": "test",  /* must be "test" */ \n\
+            // extra stuff here: \n\
+            "stopOnEntry": true \n\
+        } \n\
+    ] \n\
+} \n\
         ');
 
         await debugLauncher.launchDebugger(options);

@@ -96,11 +96,11 @@ export class DebugLauncher implements ITestDebugLauncher {
             let text = await this.fs.readFile(filename);
             text = stripJsonComments(text);
             const parsed = JSON.parse(text);
-            if (!Array.isArray(parsed)) {
+            if (!parsed.version || !parsed.configurations || !Array.isArray(parsed.configurations)) {
                 throw Error('malformed launch.json');
             }
             // We do not bother ensuring each item is a DebugConfiguration...
-            configs = parsed;
+            configs = parsed.configurations;
         } catch (exc) {
             traceError('could not get debug config', exc);
         }
