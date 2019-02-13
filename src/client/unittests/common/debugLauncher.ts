@@ -83,9 +83,9 @@ export class DebugLauncher implements ITestDebugLauncher {
                 continue;
             }
             // Return the first one.
-            return Promise.resolve(cfg as ITestDebugConfig);
+            return cfg as ITestDebugConfig;
         }
-        return Promise.resolve(undefined);
+        return undefined;
     }
 
     private async readAllDebugConfigs(): Promise<DebugConfiguration[]> {
@@ -104,7 +104,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         } catch (exc) {
             traceError('could not get debug config', exc);
         }
-        return Promise.resolve(configs);
+        return configs;
     }
 
     private applyDefaults(
@@ -161,7 +161,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         launchArgs.request = 'launch';
 
-        return Promise.resolve(launchArgs!);
+        return launchArgs!;
     }
 
     private fixArgs(args: string[], testProvider: TestProvider): string[] {
