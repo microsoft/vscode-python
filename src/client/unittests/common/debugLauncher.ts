@@ -147,9 +147,9 @@ export class DebugLauncher implements ITestDebugLauncher {
     ): Promise<LaunchRequestArguments> {
         const configArgs = debugConfig as LaunchRequestArguments;
 
-        configArgs.request = 'launch';
         configArgs.program = this.getTestLauncherScript(options.testProvider);
         configArgs.args = this.fixArgs(options.args, options.testProvider);
+        // We leave configArgs.request as "test" so it will be sent in telemetry.
 
         const launchArgs = await this.launchResolver.resolveDebugConfiguration(
             workspaceFolder,
@@ -159,6 +159,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!launchArgs) {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
+        launchArgs.request = 'launch';
 
         return Promise.resolve(launchArgs!);
     }
