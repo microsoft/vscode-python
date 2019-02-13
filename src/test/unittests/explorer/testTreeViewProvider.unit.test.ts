@@ -28,12 +28,12 @@ import { createMockTestExplorer } from './explorerTestData';
  * Class that is useful to track any Tree View update requests made by the view provider.
  */
 class TestExplorerCaptureRefresh implements IDisposable {
-    public refreshCount = 0; // this counts the number of times 'onDidChangeTreeData' is emitted.
+    public refreshCount: number = 0; // this counts the number of times 'onDidChangeTreeData' is emitted.
 
     private disposable: IDisposable;
 
     constructor(private testViewProvider: TestTreeViewProvider, disposableContainer: IDisposable[]) {
-        this.disposable = this.testViewProvider.onDidChangeTreeData(this.onRefreshOccured, this);
+        this.disposable = this.testViewProvider.onDidChangeTreeData(this.onRefreshOccured.bind(this));
         disposableContainer.push(this);
     }
 
@@ -42,7 +42,7 @@ class TestExplorerCaptureRefresh implements IDisposable {
     }
 
     private onRefreshOccured(testDataItem: TestDataItem) {
-        this.refreshCount += 1;
+        this.refreshCount = this.refreshCount + 1;
     }
 }
 
@@ -58,16 +58,16 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         disposables = [];
     });
 
-    test('Create the initial view and ensure it provides a default view', async () => {
-        const testExplorer = createMockTestExplorer();
-        expect(testExplorer).is.not.equal(
-            undefined, 'Could not create a mock test explorer, check the parameters of the test setup.'
-        );
-        const treeRoot = testExplorer.getChildren();
-        expect(treeRoot.length).to.be.greaterThan(
-            0, 'No children returned from default view of the TreeViewProvider.'
-        );
-    });
+    // test('Create the initial view and ensure it provides a default view', async () => {
+    //     const testExplorer = createMockTestExplorer();
+    //     expect(testExplorer).is.not.equal(
+    //         undefined, 'Could not create a mock test explorer, check the parameters of the test setup.'
+    //     );
+    //     const treeRoot = testExplorer.getChildren();
+    //     expect(treeRoot.length).to.be.greaterThan(
+    //         0, 'No children returned from default view of the TreeViewProvider.'
+    //     );
+    // });
 
     test('Ensure that updates from the test manager propagate to the TestExplorer', function () {
         // tslint:disable-next-line:no-invalid-this
@@ -97,6 +97,8 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const refreshCap = new TestExplorerCaptureRefresh(testView, disposables);
 
         testView.refresh(testResource);
+        // // Sometimes the terminal takes some time to start up before it can start accepting input.
+        // await new Promise(resolve => setTimeout(resolve, 10000));
 
         expect(refreshCap.refreshCount).to.be.equal(1);
     });
