@@ -4,9 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import {
-    Event, EventEmitter, ProviderResult
-} from 'vscode';
+import { Event, EventEmitter } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import {
     IDisposable, IDisposableRegistry, Resource
