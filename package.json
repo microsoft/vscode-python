@@ -215,19 +215,19 @@
                 "command": "python.viewTestOutput",
                 "title": "%python.command.python.viewTestOutput.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/repl.svg",
-					"dark": "resources/dark/repl.svg"
-				}
+                "icon": {
+                    "light": "resources/light/repl.svg",
+                    "dark": "resources/dark/repl.svg"
+                }
             },
             {
                 "command": "python.viewOutput",
                 "title": "%python.command.python.viewOutput.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/repl.svg",
-					"dark": "resources/dark/repl.svg"
-				}
+                "icon": {
+                    "light": "resources/light/repl.svg",
+                    "dark": "resources/dark/repl.svg"
+                }
             },
             {
                 "command": "python.selectAndRunTestMethod",
@@ -627,7 +627,8 @@
                 },
                 {
                     "command": "python.runFailedTests",
-                    "group": "navigation@4"
+                    "group": "navigation@4",
+                    "when": "hasFailedTests"
                 },
                 {
                     "command": "python.viewTestOutput",
