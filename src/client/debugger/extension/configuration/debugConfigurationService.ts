@@ -43,6 +43,9 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         if (debugConfiguration.request === 'attach') {
             return this.attachResolver.resolveDebugConfiguration(folder, debugConfiguration as AttachRequestArguments, token);
         } else {
+            if (debugConfiguration.request === 'test') {
+                throw Error('unsupported debug configuration "test"');
+            }
             return this.launchResolver.resolveDebugConfiguration(folder, debugConfiguration as LaunchRequestArguments, token);
         }
     }
