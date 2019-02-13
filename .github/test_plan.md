@@ -326,5 +326,6 @@ def test_failure():
   - [ ] other frameworks disabled in workspace settings
 - [ ] `Configure Unit Tests` does not close if it loses focus
 - [ ] Cancelling configuration does not leave incomplete settings
+- [ ] The first `"request": "test"` entry in launch.json is used for running unit tests
 
 </details>
