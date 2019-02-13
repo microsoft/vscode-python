@@ -8,11 +8,14 @@
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { OutputChannel, Uri, WorkspaceConfiguration } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { IConfigurationService, IInstaller, IOutputChannel, IPythonSettings, IUnitTestSettings, Product } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../../client/unittests/common/constants';
+import { TestsHelper } from '../../client/unittests/common/testUtils';
+import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
+import { ITestsHelper } from '../../client/unittests/common/types';
 import { UnitTestConfigurationService } from '../../client/unittests/configuration';
 import { ITestConfigSettingsService, ITestConfigurationManager, ITestConfigurationManagerFactory } from '../../client/unittests/types';
 
@@ -50,6 +53,12 @@ suite('Unit Tests - ConfigurationService', () => {
                 serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
                 serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestConfigurationManagerFactory))).returns(() => factory.object);
                 serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestConfigSettingsService))).returns(() => testSettingsService.object);
+                const commands = typeMoq.Mock.ofType<ICommandManager>(undefined, typeMoq.MockBehavior.Strict);
+                serviceContainer.setup(c => c.get(typeMoq.It.isValue(ICommandManager)))
+                    .returns(() => commands.object);
+                const flattener = typeMoq.Mock.ofType<TestFlatteningVisitor>(undefined, typeMoq.MockBehavior.Strict);
+                serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestsHelper)))
+                    .returns(() => new TestsHelper(flattener.object, serviceContainer.object));
                 testConfigService = typeMoq.Mock.ofType(UnitTestConfigurationService, typeMoq.MockBehavior.Loose, true, serviceContainer.object);
             });
             test('Enable Test when setting unitTest.promptToConfigure is enabled', async () => {
