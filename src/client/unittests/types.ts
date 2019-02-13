@@ -56,6 +56,13 @@ export interface IUnitTestManagementService {
     viewOutput(cmdSource: CommandSource): void;
 }
 
+export const ITestConfigSettingsService = Symbol('ITestConfigSettingsService');
+export interface ITestConfigSettingsService {
+    updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
+    enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+    disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+}
+
 export interface ITestConfigurationManager {
     requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
     configure(wkspace: Uri): Promise<void>;
@@ -65,7 +72,7 @@ export interface ITestConfigurationManager {
 
 export const ITestConfigurationManagerFactory = Symbol('ITestConfigurationManagerFactory');
 export interface ITestConfigurationManagerFactory {
-    create(wkspace: Uri, product: Product): ITestConfigurationManager;
+    create(wkspace: Uri, product: Product, cfg?: ITestConfigSettingsService): ITestConfigurationManager;
 }
 
 export enum TestFilter {

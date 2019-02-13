@@ -50,7 +50,7 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
             throw new Error('Unknown Test Type');
         }
 
-        this.cmdManager.executeCommand(command, item.resource, item.data);
+        this.cmdManager.executeCommand(command, item.resource, item.data, true);
     }
     protected async runDebugTestNode(item: TestTreeItem, runType: 'run' | 'debug'): Promise<void> {
         let testToRun: TestsToRun;

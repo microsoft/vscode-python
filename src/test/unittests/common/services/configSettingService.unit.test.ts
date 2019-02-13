@@ -13,16 +13,19 @@ import { IWorkspaceService } from '../../../../client/common/application/types';
 import { Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { TestConfigSettingsService } from '../../../../client/unittests/common/services/configSettingService';
-import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
+import { UNIT_TEST_PRODUCTS } from '../../../../client/unittests/common/constants';
+import {
+    BufferedTestConfigSettingsService, TestConfigSettingsService
+} from '../../../../client/unittests/common/services/configSettingService';
+import { UnitTestProduct } from '../../../../client/unittests/common/types';
+import { ITestConfigSettingsService } from '../../../../client/unittests/types';
 
 use(chaiPromise);
 
 const updateMethods: (keyof ITestConfigSettingsService)[] = ['updateTestArgs', 'disable', 'enable'];
 
 suite('Unit Tests - ConfigSettingsService', () => {
-    [Product.pytest, Product.unittest, Product.nosetest].forEach(prodItem => {
-        const product = prodItem as any as UnitTestProduct;
+    UNIT_TEST_PRODUCTS.forEach(product => {
         const prods = getNamesAndValues(Product);
         const productName = prods.filter(item => item.value === product)[0];
         const workspaceUri = Uri.file(__filename);
@@ -192,5 +195,51 @@ suite('Unit Tests - ConfigSettingsService', () => {
                 });
             });
         });
+    });
+});
+
+suite('Unit Tests - BufferedTestConfigSettingsService', () => {
+    test('config changes are pushed when apply() is called', async () => {
+        const testDir = '/my/project';
+        const newArgs: string[] = ['-x', '--spam=42'];
+        const cfg = typeMoq.Mock.ofType<ITestConfigSettingsService>(undefined, typeMoq.MockBehavior.Strict);
+        cfg.setup(c => c.updateTestArgs(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.pytest), typeMoq.It.isValue(newArgs)))
+            .returns(() => Promise.resolve())
+            .verifiable(typeMoq.Times.once());
+        cfg.setup(c => c.disable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.unittest)))
+            .returns(() => Promise.resolve())
+            .verifiable(typeMoq.Times.once());
+        cfg.setup(c => c.disable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.nosetest)))
+            .returns(() => Promise.resolve())
+            .verifiable(typeMoq.Times.once());
+        cfg.setup(c => c.enable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.pytest)))
+            .returns(() => Promise.resolve())
+            .verifiable(typeMoq.Times.once());
+
+        const delayed = new BufferedTestConfigSettingsService();
+        await delayed.updateTestArgs(testDir, Product.pytest, newArgs);
+        await delayed.disable(testDir, Product.unittest);
+        await delayed.disable(testDir, Product.nosetest);
+        await delayed.enable(testDir, Product.pytest);
+        await delayed.apply(cfg.object);
+
+        // Ideally we would verify that the ops were applied in their
+        // original order.  Unfortunately, the version of TypeMoq we're
+        // using does not give us that option.
+        cfg.verifyAll();
+    });
+
+    test('applied changes are cleared', async () => {
+        const cfg = typeMoq.Mock.ofType<ITestConfigSettingsService>(undefined, typeMoq.MockBehavior.Strict);
+        cfg.setup(c => c.enable(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => Promise.resolve())
+            .verifiable(typeMoq.Times.once());
+
+        const delayed = new BufferedTestConfigSettingsService();
+        await delayed.enable('/my/project', Product.pytest);
+        await delayed.apply(cfg.object);
+        await delayed.apply(cfg.object);
+
+        cfg.verifyAll();
     });
 });

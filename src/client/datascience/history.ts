@@ -23,11 +23,11 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, HistoryMessages, Identifiers, Settings, Telemetry } from './constants';
+import { EditorContexts, HistoryMessages, HistoryNonLiveShareMessages, Identifiers, Telemetry } from './constants';
 import { HistoryMessageListener } from './historyMessageListener';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import {
@@ -41,6 +41,7 @@ import {
     IJupyterExecution,
     INotebookExporter,
     INotebookServer,
+    INotebookServerManager,
     InterruptResult,
     IStatusProvider
 } from './types';
@@ -55,6 +56,7 @@ export enum SysInfoReason {
 export class History implements IHistory {
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
+    private webPanelInit: Deferred<void>;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
     private closedEvent: EventEmitter<IHistory>;
@@ -82,6 +84,7 @@ export class History implements IHistory {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
+        @inject(INotebookServerManager) private jupyterServerManager: INotebookServerManager,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
 
         // Sign up for configuration changes
@@ -94,6 +97,10 @@ export class History implements IHistory {
 
         // Create a history message listener to listen to messages from our webpanel (or remote session)
         this.messageListener = new HistoryMessageListener(liveShare, this.onMessage, this.dispose);
+
+        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
+        // react control.
+        this.webPanelInit = createDeferred();
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -118,9 +125,9 @@ export class History implements IHistory {
         return this.closedEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public addCode(code: string, file: string, line: number, id: string, editor?: TextEditor) : Promise<void> {
         // Call the internal method.
-        return this.submitCode(code, file, line, editor);
+        return this.submitCode(code, file, line, id, editor);
     }
 
     // tslint:disable-next-line: no-any no-empty
@@ -153,7 +160,11 @@ export class History implements IHistory {
                 this.export(payload);
                 break;
 
-            case HistoryMessages.SendInfo:
+            case HistoryNonLiveShareMessages.Started:
+                this.webPanelRendered(payload);
+                break;
+
+            case HistoryNonLiveShareMessages.SendInfo:
                 this.updateContexts(payload);
                 break;
 
@@ -198,9 +209,6 @@ export class History implements IHistory {
             }
             if (this.closedEvent) {
                 this.closedEvent.fire(this);
-            }
-            if (this.jupyterServer) {
-                await this.jupyterServer.dispose();
             }
             this.updateContexts();
         }
@@ -336,6 +344,13 @@ export class History implements IHistory {
     }
 
     // tslint:disable-next-line:no-any
+    private webPanelRendered(payload? : any) {
+        if (!this.webPanelInit.resolved) {
+            this.webPanelInit.resolve();
+        }
+    }
+
+    // tslint:disable-next-line:no-any
     private updateContexts = (payload?: any) => {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
@@ -364,17 +379,17 @@ export class History implements IHistory {
     private submitNewCell(payload?: any) {
         // If there's any payload, it has the code and the id
         if (payload && payload.code && payload.id) {
-            this.submitCode(payload.code, Identifiers.EmptyFileName, 0, undefined, payload.id).ignoreErrors();
+            this.submitCode(payload.code, Identifiers.EmptyFileName, 0, payload.id, undefined).ignoreErrors();
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, editor?: TextEditor, id?: string) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id: string, editor?: TextEditor) : Promise<void> {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
         // Create a deferred object that will wait until the status is disposed
         const finishedAddingCode = createDeferred<void>();
-        const actualDispose = status.dispose;
+        const actualDispose = status.dispose.bind(status);
         status.dispose = () => {
             finishedAddingCode.resolve();
             actualDispose();
@@ -602,75 +617,8 @@ export class History implements IHistory {
         }
     }
 
-    private loadJupyterServer = async (restart?: boolean): Promise<void> => {
-        // Startup our jupyter server
-        const settings = this.configuration.getSettings();
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        let workingDir: string | undefined;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-        const status = this.setStatus(localize.DataScience.connectingToJupyter());
-        // Check for dark theme, if so set matplot lib to use dark_background settings
-        let darkTheme: boolean = false;
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        if (workbench) {
-            const theme = workbench.get<string>('colorTheme');
-            if (theme) {
-                darkTheme = /dark/i.test(theme);
-            }
-        }
-
-        try {
-            // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-            if (serverURI === Settings.JupyterServerLocalLaunch) {
-                serverURI = undefined;
-
-                workingDir = await this.calculateWorkingDirectory();
-            }
-            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(serverURI, darkTheme, useDefaultConfig, undefined, workingDir);
-
-            // If this is a restart, show our restart info
-            if (restart) {
-                await this.addSysInfo(SysInfoReason.Restart);
-            }
-        } finally {
-            if (status) {
-                status.dispose();
-            }
-        }
-    }
-
-    // Calculate the working directory that we should move into when starting up our Jupyter server locally
-    private calculateWorkingDirectory = async (): Promise<string | undefined> => {
-        let workingDir: string | undefined;
-        // For a local launch calculate the working directory that we should switch into
-        const settings = this.configuration.getSettings();
-        const fileRoot = settings.datascience.notebookFileRoot;
-
-        // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
-        // so only do this setting if we actually have a valid workspace open
-        if (fileRoot && this.workspaceService.hasWorkspaceFolders) {
-            const workspaceFolderPath = this.workspaceService.workspaceFolders![0].uri.fsPath;
-            if (path.isAbsolute(fileRoot)) {
-                if (await this.fileSystem.directoryExists(fileRoot)) {
-                    // User setting is absolute and exists, use it
-                    workingDir = fileRoot;
-                } else {
-                    // User setting is absolute and doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            } else {
-                // fileRoot is a relative path, combine it with the workspace folder
-                const combinedPath = path.join(workspaceFolderPath, fileRoot);
-                if (await this.fileSystem.directoryExists(combinedPath)) {
-                    // combined path exists, use it
-                    workingDir = combinedPath;
-                } else {
-                    // Combined path doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            }
-        }
-        return workingDir;
+    private async loadJupyterServer(restart?: boolean): Promise<void> {
+        this.jupyterServer = await this.jupyterServerManager.getOrCreateServer();
     }
 
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
@@ -768,6 +716,11 @@ export class History implements IHistory {
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
             this.webPanel = this.provider.create(this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+
+            // Wait for our web panel initialization message to appear. VS code doesn't give us a way
+            // to wait for the html to load. If we start interacting with the webpanel before it's ready, we
+            // miss out on handling messages.
+            await this.webPanelInit.promise;
         }
     }
 

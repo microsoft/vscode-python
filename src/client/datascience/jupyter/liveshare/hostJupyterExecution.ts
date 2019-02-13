@@ -4,7 +4,7 @@
 import '../../../common/extensions';
 
 import * as os from 'os';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
@@ -16,20 +16,28 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
-import { IConnection, IJupyterCommandFactory, IJupyterSessionManager, INotebookServer } from '../../types';
+import {
+    IConnection,
+    IJupyterCommandFactory,
+    IJupyterExecution,
+    IJupyterSessionManager,
+    INotebookServer
+} from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
-import { waitForHostService } from './utils';
+import { LiveShareParticipantHost } from './liveShareParticipantMixin';
+import { IRoleBasedObject } from './roleBasedFactory';
 
 // tslint:disable:no-any
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
-export class HostJupyterExecution extends JupyterExecutionBase {
-
-    private started: Promise<vsls.LiveShare | null>;
-    private runningServer : INotebookServer | undefined;
-
+export class HostJupyterExecution
+    extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
+    implements IRoleBasedObject, IJupyterExecution {
+    private sharedServers: Disposable [] = [];
+    private fowardedPorts: number [] = [];
+    private runningServer: INotebookServer | undefined;
     constructor(
-        private liveShare: ILiveShareApi,
+        liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
@@ -58,71 +66,105 @@ export class HostJupyterExecution extends JupyterExecutionBase {
             configuration,
             commandFactory,
             serviceContainer);
-
-        // Create the shared service for the guest(s) to listen to.
-        this.started = this.startSharedService();
-        asyncRegistry.push(this);
     }
 
     public async dispose() : Promise<void> {
         await super.dispose();
-        const api = await this.started;
-        if (api) {
-            await api.unshareService(LiveShare.JupyterExecutionService);
-        }
-
-        if (this.runningServer) {
-            return this.runningServer.dispose();
-        }
+        const api = await this.api;
+        await this.onDetach(api);
+        this.fowardedPorts = [];
     }
 
     public async connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
-        // We only have a single server at a time. This object should go away when the server goes away
+        // We only have a single server at a time.
         if (!this.runningServer) {
+
             // Create the server
-            this.runningServer = await super.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir);
+            let sharedServerDisposable : Disposable | undefined;
+            const result = await super.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir);
 
             // Then using the liveshare api, port forward whatever port is being used by the server
-            // Note: Liveshare can actually change this value on the guest. So on the guest side we need to listen
-            // to an event they are going to add to their api.
-            if (!uri && this.runningServer) {
-                const api = await this.started;
-                if (api && api.session && api.session.role === vsls.Role.Host) {
-                    const connectionInfo = this.runningServer.getConnectionInfo();
-                    if (connectionInfo) {
-                        const portMatch = RegExpValues.ExtractPortRegex.exec(connectionInfo.baseUrl);
-                        if (portMatch && portMatch.length > 1) {
-                            await api.shareServer({ port: parseInt(portMatch[1], 10), displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()) });
-                        }
+
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Liveshare can actually change this value on the guest. So on the guest side we need to listen
+            // to an event they are going to add to their api
+            if (!uri && result) {
+                const connectionInfo = result.getConnectionInfo();
+                if (connectionInfo) {
+                    const portMatch = RegExpValues.ExtractPortRegex.exec(connectionInfo.baseUrl);
+                    if (portMatch && portMatch.length > 1) {
+                        sharedServerDisposable = await this.portForwardServer(parseInt(portMatch[1], 10));
                     }
                 }
+            }
+
+            if (result) {
+                // Save this result, but modify its dispose such that we
+                // can detach from the server when it goes away.
+                this.runningServer = result;
+                const oldDispose = result.dispose.bind(result);
+                result.dispose = () => {
+                    // Dispose of the shared server
+                    if (sharedServerDisposable) {
+                        sharedServerDisposable.dispose();
+                    }
+                    // Mark as not having a running server anymore
+                    this.runningServer = undefined;
+
+                    return oldDispose();
+                };
             }
         }
 
         return this.runningServer;
     }
 
-    private async startSharedService() : Promise<vsls.LiveShare | null> {
-        const api = await this.liveShare.getApi();
-
+    public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
         if (api) {
-            const service = await waitForHostService(api, LiveShare.JupyterExecutionService);
+            const service = await this.waitForService();
 
             // Register handlers for all of the supported remote calls
-            if (service !== null) {
+            if (service) {
                 service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
                 service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
                 service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
                 service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
                 service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                 service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
-            } else {
-                throw new Error(localize.DataScience.liveShareServiceFailure().format(LiveShare.JupyterExecutionService));
             }
+
+            // Port forward all of the servers that need it
+            this.fowardedPorts.forEach(p => this.portForwardServer(p).ignoreErrors());
+        }
+    }
+
+    public async onDetach(api: vsls.LiveShare | null) : Promise<void> {
+        if (api) {
+            await api.unshareService(LiveShare.JupyterExecutionService);
         }
 
-        return api;
+        // Unshare all of our port forwarded servers
+        this.sharedServers.forEach(s => s.dispose());
+        this.sharedServers = [];
     }
+
+    private async portForwardServer(port: number) : Promise<Disposable | undefined> {
+        // Share this port with all guests if we are actively in a session. Otherwise save for when we are.
+        let result : Disposable | undefined;
+        const api = await this.api;
+        if (api && api.session && api.session.role === vsls.Role.Host) {
+            result = await api.shareServer({port, displayName: localize.DataScience.liveShareHostFormat().format(os.hostname())});
+            this.sharedServers.push(result!);
+        }
+
+        // Save for reattaching if necessary later
+        if (this.fowardedPorts.indexOf(port) === -1) {
+            this.fowardedPorts.push(port);
+        }
+
+        return result;
+    }
+
     private onRemoteIsNotebookSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);

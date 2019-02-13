@@ -1,5 +1,7 @@
+import { DocumentFilter } from 'vscode';
+
 export const PYTHON_LANGUAGE = 'python';
-export const PYTHON = [
+export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
@@ -27,6 +29,7 @@ export namespace Commands {
     export const Tests_Ask_To_Stop_Test = 'python.askToStopUnitTests';
     export const Tests_Ask_To_Stop_Discovery = 'python.askToStopUnitTestDiscovery';
     export const Tests_Stop = 'python.stopUnitTests';
+    export const ViewOutput = 'python.viewOutput';
     export const Tests_ViewOutput = 'python.viewTestOutput';
     export const Tests_Select_And_Run_Method = 'python.selectAndRunTestMethod';
     export const Tests_Select_And_Debug_Method = 'python.selectAndDebugTestMethod';

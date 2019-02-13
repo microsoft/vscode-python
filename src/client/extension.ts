@@ -33,13 +33,13 @@ import {
 } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager } from './activation/types';
+import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
 import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
-import { IApplicationShell, IWorkspaceService } from './common/application/types';
-import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/application/types';
+import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
@@ -288,12 +288,17 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
     dispatcher.registerEventHandlers();
 
+    const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
+
     // Display progress of interpreter refreshes only after extension has activated.
     serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
+    serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
 }
 
 // tslint:disable-next-line:no-any

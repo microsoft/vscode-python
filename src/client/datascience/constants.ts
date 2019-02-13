@@ -67,9 +67,13 @@ export namespace HistoryMessages {
     export const StartProgress = 'start_progress';
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
-    export const SendInfo = 'send_info';
     export const SubmitNewCell = 'submit_new_cell';
     export const UpdateSettings = 'update_settings';
+}
+
+export namespace HistoryNonLiveShareMessages {
+    export const SendInfo = 'send_info';
+    export const Started = 'started';
 }
 
 export enum Telemetry {

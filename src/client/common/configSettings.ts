@@ -373,6 +373,17 @@ export class PythonSettings implements IPythonSettings {
     protected getPythonExecutable(pythonPath: string) {
         return getPythonExecutable(pythonPath);
     }
+    protected onWorkspaceFoldersChanged() {
+        //If an activated workspace folder was removed, delete its key
+        const workspaceKeys = this.workspace.workspaceFolders!.map(workspaceFolder => workspaceFolder.uri.fsPath);
+        const activatedWkspcKeys = Array.from(PythonSettings.pythonSettings.keys());
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        if (activatedWkspcFoldersRemoved.length > 0) {
+            for (const folder of activatedWkspcFoldersRemoved) {
+                PythonSettings.pythonSettings.delete(folder);
+            }
+        }
+    }
     protected initialize(): void {
         const onDidChange = () => {
             const currentConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
@@ -382,6 +393,7 @@ export class PythonSettings implements IPythonSettings {
             // Let's defer the change notification.
             this.debounceChangeNotification();
         };
+        this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         this.disposables.push(this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)));
         this.disposables.push(this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
             if (event.affectsConfiguration('python')) {

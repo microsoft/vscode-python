@@ -19,7 +19,7 @@ import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from './common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
-    ITestCollectionStorageService, ITestConfigSettingsService, ITestDebugLauncher,
+    ITestCollectionStorageService, ITestDebugLauncher,
     ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService,
     ITestManagerServiceFactory, ITestMessageService, ITestResultsService, ITestRunner,
     ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService,
@@ -47,10 +47,10 @@ import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/ser
 import { TestsParser as PytestTestsParser } from './pytest/services/parserService';
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
-    IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory,
-    ITestDisplay, ITestManagerRunner, ITestResultDisplay,
-    IUnitTestConfigurationService, IUnitTestDiagnosticService,
-    IUnitTestHelper, IUnitTestManagementService
+    IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
+    ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner,
+    ITestResultDisplay, IUnitTestConfigurationService,
+    IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';

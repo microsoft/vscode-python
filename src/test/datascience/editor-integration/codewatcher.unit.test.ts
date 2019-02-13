@@ -5,6 +5,7 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
+import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, CodeLens, Range, Selection, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
@@ -306,12 +307,13 @@ fourth line
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString),
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
-        await codeWatcher.runCell(testRange);
+        await codeWatcher.runCell(testRange, uuid());
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -341,16 +343,18 @@ testing2`; // Command tests override getText, so just need the ranges here
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString1),
                                 TypeMoq.It.isValue('test.py'),
-                                TypeMoq.It.isValue(0)
+                                TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
                                 TypeMoq.It.isValue('test.py'),
-                                TypeMoq.It.isValue(2)
+                                TypeMoq.It.isValue(2),
+                                TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
-        await codeWatcher.runAllCells();
+        await codeWatcher.runAllCells(uuid());
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -374,6 +378,7 @@ testing2`;
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(2),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
@@ -382,7 +387,7 @@ testing2`;
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
 
         // Try our RunCell command with the first selection point
-        await codeWatcher.runCurrentCell();
+        await codeWatcher.runCurrentCell(uuid());
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -405,6 +410,7 @@ testing2`;
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(3),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
@@ -414,7 +420,7 @@ testing2`;
         textEditor.setup(te => te.selection).returns(() => new Selection(3, 0, 3, 0));
 
         // Try our RunCell command with the first selection point
-        await codeWatcher.runSelectionOrLine(textEditor.object);
+        await codeWatcher.runSelectionOrLine(textEditor.object, uuid());
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -436,13 +442,14 @@ testing2`;
         activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(0, 0, 0, 0));
 
         // Try our RunCell command with the first selection point
-        await codeWatcher.runCurrentCell();
+        await codeWatcher.runCurrentCell(uuid());
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -468,6 +475,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString),
                                 TypeMoq.It.isValue('test.py'),
                                 TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
@@ -493,7 +501,7 @@ testing2`; // Command tests override getText, so just need the ranges here
             expect(targetRange.end.character).is.equal(8, 'Incorrect range in run cell and advance');
         };
 
-        await codeWatcher.runCurrentCellAndAdvance();
+        await codeWatcher.runCurrentCellAndAdvance(uuid());
 
         // Verify function calls
         textEditor.verifyAll();

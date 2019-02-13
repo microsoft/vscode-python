@@ -32,9 +32,11 @@ import { ITestDisplay, ITestResultDisplay, IUnitTestConfigurationService, IUnitT
 @injectable()
 export class UnitTestManagementService implements IUnitTestManagementService, Disposable {
     private readonly outputChannel: OutputChannel;
+    private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
     private workspaceTestManagerService?: IWorkspaceTestManagerService;
     private documentManager: IDocumentManager;
+    private commandManager: ICommandManager;
     private workspaceService: IWorkspaceService;
     private testResultDisplay?: ITestResultDisplay;
     private autoDiscoverTimer?: NodeJS.Timer;
@@ -47,6 +49,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
 
         this.disposableRegistry.push(this);
     }
@@ -59,6 +62,10 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         return this._onDidStatusChange.event;
     }
     public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
+        if (this.activatedOnce) {
+            return;
+        }
+        this.activatedOnce = true;
         this.workspaceTestManagerService = this.serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
@@ -163,7 +170,9 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
 
         // No need to display errors.
         // tslint:disable-next-line:no-empty
-        this.discoverTests(CommandSource.auto, this.workspaceService.workspaceFolders![0].uri, true).catch(() => { });
+        this.discoverTests(CommandSource.auto, this.workspaceService.workspaceFolders![0].uri, true).then(
+            _tests => this.commandManager.executeCommand('setContext', 'testsDiscovered', true)
+        ).ignoreErrors();
     }
     public async discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean) {
         const testManager = await this.getTestManager(true, resource);
@@ -217,7 +226,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
         testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspaceFolder, testManager.workingDirectory, file, testFunctions, debug);
     }
-    public viewOutput(cmdSource: CommandSource) {
+    public viewOutput(_cmdSource: CommandSource) {
         sendTelemetryEvent(EventName.UNITTEST_VIEW_OUTPUT);
         this.outputChannel.show();
     }

@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as vsls from 'vsls/vscode';
+
+import { IAsyncDisposable } from '../../../common/types';
 import { ICell, InterruptResult } from '../../types';
 
 // tslint:disable:max-classes-per-file
@@ -45,4 +48,12 @@ export interface IResponseMapping {
 
 export interface ICatchupRequest {
     since: number;
+}
+
+export interface ILiveShareParticipant extends IAsyncDisposable {
+    readonly role: vsls.Role;
+    onSessionChange(api: vsls.LiveShare | null) : Promise<void>;
+    onAttach(api: vsls.LiveShare | null) : Promise<void>;
+    onDetach(api: vsls.LiveShare | null) : Promise<void>;
+    onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void>;
 }

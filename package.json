@@ -69,6 +69,7 @@
         "onCommand:python.setShebangInterpreter",
         "onCommand:python.viewTestUI",
         "onCommand:python.viewTestOutput",
+        "onCommand:python.viewOutput",
         "onCommand:python.selectAndRunTestMethod",
         "onCommand:python.selectAndDebugTestMethod",
         "onCommand:python.selectAndRunTestFile",
@@ -171,19 +172,19 @@
                 "command": "python.runtests",
                 "title": "%python.command.python.runtests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/start.svg",
-					"dark": "resources/dark/start.svg"
-				}
+                "icon": {
+                    "light": "resources/light/start.svg",
+                    "dark": "resources/dark/start.svg"
+                }
             },
             {
                 "command": "python.debugtests",
                 "title": "%python.command.python.debugtests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/debug.svg",
-					"dark": "resources/dark/debug.svg"
-				}
+                "icon": {
+                    "light": "resources/light/debug.svg",
+                    "dark": "resources/dark/debug.svg"
+                }
             },
             {
                 "command": "python.execInTerminal",
@@ -213,7 +214,20 @@
             {
                 "command": "python.viewTestOutput",
                 "title": "%python.command.python.viewTestOutput.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/repl.svg",
+                    "dark": "resources/dark/repl.svg"
+                }
+            },
+            {
+                "command": "python.viewOutput",
+                "title": "%python.command.python.viewOutput.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/repl.svg",
+                    "dark": "resources/dark/repl.svg"
+                }
             },
             {
                 "command": "python.selectAndRunTestMethod",
@@ -239,19 +253,19 @@
                 "command": "python.runFailedTests",
                 "title": "%python.command.python.runFailedTests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/start-failed.svg",
-					"dark": "resources/dark/start-failed.svg"
-				}
+                "icon": {
+                    "light": "resources/light/start-failed.svg",
+                    "dark": "resources/dark/start-failed.svg"
+                }
             },
             {
                 "command": "python.discoverTests",
                 "title": "%python.command.python.discoverTests.title%",
                 "category": "Python",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             },
             {
                 "command": "python.configureTests",
@@ -480,6 +494,11 @@
             ],
             "commandPalette": [
                 {
+                    "command": "python.viewOutput",
+                    "title": "%python.command.python.viewOutput.title%",
+                    "category": "Python"
+                },
+                {
                     "command": "python.runTestNode",
                     "title": "Run",
                     "category": "Python",
@@ -596,66 +615,71 @@
             "view/title": [
                 {
                     "command": "python.debugtests",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "python.runtests",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "python.discoverTests",
-                    "group": "navigation"
+                    "group": "navigation@3"
                 },
                 {
                     "command": "python.runFailedTests",
-                    "group": "navigation"
+                    "group": "navigation@4",
+                    "when": "hasFailedTests"
+                },
+                {
+                    "command": "python.viewTestOutput",
+                    "group": "navigation@5"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testFunction",
-                    "group": "inline"
+                    "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
                     "when": "view == python_tests && viewItem == testFunction",
-                    "group": "inline"
+                    "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == testFunction",
-                    "group": "inline"
+                    "group": "inline@0"
                 },
                 {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testFile",
-                    "group": "inline"
+                    "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
                     "when": "view == python_tests && viewItem == testFile",
-                    "group": "inline"
+                    "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == testFile",
-                    "group": "inline"
+                    "group": "inline@0"
                 },
                 {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testSuite",
-                    "group": "inline"
+                    "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
                     "when": "view == python_tests && viewItem == testSuite",
-                    "group": "inline"
+                    "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == testSuite",
-                    "group": "inline"
+                    "group": "inline@0"
                 }
             ]
         },
@@ -2007,7 +2031,8 @@
             "test": [
                 {
                     "id": "python_tests",
-                    "name": "PYTHON"
+                    "name": "PYTHON",
+                    "when": "testsDiscovered"
                 }
             ]
         }

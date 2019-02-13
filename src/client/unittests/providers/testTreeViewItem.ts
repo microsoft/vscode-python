@@ -6,6 +6,8 @@
 import {
     TreeItem, TreeItemCollapsibleState, Uri
 } from 'vscode';
+import { Commands } from '../../common/constants';
+import { noop } from '../../common/utils/misc';
 import { TestsHelper } from '../common/testUtils';
 import {
     TestFile, TestFolder, TestFunction,
@@ -43,6 +45,7 @@ export class TestTreeItem extends TreeItem {
         this.tooltip = `Status: ${testStatus}`;
         this.testType = TestsHelper.getTestType(this.data);
         this.contextValue = TestsHelper.getTestType(this.data);
+        this.setCommand();
     }
 
     public static createFromFolder(
@@ -150,5 +153,24 @@ export class TestTreeItem extends TreeItem {
 
     public get parent(): TestTreeItem | undefined {
         return this.myParent;
+    }
+    private setCommand() {
+        switch (this.testType) {
+            case TestType.testFile: {
+                this.command = { command: Commands.navigateToTestFile, title: 'Open', arguments: [this.resource, this.data] };
+                break;
+            }
+            case TestType.testFunction: {
+                this.command = { command: Commands.navigateToTestFunction, title: 'Open', arguments: [this.resource, this.data, false] };
+                break;
+            }
+            case TestType.testSuite: {
+                this.command = { command: Commands.navigateToTestSuite, title: 'Open', arguments: [this.resource, this.data, false] };
+                break;
+            }
+            default: {
+                noop();
+            }
+        }
     }
 }

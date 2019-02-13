@@ -28,7 +28,8 @@ import {
     IJupyterExecution,
     IJupyterKernelSpec,
     IJupyterSessionManager,
-    INotebookServer
+    INotebookServer,
+    INotebookServerLaunchInfo
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -141,7 +142,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                 // Try to connect to our jupyter process
                 const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
-                await result.connect(connection, kernelSpec, usingDarkTheme, cancelToken, workingDir);
+                const info = await this.interpreterService.getActiveInterpreter();
+                // Populate the launch info that we are starting our server with
+                const launchInfo: INotebookServerLaunchInfo = {
+                    connectionInfo: connection,
+                    currentInterpreter: info,
+                    kernelSpec: kernelSpec,
+                    usingDarkTheme: usingDarkTheme,
+                    workingDir: workingDir,
+                    uri: uri
+                };
+                await result.connect(launchInfo, cancelToken);
                 sendTelemetryEvent(uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
                 return result;
             } catch (err) {

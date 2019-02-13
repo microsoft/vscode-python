@@ -20,7 +20,7 @@ export enum NavigableItemType {
 
 export const ITestCodeNavigator = Symbol('ITestCodeNavigator');
 export interface ITestCodeNavigator {
-    navigateTo(resource: Uri, item: NavigableItem): Promise<void>;
+    navigateTo(resource: Uri, item: NavigableItem, focus: boolean): Promise<void>;
 }
 
 export const ITestNavigatorHelper = Symbol('ITestNavigatorHelper');

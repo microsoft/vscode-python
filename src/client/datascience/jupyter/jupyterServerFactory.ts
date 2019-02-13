@@ -13,15 +13,18 @@ import {
     ICell,
     IConnection,
     IDataScience,
-    IJupyterKernelSpec,
     IJupyterSessionManager,
     INotebookServer,
+    INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
-import { JupyterServerBase } from './jupyterServer';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
-import { RoleBasedFactory } from './liveshare/roleBasedFactory';
+import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+
+interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
+
+}
 
 type JupyterServerClassType = {
     new(liveShare: ILiveShareApi,
@@ -30,14 +33,14 @@ type JupyterServerClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager): INotebookServer;
+        sessionManager: IJupyterSessionManager): IJupyterServerInterface ;
 };
 
 @injectable()
-export class JupyterServer implements INotebookServer {
-    private serverFactory: RoleBasedFactory<INotebookServer, JupyterServerClassType>;
+export class JupyterServerFactory implements INotebookServer {
+    private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
 
-    private connInfo : IConnection | undefined;
+    private launchInfo: INotebookServerLaunchInfo | undefined;
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -47,9 +50,8 @@ export class JupyterServer implements INotebookServer {
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
-        this.serverFactory = new RoleBasedFactory<INotebookServer, JupyterServerClassType>(
+        this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
-            JupyterServerBase,
             HostJupyterServer,
             GuestJupyterServer,
             liveShare,
@@ -62,10 +64,10 @@ export class JupyterServer implements INotebookServer {
         );
     }
 
-    public async connect(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, usingDarkTheme: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<void> {
-        this.connInfo = connInfo;
+    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
+        this.launchInfo = launchInfo;
         const server = await this.serverFactory.get();
-        return server.connect(connInfo, kernelSpec, usingDarkTheme, cancelToken, workingDir);
+        return server.connect(launchInfo, cancelToken);
     }
 
     public async shutdown(): Promise<void> {
@@ -83,9 +85,9 @@ export class JupyterServer implements INotebookServer {
         return server.waitForIdle();
     }
 
-    public async execute(code: string, file: string, line: number, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
         const server = await this.serverFactory.get();
-        return server.execute(code, file, line, cancelToken);
+        return server.execute(code, file, line, id, cancelToken);
     }
 
     public async setInitialDirectory(directory: string): Promise<void> {
@@ -93,7 +95,7 @@ export class JupyterServer implements INotebookServer {
         return server.setInitialDirectory(directory);
     }
 
-    public executeObservable(code: string, file: string, line: number, id?: string): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Create a wrapper observable around the actual server (because we have to wait for a promise)
         return new Observable<ICell[]>(subscriber => {
             this.serverFactory.get().then(s => {
@@ -126,7 +128,15 @@ export class JupyterServer implements INotebookServer {
 
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
-        return this.connInfo;
+        if (this.launchInfo) {
+            return this.launchInfo.connectionInfo;
+        }
+
+        return undefined;
+    }
+
+    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
+        return this.launchInfo;
     }
 
     public async getSysInfo() : Promise<ICell | undefined> {

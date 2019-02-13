@@ -35,8 +35,8 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, InterruptResult } from '../../client/datascience/types';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -51,16 +51,18 @@ import { MockJupyterManager } from './mockJupyterManager';
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class MockJupyterServer implements INotebookServer {
 
-    private conninfo: IConnection | undefined;
+    private launchInfo: INotebookServerLaunchInfo | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
     private notebookFile: TemporaryFile | undefined;
-    public connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec): Promise<void> {
-        this.conninfo = conninfo;
-        this.kernelSpec = kernelSpec;
+    public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
+        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
+            this.launchInfo = launchInfo;
+            this.kernelSpec = launchInfo.kernelSpec;
 
-        // Validate connection info and kernel spec
-        if (conninfo.baseUrl && kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(kernelSpec.name)) {
-            return Promise.resolve();
+            // Validate connection info and kernel spec
+            if (launchInfo.connectionInfo.baseUrl && launchInfo.kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)) {
+                return Promise.resolve();
+            }
         }
         return Promise.reject('invalid server startup');
     }
@@ -86,6 +88,9 @@ class MockJupyterServer implements INotebookServer {
         throw new Error('Method not implemented');
     }
     public getConnectionInfo(): IConnection | undefined {
+        return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
+    }
+    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
         throw new Error('Method not implemented');
     }
     public async shutdown() {
@@ -101,9 +106,9 @@ class MockJupyterServer implements INotebookServer {
     }
 
     public async dispose() : Promise<void> {
-        if (this.conninfo) {
-            this.conninfo.dispose(); // This should kill the process that's running
-            this.conninfo = undefined;
+        if (this.launchInfo) {
+            this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
+            this.launchInfo = undefined;
         }
         if (this.kernelSpec) {
             await this.kernelSpec.dispose(); // This destroy any unwanted kernel specs if necessary
@@ -457,7 +462,7 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
     }
 
-    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecution {
+    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecutionFactory {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
@@ -550,7 +555,7 @@ suite('Jupyter Execution', async () => {
 
         const mockSessionManager = new MockJupyterManager(instance(serviceManager));
 
-        return new JupyterExecution(
+        return new JupyterExecutionFactory(
             instance(liveShare),
             instance(executionFactory),
             instance(interpreterService),

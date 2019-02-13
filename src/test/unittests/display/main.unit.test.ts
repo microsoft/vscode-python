@@ -8,10 +8,11 @@
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { StatusBarItem, Uri } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
+import { UnitTests } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../../client/unittests/common/constants';
@@ -27,6 +28,7 @@ suite('Unit Tests - TestResultDisplay', () => {
     let display: TestResultDisplay;
     let testsHelper: typeMoq.IMock<ITestsHelper>;
     let configurationService: typeMoq.IMock<IConfigurationService>;
+    let cmdManager: typeMoq.IMock<ICommandManager>;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         configurationService = typeMoq.Mock.ofType<IConfigurationService>();
@@ -34,6 +36,7 @@ suite('Unit Tests - TestResultDisplay', () => {
         unitTestSettings = typeMoq.Mock.ofType<IUnitTestSettings>();
         const pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
         testsHelper = typeMoq.Mock.ofType<ITestsHelper>();
+        cmdManager = typeMoq.Mock.ofType<ICommandManager>();
 
         pythonSettings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
         configurationService.setup(c => c.getSettings(workspaceUri)).returns(() => pythonSettings.object);
@@ -41,6 +44,7 @@ suite('Unit Tests - TestResultDisplay', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestsHelper))).returns(() => testsHelper.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
     });
     teardown(() => {
         try {
@@ -292,7 +296,7 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell.setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((msg, item) => Promise.resolve(item))
+            .returns(() => Promise.resolve(UnitTests.disableTests()))
             .verifiable(typeMoq.Times.once());
 
         for (const setting of ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
@@ -308,6 +312,38 @@ suite('Unit Tests - TestResultDisplay', () => {
         appShell.verifyAll();
         statusBar.verify(s => s.command = typeMoq.It.isValue(Commands.Tests_View_UI), typeMoq.Times.atLeastOnce());
         configurationService.verifyAll();
+    });
+    test('Ensure corresponding command is executed when there are errors and user choses to configure test framework', async () => {
+        const statusBar = typeMoq.Mock.ofType<StatusBarItem>();
+        appShell.setup(a => a.createStatusBarItem(typeMoq.It.isAny()))
+            .returns(() => statusBar.object)
+            .verifiable(typeMoq.Times.once());
+
+        statusBar.setup(s => s.show()).verifiable(typeMoq.Times.once());
+
+        createTestResultDisplay();
+        const def = createDeferred<Tests>();
+
+        display.displayDiscoverStatus(def.promise, false).ignoreErrors();
+
+        statusBar.verifyAll();
+        statusBar.verify(s => s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery), typeMoq.Times.atLeastOnce());
+        statusBar.verify(s => s.text = typeMoq.It.isValue('$(stop) Discovering Tests'), typeMoq.Times.atLeastOnce());
+
+        const tests = typeMoq.Mock.ofType<Tests>();
+        appShell.setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(UnitTests.configureTests()))
+            .verifiable(typeMoq.Times.once());
+
+        cmdManager.setup(c => c.executeCommand(typeMoq.It.isValue(Commands.Tests_Configure)))
+            .verifiable(typeMoq.Times.once());
+        def.resolve(undefined as any);
+        await sleep(1);
+
+        tests.verifyAll();
+        appShell.verifyAll();
+        statusBar.verify(s => s.command = typeMoq.It.isValue(Commands.Tests_View_UI), typeMoq.Times.atLeastOnce());
+        cmdManager.verifyAll();
     });
     test('Ensure status bar is displayed and updated with error info when test discovery is cancelled by the user', async () => {
         const statusBar = typeMoq.Mock.ofType<StatusBarItem>();

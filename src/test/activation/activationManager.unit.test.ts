@@ -174,7 +174,7 @@ suite('Activation - ActivationManager', () => {
 
         documentManager.verifyAll();
         verify(workspaceService.onDidChangeWorkspaceFolders).once();
-        verify(workspaceService.workspaceFolders).once();
+        verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(workspaceService.getWorkspaceFolder(anything())).atLeast(1);
         verify(activationService1.activate(resource)).once();
@@ -230,7 +230,7 @@ suite('Activation - ActivationManager', () => {
 
         documentManager.verifyAll();
         verify(workspaceService.onDidChangeWorkspaceFolders).once();
-        verify(workspaceService.workspaceFolders).once();
+        verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).once();
 
         //Removed no. of folders to one
@@ -240,7 +240,7 @@ suite('Activation - ActivationManager', () => {
 
         workspaceFoldersChangedHandler.call(managerTest);
 
-        verify(workspaceService.workspaceFolders).twice();
+        verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).twice();
     });
 });

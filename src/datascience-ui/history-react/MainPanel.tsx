@@ -8,7 +8,7 @@ import * as React from 'react';
 
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages } from '../../client/datascience/constants';
+import { HistoryMessages, HistoryNonLiveShareMessages } from '../../client/datascience/constants';
 import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -34,6 +34,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private bottom: HTMLDivElement | undefined;
     private updateCount = 0;
     private renderCount = 0;
+    private sentStartup = false;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IMainPanelState) {
@@ -72,6 +73,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // If in test mode, update our outputs
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
+        }
+
+        // If haven't sent our startup message, send it now.
+        if (!this.sentStartup) {
+            this.sentStartup = true;
+            PostOffice.sendMessage({type: HistoryNonLiveShareMessages.Started});
         }
 
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
@@ -554,11 +561,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoCount: this.state.undoStack.length,
             redoCount: this.state.redoStack.length
         };
-        PostOffice.sendMessage({type: HistoryMessages.SendInfo, payload: { info: info }});
+        PostOffice.sendMessage({type: HistoryNonLiveShareMessages.SendInfo, payload: { info: info }});
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
-        const index = this.state.cellVMs.findIndex((c : ICellViewModel) => c.cell.id === cell.id);
+        const index = this.state.cellVMs.findIndex((c : ICellViewModel) => {
+            return c.cell.id === cell.id &&
+                   c.cell.line === cell.line &&
+                   c.cell.file === cell.file;
+            });
         if (index >= 0) {
             // Update this cell
             this.state.cellVMs[index].cell = cell;

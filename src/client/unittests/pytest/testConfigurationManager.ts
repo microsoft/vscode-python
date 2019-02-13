@@ -4,10 +4,15 @@ import { IFileSystem } from '../../common/platform/types';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
+import { ITestConfigSettingsService } from '../types';
 
 export class ConfigurationManager extends TestConfigurationManager {
-    constructor(workspace: Uri, serviceContainer: IServiceContainer) {
-        super(workspace, Product.pytest, serviceContainer);
+    constructor(
+        workspace: Uri,
+        serviceContainer: IServiceContainer,
+        cfg?: ITestConfigSettingsService
+    ) {
+        super(workspace, Product.pytest, serviceContainer, cfg);
     }
     public async requiresUserToConfigure(wkspace: Uri): Promise<boolean> {
         const configFiles = await this.getConfigFiles(wkspace.fsPath);

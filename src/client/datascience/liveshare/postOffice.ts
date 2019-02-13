@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { JSONArray } from '@phosphor/coreutils';
+import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -52,6 +53,11 @@ export class PostOffice implements IAsyncDisposable {
         const api = await this.started;
         let skipDefault = false;
 
+        // Every command should generate an extra arg - the id. This lets them
+        // be sync'd between guest and host.
+        const id = uuid();
+        const modifiedArgs = [...args, id];
+
         if (api && api.session) {
             switch (this.currentRole) {
                 case vsls.Role.Guest:
@@ -64,7 +70,7 @@ export class PostOffice implements IAsyncDisposable {
                 case vsls.Role.Host:
                     // Notify everybody and call our local callback (by falling through)
                     if (this.hostServer) {
-                        this.hostServer.notify(this.escapeCommandName(command), this.translateArgs(api, command, ...args));
+                        this.hostServer.notify(this.escapeCommandName(command), this.translateArgs(api, command, ...modifiedArgs));
                     }
                     break;
                 default:
@@ -74,7 +80,7 @@ export class PostOffice implements IAsyncDisposable {
 
         if (!skipDefault) {
             // Default when not connected is to just call the registered callback
-            this.callCallback(command, ...args);
+            this.callCallback(command, ...modifiedArgs);
         }
     }
 
@@ -218,7 +224,7 @@ export class PostOffice implements IAsyncDisposable {
             if (jsonArray !== null && jsonArray.length >= 2) {
                 const firstArg = jsonArray[0]; // More stupid hygiene problems.
                 const command = firstArg !== null ? firstArg.toString() : '';
-                this.postCommand(command, jsonArray.slice(1)).ignoreErrors();
+                this.postCommand(command, ...jsonArray.slice(1)).ignoreErrors();
             }
         }
     }

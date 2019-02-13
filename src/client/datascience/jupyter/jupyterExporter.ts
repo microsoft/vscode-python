@@ -13,7 +13,7 @@ import { IConfigurationService, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { CodeSnippits } from '../constants';
+import { CodeSnippits, Identifiers } from '../constants';
 import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from '../types';
 
 @injectable()
@@ -86,7 +86,7 @@ export class JupyterExporter implements INotebookExporter {
                     execution_count: 0
                 },
                 id: uuid(),
-                file: '',
+                file: Identifiers.EmptyFileName,
                 line: 0,
                 state: CellState.finished
             };

@@ -1,13 +1,13 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { IInstaller, IOutputChannel, Product } from '../../../common/types';
+import { IInstaller, IOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { getSubDirectories } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
-import { ITestConfigurationManager } from '../../types';
-import { TEST_OUTPUT_CHANNEL } from '../constants';
-import { ITestConfigSettingsService, UnitTestProduct } from './../types';
+import { ITestConfigSettingsService, ITestConfigurationManager } from '../../types';
+import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../constants';
+import { UnitTestProduct } from '../types';
 
 export abstract class TestConfigurationManager implements ITestConfigurationManager {
     protected readonly outputChannel: OutputChannel;
@@ -15,23 +15,21 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     protected readonly testConfigSettingsService: ITestConfigSettingsService;
     constructor(protected workspace: Uri,
         protected product: UnitTestProduct,
-        protected readonly serviceContainer: IServiceContainer) {
+        protected readonly serviceContainer: IServiceContainer,
+        cfg?: ITestConfigSettingsService
+    ) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.installer = serviceContainer.get<IInstaller>(IInstaller);
-        this.testConfigSettingsService = serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
+        this.testConfigSettingsService = cfg ? cfg : serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
     }
     public abstract configure(wkspace: Uri): Promise<void>;
     public abstract requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
     public async enable() {
         // Disable other test frameworks.
-        const testProducsToDisable = [Product.pytest, Product.unittest, Product.nosetest]
-            .filter(item => item !== this.product) as UnitTestProduct[];
-
-        for (const prod of testProducsToDisable) {
-            await this.testConfigSettingsService.disable(this.workspace, prod);
-        }
-
-        return this.testConfigSettingsService.enable(this.workspace, this.product);
+        await Promise.all(UNIT_TEST_PRODUCTS
+            .filter(prod => prod !== this.product)
+            .map(prod => this.testConfigSettingsService.disable(this.workspace, prod)));
+        await this.testConfigSettingsService.enable(this.workspace, this.product);
     }
     // tslint:disable-next-line:no-any
     public async disable() {

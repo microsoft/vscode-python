@@ -61,7 +61,7 @@ suite('Unit Tests - Test Explorer Command Hanlder', () => {
         const handler = capture(cmdManager.registerCommand).last()[1];
         await handler.bind(commandHandler)(instance(treeItem));
 
-        verify(cmdManager.executeCommand(expectedCommand, resource, data)).once();
+        verify(cmdManager.executeCommand(expectedCommand, resource, data, true)).once();
     }
     test('Opening a file will invoke correct command', async () => {
         const testFilePath = 'some file path';

@@ -3,7 +3,8 @@ import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { ITestConfigSettingsService, UnitTestProduct } from './../types';
+import { ITestConfigSettingsService } from '../../types';
+import { UnitTestProduct } from './../types';
 
 @injectable()
 export class TestConfigSettingsService implements ITestConfigSettingsService {
@@ -67,5 +68,46 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         }
 
         return pythonConfig.update(setting, value);
+    }
+}
+
+export class BufferedTestConfigSettingsService implements ITestConfigSettingsService {
+    private ops: [ string, string | Uri, UnitTestProduct, string[] ][];
+    constructor() {
+        this.ops = [];
+    }
+
+    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]) {
+        this.ops.push(['updateTestArgs', testDirectory, product, args]);
+    }
+
+    public async enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
+        this.ops.push(['enable', testDirectory, product, []]);
+    }
+
+    public async disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
+        this.ops.push(['disable', testDirectory, product, []]);
+    }
+
+    public async apply(cfg: ITestConfigSettingsService) {
+        const ops = this.ops;
+        this.ops = [];
+        // Note that earlier ops do not get rolled back if a later
+        // one fails.
+        for (const [op, testDir, prod, args] of ops) {
+            switch (op) {
+                case 'updateTestArgs':
+                    await cfg.updateTestArgs(testDir, prod, args);
+                    break;
+                case 'enable':
+                    await cfg.enable(testDir, prod);
+                    break;
+                case 'disable':
+                    await cfg.disable(testDir, prod);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

@@ -28,7 +28,7 @@ export enum LanguageServerActivator {
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends IDisposable {
-    activate(): Promise<void>;
+    activate(resource: Resource): Promise<void>;
 }
 
 export const IHttpClient = Symbol('IHttpClient');
@@ -87,6 +87,12 @@ export interface ILanguageServerAnalysisOptions extends IDisposable {
 export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
     start(resource: Resource): Promise<void>;
+}
+export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
+export interface ILanguageServerExtension extends IDisposable {
+    readonly invoked: Event<void>;
+    loadExtensionArgs?: {};
+    register(): void;
 }
 export const ILanguageServer = Symbol('ILanguageServer');
 export interface ILanguageServer extends IDisposable {

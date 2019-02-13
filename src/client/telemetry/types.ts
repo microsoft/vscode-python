@@ -93,15 +93,21 @@ export type DebuggerPerformanceTelemetry = {
     duration: number;
     action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
 };
+export type TestTool = 'nosetest' | 'pytest' | 'unittest';
 export type TestRunTelemetry = {
-    tool: 'nosetest' | 'pytest' | 'unittest';
+    tool: TestTool;
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
     debugging: boolean;
     triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
-    tool: 'nosetest' | 'pytest' | 'unittest';
+    tool: TestTool;
+    trigger: 'ui' | 'commandpalette';
+    failed: boolean;
+};
+export type TestConfiguringTelemetry = {
+    tool?: TestTool;
     trigger: 'ui' | 'commandpalette';
     failed: boolean;
 };

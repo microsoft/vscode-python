@@ -4,6 +4,7 @@
 import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
+import * as uuid from 'uuid/v4';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
@@ -221,7 +222,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
                     const code = document.getText(r.range);
-                    return server ? server.execute(code, document.fileName, r.range.start.line, cancelToken) : [];
+                    return server ? server.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
                 })));
 
             // Then save them to the file

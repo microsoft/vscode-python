@@ -329,5 +329,6 @@ def test_failure():
   - [ ] framework's config added (and old config removed)
   - [ ] other frameworks disabled in workspace settings
 - [ ] `Configure Unit Tests` does not close if it loses focus
+- [ ] Cancelling configuration does not leave incomplete settings
 
 </details>

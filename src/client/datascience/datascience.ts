@@ -80,7 +80,7 @@ export class DataScience implements IDataScience {
         }
     }
 
-    public async runAllCells(file: string): Promise<void> {
+    public async runAllCells(file: string, id: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
         let codeWatcher = this.getCodeWatcher(file);
@@ -88,7 +88,7 @@ export class DataScience implements IDataScience {
             codeWatcher = this.getCurrentCodeWatcher();
         }
         if (codeWatcher) {
-            return codeWatcher.runAllCells();
+            return codeWatcher.runAllCells(id);
         } else {
             return Promise.resolve();
         }
@@ -96,44 +96,44 @@ export class DataScience implements IDataScience {
 
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any
     // objects for parameters is because they can't be recreated when passing them through the LiveShare API
-    public async runCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
+    public async runCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number, id: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         const codeWatcher = this.getCodeWatcher(file);
         if (codeWatcher) {
-            return codeWatcher.runCell(new vscode.Range(startLine, startChar, endLine, endChar));
+            return codeWatcher.runCell(new vscode.Range(startLine, startChar, endLine, endChar), id);
         } else {
-            return this.runCurrentCell();
+            return this.runCurrentCell(id);
         }
     }
 
-    public async runCurrentCell(): Promise<void> {
+    public async runCurrentCell(id: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
-            return activeCodeWatcher.runCurrentCell();
-        } else {
-            return Promise.resolve();
-        }
-    }
-
-    public async runCurrentCellAndAdvance(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.runCurrentCellAndAdvance();
+            return activeCodeWatcher.runCurrentCell(id);
         } else {
             return Promise.resolve();
         }
     }
 
-    public async runSelectionOrLine(): Promise<void> {
+    public async runCurrentCellAndAdvance(id: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
-            return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor);
+            return activeCodeWatcher.runCurrentCellAndAdvance(id);
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    public async runSelectionOrLine(id: string): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeCodeWatcher) {
+            return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor, id);
         } else {
             return Promise.resolve();
         }

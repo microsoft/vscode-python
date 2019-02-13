@@ -1,5 +1,5 @@
 import { CancellationToken, CancellationTokenSource, Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, Disposable, Event, EventEmitter, languages, OutputChannel, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
@@ -38,6 +38,7 @@ export abstract class BaseTestManager implements ITestManager {
     private testRunnerCancellationTokenSource?: CancellationTokenSource;
     private _installer!: IInstaller;
     private discoverTestsPromise?: Promise<Tests>;
+    private commandManager: ICommandManager;
     private _onDidStatusChange = new EventEmitter<TestStatus>();
     private get installer(): IInstaller {
         if (!this._installer) {
@@ -57,6 +58,7 @@ export abstract class BaseTestManager implements ITestManager {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.diagnosticCollection = languages.createDiagnosticCollection(this.testProvider);
         this.unitTestDiagnosticService = serviceContainer.get<IUnitTestDiagnosticService>(IUnitTestDiagnosticService);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         disposables.push(this);
     }
     protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
@@ -237,7 +239,8 @@ export abstract class BaseTestManager implements ITestManager {
             .then(tests => {
                 this.createCancellationToken(CancellationTokenType.testRunner);
                 return this.runTestImpl(tests, testsToRun, runFailedTests, debug);
-            }).then(() => {
+            }).then((testResults) => {
+                this.commandManager.executeCommand('setContext', 'hasFailedTests', testResults.summary.failures > 0);
                 this.updateStatus(TestStatus.Idle);
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
