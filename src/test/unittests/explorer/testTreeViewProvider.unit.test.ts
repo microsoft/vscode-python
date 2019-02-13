@@ -4,18 +4,14 @@
 'use strict';
 
 import { expect } from 'chai';
-import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../client/common/types';
 import { TestDataItem } from '../../../client/providers/types';
-import { TestStatus } from '../../../client/unittests/common/types';
 import {
     TestTreeViewProvider
 } from '../../../client/unittests/explorer/testTreeViewProvider';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import {
-    createMockTestExplorer, createMockTestsData
-} from './explorerTestData';
+import { createMockTestExplorer } from './explorerTestData';
 
 // Issuing the command pallette command(s) and observing when:
 //     A test file is added/removed/renamed
