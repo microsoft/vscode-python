@@ -128,7 +128,7 @@ steps:
 
       arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
-  - bash:|
+  - bash: |
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
     
