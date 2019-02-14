@@ -93,7 +93,7 @@ export class TestFunctionTreeItem extends TestTreeItem {
     }
 
     public get contextValue(): string {
-        return 'Function';
+        return TestType.testFunction;
     }
 
     /**
@@ -114,7 +114,7 @@ export class TestSuiteTreeItem extends TestTreeItem {
     }
 
     public get contextValue(): string {
-        return 'Suite';
+        return TestType.testSuite;
     }
 
     /**
@@ -143,7 +143,7 @@ export class TestFileTreeItem extends TestTreeItem {
     }
 
     public get contextValue(): string {
-        return 'File';
+        return TestType.testFile;
     }
 
     /**
@@ -172,7 +172,7 @@ export class TestFolderTreeItem extends TestTreeItem {
     }
 
     public get contextValue(): string {
-        return 'Folder';
+        return TestType.testFolder;
     }
 
     /**

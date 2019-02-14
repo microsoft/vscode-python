@@ -25,3 +25,9 @@ export interface ITestTreeViewProvider extends TreeDataProvider<TestDataItem> {
     getTreeItem(element: TestDataItem): Promise<TestTreeItem>;
     getChildren(element?: TestDataItem): ProviderResult<TestDataItem[]>;
 }
+
+export const ITestDataItemResource = Symbol('ITestDataItemResource');
+
+export interface ITestDataItemResource {
+    getResource(testData: Readonly<TestDataItem>): Uri;
+}

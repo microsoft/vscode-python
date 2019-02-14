@@ -3,7 +3,7 @@
 
 import { Uri } from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { ITestTreeViewProvider } from '../providers/types';
+import { ITestDataItemResource, ITestTreeViewProvider } from '../providers/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
@@ -105,6 +105,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
     serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
+    serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
