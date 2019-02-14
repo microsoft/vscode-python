@@ -4,13 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import {
     IDisposable, IDisposableRegistry, Resource
 } from '../../common/types';
 import {
-    ITestTreeViewProvider, TestDataItem
+    ITestDataItemResource, ITestTreeViewProvider,
+    TestDataItem
 } from '../../providers/types';
 import {
     ITestCollectionStorageService,
@@ -22,7 +23,7 @@ import {
 } from './testTreeViewItem';
 
 @injectable()
-export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable {
+export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataItemResource, IDisposable {
     // VS Code API point to refresh the tree view recursively...
     public readonly onDidChangeTreeData: Event<TestDataItem | undefined>;
 
@@ -57,6 +58,24 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, IDisposable 
         }
         disposableRegistry.push(this);
         this.disposables.push(this.testService.onDidStatusChange(this.onTestStatusChanged, this));
+    }
+
+    /**
+     * We need a way to map a given TestDataItem to a Uri, so that other consumers (such
+     * as the commandHandler for the Test Explorer) have a way of accessing the Uri outside
+     * the purview off the TestTreeView.
+     *
+     * @param testData Test data item to map to a Uri
+     * @returns A Uri representing the workspace that the test data item exists within
+     */
+    public getResource(testData: Readonly<TestDataItem>): Uri {
+
+        if (this.cachedItems.has(testData)) {
+            const testViewItem: Readonly<TestTreeItem> = this.cachedItems.get(testData);
+            return testViewItem.resource;
+        }
+
+        throw new Error(`Test data item for ${testData.nameToRun} does not exist in the Tree View for the Test Explorer.`);
     }
 
     /**
