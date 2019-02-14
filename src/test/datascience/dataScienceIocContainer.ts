@@ -21,6 +21,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
+    ILiveShareApi,
     ITerminalManager,
     IWorkspaceService
 } from '../../client/common/application/types';
@@ -71,14 +72,16 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { JupyterServer } from '../../client/datascience/jupyter/jupyterServer';
+import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
+import { JupyterServerManager } from '../../client/datascience/jupyter/jupyterServerManager';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import {
     ICodeCssGenerator,
+    IDataScience,
     IHistory,
     IHistoryProvider,
     IJupyterCommandFactory,
@@ -87,6 +90,7 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
+    INotebookServerManager,
     IStatusProvider
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
@@ -159,6 +163,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockJupyterManager } from './mockJupyterManager';
+import { MockLiveShareApi } from './mockLiveShare';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -194,12 +199,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes() {
         this.registerFileSystemTypes();
-        this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
+        this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
+        this.serviceManager.addSingleton<INotebookServerManager>(INotebookServerManager, JupyterServerManager);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
-        this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
+        this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
+        this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
@@ -237,6 +244,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
+        const datascience = TypeMoq.Mock.ofType<IDataScience>();
 
         // Setup default settings
         this.pythonSettings.datascience = {
@@ -271,6 +279,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(w => w.onDidChangeConfiguration).returns(() => this.configChangeEvent.event);
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+        const startTime = Date.now();
+        datascience.setup(d => d.activationStartTime).returns(() => startTime);
 
         class MockFileSystemWatcher implements FileSystemWatcher {
             public ignoreCreateEvents: boolean = false;
@@ -337,6 +347,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, documentManager.object);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
         this.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configurationService.object);
+        this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, datascience.object);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(IEnvironmentVariablesService, EnvironmentVariablesService);
         this.serviceManager.addSingletonInstance<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, envVarsProvider.object);
@@ -389,7 +400,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             dispose: () => { return; }
         };
 
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);

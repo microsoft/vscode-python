@@ -240,9 +240,6 @@ gulp.task('renameSourceMaps', async () => {
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
-const installPythonLibArgs = ['-m', 'pip', '--disable-pip-version-check', 'install',
-    '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps',
-    '--upgrade', '-r', 'requirements.txt'];
 gulp.task('installPythonLibs', async () => {
     const requirements = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8').split('\n').map(item => item.trim()).filter(item => item.length > 0);
     const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
@@ -260,6 +257,21 @@ gulp.task('installPythonLibs', async () => {
         }
     }));
 });
+
+function uploadExtension(uploadBlobName){
+    const azure = require('gulp-azure-storage');
+    const rename = require("gulp-rename");
+    return gulp.src('python*.vsix')
+        .pipe(rename(uploadBlobName))
+        .pipe(azure.upload({
+            account:    process.env.AZURE_STORAGE_ACCOUNT,
+            key:        process.env.AZURE_STORAGE_ACCESS_KEY,
+            container:  process.env.AZURE_STORAGE_CONTAINER
+        }));
+}
+
+gulp.task('uploadDeveloperExtension',  () => uploadExtension('ms-python-insiders.vsix'));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.$TRAVIS_BRANCH}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {

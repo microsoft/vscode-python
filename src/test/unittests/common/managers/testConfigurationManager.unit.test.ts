@@ -10,9 +10,10 @@ import { OutputChannel, Uri } from 'vscode';
 import { IInstaller, IOutputChannel, Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { TEST_OUTPUT_CHANNEL } from '../../../../client/unittests/common/constants';
+import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../../../../client/unittests/common/constants';
 import { TestConfigurationManager } from '../../../../client/unittests/common/managers/testConfigurationManager';
-import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
+import { UnitTestProduct } from '../../../../client/unittests/common/types';
+import { ITestConfigSettingsService } from '../../../../client/unittests/types';
 
 class MockTestConfigurationManager extends TestConfigurationManager {
     public requiresUserToConfigure(wkspace: Uri): Promise<boolean> {
@@ -24,7 +25,7 @@ class MockTestConfigurationManager extends TestConfigurationManager {
 }
 
 suite('Unit Test Configuration Manager (unit)', () => {
-    [Product.pytest, Product.unittest, Product.nosetest].forEach(product => {
+    UNIT_TEST_PRODUCTS.forEach(product => {
         const prods = getNamesAndValues(Product);
         const productName = prods.filter(item => item.value === product)[0];
         suite(productName.name, () => {
@@ -44,16 +45,15 @@ suite('Unit Test Configuration Manager (unit)', () => {
             });
 
             test('Enabling a test product shoud disable other products', async () => {
-                const testProducsToDisable = [Product.pytest, Product.unittest, Product.nosetest]
-                    .filter(item => item !== product) as UnitTestProduct[];
-                testProducsToDisable.forEach(productToDisable => {
-                    configService.setup(c => c.disable(TypeMoq.It.isValue(workspaceUri),
-                        TypeMoq.It.isValue(productToDisable)))
-                        .returns(() => Promise.resolve(undefined))
-                        .verifiable(TypeMoq.Times.once());
-                });
+                UNIT_TEST_PRODUCTS.filter(item => item !== product)
+                    .forEach(productToDisable => {
+                        configService.setup(c => c.disable(TypeMoq.It.isValue(workspaceUri),
+                            TypeMoq.It.isValue(productToDisable)))
+                            .returns(() => Promise.resolve(undefined))
+                            .verifiable(TypeMoq.Times.once());
+                    });
                 configService.setup(c => c.enable(TypeMoq.It.isValue(workspaceUri),
-                    TypeMoq.It.isValue(product as UnitTestProduct)))
+                    TypeMoq.It.isValue(product)))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.once());
 

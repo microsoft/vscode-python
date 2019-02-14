@@ -1,10 +1,11 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { isNotInstalledError } from '../../common/helpers';
 import { IConfigurationService } from '../../common/types';
+import { UnitTests } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { CANCELLATION_REASON } from '../common/constants';
@@ -22,6 +23,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     private readonly didChange = new EventEmitter<void>();
     private readonly appShell: IApplicationShell;
     private readonly testsHelper: ITestsHelper;
+    private readonly cmdManager: ICommandManager;
     public get onDidChange(): Event<void> {
         return this.didChange.event;
     }
@@ -31,6 +33,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.statusBar = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
         this.testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
+        this.cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
     public dispose() {
         this.clearProgressTicker();
@@ -164,10 +167,12 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
 
         if (!haveTests && !quietMode) {
-            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests').then(item => {
-                if (item === 'Disable Tests') {
+            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', UnitTests.disableTests(), UnitTests.configureTests()).then(item => {
+                if (item === UnitTests.disableTests()) {
                     this.disableTests()
                         .catch(ex => console.error('Python Extension: disableTests', ex));
+                } else if (item === UnitTests.configureTests()) {
+                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure).then(noop);
                 }
             });
         }

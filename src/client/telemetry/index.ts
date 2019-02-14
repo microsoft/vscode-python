@@ -31,6 +31,7 @@ import {
     Platform,
     PythonInterpreterTelemetry,
     TerminalTelemetry,
+    TestConfiguringTelemetry,
     TestDiscoverytTelemetry,
     TestRunTelemetry
 } from './types';
@@ -115,10 +116,10 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
     failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -253,6 +254,7 @@ interface IEventNamePropertyMapping {
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
+    [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     [EventName.EXECUTION_CODE]: CodeExecutionTelemetry;
     [EventName.EXECUTION_DJANGO]: CodeExecutionTelemetry;
     [EventName.FORMAT]: FormatTelemetry;
@@ -288,6 +290,8 @@ interface IEventNamePropertyMapping {
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
     [EventName.SIGNATURE]: never | undefined;
     [EventName.SYMBOL]: never | undefined;
+    [EventName.UNITTEST_CONFIGURE]: never | undefined;
+    [EventName.UNITTEST_CONFIGURING]: TestConfiguringTelemetry;
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
@@ -324,4 +328,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus: boolean };
+    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus: boolean };
 }

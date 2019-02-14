@@ -21,22 +21,22 @@ suite('Data Science Tests', () => {
 
     test('input history', async () => {
         let history = new InputHistory();
-        history.add('1');
-        history.add('2');
-        history.add('3');
-        history.add('4');
+        history.add('1', true);
+        history.add('2', true);
+        history.add('3', true);
+        history.add('4', true);
         assert.equal(history.completeDown('5'), '5');
-        history.add('5');
+        history.add('5', true);
         assert.equal(history.completeUp(''), '5');
-        history.add('5');
-        assert.equal(history.completeUp('5'), '4');
-        assert.equal(history.completeUp('4'), '3');
-        assert.equal(history.completeUp('2'), '2');
-        assert.equal(history.completeUp('1'), '1');
-        assert.equal(history.completeUp(''), '');
+        history.add('5', false);
+        assert.equal(history.completeUp('5'), '5');
+        assert.equal(history.completeUp('4'), '4');
+        assert.equal(history.completeUp('2'), '3');
+        assert.equal(history.completeUp('1'), '2');
+        assert.equal(history.completeUp(''), '1');
 
         // Add should reset position.
-        history.add('6');
+        history.add('6', true);
         assert.equal(history.completeUp(''), '6');
         assert.equal(history.completeUp(''), '5');
         assert.equal(history.completeUp(''), '4');
@@ -44,10 +44,10 @@ suite('Data Science Tests', () => {
         assert.equal(history.completeUp(''), '2');
         assert.equal(history.completeUp(''), '1');
         history = new InputHistory();
-        history.add('1');
-        history.add('2');
-        history.add('3');
-        history.add('4');
+        history.add('1', true);
+        history.add('2', true);
+        history.add('3', true);
+        history.add('4', true);
         assert.equal(history.completeDown('5'), '5');
         assert.equal(history.completeDown(''), '');
         assert.equal(history.completeUp('1'), '4');
@@ -66,14 +66,21 @@ suite('Data Science Tests', () => {
         assert.equal(history.completeDown('2'), '3');
         assert.equal(history.completeDown('3'), '4');
         assert.equal(history.completeDown(''), '');
-        history.add('5');
+        history.add('5', true);
         assert.equal(history.completeUp('1'), '5');
         assert.equal(history.completeUp('1'), '4');
         assert.equal(history.completeUp('1'), '3');
+        history.add('3', false);
+        assert.equal(history.completeUp('1'), '3');
         assert.equal(history.completeUp('1'), '2');
         assert.equal(history.completeUp('1'), '1');
+        assert.equal(history.completeDown('1'), '2');
         assert.equal(history.completeUp('1'), '1');
         assert.equal(history.completeDown('1'), '2');
+        assert.equal(history.completeDown('1'), '3');
+        assert.equal(history.completeDown('1'), '4');
+        assert.equal(history.completeDown('1'), '5');
+        assert.equal(history.completeDown('1'), '3');
     });
 
 });

@@ -17,12 +17,14 @@ import { EventName } from '../telemetry/constants';
 import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+const workspacePathNameForGlobalWorkspaces = '';
 type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
+    private lsActivatedWorkspaces = new Map<string, ILanguageServerActivator>();
     private currentActivator?: ActivatorInfo;
-    private activatedOnce: boolean = false;
+    private jediActivatedOnce: boolean = false;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
@@ -40,51 +42,73 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+        disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
 
     public async activate(resource: Resource): Promise<void> {
-        if (this.currentActivator || this.activatedOnce) {
-            return;
-        }
-        this.resource = resource;
-        this.activatedOnce = true;
-
         let jedi = this.useJedi();
         if (!jedi) {
+            if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
+                return;
+            }
             const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
             this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
             if (diagnostic.length) {
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
                 jedi = true;
             }
+        } else {
+            if (this.jediActivatedOnce) {
+                return;
+            }
+            this.jediActivatedOnce = true;
         }
 
+        this.resource = resource;
         await this.logStartup(jedi);
-
         let activatorName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
         this.currentActivator = { jedi, activator };
 
         try {
-            await activator.activate();
-            return;
+            await activator.activate(resource);
+            if (!jedi) {
+                this.lsActivatedWorkspaces.set(this.getWorkspacePathKey(resource), activator);
+            }
         } catch (ex) {
             if (jedi) {
                 return;
             }
             //Language server fails, reverting to jedi
+            if (this.jediActivatedOnce) {
+                return;
+            }
+            this.jediActivatedOnce = true;
             jedi = true;
             await this.logStartup(jedi);
             activatorName = LanguageServerActivator.Jedi;
             activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
             this.currentActivator = { jedi, activator };
-            await activator.activate();
+            await activator.activate(resource);
         }
     }
 
     public dispose() {
         if (this.currentActivator) {
             this.currentActivator.activator.dispose();
+        }
+    }
+
+    protected onWorkspaceFoldersChanged() {
+        //If an activated workspace folder was removed, dispose its activator
+        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
+        const activatedWkspcKeys = Array.from(this.lsActivatedWorkspaces.keys());
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        if (activatedWkspcFoldersRemoved.length > 0) {
+            for (const folder of activatedWkspcFoldersRemoved) {
+                this.lsActivatedWorkspaces.get(folder).dispose();
+                this.lsActivatedWorkspaces.delete(folder);
+            }
         }
     }
 
@@ -118,5 +142,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private useJedi(): boolean {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         return configurationService.getSettings(this.resource).jediEnabled;
+    }
+    private getWorkspacePathKey(resource: Resource): string {
+        return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
     }
 }

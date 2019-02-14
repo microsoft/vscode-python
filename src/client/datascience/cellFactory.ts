@@ -11,7 +11,7 @@ import { CellMatcher } from './cellMatcher';
 import { appendLineFeed, generateMarkdownFromCodeLines } from './common';
 import { CellState, ICell } from './types';
 
-function generateCodeCell(code: string[], file: string, line: number, id?: string) : ICell {
+function generateCodeCell(code: string[], file: string, line: number, id: string) : ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: {
@@ -21,7 +21,7 @@ function generateCodeCell(code: string[], file: string, line: number, id?: strin
             metadata: {},
             execution_count: 0
         },
-        id: id ? id : uuid(),
+        id: id,
         file: file,
         line: line,
         state: CellState.init
@@ -29,9 +29,9 @@ function generateCodeCell(code: string[], file: string, line: number, id?: strin
 
 }
 
-function generateMarkdownCell(code: string[], file: string, line: number, id?: string) : ICell {
+function generateMarkdownCell(code: string[], file: string, line: number, id: string) : ICell {
     return {
-        id: id ? id : uuid(),
+        id: id,
         file: file,
         line: line,
         state: CellState.finished,
@@ -44,7 +44,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id?: s
 
 }
 
-export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown?: boolean, id?: string) : ICell[] {
+export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string) : ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({trim: false});
     const firstLine = split[0];
@@ -56,7 +56,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
         if (firstNonMarkdown >= 0) {
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
-                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown)
+                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, id)
             ];
         } else {
             // Just a single markdown cell
@@ -119,6 +119,6 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IDa
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(...ranges.map(r => {
         const code = document.getText(r.range);
-        return generateCells(settings, code, document.fileName, r.range.start.line);
+        return generateCells(settings, code, document.fileName, r.range.start.line, false, uuid());
     }));
 }

@@ -83,6 +83,7 @@ print('Hello,', os.environ.get('WHO'), '!')
 # .env
 WHO=world
 PYTHONPATH=some/path/somewhere
+SPAM='hello ${WHO}'
 ````
 
 **ALWAYS**:
@@ -92,6 +93,7 @@ PYTHONPATH=some/path/somewhere
 - [ ] Environment variables in a `.env` file are exposed when running under the debugger
 - [ ] `"python.envFile"` allows for specifying an environment file manually (e.g. Jedi picks up `PYTHONPATH` changes)
 - [ ] `envFile` in a `launch.json` configuration works
+- [ ] simple variable substitution works
 
 #### [Debugging](https://code.visualstudio.com/docs/python/environments#_python-interpreter-for-debugging)
 
@@ -321,5 +323,12 @@ def test_failure():
   - [ ] `Run Unit Test Method ...` works
   - [ ] `View Unit Test Output` works
   - [ ] After having at least one failure, `Run Failed Tests` works
+- [ ] `Configure Unit Tests` works
+  - [ ] quick pick for framework (and its settings)
+  - [ ] selected framework enabled in workspace settings
+  - [ ] framework's config added (and old config removed)
+  - [ ] other frameworks disabled in workspace settings
+- [ ] `Configure Unit Tests` does not close if it loses focus
+- [ ] Cancelling configuration does not leave incomplete settings
 
 </details>

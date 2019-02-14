@@ -13,6 +13,7 @@ export interface IUnitTestConfigurationService {
     displayTestFrameworkError(wkspace: Uri): Promise<void>;
     selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined>;
     enableTest(wkspace: Uri, product: UnitTestProduct);
+    promptToEnableAndConfigureTestFramework(wkspace: Uri);
 }
 
 export const ITestResultDisplay = Symbol('ITestResultDisplay');
@@ -35,8 +36,8 @@ export interface ITestDisplay {
 
 export const IUnitTestManagementService = Symbol('IUnitTestManagementService');
 export interface IUnitTestManagementService {
-    activate(): Promise<void>;
-    activateCodeLenses(symboldProvider: DocumentSymbolProvider): Promise<void>;
+    readonly onDidStatusChange: Event<WorkspaceTestStatus>;
+    activate(symbolProvider: DocumentSymbolProvider): Promise<void>;
     getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
     discoverTestsForDocument(doc: TextDocument): Promise<void>;
     autoDiscoverTests(): Promise<void>;
@@ -55,6 +56,13 @@ export interface IUnitTestManagementService {
     viewOutput(cmdSource: CommandSource): void;
 }
 
+export const ITestConfigSettingsService = Symbol('ITestConfigSettingsService');
+export interface ITestConfigSettingsService {
+    updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
+    enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+    disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+}
+
 export interface ITestConfigurationManager {
     requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
     configure(wkspace: Uri): Promise<void>;
@@ -64,7 +72,7 @@ export interface ITestConfigurationManager {
 
 export const ITestConfigurationManagerFactory = Symbol('ITestConfigurationManagerFactory');
 export interface ITestConfigurationManagerFactory {
-    create(wkspace: Uri, product: Product): ITestConfigurationManager;
+    create(wkspace: Uri, product: Product, cfg?: ITestConfigSettingsService): ITestConfigurationManager;
 }
 
 export enum TestFilter {
@@ -136,3 +144,5 @@ export interface ILocationStackFrameDetails {
     location: Location;
     lineText: string;
 }
+
+export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };

@@ -103,20 +103,18 @@ script:
     fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
-        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER
+        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER;
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
-        npm install -g azure-cli;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        npx gulp uploadDeveloperExtension;
     fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
-        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER --updateChangelog
+        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER --updateChangelog;
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
-        npm install -g azure-cli;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        npx gulp uploadReleaseExtension;
     fi
   - bash <(curl -s https://codecov.io/bash)

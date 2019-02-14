@@ -61,7 +61,7 @@ suite('Language Server - Activator', () => {
         when(manager.start(undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
-        await activator.activate();
+        await activator.activate(undefined);
 
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -76,7 +76,7 @@ suite('Language Server - Activator', () => {
         when(manager.start(undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
-        await activator.activate();
+        await activator.activate(undefined);
 
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -94,7 +94,7 @@ suite('Language Server - Activator', () => {
         when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(true);
 
-        await activator.activate();
+        await activator.activate(undefined);
 
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -114,7 +114,7 @@ suite('Language Server - Activator', () => {
         when(fs.fileExists(mscorlib)).thenResolve(false);
         when(lsDownloader.downloadLanguageServer(languageServerFolderPath)).thenReturn(deferred.promise);
 
-        const promise = activator.activate();
+        const promise = activator.activate(undefined);
         await sleep(1);
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName()).once();
@@ -135,7 +135,7 @@ suite('Language Server - Activator', () => {
         when(manager.start(uri)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
-        await activator.activate();
+        await activator.activate(undefined);
 
         verify(manager.start(uri)).once();
         verify(workspaceService.hasWorkspaceFolders).once();

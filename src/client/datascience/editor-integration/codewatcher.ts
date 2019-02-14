@@ -41,15 +41,17 @@ export class CodeWatcher implements ICodeWatcher {
         const cells = generateCellRanges(document, this.cachedSettings);
 
         this.codeLenses = [];
+        // Be careful here. These arguments will be serialized during liveshare sessions
+        // and so shouldn't reference local objects.
         cells.forEach(cell => {
             const cmd: Command = {
-                arguments: [this, cell.range],
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
                 title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllCmd: Command = {
-                arguments: [this],
+                arguments: [document.fileName],
                 title: localize.DataScience.runAllCellsLensCommandTitle(),
                 command: Commands.RunAllCells
             };
@@ -74,18 +76,18 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunAllCells)
-    public async runAllCells() {
+    public async runAllCells(id: string) {
         const activeHistory = this.historyProvider.getOrCreateActive();
 
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
         for (const lens of this.codeLenses) {
             // Make sure that we have the correct command (RunCell) lenses
-            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 2) {
-                const range: Range = lens.command.arguments[1];
+            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 5) {
+                const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
-                    await activeHistory.addCode(code, this.getFileName(), range.start.line);
+                    await activeHistory.addCode(code, this.getFileName(), range.start.line, id);
                 }
             }
         }
@@ -94,13 +96,13 @@ export class CodeWatcher implements ICodeWatcher {
         if (this.codeLenses.length === 0) {
             if (this.document) {
                 const code = this.document.getText();
-                await activeHistory.addCode(code, this.getFileName(), 0);
+                await activeHistory.addCode(code, this.getFileName(), 0, id);
             }
         }
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
+    public async runSelectionOrLine(activeEditor : TextEditor | undefined, id: string) {
         const activeHistory = this.historyProvider.getOrCreateActive();
 
         if (this.document && activeEditor &&
@@ -117,19 +119,20 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             if (code && code.trim().length) {
-                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, id, activeEditor);
             }
         }
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public async runCell(range: Range) {
+    public async runCell(range: Range, id: string) {
         const activeHistory = this.historyProvider.getOrCreateActive();
         if (this.document) {
+            // Use that to get our code.
             const code = this.document.getText(range);
 
             try {
-                await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
+                await activeHistory.addCode(code, this.getFileName(), range.start.line, id, this.documentManager.activeTextEditor);
             } catch (err) {
                 this.handleError(err);
             }
@@ -138,7 +141,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public async runCurrentCell() {
+    public async runCurrentCell(id: string) {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
         }
@@ -146,14 +149,14 @@ export class CodeWatcher implements ICodeWatcher {
         for (const lens of this.codeLenses) {
             // Check to see which RunCell lens range overlaps the current selection start
             if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
-                await this.runCell(lens.range);
+                await this.runCell(lens.range, id);
                 break;
             }
         }
     }
 
     @captureTelemetry(Telemetry.RunCurrentCellAndAdvance)
-    public async runCurrentCellAndAdvance() {
+    public async runCurrentCellAndAdvance(id: string) {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
         }
@@ -188,7 +191,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             // Run the cell after moving the selection
-            await this.runCell(currentRunCellLens.range);
+            await this.runCell(currentRunCellLens.range, id);
         }
     }
 

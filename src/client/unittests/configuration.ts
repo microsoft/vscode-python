@@ -3,11 +3,19 @@
 import { inject, injectable } from 'inversify';
 import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { TestConfiguringTelemetry, TestTool } from '../telemetry/types';
 import { TEST_OUTPUT_CHANNEL } from './common/constants';
-import { UnitTestProduct } from './common/types';
-import { ITestConfigurationManagerFactory, IUnitTestConfigurationService } from './types';
+import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
+import { ITestsHelper, UnitTestProduct } from './common/types';
+import {
+    ITestConfigSettingsService, ITestConfigurationManagerFactory,
+    IUnitTestConfigurationService
+} from './types';
 
 @injectable()
 export class UnitTestConfigurationService implements IUnitTestConfigurationService {
@@ -29,12 +37,12 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         enabledCount += settings.unitTest.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.unitTest.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
-            return this.promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
+            return this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
         } else {
             const option = 'Enable and configure a Test Framework';
             const item = await this.appShell.showInformationMessage('No test framework configured (unittest, pytest or nosetest)', option);
             if (item === option) {
-                return this.promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel);
+                return this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel);
             }
             return Promise.reject(null);
         }
@@ -60,6 +68,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             detail: 'https://nose.readthedocs.io/'
         }];
         const options = {
+            ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: placeHolderMessage
@@ -82,29 +91,58 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         });
     }
 
-    private async  promptToEnableAndConfigureTestFramework(wkspace: Uri, installer: IInstaller, outputChannel: OutputChannel, messageToDisplay: string = 'Select a test framework/tool to enable', enableOnly: boolean = false) {
-        const selectedTestRunner = await this.selectTestRunner(messageToDisplay);
-        if (typeof selectedTestRunner !== 'number') {
-            return Promise.reject(null);
-        }
-        const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
-        const configMgr = factory.create(wkspace, selectedTestRunner);
-        if (enableOnly) {
-            // Ensure others are disabled
-            [Product.unittest, Product.pytest, Product.nosetest]
-                .filter(prod => selectedTestRunner !== prod)
-                .forEach(prod => {
-                    factory.create(wkspace, prod).disable()
-                        .catch(ex => console.error('Python Extension: createTestConfigurationManager.disable', ex));
-                });
-            return configMgr.enable();
-        }
+    public async promptToEnableAndConfigureTestFramework(wkspace: Uri) {
+        await this._promptToEnableAndConfigureTestFramework(
+            wkspace,
+            this.installer,
+            this.outputChannel,
+            undefined,
+            false,
+            'commandpalette'
+        );
+    }
 
-        // Configure everything before enabling.
-        // Cuz we don't want the test engine (in main.ts file - tests get discovered when config changes are detected)
-        // to start discovering tests when tests haven't been configured properly.
-        return configMgr.configure(wkspace)
-            .then(() => this.enableTest(wkspace, selectedTestRunner))
-            .catch(reason => { return this.enableTest(wkspace, selectedTestRunner).then(() => Promise.reject(reason)); });
+    private async _promptToEnableAndConfigureTestFramework(
+        wkspace: Uri,
+        installer: IInstaller,
+        outputChannel: OutputChannel,
+        messageToDisplay: string = 'Select a test framework/tool to enable',
+        enableOnly: boolean = false,
+        trigger: 'ui' | 'commandpalette' = 'ui'
+    ) {
+        const telemetryProps: TestConfiguringTelemetry = {
+            trigger: trigger,
+            failed: false
+        };
+        try {
+            const selectedTestRunner = await this.selectTestRunner(messageToDisplay);
+            if (typeof selectedTestRunner !== 'number') {
+                return Promise.reject(null);
+            }
+            const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
+            telemetryProps.tool = helper.parseProviderName(selectedTestRunner) as TestTool;
+            const delayed = new BufferedTestConfigSettingsService();
+            const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
+            const configMgr = factory.create(wkspace, selectedTestRunner, delayed);
+            if (enableOnly) {
+                await configMgr.enable();
+            } else {
+                // Configure everything before enabling.
+                // Cuz we don't want the test engine (in main.ts file - tests get discovered when config changes are detected)
+                // to start discovering tests when tests haven't been configured properly.
+                await configMgr.configure(wkspace)
+                    .then(() => this.enableTest(wkspace, selectedTestRunner))
+                    .catch(reason => { return this.enableTest(wkspace, selectedTestRunner).then(() => Promise.reject(reason)); });
+            }
+            const cfg = this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
+            try {
+                await delayed.apply(cfg);
+            } catch (exc) {
+                traceError('Python Extension: applying unit test config updates', exc);
+                telemetryProps.failed = true;
+            }
+        } finally {
+            sendTelemetryEvent(EventName.UNITTEST_CONFIGURING, undefined, telemetryProps);
+        }
     }
 }

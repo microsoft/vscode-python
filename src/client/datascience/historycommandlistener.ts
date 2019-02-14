@@ -4,10 +4,11 @@
 import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
+import * as uuid from 'uuid/v4';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -18,6 +19,7 @@ import { CommandSource } from '../unittests/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from './cellFactory';
 import { Commands, Telemetry } from './constants';
 import {
+    ICommandBroker,
     IDataScienceCommandListener,
     IHistoryProvider,
     IJupyterExecution,
@@ -47,7 +49,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry.push(disposable);
     }
 
-    public register(commandManager: ICommandManager): void {
+    public register(commandManager: ICommandBroker): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(Commands.ImportNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
@@ -220,7 +222,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
                     const code = document.getText(r.range);
-                    return server ? server.execute(code, document.fileName, r.range.start.line, cancelToken) : [];
+                    return server ? server.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
                 })));
 
             // Then save them to the file
@@ -234,7 +236,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
         } finally {
             if (server) {
-                server.dispose();
+                await server.dispose();
             }
         }
     }

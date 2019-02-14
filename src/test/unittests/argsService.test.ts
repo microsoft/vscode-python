@@ -13,6 +13,7 @@ import { ILogger, Product } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
+import { UNIT_TEST_PRODUCTS } from '../../client/unittests/common/constants';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/unittests/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/unittests/pytest/services/argsService';
 import { IArgumentsHelper, IArgumentsService } from '../../client/unittests/types';
@@ -20,8 +21,7 @@ import { ArgumentsService as UnitTestArgumentsService } from '../../client/unitt
 import { PYTHON_PATH } from '../common';
 
 suite('ArgsService: Common', () => {
-    [Product.unittest, Product.nosetest, Product.pytest]
-        .forEach(product => {
+    UNIT_TEST_PRODUCTS.forEach(product => {
             const productNames = getNamesAndValues(Product);
             const productName = productNames.find(item => item.value === product)!.name;
             suite(productName, () => {

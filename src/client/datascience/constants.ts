@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { IS_WINDOWS } from '../common/platform/constants';
+
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunCell = 'python.datascience.runcell';
@@ -36,6 +38,15 @@ export namespace EditorContexts {
 export namespace RegExpValues {
     export const PythonCellMarker = /^(#\s*%%|#\s*\<codecell\>|#\s*In\[\d*?\]|#\s*In\[ \])/;
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
+    export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
+    export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
+    export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
+    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    export const HttpPattern = /https?:\/\//;
+    export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
+    export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
+    export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
+    export const ArgsSplitterRegEx = /([^\s,]+)/g;
 }
 
 export namespace HistoryMessages {
@@ -56,9 +67,13 @@ export namespace HistoryMessages {
     export const StartProgress = 'start_progress';
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
-    export const SendInfo = 'send_info';
     export const SubmitNewCell = 'submit_new_cell';
     export const UpdateSettings = 'update_settings';
+}
+
+export namespace HistoryNonLiveShareMessages {
+    export const SendInfo = 'send_info';
+    export const Started = 'started';
 }
 
 export enum Telemetry {
@@ -106,4 +121,38 @@ export namespace CodeSnippits {
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
+}
+
+export namespace JupyterCommands {
+    export const NotebookCommand = 'notebook';
+    export const ConvertCommand = 'nbconvert';
+    export const KernelSpecCommand = 'kernelspec';
+    export const KernelCreateCommand = 'ipykernel';
+
+}
+
+export namespace LiveShare {
+    export const None = 'none';
+    export const Host = 'host';
+    export const Guest = 'guest';
+    export const JupyterExecutionService = 'jupyterExecutionService';
+    export const JupyterServerSharedService = 'jupyterServerSharedService';
+    export const CommandBrokerService = 'commmandBrokerService';
+    export const WebPanelMessageService = 'webPanelMessageService';
+    export const LiveShareBroadcastRequest = 'broadcastRequest';
+    export const ResponseLifetime = 15000;
+    export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
+}
+
+export namespace LiveShareCommands {
+    export const isNotebookSupported = 'isNotebookSupported';
+    export const isImportSupported = 'isImportSupported';
+    export const isKernelCreateSupported = 'isKernelCreateSupported';
+    export const isKernelSpecSupported = 'isKernelSpecSupported';
+    export const connectToNotebookServer = 'connectToNotebookServer';
+    export const getUsableJupyterPython = 'getUsableJupyterPython';
+    export const getSysInfo = 'getSysInfo';
+    export const serverResponse = 'serverResponse';
+    export const catchupRequest = 'catchupRequest';
+    export const syncRequest = 'synchRequest';
 }

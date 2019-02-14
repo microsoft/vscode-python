@@ -90,7 +90,6 @@ export class LanguageServer implements ILanguageServer {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');
         }
-        await this.testManager.activate();
-        await this.testManager.activateCodeLenses(new LanguageServerSymbolProvider(this.languageClient!));
+        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
     }
 }

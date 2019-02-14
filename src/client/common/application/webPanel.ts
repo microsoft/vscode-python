@@ -47,7 +47,7 @@ export class WebPanel implements IWebPanel {
     public async show() {
         await this.loadPromise;
         if (this.panel) {
-            this.panel.reveal(ViewColumn.Two, true);
+            this.panel.reveal(this.panel.viewColumn, true);
         }
     }
 
@@ -73,7 +73,7 @@ export class WebPanel implements IWebPanel {
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(this.panel.onDidDispose(() => {
                     this.panel = undefined;
-                    this.listener.dispose();
+                    this.listener.dispose().ignoreErrors();
                 }));
 
                 this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {

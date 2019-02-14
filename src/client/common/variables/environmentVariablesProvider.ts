@@ -44,7 +44,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
         this.createFileWatcher(settings.envFile, workspaceFolderUri);
-        let mergedVars = await this.envVarsService.parseFile(settings.envFile);
+        let mergedVars = await this.envVarsService.parseFile(settings.envFile, this.process.env);
         if (!mergedVars) {
             mergedVars = {};
         }

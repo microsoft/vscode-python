@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
@@ -20,7 +19,8 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
     ICell,
@@ -38,6 +38,7 @@ import {
     InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
+import { ClassType } from '../../client/ioc/types';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
@@ -45,6 +46,11 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockJupyterSession } from './mockJupyterSession';
 
+interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
+
+}
+
+// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
@@ -101,7 +107,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any): Promise<void> {
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -120,7 +126,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string): Promise<void> {
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -134,7 +140,7 @@ suite('Jupyter notebook tests', () => {
 
     async function verifyCell(jupyterServer: INotebookServer | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue: (data: any) => void): Promise<void> {
         // Verify results of an execute
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
         if (cellType === 'code') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -175,18 +181,11 @@ suite('Jupyter notebook tests', () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
             const server = await createNotebookServer(true);
-            let statusCount: number = 0;
             if (server) {
-                server.onStatusChanged((bool: boolean) => {
-                    statusCount += 1;
-                });
                 for (let i = 0; i < types.length; i += 1) {
-                    ioc.getSettings().datascience.markdownRegularExpression = types[i].markdownRegEx;
-                    const prevCount = statusCount;
+                    const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
+                    ioc.getSettings().datascience.markdownRegularExpression = markdownRegex!;
                     await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
-                    if (types[i].cellType !== 'markdown') {
-                        assert.ok(statusCount > prevCount, 'Status didnt update');
-                    }
                 }
             }
         });
@@ -208,7 +207,7 @@ suite('Jupyter notebook tests', () => {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer(undefined, useDarkTheme, useDefaultConfig, undefined, testDir);
+            const server = await jupyterExecution.connectToNotebookServer(undefined, useDarkTheme ? true : false, useDefaultConfig, undefined, testDir);
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -281,7 +280,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Failure', async () => {
         // Make a dummy class that will fail during launch
-        class FailedProcess extends JupyterExecution {
+        class FailedProcess extends JupyterExecutionFactory {
             public isNotebookSupported = (): Promise<boolean> => {
                 return Promise.resolve(false);
             }
@@ -492,7 +491,7 @@ suite('Jupyter notebook tests', () => {
         let finishedBefore = false;
         const finishedPromise = createDeferred();
         let error;
-        const observable = server!.executeObservable(code, 'foo.py', 0);
+        const observable = server!.executeObservable(code, 'foo.py', 0, uuid());
         let cells: ICell[] = [];
         observable.subscribe(c => {
             cells = c;
@@ -771,30 +770,40 @@ plt.show()`,
         }
     });
 
+    async function getNotebookSession(server: INotebookServer | undefined) : Promise<MockJupyterSession | undefined> {
+        if (server) {
+            // This is kinda fragile. It reliese on impl details to get to the session. Might
+            // just expose it?
+            const innerServerFactory = (server as any)['serverFactory'] as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
+            const innerServer = await innerServerFactory.get();
+            assert.ok(innerServer, 'Cannot find the inner server');
+            return (innerServer as any)['session'] as MockJupyterSession;
+        }
+    }
+
     runTest('Theme modifies execution', async () => {
         if (ioc.mockJupyter) {
             let server = await createNotebookServer(true, false, false);
-            let session = (server as any)['session'] as MockJupyterSession;
-
+            let session = await getNotebookSession(server);
             const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
             const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
 
-            assert.ok(session.getExecutes().indexOf(light) >= 0, 'light not found');
-            assert.ok(session.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
-            await server.dispose();
+            assert.ok(session!.getExecutes().indexOf(light) >= 0, 'light not found');
+            assert.ok(session!.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
+            await server!.dispose();
 
             server = await createNotebookServer(true, false, true);
-            session = (server as any)['session'] as MockJupyterSession;
-            assert.ok(session.getExecutes().indexOf(dark) >= 0, 'dark not found');
-            assert.ok(session.getExecutes().indexOf(light) < 0, 'light found when not allowed');
-            await server.dispose();
+            session = await getNotebookSession(server);
+            assert.ok(session!.getExecutes().indexOf(dark) >= 0, 'dark not found');
+            assert.ok(session!.getExecutes().indexOf(light) < 0, 'light found when not allowed');
+            await server!.dispose();
         }
     });
 
     runTest('Invalid kernel spec works', async () => {
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
-            class FailedKernelSpec extends JupyterExecution {
+            class FailedKernelSpec extends JupyterExecutionFactory {
                 protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);
                 }

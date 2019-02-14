@@ -9,7 +9,10 @@
         ],
         "jsx": "react",
         "sourceMap": true,
-        "rootDir": "src",
+        "rootDirs": [
+            "node_modules/vsls",
+            "src"
+        ],
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitThis": false,

@@ -2,10 +2,15 @@ import { Uri } from 'vscode';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
+import { ITestConfigSettingsService } from '../types';
 
 export class ConfigurationManager extends TestConfigurationManager {
-    constructor(workspace: Uri, serviceContainer: IServiceContainer) {
-        super(workspace, Product.unittest, serviceContainer);
+    constructor(
+        workspace: Uri,
+        serviceContainer: IServiceContainer,
+        cfg?: ITestConfigSettingsService
+    ) {
+        super(workspace, Product.unittest, serviceContainer, cfg);
     }
     public async requiresUserToConfigure(_wkspace: Uri): Promise<boolean> {
         return true;

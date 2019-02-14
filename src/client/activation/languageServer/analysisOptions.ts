@@ -8,7 +8,7 @@ import * as path from 'path';
 import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument } from 'vscode';
 import { LanguageClientOptions, ProvideCompletionItemsSignature } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
-import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
 import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
 import { debounce } from '../../common/utils/decorators';
@@ -79,7 +79,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
         let searchPaths = interpreterData ? interpreterData.searchPaths.split(path.delimiter) : [];
-        const settings = this.configuration.getSettings();
+        const settings = this.configuration.getSettings(this.resource);
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
             if (extraPaths && extraPaths.length > 0) {
@@ -99,11 +99,20 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
 
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
-
+        const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
+        const documentSelector = [
+            { scheme: 'file', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+        if (workspaceFolder){
+            // tslint:disable-next-line:no-any
+            (documentSelector[0] as any).pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+        }
         // Options to control the language client
         return {
             // Register the server for Python documents
-            documentSelector: PYTHON,
+            documentSelector,
+            workspaceFolder,
             synchronize: {
                 configurationSection: PYTHON_LANGUAGE
             },

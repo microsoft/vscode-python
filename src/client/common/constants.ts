@@ -1,5 +1,7 @@
+import { DocumentFilter } from 'vscode';
+
 export const PYTHON_LANGUAGE = 'python';
-export const PYTHON = [
+export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
@@ -18,6 +20,7 @@ export namespace Commands {
     export const Tests_View_UI = 'python.viewTestUI';
     export const Tests_Picker_UI = 'python.selectTestToRun';
     export const Tests_Picker_UI_Debug = 'python.selectTestToDebug';
+    export const Tests_Configure = 'python.configureTests';
     export const Tests_Discover = 'python.discoverTests';
     export const Tests_Run_Failed = 'python.runFailedTests';
     export const Sort_Imports = 'python.sortImports';
@@ -26,6 +29,7 @@ export namespace Commands {
     export const Tests_Ask_To_Stop_Test = 'python.askToStopUnitTests';
     export const Tests_Ask_To_Stop_Discovery = 'python.askToStopUnitTestDiscovery';
     export const Tests_Stop = 'python.stopUnitTests';
+    export const ViewOutput = 'python.viewOutput';
     export const Tests_ViewOutput = 'python.viewTestOutput';
     export const Tests_Select_And_Run_Method = 'python.selectAndRunTestMethod';
     export const Tests_Select_And_Debug_Method = 'python.selectAndDebugTestMethod';
@@ -41,6 +45,12 @@ export namespace Commands {
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
+    export const navigateToTestFunction = 'navigateToTestFunction';
+    export const navigateToTestSuite = 'navigateToTestSuite';
+    export const navigateToTestFile = 'navigateToTestFile';
+    export const openTestNodeInEditor = 'python.openTestNodeInEditor';
+    export const runTestNode = 'python.runTestNode';
+    export const debugTestNode = 'python.debugTestNode';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
