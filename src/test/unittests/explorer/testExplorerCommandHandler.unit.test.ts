@@ -4,18 +4,22 @@
 'use strict';
 
 import { IDisposable } from '@phosphor/disposable';
-import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import {
+    anything, capture, deepEqual,
+    instance, mock, verify, when
+} from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
-import { ITestDataItemResource, TestDataItem } from '../../../client/providers/types';
+import { ITestDataItemResource } from '../../../client/providers/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
-import { TestsHelper } from '../../../client/unittests/common/testUtils';
-import { TestFile, TestFunction, TestsToRun, TestSuite } from '../../../client/unittests/common/types';
+import {
+    TestFile, TestFunction,
+    TestsToRun, TestSuite
+} from '../../../client/unittests/common/types';
 import { TestExplorerCommandHandler } from '../../../client/unittests/explorer/commandHandlers';
-import { TestTreeItem } from '../../../client/unittests/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/unittests/explorer/testTreeViewProvider';
 import { ITestExplorerCommandHandler } from '../../../client/unittests/navigation/types';
 
@@ -54,7 +58,6 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
         disposable3.verify(d => d.dispose(), typemoq.Times.once());
     });
     async function testOpeningTestNode(data: TestFile | TestSuite | TestFunction, expectedCommand: string) {
-        //const treeItem = mock(TestTreeItem);
         const resource = Uri.file(__filename);
         when(testResourceMapper.getResource(data)).thenReturn(resource);
 
