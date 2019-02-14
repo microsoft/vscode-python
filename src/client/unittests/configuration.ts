@@ -13,8 +13,8 @@ import { TEST_OUTPUT_CHANNEL } from './common/constants';
 import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
 import { ITestsHelper, UnitTestProduct } from './common/types';
 import {
-    ITestConfigSettingsService, ITestConfigurationManagerFactory,
-    IUnitTestConfigurationService
+    ITestConfigSettingsService, ITestConfigurationManager,
+    ITestConfigurationManagerFactory, IUnitTestConfigurationService
 } from './types';
 
 @injectable()
@@ -80,15 +80,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
     public async enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void> {
         const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
         const configMgr = factory.create(wkspace, product);
-        const pythonConfig = this.workspaceService.getConfiguration('python', wkspace);
-        if (pythonConfig.get<boolean>('unitTest.promptToConfigure')) {
-            return configMgr.enable();
-        }
-        return pythonConfig.update('unitTest.promptToConfigure', undefined).then(() => {
-            return configMgr.enable();
-        }, reason => {
-            return configMgr.enable().then(() => Promise.reject(reason));
-        });
+        return this._enableTest(wkspace, configMgr);
     }
 
     public async promptToEnableAndConfigureTestFramework(wkspace: Uri) {
@@ -100,6 +92,19 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
             false,
             'commandpalette'
         );
+    }
+
+    private _enableTest(wkspace: Uri, configMgr: ITestConfigurationManager) {
+        const pythonConfig = this.workspaceService.getConfiguration('python', wkspace);
+        if (pythonConfig.get<boolean>('unitTest.promptToConfigure')) {
+            return configMgr.enable();
+        }
+        return pythonConfig.update('unitTest.promptToConfigure', undefined).then(() => {
+            return configMgr.enable();
+        }, reason => {
+            return configMgr.enable()
+                .then(() => Promise.reject(reason));
+        });
     }
 
     private async _promptToEnableAndConfigureTestFramework(
@@ -131,8 +136,10 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
                 // Cuz we don't want the test engine (in main.ts file - tests get discovered when config changes are detected)
                 // to start discovering tests when tests haven't been configured properly.
                 await configMgr.configure(wkspace)
-                    .then(() => this.enableTest(wkspace, selectedTestRunner))
-                    .catch(reason => { return this.enableTest(wkspace, selectedTestRunner).then(() => Promise.reject(reason)); });
+                    .then(() => this._enableTest(wkspace, configMgr))
+                    .catch(reason => {
+                        return this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason));
+                    });
             }
             const cfg = this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
             try {
