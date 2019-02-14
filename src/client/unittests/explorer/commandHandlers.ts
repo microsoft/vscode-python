@@ -12,7 +12,10 @@ import { swallowExceptions } from '../../common/utils/decorators';
 import { ITestDataItemResource, TestDataItem } from '../../providers/types';
 import { CommandSource } from '../common/constants';
 import { TestsHelper } from '../common/testUtils';
-import { TestFile, TestFolder, TestFunction, TestsToRun, TestSuite, TestType } from '../common/types';
+import {
+    TestFile, TestFolder, TestFunction,
+    TestsToRun, TestSuite, TestType
+} from '../common/types';
 import { ITestExplorerCommandHandler } from '../navigation/types';
 
 const testNavigationCommandMapping = {
