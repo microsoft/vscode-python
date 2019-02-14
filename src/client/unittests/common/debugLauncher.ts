@@ -7,6 +7,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { LaunchRequestArguments } from '../../debugger/types';
@@ -42,7 +43,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
         return debugManager.startDebugging(workspaceFolder, launchArgs)
-            .then(() => void (0));
+            .then(noop, ex => traceError('Failed to start debugging tests', ex));
     }
 
     private resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
