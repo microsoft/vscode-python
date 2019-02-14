@@ -44,7 +44,7 @@ jobs:
     pool:
       name: 'Hosted Ubuntu 1604'
     Platform: 'Linux'
-    PythonVersion: '3.7'
+    PythonVersion: '2.7'
 
 - template: templates/test-phase-job.yml
   parameters:
