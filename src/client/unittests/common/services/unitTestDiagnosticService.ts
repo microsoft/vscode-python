@@ -31,7 +31,7 @@ export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
     }
     public getMessagePrefix(status: TestStatus): string | undefined {
         const msgType = this.MessageTypes.get(status);
-        return msgType ? this.MessagePrefixes.get(msgType!) : undefined;
+        return msgType !== undefined ? this.MessagePrefixes.get(msgType!) : undefined;
     }
     public getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity | undefined {
         return this.MessageSeverities.get(unitTestSeverity);
