@@ -15,7 +15,7 @@ import { TestDataItem } from '../../providers/types';
 import { TestsHelper } from '../common/testUtils';
 import {
     TestFile, TestFolder, TestFunction,
-    TestSuite, TestType
+    TestStatus, TestSuite, TestType
 } from '../common/types';
 
 /**
@@ -25,6 +25,7 @@ import {
  */
 export abstract class TestTreeItem extends TreeItem {
     public readonly testType: TestType;
+    private _children: TestTreeItem[];
 
     constructor(
         public readonly resource: Uri,
@@ -46,17 +47,20 @@ export abstract class TestTreeItem extends TreeItem {
     }
 
     /**
-     * Tooltip for our tree nodes will be the test status (until we get icons up and running)
+     * Tooltip for our tree nodes is the test status
      */
-    public get tooltip(): string {
-        return this.data.status.toString();
+    public get testStatus(): string {
+        return this.data.status ? this.data.status : TestStatus.Unknown;
     }
 
     /**
-     * Each test type will provide its children in a different way. P-impl used here.
+     * Each test type will provide its children in a different way. pImpl used here.
      */
     public get children(): TestTreeItem[] {
-        return this.getChildrenImpl();
+        if (this._children === undefined) {
+            this._children = this.getChildrenImpl();
+        }
+        return this._children;
     }
 
     protected abstract getChildrenImpl(): Readonly<TestTreeItem[]>;

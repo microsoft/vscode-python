@@ -113,13 +113,8 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
 
         const viewItem: TestTreeItem = this.cachedItems.get(element);
         const children: TestTreeItem[] = viewItem.children;
-        const dataItems: TestDataItem[] = [];
-        children.forEach((item: TestTreeItem) => {
-            this.cachedItems.set(item.data, item);
-            dataItems.push(item.data);
-        });
 
-        return dataItems;
+        return children.map((treeItem: TestTreeItem) => treeItem.data);
     }
 
     /**
@@ -134,7 +129,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
     public async getParent?(element: TestDataItem): Promise<TestDataItem> {
         const treeEl: TestTreeItem = this.cachedItems.get(element);
         const parentEl: TestTreeItem = this.cachedItems.get(treeEl.parent);
-        return parentEl ? undefined : parentEl.data;
+        return parentEl ? parentEl.data : undefined;
     }
 
     /**
