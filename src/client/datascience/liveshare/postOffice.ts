@@ -223,7 +223,7 @@ export class PostOffice implements IAsyncDisposable {
             const jsonArray = JSON.parse(a.args) as JSONArray;
             if (jsonArray !== null && jsonArray.length >= 2) {
                 const firstArg = jsonArray[0]; // More stupid hygiene problems.
-                const command = firstArg !== null ? firstArg.toString() : '';
+                const command = firstArg !== null ? firstArg!.toString() : '';
                 this.postCommand(command, ...jsonArray.slice(1)).ignoreErrors();
             }
         }

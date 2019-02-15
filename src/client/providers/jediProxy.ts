@@ -173,7 +173,7 @@ export class JediProxy implements Disposable {
     }
 
     private static getProperty<T>(o: object, name: string): T {
-        return <T>o[name];
+        return <T>(o as any)[name];
     }
 
     public dispose() {

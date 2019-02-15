@@ -30,7 +30,8 @@ function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string
         tree.name,
         // Type coercion is a bit fuzzy when it comes to enums, so we
         // play it safe by explicitly converting.
-        SymbolKind[SymbolKind[kind]],
+        // tslint:disable-next-line:no-any
+        (SymbolKind as any)[(SymbolKind as any)[kind]],
         containerName,
         new Location(uri, range)
     );

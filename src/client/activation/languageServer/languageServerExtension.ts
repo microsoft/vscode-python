@@ -23,8 +23,8 @@ export class LanguageServerExtension implements ILanguageServerExtension {
             this.disposable.dispose();
         }
     }
-    public register(): Promise<void> {
-        if (this.disposable) {
+    public async register(): Promise<void> {
+        if (!this.disposable) {
             return;
         }
         this.disposable = this.commandManager.registerCommand(loadExtensionCommand, args => {

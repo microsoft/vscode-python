@@ -20,7 +20,7 @@ import { IDebugConfigurationResolver } from '../types';
 
 @injectable()
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration> implements IDebugConfigurationResolver<T> {
-    protected pythonPathSource: PythonPathSource;
+    protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
     constructor(protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
         protected readonly configurationService: IConfigurationService) { }

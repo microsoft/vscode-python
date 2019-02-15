@@ -50,6 +50,6 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
     }
 
     private getHistoryMessages() : string [] {
-        return Object.keys(HistoryMessages).map(k => HistoryMessages[k].toString());
+        return Object.keys(HistoryMessages).map(k => (HistoryMessages as any)[k].toString());
     }
 }
