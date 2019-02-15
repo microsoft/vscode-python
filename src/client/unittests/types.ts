@@ -133,7 +133,7 @@ export interface IPythonUnitTestMessage {
     provider: string | undefined;
     traceback?: string;
     testTime: number;
-    status: TestStatus;
+    status?: TestStatus;
     locationStack?: ILocationStackFrameDetails[];
     testFilePath: string;
 }
