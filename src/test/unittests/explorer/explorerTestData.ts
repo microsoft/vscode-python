@@ -10,11 +10,17 @@
 import { parse as path_parse } from 'path';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
-import { IDisposable, IDisposableRegistry } from '../../../client/common/types';
+import {
+    IApplicationShell, ICommandManager, IWorkspaceService
+} from '../../../client/common/application/types';
+import {
+    IDisposable, IDisposableRegistry
+} from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
-import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
+import {
+    TestFlatteningVisitor
+} from '../../../client/unittests/common/testVisitors/flatteningVisitor';
 import {
     ITestCollectionStorageService, TestFile,
     TestFolder, TestFunction, Tests, TestSuite
@@ -34,6 +40,75 @@ export class ExplorerTestsDisposable implements IDisposable {
     public dispose() { }
 }
 
+export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []): TestFolder {
+
+    // tslint:disable-next-line:no-unnecessary-local-variable
+    const folder: TestFolder = {
+        folders: [],
+        name: folderPath,
+        nameToRun: folderPath,
+        testFiles: testFiles,
+        time: 0
+    };
+
+    return folder;
+}
+
+export function getMockTestFile(filePath: string, testSuites: TestSuite[] = [], testFunctions: TestFunction[] = []): TestFile {
+
+    // tslint:disable-next-line:no-unnecessary-local-variable
+    const testFile: TestFile = {
+        name: (path_parse(filePath)).base,
+        nameToRun: filePath,
+        time: 0,
+        fullPath: filePath,
+        functions: testFunctions,
+        suites: testSuites,
+        xmlName: filePath.replace(/\//g, '.')
+    };
+
+    return testFile;
+}
+
+export function getMockTestSuite(
+    suiteNameToRun: string,
+    testFunctions: TestFunction[] = [],
+    subSuites: TestSuite[] = [],
+    instance: boolean = true,
+    unitTest: boolean = true
+): TestSuite {
+    const suiteNameChunks = suiteNameToRun.split('::');
+    const suiteName = suiteNameChunks[suiteNameChunks.length - 1];
+
+    // tslint:disable-next-line:no-unnecessary-local-variable
+    const testSuite: TestSuite = {
+        functions: testFunctions,
+        isInstance: instance,
+        isUnitTest: unitTest,
+        name: suiteName,
+        nameToRun: suiteNameToRun,
+        suites: subSuites,
+        time: 0,
+        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':')
+    };
+    return testSuite;
+}
+
+export function getMockTestFunction(fnNameToRun: string): TestFunction {
+
+    const fnNameChunks = fnNameToRun.split('::');
+    const fnName = fnNameChunks[fnNameChunks.length - 1];
+
+    // tslint:disable-next-line:no-unnecessary-local-variable
+    const fn: TestFunction = {
+        name: fnName,
+        nameToRun: fnNameToRun,
+        time: 0
+    };
+
+    return fn;
+}
+
 /**
  * Return a basic hierarchy of test data items for use in testing.
  *
@@ -47,74 +122,56 @@ export function getTestExplorerViewItemData(): [TestFolder, TestFile, TestFuncti
     let testFunction: TestFunction;
     let testSuiteFunction: TestFunction;
 
-    testSuiteFunction = {
-        name: 'test_suite_function',
-        nameToRun: 'workspace/test_folder/test_file.py::test_suite::test_suite_function',
-        time: 0
-    };
+    testSuiteFunction = getMockTestFunction('workspace/test_folder/test_file.py::test_suite::test_suite_function');
+    testSuite = getMockTestSuite('workspace/test_folder/test_file.py::test_suite', [testSuiteFunction]);
+    testFunction = getMockTestFunction('workspace/test_folder/test_file.py::test_function');
+    testFile = getMockTestFile('workspace/test_folder/test_file.py', [testSuite], [testFunction]);
+    testFolder = getMockTestFolder('workspace/test_folder', [testFile]);
 
-    testSuite = {
-        functions: [testSuiteFunction],
-        isInstance: true,
-        isUnitTest: true,
-        name: 'test_suite',
-        nameToRun: 'workspace/test_folder/test_file.py::test_suite',
-        suites: [],
-        time: 0,
-        xmlName: 'workspace.test_folder.test_file.py:test_suite'
-    };
-
-    testFunction = {
-        name: 'test_function',
-        nameToRun: 'workspace/test_folder/test_file.py::test_function',
-        time: 0
-    };
-
-    testFile = {
-        fullPath: 'workspace/test_folder/test_file.py',
-        functions: [testFunction],
-        name: 'test_file.py',
-        nameToRun: 'workspace/test_folder/test_file.py',
-        suites: [testSuite],
-        time: 0,
-        xmlName: 'workspace.test_folder.test_file.py'
-    };
-
-    testFolder = {
-        folders: [],
-        name: 'workspace/test_folder',
-        nameToRun: 'workspace/test_folder',
-        testFiles: [testFile],
-        time: 0
-    };
     return [testFolder, testFile, testFunction, testSuite, testSuiteFunction];
+}
+
+/**
+ * Return an instance of `TestsHelper` that can be used in a unit test scenario.
+ *
+ * @returns An instance of `TestsHelper` class with mocked AppShell & ICommandManager members.
+ */
+export function getTestHelperInstance(): TestsHelper {
+
+    const appShellMoq = typemoq.Mock.ofType<IApplicationShell>();
+    const commMgrMoq = typemoq.Mock.ofType<ICommandManager>();
+    const serviceContainerMoq = typemoq.Mock.ofType<IServiceContainer>();
+
+    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
+        .returns(() => appShellMoq.object);
+    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
+        .returns(() => commMgrMoq.object);
+
+    return new TestsHelper(new TestFlatteningVisitor(), serviceContainerMoq.object);
 }
 
 /**
  * Creates mock `Tests` data suitable for testing the TestTreeViewProvider with.
  */
-export function createMockTestsData(): Tests {
-    let testFolder: TestFolder;
-    let testFile: TestFile;
-    let testFunction: TestFunction;
-    let testSuite: TestSuite;
-    let testSuiteFn: TestFunction;
+export function createMockTestsData(testData?: TestFile[]): Tests {
+    if (testData === undefined) {
+        let testFolder: TestFolder;
+        let testFile: TestFile;
+        let testFunction: TestFunction;
+        let testSuite: TestSuite;
+        let testSuiteFn: TestFunction;
 
-    [testFolder,
-        testFile,
-        testFunction,
-        testSuite,
-        testSuiteFn] = getTestExplorerViewItemData();
-    const appShellMoq = typemoq.Mock.ofType<IApplicationShell>();
-    const commMgrMoq = typemoq.Mock.ofType<ICommandManager>();
-    const serviceContainerMoq = typemoq.Mock.ofType<IServiceContainer>();
-    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
-        .returns(() => appShellMoq.object);
-    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
-        .returns(() => commMgrMoq.object);
-    const testHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainerMoq.object);
+        [testFolder,
+            testFile,
+            testFunction,
+            testSuite,
+            testSuiteFn] = getTestExplorerViewItemData();
 
-    return testHelper.flattenTestFiles([testFile]);
+        testData = [testFile];
+    }
+
+    const testHelper = getTestHelperInstance();
+    return testHelper.flattenTestFiles(testData);
 }
 
 export function createMockTestStorageService(testData?: Tests): typemoq.IMock<ITestCollectionStorageService> {

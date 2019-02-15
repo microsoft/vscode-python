@@ -27,27 +27,27 @@ suite('Unit Tests Test Explorer View Items', () => {
 
     test('Test folder created into test view item', () => {
         const viewItem: TestTreeItem = createTreeViewItemFrom(undefined, testFolder, undefined);
-        expect(viewItem.contextValue).is.equal('Folder');
+        expect(viewItem.contextValue).is.equal('testFolder');
     });
 
     test('Test file created into test view item', () => {
         const viewItem: TestTreeItem = createTreeViewItemFrom(undefined, testFile, testFolder);
-        expect(viewItem.contextValue).is.equal('File');
+        expect(viewItem.contextValue).is.equal('testFile');
     });
 
     test('Test folder created into test view item', () => {
         const viewItem: TestTreeItem = createTreeViewItemFrom(undefined, testSuite, testFile);
-        expect(viewItem.contextValue).is.equal('Suite');
+        expect(viewItem.contextValue).is.equal('testSuite');
     });
 
     test('Test folder created into test view item', () => {
         const viewItem: TestTreeItem = createTreeViewItemFrom(undefined, testFunction, testFile);
-        expect(viewItem.contextValue).is.equal('Function');
+        expect(viewItem.contextValue).is.equal('testFunction');
     });
 
     test('Test folder created into test view item', () => {
         const viewItem: TestTreeItem = createTreeViewItemFrom(undefined, testSuiteFunction, testSuite);
-        expect(viewItem.contextValue).is.equal('Function');
+        expect(viewItem.contextValue).is.equal('testFunction');
     });
 
     test('Children of test folders are only files.', () => {
@@ -55,7 +55,7 @@ suite('Unit Tests Test Explorer View Items', () => {
         const childrenItems: TestTreeItem[] = viewItem.children;
         expect(childrenItems.length).to.be.greaterThan(0);
         childrenItems.forEach((item: TestTreeItem) => {
-            expect(item.contextValue).to.equal('File');
+            expect(item.contextValue).to.equal('testFile');
         });
     });
 
@@ -64,7 +64,7 @@ suite('Unit Tests Test Explorer View Items', () => {
         const childrenItems: TestTreeItem[] = viewItem.children;
         expect(childrenItems.length).to.be.greaterThan(0);
         childrenItems.forEach((item: TestTreeItem) => {
-            expect(item.contextValue).is.oneOf(['Function', 'Suite']);
+            expect(item.contextValue).is.oneOf(['testFunction', 'testSuite']);
         });
     });
 
@@ -73,7 +73,7 @@ suite('Unit Tests Test Explorer View Items', () => {
         const childrenItems: TestTreeItem[] = viewItem.children;
         expect(childrenItems.length).to.be.greaterThan(0);
         childrenItems.forEach((item: TestTreeItem) => {
-            expect(item.contextValue).to.equal('Function');
+            expect(item.contextValue).to.equal('testFunction');
         });
     });
 });

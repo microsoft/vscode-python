@@ -65,7 +65,6 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
 
         const handler = capture(cmdManager.registerCommand).last()[1];
         await handler.bind(commandHandler)(data);
-        const cap = capture(cmdManager.executeCommand).last();
 
         verify(cmdManager.executeCommand(expectedCommand, resource, data, true)).once();
     }
