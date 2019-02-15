@@ -12,8 +12,8 @@ import { TestStatus } from '../types';
 @injectable()
 export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
     private MessageTypes = new Map<TestStatus, DiagnosticMessageType>();
-    private MessageSeverities = new Map<PythonUnitTestMessageSeverity, DiagnosticSeverity>();
-    private MessagePrefixes = new Map<DiagnosticMessageType, string>();
+    private MessageSeverities = new Map<PythonUnitTestMessageSeverity, DiagnosticSeverity | null>();
+    private MessagePrefixes = new Map<DiagnosticMessageType | undefined, string>();
 
     constructor() {
         this.MessageTypes.set(TestStatus.Error, DiagnosticMessageType.Error);
@@ -29,10 +29,11 @@ export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
         this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.UnitTests.testSkippedDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Pass, '');
     }
-    public getMessagePrefix(status: TestStatus): string {
-        return this.MessagePrefixes.get(this.MessageTypes.get(status));
+    public getMessagePrefix(status: TestStatus): string | undefined{
+        const hello = this.MessageTypes.get(status);
+        return this.MessagePrefixes.get(hello);
     }
-    public getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity {
+    public getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity | null | undefined {
         return this.MessageSeverities.get(unitTestSeverity);
     }
 }

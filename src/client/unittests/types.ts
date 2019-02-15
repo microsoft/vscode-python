@@ -12,8 +12,8 @@ export const IUnitTestConfigurationService = Symbol('IUnitTestConfigurationServi
 export interface IUnitTestConfigurationService {
     displayTestFrameworkError(wkspace: Uri): Promise<void>;
     selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined>;
-    enableTest(wkspace: Uri, product: UnitTestProduct);
-    promptToEnableAndConfigureTestFramework(wkspace: Uri);
+    enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void>;
+    promptToEnableAndConfigureTestFramework(wkspace: Uri): Promise<void>;
 }
 
 export const ITestResultDisplay = Symbol('ITestResultDisplay');
@@ -112,8 +112,8 @@ export interface IUnitTestHelper {
 
 export const IUnitTestDiagnosticService = Symbol('IUnitTestDiagnosticService');
 export interface IUnitTestDiagnosticService {
-    getMessagePrefix(status: TestStatus): string;
-    getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity;
+    getMessagePrefix(status: TestStatus): string | undefined;
+    getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity | null | undefined;
 }
 
 export interface IPythonUnitTestMessage {

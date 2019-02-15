@@ -77,7 +77,7 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         // tslint:disable-next-line:prefer-type-cast
         return selectedTestRunner ? selectedTestRunner.product as UnitTestProduct : undefined;
     }
-    public enableTest(wkspace: Uri, product: UnitTestProduct) {
+    public async enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void> {
         const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
         const configMgr = factory.create(wkspace, product);
         const pythonConfig = this.workspaceService.getConfiguration('python', wkspace);

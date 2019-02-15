@@ -24,7 +24,7 @@ export class LanguageServerExtension implements ILanguageServerExtension {
         }
     }
     public async register(): Promise<void> {
-        if (!this.disposable) {
+        if (this.disposable) {
             return;
         }
         this.disposable = this.commandManager.registerCommand(loadExtensionCommand, args => {
