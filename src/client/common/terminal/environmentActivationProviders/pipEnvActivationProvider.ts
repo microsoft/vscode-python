@@ -20,7 +20,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
     ) { }
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
-        return true;
+        return false;
     }
 
     public async getActivationCommands(resource: Uri | undefined, _: TerminalShellType): Promise<string[] | undefined> {
