@@ -53,6 +53,7 @@ export const INotebookServerManager = Symbol('INotebookServerManager');
 export interface INotebookServerManager {
     getOrCreateServer(): Promise<INotebookServer | undefined>;
     getServer() : Promise<INotebookServer | undefined>;
+    getActiveServer(): INotebookServer | undefined;
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -251,5 +252,4 @@ export interface IJupyterVariable {
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
-    getVariableShortInfo(targetVariable: IJupyterVariable): Promise<boolean>;
 }

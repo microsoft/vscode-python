@@ -81,6 +81,12 @@ export class JupyterServerManager implements INotebookServerManager, IAsyncDispo
         }
     }
 
+    // Don't check the launch paramters, just return back the active
+    // used for components that never create or control the active server like the variables view
+    public getActiveServer(): INotebookServer | undefined {
+        return this.activeServer;
+    }
+
     public dispose(): Promise<void> {
         if (this.activeServer) {
             return this.activeServer.dispose();

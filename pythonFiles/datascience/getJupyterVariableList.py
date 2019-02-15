@@ -1,5 +1,5 @@
-# IANHU: Check for python 2.7 support
-# Also load text once and reuse
+# Query Jupyter server for defined variables list
+# Tested on 2.7 and 3.6
 from sys import getsizeof
 import json
 
