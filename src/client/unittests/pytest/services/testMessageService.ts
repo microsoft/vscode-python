@@ -205,7 +205,7 @@ export class TestMessageService implements ITestMessageService {
                 const lineClassName = matches ? matches[0] : undefined;
 
                 // Check if the indentation is proper.
-                if (parentIndentation === undefined) {
+                if (parentIndentation === -1) {
                     // The parentIndentation hasn't been set yet, so we are looking for a class that was
                     // defined in the global scope of the module.
                     if (trimmedLineText.length === lineText.length) {
@@ -228,7 +228,7 @@ export class TestMessageService implements ITestMessageService {
                         parentScopeEndIndex = index + 1;
                         continue;
                     }
-                    if (prevLowestIndentation === undefined || indentation < prevLowestIndentation) {
+                    if (prevLowestIndentation === -1 || indentation < prevLowestIndentation) {
                         if (lineClassName === suiteName) {
                             // This might be the line that we want.
                             suiteDefLineIndex = index;
@@ -240,19 +240,19 @@ export class TestMessageService implements ITestMessageService {
                     }
                 }
             }
-            if (suiteDefLineIndex === undefined) {
+            if (suiteDefLineIndex === -1) {
                 // Could not find the suite declaration line, so give up and move on with the latest one that we found.
                 break;
             }
             // Found the line to process.
             parentScopeStartIndex = suiteDefLineIndex;
-            parentIndentation = indentation;
+            parentIndentation = indentation!;
 
             // Invert the index to get the unreversed equivalent.
             const realIndex = (reversedTestFileLines.length - 1) - suiteDefLineIndex;
-            const startChar = indentation + classPrefix.length;
+            const startChar = indentation! + classPrefix.length;
             const suiteStartPos = new Position(realIndex, startChar);
-            const suiteEndPos = new Position(realIndex, (startChar + suiteName.length));
+            const suiteEndPos = new Position(realIndex, (startChar + suiteName!.length));
             const suiteRange = new Range(suiteStartPos, suiteEndPos);
             const suiteLocation = new Location(testFileUri, suiteRange);
             suiteLocationStackFrameDetails.push({ location: suiteLocation, lineText: testFile.getText(suiteRange) });
