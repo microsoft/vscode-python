@@ -3,10 +3,20 @@
 
 'use strict';
 
-import { DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Location, TextDocument, Uri } from 'vscode';
+// tslint:disable-next-line:ordered-imports
+import {
+    DiagnosticSeverity, Disposable, DocumentSymbolProvider,
+    Event, Location, ProviderResult, TextDocument,
+    TreeDataProvider, Uri
+} from 'vscode';
 import { Product } from '../common/types';
 import { CommandSource } from './common/constants';
-import { FlattenedTestFunction, ITestManager, ITestResultsService, TestFile, TestFunction, TestRunOptions, Tests, TestStatus, TestsToRun, UnitTestProduct } from './common/types';
+import {
+    FlattenedTestFunction, ITestManager, ITestResultsService,
+    TestFile, TestFolder, TestFunction, TestRunOptions, Tests,
+    TestStatus, TestsToRun, TestSuite, UnitTestProduct
+} from './common/types';
+import { TestTreeItem } from './explorer/testTreeViewItem';
 
 export const IUnitTestConfigurationService = Symbol('IUnitTestConfigurationService');
 export interface IUnitTestConfigurationService {
@@ -146,3 +156,18 @@ export interface ILocationStackFrameDetails {
 }
 
 export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };
+
+export type TestDataItem = TestFolder | TestFile | TestSuite | TestFunction;
+
+export const ITestTreeViewProvider = Symbol('ITestTreeViewProvider');
+export interface ITestTreeViewProvider extends TreeDataProvider<TestDataItem> {
+    onDidChangeTreeData: Event<TestDataItem | undefined>;
+    getTreeItem(element: TestDataItem): Promise<TestTreeItem>;
+    getChildren(element?: TestDataItem): ProviderResult<TestDataItem[]>;
+}
+
+export const ITestDataItemResource = Symbol('ITestDataItemResource');
+
+export interface ITestDataItemResource {
+    getResource(testData: Readonly<TestDataItem>): Uri;
+}

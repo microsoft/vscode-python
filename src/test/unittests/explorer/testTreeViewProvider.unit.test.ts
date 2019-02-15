@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../client/common/types';
-import { TestDataItem } from '../../../client/providers/types';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
 import {
     ITestCollectionStorageService, TestStatus, TestType
@@ -15,6 +14,7 @@ import {
 import {
     TestTreeViewProvider
 } from '../../../client/unittests/explorer/testTreeViewProvider';
+import { TestDataItem } from '../../../client/unittests/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import {
     createMockTestExplorer, createMockTestsData,

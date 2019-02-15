@@ -10,14 +10,14 @@ import {
     IDisposable, IDisposableRegistry, Resource
 } from '../../common/types';
 import {
-    ITestDataItemResource, ITestTreeViewProvider,
-    TestDataItem
-} from '../../providers/types';
-import {
     ITestCollectionStorageService,
     TestFolder, Tests, TestStatus
 } from '../common/types';
-import { IUnitTestManagementService, WorkspaceTestStatus } from '../types';
+import {
+    ITestDataItemResource, ITestTreeViewProvider,
+    IUnitTestManagementService, TestDataItem,
+    WorkspaceTestStatus
+} from '../types';
 import {
     createTreeViewItemFrom, TestFolderTreeItem, TestTreeItem
 } from './testTreeViewItem';
@@ -143,7 +143,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         if (tests && tests.testFolders) {
             const newRoot: TestTreeItem[] = [];
             const newCache: Map<TestDataItem, TestTreeItem> = new Map<TestDataItem, TestTreeItem>();
-            tests.testFolders.forEach((tf: TestFolder) => {
+            tests.rootTestFolders.forEach((tf: TestFolder) => {
                 const rootItem: TestTreeItem = createTreeViewItemFrom(resource, tf, undefined);
                 newCache.set(tf, rootItem);
                 newRoot.push(rootItem);

@@ -3,7 +3,6 @@
 
 import { Uri } from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { ITestDataItemResource, ITestTreeViewProvider } from '../providers/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
@@ -48,9 +47,10 @@ import { TestsParser as PytestTestsParser } from './pytest/services/parserServic
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
     IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
-    ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner,
-    ITestResultDisplay, IUnitTestConfigurationService,
-    IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService
+    ITestConfigurationManagerFactory, ITestDataItemResource, ITestDisplay,
+    ITestManagerRunner, ITestResultDisplay, ITestTreeViewProvider,
+    IUnitTestConfigurationService, IUnitTestDiagnosticService,
+    IUnitTestHelper, IUnitTestManagementService
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
