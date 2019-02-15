@@ -399,7 +399,7 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
             storeEntries: true
         });
         zip.on('ready', async () => {
-            zip.extract('extension', targetFolder, err => {
+            zip.extract('extension', targetFolder, (err: any) => {
                 if (err) {
                     reject(err);
                 } else {

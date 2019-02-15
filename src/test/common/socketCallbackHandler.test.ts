@@ -95,7 +95,7 @@ class MockSocketClient {
     }
     public start(): Promise<any> {
         this.def = createDeferred<any>();
-        this.socket = net.connect(this.port, this.connectionListener.bind(this));
+        this.socket = net.connect(this.port as any, this.connectionListener.bind(this));
         return this.def.promise;
     }
     private connectionListener() {
