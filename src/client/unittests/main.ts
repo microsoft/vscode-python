@@ -18,7 +18,6 @@ import {
     ILogger, IOutputChannel
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { ITestTreeViewProvider } from '../providers/types';
 import { EventName } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
@@ -26,8 +25,16 @@ import {
     CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL
 } from './common/constants';
 import { selectTestWorkspace } from './common/testUtils';
-import { ITestCollectionStorageService, ITestManager, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
-import { ITestDisplay, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestManagementService, WorkspaceTestStatus } from './types';
+import {
+    ITestCollectionStorageService, ITestManager,
+    IWorkspaceTestManagerService, TestFile,
+    TestFunction, TestStatus, TestsToRun
+} from './common/types';
+import {
+    ITestDisplay, ITestResultDisplay, ITestTreeViewProvider,
+    IUnitTestConfigurationService, IUnitTestManagementService,
+    WorkspaceTestStatus
+} from './types';
 
 @injectable()
 export class UnitTestManagementService implements IUnitTestManagementService, Disposable {

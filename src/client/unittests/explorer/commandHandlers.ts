@@ -9,7 +9,6 @@ import { Commands } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
-import { ITestDataItemResource, TestDataItem } from '../../providers/types';
 import { CommandSource } from '../common/constants';
 import { TestsHelper } from '../common/testUtils';
 import {
@@ -17,6 +16,7 @@ import {
     TestsToRun, TestSuite, TestType
 } from '../common/types';
 import { ITestExplorerCommandHandler } from '../navigation/types';
+import { ITestDataItemResource, TestDataItem } from '../types';
 
 const testNavigationCommandMapping = {
     [TestType.testFile]: Commands.navigateToTestFile,

@@ -11,12 +11,12 @@ import {
 import { Commands } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { noop } from '../../common/utils/misc';
-import { TestDataItem } from '../../providers/types';
 import { TestsHelper } from '../common/testUtils';
 import {
     TestFile, TestFolder, TestFunction,
     TestStatus, TestSuite, TestType
 } from '../common/types';
+import { TestDataItem } from '../types';
 
 /**
  * Base class for a TestTreeItem that represents a visual node on the

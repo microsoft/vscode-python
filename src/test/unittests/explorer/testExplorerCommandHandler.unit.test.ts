@@ -13,7 +13,6 @@ import { Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
-import { ITestDataItemResource } from '../../../client/providers/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import {
     TestFile, TestFunction,
@@ -22,6 +21,7 @@ import {
 import { TestExplorerCommandHandler } from '../../../client/unittests/explorer/commandHandlers';
 import { TestTreeViewProvider } from '../../../client/unittests/explorer/testTreeViewProvider';
 import { ITestExplorerCommandHandler } from '../../../client/unittests/navigation/types';
+import { ITestDataItemResource } from '../../../client/unittests/types';
 
 // tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Test Explorer Command Handler', () => {
