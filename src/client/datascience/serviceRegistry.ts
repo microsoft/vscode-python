@@ -17,6 +17,7 @@ import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterServerManager } from './jupyter/jupyterServerManager';
 import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
+import { JupyterVariables } from './jupyter/jupyterVariables';
 import { StatusProvider } from './statusProvider';
 import {
     ICodeCssGenerator,
@@ -30,6 +31,7 @@ import {
     IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
+    IJupyterVariables,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -52,6 +54,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
 }

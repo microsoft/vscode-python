@@ -491,7 +491,7 @@ suite('Jupyter notebook tests', () => {
         let finishedBefore = false;
         const finishedPromise = createDeferred();
         let error;
-        const observable = server!.executeObservable(code, 'foo.py', 0, uuid());
+        const observable = server!.executeObservable(code, 'foo.py', 0, uuid(), false);
         let cells: ICell[] = [];
         observable.subscribe(c => {
             cells = c;
