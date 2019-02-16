@@ -14,7 +14,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 suite('Smoke Test: Debug file', () => {
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
@@ -48,12 +48,13 @@ suite('Smoke Test: Debug file', () => {
             name: 'Debug',
             request: 'launch',
             type: 'python',
-            program: file
+            program: file,
+            args: [outputFile]
         };
 
         const started = await vscode.debug.startDebugging(vscode.workspace.workspaceFolders![0], config);
         expect(started).to.be.equal(true, 'Debugger did not sart');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, 30_000, '\'testExecInTerminal.log\' file not created');
+        await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
     });
 });
