@@ -615,23 +615,27 @@
             "view/title": [
                 {
                     "command": "python.debugtests",
+                    "when": "view == python_tests",
                     "group": "navigation@2"
                 },
                 {
                     "command": "python.runtests",
+                    "when": "view == python_tests",
                     "group": "navigation@1"
                 },
                 {
                     "command": "python.discoverTests",
+                    "when": "view == python_tests",
                     "group": "navigation@3"
                 },
                 {
                     "command": "python.runFailedTests",
-                    "group": "navigation@4",
-                    "when": "hasFailedTests"
+                    "when": "view == python_tests && hasFailedTests",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "python.viewTestOutput",
+                    "when": "view == python_tests",
                     "group": "navigation@5"
                 }
             ],
