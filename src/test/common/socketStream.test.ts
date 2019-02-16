@@ -101,6 +101,7 @@ suite('SocketStream', () => {
 
         stream.BeginTransaction();
         assert.equal(stream.ReadString(), message, 'First message not read properly');
+        stream.ReadString();
         assert.equal(stream.HasInsufficientDataForReading, true, 'Should not have sufficient data for reading');
         stream.RollBackTransaction();
         assert.equal(stream.ReadString(), message, 'First message not read properly after rolling back transaction');
@@ -119,6 +120,7 @@ suite('SocketStream', () => {
 
         stream.BeginTransaction();
         assert.equal(stream.ReadString(), message, 'First message not read properly');
+        stream.ReadString();
         assert.equal(stream.HasInsufficientDataForReading, true, 'Should not have sufficient data for reading');
         stream.EndTransaction();
         stream.RollBackTransaction();
