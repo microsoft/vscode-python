@@ -43,7 +43,7 @@ type TestCallback = (error?: Error, failures?: number) => void;
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function(): number[] {
+    tty.getWindowSize = function (): number[] {
         return [80, 75];
     };
 }
@@ -240,7 +240,7 @@ class CoverageRunner {
                 // When instrumenting the code, istanbul will give each FunctionDeclaration a value of 1 in coverState.s,
                 // presumably to compensate for function hoisting. We need to reset this, as the function was not hoisted,
                 // as it was never loaded.
-                Object.keys(this.instrumenter.coverState.s).forEach(key => (this.instrumenter.coverState.s[key] = 0));
+                Object.keys(this.instrumenter.coverState.s).forEach(key => ((this.instrumenter.coverState.s as any)[key] = 0));
 
                 coverage[file] = this.instrumenter.coverState;
             });
@@ -252,7 +252,7 @@ class CoverageRunner {
         fs.writeFileSync(coverageFile, JSON.stringify(coverage), 'utf8');
 
         const remappedCollector: istanbul.Collector = remapIstanbul.remap(coverage, {
-            warn: warning => {
+            warn: (warning: any) => {
                 // We expect some warnings as any JS file without a typescript mapping will cause this.
                 // By default, we'll skip printing these to the console as it clutters it up.
                 if (this.options.verbose) {
