@@ -25,7 +25,7 @@ export class TestMessageService implements ITestMessageService {
      * @param testResults Details about all known tests.
      */
     public async getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]> {
-        const testFuncs: FlattenedTestFunction[] = testResults.testFunctions.reduce<FlattenedTestFunction[]>((filtered, test) => {
+        const testFuncs = testResults.testFunctions.reduce<FlattenedTestFunction[]>((filtered, test) => {
             if (test.testFunction.passed !== undefined || test.testFunction.status === TestStatus.Skipped) {
                 filtered.push(test);
             }
