@@ -107,13 +107,13 @@ suite('Activation of Environments in Terminal', () => {
     async function testActivation(envPath: string) {
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPath);
-        const content = openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(content).to.equal(envPath);
     }
 
     test('Should not activate', async () => {
         await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
-        const content = openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(content).to.not.equal(PYTHON_PATH);
     });
 
