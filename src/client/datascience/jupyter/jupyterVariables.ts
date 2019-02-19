@@ -3,14 +3,14 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Identifiers } from '../constants';
-import { ICell, INotebookServer, INotebookServerManager, IJupyterVariable, IJupyterVariables } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { nbformat } from '@jupyterlab/coreutils';
+import { Identifiers } from '../constants';
+import { ICell, IJupyterVariable, IJupyterVariables, INotebookServerManager } from '../types';
 
 @injectable()
 
@@ -28,7 +28,7 @@ export class JupyterVariables implements IJupyterVariables {
         }
 
         const activeServer = this.jupyterServerManager.getActiveServer();
-        if (!activeServer) {
+        if (!activeServer || !this.fetchVariablesFile) {
             return [];
         }
 
@@ -47,7 +47,7 @@ export class JupyterVariables implements IJupyterVariables {
         this.fetchVariablesFile = await fs.readFile(file, 'utf-8');
     }
 
-    private deserializeVariableData(cells: ICell[]): IJupyterVariable[] | undefined {
+    private deserializeVariableData(cells: ICell[]): IJupyterVariable[] {
         // Verify that we have the correct cell type and outputs
         if (cells.length > 0 && cells[0].data) {
             const codeCell = cells[0].data as nbformat.ICodeCell;
@@ -60,10 +60,11 @@ export class JupyterVariables implements IJupyterVariables {
                     // Trim the excess ' character on the string
                     resultString = resultString.slice(1, resultString.length - 1);
 
-                    const jsonObject: IJupyterVariable[] = JSON.parse(resultString) as IJupyterVariable[];
-                    return jsonObject;
+                    return JSON.parse(resultString) as IJupyterVariable[];
                 }
             }
         }
+
+        return [];
     }
 }

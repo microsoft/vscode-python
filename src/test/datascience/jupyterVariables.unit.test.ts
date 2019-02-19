@@ -4,12 +4,12 @@
 'use strict';
 
 // tslint:disable:no-any max-func-body-length
+import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
-import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
-import { CellState, ICell, IJupyterVariable, INotebookServerManager, INotebookServer } from '../../client/datascience/types';
 import { Identifiers } from '../../client/datascience/constants';
-import { nbformat } from '@jupyterlab/coreutils';
+import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
+import { CellState, ICell, IJupyterVariable, INotebookServer, INotebookServerManager } from '../../client/datascience/types';
 
 suite('JupyterVariables', () => {
     let serverManager: typemoq.IMock<INotebookServerManager>;
@@ -19,7 +19,7 @@ suite('JupyterVariables', () => {
     function generateVariableOutput(): nbformat.IOutput {
         return {
             output_type: 'execute_result',
-            data: { 'text/plain' : '"[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}, {"name": "getsizeof", "type": "builtin_function_or_method", "size": 58, "expensive": true}, {"name": "json", "type": "module", "size": 53, "expensive": true}, {"name": "notebook", "type": "module", "size": 57, "expensive": true}, {"name": "np", "type": "module", "size": 51, "expensive": true}, {"name": "pd", "type": "module", "size": 51, "expensive": true}, {"name": "plt", "type": "module", "size": 52, "expensive": true}, {"name": "style", "type": "module", "size": 54, "expensive": true}, {"name": "sys", "type": "module", "size": 52, "expensive": true}, {"name": "testing", "type": "str", "size": 56, "expensive": true}, {"name": "textFile", "type": "TextIOWrapper", "size": 57, "expensive": true}, {"name": "value", "type": "int", "size": 66, "expensive": true}]"'} 
+            data: { 'text/plain' : '"[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}, {"name": "getsizeof", "type": "builtin_function_or_method", "size": 58, "expensive": true}, {"name": "json", "type": "module", "size": 53, "expensive": true}, {"name": "notebook", "type": "module", "size": 57, "expensive": true}, {"name": "np", "type": "module", "size": 51, "expensive": true}, {"name": "pd", "type": "module", "size": 51, "expensive": true}, {"name": "plt", "type": "module", "size": 52, "expensive": true}, {"name": "style", "type": "module", "size": 54, "expensive": true}, {"name": "sys", "type": "module", "size": 52, "expensive": true}, {"name": "testing", "type": "str", "size": 56, "expensive": true}, {"name": "textFile", "type": "TextIOWrapper", "size": 57, "expensive": true}, {"name": "value", "type": "int", "size": 66, "expensive": true}]"'}
         };
     }
 
@@ -28,7 +28,7 @@ suite('JupyterVariables', () => {
             data: {
                 cell_type: 'code',
                 execution_count: 0,
-                metadata: undefined,
+                metadata: {},
                 outputs: [generateVariableOutput()],
                 source: ''
             },
@@ -93,7 +93,7 @@ suite('JupyterVariables', () => {
 
         const results = await jupyterVariables.getVariables();
 
-        // Check the results that we get back 
+        // Check the results that we get back
         assert.equal(results.length, 16);
 
         // Check our items (just the first few real items, no need to check all 19)
