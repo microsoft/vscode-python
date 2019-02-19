@@ -42,10 +42,9 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined> {
         if (debugConfiguration.request === 'attach') {
             return this.attachResolver.resolveDebugConfiguration(folder, debugConfiguration as AttachRequestArguments, token);
+        } else if (debugConfiguration.request === 'test') {
+            throw Error('Please use the command \'Python: Debug Unit Tests\'');
         } else {
-            if (debugConfiguration.request === 'test') {
-                throw Error('unsupported debug configuration "test"');
-            }
             return this.launchResolver.resolveDebugConfiguration(folder, debugConfiguration as LaunchRequestArguments, token);
         }
     }
