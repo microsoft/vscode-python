@@ -61,7 +61,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => true);
         configService
             .setup(c => c.getSettings(uri))
-            .returns(() => pythonSettings.object)
+            .returns(() => pythonSettings.object);
 
         const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
         client
@@ -117,7 +117,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => true);
         configService
             .setup(c => c.getSettings(uri))
-            .returns(() => pythonSettings.object)
+            .returns(() => pythonSettings.object);
 
         const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
         client
