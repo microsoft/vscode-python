@@ -9,6 +9,6 @@ varDic = []
 for var in localVars:
     # Everything is assumed expensive when just loading the type list
     varDic.append({'name': var, 'type': type(eval(var)).__name__,
-    'size': getsizeof(var), 'expensive': 'true'})
+    'size': getsizeof(var), 'expensive': True})
 
 json.dumps(varDic)

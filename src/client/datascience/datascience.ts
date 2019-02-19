@@ -23,14 +23,12 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-// IANHU: Only in this class for testing, remove later
 import {
     ICodeWatcher,
     ICommandBroker,
     IDataScience,
     IDataScienceCodeLensProvider,
-    IDataScienceCommandListener,
-    IJupyterVariables
+    IDataScienceCommandListener
 } from './types';
 
 @injectable()
@@ -161,8 +159,6 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
-        // IANHU: Just for testing
-        const results = await this.jupyterVariables.getVariables();
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
