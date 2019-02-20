@@ -173,8 +173,8 @@
                 "title": "%python.command.python.runtests.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/start.svg",
-                    "dark": "resources/dark/start.svg"
+                    "light": "resources/light/run-tests.svg",
+                    "dark": "resources/dark/run-tests.svg"
                 }
             },
             {
@@ -254,8 +254,8 @@
                 "title": "%python.command.python.runFailedTests.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/start-failed.svg",
-                    "dark": "resources/dark/start-failed.svg"
+                    "light": "resources/light/run-failed-tests.svg",
+                    "dark": "resources/dark/run-failed-tests.svg"
                 }
             },
             {
@@ -616,7 +616,7 @@
                 {
                     "command": "python.debugtests",
                     "when": "view == python_tests",
-                    "group": "navigation@2"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "python.runtests",
@@ -631,7 +631,7 @@
                 {
                     "command": "python.runFailedTests",
                     "when": "view == python_tests && hasFailedTests",
-                    "group": "navigation@4"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "python.viewTestOutput",
