@@ -237,7 +237,7 @@ gulp.task('renameSourceMaps', async () => {
     await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
 });
 
-gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
+gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
 gulp.task('installPythonLibs', async () => {
@@ -258,19 +258,19 @@ gulp.task('installPythonLibs', async () => {
     }));
 });
 
-function uploadExtension(uploadBlobName){
+function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
     return gulp.src('python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
-            account:    process.env.AZURE_STORAGE_ACCOUNT,
-            key:        process.env.AZURE_STORAGE_ACCESS_KEY,
-            container:  process.env.AZURE_STORAGE_CONTAINER
+            account: process.env.AZURE_STORAGE_ACCOUNT,
+            key: process.env.AZURE_STORAGE_ACCESS_KEY,
+            container: process.env.AZURE_STORAGE_CONTAINER
         }));
 }
 
-gulp.task('uploadDeveloperExtension',  () => uploadExtension('ms-python-insiders.vsix'));
+gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
 gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.$TRAVIS_BRANCH}.vsix`));
 
 function spawnAsync(command, args) {
