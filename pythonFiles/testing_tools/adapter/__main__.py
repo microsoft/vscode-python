@@ -3,9 +3,7 @@ from __future__ import absolute_import
 import argparse
 import sys
 
-from . import report
-#from . import pytest
-pytest = None
+from . import pytest, report
 
 
 TOOLS = {
