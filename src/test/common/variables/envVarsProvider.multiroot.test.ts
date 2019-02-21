@@ -36,11 +36,14 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 // tslint:disable-next-line:max-func-body-length
 suite('Multiroot Environment Variables Provider', () => {
     let ioc: UnitTestIocContainer;
+    let testFileCounter = 0;
+    const testFilesToDelete: string[] = [];
+
     const pathVariableName = IS_WINDOWS ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
-            this.skip();
+            return this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -57,7 +60,13 @@ suite('Multiroot Environment Variables Provider', () => {
         clearCache();
         return initializeTest();
     });
-    suiteTeardown(closeActiveWindows);
+    suiteTeardown(async () => {
+        await closeActiveWindows();
+        testFilesToDelete.forEach(async (fullFilePath: string) => {
+            fs.remove(fullFilePath).ignoreErrors();
+        });
+    });
+
     teardown(async () => {
         await ioc.dispose();
         await closeActiveWindows();
@@ -320,13 +329,19 @@ suite('Multiroot Environment Variables Provider', () => {
     test('Custom variables will be refreshed when .env file is created, modified and deleted', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
-        const env3 = path.join(workspace4Path.fsPath, '.env3');
-        const fileExists = await fs.pathExists(env3);
-        if (fileExists) {
-            await fs.remove(env3);
+
+        let envFileName = `.env_cust_${testFileCounter}`;
+        let env3 = path.join(workspace4Path.fsPath, envFileName);
+        testFileCounter += 1;
+        while (await fs.pathExists(env3)) {
+            testFilesToDelete.push(env3);
+            envFileName = `.env_cust_${testFileCounter}`;
+            env3 = path.join(workspace4Path.fsPath, envFileName);
+            testFileCounter += 1;
         }
+        testFilesToDelete.push(env3);
         // tslint:disable-next-line:no-invalid-template-strings
-        await updateSetting('envFile', '${workspaceRoot}/.env3', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await updateSetting('envFile', `\${workspaceRoot}/${envFileName}`, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const processVariables = { ...process.env };
         if (processVariables.PYTHONPATH) {
             delete processVariables.PYTHONPATH;
@@ -372,13 +387,20 @@ suite('Multiroot Environment Variables Provider', () => {
     test('Change event will be raised when when .env file is created, modified and deleted', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
-        const env3 = path.join(workspace4Path.fsPath, '.env3');
-        const fileExists = await fs.pathExists(env3);
-        if (fileExists) {
-            await fs.remove(env3);
+
+        let envFileName = `.env_change_${testFileCounter}`;
+        let env3 = path.join(workspace4Path.fsPath, envFileName);
+        testFileCounter += 1;
+        while (await fs.pathExists(env3)) {
+            testFilesToDelete.push(env3);
+            envFileName = `.env_change_${testFileCounter}`;
+            env3 = path.join(workspace4Path.fsPath, envFileName);
+            testFileCounter += 1;
         }
+        testFilesToDelete.push(env3);
         // tslint:disable-next-line:no-invalid-template-strings
-        await updateSetting('envFile', '${workspaceRoot}/.env3', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await updateSetting('envFile', `\${workspaceRoot}/${envFileName}`, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+
         const processVariables = { ...process.env };
         if (processVariables.PYTHONPATH) {
             delete processVariables.PYTHONPATH;
