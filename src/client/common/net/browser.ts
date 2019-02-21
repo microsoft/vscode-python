@@ -3,8 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires
-const opn = require('opn');
+// tslint:disable:no-var-requires
 
 import { injectable } from 'inversify';
 import { env, Uri } from 'vscode';
