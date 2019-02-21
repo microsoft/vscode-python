@@ -63,7 +63,9 @@ suite('Multiroot Environment Variables Provider', () => {
     suiteTeardown(async () => {
         await closeActiveWindows();
         testFilesToDelete.forEach(async (fullFilePath: string) => {
-            fs.remove(fullFilePath).ignoreErrors();
+            if (await fs.pathExists(fullFilePath)) {
+                fs.remove(fullFilePath).ignoreErrors();
+            }
         });
     });
 
