@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import argparse
 import sys
 
+from . import report
 #from . import pytest
 pytest = None
 
@@ -58,14 +59,15 @@ def parse_args(
     return tool, cmd, ns
 
 
-def main(tool, cmd, subargs, tools=TOOLS):
+def main(tool, cmd, subargs, tools=TOOLS, report=report):
     try:
         tool = tools[tool]
     except KeyError:
         raise UnsupportedToolError(tool)
 
     if cmd == 'discover':
-        tool.discover(**subargs)
+        discovered = tool.discover(**subargs)
+        report.discovered(discovered)
     else:
         raise UnsupportedCommandError(cmd)
 

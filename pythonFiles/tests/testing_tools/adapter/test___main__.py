@@ -49,12 +49,17 @@ class MainTests(unittest.TestCase):
     # TODO: We could use an integration test for pytest.discover().
 
     def test_discover(self):
-        tool = StubTool('spam')
-        main('spamspamspam', 'discover', {'spam': 'eggs'},
-             tools={'spamspamspam': tool})
+        stub = Stub()
+        tool = StubTool('spamspamspam', stub)
+        expected = object()
+        tool.return_discover = expected
+        report = StubReport(stub)
+        main(tool.name, 'discover', {'spam': 'eggs'},
+             tools={tool.name: tool}, report=report)
 
         self.assertEqual(tool.calls, [
-            ('discover', {'spam': 'eggs'}),
+            ('spamspamspam.discover', None, {'spam': 'eggs'}),
+            ('report.discovered', (expected,), None),
             ])
 
     def test_unsupported_tool(self):
@@ -78,11 +83,49 @@ class MainTests(unittest.TestCase):
         self.assertEqual(tool.calls, [])
 
 
-class StubTool(object):
+class Stub(object):
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.calls = []
 
+    def add_call(self, name, args=None, kwargs=None):
+        self.calls.append((name, args, kwargs))
+
+
+class StubProxy(object):
+
+    def __init__(self, stub=None, name=None):
+        self.name = name
+        self.stub = stub if stub is not None else Stub()
+
+    @property
+    def calls(self):
+        return self.stub.calls
+
+    def add_call(self, funcname, *args, **kwargs):
+        callname = funcname
+        if self.name:
+            callname = '{}.{}'.format(self.name, funcname)
+        return self.stub.add_call(callname, *args, **kwargs)
+
+
+class StubTool(StubProxy):
+
+    def __init__(self, name, stub=None):
+        super().__init__(stub, name)
+        self.return_discover = None
+
     def discover(self, **kwargs):
-        self.calls.append(('discover', kwargs))
+        self.add_call('discover', None, kwargs)
+        if self.return_discover is None:
+            raise NotImplementedError
+        return self.return_discover
+
+
+class StubReport(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'report')
+
+    def discovered(self, discovered):
+        self.add_call('discovered', (discovered,), None)
