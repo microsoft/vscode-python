@@ -4,47 +4,51 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
+import { IFileSystem } from '../../common/platform/types';
+import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers } from '../constants';
 import { ICell, IJupyterVariable, IJupyterVariables, INotebookServerManager } from '../types';
 
 @injectable()
-
 export class JupyterVariables implements IJupyterVariables {
-    private fetchVariablesFile: string | undefined;
+    private fetchVariablesScript?: string;
 
-    constructor(@inject(INotebookServerManager) private jupyterServerManager: INotebookServerManager) {
+    constructor(
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(INotebookServerManager) private jupyterServerManager: INotebookServerManager
+        ) {
     }
 
     // IJupyterVariables implementation
     public async getVariables(): Promise<IJupyterVariable[]> {
         // First make sure our python file is loaded up
-        if (!this.fetchVariablesFile) {
+        if (!this.fetchVariablesScript) {
             await this.loadVariablesFile();
         }
 
         const activeServer = this.jupyterServerManager.getActiveServer();
-        if (!activeServer || !this.fetchVariablesFile) {
+        if (!activeServer) {
+            // No active server will just return an empty list
             return [];
         }
 
         // Get our results and convert them to IJupyterVariable objects
-        const results = await activeServer.execute(this.fetchVariablesFile, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+        const results = await activeServer.execute(this.fetchVariablesScript!, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
         return this.deserializeVariableData(results);
     }
 
     // Private methods
     private async loadVariablesFile(): Promise<void> {
-        if (this.fetchVariablesFile) {
+        if (this.fetchVariablesScript) {
             return;
         }
 
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableList.py');
-        this.fetchVariablesFile = await fs.readFile(file, 'utf-8');
+        this.fetchVariablesScript = await this.fileSystem.readFile(file);
     }
 
     private deserializeVariableData(cells: ICell[]): IJupyterVariable[] {
@@ -65,6 +69,6 @@ export class JupyterVariables implements IJupyterVariables {
             }
         }
 
-        return [];
+        throw new Error(localize.DataScience.jupyterGetVariablesBadResults());
     }
 }

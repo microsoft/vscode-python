@@ -7,29 +7,31 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
+import { IFileSystem } from '../../client/common/platform/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
-import { CellState, ICell, IJupyterVariable, INotebookServer, INotebookServerManager } from '../../client/datascience/types';
+import { CellState, ICell, INotebookServer, INotebookServerManager } from '../../client/datascience/types';
 
 suite('JupyterVariables', () => {
     let serverManager: typemoq.IMock<INotebookServerManager>;
     let fakeServer: typemoq.IMock<INotebookServer>;
     let jupyterVariables: JupyterVariables;
+    let fileSystem: typemoq.IMock<IFileSystem>;
 
-    function generateVariableOutput(): nbformat.IOutput {
+    function generateVariableOutput(outputData: nbformat.IMimeBundle): nbformat.IOutput {
         return {
             output_type: 'execute_result',
-            data: { 'text/plain' : '"[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}, {"name": "getsizeof", "type": "builtin_function_or_method", "size": 58, "expensive": true}, {"name": "json", "type": "module", "size": 53, "expensive": true}, {"name": "notebook", "type": "module", "size": 57, "expensive": true}, {"name": "np", "type": "module", "size": 51, "expensive": true}, {"name": "pd", "type": "module", "size": 51, "expensive": true}, {"name": "plt", "type": "module", "size": 52, "expensive": true}, {"name": "style", "type": "module", "size": 54, "expensive": true}, {"name": "sys", "type": "module", "size": 52, "expensive": true}, {"name": "testing", "type": "str", "size": 56, "expensive": true}, {"name": "textFile", "type": "TextIOWrapper", "size": 57, "expensive": true}, {"name": "value", "type": "int", "size": 66, "expensive": true}]"'}
+            data: outputData
         };
     }
 
-    function generateCell(): ICell {
+    function generateCell(outputData: nbformat.IMimeBundle, hasOutput: boolean): ICell {
         return {
             data: {
                 cell_type: 'code',
                 execution_count: 0,
                 metadata: {},
-                outputs: [generateVariableOutput()],
+                outputs: hasOutput ? [generateVariableOutput(outputData)] : [],
                 source: ''
             },
             id: '0',
@@ -39,8 +41,8 @@ suite('JupyterVariables', () => {
         };
     }
 
-    function generateCells(): ICell[] {
-        return [generateCell()];
+    function generateCells(outputData: nbformat.IMimeBundle, hasOutput: boolean = true): ICell[] {
+        return [generateCell(outputData, hasOutput)];
     }
 
     function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
@@ -52,19 +54,16 @@ suite('JupyterVariables', () => {
         return result;
     }
 
-    function verifyVariable(variable: IJupyterVariable, expensive: boolean, name: string, size: number, type: string) {
-        assert.equal(variable.expensive, expensive);
-        assert.equal(variable.name, name);
-        assert.equal(variable.size, size);
-        assert.equal(variable.type, type);
-    }
-
     setup(() => {
         serverManager = typemoq.Mock.ofType<INotebookServerManager>();
         // Create our fake notebook server
         fakeServer = createTypeMoq<INotebookServer>('Fake Server');
 
-        jupyterVariables = new JupyterVariables(serverManager.object);
+        fileSystem = typemoq.Mock.ofType<IFileSystem>();
+        fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString()))
+        .returns(() => Promise.resolve('test'));
+
+        jupyterVariables = new JupyterVariables(fileSystem.object, serverManager.object);
     });
 
     test('getVariables no server', async() => {
@@ -72,13 +71,79 @@ suite('JupyterVariables', () => {
             return undefined;
         });
 
-        fakeServer.setup(fs => fs.execute(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), undefined, typemoq.It.isAny())).returns(() => {
-            return Promise.resolve(generateCells());
-        }).verifiable(typemoq.Times.never());
+        fakeServer.setup(fs => fs.execute(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), undefined, typemoq.It.isAny()))
+        .returns(() => Promise.resolve(generateCells(
+            { 'text/plain' : '"[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}, {"name": "getsizeof", "type": "builtin_function_or_method", "size": 58, "expensive": true}, {"name": "json", "type": "module", "size": 53, "expensive": true}, {"name": "notebook", "type": "module", "size": 57, "expensive": true}, {"name": "np", "type": "module", "size": 51, "expensive": true}, {"name": "pd", "type": "module", "size": 51, "expensive": true}, {"name": "plt", "type": "module", "size": 52, "expensive": true}, {"name": "style", "type": "module", "size": 54, "expensive": true}, {"name": "sys", "type": "module", "size": 52, "expensive": true}, {"name": "testing", "type": "str", "size": 56, "expensive": true}, {"name": "textFile", "type": "TextIOWrapper", "size": 57, "expensive": true}, {"name": "value", "type": "int", "size": 66, "expensive": true}]"'}
+        )))
+        .verifiable(typemoq.Times.never());
 
         const results = await jupyterVariables.getVariables();
         assert.equal(results.length, 0);
 
+        fakeServer.verifyAll();
+    });
+
+    // No cells, no output, no text/plain
+
+    test('getVariables no cells', async() => {
+        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
+            return fakeServer.object;
+        });
+
+        fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
+        .returns(() => Promise.resolve([]))
+        .verifiable(typemoq.Times.once());
+
+        let exceptionThrown = false;
+        try {
+            await jupyterVariables.getVariables();
+        } catch (exc) {
+            exceptionThrown = true;
+        }
+
+        assert.equal(exceptionThrown, true);
+        fakeServer.verifyAll();
+    });
+
+    test('getVariables no output', async() => {
+        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
+            return fakeServer.object;
+        });
+
+        fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
+        .returns(() => Promise.resolve(generateCells({}, false)))
+        .verifiable(typemoq.Times.once());
+
+        let exceptionThrown = false;
+        try {
+            await jupyterVariables.getVariables();
+        } catch (exc) {
+            exceptionThrown = true;
+        }
+
+        assert.equal(exceptionThrown, true);
+        fakeServer.verifyAll();
+    });
+
+    test('getVariables bad mime', async() => {
+        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
+            return fakeServer.object;
+        });
+
+        fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
+        .returns(() => Promise.resolve(generateCells(
+            { 'text/html' : '' }
+        )))
+        .verifiable(typemoq.Times.once());
+
+        let exceptionThrown = false;
+        try {
+            await jupyterVariables.getVariables();
+        } catch (exc) {
+            exceptionThrown = true;
+        }
+
+        assert.equal(exceptionThrown, true);
         fakeServer.verifyAll();
     });
 
@@ -87,9 +152,11 @@ suite('JupyterVariables', () => {
             return fakeServer.object;
         });
 
-        fakeServer.setup(fs => fs.execute(typemoq.It.isAnyString(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))).returns(() => {
-            return Promise.resolve(generateCells());
-        }).verifiable(typemoq.Times.once());
+        fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
+        .returns(() => Promise.resolve(generateCells(
+            { 'text/plain' : '"[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}, {"name": "getsizeof", "type": "builtin_function_or_method", "size": 58, "expensive": true}, {"name": "json", "type": "module", "size": 53, "expensive": true}, {"name": "notebook", "type": "module", "size": 57, "expensive": true}, {"name": "np", "type": "module", "size": 51, "expensive": true}, {"name": "pd", "type": "module", "size": 51, "expensive": true}, {"name": "plt", "type": "module", "size": 52, "expensive": true}, {"name": "style", "type": "module", "size": 54, "expensive": true}, {"name": "sys", "type": "module", "size": 52, "expensive": true}, {"name": "testing", "type": "str", "size": 56, "expensive": true}, {"name": "textFile", "type": "TextIOWrapper", "size": 57, "expensive": true}, {"name": "value", "type": "int", "size": 66, "expensive": true}]"'}
+        )))
+        .verifiable(typemoq.Times.once());
 
         const results = await jupyterVariables.getVariables();
 
@@ -97,12 +164,12 @@ suite('JupyterVariables', () => {
         assert.equal(results.length, 16);
 
         // Check our items (just the first few real items, no need to check all 19)
-        verifyVariable(results[0], true, 'big_dataframe', 62, 'DataFrame');
-        verifyVariable(results[1], true, 'big_dict', 57, 'dict');
-        verifyVariable(results[2], true, 'big_list', 57, 'list');
-        verifyVariable(results[3], true, 'big_nparray', 60, 'ndarray');
-        verifyVariable(results[4], true, 'big_string', 59, 'str');
-        verifyVariable(results[5], true, 'getsizeof', 58, 'builtin_function_or_method');
+        assert.deepEqual(results[0], {name: 'big_dataframe', size: 62, type: 'DataFrame', expensive: true});
+        assert.deepEqual(results[1], {name: 'big_dict', size: 57, type: 'dict', expensive: true});
+        assert.deepEqual(results[2], {name: 'big_list', size: 57, type: 'list', expensive: true});
+        assert.deepEqual(results[3], {name: 'big_nparray', size: 60, type: 'ndarray', expensive: true});
+        assert.deepEqual(results[4], {name: 'big_string', size: 59, type: 'str', expensive: true});
+        assert.deepEqual(results[5], {name: 'getsizeof', size: 58, type: 'builtin_function_or_method', expensive: true});
 
         fakeServer.verifyAll();
     });
