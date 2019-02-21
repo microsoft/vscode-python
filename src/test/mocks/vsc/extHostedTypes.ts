@@ -13,6 +13,7 @@ import * as vscode from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
+import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
 
@@ -1554,28 +1555,24 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class Task implements vscode.Task {
-        // @ts-ignore
 
-        private __id: string;
-        // @ts-ignore
+        private static ProcessType: string = 'process';
+        private static ShellType: string = 'shell';
+        private static EmptyType: string = '$empty';
+
+        private __id: string | undefined;
 
         private _definition: vscode.TaskDefinition;
-        // @ts-ignore
-        private _scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder;
-        // @ts-ignore
+        private _scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder | undefined;
         private _name: string;
-        // @ts-ignore
-        private _execution: ProcessExecution | ShellExecution;
+        private _execution: ProcessExecution | ShellExecution | undefined;
         private _problemMatchers: string[];
         private _hasDefinedMatchers: boolean;
-        // @ts-ignore
         private _isBackground: boolean;
-        // @ts-ignore
         private _source: string;
-        // @ts-ignore
-        private _group: TaskGroup;
-        // @ts-ignore
+        private _group: TaskGroup | undefined;
         private _presentationOptions: vscode.TaskPresentationOptions;
+        private _runOptions: vscode.RunOptions;
 
         constructor(definition: vscode.TaskDefinition, name: string, source: string, execution?: ProcessExecution | ShellExecution, problemMatchers?: string | string[]);
         constructor(definition: vscode.TaskDefinition, scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder, name: string, source: string, execution?: ProcessExecution | ShellExecution, problemMatchers?: string | string[]);
@@ -1611,35 +1608,42 @@ export namespace vscMockExtHostedTypes {
                 this._hasDefinedMatchers = false;
             }
             this._isBackground = false;
+            this._presentationOptions = Object.create(null);
+            this._runOptions = Object.create(null);
         }
 
-        get _id(): string {
+        get _id(): string | undefined {
             return this.__id;
         }
 
-        set _id(value: string) {
+        set _id(value: string | undefined) {
             this.__id = value;
         }
 
         private clear(): void {
-            if (this.__id === void 0) {
+            if (this.__id === undefined) {
                 return;
             }
-            // @ts-ignore
             this.__id = undefined;
-            // @ts-ignore
             this._scope = undefined;
-            // @ts-ignore
-            this._definition = undefined;
+            this.computeDefinitionBasedOnExecution();
+        }
+
+        private computeDefinitionBasedOnExecution(): void {
             if (this._execution instanceof ProcessExecution) {
                 this._definition = {
-                    type: 'process',
+                    type: Task.ProcessType,
                     id: this._execution.computeId()
                 };
             } else if (this._execution instanceof ShellExecution) {
                 this._definition = {
-                    type: 'shell',
+                    type: Task.ShellType,
                     id: this._execution.computeId()
+                };
+            } else {
+                this._definition = {
+                    type: Task.EmptyType,
+                    id: generateUuid()
                 };
             }
         }
@@ -1649,14 +1653,14 @@ export namespace vscMockExtHostedTypes {
         }
 
         set definition(value: vscode.TaskDefinition) {
-            if (value === void 0 || value === null) {
+            if (value === undefined || value === null) {
                 throw illegalArgument('Kind can\'t be undefined or null');
             }
             this.clear();
             this._definition = value;
         }
 
-        get scope(): vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder {
+        get scope(): vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder | undefined {
             return this._scope;
         }
 
@@ -1677,17 +1681,20 @@ export namespace vscMockExtHostedTypes {
             this._name = value;
         }
 
-        get execution(): ProcessExecution | ShellExecution {
+        get execution(): ProcessExecution | ShellExecution | undefined {
             return this._execution;
         }
 
-        set execution(value: ProcessExecution | ShellExecution) {
+        set execution(value: ProcessExecution | ShellExecution | undefined) {
             if (value === null) {
-                // @ts-ignore
                 value = undefined;
             }
             this.clear();
             this._execution = value;
+            let type = this._definition.type;
+            if (Task.EmptyType === type || Task.ProcessType === type || Task.ShellType === type) {
+                this.computeDefinitionBasedOnExecution();
+            }
         }
 
         get problemMatchers(): string[] {
@@ -1696,13 +1703,15 @@ export namespace vscMockExtHostedTypes {
 
         set problemMatchers(value: string[]) {
             if (!Array.isArray(value)) {
+                this.clear();
                 this._problemMatchers = [];
                 this._hasDefinedMatchers = false;
                 return;
+            } else {
+                this.clear();
+                this._problemMatchers = value;
+                this._hasDefinedMatchers = true;
             }
-            this.clear();
-            this._problemMatchers = value;
-            this._hasDefinedMatchers = true;
         }
 
         get hasDefinedMatchers(): boolean {
@@ -1733,15 +1742,13 @@ export namespace vscMockExtHostedTypes {
             this._source = value;
         }
 
-        get group(): TaskGroup {
+        get group(): TaskGroup | undefined {
             return this._group;
         }
 
-        set group(value: TaskGroup) {
-            if (value === void 0 || value === null) {
-                // @ts-ignore
-                this._group = undefined;
-                return;
+        set group(value: TaskGroup | undefined) {
+            if (value === null) {
+                value = undefined;
             }
             this.clear();
             this._group = value;
@@ -1752,12 +1759,23 @@ export namespace vscMockExtHostedTypes {
         }
 
         set presentationOptions(value: vscode.TaskPresentationOptions) {
-            if (value === null) {
-                // @ts-ignore
-                value = undefined;
+            if (value === null || value === undefined) {
+                value = Object.create(null);
             }
             this.clear();
             this._presentationOptions = value;
+        }
+
+        get runOptions(): vscode.RunOptions {
+            return this._runOptions;
+        }
+
+        set runOptions(value: vscode.RunOptions) {
+            if (value === null || value === undefined) {
+                value = Object.create(null);
+            }
+            this.clear();
+            this._runOptions = value;
         }
     }
 

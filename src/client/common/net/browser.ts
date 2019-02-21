@@ -7,10 +7,11 @@
 const opn = require('opn');
 
 import { injectable } from 'inversify';
+import { env, Uri } from 'vscode';
 import { IBrowserService } from '../types';
 
 export function launch(url: string) {
-    opn(url);
+    env.openExternal(Uri.parse(url));
 }
 
 @injectable()
