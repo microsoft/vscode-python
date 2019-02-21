@@ -1,6 +1,7 @@
 import os.path
 import sys
-import unittest
+
+import pytest
 
 
 TEST_ROOT = os.path.dirname(__file__)
@@ -10,6 +11,8 @@ DATASCIENCE_ROOT = os.path.join(SRC_ROOT, 'datascience')
 
 if __name__ == '__main__':
     sys.path.insert(1, DATASCIENCE_ROOT)
-    suite = unittest.defaultTestLoader.discover(TEST_ROOT,
-                                                top_level_dir=SRC_ROOT)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    ec = pytest.main([
+        '--rootdir', SRC_ROOT,
+        TEST_ROOT,
+        ])
+    sys.exit(ec)
