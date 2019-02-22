@@ -72,10 +72,10 @@
 - [ ] (Linux/macOS) Virtual environments created under `{workspaceFolder}/.direnv/python-{python_version}` are detected (for [direnv](https://direnv.net/) and its [`layout python3`](https://github.com/direnv/direnv/blob/master/stdlib.sh) support)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
 
-- [ ] Installed requests in app virtual environments and detect import error disappeared
-    - [ ] Prompt unresolver import 'requests'
-    - [ ] Create Terminal works to create app virtual environment uses py -3 -m venv env
-    - [ ] Install requests in terminal uses pip install reuqests
+- [ ] Installed `requests` in app virtual environments and detect import error disappeared
+    - [ ] Prompt unresolver import `'requests'`
+    - [ ] Create Terminal works to create app virtual environment via command `"py -3 -m venv env"`
+    - [ ] Install `requests` in terminal via command `"pip install reuqests"`
 
 #### [Environment files](https://code.visualstudio.com/docs/python/environments#_environment-variable-definitions-file)
 Sample files:
