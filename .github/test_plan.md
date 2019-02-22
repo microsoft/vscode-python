@@ -72,6 +72,11 @@
 - [ ] (Linux/macOS) Virtual environments created under `{workspaceFolder}/.direnv/python-{python_version}` are detected (for [direnv](https://direnv.net/) and its [`layout python3`](https://github.com/direnv/direnv/blob/master/stdlib.sh) support)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
 
+- [ ] Installed requests in app virtual environments and detect import error disappeared
+    - [ ] Prompt unresolver import 'requests'
+    - [ ] Create Terminal works to create app virtual environment uses py -3 -m venv env
+    - [ ] Install requests in terminal uses pip install reuqests
+
 #### [Environment files](https://code.visualstudio.com/docs/python/environments#_environment-variable-definitions-file)
 Sample files:
 ```python
@@ -156,6 +161,9 @@ Please also test for general accuracy on the most "interesting" code you can fin
 
 - [ ] `"python.autoComplete.extraPaths"` works
 - [ ] `"python.autocomplete.addBrackets": true` causes auto-completion of functions to append `()`
+- [ ]  requests auto-completions works
+- [ ]  Documentation/parameters shows for "open" method
+- [ ]  Completions show for "request."
 
 #### [Formatting](https://code.visualstudio.com/docs/python/editing#_formatting)
 Sample file:
@@ -187,6 +195,24 @@ def foo():pass
   - [ ] You are prompted to install `rope` if it is not already available
 - [ ] [`Sort Imports`](https://code.visualstudio.com/docs/python/editing#_sort-imports) works
 
+
+#### Send code to terminal to execute
+Sample file:
+```python
+import requests
+request = requests.get("https://drive.google.com/uc?export=download&id=1_9On2-nsBQIw3JiY43sWbrF8EjrqrR4U")
+with open("survey2017.zip", "wb") as file:
+    file.write(request.content)
+import zipfile
+with zipfile.ZipFile('survey2017.zip') as zip:
+    zip.extractall('survey2017')
+import shutil, os
+shutil.move('survey2017/survey_results_public.csv','survey2017.csv')
+shutil.rmtree('survey2017')
+os.remove('survey2017.zip')
+````
+- [ ] Shift+Enter to send selected code in sample file to terminal works
+
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
 - [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
@@ -214,6 +240,7 @@ def foo():pass
   - [ ] `Variables` section of debugger sidebar
 - [ ] [Remote debugging](https://code.visualstudio.com/docs/python/debugging#_remote-debugging) works
   - [ ] ... over SSH
+  - [ ] ... on other branches
 - [ ] [App Engine](https://code.visualstudio.com/docs/python/debugging#_google-app-engine-debugging)
 
 ### [Unit testing](https://code.visualstudio.com/docs/python/unit-testing)
@@ -327,5 +354,11 @@ def test_failure():
 - [ ] `Configure Unit Tests` does not close if it loses focus
 - [ ] Cancelling configuration does not leave incomplete settings
 - [ ] The first `"request": "test"` entry in launch.json is used for running unit tests
+
+### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
+- [ ] Set python environment to Anaconda
+- [ ] Jupyter code generated works
+- [ ] "Run All Cells" in Jupyter code works
+- [ ] Type code in python interactive window works
 
 </details>
