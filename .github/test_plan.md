@@ -161,9 +161,7 @@ Please also test for general accuracy on the most "interesting" code you can fin
 
 - [ ] `"python.autoComplete.extraPaths"` works
 - [ ] `"python.autocomplete.addBrackets": true` causes auto-completion of functions to append `()`
-- [ ]  requests auto-completions works
-- [ ]  Documentation/parameters shows for "open" method
-- [ ]  Completions show for "request."
+- [ ]  Auto-completions works
 
 #### [Formatting](https://code.visualstudio.com/docs/python/editing#_formatting)
 Sample file:
