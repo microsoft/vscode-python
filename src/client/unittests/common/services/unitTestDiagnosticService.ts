@@ -12,7 +12,7 @@ import { TestStatus } from '../types';
 @injectable()
 export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
     private MessageTypes = new Map<TestStatus, DiagnosticMessageType>();
-    private MessageSeverities = new Map<PythonUnitTestMessageSeverity, DiagnosticSeverity>();
+    private MessageSeverities = new Map<PythonUnitTestMessageSeverity, DiagnosticSeverity | undefined>();
     private MessagePrefixes = new Map<DiagnosticMessageType, string>();
 
     constructor() {
@@ -23,16 +23,17 @@ export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
         this.MessageSeverities.set(PythonUnitTestMessageSeverity.Error, DiagnosticSeverity.Error);
         this.MessageSeverities.set(PythonUnitTestMessageSeverity.Failure, DiagnosticSeverity.Error);
         this.MessageSeverities.set(PythonUnitTestMessageSeverity.Skip, DiagnosticSeverity.Information);
-        this.MessageSeverities.set(PythonUnitTestMessageSeverity.Pass, null);
+        this.MessageSeverities.set(PythonUnitTestMessageSeverity.Pass, undefined);
         this.MessagePrefixes.set(DiagnosticMessageType.Error, localize.UnitTests.testErrorDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Fail, localize.UnitTests.testFailDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.UnitTests.testSkippedDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Pass, '');
     }
-    public getMessagePrefix(status: TestStatus): string {
-        return this.MessagePrefixes.get(this.MessageTypes.get(status));
+    public getMessagePrefix(status: TestStatus): string | undefined {
+        const msgType = this.MessageTypes.get(status);
+        return msgType !== undefined ? this.MessagePrefixes.get(msgType!) : undefined;
     }
-    public getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity {
+    public getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity | undefined {
         return this.MessageSeverities.get(unitTestSeverity);
     }
 }

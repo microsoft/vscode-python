@@ -198,16 +198,20 @@ async function updateBuildNumber(args) {
 async function buildWebPack(webpackConfigName, args) {
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName);
     const stdOut = await spawnAsync('npx', ['webpack', ...args, ...['--mode', 'production']], allowedWarnings);
-    const warnings = stdOut
+    const stdOutLines = stdOut
         .split('\n')
         .map(item => item.trim())
-        .filter(item => item.length > 0)
+        .filter(item => item.length > 0);
+    const warnings = stdOutLines
         .filter(item => item.startsWith('WARNING in '))
         .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
-    if (warnings.length === 0) {
-        return;
+    const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
+    if (errors){
+        throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
-    throw new Error(`Warnings in ${webpackConfigName}, \n{warnings.join(', ')}\n\n${stdOut}`);
+    if (warnings.length > 0) {
+        throw new Error(`Warnings in ${webpackConfigName}, \n\n${stdOut}`);
+    }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
     switch (buildConfig) {
@@ -216,6 +220,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
                 'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
                 'WARNING in webpack performance recommendations:',
+                'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js'
@@ -258,19 +263,19 @@ gulp.task('installPythonLibs', async () => {
     }));
 });
 
-function uploadExtension(uploadBlobName){
+function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
     return gulp.src('python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
-            account:    process.env.AZURE_STORAGE_ACCOUNT,
-            key:        process.env.AZURE_STORAGE_ACCESS_KEY,
-            container:  process.env.AZURE_STORAGE_CONTAINER
+            account: process.env.AZURE_STORAGE_ACCOUNT,
+            key: process.env.AZURE_STORAGE_ACCESS_KEY,
+            container: process.env.AZURE_STORAGE_CONTAINER
         }));
 }
 
-gulp.task('uploadDeveloperExtension',  () => uploadExtension('ms-python-insiders.vsix'));
+gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
 gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.$TRAVIS_BRANCH}.vsix`));
 
 function spawnAsync(command, args) {

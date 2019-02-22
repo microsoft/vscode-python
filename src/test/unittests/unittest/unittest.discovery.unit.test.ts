@@ -334,7 +334,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         expect(tests.testFiles.length).to.be.equal(3);
         expect(tests.testFunctions.length).to.be.equal(6);
         expect(tests.testSuites.length).to.be.equal(3);
-        expect(tests.testFolders.length).to.be.equal(1);
+        expect(tests.testFolders.length).to.be.equal(5);
 
         // now ensure that each test function belongs within a single test suite...
         tests.testFunctions.forEach(fn => {
@@ -376,7 +376,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         expect(tests.testFiles.length).to.be.equal(3);
         expect(tests.testFunctions.length).to.be.equal(6);
         expect(tests.testSuites.length).to.be.equal(3);
-        expect(tests.testFolders.length).to.be.equal(1);
+        expect(tests.testFolders.length).to.be.equal(5);
 
         // now ensure that the 'nameToRun' for each test function begins with its file's a single test suite...
         tests.testFunctions.forEach(fn => {
@@ -418,7 +418,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         expect(tests.testFiles.length).to.be.equal(3);
         expect(tests.testFunctions.length).to.be.equal(6);
         expect(tests.testSuites.length).to.be.equal(3);
-        expect(tests.testFolders.length).to.be.equal(1);
+        expect(tests.testFolders.length).to.be.equal(4);
 
         // now ensure that each test function belongs within a single test suite...
         tests.testFunctions.forEach(fn => {
@@ -460,7 +460,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         expect(tests.testFiles.length).to.be.equal(3);
         expect(tests.testFunctions.length).to.be.equal(6);
         expect(tests.testSuites.length).to.be.equal(3);
-        expect(tests.testFolders.length).to.be.equal(1);
+        expect(tests.testFolders.length).to.be.equal(5);
 
         // now ensure that each test function belongs within a single test suite...
         tests.testFunctions.forEach(fn => {

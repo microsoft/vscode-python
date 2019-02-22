@@ -22,6 +22,7 @@ export namespace Commands {
     export const Tests_Picker_UI_Debug = 'python.selectTestToDebug';
     export const Tests_Configure = 'python.configureTests';
     export const Tests_Discover = 'python.discoverTests';
+    export const Tests_Discovering = 'python.discoveringTests';
     export const Tests_Run_Failed = 'python.runFailedTests';
     export const Sort_Imports = 'python.sortImports';
     export const Tests_Run = 'python.runtests';

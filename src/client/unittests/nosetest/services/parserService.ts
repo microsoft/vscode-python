@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
-import { ITestsHelper, ITestsParser, ParserOptions, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../../common/types';
+import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
 
 const NOSE_WANT_FILE_PREFIX = 'nose.selector: DEBUG: wantFile ';
 const NOSE_WANT_FILE_SUFFIX = '.py? True';
@@ -18,7 +18,7 @@ export class TestsParser implements ITestsParser {
         let testFiles = this.getTestFiles(content, options);
         // Exclude tests that don't have any functions or test suites.
         testFiles = testFiles.filter(testFile => testFile.suites.length > 0 || testFile.functions.length > 0);
-        return this.testsHelper.flattenTestFiles(testFiles);
+        return this.testsHelper.flattenTestFiles(testFiles, options.cwd);
     }
 
     private getTestFiles(content: string, options: ParserOptions) {

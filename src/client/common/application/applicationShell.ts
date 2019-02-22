@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires no-any unified-signatures
-const opn = require('opn');
+// tslint:disable:no-var-requires no-any unified-signatures
 
 import { injectable } from 'inversify';
-import { CancellationToken, Disposable, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { CancellationToken, Disposable, env, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { IApplicationShell } from './types';
 
 @injectable()
@@ -51,7 +50,7 @@ export class ApplicationShell implements IApplicationShell {
         return window.showInputBox(options, token);
     }
     public openUrl(url: string): void {
-        opn(url);
+        env.openExternal(Uri.parse(url));
     }
 
     public setStatusBarMessage(text: string, hideAfterTimeout: number): Disposable;

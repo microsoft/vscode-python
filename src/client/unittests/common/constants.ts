@@ -19,3 +19,9 @@ export const UNIT_TEST_PRODUCTS: UnitTestProduct[] = [
 export const NOSETEST_PROVIDER: TestProvider = 'nosetest';
 export const PYTEST_PROVIDER: TestProvider = 'pytest';
 export const UNITTEST_PROVIDER: TestProvider = 'unittest';
+
+export enum Icons {
+    discovering = 'discovering-tests.svg',
+    passed = 'status-ok.svg',
+    failed = 'status-error.svg'
+}

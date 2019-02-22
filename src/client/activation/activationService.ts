@@ -106,8 +106,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
-                this.lsActivatedWorkspaces.get(folder).dispose();
-                this.lsActivatedWorkspaces.delete(folder);
+                this.lsActivatedWorkspaces.get(folder)!.dispose();
+                this.lsActivatedWorkspaces!.delete(folder);
             }
         }
     }

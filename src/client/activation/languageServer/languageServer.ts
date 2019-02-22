@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
-import { Resource } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
@@ -30,7 +30,8 @@ export class LanguageServer implements ILanguageServer {
         @inject(ILanguageClientFactory)
         @named(LanguageClientFactory.base)
         private readonly factory: ILanguageClientFactory,
-        @inject(IUnitTestManagementService) private readonly testManager: IUnitTestManagementService
+        @inject(IUnitTestManagementService) private readonly testManager: IUnitTestManagementService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -58,10 +59,15 @@ export class LanguageServer implements ILanguageServer {
         await this.serverReady();
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
-        this.languageClient.onTelemetry(telemetryEvent => {
-            const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-            sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
-        });
+
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer) {
+            this.languageClient.onTelemetry(telemetryEvent => {
+                const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
+            });
+        }
+
         await this.registerTestServices();
     }
     @traceDecorators.error('Failed to load Language Server extension')

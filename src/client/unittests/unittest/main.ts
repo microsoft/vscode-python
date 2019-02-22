@@ -32,7 +32,7 @@ export class TestManager extends BaseTestManager {
             outChannel: this.outputChannel
         };
     }
-    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
+    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
         let args: string[];
 
         const runAllTests = this.helper.shouldRunAllTests(testsToRun);

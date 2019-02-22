@@ -4,6 +4,7 @@ import { fsExistsAsync } from '../common/utils/fs';
 import { Tag } from './contracts';
 
 // tslint:disable:no-require-imports no-var-requires no-suspicious-comment
+// tslint:disable:no-any
 // TODO: Turn these into imports.
 const LineByLineReader = require('line-by-line');
 const NamedRegexp = require('named-js-regexp');
@@ -20,7 +21,7 @@ export interface IRegexGroup {
     line: number;
 }
 
-export function matchNamedRegEx(data, regex): IRegexGroup | null {
+export function matchNamedRegEx(data: String, regex: String): IRegexGroup | null {
     const compiledRegexp = NamedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {
@@ -96,10 +97,10 @@ CTagKinMapping.set('_singleton methods', vscode.SymbolKind.Method);
 
 const newValuesAndKeys = {};
 CTagKinMapping.forEach((value, key) => {
-    newValuesAndKeys[key.substring(1)] = value;
+    (newValuesAndKeys as any)[key.substring(1)] = value;
 });
 Object.keys(newValuesAndKeys).forEach(key => {
-    CTagKinMapping.set(key, newValuesAndKeys[key]);
+    CTagKinMapping.set(key, (newValuesAndKeys as any)[key]);
 });
 
 export function parseTags(
@@ -119,11 +120,11 @@ export function parseTags(
             let lineNumber = 0;
             const tags: Tag[] = [];
 
-            lr.on('error', (err) => {
+            lr.on('error', (err: Error) => {
                 reject(err);
             });
 
-            lr.on('line', (line) => {
+            lr.on('line', (line: string) => {
                 lineNumber = lineNumber + 1;
                 if (token.isCancellationRequested) {
                     lr.close();

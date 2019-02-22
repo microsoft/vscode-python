@@ -879,8 +879,8 @@ THE SOFTWARE.
 
 [[project]]
 name = "ptvsd"
-version = "4.2.0"
-url = "https://github.com/Microsoft/ptvsd/tree/v4.2.0"
+version = "4.2.4"
+url = "https://github.com/Microsoft/ptvsd/tree/v4.2.4"
 purpose = "PyPI"
 license = """
     ptvsd

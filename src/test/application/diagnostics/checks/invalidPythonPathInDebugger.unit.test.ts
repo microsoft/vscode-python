@@ -23,7 +23,7 @@ import {
     IDiagnosticHandlerService,
     IInvalidPythonPathInDebuggerService
 } from '../../../../client/application/diagnostics/types';
-import { IWorkspaceService } from '../../../../client/common/application/types';
+import { IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { PythonPathSource } from '../../../../client/debugger/extension/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
@@ -36,6 +36,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     let configService: typemoq.IMock<IConfigurationService>;
     let helper: typemoq.IMock<IInterpreterHelper>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
+    let docMgr: typemoq.IMock<IDocumentManager>;
     setup(() => {
         const serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
@@ -48,6 +49,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             )
             .returns(() => messageHandler.object);
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
+        docMgr = typemoq.Mock.ofType<IDocumentManager>();
         serviceContainer
             .setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
             .returns(() => commandFactory.object);
@@ -73,6 +75,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             workspaceService.object,
             commandFactory.object,
             helper.object,
+            docMgr.object,
             configService.object,
             messageHandler.object
         );

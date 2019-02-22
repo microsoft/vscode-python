@@ -6,8 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from 'vscode';
-import { openFile } from '../../../../test/common';
-import { IWorkspaceService } from '../../../common/application/types';
+import { IDocumentManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
 import { IConfigurationService, Resource } from '../../../common/types';
@@ -58,6 +57,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDiagnosticsCommandFactory) private readonly commandFactory: IDiagnosticsCommandFactory,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
@@ -128,12 +128,12 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                 return [
                     {
                         prompt: 'Open launch.json',
-                        // tslint:disable-next-line:no-object-literal-type-assertion
                         command: {
                             diagnostic,
                             invoke: async (): Promise<void> => {
                                 const launchJson = this.getLaunchJsonFile(workspc.workspaceFolders![0]);
-                                await openFile(launchJson);
+                                const doc = await this.documentManager.openTextDocument(launchJson);
+                                await this.documentManager.showTextDocument(doc);
                             }
                         }
                     }

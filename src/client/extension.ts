@@ -101,6 +101,7 @@ import { EditorLoadTelemetry } from './telemetry/types';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
+import { ITestContextService } from './unittests/common/types';
 import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './unittests/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 
@@ -126,7 +127,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const serviceContainer = new ServiceContainer(cont);
     activatedServiceContainer = serviceContainer;
     registerServices(context, serviceManager, serviceContainer);
-    initializeServices(context, serviceManager, serviceContainer);
+    await initializeServices(context, serviceManager, serviceContainer);
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
@@ -275,7 +276,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     providersRegisterTypes(serviceManager);
 }
 
-function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
     selector.initialize();
     context.subscriptions.push(selector);
@@ -299,6 +300,7 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
+    serviceContainer.get<ITestContextService>(ITestContextService).register();
 }
 
 // tslint:disable-next-line:no-any

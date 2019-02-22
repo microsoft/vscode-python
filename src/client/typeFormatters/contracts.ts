@@ -1,5 +1,5 @@
 export class BlockRegEx {
-    constructor(private regEx: RegExp, public startWord) {
+    constructor(private regEx: RegExp, public startWord: String) {
 
     }
     public test(value: string): boolean {
