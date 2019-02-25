@@ -3,33 +3,35 @@
 
 import { Uri } from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { ITestTreeViewProvider } from '../providers/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
 import { TestRunner } from './common/runner';
 import { TestConfigSettingsService } from './common/services/configSettingService';
+import { TestContextService } from './common/services/contextService';
 import { TestCollectionStorageService } from './common/services/storageService';
 import { TestManagerService } from './common/services/testManagerService';
 import { TestResultsService } from './common/services/testResultsService';
+import { TestsStatusUpdaterService } from './common/services/testsStatusService';
 import { UnitTestDiagnosticService } from './common/services/unitTestDiagnosticService';
 import { WorkspaceTestManagerService } from './common/services/workspaceTestManagerService';
 import { TestsHelper } from './common/testUtils';
 import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
-import { TestFolderGenerationVisitor } from './common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
-    ITestCollectionStorageService, ITestDebugLauncher,
-    ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService,
-    ITestManagerServiceFactory, ITestMessageService, ITestResultsService, ITestRunner,
-    ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService,
-    IXUnitParser, TestProvider
+    ITestCollectionStorageService, ITestContextService,
+    ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory,
+    ITestManagerService, ITestManagerServiceFactory, ITestMessageService, ITestResultsService,
+    ITestRunner, ITestsHelper, ITestsParser, ITestsStatusUpdaterService, ITestVisitor,
+    IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
 } from './common/types';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
+import { TestExplorerCommandHandler } from './explorer/commandHandlers';
+import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
 import { UnitTestManagementService } from './main';
 import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
 import { ITestExplorerCommandHandler } from './navigation/types';
@@ -38,8 +40,6 @@ import { TestManagerRunner as NoseTestManagerRunner } from './nosetest/runner';
 import { ArgumentsService as NoseTestArgumentsService } from './nosetest/services/argsService';
 import { TestDiscoveryService as NoseTestDiscoveryService } from './nosetest/services/discoveryService';
 import { TestsParser as NoseTestTestsParser } from './nosetest/services/parserService';
-import { TestExplorerCommandHandler } from './providers/commandHandlers';
-import { TestTreeViewProvider } from './providers/testTreeViewProvider';
 import { TestManager as PyTestTestManager } from './pytest/main';
 import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
@@ -48,9 +48,10 @@ import { TestsParser as PytestTestsParser } from './pytest/services/parserServic
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
     IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
-    ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner,
-    ITestResultDisplay, IUnitTestConfigurationService,
-    IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService
+    ITestConfigurationManagerFactory, ITestDataItemResource, ITestDisplay,
+    ITestManagerRunner, ITestResultDisplay, ITestTreeViewProvider,
+    IUnitTestConfigurationService, IUnitTestDiagnosticService,
+    IUnitTestHelper, IUnitTestManagementService
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -68,11 +69,12 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
     serviceManager.add<IUnitTestSocketServer>(IUnitTestSocketServer, UnitTestSocketServer);
+    serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
+    serviceManager.addSingleton<ITestsStatusUpdaterService>(ITestsStatusUpdaterService, TestsStatusUpdaterService);
 
     serviceManager.add<ITestResultsService>(ITestResultsService, TestResultsService);
 
     serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
-    serviceManager.add<ITestVisitor>(ITestVisitor, TestFolderGenerationVisitor, 'TestFolderGenerationVisitor');
     serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
 
     serviceManager.add<ITestsParser>(ITestsParser, UnitTestTestsParser, UNITTEST_PROVIDER);
@@ -105,6 +107,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
     serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
+    serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {

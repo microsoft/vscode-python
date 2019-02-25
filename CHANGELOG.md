@@ -1,5 +1,154 @@
 # Changelog
 
+## 2019.2.0-rc (21 Feb 2019)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+### Enhancements
+
+1. Support launch configs for debugging tests.
+   ([#332](https://github.com/Microsoft/vscode-python/issues/332))
+1. Add way to send code to the Python Interactive window without having to put `#%%` into a file.
+   ([#3171](https://github.com/Microsoft/vscode-python/issues/3171))
+1. Support simple variable substitution in `.env` files.
+   ([#3275](https://github.com/Microsoft/vscode-python/issues/3275))
+1. Support live share in Python interactive window (experimental).
+   ([#3581](https://github.com/Microsoft/vscode-python/issues/3581))
+1. Strip comments before sending so shell command and multiline jupyter magics work correctly.
+   ([#4064](https://github.com/Microsoft/vscode-python/issues/4064))
+1. Add a build number to our released builds.
+   ([#4183](https://github.com/Microsoft/vscode-python/issues/4183))
+1. Prompt the user to send shift-enter to the interactive window.
+   ([#4184](https://github.com/Microsoft/vscode-python/issues/4184))
+1. Added Dutch translation.
+   (thanks [Robin Martijn](https://github.com/Bowero) with the feedback of [Michael van Tellingen](https://github.com/mvantellingen))
+   ([#4186](https://github.com/Microsoft/vscode-python/issues/4186))
+1. Add the Test Activity view.
+   ([#4272](https://github.com/Microsoft/vscode-python/issues/4272))
+1. Added action buttons to top of Test Explorer.
+   ([#4275](https://github.com/Microsoft/vscode-python/issues/4275))
+1. Navigation to test output from Test Explorer.
+   ([#4279](https://github.com/Microsoft/vscode-python/issues/4279))
+1. Add the command 'Configure Unit Tests'.
+   ([#4286](https://github.com/Microsoft/vscode-python/issues/4286))
+1. Do not update unit test settings if configuration is cancelled.
+   ([#4287](https://github.com/Microsoft/vscode-python/issues/4287))
+1. Keep testing configuration alive when losing UI focus.
+   ([#4288](https://github.com/Microsoft/vscode-python/issues/4288))
+1. Display test activity only when tests have been discovered.
+   ([#4317](https://github.com/Microsoft/vscode-python/issues/4317))
+1. Added a button to configure unit tests when prompting users that tests weren't discovered.
+   ([#4318](https://github.com/Microsoft/vscode-python/issues/4318))
+1. Don't shut down the notebook server on window close.
+   ([#4348](https://github.com/Microsoft/vscode-python/issues/4348))
+1. Added command `Show Output` to display the `Python` output panel.
+   ([#4362](https://github.com/Microsoft/vscode-python/issues/4362))
+1. Fix order of icons in test explorer and items.
+   ([#4364](https://github.com/Microsoft/vscode-python/issues/4364))
+1. Run failed tests icon should only appear if and when a test has failed.
+   ([#4371](https://github.com/Microsoft/vscode-python/issues/4371))
+1. Update ptvsd to [4.2.4](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.4).
+   ([#4457](https://github.com/Microsoft/vscode-python/issues/4457))
+   * Validate brekpoint targets.
+   * Properly exclude certain files from showing up in the debugger.
+
+### Fixes
+
+1. Add support for multi root workspaces with the new language server server.
+   ([#3008](https://github.com/Microsoft/vscode-python/issues/3008))
+1. Move linting tests to unit-testing for better reliability.
+   ([#3914](https://github.com/Microsoft/vscode-python/issues/3914))
+1. Allow "Run Cell" code lenses on non-local files.
+   ([#3995](https://github.com/Microsoft/vscode-python/issues/3995))
+1. Functional test for the input portion of the python interactive window.
+   ([#4057](https://github.com/Microsoft/vscode-python/issues/4057))
+1. Fix hitting the up arrow on the input prompt for the Python Interactive window to behave like the terminal window when only 1 item in the history.
+   ([#4145](https://github.com/Microsoft/vscode-python/issues/4145))
+1. Fix problem with webview panel not being dockable anywhere but view column 2.
+   ([#4237](https://github.com/Microsoft/vscode-python/issues/4237))
+1. More fixes for history in the Python Interactive window input prompt.
+   ([#4255](https://github.com/Microsoft/vscode-python/issues/4255))
+1. Fix precedence in `parsePyTestModuleCollectionResult`.
+   (thanks [Tammo Ippen](https://github.com/tammoippen))
+   ([#4360](https://github.com/Microsoft/vscode-python/issues/4360))
+1. Revert pipenv activation to not use `pipenv` shell.`
+   ([#4394](https://github.com/Microsoft/vscode-python/issues/4394))
+1. Icons should display only in test explorer.
+   ([#4418](https://github.com/Microsoft/vscode-python/issues/4418))
+1. Update ptvsd to [4.2.4](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.4).
+   ([#4457](https://github.com/Microsoft/vscode-python/issues/4457))
+   * `BreakOnSystemExitZero` now respected.
+   * Fix a bug causing breakpoints not to be hit when attached to a remote target.
+1. Update the Python language server to 0.1.80.
+
+### Code Health
+
+1. Fix all typescript errors when compiled in strict mode.
+   ([#611](https://github.com/Microsoft/vscode-python/issues/611))
+1. Get functional tests running nightly again.
+   ([#3973](https://github.com/Microsoft/vscode-python/issues/3973))
+1. Turn on strict type checking (typescript compiling) for Datascience code.
+   ([#4058](https://github.com/Microsoft/vscode-python/issues/4058))
+1. Turn on strict typescript compile for the data science react code.
+   ([#4091](https://github.com/Microsoft/vscode-python/issues/4091))
+1. Fix issue causing debugger tests to timeout on CI servers.
+   ([#4148](https://github.com/Microsoft/vscode-python/issues/4148))
+1. Don't register language server onTelemetry when downloadLanguageServer is false.
+   ([#4199](https://github.com/Microsoft/vscode-python/issues/4199))
+1. Fixes to smoke tests on CI.
+   ([#4201](https://github.com/Microsoft/vscode-python/issues/4201))
+
+
+
 ## 2019.1.0 (29 Jan 2019)
 
 ### Thanks

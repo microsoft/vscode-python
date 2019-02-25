@@ -85,9 +85,9 @@ export class JupyterServerFactory implements INotebookServer {
         return server.waitForIdle();
     }
 
-    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
         const server = await this.serverFactory.get();
-        return server.execute(code, file, line, id, cancelToken);
+        return server.execute(code, file, line, id, cancelToken, silent);
     }
 
     public async setInitialDirectory(directory: string): Promise<void> {
@@ -95,11 +95,11 @@ export class JupyterServerFactory implements INotebookServer {
         return server.setInitialDirectory(directory);
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
         // Create a wrapper observable around the actual server (because we have to wait for a promise)
         return new Observable<ICell[]>(subscriber => {
             this.serverFactory.get().then(s => {
-                s.executeObservable(code, file, line, id)
+                s.executeObservable(code, file, line, id, silent)
                     .forEach(n => subscriber.next(n), Promise)
                     .then(f => subscriber.complete())
                     .catch(e => subscriber.error(e));
@@ -109,11 +109,6 @@ export class JupyterServerFactory implements INotebookServer {
                 subscriber.complete();
             });
         });
-    }
-
-    public async executeSilently(code: string, cancelToken?: CancellationToken): Promise<void> {
-        const server = await this.serverFactory.get();
-        return server.dispose();
     }
 
     public async restartKernel(): Promise<void> {

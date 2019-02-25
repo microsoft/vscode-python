@@ -16,7 +16,9 @@ import { initialize, initializeTest } from '../../../initialize';
 // tslint:disable:max-func-body-length no-any
 suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
-    const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
+    let outputFile = '';
+    let outputFileCounter = 0;
+    const outputFilesCreated: string[] = [];
     const envsLocation = PYTHON_VIRTUAL_ENVS_LOCATION !== undefined ?
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
     const waitTimeForActivation = 5000;
@@ -44,12 +46,25 @@ suite('Activation of Environments in Terminal', () => {
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
         await initialize();
     });
+
     setup(async () => {
         await initializeTest();
-        await cleanUp();
+        outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', `testExecInTerminal_${outputFileCounter}.log`);
+        outputFileCounter += 1;
+        outputFilesCreated.push(outputFile);
     });
-    teardown(cleanUp);
-    suiteTeardown(revertSettings);
+
+    suiteTeardown(async () => {
+        await revertSettings();
+
+        // remove all created log files.
+        outputFilesCreated.forEach(async (filePath: string) => {
+            if (await fs.pathExists(filePath)) {
+                await fs.unlink(filePath);
+            }
+        });
+    });
+
     async function revertSettings() {
         await updateSetting('terminal.activateEnvironment', undefined, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await terminalSettings.update('integrated.shell.windows', defaultShell.Windows, vscode.ConfigurationTarget.Global);
@@ -57,49 +72,58 @@ suite('Activation of Environments in Terminal', () => {
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
         await restorePythonPathInWorkspaceRoot();
     }
-    async function cleanUp() {
-        if (await fs.pathExists(outputFile)) {
-            await fs.unlink(outputFile);
-        }
+
+    /**
+     * Open a terminal and issue a python `pythonFile` command, expecting it to
+     * create a file `logfile`, with timeout limits.
+     *
+     * @param pythonFile The python script to run.
+     * @param logFile The logfile that the python script will produce.
+     * @param consoleInitWaitMs How long to wait for the console to initialize.
+     * @param logFileCreationWaitMs How long to wait for the output file to be produced.
+     */
+    async function openTerminalAndAwaitCommandContent(
+        consoleInitWaitMs: number,
+        pythonFile: string,
+        logFile: string,
+        logFileCreationWaitMs: number
+    ): Promise<string> {
+        const terminal = vscode.window.createTerminal();
+        await sleep(consoleInitWaitMs);
+        terminal.sendText(`python ${pythonFile} ${logFile}`, true);
+        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
+
+        return fs.readFile(logFile, 'utf-8');
     }
 
+    /**
+     * Turn on `terminal.activateEnvironment`, produce a shell, run a python script
+     * that outputs the path to the active python interpreter.
+     *
+     * Note: asserts that the envPath given matches the envPath returned by the script.
+     *
+     * @param envPath Python environment path to activate in the terminal (via vscode config)
+     */
     async function testActivation(envPath: string) {
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPath);
-        const terminal = vscode.window.createTerminal();
-        await sleep(waitTimeForActivation);
-        terminal.sendText(`python ${file}`, true);
-        await waitForCondition(() => fs.pathExists(outputFile), 5_000, '\'testExecInTerminal.log\' file not created');
-        const content = await fs.readFile(outputFile, 'utf-8');
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(content).to.equal(envPath);
     }
-    async function testNonActivation() {
-        await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
-        const terminal = vscode.window.createTerminal();
-        terminal.sendText(`python ${file}`, true);
-        await waitForCondition(() => fs.pathExists(outputFile), 5_000, '\'testExecInTerminal.log\' file not created');
-        const content = await fs.readFile(outputFile, 'utf-8');
-        expect(content).to.not.equal(PYTHON_PATH);
-    }
+
     test('Should not activate', async () => {
-        await testNonActivation();
+        await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        expect(content).to.not.equal(PYTHON_PATH);
     });
-    test('Should activate with venv', async function() {
-        // Skipped to unblock PR merges.  See gh-4309.
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
+
+    test('Should activate with venv', async () => {
         await testActivation(envPaths.venvPath);
     });
-    test('Should activate with pipenv', async function() {
-        // Skipped to unblock PR merges.  See gh-4309.
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
+    test('Should activate with pipenv', async () => {
         await testActivation(envPaths.pipenvPath);
     });
-    test('Should activate with virtualenv', async function() {
-        // Skipped to unblock PR merges.  See gh-4309.
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
+    test('Should activate with virtualenv', async () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async () => {

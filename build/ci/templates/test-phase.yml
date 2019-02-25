@@ -128,11 +128,11 @@ steps:
 
       arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
-  - task: CmdLine@1
+  - bash: |
+      python -m pip install numpy
+      python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+    
     displayName: 'pip install  functional requirements'
-    inputs:
-      filename: python
-      arguments: '-m pip install --upgrade -r ./build/functional-test-requirements.txt'
     condition: variables['HasFunctionalRequirements']
 
 

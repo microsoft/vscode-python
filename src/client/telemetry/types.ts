@@ -70,7 +70,7 @@ export type CodeExecutionTelemetry = {
     scope: 'file' | 'selection';
 };
 export type DebuggerTelemetry = {
-    trigger: 'launch' | 'attach';
+    trigger: 'launch' | 'attach' | 'test';
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     hasEnvVars: boolean;
     hasArgs: boolean;

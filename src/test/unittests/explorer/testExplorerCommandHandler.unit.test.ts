@@ -4,27 +4,35 @@
 'use strict';
 
 import { IDisposable } from '@phosphor/disposable';
-import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import {
+    anything, capture, deepEqual,
+    instance, mock, verify, when
+} from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { CommandSource } from '../../../client/unittests/common/constants';
-import { TestsHelper } from '../../../client/unittests/common/testUtils';
-import { TestFile, TestFunction, TestsToRun, TestSuite } from '../../../client/unittests/common/types';
+import {
+    TestFile, TestFunction,
+    TestsToRun, TestSuite
+} from '../../../client/unittests/common/types';
+import { TestExplorerCommandHandler } from '../../../client/unittests/explorer/commandHandlers';
+import { TestTreeViewProvider } from '../../../client/unittests/explorer/testTreeViewProvider';
 import { ITestExplorerCommandHandler } from '../../../client/unittests/navigation/types';
-import { TestExplorerCommandHandler } from '../../../client/unittests/providers/commandHandlers';
-import { TestTreeItem } from '../../../client/unittests/providers/testTreeViewItem';
+import { ITestDataItemResource } from '../../../client/unittests/types';
 
 // tslint:disable:no-any max-func-body-length
-suite('Unit Tests - Test Explorer Command Hanlder', () => {
+suite('Unit Tests - Test Explorer Command Handler', () => {
     let commandHandler: ITestExplorerCommandHandler;
     let cmdManager: ICommandManager;
+    let testResourceMapper: ITestDataItemResource;
 
     setup(() => {
         cmdManager = mock(CommandManager);
-        commandHandler = new TestExplorerCommandHandler(instance(cmdManager));
+        testResourceMapper = mock(TestTreeViewProvider);
+        commandHandler = new TestExplorerCommandHandler(instance(cmdManager), instance(testResourceMapper));
     });
     test('Commands are registered', () => {
         commandHandler.register();
@@ -50,16 +58,13 @@ suite('Unit Tests - Test Explorer Command Hanlder', () => {
         disposable3.verify(d => d.dispose(), typemoq.Times.once());
     });
     async function testOpeningTestNode(data: TestFile | TestSuite | TestFunction, expectedCommand: string) {
-        const treeItem = mock(TestTreeItem);
         const resource = Uri.file(__filename);
-        when(treeItem.data).thenReturn(data);
-        when(treeItem.resource).thenReturn(resource);
-        when(treeItem.testType).thenReturn(TestsHelper.getTestType(data));
+        when(testResourceMapper.getResource(data)).thenReturn(resource);
 
         commandHandler.register();
 
         const handler = capture(cmdManager.registerCommand).last()[1];
-        await handler.bind(commandHandler)(instance(treeItem));
+        await handler.bind(commandHandler)(data);
 
         verify(cmdManager.executeCommand(expectedCommand, resource, data, true)).once();
     }
@@ -78,17 +83,14 @@ suite('Unit Tests - Test Explorer Command Hanlder', () => {
     });
     async function testRunOrDebugTestNode(data: TestFile | TestSuite | TestFunction,
         expectedTestRun: TestsToRun, runType: 'run' | 'debug') {
-        const treeItem = mock(TestTreeItem);
         const resource = Uri.file(__filename);
-        when(treeItem.data).thenReturn(data);
-        when(treeItem.testType).thenReturn(TestsHelper.getTestType(data));
-        when(treeItem.resource).thenReturn(resource);
+        when(testResourceMapper.getResource(data)).thenReturn(resource);
 
         commandHandler.register();
 
         const capturedCommand = capture(cmdManager.registerCommand);
         const handler = runType === 'run' ? capturedCommand.first()[1] : capturedCommand.second()[1];
-        await handler.bind(commandHandler)(instance(treeItem));
+        await handler.bind(commandHandler)(data);
 
         const cmd = runType === 'run' ? Commands.Tests_Run : Commands.Tests_Debug;
         verify(cmdManager.executeCommand(cmd, undefined, CommandSource.testExplorer, resource, deepEqual(expectedTestRun))).once();

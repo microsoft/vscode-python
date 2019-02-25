@@ -18,7 +18,7 @@ import {
     LanguageServerActivator
 } from '../../client/activation/types';
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
-import { IDiagnosticsService } from '../../client/application/diagnostics/types';
+import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IOutputChannel, IPythonSettings, Resource } from '../../client/common/types';
@@ -101,7 +101,7 @@ suite('Activation - ActivationService', () => {
                 if (lsSupported && !jediIsEnabled) {
                     activatorName = LanguageServerActivator.DotNet;
                 }
-                let diagnostics;
+                let diagnostics : IDiagnostic[];
                 if (!lsSupported && !jediIsEnabled) {
                     diagnostics = [TypeMoq.It.isAny()];
                 } else {
@@ -155,7 +155,6 @@ suite('Activation - ActivationService', () => {
 
                 activator
                     .setup(a => a.dispose())
-                    .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
 
                 activationService.dispose();
@@ -311,7 +310,7 @@ suite('Activation - ActivationService', () => {
                     const activatorDotNet = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activatorJedi = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(serviceContainer.object);
-                    const diagnostics = [];
+                    const diagnostics: IDiagnostic[] = [];
                     lsNotSupportedDiagnosticService
                         .setup(l => l.diagnose(undefined))
                         .returns(() => Promise.resolve(diagnostics));
@@ -372,7 +371,7 @@ suite('Activation - ActivationService', () => {
                         .verifiable(TypeMoq.Times.atLeastOnce());
                     workspaceService
                         .setup(w => w.getWorkspaceFolderIdentifier(resource, ''))
-                        .returns(() => resource.fsPath)
+                        .returns(() => resource!.fsPath)
                         .verifiable(TypeMoq.Times.atLeastOnce());
 
                     await activationService.activate(resource);

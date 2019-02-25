@@ -235,7 +235,7 @@ function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites,
 
 function getAllTestSuitesAndFunctionsPerFile(testFile: TestFile): FunctionsAndSuites {
     // tslint:disable-next-line:prefer-type-cast
-    const all = { functions: testFile.functions, suites: [] as TestSuite[] };
+    const all = { functions: [...testFile.functions], suites: [] as TestSuite[] };
     testFile.suites.forEach(suite => {
         all.suites.push(suite);
 

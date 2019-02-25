@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Location, Position, Range, TextLine, Uri, workspace } from 'vscode';
+import '../../../common/extensions';
 import { ProductNames } from '../../../common/installer/productNames';
 import { IFileSystem } from '../../../common/platform/types';
 import { Product } from '../../../common/types';
@@ -24,8 +25,8 @@ export class TestMessageService implements ITestMessageService {
      * @param testResults Details about all known tests.
      */
     public async getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]> {
-        const testFuncs: FlattenedTestFunction[] = testResults.testFunctions.reduce((filtered, test) => {
-            if (test.testFunction.passed !== undefined || test.testFunction.status === TestStatus.Skipped){
+        const testFuncs: FlattenedTestFunction[] = testResults.testFunctions.reduce<FlattenedTestFunction[]>((filtered, test) => {
+            if (test.testFunction.passed !== undefined || test.testFunction.status === TestStatus.Skipped) {
                 filtered.push(test);
             }
             return filtered;
@@ -33,8 +34,8 @@ export class TestMessageService implements ITestMessageService {
         const messages: IPythonUnitTestMessage[] = [];
         for (const tf of testFuncs) {
             const nameToRun = tf.testFunction.nameToRun;
-            const provider = ProductNames.get(Product.pytest);
-            const status = tf.testFunction.status;
+            const provider = ProductNames.get(Product.pytest)!;
+            const status = tf.testFunction.status!;
             if (status === TestStatus.Pass) {
                 // If the test passed, there's not much to do with it.
                 const msg: IPythonUnitTestMessage = {
@@ -84,7 +85,7 @@ export class TestMessageService implements ITestMessageService {
     private async getLocationStack(rootDirectory: string, testFunction: FlattenedTestFunction): Promise<ILocationStackFrameDetails[]> {
         const locationStack: ILocationStackFrameDetails[] = [];
         if (testFunction.testFunction.traceback) {
-            const fileMatches = testFunction.testFunction.traceback.match(/^((\.\.[\\\/])*.+\.py)\:(\d+)\:.*$/gim);
+            const fileMatches = testFunction.testFunction.traceback.match(/^((\.\.[\\\/])*.+\.py)\:(\d+)\:.*$/gim) || [];
             for (const fileDetailsMatch of fileMatches) {
                 const fileDetails = fileDetailsMatch.split(':');
                 let filePath = fileDetails[0];
@@ -97,41 +98,47 @@ export class TestMessageService implements ITestMessageService {
                     new Position((fileLineNum - 1), line.firstNonWhitespaceCharacterIndex),
                     new Position((fileLineNum - 1), line.text.length)
                 ));
-                const stackFrame: ILocationStackFrameDetails = {location: location, lineText: file.getText(location.range)};
+                const stackFrame: ILocationStackFrameDetails = { location: location, lineText: file.getText(location.range) };
                 locationStack.push(stackFrame);
             }
         }
         // Find where the file the test was defined.
-        let testSourceFilePath = testFunction.testFunction.file;
+        let testSourceFilePath = testFunction.testFunction.file!;
         testSourceFilePath = path.isAbsolute(testSourceFilePath) ? testSourceFilePath : path.resolve(rootDirectory, testSourceFilePath);
         const testSourceFileUri = Uri.file(testSourceFilePath);
         const testSourceFile = await workspace.openTextDocument(testSourceFileUri);
-        let testDefLine: TextLine;
-        let lineNum = testFunction.testFunction.line;
-        let lineText: string;
-        let trimmedLineText: string;
+        let testDefLine: TextLine | undefined;
+        let lineNum = testFunction.testFunction.line!;
+        let lineText: string = '';
+        let trimmedLineText: string = '';
         const testDefPrefix = 'def ';
-
+        const testAsyncDefPrefix = 'async def ';
+        let prefix = '';
         while (testDefLine === undefined) {
             const possibleTestDefLine = testSourceFile.lineAt(lineNum);
             lineText = possibleTestDefLine.text;
-            trimmedLineText = lineText.trimLeft();
+            trimmedLineText = lineText.trimLeft()!;
             if (trimmedLineText.toLowerCase().startsWith(testDefPrefix)) {
                 testDefLine = possibleTestDefLine;
+                prefix = testDefPrefix;
+            } else if (trimmedLineText.toLowerCase().startsWith(testAsyncDefPrefix)) {
+                testDefLine = possibleTestDefLine;
+                prefix = testAsyncDefPrefix;
             } else {
                 // The test definition may have been decorated, and there may be multiple
                 // decorations, so move to the next line and check it.
                 lineNum += 1;
             }
         }
-        const testSimpleName = trimmedLineText.slice(testDefPrefix.length).match(/[^ \(:]+/)[0];
-        const testDefStartCharNum = (lineText.length - trimmedLineText.length) + testDefPrefix.length;
+        const matches = trimmedLineText!.slice(prefix.length).match(/[^ \(:]+/);
+        const testSimpleName = matches ? matches[0] : '';
+        const testDefStartCharNum = (lineText.length - trimmedLineText.length) + prefix.length;
         const testDefEndCharNum = testDefStartCharNum + testSimpleName.length;
-        const lineStart = new Position(testDefLine.lineNumber, testDefStartCharNum);
-        const lineEnd = new Position(testDefLine.lineNumber, testDefEndCharNum);
+        const lineStart = new Position(testDefLine!.lineNumber, testDefStartCharNum);
+        const lineEnd = new Position(testDefLine!.lineNumber, testDefEndCharNum);
         const lineRange = new Range(lineStart, lineEnd);
         const testDefLocation = new Location(testSourceFileUri, lineRange);
-        const testSourceLocationDetails = {location: testDefLocation, lineText: testSourceFile.getText(lineRange)};
+        const testSourceLocationDetails = { location: testDefLocation, lineText: testSourceFile.getText(lineRange) };
         locationStack.unshift(testSourceLocationDetails);
 
         // Put the class declaration at the top of the stack if the test was imported.
@@ -167,33 +174,34 @@ export class TestMessageService implements ITestMessageService {
         const suiteStack = suiteStackWithFileAndTest.slice(1, (suiteStackWithFileAndTest.length - 1));
         const testFileUri = Uri.file(testFunction.parentTestFile.fullPath);
         const testFile = await workspace.openTextDocument(testFileUri);
-        const testFileLines = testFile.getText().splitLines({trim: false, removeEmptyEntries: false});
+        const testFileLines = testFile.getText().splitLines({ trim: false, removeEmptyEntries: false });
         const reversedTestFileLines = testFileLines.slice().reverse();
         // Track the end of the parent scope.
         let parentScopeEndIndex = 0;
         let parentScopeStartIndex = testFileLines.length;
-        let parentIndentation: number;
+        let parentIndentation: number | undefined;
         const suiteLocationStackFrameDetails: ILocationStackFrameDetails[] = [];
 
         const classPrefix = 'class ';
         while (suiteStack.length > 0) {
-            let indentation: number;
-            let prevLowestIndentation: number;
+            let indentation: number = 0;
+            let prevLowestIndentation: number | undefined;
             // Get the name of the suite on top of the stack so it can be located.
-            const suiteName = suiteStack.shift();
-            let suiteDefLineIndex: number;
+            const suiteName = suiteStack.shift()!;
+            let suiteDefLineIndex: number | undefined;
             for (let index = parentScopeEndIndex; index < parentScopeStartIndex; index += 1) {
                 const lineText = reversedTestFileLines[index];
                 if (lineText.trim().length === 0) {
                     // This line is just whitespace.
                     continue;
                 }
-                const trimmedLineText = lineText.trimLeft();
+                const trimmedLineText = lineText.trimLeft()!;
                 if (!trimmedLineText.toLowerCase().startsWith(classPrefix)) {
                     // line is not a class declaration
                     continue;
                 }
-                const lineClassName = trimmedLineText.slice(classPrefix.length).match(/[^ \(:]+/)[0];
+                const matches = trimmedLineText.slice(classPrefix.length).match(/[^ \(:]+/);
+                const lineClassName = matches ? matches[0] : undefined;
 
                 // Check if the indentation is proper.
                 if (parentIndentation === undefined) {
@@ -246,7 +254,7 @@ export class TestMessageService implements ITestMessageService {
             const suiteEndPos = new Position(realIndex, (startChar + suiteName.length));
             const suiteRange = new Range(suiteStartPos, suiteEndPos);
             const suiteLocation = new Location(testFileUri, suiteRange);
-            suiteLocationStackFrameDetails.push({location: suiteLocation, lineText: testFile.getText(suiteRange)});
+            suiteLocationStackFrameDetails.push({ location: suiteLocation, lineText: testFile.getText(suiteRange) });
         }
         return suiteLocationStackFrameDetails[suiteLocationStackFrameDetails.length - 1];
     }
