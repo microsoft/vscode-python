@@ -7,6 +7,8 @@ import { IS_WINDOWS } from '../common/platform/constants';
 
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
+    export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
+    export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
@@ -82,6 +84,8 @@ export enum Telemetry {
     RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL',
     RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE',
     RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS',
+    RunAllCellsAbove = 'DATASCIENCE.RUN_ALL_CELLS_ABOVE',
+    RunCellAndAllBelow = 'DATASCIENCE.RUN_CELL_AND_ALL_BELOW',
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',

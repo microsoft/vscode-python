@@ -106,6 +106,15 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public async runAllCellsAbove(): Promise<void> {
+
+    }
+
+    public async runCellAndAllBelow(): Promise<void> {
+
+    }
+    
+
     public async runCurrentCell(id: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
@@ -230,6 +239,10 @@ export class DataScience implements IDataScience {
         disposable = this.commandBroker.registerCommand(Commands.ExecSelectionInInteractiveWindow, this.runSelectionOrLine, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandBroker.registerCommand(Commands.SelectJupyterURI, this.selectJupyterURI, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandBroker.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandBroker.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandBroker);

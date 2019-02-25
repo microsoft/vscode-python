@@ -346,6 +346,16 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.runallcellsabove",
+                "title": "%python.command.python.datascience.runallcellsabove.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcellandallbelow",
+                "title": "%python.command.python.datascience.runcellandallbelow.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
                 "category": "Python"
@@ -468,6 +478,16 @@
                     "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
                 },
                 {
+                    "command": "python.datascience.runallcellsabove",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                },
+                {
+                    "command": "python.datascience.runcellandallbelow",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                },
+                {
                     "command": "python.datascience.execSelectionInteractive",
                     "group": "Python",
                     "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
@@ -566,6 +586,18 @@
                 {
                     "command": "python.datascience.runallcells",
                     "title": "%python.command.python.datascience.runallcells.command.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runallcellsabove",
+                    "title": "%python.command.python.datascience.runallcellsabove.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runcellandallbelow",
+                    "title": "%python.command.python.datascience.runcellandallbelow.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },

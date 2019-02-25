@@ -50,12 +50,18 @@ export class CodeWatcher implements ICodeWatcher {
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
-            const runAllCmd: Command = {
-                arguments: [document.fileName],
-                title: localize.DataScience.runAllCellsLensCommandTitle(),
+            const runAllAboveCmd: Command = {
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
+                title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
                 command: Commands.RunAllCells
             };
-            this.codeLenses.push(new CodeLens(cell.range, runAllCmd));
+            this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
+            const runCellAndBelowCmd: Command = {
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
+                title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
+                command: Commands.RunAllCells
+            };
+            this.codeLenses.push(new CodeLens(cell.range, runCellAndBelowCmd));
         });
     }
 
