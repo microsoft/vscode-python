@@ -51,8 +51,10 @@ def parse_args(
 
     cmd = ns.pop('cmd')
     if not cmd:
-        parser.error('missing subcommand')
+        parser.error('missing command')
     tool = ns.pop('tool')
+    if not tool:
+        parser.error('missing tool')
 
     return tool, cmd, ns, toolargs
 
@@ -76,4 +78,4 @@ def main(toolname, cmdname, subargs, toolargs,
 
 if __name__ == '__main__':
     tool, cmd, subargs, toolargs = parse_args()
-    main(tool, cmd, subargs)
+    main(tool, cmd, subargs, toolargs)

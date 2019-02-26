@@ -21,6 +21,7 @@ class AddCLISubparser(unittest.TestCase):
 
     def test_unsupported_command(self):
         subparsers = StubSubparsers(name=None)
+        subparsers.return_add_parser = None
 
         with self.assertRaises(UnsupportedCommandError):
             add_cli_subparser('run', 'pytest', subparsers)
@@ -49,6 +50,7 @@ class StubSubparsers(StubProxy):
 
     def add_parser(self, name):
         self.add_call('add_parser', None, {'name': name})
+        return self.return_add_parser
 
 
 class StubArgParser(StubProxy):
