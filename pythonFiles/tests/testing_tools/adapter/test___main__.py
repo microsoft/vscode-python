@@ -1,5 +1,6 @@
 import unittest
 
+from ...util import Stub, StubProxy
 from adapter.__main__ import (
     parse_args, main, UnsupportedToolError, UnsupportedCommandError
     )
@@ -9,32 +10,58 @@ class ParseGeneralTests(unittest.TestCase):
 
     def test_unsupported_command(self):
         with self.assertRaises(SystemExit):
-            parse_args(['run', '--tool', 'pytest'])
+            parse_args(['run', 'pytest'])
         with self.assertRaises(SystemExit):
-            parse_args(['debug', '--tool', 'pytest'])
+            parse_args(['debug', 'pytest'])
         with self.assertRaises(SystemExit):
-            parse_args(['???', '--tool', 'pytest'])
+            parse_args(['???', 'pytest'])
 
 
 class ParseDiscoverTests(unittest.TestCase):
 
     def test_pytest_default(self):
-        tool, cmd, args = parse_args([
+        tool, cmd, args, toolargs = parse_args([
             'discover',
-            '--tool', 'pytest',
+            'pytest',
             ])
     
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
         self.assertEqual(args, {})
+        self.assertEqual(toolargs, [])
+
+    def test_pytest_full(self):
+        tool, cmd, args, toolargs = parse_args([
+            'discover',
+            'pytest',
+            # no adapter-specific options yet
+            '--',
+            '--strict',
+            '--ignore', 'spam,ham,eggs',
+            '--pastebin=xyz',
+            '--no-cov',
+            '-d',
+            ])
+
+        self.assertEqual(tool, 'pytest')
+        self.assertEqual(cmd, 'discover')
+        self.assertEqual(args, {})
+        self.assertEqual(toolargs, [
+            '--',
+            '--strict',
+            '--ignore', 'spam,ham,eggs',
+            '--pastebin=xyz',
+            '--no-cov',
+            '-d',
+            ])
 
     def test_unsupported_tool(self):
         with self.assertRaises(SystemExit):
-            parse_args(['discover', '--tool', 'unittest'])
+            parse_args(['discover', 'unittest'])
         with self.assertRaises(SystemExit):
-            parse_args(['discover', '--tool', 'nose'])
+            parse_args(['discover', 'nose'])
         with self.assertRaises(SystemExit):
-            parse_args(['discover', '--tool', '???'])
+            parse_args(['discover', '???'])
 
 
 class MainTests(unittest.TestCase):
@@ -54,59 +81,33 @@ class MainTests(unittest.TestCase):
         expected = object()
         tool.return_discover = expected
         report = StubReport(stub)
-        main(tool.name, 'discover', {'spam': 'eggs'},
+        main(tool.name, 'discover', {'spam': 'eggs'}, [],
              tools={tool.name: tool}, report=report)
 
         self.assertEqual(tool.calls, [
-            ('spamspamspam.discover', None, {'spam': 'eggs'}),
+            ('spamspamspam.discover', ([],), {'spam': 'eggs'}),
             ('report.discovered', (expected,), None),
             ])
 
     def test_unsupported_tool(self):
         tool = StubTool('pytest')
         with self.assertRaises(UnsupportedToolError):
-            main('unittest', 'discover', {'spam': 'eggs'}, tools={'pytest': tool})
+            main('unittest', 'discover', {'spam': 'eggs'}, [], tools={'pytest': tool})
         with self.assertRaises(UnsupportedToolError):
-            main('nose', 'discover', {'spam': 'eggs'}, tools={'pytest': tool})
+            main('nose', 'discover', {'spam': 'eggs'}, [], tools={'pytest': tool})
         with self.assertRaises(UnsupportedToolError):
-            main('???', 'discover', {'spam': 'eggs'}, tools={'pytest': tool})
+            main('???', 'discover', {'spam': 'eggs'}, [], tools={'pytest': tool})
         self.assertEqual(tool.calls, [])
 
     def test_unsupported_command(self):
         tool = StubTool('pytest')
         with self.assertRaises(UnsupportedCommandError):
-            main('pytest', 'run', {'spam': 'eggs'}, tools={'pytest': tool})
+            main('pytest', 'run', {'spam': 'eggs'}, [], tools={'pytest': tool})
         with self.assertRaises(UnsupportedCommandError):
-            main('pytest', 'debug', {'spam': 'eggs'}, tools={'pytest': tool})
+            main('pytest', 'debug', {'spam': 'eggs'}, [], tools={'pytest': tool})
         with self.assertRaises(UnsupportedCommandError):
-            main('pytest', '???', {'spam': 'eggs'}, tools={'pytest': tool})
+            main('pytest', '???', {'spam': 'eggs'}, [], tools={'pytest': tool})
         self.assertEqual(tool.calls, [])
-
-
-class Stub(object):
-
-    def __init__(self):
-        self.calls = []
-
-    def add_call(self, name, args=None, kwargs=None):
-        self.calls.append((name, args, kwargs))
-
-
-class StubProxy(object):
-
-    def __init__(self, stub=None, name=None):
-        self.name = name
-        self.stub = stub if stub is not None else Stub()
-
-    @property
-    def calls(self):
-        return self.stub.calls
-
-    def add_call(self, funcname, *args, **kwargs):
-        callname = funcname
-        if self.name:
-            callname = '{}.{}'.format(self.name, funcname)
-        return self.stub.add_call(callname, *args, **kwargs)
 
 
 class StubTool(StubProxy):
@@ -115,8 +116,8 @@ class StubTool(StubProxy):
         super().__init__(stub, name)
         self.return_discover = None
 
-    def discover(self, **kwargs):
-        self.add_call('discover', None, kwargs)
+    def discover(self, args, **kwargs):
+        self.add_call('discover', (args,), kwargs)
         if self.return_discover is None:
             raise NotImplementedError
         return self.return_discover

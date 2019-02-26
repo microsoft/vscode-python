@@ -21,21 +21,21 @@ def parse_args(
 
     This defines the standard CLI for the different testing frameworks.
     """
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument('--tool', choices=sorted(TOOLS), required=True)
-
     parser = argparse.ArgumentParser(
             description='Run Python testing operations.',
             prog=prog,
             )
-    subs = parser.add_subparsers(dest='cmd')
+    cmdsubs = parser.add_subparsers(dest='cmd')
 
-    discover = subs.add_parser('discover', parents=[common])
+    discover = cmdsubs.add_parser('discover')
+    discover_subs = discover.add_subparsers(dest='tool')
+    pytest.add_cli_subparser('discover', 'pytest', discover_subs)
 
     # Add "run" and "debug" subcommands when ready.
 
     # Parse the args!
-    args = parser.parse_args(argv)
+    args, toolargs = parser.parse_known_args(argv)
+    #args = parser.parse_args(argv)
     ns = vars(args)
 
     cmd = ns.pop('cmd')
@@ -43,22 +43,22 @@ def parse_args(
         parser.error('missing subcommand')
     tool = ns.pop('tool')
 
-    return tool, cmd, ns
+    return tool, cmd, ns, toolargs
 
 
-def main(tool, cmd, subargs, tools=TOOLS, report=report):
+def main(tool, cmd, subargs, toolargs, tools=TOOLS, report=report):
     try:
         tool = tools[tool]
     except KeyError:
         raise UnsupportedToolError(tool)
 
     if cmd == 'discover':
-        discovered = tool.discover(**subargs)
+        discovered = tool.discover(toolargs, **subargs)
         report.discovered(discovered)
     else:
         raise UnsupportedCommandError(cmd)
 
 
 if __name__ == '__main__':
-    tool, cmd, subargs = parse_args()
+    tool, cmd, subargs, toolargs = parse_args()
     main(tool, cmd, subargs)
