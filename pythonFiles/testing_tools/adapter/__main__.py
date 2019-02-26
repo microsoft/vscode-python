@@ -8,8 +8,14 @@ from .errors import UnsupportedToolError, UnsupportedCommandError
 
 
 TOOLS = {
-        'pytest': pytest,
-        }
+    'pytest': {
+        '_add_subparser': pytest.add_cli_subparser,
+        'discover': pytest.discover,
+        },
+    }
+REPORTERS = {
+    'discover': report.discovered,
+    }
 
 
 def parse_args(
@@ -27,11 +33,16 @@ def parse_args(
             )
     cmdsubs = parser.add_subparsers(dest='cmd')
 
-    discover = cmdsubs.add_parser('discover')
-    discover_subs = discover.add_subparsers(dest='tool')
-    pytest.add_cli_subparser('discover', 'pytest', discover_subs)
-
     # Add "run" and "debug" subcommands when ready.
+    for cmdname in ['discover']:
+        sub = cmdsubs.add_parser(cmdname)
+        subsubs = sub.add_subparsers(dest='tool')
+        for toolname in sorted(TOOLS):
+            try:
+                add_subparser = TOOLS[toolname]['_add_subparser']
+            except KeyError:
+                continue
+            add_subparser(cmdname, toolname, subsubs)
 
     # Parse the args!
     args, toolargs = parser.parse_known_args(argv)
@@ -46,17 +57,21 @@ def parse_args(
     return tool, cmd, ns, toolargs
 
 
-def main(tool, cmd, subargs, toolargs, tools=TOOLS, report=report):
+def main(toolname, cmdname, subargs, toolargs,
+         tools=TOOLS, reporters=REPORTERS):
     try:
-        tool = tools[tool]
+        tool = tools[toolname]
     except KeyError:
-        raise UnsupportedToolError(tool)
+        raise UnsupportedToolError(toolname)
 
-    if cmd == 'discover':
-        discovered = tool.discover(toolargs, **subargs)
-        report.discovered(discovered)
-    else:
-        raise UnsupportedCommandError(cmd)
+    try:
+        run = tool[cmdname]
+        report_result = reporters[cmdname]
+    except KeyError:
+        raise UnsupportedCommandError(cmdname)
+
+    result = run(toolargs, **subargs)
+    report_result(result)
 
 
 if __name__ == '__main__':

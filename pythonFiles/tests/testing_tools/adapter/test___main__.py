@@ -66,13 +66,6 @@ class ParseDiscoverTests(unittest.TestCase):
 
 class MainTests(unittest.TestCase):
 
-    tool = None
-    tools = {}
-
-    def set_tool(self, name):
-        self.tools = {name: tool}
-        return tool
-
     # TODO: We could use an integration test for pytest.discover().
 
     def test_discover(self):
@@ -82,7 +75,12 @@ class MainTests(unittest.TestCase):
         tool.return_discover = expected
         report = StubReport(stub)
         main(tool.name, 'discover', {'spam': 'eggs'}, [],
-             tools={tool.name: tool}, report=report)
+             tools={tool.name: {
+                 'discover': tool.discover,
+                 }},
+             reporters={
+                 'discover': report.discovered,
+                 })
 
         self.assertEqual(tool.calls, [
             ('spamspamspam.discover', ([],), {'spam': 'eggs'}),
@@ -90,23 +88,30 @@ class MainTests(unittest.TestCase):
             ])
 
     def test_unsupported_tool(self):
-        tool = StubTool('pytest')
         with self.assertRaises(UnsupportedToolError):
-            main('unittest', 'discover', {'spam': 'eggs'}, [], tools={'pytest': tool})
+            main('unittest', 'discover', {'spam': 'eggs'}, [],
+                 tools={'pytest': None}, reporters=None)
         with self.assertRaises(UnsupportedToolError):
-            main('nose', 'discover', {'spam': 'eggs'}, [], tools={'pytest': tool})
+            main('nose', 'discover', {'spam': 'eggs'}, [],
+                 tools={'pytest': None}, reporters=None)
         with self.assertRaises(UnsupportedToolError):
-            main('???', 'discover', {'spam': 'eggs'}, [], tools={'pytest': tool})
-        self.assertEqual(tool.calls, [])
+            main('???', 'discover', {'spam': 'eggs'}, [],
+                 tools={'pytest': None}, reporters=None)
 
     def test_unsupported_command(self):
         tool = StubTool('pytest')
         with self.assertRaises(UnsupportedCommandError):
-            main('pytest', 'run', {'spam': 'eggs'}, [], tools={'pytest': tool})
+            main('pytest', 'run', {'spam': 'eggs'}, [],
+                 tools={'pytest': {'discover': tool.discover}},
+                 reporters=None)
         with self.assertRaises(UnsupportedCommandError):
-            main('pytest', 'debug', {'spam': 'eggs'}, [], tools={'pytest': tool})
+            main('pytest', 'debug', {'spam': 'eggs'}, [],
+                 tools={'pytest': {'discover': tool.discover}},
+                 reporters=None)
         with self.assertRaises(UnsupportedCommandError):
-            main('pytest', '???', {'spam': 'eggs'}, [], tools={'pytest': tool})
+            main('pytest', '???', {'spam': 'eggs'}, [],
+                 tools={'pytest': {'discover': tool.discover}},
+                 reporters=None)
         self.assertEqual(tool.calls, [])
 
 
