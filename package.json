@@ -110,12 +110,12 @@
             {
                 "command": "python.datascience.execSelectionInteractive",
                 "key": "shift+enter",
-                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
+                "when": "editorFocus && editorHasSelection && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorFocus && python.datascience.hascodecells && python.datascience.featureenabled"
+                "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
