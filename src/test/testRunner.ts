@@ -103,7 +103,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
      * @returns
      */
     function initializationScript() {
-        const ex = new Error('Failed to initialize extension for tests');
+        const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
         const failed = new Promise((_, reject) => setTimeout(() => reject(ex), 120_000));
         return Promise.race([initialize(), failed]);
     }
