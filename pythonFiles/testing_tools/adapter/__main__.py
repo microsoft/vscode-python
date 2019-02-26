@@ -4,23 +4,12 @@ import argparse
 import sys
 
 from . import pytest, report
+from .errors import UnsupportedToolError, UnsupportedCommandError
 
 
 TOOLS = {
         'pytest': pytest,
         }
-
-
-class UnsupportedToolError(Exception):
-    def __init__(self, tool):
-        super().__init__('unsupported tool {!r}'.format(tool))
-        self.tool = tool
-
-
-class UnsupportedCommandError(Exception):
-    def __init__(self, cmd):
-        super().__init__('unsupported cmd {!r}'.format(cmd))
-        self.cmd = cmd
 
 
 def parse_args(
