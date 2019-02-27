@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
 import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
+
 import { IFileSystem } from '../../client/common/platform/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
-import { CellState, ICell, INotebookServer, INotebookServerManager } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryProvider, IJupyterExecution, INotebookServer } from '../../client/datascience/types';
 
+// tslint:disable:no-any max-func-body-length
 suite('JupyterVariables', () => {
-    let serverManager: typemoq.IMock<INotebookServerManager>;
+    let execution: typemoq.IMock<IJupyterExecution>;
+    let historyProvider: typemoq.IMock<IHistoryProvider>;
     let fakeServer: typemoq.IMock<INotebookServer>;
     let jupyterVariables: JupyterVariables;
     let fileSystem: typemoq.IMock<IFileSystem>;
@@ -55,7 +56,8 @@ suite('JupyterVariables', () => {
     }
 
     setup(() => {
-        serverManager = typemoq.Mock.ofType<INotebookServerManager>();
+        execution = typemoq.Mock.ofType<IJupyterExecution>();
+        historyProvider = typemoq.Mock.ofType<IHistoryProvider>();
         // Create our fake notebook server
         fakeServer = createTypeMoq<INotebookServer>('Fake Server');
 
@@ -63,12 +65,12 @@ suite('JupyterVariables', () => {
         fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString()))
         .returns(() => Promise.resolve('test'));
 
-        jupyterVariables = new JupyterVariables(fileSystem.object, serverManager.object);
+        jupyterVariables = new JupyterVariables(fileSystem.object, execution.object, historyProvider.object);
     });
 
     test('getVariables no server', async() => {
-        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
-            return undefined;
+        execution.setup(sm => sm.getServer(typemoq.It.isAny())).returns(() => {
+            return Promise.resolve(undefined);
         });
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), undefined, typemoq.It.isAny()))
@@ -86,8 +88,8 @@ suite('JupyterVariables', () => {
     // No cells, no output, no text/plain
 
     test('getVariables no cells', async() => {
-        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
-            return fakeServer.object;
+        execution.setup(sm => sm.getServer(typemoq.It.isAny())).returns(() => {
+            return Promise.resolve(fakeServer.object);
         });
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
@@ -106,8 +108,8 @@ suite('JupyterVariables', () => {
     });
 
     test('getVariables no output', async() => {
-        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
-            return fakeServer.object;
+        execution.setup(sm => sm.getServer(typemoq.It.isAny())).returns(() => {
+            return Promise.resolve(fakeServer.object);
         });
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
@@ -126,8 +128,8 @@ suite('JupyterVariables', () => {
     });
 
     test('getVariables bad mime', async() => {
-        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
-            return fakeServer.object;
+        execution.setup(sm => sm.getServer(typemoq.It.isAny())).returns(() => {
+            return Promise.resolve(fakeServer.object);
         });
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
@@ -148,8 +150,8 @@ suite('JupyterVariables', () => {
     });
 
     test('getVariables fake data', async() => {
-        serverManager.setup(sm => sm.getActiveServer()).returns(() => {
-            return fakeServer.object;
+        execution.setup(sm => sm.getServer(typemoq.It.isAny())).returns(() => {
+            return Promise.resolve(fakeServer.object);
         });
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))

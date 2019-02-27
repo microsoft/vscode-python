@@ -34,6 +34,23 @@
   - [ ] Right-click
   - [ ] Command
   - [ ] `Shift+Enter`
+  
+#### Terminal
+Sample file:
+```python
+import requests
+request = requests.get("https://drive.google.com/uc?export=download&id=1_9On2-nsBQIw3JiY43sWbrF8EjrqrR4U")
+with open("survey2017.zip", "wb") as file:
+    file.write(request.content)
+import zipfile
+with zipfile.ZipFile('survey2017.zip') as zip:
+    zip.extractall('survey2017')
+import shutil, os
+shutil.move('survey2017/survey_results_public.csv','survey2017.csv')
+shutil.rmtree('survey2017')
+os.remove('survey2017.zip')
+```
+- [ ] *Shift+Enter* to send selected code in sample file to terminal works
 
 #### Virtual environments
 
@@ -104,6 +121,13 @@ SPAM='hello ${WHO}'
 **ALWAYS**:
 - Check under the `Problems` tab to see e.g. if a linter is raising errors
 
+#### Language server
+
+- [ ] Installing [`requests`](https://pypi.org/project/requests/) in virtual environment is detected
+    - [ ] Import of `requests` without package installed is flagged as unresolved
+    - [ ] Create a virtual environment
+    - [ ] Install `requests` into the virtual environment
+
 #### Pylint/default linting
 [Prompting to install Pylint is covered under `Environments` above]
 
@@ -156,6 +180,7 @@ Please also test for general accuracy on the most "interesting" code you can fin
 
 - [ ] `"python.autoComplete.extraPaths"` works
 - [ ] `"python.autocomplete.addBrackets": true` causes auto-completion of functions to append `()`
+- [ ]  Auto-completions works
 
 #### [Formatting](https://code.visualstudio.com/docs/python/editing#_formatting)
 Sample file:
@@ -214,6 +239,7 @@ def foo():pass
   - [ ] `Variables` section of debugger sidebar
 - [ ] [Remote debugging](https://code.visualstudio.com/docs/python/debugging#_remote-debugging) works
   - [ ] ... over SSH
+  - [ ] ... on other branches
 - [ ] [App Engine](https://code.visualstudio.com/docs/python/debugging#_google-app-engine-debugging)
 
 ### [Unit testing](https://code.visualstudio.com/docs/python/unit-testing)
@@ -327,5 +353,11 @@ def test_failure():
 - [ ] `Configure Unit Tests` does not close if it loses focus
 - [ ] Cancelling configuration does not leave incomplete settings
 - [ ] The first `"request": "test"` entry in launch.json is used for running unit tests
+
+### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
+- [ ] Set Python environment to Anaconda
+- [ ] Single cell execution works
+- [ ] `Run All Cells` in Jupyter code works
+- [ ] Typing code into Python interactive window works
 
 </details>

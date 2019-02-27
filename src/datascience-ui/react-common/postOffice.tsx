@@ -5,6 +5,7 @@
 
 import * as React from 'react';
 import { WebPanelMessage } from '../../client/common/application/types';
+import { IHistoryMapping } from '../../client/datascience/historyTypes';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
@@ -43,11 +44,11 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
         return false;
     }
 
-    public static sendMessage(message: WebPanelMessage) {
+    public static sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
         if (PostOffice.canSendMessages()) {
             const api = PostOffice.acquireApi();
             if (api) {
-                api.postMessage(message);
+                api.postMessage({type: type.toString(), payload });
             }
         }
     }

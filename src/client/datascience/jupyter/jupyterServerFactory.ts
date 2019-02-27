@@ -130,8 +130,9 @@ export class JupyterServerFactory implements INotebookServer {
         return undefined;
     }
 
-    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
-        return this.launchInfo;
+    public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
+        const server = await this.serverFactory.get();
+        return server.waitForConnect();
     }
 
     public async getSysInfo() : Promise<ICell | undefined> {

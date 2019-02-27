@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
-import { IApplicationShell, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -19,7 +19,6 @@ import { CommandSource } from '../unittests/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from './cellFactory';
 import { Commands, Telemetry } from './constants';
 import {
-    ICommandBroker,
     IDataScienceCommandListener,
     IHistoryProvider,
     IJupyterExecution,
@@ -49,7 +48,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry.push(disposable);
     }
 
-    public register(commandManager: ICommandBroker): void {
+    public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(Commands.ImportNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
@@ -116,6 +115,14 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         }
     }
 
+    private showInformationMessage(message: string, question?: string) : Thenable<string | undefined> {
+        if (question) {
+            return this.applicationShell.showInformationMessage(message, question);
+        } else {
+            return this.applicationShell.showInformationMessage(message);
+        }
+    }
+
     @captureTelemetry(Telemetry.ExportPythonFile, undefined, false)
     private async exportFile(file: string): Promise<void> {
         if (file && file.length > 0) {
@@ -148,9 +155,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                     }, localize.DataScience.exportingFormat(), file);
 
                     // When all done, show a notice that it completed.
-                    const openQuestion = localize.DataScience.exportOpenQuestion();
+                    const openQuestion = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
                     if (uri && uri.fsPath) {
-                        this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
+                        this.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
                             if (str === openQuestion) {
                                 // If the user wants to, open the notebook they just generated.
                                 this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
@@ -185,7 +192,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                                 return this.exportCellsWithOutput(ranges, activeEditor.document, output, cancelSource.token);
                             } catch (err) {
                                 if (!(err instanceof CancellationError)) {
-                                    this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
+                                    this.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
                                 }
                             }
                             return Promise.resolve();
@@ -194,8 +201,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                         }, true);
 
                         // When all done, show a notice that it completed.
-                        const openQuestion = localize.DataScience.exportOpenQuestion();
-                        this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), openQuestion).then((str: string | undefined) => {
+                        const openQuestion = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
+                        this.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), openQuestion).then((str: string | undefined) => {
                             if (str === openQuestion && output) {
                                 // If the user wants to, open the notebook they just generated.
                                 this.jupyterExecution.spawnNotebook(output).ignoreErrors();
@@ -216,8 +223,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             const settings = this.configuration.getSettings();
             const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
-            // Try starting a server.
-            server = await this.jupyterExecution.connectToNotebookServer(undefined, false, useDefaultConfig, cancelToken);
+            // Try starting a server. Purpose should be unique so we
+            // create a brand new one.
+            server = await this.jupyterExecution.connectToNotebookServer({ useDefaultConfig, purpose: uuid()}, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
@@ -347,8 +355,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
-    private showHistoryPane() : Promise<void>{
-        const active = this.historyProvider.getOrCreateActive();
+    private async showHistoryPane() : Promise<void>{
+        const active = await this.historyProvider.getOrCreateActive();
         return active.show();
     }
 

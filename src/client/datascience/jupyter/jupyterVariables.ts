@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
+
 import { IFileSystem } from '../../common/platform/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers } from '../constants';
-import { ICell, IJupyterVariable, IJupyterVariables, INotebookServerManager } from '../types';
+import { ICell, IHistoryProvider, IJupyterExecution, IJupyterVariable, IJupyterVariables } from '../types';
 
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
@@ -19,7 +19,8 @@ export class JupyterVariables implements IJupyterVariables {
 
     constructor(
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(INotebookServerManager) private jupyterServerManager: INotebookServerManager
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IHistoryProvider) private historyProvider: IHistoryProvider
         ) {
     }
 
@@ -30,7 +31,7 @@ export class JupyterVariables implements IJupyterVariables {
             await this.loadVariablesFile();
         }
 
-        const activeServer = this.jupyterServerManager.getActiveServer();
+        const activeServer = await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions());
         if (!activeServer) {
             // No active server will just return an empty list
             return [];

@@ -203,11 +203,11 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean, useDarkTheme?: boolean): Promise<INotebookServer | undefined> {
+    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebookServer | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer(undefined, useDarkTheme ? true : false, useDefaultConfig, undefined, testDir);
+            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1'});
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -255,7 +255,7 @@ suite('Jupyter notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer(uri!, false, true);
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: ''});
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
@@ -459,7 +459,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Try different timeouts, canceling after the timeout on each
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, false, true, t), 'Cancel did not cancel start after {0}ms'));
+        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, t), 'Cancel did not cancel start after {0}ms'));
 
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(undefined);
@@ -467,7 +467,7 @@ suite('Jupyter notebook tests', () => {
 
         // Make sure doing normal start still works
         const nonCancelSource = new CancellationTokenSource();
-        const server = await jupyterExecution.connectToNotebookServer(undefined, false, true, nonCancelSource.token);
+        const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
         assert.ok(server, 'Server not found with a cancel token that does not cancel');
 
         // Make sure can run some code too
@@ -819,23 +819,14 @@ plt.show()`,
         }
     });
 
-    // Tests that should be running:
-    // - Creation
-    // - Failure
-    // - Not installed
-    // - Different mime types
-    // - Export/import
-    // - Auto import
-    // - changing directories
-    // - Restart
-    // - Error types
-    // Test to write after jupyter process abstraction
-    // - jupyter not installed
-    // - kernel spec not matching
-    // - ipykernel not installed
-    // - kernelspec not installed
-    // - startup / shutdown / restart - make uses same kernelspec. Actually should be in memory already
-    // - Starting with python that doesn't have jupyter and make sure it can switch to one that does
-    // - Starting with python that doesn't have jupyter and make sure the switch still uses a python that's close as the kernel
+    runTest('Server cache working', async () => {
+        const s1 = await createNotebookServer(true, false, false, 'same');
+        const s2 = await createNotebookServer(true, false, false, 'same');
+        assert.ok(s1 === s2, 'Two servers not the same when they should be');
+        const s3 = await createNotebookServer(false, false, false, 'same');
+        assert.ok(s1 !== s3, 'Different config should create different server');
+        const s4 = await createNotebookServer(true, false, false, 'different');
+        assert.ok(s1 !== s4, 'Different purpose should create different server');
+    });
 
 });

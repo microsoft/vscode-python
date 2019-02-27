@@ -21,7 +21,7 @@ export interface IDataScience extends Disposable {
 
 export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
 export interface IDataScienceCommandListener {
-    register(commandManager: ICommandBroker): void;
+    register(commandManager: ICommandManager): void;
 }
 
 // Connection information for talking to a jupyter notebook process
@@ -46,14 +46,7 @@ export interface INotebookServerLaunchInfo
     kernelSpec: IJupyterKernelSpec | undefined;
     usingDarkTheme: boolean;
     workingDir: string | undefined;
-}
-
-// Manage our running notebook server instances
-export const INotebookServerManager = Symbol('INotebookServerManager');
-export interface INotebookServerManager {
-    getOrCreateServer(): Promise<INotebookServer | undefined>;
-    getServer() : Promise<INotebookServer | undefined>;
-    getActiveServer(): INotebookServer | undefined;
+    purpose: string | undefined; // Purpose this server is for
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -67,9 +60,17 @@ export interface INotebookServer extends IAsyncDisposable {
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
-    getLaunchInfo(): INotebookServerLaunchInfo | undefined;
+    waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     getConnectionInfo(): IConnection | undefined;
     getSysInfo() : Promise<ICell | undefined>;
+}
+
+export interface INotebookServerOptions {
+    uri?: string;
+    usingDarkTheme?: boolean;
+    useDefaultConfig?: boolean;
+    workingDir?: string;
+    purpose: string;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -78,10 +79,12 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isImportSupported(cancelToken?: CancellationToken) : Promise<boolean>;
     isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string) : Promise<INotebookServer | undefined>;
+    isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken) : Promise<INotebookServer | undefined>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
+    getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
@@ -118,14 +121,15 @@ export const IHistoryProvider = Symbol('IHistoryProvider');
 export interface IHistoryProvider {
     getActive() : IHistory | undefined;
 
-    getOrCreateActive(): IHistory;
+    getOrCreateActive(): Promise<IHistory>;
+    getNotebookOptions() : Promise<INotebookServerOptions>;
 }
 
 export const IHistory = Symbol('IHistory');
 export interface IHistory extends Disposable {
     closed: Event<IHistory>;
     show() : Promise<void>;
-    addCode(code: string, file: string, line: number, id: string, editor?: TextEditor) : Promise<void>;
+    addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
     postMessage(type: string, payload?: any): void;
     undoCells(): void;
@@ -161,11 +165,11 @@ export interface ICodeWatcher {
     getVersion() : number;
     getCodeLenses() : CodeLens[];
     getCachedSettings() : IDataScienceSettings | undefined;
-    runAllCells(id: string): void;
-    runCell(range: Range, id: string): void;
-    runCurrentCell(id: string): void;
-    runCurrentCellAndAdvance(id: string): void;
-    runSelectionOrLine(activeEditor: TextEditor | undefined, id: string): void;
+    runAllCells(): void;
+    runCell(range: Range): void;
+    runCurrentCell(): void;
+    runCurrentCellAndAdvance(): void;
+    runSelectionOrLine(activeEditor: TextEditor | undefined): void;
 }
 
 export enum CellState {
@@ -205,6 +209,12 @@ export interface ICodeCssGenerator {
     generateThemeCss() : Promise<string>;
 }
 
+export const IThemeFinder = Symbol('IThemeFinder');
+export interface IThemeFinder {
+    findThemeRootJson(themeName: string) : Promise<string | undefined>;
+    isThemeDark(themeName: string) : Promise<boolean | undefined>;
+}
+
 export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
@@ -232,11 +242,6 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
     };
-}
-
-export const ICommandBroker = Symbol('ICommandBroker');
-
-export interface ICommandBroker extends ICommandManager {
 }
 
 // Get variables from the currently running active Jupyter server
