@@ -355,9 +355,9 @@ def test_failure():
 - [ ] The first `"request": "test"` entry in launch.json is used for running unit tests
 
 ### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
-- [ ] Set python environment to Anaconda
+- [ ] Set Python environment to Anaconda
 - [ ] Jupyter code generated works
-- [ ] "Run All Cells" in Jupyter code works
-- [ ] Type code in python interactive window works
+- [ ] `Run All Cells` in Jupyter code works
+- [ ] Typing code into Python interactive window works
 
 </details>
