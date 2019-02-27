@@ -1,6 +1,6 @@
 import unittest
 
-from adapter.report import discovered
+from testing_tools.adapter.report import discovered
 
 
 class DiscoveredTests(unittest.TestCase):

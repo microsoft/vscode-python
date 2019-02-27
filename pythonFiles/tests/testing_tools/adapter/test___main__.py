@@ -1,7 +1,7 @@
 import unittest
 
 from ...util import Stub, StubProxy
-from adapter.__main__ import (
+from testing_tools.adapter.__main__ import (
     parse_args, main, UnsupportedToolError, UnsupportedCommandError
     )
 

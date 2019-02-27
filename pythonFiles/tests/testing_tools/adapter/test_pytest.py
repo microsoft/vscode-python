@@ -1,8 +1,8 @@
 import unittest
 
 from ...util import Stub, StubProxy
-from adapter.errors import UnsupportedCommandError
-from adapter.pytest import discover, add_cli_subparser
+from testing_tools.adapter.errors import UnsupportedCommandError
+from testing_tools.adapter.pytest import discover, add_cli_subparser
 
 
 class AddCLISubparser(unittest.TestCase):
