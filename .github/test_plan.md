@@ -72,11 +72,6 @@
 - [ ] (Linux/macOS) Virtual environments created under `{workspaceFolder}/.direnv/python-{python_version}` are detected (for [direnv](https://direnv.net/) and its [`layout python3`](https://github.com/direnv/direnv/blob/master/stdlib.sh) support)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
 
-- [ ] Installed `'requests'` in app virtual environments and detect import error disappeared
-    - [ ] Prompt unresolved import `'requests'` without package installed
-    - [ ] Create app virtual environment via command `"py -3 -m venv env"` in terminal works
-    - [ ] Install package `'requests'` in terminal via command `"pip install reuqests"`
-
 #### [Environment files](https://code.visualstudio.com/docs/python/environments#_environment-variable-definitions-file)
 Sample files:
 ```python
@@ -108,6 +103,13 @@ SPAM='hello ${WHO}'
 
 **ALWAYS**:
 - Check under the `Problems` tab to see e.g. if a linter is raising errors
+
+#### Language server
+
+- [ ] Installing [`requests`](https://pypi.org/project/requests/) in virtual environment is detected
+    - [ ] Import of `requests` without package installed is flagged as unresolved
+    - [ ] Create a virtual environment
+    - [ ] Install `requests` into the virtual environment
 
 #### Pylint/default linting
 [Prompting to install Pylint is covered under `Environments` above]
