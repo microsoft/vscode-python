@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
 import {
@@ -90,7 +91,7 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
             break;
         }
         case PYTEST_PROVIDER: {
-            testRunnerExecutablePath = settings.unitTest.pyTestPath;
+            testRunnerExecutablePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py');
             break;
         }
         default: {
