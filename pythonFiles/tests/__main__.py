@@ -16,5 +16,5 @@ if __name__ == '__main__':
     ec = pytest.main([
         '--rootdir', SRC_ROOT,
         TEST_ROOT,
-        ])
+        ] + sys.argv[1:])
     sys.exit(ec)
