@@ -309,7 +309,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Event Handler is registered and invoked', async () => {
             let invoked = false;
             let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
-            const workspaceService = { onDidChangeConfiguration: cb => callbackHandler = cb } as any;
+            const workspaceService = { onDidChangeConfiguration: (cb : (e: ConfigurationChangeEvent) => Promise<void>) => callbackHandler = cb } as any;
             const serviceContainerObject = createContainer();
             serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService);
@@ -348,16 +348,16 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
             const diagnosticSvc = new class extends InvalidMacPythonInterpreterService {
-                constructor(arg1, arg2, arg3, arg4) {
+                constructor(arg1: IServiceContainer, arg2: IInterpreterService, arg3: IPlatformService, arg4: IInterpreterHelper) {
                     super(arg1, arg2, arg3, arg4);
                     this.changeThrottleTimeout = 1;
                 }
-                public onDidChangeConfigurationEx = e => super.onDidChangeConfiguration(e);
+                public onDidChangeConfigurationEx = (e: ConfigurationChangeEvent) => super.onDidChangeConfiguration(e);
                 public diagnose(): Promise<any> {
                     diagnoseInvocationCount += 1;
                     return Promise.resolve();
                 }
-            }(serviceContainerObject, undefined, undefined, undefined);
+            }(serviceContainerObject, typemoq.Mock.ofType<IInterpreterService>().object, typemoq.Mock.ofType<IPlatformService>().object, typemoq.Mock.ofType<IInterpreterHelper>().object);
 
             event
                 .setup(e => e.affectsConfiguration(typemoq.It.isValue('python.pythonPath'), typemoq.It.isAny()))
@@ -389,16 +389,16 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
             const diagnosticSvc = new class extends InvalidMacPythonInterpreterService {
-                constructor(arg1, arg2, arg3, arg4) {
+                constructor(arg1: IServiceContainer, arg2: IInterpreterService, arg3: IPlatformService, arg4: IInterpreterHelper) {
                     super(arg1, arg2, arg3, arg4);
                     this.changeThrottleTimeout = 100;
                 }
-                public onDidChangeConfigurationEx = e => super.onDidChangeConfiguration(e);
+                public onDidChangeConfigurationEx = (e: ConfigurationChangeEvent) => super.onDidChangeConfiguration(e);
                 public diagnose(): Promise<any> {
                     diagnoseInvocationCount += 1;
                     return Promise.resolve();
                 }
-            }(serviceContainerObject, undefined, undefined, undefined);
+            }(serviceContainerObject, typemoq.Mock.ofType<IInterpreterService>().object, typemoq.Mock.ofType<IPlatformService>().object, typemoq.Mock.ofType<IInterpreterHelper>().object);
 
             event
                 .setup(e => e.affectsConfiguration(typemoq.It.isValue('python.pythonPath'), typemoq.It.isAny()))

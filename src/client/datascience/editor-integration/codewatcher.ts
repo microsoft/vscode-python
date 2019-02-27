@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import * as uuid from 'uuid/v4';
 import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
@@ -87,7 +88,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
-                    await activeHistory.addCode(code, this.getFileName(), range.start.line, id);
+                    await activeHistory.addCode(code, this.getFileName(), range.start.line, uuid());
                 }
             }
         }
@@ -96,7 +97,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (this.codeLenses.length === 0) {
             if (this.document) {
                 const code = this.document.getText();
-                await activeHistory.addCode(code, this.getFileName(), 0, id);
+                await activeHistory.addCode(code, this.getFileName(), 0, uuid());
             }
         }
     }
@@ -119,7 +120,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             if (code && code.trim().length) {
-                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, id, activeEditor);
+                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, uuid(), activeEditor);
             }
         }
     }
@@ -132,7 +133,7 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText(range);
 
             try {
-                await activeHistory.addCode(code, this.getFileName(), range.start.line, id, this.documentManager.activeTextEditor);
+                await activeHistory.addCode(code, this.getFileName(), range.start.line, uuid(), this.documentManager.activeTextEditor);
             } catch (err) {
                 this.handleError(err);
             }

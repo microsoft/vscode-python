@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import '../../../common/extensions';
 import { IInterpreterService, InterpreterType, IPipEnvService } from '../../../interpreter/contracts';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
@@ -20,7 +21,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
     ) { }
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
-        return true;
+        return false;
     }
 
     public async getActivationCommands(resource: Uri | undefined, _: TerminalShellType): Promise<string[] | undefined> {

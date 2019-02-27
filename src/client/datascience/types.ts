@@ -53,14 +53,15 @@ export const INotebookServerManager = Symbol('INotebookServerManager');
 export interface INotebookServerManager {
     getOrCreateServer(): Promise<INotebookServer | undefined>;
     getServer() : Promise<INotebookServer | undefined>;
+    getActiveServer(): INotebookServer | undefined;
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
-    executeObservable(code: string, file: string, line: number, id: string) : Observable<ICell[]>;
-    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken) : Promise<ICell[]>;
+    executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
+    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     waitForIdle() : Promise<void>;
     shutdown() : Promise<void>;
@@ -236,4 +237,19 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 export const ICommandBroker = Symbol('ICommandBroker');
 
 export interface ICommandBroker extends ICommandManager {
+}
+
+// Get variables from the currently running active Jupyter server
+export interface IJupyterVariable {
+    name: string;
+    shortValue: string | undefined;
+    fullValue: string | undefined;
+    type: string;
+    size: number;
+    expensive: boolean;
+}
+
+export const IJupyterVariables = Symbol('IJupyterVariables');
+export interface IJupyterVariables {
+    getVariables(): Promise<IJupyterVariable[]>;
 }

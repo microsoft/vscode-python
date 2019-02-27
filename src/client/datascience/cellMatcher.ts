@@ -33,7 +33,7 @@ export class CellMatcher {
     }
 
     public exec(code: string) : string | undefined {
-        let result: RegExpExecArray;
+        let result: RegExpExecArray | null = null;
         if (this.codeMatchRegEx.test(code)) {
             this.codeExecRegEx.lastIndex = -1;
             result = this.codeExecRegEx.exec(code);

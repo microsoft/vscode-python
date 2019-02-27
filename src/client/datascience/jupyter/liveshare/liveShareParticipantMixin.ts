@@ -3,9 +3,10 @@
 'use strict';
 import * as vsls from 'vsls/vscode';
 
-import { noop } from '../../../../test/core';
 import { ILiveShareApi } from '../../../common/application/types';
+import '../../../common/extensions';
 import { IAsyncDisposable } from '../../../common/types';
+import { noop } from '../../../common/utils/misc';
 import { ClassType } from '../../../ioc/types';
 import { ILiveShareParticipant } from './types';
 import { waitForGuestService, waitForHostService } from './utils';

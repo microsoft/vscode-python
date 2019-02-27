@@ -47,7 +47,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { IAsyncDisposable } from '../types';
+import { IAsyncDisposable, Resource } from '../types';
 
 // tslint:disable:no-any unified-signatures
 
@@ -581,7 +581,7 @@ export interface IWorkspaceService {
      * @param uri An uri.
      * @return A workspace folder or `undefined`
      */
-    getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined;
+    getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined;
 
     /**
      * Generate a key that's unique to the workspace folder (could be fsPath).

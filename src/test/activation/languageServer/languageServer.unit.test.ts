@@ -12,7 +12,7 @@ import { BaseLanguageClientFactory } from '../../../client/activation/languageSe
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { ILanguageClientFactory } from '../../../client/activation/types';
 import '../../../client/common/extensions';
-import { IDisposable } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { UnitTestManagementService } from '../../../client/unittests/main';
 import { IUnitTestManagementService } from '../../../client/unittests/types';
@@ -30,11 +30,13 @@ suite('Language Server - LanguageServer', () => {
     let server: LanguageServerTest;
     let client: typemoq.IMock<LanguageClient>;
     let testManager: IUnitTestManagementService;
+    let configService: typemoq.IMock<IConfigurationService>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(BaseLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager));
+        configService = typemoq.Mock.ofType<IConfigurationService>();
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());
@@ -52,6 +54,20 @@ suite('Language Server - LanguageServer', () => {
 
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+
+        const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup(p => p.downloadLanguageServer)
+            .returns(() => true);
+        configService
+            .setup(c => c.getSettings(uri))
+            .returns(() => pythonSettings.object);
+
+        const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
+        client
+            .setup(c => c.onTelemetry(typemoq.It.isAny()))
+            .returns(() => onTelemetryDisposable.object);
+
         client.setup(c => (c as any).then).returns(() => undefined);
         when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
@@ -94,6 +110,20 @@ suite('Language Server - LanguageServer', () => {
         const loadExtensionArgs = { x: 1 };
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+
+        const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup(p => p.downloadLanguageServer)
+            .returns(() => true);
+        configService
+            .setup(c => c.getSettings(uri))
+            .returns(() => pythonSettings.object);
+
+        const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
+        client
+            .setup(c => c.onTelemetry(typemoq.It.isAny()))
+            .returns(() => onTelemetryDisposable.object);
+
         client.setup(c => (c as any).then).returns(() => undefined);
         when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
@@ -142,5 +172,97 @@ suite('Language Server - LanguageServer', () => {
     });
     test('Ensure Errors raised when starting test manager are not bubbled up', async () => {
         await server.registerTestServices();
+    });
+    test('Register telemetry handler if LS was downloadeded', async () => {
+        client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
+
+        const uri = Uri.file(__filename);
+        const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+
+        const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup(p => p.downloadLanguageServer)
+            .returns(() => true)
+            .verifiable(typemoq.Times.once());
+        configService
+            .setup(c => c.getSettings(uri))
+            .returns(() => pythonSettings.object)
+            .verifiable(typemoq.Times.once());
+
+        const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
+        client
+            .setup(c => c.onTelemetry(typemoq.It.isAny()))
+            .returns(() => onTelemetryDisposable.object)
+            .verifiable(typemoq.Times.once());
+
+        client.setup(c => (c as any).then).returns(() => undefined);
+        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        const startDisposable = typemoq.Mock.ofType<IDisposable>();
+        client.setup(c => c.stop()).returns(() => Promise.resolve());
+        client
+            .setup(c => c.start())
+            .returns(() => startDisposable.object)
+            .verifiable(typemoq.Times.once());
+
+        server.start(uri, options).ignoreErrors();
+
+        // Initialize language client and verify that the request was sent out.
+        client
+            .setup(c => c.initializeResult)
+            .returns(() => true as any)
+            .verifiable(typemoq.Times.once());
+        await sleep(120);
+
+        verify(testManager.activate(anything())).once();
+
+        client.verify(c => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.once());
+        pythonSettings.verifyAll();
+        configService.verifyAll();
+    });
+    test('Do not register telemetry handler if LS was not downloadeded', async () => {
+        client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
+
+        const uri = Uri.file(__filename);
+        const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+
+        const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup(p => p.downloadLanguageServer)
+            .returns(() => false)
+            .verifiable(typemoq.Times.once());
+        configService
+            .setup(c => c.getSettings(uri))
+            .returns(() => pythonSettings.object)
+            .verifiable(typemoq.Times.once());
+
+        const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
+        client
+            .setup(c => c.onTelemetry(typemoq.It.isAny()))
+            .returns(() => onTelemetryDisposable.object)
+            .verifiable(typemoq.Times.once());
+
+        client.setup(c => (c as any).then).returns(() => undefined);
+        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        const startDisposable = typemoq.Mock.ofType<IDisposable>();
+        client.setup(c => c.stop()).returns(() => Promise.resolve());
+        client
+            .setup(c => c.start())
+            .returns(() => startDisposable.object)
+            .verifiable(typemoq.Times.once());
+
+        server.start(uri, options).ignoreErrors();
+
+        // Initialize language client and verify that the request was sent out.
+        client
+            .setup(c => c.initializeResult)
+            .returns(() => true as any)
+            .verifiable(typemoq.Times.once());
+        await sleep(120);
+
+        verify(testManager.activate(anything())).once();
+
+        client.verify(c => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.never());
+        pythonSettings.verifyAll();
+        configService.verifyAll();
     });
 });

@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { IInstaller, IOutputChannel } from '../../../common/types';
+import { IInstaller, ILogger, IOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { getSubDirectories } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
@@ -62,7 +62,8 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         appShell.showQuickPick(items, options).then(item => {
             if (!item) {
-                return def.resolve();
+                this.handleCancelled();  // This will throw an exception.
+                return;
             }
 
             def.resolve(item.label);
@@ -90,7 +91,8 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         appShell.showQuickPick(items, options).then(item => {
             if (!item) {
-                return def.resolve();
+                this.handleCancelled();  // This will throw an exception.
+                return;
             }
 
             def.resolve(item.label);
@@ -110,5 +112,11 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             // The test dirs are now on top.
             return possibleTestDirs;
         });
+    }
+
+    private handleCancelled() {
+        const logger = this.serviceContainer.get<ILogger>(ILogger);
+        logger.logInformation('testing configuration (in UI) cancelled');
+        throw Error('cancelled');
     }
 }

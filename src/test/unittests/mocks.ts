@@ -56,7 +56,7 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
 @injectable()
 export class MockTestManagerWithRunningTests extends BaseTestManager {
     // tslint:disable-next-line:no-any
-    public readonly runnerDeferred = createDeferred<any>();
+    public readonly runnerDeferred = createDeferred<Tests>();
     public readonly enabled = true;
     // tslint:disable-next-line:no-any
     public readonly discoveryDeferred = createDeferred<Tests>();
@@ -69,7 +69,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         return {} as TestDiscoveryOptions;
     }
     // tslint:disable-next-line:no-any
-    protected async runTestImpl(_tests: Tests, _testsToRun?: TestsToRun, _runFailedTests?: boolean, _debug?: boolean): Promise<any> {
+    protected async runTestImpl(_tests: Tests, _testsToRun?: TestsToRun, _runFailedTests?: boolean, _debug?: boolean): Promise<Tests> {
         // tslint:disable-next-line:no-non-null-assertion
         this.testRunnerCancellationToken!.onCancellationRequested(() => {
             this.runnerDeferred.reject(CANCELLATION_REASON);

@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.2.0-alpha",
-    "languageServerVersion": "0.1.78",
+    "version": "2019.3.0-dev",
+    "languageServerVersion": "0.1.80",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -41,7 +41,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.26.0"
+        "vscode": "^1.31.0"
     },
     "keywords": [
         "python",
@@ -110,12 +110,12 @@
             {
                 "command": "python.datascience.execSelectionInteractive",
                 "key": "shift+enter",
-                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
+                "when": "editorFocus && editorHasSelection && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorFocus && python.datascience.hascodecells && python.datascience.featureenabled"
+                "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -173,8 +173,8 @@
                 "title": "%python.command.python.runtests.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/start.svg",
-                    "dark": "resources/dark/start.svg"
+                    "light": "resources/light/run-tests.svg",
+                    "dark": "resources/dark/run-tests.svg"
                 }
             },
             {
@@ -254,8 +254,8 @@
                 "title": "%python.command.python.runFailedTests.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/start-failed.svg",
-                    "dark": "resources/dark/start-failed.svg"
+                    "light": "resources/light/run-failed-tests.svg",
+                    "dark": "resources/dark/run-failed-tests.svg"
                 }
             },
             {
@@ -265,6 +265,24 @@
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "python.discoveringTests",
+                "title": "%python.command.python.discoverTests.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/discovering-tests.svg",
+                    "dark": "resources/dark/discovering-tests.svg"
+                }
+            },
+            {
+                "command": "python.stopUnitTests",
+                "title": "%python.command.python.stopUnitTests.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/stop.svg",
+                    "dark": "resources/dark/stop.svg"
                 }
             },
             {
@@ -472,12 +490,12 @@
             ],
             "explorer/context": [
                 {
-                    "when": "resourceLangId == python",
+                    "when": "resourceLangId == python && !busyTests",
                     "command": "python.runtests",
                     "group": "Python"
                 },
                 {
-                    "when": "resourceLangId == python",
+                    "when": "resourceLangId == python && !busyTests",
                     "command": "python.debugtests",
                     "group": "Python"
                 },
@@ -501,6 +519,16 @@
                 {
                     "command": "python.runTestNode",
                     "title": "Run",
+                    "category": "Python",
+                    "when": "config.noExists"
+                },
+                {
+                    "command": "python.discoveringTests",
+                    "category": "Python",
+                    "when": "config.noExists"
+                },
+                {
+                    "command": "python.stopUnitTests",
                     "category": "Python",
                     "when": "config.noExists"
                 },
@@ -615,23 +643,37 @@
             "view/title": [
                 {
                     "command": "python.debugtests",
-                    "group": "navigation@2"
+                    "when": "view == python_tests && !busyTests",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "python.runtests",
+                    "when": "view == python_tests && !busyTests",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "python.stopUnitTests",
+                    "when": "view == python_tests && busyTests",
                     "group": "navigation@1"
                 },
                 {
                     "command": "python.discoverTests",
-                    "group": "navigation@3"
+                    "when": "view == python_tests && !busyTests",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "python.discoveringTests",
+                    "when": "view == python_tests && discoveringTests",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "python.runFailedTests",
-                    "group": "navigation@4",
-                    "when": "hasFailedTests"
+                    "when": "view == python_tests && hasFailedTests && !busyTests",
+                    "group": "navigation@2"
                 },
                 {
                     "command": "python.viewTestOutput",
+                    "when": "view == python_tests",
                     "group": "navigation@5"
                 }
             ],
@@ -643,12 +685,12 @@
                 },
                 {
                     "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testFunction",
+                    "when": "view == python_tests && viewItem == testFunction && !busyTests",
                     "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testFunction",
+                    "when": "view == python_tests && viewItem == testFunction && !busyTests",
                     "group": "inline@0"
                 },
                 {
@@ -658,12 +700,12 @@
                 },
                 {
                     "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testFile",
+                    "when": "view == python_tests && viewItem == testFile && !busyTests",
                     "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testFile",
+                    "when": "view == python_tests && viewItem == testFile && !busyTests",
                     "group": "inline@0"
                 },
                 {
@@ -673,12 +715,12 @@
                 },
                 {
                     "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testSuite",
+                    "when": "view == python_tests && viewItem == testSuite && !busyTests",
                     "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testSuite",
+                    "when": "view == python_tests && viewItem == testSuite && !busyTests",
                     "group": "inline@0"
                 }
             ]
@@ -863,6 +905,15 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "label": "Python: Unit Tests",
+                        "description": "%python.snippet.launch.unitTests.description%",
+                        "body": {
+                            "name": "Unit Tests",
+                            "type": "python",
+                            "request": "test"
+                        }
                     }
                 ],
                 "configurationAttributes": {
@@ -982,6 +1033,59 @@
                             "subProcess": {
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
+                                "default": false
+                            }
+                        }
+                    },
+                    "test": {
+                        "properties": {
+                            "pythonPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
+                                "default": "${config:python.pythonPath}"
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": false
+                            },
+                            "showReturnValue": {
+                                "type": "boolean",
+                                "description": "Show return value of functions when stepping.",
+                                "default": false
+                            },
+                            "console": {
+                                "enum": [
+                                    "none",
+                                    "integratedTerminal",
+                                    "externalTerminal"
+                                ],
+                                "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
+                                "default": "none"
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
+                                "default": "${workspaceFolder}"
+                            },
+                            "env": {
+                                "type": "object",
+                                "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
+                                "default": {}
+                            },
+                            "envFile": {
+                                "type": "string",
+                                "description": "Absolute path to a file containing environment variable definitions.",
+                                "default": "${workspaceFolder}/.env"
+                            },
+                            "redirectOutput": {
+                                "type": "boolean",
+                                "description": "Redirect output.",
+                                "default": true
+                            },
+                            "debugStdLib": {
+                                "type": "boolean",
+                                "description": "Debug standard library code.",
                                 "default": false
                             }
                         }
@@ -2081,7 +2185,6 @@
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
         "node-stream-zip": "^1.6.0",
-        "opn": "^5.3.0",
         "pidusage": "^1.2.0",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
@@ -2227,7 +2330,7 @@
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
-        "vscode": "^1.1.22",
+        "vscode": "^1.1.30",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",
         "webpack-bundle-analyzer": "^3.0.3",

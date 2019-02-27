@@ -109,11 +109,6 @@ export class GuestJupyterServer
         });
     }
 
-    public async executeSilently(code: string, cancelToken?: CancellationToken): Promise<void> {
-        // We don't need the result from this. It should have already happened on the host side
-        return Promise.resolve();
-    }
-
     public async restartKernel(): Promise<void> {
         await this.waitForResponse(ServerResponseType.Restart);
     }

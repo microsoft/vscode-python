@@ -424,7 +424,7 @@ export class History implements IHistory {
                 }
 
                 // Attempt to evaluate this cell in the jupyter notebook
-                const observable = this.jupyterServer.executeObservable(code, file, line, id);
+                const observable = this.jupyterServer.executeObservable(code, file, line, id, false);
 
                 // Sign up for cell changes
                 observable.subscribe(

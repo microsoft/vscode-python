@@ -20,7 +20,7 @@ import { IDebugConfigurationResolver } from '../types';
 
 @injectable()
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration> implements IDebugConfigurationResolver<T> {
-    protected pythonPathSource: PythonPathSource;
+    protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
     constructor(protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
         protected readonly configurationService: IConfigurationService) { }
@@ -74,7 +74,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
     }
-    protected sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
+    protected sendTelemetry(trigger: 'launch' | 'attach' | 'test', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         const name = debugConfiguration.name || '';
         const moduleName = debugConfiguration.module || '';
         const telemetryProps: DebuggerTelemetry = {

@@ -189,10 +189,6 @@ def foo():pass
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
-**ALWAYS**:
-- Test the current debugger
-- Test the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
-
 - [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
 - [ ] Running code from start to finish w/ no special debugging options (e.g. no breakpoints)
 - [ ] Breakpoint-like things
@@ -330,5 +326,6 @@ def test_failure():
   - [ ] other frameworks disabled in workspace settings
 - [ ] `Configure Unit Tests` does not close if it loses focus
 - [ ] Cancelling configuration does not leave incomplete settings
+- [ ] The first `"request": "test"` entry in launch.json is used for running unit tests
 
 </details>
