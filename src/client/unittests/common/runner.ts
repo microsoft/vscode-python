@@ -91,7 +91,7 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
             break;
         }
         case PYTEST_PROVIDER: {
-            testRunnerExecutablePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py');
+            testRunnerExecutablePath = settings.pythonPath;
             break;
         }
         default: {

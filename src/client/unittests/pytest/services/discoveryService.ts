@@ -2,11 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
+import { join as path_join } from 'path';
 import { CancellationTokenSource } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IServiceContainer } from '../../../ioc/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { ITestDiscoveryService, ITestRunner, ITestsHelper, ITestsParser, Options, TestDiscoveryOptions, Tests } from '../../common/types';
 import { IArgumentsService, TestFilter } from '../../types';
+
+const TEST_DISCOVERY_ADAPTER = path_join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py');
 
 @injectable()
 export class TestDiscoveryService implements ITestDiscoveryService {
@@ -57,7 +61,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
     private async discoverTestsInTestDirectory(options: TestDiscoveryOptions): Promise<Tests> {
         const token = options.token ? options.token : new CancellationTokenSource().token;
         const runOptions: Options = {
-            args: options.args,
+            args: [TEST_DISCOVERY_ADAPTER, ...options.args],
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
             token,
