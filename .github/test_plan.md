@@ -356,7 +356,7 @@ def test_failure():
 
 ### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
 - [ ] Set Python environment to Anaconda
-- [ ] Jupyter code generated works
+- [ ] Single cell execution works
 - [ ] `Run All Cells` in Jupyter code works
 - [ ] Typing code into Python interactive window works
 
