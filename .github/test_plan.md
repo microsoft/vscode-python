@@ -34,6 +34,23 @@
   - [ ] Right-click
   - [ ] Command
   - [ ] `Shift+Enter`
+  
+#### Terminal
+Sample file:
+```python
+import requests
+request = requests.get("https://drive.google.com/uc?export=download&id=1_9On2-nsBQIw3JiY43sWbrF8EjrqrR4U")
+with open("survey2017.zip", "wb") as file:
+    file.write(request.content)
+import zipfile
+with zipfile.ZipFile('survey2017.zip') as zip:
+    zip.extractall('survey2017')
+import shutil, os
+shutil.move('survey2017/survey_results_public.csv','survey2017.csv')
+shutil.rmtree('survey2017')
+os.remove('survey2017.zip')
+```
+- [ ] *Shift+Enter* to send selected code in sample file to terminal works
 
 #### Virtual environments
 
@@ -194,24 +211,6 @@ def foo():pass
 - [ ] [`Extract method`](https://code.visualstudio.com/docs/python/editing#_extract-method) works
   - [ ] You are prompted to install `rope` if it is not already available
 - [ ] [`Sort Imports`](https://code.visualstudio.com/docs/python/editing#_sort-imports) works
-
-
-#### Send code to terminal to execute
-Sample file:
-```python
-import requests
-request = requests.get("https://drive.google.com/uc?export=download&id=1_9On2-nsBQIw3JiY43sWbrF8EjrqrR4U")
-with open("survey2017.zip", "wb") as file:
-    file.write(request.content)
-import zipfile
-with zipfile.ZipFile('survey2017.zip') as zip:
-    zip.extractall('survey2017')
-import shutil, os
-shutil.move('survey2017/survey_results_public.csv','survey2017.csv')
-shutil.rmtree('survey2017')
-os.remove('survey2017.zip')
-````
-- [ ] Shift+Enter to send selected code in sample file to terminal works
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
