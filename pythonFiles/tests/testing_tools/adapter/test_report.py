@@ -4,7 +4,7 @@ import unittest
 
 from ...util import StubProxy
 from testing_tools.adapter.info import TestInfo, TestPath
-from testing_tools.adapter.discover import report
+from testing_tools.adapter.report import report_discovered
 
 
 class StubSender(StubProxy):
@@ -45,7 +45,7 @@ class ReportTests(unittest.TestCase):
             'subtest': None,
             }]
 
-        report(tests, _send=stub.send)
+        report_discovered(tests, _send=stub.send)
 
         self.assertEqual(stub.calls, [
             ('send', (json.dumps(expected),), None),
@@ -311,7 +311,7 @@ class ReportTests(unittest.TestCase):
             'subtest': None,
             }]
 
-        report(tests, _send=stub.send)
+        report_discovered(tests, _send=stub.send)
 
         self.maxDiff = None
         self.assertEqual(stub.calls, [

@@ -1,10 +1,9 @@
 import json
 
 
-def report(tests, debug=False,
-           _send=print):
+def report_discovered(tests, debug=False,
+               _send=print):
     """Serialize the discovered tests and write to stdout."""
-
     data = [{
             'id': test.id,
             'name': test.name,
