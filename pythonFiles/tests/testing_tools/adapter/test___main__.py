@@ -49,7 +49,7 @@ class ParseDiscoverTests(unittest.TestCase):
             'discover',
             'pytest',
             ])
-    
+
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
         self.assertEqual(args, {})
