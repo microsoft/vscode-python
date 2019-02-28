@@ -22,14 +22,25 @@ def discover(pytestargs=None,
     """Return the results of test discovery."""
     if _plugin is None:
         _plugin = TestCollector()
-    # TODO: ensure --collect-only
-    # TODO: -pno:terminal
-    ec = _pytest_main(pytestargs or [], [_plugin])
+
+    pytestargs = _adjust_pytest_args(pytestargs)
+    ec = _pytest_main(pytestargs, [_plugin])
     if ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if _plugin.discovered is None:
         raise Exception('pytest discovery did not start')
     return _plugin.discovered
+
+
+def _adjust_pytest_args(pytestargs):
+    pytestargs = list(pytestargs) if pytestargs else []
+    # Duplicate entries should be okay.
+    pytestargs.insert(0, '--collect-only')
+    pytestargs.insert(0, '-pno:terminal')
+    # TODO: pull in code from:
+    #  src/client/unittests/pytest/services/discoveryService.ts
+    #  src/client/unittests/pytest/services/argsService.ts
+    return pytestargs
 
 
 class TestCollector(object):

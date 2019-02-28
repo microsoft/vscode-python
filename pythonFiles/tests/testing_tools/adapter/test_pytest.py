@@ -131,6 +131,11 @@ class AddCLISubparserTests(unittest.TestCase):
 
 class DiscoverTests(unittest.TestCase):
 
+    DEFAULT_ARGS = [
+        '-pno:terminal',
+        '--collect-only',
+        ]
+
     def test_basic(self):
         stub = Stub()
         pytest = StubPyTest(stub)
@@ -142,7 +147,8 @@ class DiscoverTests(unittest.TestCase):
 
         self.assertEqual(discovered, expected)
         self.assertEqual(stub.calls, [
-            ('pytest.main', None, {'args': [], 'plugins': [plugin]}),
+            ('pytest.main', None, {'args': self.DEFAULT_ARGS,
+                                   'plugins': [plugin]}),
             ])
 
     def test_failure(self):
@@ -155,7 +161,8 @@ class DiscoverTests(unittest.TestCase):
             discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(stub.calls, [
-            ('pytest.main', None, {'args': [], 'plugins': [plugin]}),
+            ('pytest.main', None, {'args': self.DEFAULT_ARGS,
+                                   'plugins': [plugin]}),
             ])
 
 
