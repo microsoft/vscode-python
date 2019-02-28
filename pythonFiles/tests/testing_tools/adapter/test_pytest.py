@@ -9,7 +9,96 @@ from testing_tools.adapter.pytest import (
         )
 
 
-class AddCLISubparser(unittest.TestCase):
+class StubSubparsers(StubProxy):
+
+    def __init__(self, stub=None, name='subparsers'):
+        super().__init__(stub, name)
+
+    def add_parser(self, name):
+        self.add_call('add_parser', None, {'name': name})
+        return self.return_add_parser
+
+
+class StubArgParser(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'argparser')
+
+    def add_argument(self, *args, **kwargs):
+        self.add_call('add_argument', args, kwargs)
+
+
+class StubPyTest(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'pytest')
+        self.return_main = 0
+
+    def main(self, args, plugins):
+        self.add_call('main', None, {'args': args, 'plugins': plugins})
+        return self.return_main
+
+
+class StubPlugin(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'plugin')
+
+    def __getattr__(self, name):
+        if not name.startswith('pytest_'):
+            raise AttributeError(name)
+        def func(*args, **kwargs):
+            self.add_call(name, args or None, kwargs or None)
+        return func
+
+
+class FakeFunc(object):
+
+    def __init__(self, name):
+        self.__name__ = name
+
+
+class StubPytestItem(StubProxy):
+
+    def __init__(self, stub=None, **attrs):
+        super().__init__(stub, 'pytest.Item')
+        self.__dict__.update(attrs)
+
+    def __getattr__(self, name):
+        self.add_call(name + ' (attr)', None, None)
+        def func(*args, **kwargs):
+            self.add_call(name, args or None, kwargs or None)
+        return func
+
+
+class StubPytestSession(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'pytest.Session')
+
+    def __getattr__(self, name):
+        self.add_call(name + ' (attr)', None, None)
+        def func(*args, **kwargs):
+            self.add_call(name, args or None, kwargs or None)
+        return func
+
+
+class StubPytestConfig(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'pytest.Config')
+
+    def __getattr__(self, name):
+        self.add_call(name + ' (attr)', None, None)
+        def func(*args, **kwargs):
+            self.add_call(name, args or None, kwargs or None)
+        return func
+
+
+##################################
+# tests
+
+class AddCLISubparserTests(unittest.TestCase):
 
     def test_discover(self):
         stub = Stub()
@@ -49,7 +138,7 @@ class DiscoverTests(unittest.TestCase):
         expected = []
         plugin.discovered = expected
 
-        discovered = discover([], pytest.main, plugin)
+        discovered = discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(discovered, expected)
         self.assertEqual(stub.calls, [
@@ -63,7 +152,7 @@ class DiscoverTests(unittest.TestCase):
         plugin = StubPlugin(stub)
 
         with self.assertRaises(Exception):
-            discover([], pytest.main, plugin)
+            discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(stub.calls, [
             ('pytest.main', None, {'args': [], 'plugins': [plugin]}),
@@ -201,89 +290,3 @@ class CollectorTests(unittest.TestCase):
                 ),
             ])
         self.assertEqual(stub.calls, [])
-
-
-class StubSubparsers(StubProxy):
-
-    def __init__(self, stub=None, name='subparsers'):
-        super().__init__(stub, name)
-
-    def add_parser(self, name):
-        self.add_call('add_parser', None, {'name': name})
-        return self.return_add_parser
-
-
-class StubArgParser(StubProxy):
-
-    def __init__(self, stub=None):
-        super().__init__(stub, 'argparser')
-
-    def add_argument(self, *args, **kwargs):
-        self.add_call('add_argument', args, kwargs)
-
-
-class StubPyTest(StubProxy):
-
-    def __init__(self, stub=None):
-        super().__init__(stub, 'pytest')
-        self.return_main = 0
-
-    def main(self, args, plugins):
-        self.add_call('main', None, {'args': args, 'plugins': plugins})
-        return self.return_main
-
-
-class StubPlugin(StubProxy):
-
-    def __init__(self, stub=None):
-        super().__init__(stub, 'plugin')
-
-    def __getattr__(self, name):
-        if not name.startswith('pytest_'):
-            raise AttributeError(name)
-        def func(*args, **kwargs):
-            self.add_call(name, args or None, kwargs or None)
-        return func
-
-
-class FakeFunc(object):
-
-    def __init__(self, name):
-        self.__name__ = name
-
-
-class StubPytestItem(StubProxy):
-
-    def __init__(self, stub=None, **attrs):
-        super().__init__(stub, 'pytest.Item')
-        self.__dict__.update(attrs)
-
-    def __getattr__(self, name):
-        self.add_call(name + ' (attr)', None, None)
-        def func(*args, **kwargs):
-            self.add_call(name, args or None, kwargs or None)
-        return func
-
-
-class StubPytestSession(StubProxy):
-
-    def __init__(self, stub=None):
-        super().__init__(stub, 'pytest.Session')
-
-    def __getattr__(self, name):
-        self.add_call(name + ' (attr)', None, None)
-        def func(*args, **kwargs):
-            self.add_call(name, args or None, kwargs or None)
-        return func
-
-
-class StubPytestConfig(StubProxy):
-
-    def __init__(self, stub=None):
-        super().__init__(stub, 'pytest.Config')
-
-    def __getattr__(self, name):
-        self.add_call(name + ' (attr)', None, None)
-        def func(*args, **kwargs):
-            self.add_call(name, args or None, kwargs or None)
-        return func

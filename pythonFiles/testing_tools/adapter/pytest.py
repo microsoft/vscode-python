@@ -17,20 +17,19 @@ def add_cli_subparser(cmd, name, parent):
     return parser
 
 
-def discover(pytestargs=None, pytest_main=None, plugin=None):
+def discover(pytestargs=None,
+             _pytest_main=pytest.main, _plugin=None):
     """Return the results of test discovery."""
-    if pytest_main is None:
-        pytest_main = pytest.main
-    if plugin is None:
-        plugin = TestCollector()
-    # ensure --collect-only
-    # -pno:terminal
-    ec = pytest_main(pytestargs or [], [plugin])
+    if _plugin is None:
+        _plugin = TestCollector()
+    # TODO: ensure --collect-only
+    # TODO: -pno:terminal
+    ec = _pytest_main(pytestargs or [], [_plugin])
     if ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
-    if plugin.discovered is None:
+    if _plugin.discovered is None:
         raise Exception('pytest discovery did not start')
-    return plugin.discovered
+    return _plugin.discovered
 
 
 class TestCollector(object):
@@ -53,7 +52,7 @@ class TestCollector(object):
         try:
             items = session.items
         except AttributeError:
-            # Is there an alternative?
+            # TODO: Is there an alternative?
             return
         self.discovered = []
         for item in items:
@@ -86,6 +85,7 @@ def _parse_item(item):
     funcname = item.function.__name__
     parts = item.nodeid.split('::')
     if parts.pop(0) != filename:
+        # TODO: What to do?
         raise NotImplementedError
     suites = []
     while parts[0] != funcname:
@@ -96,8 +96,10 @@ def _parse_item(item):
         testfunc = funcname
     subs = parts[1:]
     if len(subs) > 1:
+        # TODO: What to do?
         raise NotImplementedError
     if fullname != testfunc:
+        # TODO: What to do?
         raise NotImplementedError
 
     return TestInfo(

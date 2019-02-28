@@ -6,6 +6,31 @@ from testing_tools.adapter.__main__ import (
     )
 
 
+class StubTool(StubProxy):
+
+    def __init__(self, name, stub=None):
+        super().__init__(stub, name)
+        self.return_discover = None
+
+    def discover(self, args, **kwargs):
+        self.add_call('discover', (args,), kwargs)
+        if self.return_discover is None:
+            raise NotImplementedError
+        return self.return_discover
+
+
+class StubReport(StubProxy):
+
+    def __init__(self, stub=None):
+        super().__init__(stub, 'report')
+
+    def discovered(self, discovered):
+        self.add_call('discovered', (discovered,), None)
+
+
+##################################
+# tests
+
 class ParseGeneralTests(unittest.TestCase):
 
     def test_unsupported_command(self):
@@ -75,10 +100,10 @@ class MainTests(unittest.TestCase):
         tool.return_discover = expected
         report = StubReport(stub)
         main(tool.name, 'discover', {'spam': 'eggs'}, [],
-             tools={tool.name: {
+             _tools={tool.name: {
                  'discover': tool.discover,
                  }},
-             reporters={
+             _reporters={
                  'discover': report.discovered,
                  })
 
@@ -90,48 +115,26 @@ class MainTests(unittest.TestCase):
     def test_unsupported_tool(self):
         with self.assertRaises(UnsupportedToolError):
             main('unittest', 'discover', {'spam': 'eggs'}, [],
-                 tools={'pytest': None}, reporters=None)
+                 _tools={'pytest': None}, _reporters=None)
         with self.assertRaises(UnsupportedToolError):
             main('nose', 'discover', {'spam': 'eggs'}, [],
-                 tools={'pytest': None}, reporters=None)
+                 _tools={'pytest': None}, _reporters=None)
         with self.assertRaises(UnsupportedToolError):
             main('???', 'discover', {'spam': 'eggs'}, [],
-                 tools={'pytest': None}, reporters=None)
+                 _tools={'pytest': None}, _reporters=None)
 
     def test_unsupported_command(self):
         tool = StubTool('pytest')
         with self.assertRaises(UnsupportedCommandError):
             main('pytest', 'run', {'spam': 'eggs'}, [],
-                 tools={'pytest': {'discover': tool.discover}},
-                 reporters=None)
+                 _tools={'pytest': {'discover': tool.discover}},
+                 _reporters=None)
         with self.assertRaises(UnsupportedCommandError):
             main('pytest', 'debug', {'spam': 'eggs'}, [],
-                 tools={'pytest': {'discover': tool.discover}},
-                 reporters=None)
+                 _tools={'pytest': {'discover': tool.discover}},
+                 _reporters=None)
         with self.assertRaises(UnsupportedCommandError):
             main('pytest', '???', {'spam': 'eggs'}, [],
-                 tools={'pytest': {'discover': tool.discover}},
-                 reporters=None)
+                 _tools={'pytest': {'discover': tool.discover}},
+                 _reporters=None)
         self.assertEqual(tool.calls, [])
-
-
-class StubTool(StubProxy):
-
-    def __init__(self, name, stub=None):
-        super().__init__(stub, name)
-        self.return_discover = None
-
-    def discover(self, args, **kwargs):
-        self.add_call('discover', (args,), kwargs)
-        if self.return_discover is None:
-            raise NotImplementedError
-        return self.return_discover
-
-
-class StubReport(StubProxy):
-
-    def __init__(self, stub=None):
-        super().__init__(stub, 'report')
-
-    def discovered(self, discovered):
-        self.add_call('discovered', (discovered,), None)

@@ -13,6 +13,9 @@ class StubSender(StubProxy):
         self.add_call('send', (outstr,), None)
 
 
+##################################
+# tests
+
 class ReportTests(unittest.TestCase):
 
     def test_basic(self):

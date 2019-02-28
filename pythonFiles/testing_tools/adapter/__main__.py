@@ -59,15 +59,15 @@ def parse_args(
 
 
 def main(toolname, cmdname, subargs, toolargs,
-         tools=TOOLS, reporters=REPORTERS):
+         _tools=TOOLS, _reporters=REPORTERS):
     try:
-        tool = tools[toolname]
+        tool = _tools[toolname]
     except KeyError:
         raise UnsupportedToolError(toolname)
 
     try:
         run = tool[cmdname]
-        report_result = reporters[cmdname]
+        report_result = _reporters[cmdname]
     except KeyError:
         raise UnsupportedCommandError(cmdname)
 
