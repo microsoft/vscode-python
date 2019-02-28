@@ -99,17 +99,20 @@ def _parse_item(item):
         # TODO: What to do?
         raise NotImplementedError
     suites = []
-    while parts[0] != funcname:
+    while len(parts) > 1:
         suites.append(parts.pop(0))
+    parameterized = ''
+    if '[' in parts[0]:
+        _func, sep, parameterized = parts[0].partition('[')
+        parameterized = sep + parameterized
+        if _func != funcname:
+            # TODO: What to do?
+            raise NotImplementedError
     if suites:
         testfunc = '.'.join(suites) + '.' + funcname
     else:
         testfunc = funcname
-    subs = parts[1:]
-    if len(subs) > 1:
-        # TODO: What to do?
-        raise NotImplementedError
-    if fullname != testfunc:
+    if fullname != testfunc + parameterized:
         # TODO: What to do?
         raise NotImplementedError
 
@@ -120,7 +123,7 @@ def _parse_item(item):
             root=testroot,
             relfile=relfile,
             func=testfunc,
-            sub=subs or None,
+            sub=[parameterized] if parameterized else None,
             ),
         lineno=lineno,
         )

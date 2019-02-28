@@ -19,13 +19,13 @@ class StubTool(StubProxy):
         return self.return_discover
 
 
-class StubReport(StubProxy):
+class StubReporter(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'report')
+        super().__init__(stub, 'reporter')
 
-    def discovered(self, discovered):
-        self.add_call('discovered', (discovered,), None)
+    def report(self, discovered, **kwargs):
+        self.add_call('report', (discovered,), kwargs or None)
 
 
 ##################################
@@ -98,18 +98,18 @@ class MainTests(unittest.TestCase):
         tool = StubTool('spamspamspam', stub)
         expected = object()
         tool.return_discover = expected
-        report = StubReport(stub)
+        reporter = StubReporter(stub)
         main(tool.name, 'discover', {'spam': 'eggs'}, [],
              _tools={tool.name: {
                  'discover': tool.discover,
                  }},
              _reporters={
-                 'discover': report.discovered,
+                 'discover': reporter.report,
                  })
 
         self.assertEqual(tool.calls, [
             ('spamspamspam.discover', ([],), {'spam': 'eggs'}),
-            ('report.discovered', (expected,), None),
+            ('reporter.report', (expected,), {'debug': False}),
             ])
 
     def test_unsupported_tool(self):

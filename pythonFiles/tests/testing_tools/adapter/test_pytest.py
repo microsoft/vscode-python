@@ -211,7 +211,14 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, relfile2),
                 function=FakeFunc('test_first'),
                 ),
-            # TODO: Add an example of subtests!
+            StubPytestItem(
+                stub,
+                nodeid=relfile2 + '::All::BasicTests::test_each[1+2-3]',
+                name='test_each[1+2-3]',
+                location=(relfile2, 62, 'All.BasicTests.test_each[1+2-3]'),
+                fspath=os.path.join(testroot, relfile2),
+                function=FakeFunc('test_each'),
+                ),
             ])
 
         self.maxDiff = None
@@ -259,6 +266,17 @@ class CollectorTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=31,
+                ),
+            TestInfo(
+                id=relfile2 + '::All::BasicTests::test_each[1+2-3]',
+                name='test_each[1+2-3]',
+                path=TestPath(
+                    root=testroot,
+                    relfile=relfile2,
+                    func='All.BasicTests.test_each',
+                    sub=['[1+2-3]'],
+                    ),
+                lineno=62,
                 ),
             ])
         self.assertEqual(stub.calls, [])
