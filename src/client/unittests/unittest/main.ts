@@ -2,7 +2,7 @@ import { Uri } from 'vscode';
 import { Product } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { UNITTEST_PROVIDER } from '../common/constants';
+import { CommandSource, UNITTEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import { ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 import { IArgumentsService, ITestManagerRunner, TestFilter } from '../types';
@@ -32,7 +32,16 @@ export class TestManager extends BaseTestManager {
             outChannel: this.outputChannel
         };
     }
-    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
+    public async runTest(cmdSource: CommandSource, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
+        if (runFailedTests === true && this.tests) {
+            testsToRun = { testFile: [], testFolder: [], testSuite: [], testFunction: [] };
+            testsToRun.testFunction = this.tests.testFunctions.filter(fn => {
+                return fn.testFunction.status === TestStatus.Error || fn.testFunction.status === TestStatus.Fail;
+            }).map(fn => fn.testFunction);
+        }
+        return super.runTest(cmdSource, testsToRun, runFailedTests, debug);
+    }
+    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, _runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
         let args: string[];
 
         const runAllTests = this.helper.shouldRunAllTests(testsToRun);
@@ -42,12 +51,6 @@ export class TestManager extends BaseTestManager {
             args = this.argsService.filterArguments(this.settings.unitTest.unittestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
         }
 
-        if (runFailedTests === true) {
-            testsToRun = { testFile: [], testFolder: [], testSuite: [], testFunction: [] };
-            testsToRun.testFunction = tests.testFunctions.filter(fn => {
-                return fn.testFunction.status === TestStatus.Error || fn.testFunction.status === TestStatus.Fail;
-            }).map(fn => fn.testFunction);
-        }
         const options: TestRunOptions = {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory,

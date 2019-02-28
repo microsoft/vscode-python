@@ -32,6 +32,10 @@
     max-height: 100%;
 }
 
+.cell-button-image svg{
+    pointer-events: none;
+}
+
 .cell-button-vscode-light:disabled {
     border-color: gray;
     filter: grayscale(100%);

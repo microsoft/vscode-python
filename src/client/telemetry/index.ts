@@ -315,6 +315,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.Redo]: never | undefined;
+    [Telemetry.RemoteAddCode]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;

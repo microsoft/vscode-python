@@ -90,7 +90,7 @@ class MockJupyterServer implements INotebookServer {
     public getConnectionInfo(): IConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }
-    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
+    public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
         throw new Error('Method not implemented');
     }
     public async shutdown() {
@@ -584,24 +584,24 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
-        await assert.isFulfilled(execution.connectToNotebookServer(undefined, false, true), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 
     test('Failing others throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 
     test('Slow notebook startups throws exception', async () => {
         const execution = createExecution(workingPython, ['Failure']);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time\nFailure');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time\nFailure');
     }).timeout(10000);
 
     test('Other than active works', async () => {
@@ -653,7 +653,7 @@ suite('Jupyter Execution', async () => {
 
     test('Kernelspec is deleted on exit', async () => {
         const execution = createExecution(missingKernelPython);
-        await assert.isFulfilled(execution.connectToNotebookServer(undefined, false, true), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
         await cleanupDisposables();
         const exists = fs.existsSync(workingKernelSpec);
         assert.notOk(exists, 'Temp kernel spec still exists');
@@ -665,7 +665,7 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isFulfilled(execution.connectToNotebookServer(undefined, false, true), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
 
     test('Jupyter found on the path skipped', async () => {
@@ -674,6 +674,6 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython, undefined, true);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 });

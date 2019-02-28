@@ -45,6 +45,7 @@ contributors (if you would like to contribute a translation, see the
 * `it`
 * `ja`
 * `ko-kr`
+* `pl`
 * `pt-br`
 * `ru`
 * `zh-cn`

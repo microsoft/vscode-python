@@ -29,7 +29,8 @@ import {
     IJupyterKernelSpec,
     IJupyterSessionManager,
     INotebookServer,
-    INotebookServerLaunchInfo
+    INotebookServerLaunchInfo,
+    INotebookServerOptions
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -104,15 +105,20 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelSpecCommand), cancelToken);
     }
 
-    public connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
+    public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
+        // Supported if we can run a notebook
+        return this.isNotebookSupported(cancelToken);
+    }
+
+    public connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let connection: IConnection;
             let kernelSpec: IJupyterKernelSpec | undefined;
 
             // If our uri is undefined or if it's set to local launch we need to launch a server locally
-            if (!uri) {
-                const launchResults = await this.startNotebookServer(useDefaultConfig, cancelToken);
+            if (!options || !options.uri) {
+                const launchResults = await this.startNotebookServer(options && options.useDefaultConfig ? true : false, cancelToken);
                 if (launchResults) {
                     connection = launchResults.connection;
                     kernelSpec = launchResults.kernelSpec;
@@ -125,7 +131,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 }
             } else {
                 // If we have a URI spec up a connection info for it
-                connection = this.createRemoteConnectionInfo(uri);
+                connection = this.createRemoteConnectionInfo(options.uri);
                 kernelSpec = undefined;
             }
 
@@ -148,12 +154,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     connectionInfo: connection,
                     currentInterpreter: info,
                     kernelSpec: kernelSpec,
-                    usingDarkTheme: usingDarkTheme,
-                    workingDir: workingDir,
-                    uri: uri
+                    usingDarkTheme: options && options.usingDarkTheme ? options.usingDarkTheme : false,
+                    workingDir: options ? options.workingDir : undefined,
+                    uri: options ? options.uri : undefined,
+                    purpose: options ? options.purpose : uuid()
                 };
                 await result.connect(launchInfo, cancelToken);
-                sendTelemetryEvent(uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
+                sendTelemetryEvent(launchInfo.uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
                 return result;
             } catch (err) {
                 // Something else went wrong
@@ -190,6 +197,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             this.logger.logInformation(result.stderr);
         }
         return result.stdout;
+    }
+
+    public getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+        // This is cached at the host or guest level
+        return Promise.resolve(undefined);
     }
 
     protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {

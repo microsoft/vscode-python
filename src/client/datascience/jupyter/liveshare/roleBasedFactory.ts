@@ -54,8 +54,10 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         const obj = new ctor(...this.ctorArgs);
 
         // Rewrite the object's dispose so we can get rid of our own state.
+        let objDisposed = false;
         const oldDispose = obj.dispose.bind(obj);
         obj.dispose = () => {
+            objDisposed = true;
             this.createPromise = undefined;
             return oldDispose();
         };
@@ -72,10 +74,14 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                 }
 
                 // Update the object with respect to the api
-                obj.onSessionChange(api).ignoreErrors();
+                if (!objDisposed) {
+                    obj.onSessionChange(api).ignoreErrors();
+                }
             });
             api.onDidChangePeers((e) => {
-                obj.onPeerChange(e).ignoreErrors();
+                if (!objDisposed) {
+                    obj.onPeerChange(e).ignoreErrors();
+                }
             });
         }
 

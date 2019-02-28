@@ -13,7 +13,7 @@
 		]]></style>
 	</defs>
 	<g>
-		<path d="M14,6 A6.3,6.3 0 1 0 12.5,12.5" style="stroke: #cccccc; stroke-width: 1.5; fill: none;"/>
-		<path d="M15,2 L15,6.5 L11,6.5" style="stroke: #cccccc; stroke-width: 1.5; fill: none;"/>
+		<path d="M14,6 A6.3,6.3 0 1 0 12.5,12.5" style="stroke: #424242; stroke-width: 1.5; fill: none;"/>
+		<path d="M15,2 L15,6.5 L11,6.5" style="stroke: #424242; stroke-width: 1.5; fill: none;"/>
 	</g>
 </svg>

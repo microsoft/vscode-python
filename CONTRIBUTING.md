@@ -33,25 +33,22 @@
 ```shell
 git clone https://github.com/microsoft/vscode-python
 cd vscode-python
-npm install
+npm ci
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
 python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-# Specifying the virtual environment simply varies between shells.
-export CI_PYTHON_PATH=`pwd`/.venv/bin/python
+# Optionally Update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter. 
 ```
-
 You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
 
 ### Incremental Build
 
 Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
 
-You can also compile from the command-line:
-
+You can also compile from the command-line. For a full compile you can use `npx gulp prePublishNonBundle`. For incremental builds you can use the following commands depending on your needs:
 ```shell
-tsc -p ./  # full compile
-tsc --watch -p ./  # incremental
+npm run compile
+npm run compile-webviews-watch # For data science (React Code)
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out`.

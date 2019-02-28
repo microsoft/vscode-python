@@ -12,6 +12,7 @@ import {
     Uri
 } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import '../../../common/extensions';
 import { isNotInstalledError } from '../../../common/helpers';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
@@ -59,7 +60,7 @@ export abstract class BaseTestManager implements ITestManager {
     private _testResultsService: ITestResultsService;
     private workspaceService: IWorkspaceService;
     private _outputChannel: OutputChannel;
-    private tests?: Tests;
+    protected tests?: Tests;
     private _status: TestStatus = TestStatus.Unknown;
     private testDiscoveryCancellationTokenSource?: CancellationTokenSource;
     private testRunnerCancellationTokenSource?: CancellationTokenSource;
@@ -289,6 +290,7 @@ export abstract class BaseTestManager implements ITestManager {
                 };
             })
             .then(tests => {
+                this.updateStatus(TestStatus.Running);
                 this.createCancellationToken(CancellationTokenType.testRunner);
                 return this.runTestImpl(tests, testsToRun, runFailedTests, debug);
             })

@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.2.0-rc (21 Feb 2019)
+## 2019.2.0 (26 Feb 2019)
 
 ### Thanks
 
@@ -88,6 +88,8 @@ part of!
    ([#4317](https://github.com/Microsoft/vscode-python/issues/4317))
 1. Added a button to configure unit tests when prompting users that tests weren't discovered.
    ([#4318](https://github.com/Microsoft/vscode-python/issues/4318))
+1. Use VSC API to open browser window
+   ([#4322](https://github.com/Microsoft/vscode-python/issues/4322))
 1. Don't shut down the notebook server on window close.
    ([#4348](https://github.com/Microsoft/vscode-python/issues/4348))
 1. Added command `Show Output` to display the `Python` output panel.
@@ -122,12 +124,16 @@ part of!
    ([#4360](https://github.com/Microsoft/vscode-python/issues/4360))
 1. Revert pipenv activation to not use `pipenv` shell.`
    ([#4394](https://github.com/Microsoft/vscode-python/issues/4394))
+1. Fix shift enter to send selection when cells are defined.
+   ([#4413](https://github.com/Microsoft/vscode-python/issues/4413))
 1. Icons should display only in test explorer.
    ([#4418](https://github.com/Microsoft/vscode-python/issues/4418))
 1. Update ptvsd to [4.2.4](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.4).
    ([#4457](https://github.com/Microsoft/vscode-python/issues/4457))
    * `BreakOnSystemExitZero` now respected.
    * Fix a bug causing breakpoints not to be hit when attached to a remote target.
+1. Fix double running of cells with the context menu
+   ([#4532](https://github.com/Microsoft/vscode-python/issues/4532))
 1. Update the Python language server to 0.1.80.
 
 ### Code Health

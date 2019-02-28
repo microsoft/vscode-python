@@ -114,6 +114,8 @@ export class JupyterServerBase implements INotebookServer {
     private sessionStartTime: number | undefined;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
+    private id = uuid();
+    private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
 
     constructor(
         liveShare: ILiveShareApi,
@@ -126,9 +128,14 @@ export class JupyterServerBase implements INotebookServer {
         this.asyncRegistry.push(this);
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) {
+    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void> {
+        this.logger.logInformation(`Connecting server ${this.id}`);
+
         // Save our launch info
         this.launchInfo = launchInfo;
+
+        // Indicate connect started
+        this.connectPromise.resolve(launchInfo);
 
         // Start our session
         this.session = await this.sessionManager.startNew(launchInfo.connectionInfo, launchInfo.kernelSpec, cancelToken);
@@ -146,6 +153,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public shutdown(): Promise<void> {
+        this.logger.logInformation(`Shutting down ${this.id}`);
         const dispose = this.session ? this.session.dispose() : undefined;
         return dispose ? dispose : Promise.resolve();
     }
@@ -158,7 +166,7 @@ export class JupyterServerBase implements INotebookServer {
         return this.session ? this.session.waitForIdle() : Promise.resolve();
     }
 
-    public execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
         // Do initial setup if necessary
         this.initialNotebookSetup();
 
@@ -166,7 +174,7 @@ export class JupyterServerBase implements INotebookServer {
         const deferred = createDeferred<ICell[]>();
 
         // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservable(code, file, line, id);
+        const observable = this.executeObservable(code, file, line, id, silent);
         let output: ICell[];
 
         observable.subscribe(
@@ -196,38 +204,8 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
         return this.executeObservableImpl(code, file, line, id, false);
-    }
-
-    public executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
-        // Create a deferred that we'll fire when we're done
-        const deferred = createDeferred<ICell[]>();
-
-        // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservableImpl(code, Identifiers.EmptyFileName, 0, uuid(), true);
-        let output: ICell[];
-
-        observable.subscribe(
-            (cells: ICell[]) => {
-                output = cells;
-            },
-            (error) => {
-                deferred.reject(error);
-            },
-            () => {
-                deferred.resolve(output);
-            });
-
-        if (cancelToken) {
-            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
-        }
-
-        // Wait for the execution to finish
-        return deferred.promise;
     }
 
     public async getSysInfo() : Promise<ICell> {
@@ -363,12 +341,8 @@ export class JupyterServerBase implements INotebookServer {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
-        if (!this.launchInfo) {
-            return undefined;
-        }
-
-        return this.launchInfo;
+    public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
+        return this.connectPromise.promise;
     }
 
     // Return a copy of the connection information that this server used to connect with
@@ -382,6 +356,36 @@ export class JupyterServerBase implements INotebookServer {
             ...this.launchInfo.connectionInfo,
             dispose: noop
         };
+    }
+
+    private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
+        // Do initial setup if necessary
+        this.initialNotebookSetup();
+
+        // Create a deferred that we'll fire when we're done
+        const deferred = createDeferred<ICell[]>();
+
+        // Attempt to evaluate this cell in the jupyter notebook
+        const observable = this.executeObservableImpl(code, Identifiers.EmptyFileName, 0, uuid(), true);
+        let output: ICell[];
+
+        observable.subscribe(
+            (cells: ICell[]) => {
+                output = cells;
+            },
+            (error) => {
+                deferred.reject(error);
+            },
+            () => {
+                deferred.resolve(output);
+            });
+
+        if (cancelToken) {
+            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+        }
+
+        // Wait for the execution to finish
+        return deferred.promise;
     }
 
     private extractStreamOutput(cell: ICell): string {

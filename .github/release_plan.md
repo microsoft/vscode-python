@@ -41,6 +41,7 @@
    - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
 - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`; quite possible there will be no change)
 - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) manually if necessary
+- [ ] Create pull request against `release`
 - [ ] Merge pull request into `release`
 - [ ] Make sure component governance is happy
 
@@ -57,8 +58,8 @@
 - [ ] Merge `release` back into `master`
 
 ## Prep for the _next_ release
-- [ ] Bump the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) number to the next `dev`
 - [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/edit/master/.github/release_plan.md)
+- [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 
 ## Clean up after _this_ release
 - [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22)
