@@ -46,7 +46,6 @@ def parse_args(
 
     # Parse the args!
     args, toolargs = parser.parse_known_args(argv)
-    #args = parser.parse_args(argv)
     ns = vars(args)
 
     cmd = ns.pop('cmd')
