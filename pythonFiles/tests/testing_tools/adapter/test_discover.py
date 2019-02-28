@@ -1,11 +1,11 @@
 import unittest
 
-from testing_tools.adapter.report import discovered
+from testing_tools.adapter.discover import report
 
 
-class DiscoveredTests(unittest.TestCase):
+class ReportTests(unittest.TestCase):
 
     def test_basic(self):
         data = object()
         with self.assertRaises(NotImplementedError):
-            discovered(data)
+            report(data)

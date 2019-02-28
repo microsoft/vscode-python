@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import argparse
 import sys
 
-from . import pytest, report
+from . import pytest, discover
 from .errors import UnsupportedToolError, UnsupportedCommandError
 
 
@@ -14,7 +14,7 @@ TOOLS = {
         },
     }
 REPORTERS = {
-    'discover': report.discovered,
+    'discover': discover.report,
     }
 
 
