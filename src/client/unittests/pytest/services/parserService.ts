@@ -15,6 +15,8 @@ export class TestsParser implements ITestsParser {
     constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
 
     public parse(content: string, options: ParserOptions): Tests {
+        const testsDiscovered = JSON.parse(content);
+
         const testFiles = this.getTestFiles(content, options);
         return this.testsHelper.flattenTestFiles(testFiles, options.cwd);
     }
