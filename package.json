@@ -110,7 +110,7 @@
             {
                 "command": "python.datascience.execSelectionInteractive",
                 "key": "shift+enter",
-                "when": "editorFocus && editorHasSelection && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
+                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
@@ -435,7 +435,7 @@
                 {
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && !python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python"
                 },
                 {
                     "command": "python.execSelectionInDjangoShell",
@@ -443,7 +443,7 @@
                     "when": "editorHasSelection && editorLangId == python && python.isDjangoProject"
                 },
                 {
-                    "when": "resourceLangId == python && !python.datascience.ownsSelection",
+                    "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
                     "group": "Python"
                 },

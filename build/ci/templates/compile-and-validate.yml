@@ -156,6 +156,10 @@ jobs:
         arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
 
+    - bash: 'python -m pythonFiles.tests'
+      displayName: 'run pythonFiles unit tests'
+
+
     - task: CmdLine@1
       displayName: 'pip install python packages'
       inputs:
