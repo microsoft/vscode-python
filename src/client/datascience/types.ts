@@ -257,4 +257,5 @@ export interface IJupyterVariable {
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
+    getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
 }

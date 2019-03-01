@@ -133,6 +133,7 @@ export namespace DataScience {
     export const liveShareServiceFailure = localize('DataScience.liveShareServiceFailure', 'Failure starting \'{0}\' service during live share connection.');
     export const documentMismatch = localize('DataScience.documentMismatch', 'Cannot run cells, duplicate documents for {0} found.');
     export const jupyterGetVariablesBadResults = localize('DataScience.jupyterGetVariablesBadResults', 'Failed to fetch variables from the Jupyter server.');
+    export const jupyterGetValueBadResults = localize('DataScience.jupyterGetValueBadResults', 'Failed to get variable value from the Jupyter server.');
 }
 
 export namespace DebugConfigurationPrompts {

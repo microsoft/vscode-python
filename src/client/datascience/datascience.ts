@@ -23,7 +23,8 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+// IANHU: Remove vars from this file
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterVariables } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -39,6 +40,7 @@ export class DataScience implements IDataScience {
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IJupyterVariables) private jupyterVars: IJupyterVariables,
         @inject(IApplicationShell) private appShell: IApplicationShell) {
         this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
@@ -151,6 +153,8 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
+        const varResults = await this.jupyterVars.getVariables();
+        const finalVar = await this.jupyterVars.getValue(varResults[0]);
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
