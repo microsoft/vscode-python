@@ -77,7 +77,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     }
 
     test('Should run program to the end', async function () {
-        this.skip();
+        return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
