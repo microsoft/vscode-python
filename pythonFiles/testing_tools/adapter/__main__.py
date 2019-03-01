@@ -9,6 +9,7 @@ from .errors import UnsupportedToolError, UnsupportedCommandError
 
 # Set this to True to pretty-print the output.
 DEBUG=False
+#DEBUG=True
 
 TOOLS = {
     'pytest': {

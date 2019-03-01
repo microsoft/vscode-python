@@ -58,11 +58,19 @@ class FakeFunc(object):
         self.__name__ = name
 
 
+class FakeMarker(object):
+
+    def __init__(self, name):
+        self.name = name
+
+
 class StubPytestItem(StubProxy):
 
     def __init__(self, stub=None, **attrs):
         super().__init__(stub, 'pytest.Item')
         self.__dict__.update(attrs)
+        if 'own_markers' not in attrs:
+            self.own_markers = ()
 
     def __getattr__(self, name):
         self.add_call(name + ' (attr)', None, None)
@@ -218,6 +226,16 @@ class CollectorTests(unittest.TestCase):
                 location=(relfile2, 62, 'All.BasicTests.test_each[1+2-3]'),
                 fspath=os.path.join(testroot, relfile2),
                 function=FakeFunc('test_each'),
+                own_markers=[FakeMarker(v) for v in [
+                    # supported
+                    'skip', 'skipif', 'xfail',
+                    # duplicate
+                    'skip',
+                    # ignored (pytest-supported)
+                    'parameterize', 'usefixtures', 'filterwarnings',
+                    # ignored (custom)
+                    'timeout', 
+                    ]],
                 ),
             ])
 
@@ -233,6 +251,7 @@ class CollectorTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=12,
+                markers=None,
                 ),
             TestInfo(
                 id='test_spam.py::SpamTests::test_other',
@@ -244,6 +263,7 @@ class CollectorTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=19,
+                markers=None,
                 ),
             TestInfo(
                 id='test_spam.py::test_all',
@@ -255,6 +275,7 @@ class CollectorTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=144,
+                markers=None,
                 ),
             TestInfo(
                 id=relfile2 + '::All::BasicTests::test_first',
@@ -266,6 +287,7 @@ class CollectorTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=31,
+                markers=None,
                 ),
             TestInfo(
                 id=relfile2 + '::All::BasicTests::test_each[1+2-3]',
@@ -277,6 +299,7 @@ class CollectorTests(unittest.TestCase):
                     sub=['[1+2-3]'],
                     ),
                 lineno=62,
+                markers=['expected-failure', 'skip', 'skip-if'],
                 ),
             ])
         self.assertEqual(stub.calls, [])
@@ -312,6 +335,7 @@ class CollectorTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=12,
+                markers=None,
                 ),
             ])
         self.assertEqual(stub.calls, [])

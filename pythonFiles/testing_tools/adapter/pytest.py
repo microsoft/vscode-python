@@ -65,8 +65,13 @@ class TestCollector(object):
         except AttributeError:
             # TODO: Is there an alternative?
             return
+#        print(', '.join(k for k in dir(items[0]) if k[0].islower()))
         self.discovered = []
         for item in items:
+#            print(' ', item.user_properties)
+#            print(' ', item.own_markers)
+#            print(' ', list(item.iter_markers()))
+#            print()
             info = _parse_item(item)
             self.discovered.append(info)
 
@@ -116,6 +121,21 @@ def _parse_item(item):
         # TODO: What to do?
         raise NotImplementedError
 
+    # Sort out markers.
+    #  See: https://docs.pytest.org/en/latest/reference.html#marks
+    markers = set()
+    for marker in item.own_markers:
+        if marker.name == 'parameterize':
+            # We've already covered these.
+            continue
+        elif marker.name == 'skip':
+            markers.add('skip')
+        elif marker.name == 'skipif':
+            markers.add('skip-if')
+        elif marker.name == 'xfail':
+            markers.add('expected-failure')
+        # TODO: Support other markers?
+
     return TestInfo(
         id=item.nodeid,
         name=item.name,
@@ -126,4 +146,5 @@ def _parse_item(item):
             sub=[parameterized] if parameterized else None,
             ),
         lineno=lineno,
+        markers=sorted(markers) if markers else None,
         )

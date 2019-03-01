@@ -33,6 +33,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=10,
+                markers=None,
                 ),
             ]
         expected = [{
@@ -43,6 +44,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 10,
             'testfunc': 'MySuite.test_spam_1',
             'subtest': None,
+            'markers': None,
             }]
 
         report_discovered(tests, _send=stub.send)
@@ -108,6 +110,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=10,
+                markers=None,
                 ),
             TestInfo(
                 id='test#2',
@@ -119,6 +122,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=21,
+                markers=None,
                 ),
             # under second root folder
             TestInfo(
@@ -131,6 +135,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=17,
+                markers=None,
                 ),
             TestInfo(
                 id='test#4',
@@ -142,6 +147,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=8,
+                markers=None,
                 ),
             TestInfo(
                 id='test#5',
@@ -153,6 +159,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=19,
+                markers=['expected-failure'],
                 ),
             TestInfo(
                 id='test#6',
@@ -164,6 +171,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=35,
+                markers=None,
                 ),
             TestInfo(
                 id='test#7',
@@ -175,6 +183,7 @@ class ReportTests(unittest.TestCase):
                     sub=['sub1'],
                     ),
                 lineno=57,
+                markers=None,
                 ),
             TestInfo(
                 id='test#8',
@@ -186,6 +195,7 @@ class ReportTests(unittest.TestCase):
                     sub=['sub2', 'sub3'],
                     ),
                 lineno=72,
+                markers=None,
                 ),
             TestInfo(
                 id='test#9',
@@ -197,6 +207,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=15,
+                markers=None,
                 ),
             TestInfo(
                 id='test#10',
@@ -208,6 +219,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=12,
+                markers=None,
                 ),
             TestInfo(
                 id='test#11',
@@ -219,6 +231,7 @@ class ReportTests(unittest.TestCase):
                     sub=None,
                     ),
                 lineno=27,
+                markers=None,
                 ),
             ]
         expected = [{
@@ -229,6 +242,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 10,
             'testfunc': 'MySuite.test_x1',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#2',
             'name': 'test_x2',
@@ -237,6 +251,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 21,
             'testfunc': 'MySuite.test_x2',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#3',
             'name': 'test_okay',
@@ -245,6 +260,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 17,
             'testfunc': 'SpamTests.test_okay',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#4',
             'name': 'test_ham1',
@@ -253,6 +269,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 8,
             'testfunc': 'test_ham1',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#5',
             'name': 'test_uh_oh',
@@ -261,6 +278,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 19,
             'testfunc': 'HamTests.test_uh_oh',
             'subtest': None,
+            'markers': ['expected-failure'],
             }, {
             'id': 'test#6',
             'name': 'test_whoa',
@@ -269,6 +287,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 35,
             'testfunc': 'HamTests.test_whoa',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#7',
             'name': 'test_yay (sub1)',
@@ -277,6 +296,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 57,
             'testfunc': 'MoreHam.test_yay',
             'subtest': ['sub1'],
+            'markers': None,
             }, {
             'id': 'test#8',
             'name': 'test_yay (sub2) (sub3)',
@@ -285,6 +305,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 72,
             'testfunc': 'MoreHam.test_yay',
             'subtest': ['sub2', 'sub3'],
+            'markers': None,
             }, {
             'id': 'test#9',
             'name': 'test_okay',
@@ -293,6 +314,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 15,
             'testfunc': 'SpamTests.test_okay',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#10',
             'name': 'test_okay',
@@ -301,6 +323,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 12,
             'testfunc': 'SpamTests.test_okay',
             'subtest': None,
+            'markers': None,
             }, {
             'id': 'test#11',
             'name': 'test_okay',
@@ -309,6 +332,7 @@ class ReportTests(unittest.TestCase):
             'lineno': 27,
             'testfunc': 'SpamTests.test_okay',
             'subtest': None,
+            'markers': None,
             }]
 
         report_discovered(tests, _send=stub.send)

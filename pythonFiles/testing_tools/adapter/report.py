@@ -12,6 +12,7 @@ def report_discovered(tests, debug=False,
             'lineno': test.lineno,
             'testfunc': test.path.func,
             'subtest': test.path.sub or None,
+            'markers': test.markers or None,
             } for test in tests]
     kwargs = {}
     if debug:
