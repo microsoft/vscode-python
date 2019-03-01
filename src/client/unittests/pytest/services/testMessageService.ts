@@ -25,7 +25,7 @@ export class TestMessageService implements ITestMessageService {
      * @param testResults Details about all known tests.
      */
     public async getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]> {
-        const testFuncs: FlattenedTestFunction[] = testResults.testFunctions.reduce<FlattenedTestFunction[]>((filtered, test) => {
+        const testFuncs = testResults.testFunctions.reduce<FlattenedTestFunction[]>((filtered, test) => {
             if (test.testFunction.passed !== undefined || test.testFunction.status === TestStatus.Skipped) {
                 filtered.push(test);
             }
@@ -107,14 +107,15 @@ export class TestMessageService implements ITestMessageService {
         testSourceFilePath = path.isAbsolute(testSourceFilePath) ? testSourceFilePath : path.resolve(rootDirectory, testSourceFilePath);
         const testSourceFileUri = Uri.file(testSourceFilePath);
         const testSourceFile = await workspace.openTextDocument(testSourceFileUri);
-        let testDefLine: TextLine | undefined;
+        let testDefLine: TextLine | null = null;
         let lineNum = testFunction.testFunction.line!;
         let lineText: string = '';
         let trimmedLineText: string = '';
         const testDefPrefix = 'def ';
         const testAsyncDefPrefix = 'async def ';
         let prefix = '';
-        while (testDefLine === undefined) {
+
+        while (testDefLine === null) {
             const possibleTestDefLine = testSourceFile.lineAt(lineNum);
             lineText = possibleTestDefLine.text;
             trimmedLineText = lineText.trimLeft()!;

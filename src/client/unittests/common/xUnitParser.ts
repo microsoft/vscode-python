@@ -57,7 +57,7 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
             }
             // tslint:disable-next-line:no-require-imports
             const xml2js = require('xml2js');
-            xml2js.parseString(data, (error, parserResult) => {
+            xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
                 if (error) {
                     return reject(error);
                 }
