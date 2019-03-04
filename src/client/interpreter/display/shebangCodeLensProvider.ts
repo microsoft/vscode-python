@@ -50,9 +50,12 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     }
     private async createShebangCodeLens(document: TextDocument) {
         const shebang = await this.detectShebang(document);
+        if (!shebang) {
+            return [];
+        }
         const pythonPath = this.configurationService.getSettings(document.uri).pythonPath;
         const resolvedPythonPath = await this.getFullyQualifiedPathToInterpreter(pythonPath, document.uri);
-        if (!shebang || shebang === resolvedPythonPath) {
+        if (shebang === resolvedPythonPath) {
             return [];
         }
         const firstLine = document.lineAt(0);
