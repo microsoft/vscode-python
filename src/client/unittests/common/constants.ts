@@ -23,5 +23,6 @@ export const UNITTEST_PROVIDER: TestProvider = 'unittest';
 export enum Icons {
     discovering = 'discovering-tests.svg',
     passed = 'status-ok.svg',
-    failed = 'status-error.svg'
+    failed = 'status-error.svg',
+    unknown = 'status-unknown.svg'
 }
