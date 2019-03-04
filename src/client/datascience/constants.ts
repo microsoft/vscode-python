@@ -77,8 +77,10 @@ export enum Telemetry {
     ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER',
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
-    RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE'
-}
+    RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
+    ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
+    EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER'
+ }
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
