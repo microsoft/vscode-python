@@ -21,7 +21,8 @@ import { ITestDataItemResource, TestDataItem } from '../types';
 const testNavigationCommandMapping = {
     [TestType.testFile]: Commands.navigateToTestFile,
     [TestType.testFunction]: Commands.navigateToTestFunction,
-    [TestType.testSuite]: Commands.navigateToTestSuite
+    [TestType.testSuite]: Commands.navigateToTestSuite,
+    [TestType.testFolder]: undefined
 };
 
 @injectable()

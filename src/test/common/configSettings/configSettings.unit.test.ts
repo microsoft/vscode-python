@@ -48,7 +48,8 @@ suite('Python Settings', () => {
         // string settings
         for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile']) {
             config.setup(c => c.get<string>(name))
-                .returns(() => sourceSettings[name]);
+                // tslint:disable-next-line:no-any
+                .returns(() => (sourceSettings as any)[name]);
         }
         if (sourceSettings.jediEnabled) {
             config.setup(c => c.get<string>('jediPath'))
@@ -56,17 +57,20 @@ suite('Python Settings', () => {
         }
         for (const name of ['venvFolders']) {
             config.setup(c => c.get<string[]>(name))
-                .returns(() => sourceSettings[name]);
+                // tslint:disable-next-line:no-any
+                .returns(() => (sourceSettings as any)[name]);
         }
 
         // boolean settings
         for (const name of ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer']) {
             config.setup(c => c.get<boolean>(name, true))
-                .returns(() => sourceSettings[name]);
+                // tslint:disable-next-line:no-any
+                .returns(() => (sourceSettings as any)[name]);
         }
         for (const name of ['disableInstallationCheck', 'globalModuleInstallation']) {
             config.setup(c => c.get<boolean>(name))
-                .returns(() => sourceSettings[name]);
+                // tslint:disable-next-line:no-any
+                .returns(() => (sourceSettings as any)[name]);
         }
 
         // number settings
@@ -147,7 +151,8 @@ suite('Python Settings', () => {
         settings.update(config.object);
 
         for (const key of Object.keys(expected.formatting)) {
-            expect(settings.formatting[key]).to.be.deep.equal(expected.formatting[key]);
+            // tslint:disable-next-line:no-any
+            expect((settings.formatting as any)[key]).to.be.deep.equal((expected.formatting as any)[key]);
         }
         config.verifyAll();
     });
@@ -172,8 +177,10 @@ suite('Python Settings', () => {
             if (!key.endsWith('path')) {
                 continue;
             }
-            const expectedPath = untildify(expected.formatting[key]);
-            expect(settings.formatting[key]).to.be.equal(expectedPath);
+            // tslint:disable-next-line:no-any
+            const expectedPath = untildify((expected.formatting as any)[key]);
+            // tslint:disable-next-line:no-any
+            expect((settings.formatting as any)[key]).to.be.equal(expectedPath);
         }
         config.verifyAll();
     });

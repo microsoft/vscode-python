@@ -120,8 +120,8 @@ suite('Jupyter notebook tests', () => {
         assert.ok(data, `No data object on the cell`);
         if (data) { // For linter
             assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
-            assert.ok(data['text/plain'], `Cell mime type not correct`);
-            assert.equal(data['text/plain'], expectedValue, 'Cell value does not match');
+            assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
+            assert.equal((data as any)['text/plain'], expectedValue, 'Cell value does not match');
         }
     }
 
@@ -154,8 +154,8 @@ suite('Jupyter notebook tests', () => {
             assert.ok(data, `${index}: No data object on the cell`);
             if (data) { // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
-                assert.ok(data[mimeType], `${index}: Cell mime type not correct`);
-                verifyValue(data[mimeType]);
+                assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
+                verifyValue((data as any)[mimeType]);
             }
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -356,7 +356,7 @@ suite('Jupyter notebook tests', () => {
             const nbcells = notebook['cells'];
             if (nbcells) {
                 // tslint:disable-next-line:no-string-literal
-                const firstCellText: string = nbcells[0]['source'] as string;
+                const firstCellText: string = (nbcells as any)[0]['source'] as string;
                 assert.ok(firstCellText.includes('os.chdir'));
             }
         }
@@ -428,7 +428,7 @@ suite('Jupyter notebook tests', () => {
 
         try {
             // tslint:disable-next-line:no-string-literal
-            tokenSource.token['tag'] = messageFormat.format(timeout.toString());
+            (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
             assert.ok(false, messageFormat.format(timeout.toString()));
         } catch (exc) {
@@ -770,7 +770,7 @@ plt.show()`,
         }
     });
 
-    async function getNotebookSession(server: INotebookServer | undefined) : Promise<MockJupyterSession | undefined> {
+    async function getNotebookSession(server: INotebookServer | undefined): Promise<MockJupyterSession | undefined> {
         if (server) {
             // This is kinda fragile. It reliese on impl details to get to the session. Might
             // just expose it?

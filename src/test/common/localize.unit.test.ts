@@ -51,7 +51,7 @@ suite('localize tests', () => {
                 const funcs = Object.keys(namespace);
 
                 // Run every function, this should fill up our asked for keys collection
-                funcs.forEach((f : string) => {
+                funcs.forEach((f: string) => {
                     const func = namespace[f];
                     func();
                 });
@@ -61,10 +61,12 @@ suite('localize tests', () => {
         // Now verify all of the asked for keys exist
         const askedFor = localize.getAskedForCollection();
         const missing = {};
-        Object.keys(askedFor).forEach((key : string) => {
+        Object.keys(askedFor).forEach((key: string) => {
             // Now check that this key exists somewhere in the nls collection
-            if (!nlsCollection[key]) {
-                missing[key] = askedFor[key];
+            // tslint:disable-next-line:no-any
+            if (!(nlsCollection as any)[key]) {
+                // tslint:disable-next-line:no-any
+                (missing as any)[key] = askedFor[key];
             }
         });
 
@@ -72,8 +74,9 @@ suite('localize tests', () => {
         const missingKeys = Object.keys(missing);
         if (missingKeys && missingKeys.length > 0) {
             let message = 'Missing keys. Add the following to package.nls.json:\n';
-            missingKeys.forEach((k : string) => {
-                message = message.concat(`\t"${k}" : "${missing[k]}",\n`);
+            missingKeys.forEach((k: string) => {
+                // tslint:disable-next-line:no-any
+                message = message.concat(`\t"${k}" : "${(missing as any)[k]}",\n`);
             });
             assert.fail(message);
         }

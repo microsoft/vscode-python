@@ -427,6 +427,8 @@ export class History implements IHistory {
     }
 
     private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
+        this.logger.logInformation(`Submitting code for ${this.id}`);
+
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
@@ -448,6 +450,7 @@ export class History implements IHistory {
 
             // Make sure we're loaded first.
             try {
+                this.logger.logInformation('Waiting for jupyter server and web panel ...');
                 await this.loadPromise;
             } catch (exc) {
                 // We should dispose ourselves if the load fails. Othewise the user
@@ -661,11 +664,17 @@ export class History implements IHistory {
     }
 
     private async loadJupyterServer(restart?: boolean): Promise<void> {
+        this.logger.logInformation('Getting jupyter server options ...');
+
         // Extract our options
         const options = await this.historyProvider.getNotebookOptions();
 
+        this.logger.logInformation('Connecting to jupyter server ...');
+
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
+
+        this.logger.logInformation('Connected to jupyter server.');
     }
 
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {

@@ -415,7 +415,7 @@ export abstract class BaseTestManager implements ITestManager {
 
     private createDiagnostics(message: IPythonUnitTestMessage): Diagnostic {
         const stackStart = message.locationStack![0];
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status);
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
         const diagMsg = message.message!.split('\n')[0];
         const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`, severity);

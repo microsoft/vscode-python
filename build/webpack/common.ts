@@ -24,7 +24,6 @@ export const nodeModulesToExternalize = [
     'request',
     'request-progress',
     'source-map-support',
-    'file-matcher',
     'diff-match-patch',
     'sudo-prompt',
     'node-stream-zip',

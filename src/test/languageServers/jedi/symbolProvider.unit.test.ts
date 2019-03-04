@@ -220,8 +220,8 @@ suite('Language Server Symbol Provider', () => {
             name: 'spam',
             kind: SymbolKind.Array + 1,
             range: {
-                start: {line: 0, character: 0},
-                end: {line: 0, character: 0}
+                start: { line: 0, character: 0 },
+                end: { line: 0, character: 0 }
             },
             children: []
         }];
@@ -250,35 +250,35 @@ suite('Language Server Symbol Provider', () => {
             name: 'SpamTests',
             kind: 5,
             range: {
-                start: {line: 2, character: 6},
-                end: {line: 2, character: 15}
+                start: { line: 2, character: 6 },
+                end: { line: 2, character: 15 }
             },
             children: [
-                 {
-                     name: 'test_all',
-                     kind: 12,
-                     range: {
-                         start: {line: 3, character: 8},
-                         end: {line: 3, character: 16}
-                     },
-                     children: [{
-                         name: 'self',
-                         kind: 13,
-                         range: {
-                             start: {line: 3, character: 17},
-                             end: {line: 3, character: 21}
-                         },
-                         children: []
-                     }]
-                 }, {
-                     name: 'assertTrue',
-                     kind: 13,
-                     range: {
-                         start: {line: 0, character: 0},
-                         end: {line: 0, character: 0}
-                     },
-                     children: []
-                 }
+                {
+                    name: 'test_all',
+                    kind: 12,
+                    range: {
+                        start: { line: 3, character: 8 },
+                        end: { line: 3, character: 16 }
+                    },
+                    children: [{
+                        name: 'self',
+                        kind: 13,
+                        range: {
+                            start: { line: 3, character: 17 },
+                            end: { line: 3, character: 21 }
+                        },
+                        children: []
+                    }]
+                }, {
+                    name: 'assertTrue',
+                    kind: 13,
+                    range: {
+                        start: { line: 0, character: 0 },
+                        end: { line: 0, character: 0 }
+                    },
+                    children: []
+                }
             ]
         }];
         const expected = [
@@ -445,7 +445,7 @@ function normalizeSymbols(uri: Uri, raw: any[]): SymbolInformation[] {
             item.name,
             // Type coercion is a bit fuzzy when it comes to enums, so we
             // play it safe by explicitly converting.
-            SymbolKind[SymbolKind[item.kind]],
+            (SymbolKind as any)[(SymbolKind as any)[item.kind]],
             item.containerName,
             new Location(
                 uri,

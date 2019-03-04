@@ -97,7 +97,7 @@ suite('FileSystem', () => {
         await fileSystem.createTemporaryFile('.tmp').then((tf: TemporaryFile) => {
             expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
             const writeStream = fileSystem.createWriteStream(tf.filePath);
-            writeStream.write('hello', 'utf8', (err) => {
+            writeStream.write('hello', 'utf8', (err: Error) => {
                 expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
             });
         }, (failReason) => {
