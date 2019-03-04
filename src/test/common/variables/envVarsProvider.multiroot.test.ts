@@ -317,7 +317,10 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(newVars).to.not.to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
     });
 
+    // Check https://github.com/Microsoft/vscode-python/issues/4067
     test('Custom variables will be refreshed when .env file is created, modified and deleted', async function () {
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
         // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
         const env3 = path.join(workspace4Path.fsPath, '.env3');
