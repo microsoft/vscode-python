@@ -284,7 +284,8 @@ suite('Unit Tests - TestResultDisplay', () => {
             .verifiable(typeMoq.Times.once());
 
         statusBar.setup(s => s.show()).verifiable(typeMoq.Times.once());
-
+        cmdManager.setup(c => c.executeCommand(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .verifiable(typeMoq.Times.once());
         createTestResultDisplay();
         const def = createDeferred<Tests>();
 
@@ -312,6 +313,7 @@ suite('Unit Tests - TestResultDisplay', () => {
         appShell.verifyAll();
         statusBar.verify(s => s.command = typeMoq.It.isValue(Commands.Tests_View_UI), typeMoq.Times.atLeastOnce());
         configurationService.verifyAll();
+        cmdManager.verifyAll();
     });
     test('Ensure corresponding command is executed when there are errors and user choses to configure test framework', async () => {
         const statusBar = typeMoq.Mock.ofType<StatusBarItem>();
