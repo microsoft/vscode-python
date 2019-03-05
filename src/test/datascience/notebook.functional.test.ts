@@ -23,7 +23,6 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
-    ICell,
     IConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
@@ -207,7 +206,7 @@ suite('Jupyter notebook tests', () => {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1'});
+            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1' });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -255,7 +254,7 @@ suite('Jupyter notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: ''});
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
@@ -492,9 +491,7 @@ suite('Jupyter notebook tests', () => {
         const finishedPromise = createDeferred();
         let error;
         const observable = server!.executeObservable(code, 'foo.py', 0, uuid(), false);
-        let cells: ICell[] = [];
         observable.subscribe(c => {
-            cells = c;
             if (c.length > 0 && c[0].state === CellState.error) {
                 finishedBefore = !interrupted;
                 finishedPromise.resolve();
@@ -590,17 +587,17 @@ while keep_going:
         await sleep(100);
 
         // Try with something we can interrupt
-        let interruptResult = await interruptExecute(server, returnable, 1000, 1000);
+        await interruptExecute(server, returnable, 1000, 1000);
 
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
-        interruptResult = await interruptExecute(server, fourSecondSleep, 7000, 7000);
+        await interruptExecute(server, fourSecondSleep, 7000, 7000);
 
         // Try again with something that doesn't return. Make sure it times out
-        interruptResult = await interruptExecute(server, fourSecondSleep, 100, 7000);
+        await interruptExecute(server, fourSecondSleep, 100, 7000);
 
         // The tough one, somethign that causes a kernel reset.
-        interruptResult = await interruptExecute(server, kill, 1000, 1000);
+        await interruptExecute(server, kill, 1000, 1000);
     });
 
     testMimeTypes(

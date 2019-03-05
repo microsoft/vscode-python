@@ -28,11 +28,10 @@ import { MockOutputChannel } from '../../mockClasses';
 import { createMockTestDataItem } from '../common/testUtils.unit.test';
 
 // tslint:disable:max-func-body-length no-any
-suite('xUnit Tests - unittest - run failed tests', () => {
+suite('Unit Tests - unittest - run failed tests', () => {
     let testManager: TestManager;
     const workspaceFolder = Uri.file(__dirname);
     let serviceContainer: IServiceContainer;
-    let argsHelper: IArgumentsHelper;
     let testsHelper: ITestsHelper;
     let testManagerRunner: ITestManagerRunner;
     let tests: Tests;
@@ -130,7 +129,6 @@ suite('xUnit Tests - unittest - run failed tests', () => {
         createTestData();
         serviceContainer = mock(ServiceContainer);
         testsHelper = mock(TestsHelper);
-        argsHelper = mock(ArgumentsHelper);
         testManagerRunner = mock(TestManagerRunner);
         const testStorage = mock(TestCollectionStorageService);
         const workspaceService = mock(WorkspaceService);

@@ -12,16 +12,16 @@ import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 
 export class ServerCache implements IAsyncDisposable {
-    private cache : Map<string, INotebookServer> = new Map<string, INotebookServer>();
+    private cache: Map<string, INotebookServer> = new Map<string, INotebookServer>();
     private emptyKey = uuid();
 
     constructor(
         private configService: IConfigurationService,
         private workspace: IWorkspaceService,
         private fileSystem: IFileSystem
-        ) {}
+    ) { }
 
-    public async get(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         if (this.cache.has(key)) {
@@ -29,7 +29,7 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    public async set(result: INotebookServer, disposeCallback: () => void, options?: INotebookServerOptions) : Promise<void> {
+    public async set(result: INotebookServer, disposeCallback: () => void, options?: INotebookServerOptions): Promise<void> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
 
@@ -52,25 +52,24 @@ export class ServerCache implements IAsyncDisposable {
         };
     }
 
-    public async dispose() : Promise<void> {
-        // tslint:disable-next-line:no-unused-variable
-        for (const [k, s] of this.cache) {
+    public async dispose(): Promise<void> {
+        for (const [, s] of this.cache) {
             await s.dispose();
         }
         this.cache.clear();
     }
 
-    public async generateDefaultOptions(options? : INotebookServerOptions) : Promise<INotebookServerOptions> {
+    public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
             uri: options ? options.uri : undefined,
-            useDefaultConfig : options ? options.useDefaultConfig : true, // Default for this is true.
-            usingDarkTheme : options ? options.usingDarkTheme : undefined,
-            purpose : options ? options.purpose : uuid(),
-            workingDir : options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory()
+            useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
+            usingDarkTheme: options ? options.usingDarkTheme : undefined,
+            purpose: options ? options.purpose : uuid(),
+            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory()
         };
     }
 
-    private generateKey(options?: INotebookServerOptions) : string {
+    private generateKey(options?: INotebookServerOptions): string {
         if (!options) {
             return this.emptyKey;
         } else {

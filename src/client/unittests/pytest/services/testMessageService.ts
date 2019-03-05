@@ -205,7 +205,7 @@ export class TestMessageService implements ITestMessageService {
                 const lineClassName = matches ? matches[0] : undefined;
 
                 // Check if the indentation is proper.
-                if (parentIndentation === -1) {
+                if (parentIndentation === undefined) {
                     // The parentIndentation hasn't been set yet, so we are looking for a class that was
                     // defined in the global scope of the module.
                     if (trimmedLineText.length === lineText.length) {
@@ -228,7 +228,7 @@ export class TestMessageService implements ITestMessageService {
                         parentScopeEndIndex = index + 1;
                         continue;
                     }
-                    if (prevLowestIndentation === -1 || indentation < prevLowestIndentation) {
+                    if (prevLowestIndentation === undefined || indentation < prevLowestIndentation) {
                         if (lineClassName === suiteName) {
                             // This might be the line that we want.
                             suiteDefLineIndex = index;
@@ -240,7 +240,7 @@ export class TestMessageService implements ITestMessageService {
                     }
                 }
             }
-            if (suiteDefLineIndex === -1) {
+            if (suiteDefLineIndex === undefined) {
                 // Could not find the suite declaration line, so give up and move on with the latest one that we found.
                 break;
             }

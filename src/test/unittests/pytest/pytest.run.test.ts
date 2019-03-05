@@ -385,13 +385,12 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                     uniqueIssueFiles.forEach(fileName => {
                         suite(fileName, () => {
                             let testFileUri: vscode.Uri;
-                            let expectedDiagnosticCount: number;
                             const relevantTestDetails = getRelevantTestDetailsForFile(testDetails, fileName);
                             const relevantSkippedIssues = getRelevantSkippedIssuesFromTestDetailsForFile(scenario.testDetails!, fileName);
                             suiteSetup(async () => {
                                 testFileUri = vscode.Uri.file(path.join(UNITTEST_TEST_FILES_PATH, fileName));
                                 diagnostics = testManager.diagnosticCollection.get(testFileUri)!;
-                                expectedDiagnosticCount = getIssueCountFromRelevantTestDetails(relevantTestDetails, relevantSkippedIssues, failedRun);
+                                getIssueCountFromRelevantTestDetails(relevantTestDetails, relevantSkippedIssues, failedRun);
                             });
                             // test('Test DiagnosticCollection', async () => { assert.equal(diagnostics.length, expectedDiagnosticCount, 'Diagnostics count'); });
                             const validateTestFunctionAndDiagnostics = (td: ITestDetails) => {
