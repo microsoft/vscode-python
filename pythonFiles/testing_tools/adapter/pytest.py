@@ -102,8 +102,8 @@ def _parse_item(item):
     # Figure out the func (and subs).
     funcname = item.function.__name__
     parts = item.nodeid.split('::')
-    if parts.pop(0) != filename:
-        # TODO: What to do?
+    if os.path.normcase(parts.pop(0)) != filename:
+        # The filename of this node doesn't match the filename within the node id?
         raise NotImplementedError
     suites = []
     while len(parts) > 1:
