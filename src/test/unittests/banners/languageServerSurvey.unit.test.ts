@@ -10,11 +10,10 @@ import { SemVer } from 'semver';
 import * as typemoq from 'typemoq';
 import { FolderVersionPair, ILanguageServerFolderService } from '../../../client/activation/types';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { IBrowserService, IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { LanguageServerSurveyBanner, LSSurveyStateKeys } from '../../../client/languageServices/languageServerSurveyBanner';
 
 suite('Language Server Survey Banner', () => {
-    let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
     let browser: typemoq.IMock<IBrowserService>;
     let lsService: typemoq.IMock<ILanguageServerFolderService>;
@@ -24,7 +23,6 @@ suite('Language Server Survey Banner', () => {
     const no = 'No, thanks';
 
     setup(() => {
-        config = typemoq.Mock.ofType<IConfigurationService>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         browser = typemoq.Mock.ofType<IBrowserService>();
         lsService = typemoq.Mock.ofType<ILanguageServerFolderService>();

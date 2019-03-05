@@ -19,13 +19,13 @@ interface IMessageArgs {
 export class PostOffice implements IAsyncDisposable {
 
     private name: string;
-    private started : Promise<vsls.LiveShare | null>;
-    private hostServer : vsls.SharedService | null = null;
-    private guestServer : vsls.SharedServiceProxy | null = null;
-    private currentRole : vsls.Role = vsls.Role.None;
+    private started: Promise<vsls.LiveShare | null>;
+    private hostServer: vsls.SharedService | null = null;
+    private guestServer: vsls.SharedServiceProxy | null = null;
+    private currentRole: vsls.Role = vsls.Role.None;
     private currentPeerCount: number = 0;
-    private peerCountChangedEmitter : vscode.EventEmitter<number> = new vscode.EventEmitter<number>();
-    private commandMap : { [key: string] : { thisArg: any; callback(...args: any[]) : void } } = {};
+    private peerCountChangedEmitter: vscode.EventEmitter<number> = new vscode.EventEmitter<number>();
+    private commandMap: { [key: string]: { thisArg: any; callback(...args: any[]): void } } = {};
 
     constructor(
         name: string,
@@ -41,7 +41,7 @@ export class PostOffice implements IAsyncDisposable {
         return this.currentPeerCount;
     }
 
-    public get peerCountChanged() : vscode.Event<number> {
+    public get peerCountChanged(): vscode.Event<number> {
         return this.peerCountChangedEmitter.event;
     }
 
@@ -57,7 +57,7 @@ export class PostOffice implements IAsyncDisposable {
         this.guestServer = null;
     }
 
-    public async postCommand(command: string, ...args: any[]) : Promise<void> {
+    public async postCommand(command: string, ...args: any[]): Promise<void> {
         // Make sure startup finished
         const api = await this.started;
         let skipDefault = false;
@@ -88,7 +88,7 @@ export class PostOffice implements IAsyncDisposable {
         }
     }
 
-    public async registerCallback(command: string, callback: (...args: any[]) => void, thisArg?: any) : Promise<void> {
+    public async registerCallback(command: string, callback: (...args: any[]) => void, thisArg?: any): Promise<void> {
         const api = await this.started;
 
         // For a guest, make sure to register the notification
@@ -100,11 +100,11 @@ export class PostOffice implements IAsyncDisposable {
         this.commandMap[command] = { callback, thisArg };
     }
 
-    private createBroadcastArgs(command: string, ...args: any[]) : IMessageArgs {
+    private createBroadcastArgs(command: string, ...args: any[]): IMessageArgs {
         return { args: JSON.stringify([command, ...args]) };
     }
 
-    private translateArgs(api: vsls.LiveShare, command: string, ...args: any[]) : IMessageArgs {
+    private translateArgs(api: vsls.LiveShare, command: string, ...args: any[]): IMessageArgs {
         // Make sure to eliminate all .toJSON functions on our arguments. Otherwise they're stringified incorrectly
         for (let a = 0; a <= args.length; a += 1) {
             // Eliminate this on only object types (https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript)
@@ -130,12 +130,12 @@ export class PostOffice implements IAsyncDisposable {
         return { args: JSON.stringify(copyArgs) };
     }
 
-    private escapeCommandName(command: string) : string {
+    private escapeCommandName(command: string): string {
         // Replace . with $ instead.
         return command.replace(/\./g, '$');
     }
 
-    private unescapeCommandName(command: string) : string {
+    private unescapeCommandName(command: string): string {
         // Turn $ back into .
         return command.replace(/\$/g, '.');
     }
@@ -153,7 +153,7 @@ export class PostOffice implements IAsyncDisposable {
         }
     }
 
-    private getCallback(command: string) : ((...args: any[]) => void) | undefined {
+    private getCallback(command: string): ((...args: any[]) => void) | undefined {
         let callback = this.commandMap.hasOwnProperty(command) ? this.commandMap[command].callback : undefined;
         if (callback) {
             // Bind the this arg if necessary
@@ -166,7 +166,7 @@ export class PostOffice implements IAsyncDisposable {
         return callback;
     }
 
-    private async startCommandServer() : Promise<vsls.LiveShare | null> {
+    private async startCommandServer(): Promise<vsls.LiveShare | null> {
         const api = await this.liveShareApi.getApi();
         if (api !== null) {
             api.onDidChangeSession(() => this.onChangeSession(api).ignoreErrors());
@@ -177,7 +177,7 @@ export class PostOffice implements IAsyncDisposable {
         return api;
     }
 
-    private async onChangeSession(api: vsls.LiveShare) : Promise<void> {
+    private async onChangeSession(api: vsls.LiveShare): Promise<void> {
         // Startup or shutdown our connection to the other side
         if (api.session) {
             if (this.currentRole !== api.session.role) {
@@ -209,7 +209,7 @@ export class PostOffice implements IAsyncDisposable {
         }
     }
 
-    private async onChangePeers(api: vsls.LiveShare) : Promise<void> {
+    private async onChangePeers(api: vsls.LiveShare): Promise<void> {
         let newPeerCount = 0;
         if (api.session) {
             newPeerCount = api.peers.length;
@@ -226,7 +226,7 @@ export class PostOffice implements IAsyncDisposable {
         if (a.args.length > 0) {
             const jsonArray = JSON.parse(a.args) as JSONArray;
             if (jsonArray !== null && jsonArray.length >= 2) {
-                const firstArg = jsonArray[0]; // More stupid hygiene problems.
+                const firstArg = jsonArray[0]!; // More stupid hygiene problems.
                 const command = firstArg !== null ? firstArg.toString() : '';
 
                 // Args need to be translated from guest to host

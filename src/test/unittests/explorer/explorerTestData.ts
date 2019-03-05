@@ -155,17 +155,9 @@ export function getTestHelperInstance(): TestsHelper {
  */
 export function createMockTestsData(testData?: TestFile[]): Tests {
     if (testData === undefined) {
-        let testFolder: TestFolder;
         let testFile: TestFile;
-        let testFunction: TestFunction;
-        let testSuite: TestSuite;
-        let testSuiteFn: TestFunction;
 
-        [testFolder,
-            testFile,
-            testFunction,
-            testSuite,
-            testSuiteFn] = getTestExplorerViewItemData();
+        [, testFile] = getTestExplorerViewItemData();
 
         testData = [testFile];
     }

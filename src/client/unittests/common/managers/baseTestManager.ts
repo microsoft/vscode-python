@@ -11,7 +11,7 @@ import {
     OutputChannel,
     Uri
 } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { isNotInstalledError } from '../../../common/helpers';
 import { IFileSystem } from '../../../common/platform/types';
@@ -58,6 +58,7 @@ export abstract class BaseTestManager implements ITestManager {
     }
     private testCollectionStorage: ITestCollectionStorageService;
     private _testResultsService: ITestResultsService;
+    private commandManager: ICommandManager;
     private workspaceService: IWorkspaceService;
     private _outputChannel: OutputChannel;
     protected tests?: Tests;
@@ -92,6 +93,7 @@ export abstract class BaseTestManager implements ITestManager {
         this.diagnosticCollection = languages.createDiagnosticCollection(this.testProvider);
         this.unitTestDiagnosticService = serviceContainer.get<IUnitTestDiagnosticService>(IUnitTestDiagnosticService);
         this.testsStatusUpdaterService = serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         disposables.push(this);
     }
     protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
@@ -159,7 +161,7 @@ export abstract class BaseTestManager implements ITestManager {
             trigger: cmdSource as any,
             failed: false
         };
-
+        this.commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
         this.createCancellationToken(CancellationTokenType.testDiscovery);
         const discoveryOptions = this.getDiscoveryOptions(ignoreCache);
         const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, this.testProvider);

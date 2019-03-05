@@ -115,7 +115,7 @@ suite('Unit Tests - Debug Launcher', () => {
         settings.setup(p => p.envFile)
             .returns(() => __filename);
         const args = expected.args;
-        const debugArgs = testProvider === 'unittest' ? args.filter(item => item !== '--debug') : args;
+        const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
         expected.args = debugArgs;
 
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))

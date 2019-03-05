@@ -219,10 +219,6 @@ Once an issue has been appropriately classified, there are two keys ways to help
 
 The other way to help is to go through issues that are labeled as [`validate fix`](https://github.com/Microsoft/vscode-python/labels/validate%20fix). These issues are believed to be fixed, but having an independent validation is always appreciated.
 
-#### Closed issues
-
-If a closed issue is labeled with ["volunteer"](https://github.com/Microsoft/vscode-python/issues?q=label%3Avolunteer+is%3Aclosed) that means the development team has no plans to implement the work for the issue, but that we would accept a pull request if provided. We close these types of issues to help us stay focused on the issues we do plan/hope to get to (which we will also accept pull requests for, just please discuss design considerations with us first to help make sure your pull request will be accepted).
-
 ### Pull requests
 
 Key details that all pull requests are expected to handle should be
