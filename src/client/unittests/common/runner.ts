@@ -100,13 +100,15 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
     }
     return path.basename(testRunnerExecutablePath) === testRunnerExecutablePath ? undefined : testRunnerExecutablePath;
 }
+
 function getTestModuleName(testProvider: TestProvider) {
     switch (testProvider) {
         case NOSETEST_PROVIDER: {
             return 'nose';
         }
         case PYTEST_PROVIDER: {
-            return 'pytest';
+            return undefined;
+            //return 'testing_tools.adapter';
         }
         case UNITTEST_PROVIDER: {
             return 'unittest';

@@ -47,7 +47,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         return this.helper.mergeTests(results);
     }
     private buildTestCollectionArgs(options: TestDiscoveryOptions) {
-        // Remove unwnted arguments (which happen to be test directories & test specific args).
+        // Remove unwanted arguments (which happen to be test directories & test specific args).
         const args = this.argsService.filterArguments(options.args, TestFilter.discovery);
         if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
             args.splice(0, 0, '--cache-clear');
@@ -56,12 +56,16 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             args.splice(0, 0, '-s');
         }
         args.splice(0, 0, '--collect-only');
+        args.splice(0, 0, 'pytest');
+        args.splice(0, 0, 'discover');
+        //args.splice(0, 0, path_join(EXTENSION_ROOT_DIR, 'pythonFiles', 'tests', 'scripts', 'testing_tools_dummy.py'));
+        args.splice(0, 0, path_join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py'));
         return args;
     }
     private async discoverTestsInTestDirectory(options: TestDiscoveryOptions): Promise<Tests> {
         const token = options.token ? options.token : new CancellationTokenSource().token;
         const runOptions: Options = {
-            args: [TEST_DISCOVERY_ADAPTER, ...options.args],
+            args: options.args,
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
             token,
