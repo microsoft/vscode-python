@@ -153,6 +153,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);
         }
+        this.cmdManager.executeCommand('setContext', 'testsDiscovered', false);
     }
 
     private updateWithDiscoverSuccess(tests: Tests, quietMode: boolean = false) {

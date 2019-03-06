@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+
+import { noop } from '../../test/core';
 
 export function concatMultilineString(str : nbformat.MultilineString) : string {
     if (Array.isArray(str)) {
@@ -23,15 +24,9 @@ export function concatMultilineString(str : nbformat.MultilineString) : string {
 // Strip out comment lines from code
 export function stripComments(str : nbformat.MultilineString): nbformat.MultilineString {
     if (Array.isArray(str)) {
-        return str.filter((value: string) => {
-            if (value.trim().startsWith('#')) {
-                return false;
-            }
-
-            return true;
-        });
+        return extractNonComments(str);
     } else {
-        return str;
+        return extractNonComments([str]);
     }
 }
 
@@ -76,6 +71,51 @@ export function appendLineFeed(arr : string[], modifier? : (s : string) => strin
 }
 
 export function generateMarkdownFromCodeLines(lines: string[]) {
-    // Generate markdown by stripping out the comment and markdown header
-    return appendLineFeed(lines.slice(1).filter(s => s.includes('#')), s => s.trim().slice(1));
+    // Generate markdown by stripping out the comments and markdown header
+    return appendLineFeed(extractComments(lines.slice(1)));
+}
+
+export function parseForComments(
+    lines: string [],
+    foundCommentLine: (s: string, i: number) => void,
+    foundNonCommentLine: (s: string, i: number) => void)
+    {
+    // Check for either multiline or single line comments
+    let insideMultiline = false;
+    let pos = 0;
+    for (const l of lines) {
+        const trim = l.trim();
+        // Multiline is triple quotes of either kind
+        const isMultiline = trim === '\'\'\'' || trim === '\"\"\"';
+        if (insideMultiline) {
+            if (!isMultiline) {
+                foundCommentLine(l, pos);
+            } else {
+                insideMultiline = false;
+            }
+        } else {
+            if (!isMultiline) {
+                if (trim.startsWith('#')) {
+                    foundCommentLine(trim.slice(1), pos);
+                } else {
+                    foundNonCommentLine(l, pos);
+                }
+            } else {
+                insideMultiline = true;
+            }
+        }
+        pos += 1;
+    }
+}
+
+function extractComments(lines: string []) : string[] {
+    const result = [];
+    parseForComments(lines, (s) => result.push(s), (s) => noop());
+    return result;
+}
+
+function extractNonComments(lines: string[]) : string [] {
+    const result = [];
+    parseForComments(lines, (s) => noop, (s) => result.push(s));
+    return result;
 }
