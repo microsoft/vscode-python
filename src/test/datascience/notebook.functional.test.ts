@@ -917,6 +917,7 @@ plt.show()`,
                 await verifySimple(server, `a=1${os.EOL}a`, 1);
                 assert.ok(false, 'Exception should have been thrown');
             } catch {
+                noop();
             }
 
         }
