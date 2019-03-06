@@ -206,7 +206,16 @@ export class TestsParser implements ITestsParser {
                 name = name.trimQuotes();
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
-                const fn: TestFunction = { resource, name: name, nameToRun: rawName, time: 0 };
+                const fn: TestFunction = {
+                    resource: resource,
+                    name: name,
+                    nameToRun: rawName,
+                    time: 0
+                };
+                const pos = name.indexOf('[');
+                if (pos > 0 && name.endsWith(']')) {
+                    fn.funcName = name.substring(0, pos);
+                }
                 parentNode!.item.functions.push(fn);
                 return;
             }

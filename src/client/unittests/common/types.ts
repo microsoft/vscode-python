@@ -72,6 +72,7 @@ export type TestFunction = TestResult & {
     resource: Uri;
     name: string;
     nameToRun: string;
+    funcName?: string;  // used if is subtest
 };
 
 export type TestResult = Node & {
