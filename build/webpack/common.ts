@@ -28,8 +28,12 @@ export const nodeModulesToExternalize = [
     'sudo-prompt',
     'node-stream-zip',
     'xml2js',
-    'vsls/vscode'
+    'vsls/vscode',
 ];
+
+export const nodeModulesToReplacePaths = [
+    ...nodeModulesToExternalize
+]
 
 export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies' | 'datascience-ui') {
     const plugins = [];

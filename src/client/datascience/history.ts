@@ -110,8 +110,16 @@ export class History implements IHistory {
         // react control.
         this.webPanelInit = createDeferred();
 
+        // If our execution changes its liveshare session, we need to close our server
+        this.jupyterExecution.sessionChanged(() => this.onInterpreterChanged());
+
         // Load on a background thread.
         this.loadPromise = this.load();
+    }
+
+    public get ready() : Promise<void> {
+        // We need this to ensure the history window is up and ready to receive messages.
+        return this.loadPromise;
     }
 
     public async show(): Promise<void> {
@@ -566,15 +574,21 @@ export class History implements IHistory {
         this.postMessage(HistoryMessages.UpdateSettings, dsSettings).ignoreErrors();
     }
 
-    private onInterpreterChanged = async () => {
+    private onInterpreterChanged = () => {
         // Update our load promise. We need to restart the jupyter server
+        this.loadPromise = this.reload();
+    }
+
+    private async reload() : Promise<void> {
         if (this.loadPromise) {
             await this.loadPromise;
             if (this.jupyterServer) {
-                await this.jupyterServer.shutdown();
+                const server = this.jupyterServer;
+                this.jupyterServer = undefined;
+                server.shutdown().ignoreErrors();
             }
         }
-        this.loadPromise = this.load();
+        return this.load();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -740,7 +754,7 @@ export class History implements IHistory {
 
     private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
         if (!this.addSysInfoPromise || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
-            this.logger.logInformation(`Adding sys info for ${reason}`);
+            this.logger.logInformation(`Adding sys info for ${this.id} ${reason}`);
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
 
@@ -755,10 +769,10 @@ export class History implements IHistory {
                 this.shareMessage(HistoryMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
             }
 
-            this.logger.logInformation(`Sys info for ${reason} complete`);
+            this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);
             deferred.resolve(true);
         } else if (this.addSysInfoPromise) {
-            this.logger.logInformation(`Wait for sys info for ${reason}`);
+            this.logger.logInformation(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
         }
     }

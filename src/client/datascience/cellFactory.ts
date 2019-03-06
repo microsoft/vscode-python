@@ -6,9 +6,10 @@ import '../common/extensions';
 import * as uuid from 'uuid/v4';
 import { Range, TextDocument } from 'vscode';
 
+import { noop } from '../../test/core';
 import { IDataScienceSettings } from '../common/types';
 import { CellMatcher } from './cellMatcher';
-import { appendLineFeed, generateMarkdownFromCodeLines } from './common';
+import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from './common';
 import { CellState, ICell } from './types';
 
 function generateCodeCell(code: string[], file: string, line: number, id: string) : ICell {
@@ -51,12 +52,14 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
     const matcher = new CellMatcher(settings);
     if (matcher.isMarkdown(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
-        // with #
-        const firstNonMarkdown = splitMarkdown ? split.findIndex((l: string) => l.trim().length > 0 && !l.trim().startsWith('#')) : -1;
+        // with # or are inside a multiline comment
+        let firstNonMarkdown = -1;
+        parseForComments(split, (s, i) => noop(), (s, i) => firstNonMarkdown = splitMarkdown ? i : -1);
         if (firstNonMarkdown >= 0) {
+            // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
-                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, id)
+                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, uuid())
             ];
         } else {
             // Just a single markdown cell

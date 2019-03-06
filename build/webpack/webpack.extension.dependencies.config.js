@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const constants_1 = require("../constants");
 const common_1 = require("./common");
+const copyWebpackPlugin = require("copy-webpack-plugin");
 const entryItems = {};
 common_1.nodeModulesToExternalize.forEach(moduleName => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
@@ -35,7 +36,12 @@ const config = {
         'commonjs'
     ],
     plugins: [
-        ...common_1.getDefaultPlugins('dependencies')
+        ...common_1.getDefaultPlugins('dependencies'),
+        // vsls requires our package.json to be next to node_modules. It's how they
+        // 'find' the calling extension.
+        new copyWebpackPlugin([
+            { from: './package.json', to: '.' }
+        ])
     ],
     resolve: {
         extensions: ['.js']

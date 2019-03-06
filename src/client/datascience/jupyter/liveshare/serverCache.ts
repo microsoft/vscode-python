@@ -77,7 +77,6 @@ export class ServerCache implements IAsyncDisposable {
             return options.purpose +
                 (options.uri ? options.uri : '') +
                 (options.useDefaultConfig ? 'true' : 'false') +
-                (options.usingDarkTheme ? 'true' : 'false') + // Ideally we'd have different results for different themes. Not sure how to handle this.
                 (options.workingDir);
         }
     }

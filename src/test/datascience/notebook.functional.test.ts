@@ -824,6 +824,8 @@ plt.show()`,
         assert.ok(s1 !== s3, 'Different config should create different server');
         const s4 = await createNotebookServer(true, false, false, 'different');
         assert.ok(s1 !== s4, 'Different purpose should create different server');
+        const s5 = await createNotebookServer(true, false, true, 'different');
+        assert.ok(s4 === s5, 'Dark theme should be same server');
     });
 
 });

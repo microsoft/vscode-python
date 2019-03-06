@@ -22,6 +22,7 @@ import {
 } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
+import { GuestJupyterSessionManager } from './guestJupyterSessionManager';
 import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ServerCache } from './serverCache';
 
@@ -55,7 +56,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             disposableRegistry,
             asyncRegistry,
             fileSystem,
-            sessionManager,
+            new GuestJupyterSessionManager(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
             commandFactory,

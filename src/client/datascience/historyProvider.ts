@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
+import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../common/application/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../common/types';
@@ -12,13 +13,18 @@ import { Identifiers, LiveShare, LiveShareCommands, Settings } from './constants
 import { PostOffice } from './liveshare/postOffice';
 import { IHistory, IHistoryProvider, INotebookServerOptions, IThemeFinder } from './types';
 
+interface ISyncData {
+    count: number;
+    waitable: Deferred<void>;
+}
+
 @injectable()
 export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
 
     private activeHistory : IHistory | undefined;
     private postOffice : PostOffice;
     private id: string;
-    private pendingSyncs : { [key: string] : { waitable: Deferred<void>; count: number }} = {};
+    private pendingSyncs : Map<string, ISyncData> = new Map<string, ISyncData>();
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -51,7 +57,7 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
 
     public async getOrCreateActive() : Promise<IHistory> {
         if (!this.activeHistory) {
-            this.activeHistory = this.create();
+            this.activeHistory = await this.create();
         }
 
         // Make sure all other providers have an active history.
@@ -93,30 +99,31 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         return this.postOffice.dispose();
     }
 
-    private create = () => {
+    private async create() : Promise<IHistory> {
         const result = this.serviceContainer.get<IHistory>(IHistory);
         const handler = result.closed(this.onHistoryClosed);
         this.disposables.push(result);
         this.disposables.push(handler);
+        await result.ready;
         return result;
     }
 
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs
         if (newCount < this.postOffice.peerCount) {
-            Object.keys(this.pendingSyncs).forEach(k => this.pendingSyncs[k].waitable.resolve());
-            this.pendingSyncs = {};
+            this.pendingSyncs.forEach(v => v.waitable.resolve());
+            this.pendingSyncs.clear();
         }
     }
 
     // tslint:disable-next-line:no-any
-    private onRemoteCreate(...args: any[]) {
+    private async onRemoteCreate(...args: any[]) {
         // Should be a single arg, the originator of the create
         if (args.length > 0 && args[0].toString() !== this.id) {
             // The other side is creating a history window. Create on this side. We don't need to show
             // it as the running of new code should do that.
             if (!this.activeHistory) {
-                this.activeHistory = this.create();
+                this.activeHistory = await this.create();
             }
 
             // Tell the requestor that we got its message (it should be waiting for all peers to sync)
@@ -130,10 +137,12 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         if (args.length > 1 && args[0].toString() === this.id) {
             // Update our pending wait count on the matching pending sync
             const key = args[1].toString();
-            if (this.pendingSyncs.hasOwnProperty(key)) {
-                this.pendingSyncs[key].count -= 1;
-                if (this.pendingSyncs[key].count <= 0) {
-                    this.pendingSyncs[key].waitable.resolve();
+            const sync = this.pendingSyncs.get(key);
+            if (sync) {
+                sync.count -= 1;
+                if (sync.count <= 0) {
+                    sync.waitable.resolve();
+                    this.pendingSyncs.delete(key);
                 }
             }
         }
@@ -147,10 +156,10 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
 
     private synchronizeCreate() : Promise<void> {
         // Create a new pending wait if necessary
-        if (this.postOffice.peerCount > 0) {
+        if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
             const key = uuid();
             const waitable = createDeferred<void>();
-            this.pendingSyncs[key] = { count: this.postOffice.peerCount, waitable };
+            this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
 
             // Make sure all providers have an active history
             this.postOffice.postCommand(LiveShareCommands.historyCreate, this.id, key).ignoreErrors();

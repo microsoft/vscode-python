@@ -120,7 +120,7 @@ export class JupyterServerBase implements INotebookServer {
     constructor(
         liveShare: ILiveShareApi,
         dataScience: IDataScience,
-        private logger: ILogger,
+        protected logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,

@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode-jsonrpc';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
@@ -41,6 +41,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private commands: Record<string, IJupyterCommand> = {};
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
+    private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(liveShare: ILiveShareApi,
                 private executionFactory: IPythonExecutionFactory,
@@ -69,6 +70,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             });
             this.disposableRegistry.push(disposable);
         }
+    }
+
+    public get sessionChanged() : Event<void> {
+        return this.eventEmitter.event;
     }
 
     public dispose() : Promise<void> {
@@ -183,7 +188,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         notebookCommand.exec(args, { throwOnStdErr: false, encoding: 'utf8' }).ignoreErrors();
     }
 
-    public async importNotebook(file: string, template: string): Promise<string> {
+    public async importNotebook(file: string, template: string | undefined): Promise<string> {
         // First we find a way to start a nbconvert
         const convert = await this.findBestCommand(JupyterCommands.ConvertCommand);
         if (!convert) {
@@ -191,7 +196,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         // Wait for the nbconvert to finish
-        const result = await convert.exec([file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
+        const args = template ? [file, '--to', 'python', '--stdout', '--template', template] : [file, '--to', 'python', '--stdout'];
+        const result = await convert.exec(args, { throwOnStdErr: false, encoding: 'utf8' });
         if (result.stderr) {
             // Stderr on nbconvert doesn't indicate failure. Just log the result
             this.logger.logInformation(result.stderr);

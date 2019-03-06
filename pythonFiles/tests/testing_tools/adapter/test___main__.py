@@ -9,7 +9,7 @@ from testing_tools.adapter.__main__ import (
 class StubTool(StubProxy):
 
     def __init__(self, name, stub=None):
-        super().__init__(stub, name)
+        super(StubTool, self).__init__(stub, name)
         self.return_discover = None
 
     def discover(self, args, **kwargs):
@@ -22,7 +22,7 @@ class StubTool(StubProxy):
 class StubReporter(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'reporter')
+        super(StubReporter, self).__init__(stub, 'reporter')
 
     def report(self, discovered, **kwargs):
         self.add_call('report', (discovered,), kwargs or None)

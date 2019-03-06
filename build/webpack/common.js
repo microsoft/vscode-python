@@ -26,7 +26,10 @@ exports.nodeModulesToExternalize = [
     'sudo-prompt',
     'node-stream-zip',
     'xml2js',
-    'vsls/vscode'
+    'vsls/vscode',
+];
+exports.nodeModulesToReplacePaths = [
+    ...exports.nodeModulesToExternalize
 ];
 function getDefaultPlugins(name) {
     const plugins = [];

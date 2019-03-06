@@ -45,7 +45,12 @@ export class PostOffice implements IAsyncDisposable {
         return this.peerCountChangedEmitter.event;
     }
 
+    public get role() {
+        return this.currentRole;
+    }
+
     public async dispose() {
+        this.peerCountChangedEmitter.fire();
         this.peerCountChangedEmitter.dispose();
         if (this.hostServer) {
             const s = await this.started;

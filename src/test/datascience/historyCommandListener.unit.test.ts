@@ -7,23 +7,9 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import {
-    Disposable,
-    Event,
-    EventEmitter,
-    TextDocument,
-    TextDocumentShowOptions,
-    TextEditor,
-    TextEditorOptionsChangeEvent,
-    TextEditorSelectionChangeEvent,
-    TextEditorViewColumnChangeEvent,
-    Uri,
-    ViewColumn,
-    WorkspaceEdit
-} from 'vscode';
+import { Disposable, EventEmitter, Uri } from 'vscode';
 
 import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IDocumentManager } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
@@ -44,8 +30,8 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as vscodeMocks from '../vscode-mock';
-import { createDocument } from './editor-integration/helpers';
 import { MockCommandManager } from './mockCommandManager';
+import { MockDocumentManager } from './mockDocumentManager';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
@@ -56,66 +42,6 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     (result as any)['tag'] = tag;
     result.setup((x: any) => x.then).returns(() => undefined);
     return result;
-}
-
-class MockDocumentManager implements IDocumentManager {
-    public textDocuments: TextDocument[] = [];
-    public activeTextEditor: TextEditor | undefined;
-    public visibleTextEditors: TextEditor[] = [];
-    private didChangeEmitter = new EventEmitter<TextEditor>();
-    private didOpenEmitter = new EventEmitter<TextDocument>();
-    private didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
-    private didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();
-    private didChangeTextEditorOptionsEmitter = new EventEmitter<TextEditorOptionsChangeEvent>();
-    private didChangeTextEditorViewColumnEmitter = new EventEmitter<TextEditorViewColumnChangeEvent>();
-    private didCloseEmitter = new EventEmitter<TextDocument>();
-    private didSaveEmitter = new EventEmitter<TextDocument>();
-    public get onDidChangeActiveTextEditor(): Event<TextEditor> {
-        return this.didChangeEmitter.event;
-    }
-    public get onDidOpenTextDocument(): Event<TextDocument> {
-        return this.didOpenEmitter.event;
-    }
-    public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
-        return this.didChangeVisibleEmitter.event;
-    }
-    public get onDidChangeTextEditorSelection(): Event<TextEditorSelectionChangeEvent> {
-        return this.didChangeTextEditorSelectionEmitter.event;
-    }
-    public get onDidChangeTextEditorOptions(): Event<TextEditorOptionsChangeEvent> {
-        return this.didChangeTextEditorOptionsEmitter.event;
-    }
-    public get onDidChangeTextEditorViewColumn(): Event<TextEditorViewColumnChangeEvent> {
-        return this.didChangeTextEditorViewColumnEmitter.event;
-    }
-    public get onDidCloseTextDocument(): Event<TextDocument> {
-        return this.didCloseEmitter.event;
-    }
-    public get onDidSaveTextDocument(): Event<TextDocument> {
-        return this.didSaveEmitter.event;
-    }
-    public showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
-    public showTextDocument(document: TextDocument | Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
-    public showTextDocument(document: any, column?: any, preserveFocus?: any): Thenable<TextEditor> {
-        const mockEditor = createTypeMoq<TextEditor>('TextEditor');
-        mockEditor.setup(e => e.document).returns(() => this.getDocument());
-        this.activeTextEditor = mockEditor.object;
-        return Promise.resolve(mockEditor.object);
-    }
-    public openTextDocument(fileName: string | Uri): Thenable<TextDocument>;
-    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
-    public openTextDocument(options?: any): Thenable<TextDocument> {
-        return Promise.resolve(this.getDocument());
-    }
-    public applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
-        throw new Error('Method not implemented.');
-    }
-
-    private getDocument(): TextDocument {
-        const mockDoc = createDocument('#%%\r\nprint("code")', 'bar.ipynb', 1, TypeMoq.Times.atMost(100), true);
-        mockDoc.setup((x: any) => x.then).returns(() => undefined);
-        return mockDoc.object;
-    }
 }
 
 class MockStatusProvider implements IStatusProvider {
@@ -262,6 +188,11 @@ suite('History command listener', async () => {
         if (jupyterExecution.isNotebookSupported) {
             when(jupyterExecution.isNotebookSupported()).thenResolve(true);
         }
+
+        documentManager.addDocument('#%%\r\nprint("code")', 'bar.ipynb');
+
+        when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
+        when(applicationShell.showInformationMessage(anything())).thenReturn(Promise.resolve('moo'));
 
         const result = new HistoryCommandListener(
             disposableRegistry,
