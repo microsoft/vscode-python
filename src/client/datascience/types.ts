@@ -245,6 +245,8 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 }
 
 // Get variables from the currently running active Jupyter server
+// Note: This definition is used implicitly by getJupyterVariableValue.py file
+// Changes here may need to be reflected there as well
 export interface IJupyterVariable {
     name: string;
     value: string | undefined;
