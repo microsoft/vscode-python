@@ -53,6 +53,10 @@ export abstract class TestTreeItem extends TreeItem {
             case TestStatus.Running: {
                 return getIcon(Icons.discovering);
             }
+            case TestStatus.Idle:
+            case TestStatus.Unknown: {
+                return getIcon(Icons.unknown);
+            }
             default: {
                 switch (this.testType) {
                     case TestType.testFile: {
@@ -73,6 +77,31 @@ export abstract class TestTreeItem extends TreeItem {
      */
     public get parent(): TestDataItem {
         return this.parentData;
+    }
+
+    public get tooltip(): string {
+        if (!this.data) {
+            return '';
+        }
+        if (this.testType !== TestType.testFunction) {
+            return `${this.data.functionsFailed} failed, ${this.data.functionsPassed} passed in ${this.data.time} seconds`;
+        }
+        switch (this.data.status) {
+            case TestStatus.Error:
+            case TestStatus.Fail: {
+                return `Failed in ${this.data.time} seconds`;
+            }
+            case TestStatus.Pass: {
+                return `Passed in ${this.data.time} seconds`;
+            }
+            case TestStatus.Discovering:
+            case TestStatus.Running: {
+                return 'Loading...';
+            }
+            default: {
+                return '';
+            }
+        }
     }
 
     /**
