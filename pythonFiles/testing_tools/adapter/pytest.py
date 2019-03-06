@@ -37,8 +37,10 @@ def discover(pytestargs=None,
 def _adjust_pytest_args(pytestargs):
     pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
-    pytestargs.insert(0, '--collect-only')
     pytestargs.insert(0, '-pno:terminal')
+    pytestargs.insert(0, '--collect-only')
+    pytestargs.insert(0, '--cache-clear')
+    pytestargs.insert(0, '-s')
     # TODO: pull in code from:
     #  src/client/unittests/pytest/services/discoveryService.ts
     #  src/client/unittests/pytest/services/argsService.ts
