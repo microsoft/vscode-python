@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 
 import { noop } from '../../test/core';
 
-export function concatMultilineString(str : nbformat.MultilineString) : string {
+export function concatMultilineString(str: nbformat.MultilineString): string {
     if (Array.isArray(str)) {
         let result = '';
         for (let i = 0; i < str.length; i += 1) {
@@ -22,7 +22,7 @@ export function concatMultilineString(str : nbformat.MultilineString) : string {
 }
 
 // Strip out comment lines from code
-export function stripComments(str : nbformat.MultilineString): nbformat.MultilineString {
+export function stripComments(str: nbformat.MultilineString): nbformat.MultilineString {
     if (Array.isArray(str)) {
         return extractNonComments(str);
     } else {
@@ -30,7 +30,7 @@ export function stripComments(str : nbformat.MultilineString): nbformat.Multilin
     }
 }
 
-export function formatStreamText(str: string) : string {
+export function formatStreamText(str: string): string {
     // Go through the string, looking for \r's that are not followed by \n. This is
     // a special case that means replace the string before. This is necessary to
     // get an html display of this string to behave correctly.
@@ -63,7 +63,7 @@ export function formatStreamText(str: string) : string {
     return result;
 }
 
-export function appendLineFeed(arr : string[], modifier? : (s : string) => string) {
+export function appendLineFeed(arr: string[], modifier?: (s: string) => string) {
     return arr.map((s: string, i: number) => {
         const out = modifier ? modifier(s) : s;
         return i === arr.length - 1 ? `${out}` : `${out}\n`;
@@ -76,10 +76,9 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
 }
 
 export function parseForComments(
-    lines: string [],
+    lines: string[],
     foundCommentLine: (s: string, i: number) => void,
-    foundNonCommentLine: (s: string, i: number) => void)
-    {
+    foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
     let insideMultiline = false;
     let pos = 0;
@@ -108,14 +107,14 @@ export function parseForComments(
     }
 }
 
-function extractComments(lines: string []) : string[] {
-    const result = [];
+function extractComments(lines: string[]): string[] {
+    const result: string[] = [];
     parseForComments(lines, (s) => result.push(s), (s) => noop());
     return result;
 }
 
-function extractNonComments(lines: string[]) : string [] {
-    const result = [];
+function extractNonComments(lines: string[]): string[] {
+    const result: string[] = [];
     parseForComments(lines, (s) => noop, (s) => result.push(s));
     return result;
 }

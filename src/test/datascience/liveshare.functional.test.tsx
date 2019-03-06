@@ -183,7 +183,7 @@ suite('LiveShare tests', () => {
 
         // Remap event handlers to point to the container.
         const oldListener = window.addEventListener;
-        window.addEventListener = (event, cb) => {
+        window.addEventListener = (event: string, cb: any) => {
             if (event === 'message') {
                 container.postMessage = cb;
             }
@@ -210,7 +210,7 @@ suite('LiveShare tests', () => {
         return api.isSessionStarted;
     }
 
-    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5) : Promise<ReactWrapper<any, Readonly<{}>, React.Component>>  {
+    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
 
         // If just the host session has started or nobody, just run the host.
