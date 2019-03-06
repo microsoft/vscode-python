@@ -239,6 +239,9 @@ export class History implements IHistory {
                 this.closedEvent.fire(this);
             }
             this.updateContexts(undefined);
+            if (this.webPanel) {
+                this.webPanel.close();
+            }
         }
         if (this.changeHandler) {
             this.changeHandler.dispose();
@@ -494,7 +497,7 @@ export class History implements IHistory {
                     (error) => {
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error);
+                            this.applicationShell.showErrorMessage(error.toString());
                         }
                     },
                     () => {

@@ -211,27 +211,37 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
-        // If not using an active connection, check on disk
-        if (!connection) {
-            // Get our best interpreter. We want its python path
-            const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
+        try {
+            // If not using an active connection, check on disk
+            if (!connection) {
+                // Get our best interpreter. We want its python path
+                const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
 
-            // Enumerate our kernel specs that jupyter will know about and see if
-            // one of them already matches based on path
-            if (bestInterpreter && !await this.hasSpecPathMatch(bestInterpreter, cancelToken)) {
+                // Enumerate our kernel specs that jupyter will know about and see if
+                // one of them already matches based on path
+                if (bestInterpreter && !await this.hasSpecPathMatch(bestInterpreter, cancelToken)) {
 
-                // Nobody matches on path, so generate a new kernel spec
-                if (await this.isKernelCreateSupported(cancelToken)) {
-                    await this.addMatchingSpec(bestInterpreter, cancelToken);
+                    // Nobody matches on path, so generate a new kernel spec
+                    if (await this.isKernelCreateSupported(cancelToken)) {
+                        await this.addMatchingSpec(bestInterpreter, cancelToken);
+                    }
                 }
             }
+
+            // Now enumerate them again
+            const enumerator = connection ? () => this.sessionManager.getActiveKernelSpecs(connection) : () => this.enumerateSpecs(cancelToken);
+
+            // Then find our match
+            return this.findSpecMatch(enumerator);
+        } catch (e) {
+            // ECONNREFUSED seems to happen here. Log the error, but don't let it bubble out. We don't really need a kernel spec
+            this.logger.logWarning(e);
+
+            // Double check our jupyter server is still running.
+            if (connection && connection.localProcExitCode) {
+                throw new Error(localize.DataScience.jupyterServerCrashed().format(connection.localProcExitCode.toString()));
+            }
         }
-
-        // Now enumerate them again
-        const enumerator = connection ? () => this.sessionManager.getActiveKernelSpecs(connection) : () => this.enumerateSpecs(cancelToken);
-
-        // Then find our match
-        return this.findSpecMatch(enumerator);
     }
 
     private createRemoteConnectionInfo = (uri: string): IConnection => {
@@ -247,6 +257,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,
+            localProcExitCode: undefined,
+            disconnected: (l) => { return { dispose: noop }; },
             dispose: noop
         };
     }
@@ -260,6 +272,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         // Now actually launch it
+        let exitCode = 0;
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDir = await this.generateTempDir();
@@ -294,6 +307,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Then use this to launch our notebook process.
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 
+            // Watch for premature exits
+            if (launchResult.proc) {
+                launchResult.proc.on('exit', (c) => exitCode = c);
+            }
+
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
             if (launchResult && cancelToken) {
                 cancelToken.onCancellationRequested(() => {
@@ -314,8 +332,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 throw err;
             }
 
-            // Something else went wrong
-            throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+            // Something else went wrong. See if the local proc died or not.
+            if (exitCode !== 0) {
+                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
+            } else {
+                throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+            }
         }
     }
 

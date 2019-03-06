@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { ChildProcess } from 'child_process';
 import * as path from 'path';
-import { CancellationToken, Disposable } from 'vscode-jsonrpc';
+import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 
 import { CancellationError } from '../../common/cancellation';
 import { IFileSystem } from '../../common/platform/types';
@@ -74,6 +75,12 @@ class JupyterConnectionWaiter {
             this.launchTimedOut();
         }, jupyterLaunchTimeout);
 
+        // Listen for crashes
+        let exitCode = 0;
+        if (launchResult.proc) {
+            launchResult.proc.on('exit', (c) => exitCode = c);
+        }
+
         // Listen on stderr for its connection information
         launchResult.out.subscribe((output : Output<string>) => {
             if (output.source === 'stderr') {
@@ -82,7 +89,10 @@ class JupyterConnectionWaiter {
             } else {
                 this.output(output.out);
             }
-        });
+        },
+        (e) => this.rejectStartPromise(e.message),
+        // If the process dies, we can't extract connection information.
+        () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
     }
 
     public waitForConnection() : Promise<IConnection> {
@@ -167,7 +177,9 @@ class JupyterConnectionWaiter {
     // tslint:disable-next-line:no-any
     private rejectStartPromise = (message: string) => {
         clearTimeout(this.launchTimeout);
-        this.startPromise.reject(new JupyterConnectError(message, this.stderr.join('\n')));
+        if (!this.startPromise.resolved) {
+            this.startPromise.reject(new JupyterConnectError(message, this.stderr.join('\n')));
+        }
     }
 
 }
@@ -177,12 +189,26 @@ export class JupyterConnection implements IConnection {
     public baseUrl: string;
     public token: string;
     public localLaunch: boolean;
+    public localProcExitCode: number | undefined;
     private disposable: Disposable | undefined;
-    constructor(baseUrl: string, token: string, disposable: Disposable) {
+    private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
+    constructor(baseUrl: string, token: string, disposable: Disposable, childProc: ChildProcess | undefined) {
         this.baseUrl = baseUrl;
         this.token = token;
         this.localLaunch = true;
         this.disposable = disposable;
+
+        // If the local process exits, set our exit code and fire our event
+        if (childProc) {
+            childProc.on('exit', (c) => {
+                this.localProcExitCode = c;
+                this.eventEmitter.fire(c);
+            });
+        }
+    }
+
+    public get disconnected() : Event<number> {
+        return this.eventEmitter.event;
     }
 
     public static waitForConnection(
@@ -197,7 +223,7 @@ export class JupyterConnection implements IConnection {
             notebookExecution,
             notebookFile,
             getServerInfo,
-            (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, processDisposable),
+            (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, processDisposable, notebookExecution.proc),
             serviceContainer,
             cancelToken);
 

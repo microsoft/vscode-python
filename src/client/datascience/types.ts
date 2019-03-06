@@ -29,6 +29,8 @@ export interface IConnection extends Disposable {
     baseUrl: string;
     token: string;
     localLaunch: boolean;
+    localProcExitCode: number | undefined;
+    disconnected: Event<number>;
 }
 
 export enum InterruptResult {
