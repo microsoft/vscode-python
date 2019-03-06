@@ -3,10 +3,12 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
+import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
@@ -71,9 +73,6 @@ suite('Jupyter notebook tests', () => {
         ioc.registerDataScienceTypes();
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
-        if (ioc.mockJupyter) {
-            ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all);
-        }
     });
 
     teardown(async () => {
@@ -190,9 +189,12 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>) {
+    function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
+            if (ioc.mockJupyter) {
+                ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all, undefined, notebookProc);
+            }
             if (await jupyterExecution.isNotebookSupported()) {
                 return func();
             } else {
@@ -827,5 +829,97 @@ plt.show()`,
         const s5 = await createNotebookServer(true, false, true, 'different');
         assert.ok(s4 === s5, 'Dark theme should be same server');
     });
+
+    class DyingProcess implements ChildProcess {
+        public stdin: Writable = null;
+        public stdout: Readable = null;
+        public stderr: Readable = null;
+        public stdio: [Writable, Readable, Readable] = [null, null, null];
+        public killed: boolean = false;
+        public pid: number = 1;
+        public connected: boolean = true;
+        constructor(private timeout: number) {
+            noop();
+        }
+        public kill(signal?: string): void {
+            throw new Error('Method not implemented.');
+        }
+        public send(message: any, sendHandle?: any, options?: any, callback?: any) : any {
+            throw new Error('Method not implemented.');
+        }
+        public disconnect(): void {
+            throw new Error('Method not implemented.');
+        }
+        public unref(): void {
+            throw new Error('Method not implemented.');
+        }
+        public ref(): void {
+            throw new Error('Method not implemented.');
+        }
+        public addListener(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]) : any {
+            throw new Error('Method not implemented.');
+        }
+        public on(event: any, listener: any) : this {
+            if (event === 'exit') {
+                setTimeout(() => listener(2), this.timeout);
+            }
+            return this;
+        }
+        public once(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public prependListener(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public prependOnceListener(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+            return this;
+        }
+        public removeAllListeners(event?: string | symbol): this {
+            throw new Error('Method not implemented.');
+        }
+        public setMaxListeners(n: number): this {
+            throw new Error('Method not implemented.');
+        }
+        public getMaxListeners(): number {
+            throw new Error('Method not implemented.');
+        }
+        public listeners(event: string | symbol): Function[] {
+            throw new Error('Method not implemented.');
+        }
+        public rawListeners(event: string | symbol): Function[] {
+            throw new Error('Method not implemented.');
+        }
+        public eventNames(): (string | symbol)[] {
+            throw new Error('Method not implemented.');
+        }
+        public listenerCount(type: string | symbol): number {
+            throw new Error('Method not implemented.');
+        }
+    }
+
+    runTest('Server death', async () => {
+        if (ioc.mockJupyter) {
+            // Only run this test for mocks. We need to mock the server dying.
+            addMockData(`a=1${os.EOL}a`, 1);
+            const server = await createNotebookServer(true);
+            assert.ok(server, 'Server died before running');
+
+            // Sleep for 100 ms so it crashes
+            await sleep(100);
+
+            try {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
+                assert.ok(false, 'Exception should have been thrown');
+            } catch {
+            }
+
+        }
+    }, new DyingProcess(100));
 
 });
