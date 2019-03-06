@@ -109,13 +109,13 @@ export function parseForComments(
 }
 
 function extractComments(lines: string []) : string[] {
-    const result = [];
+    const result: string[] = [];
     parseForComments(lines, (s) => result.push(s), (s) => noop());
     return result;
 }
 
 function extractNonComments(lines: string[]) : string [] {
-    const result = [];
+    const result: string[] = [];
     parseForComments(lines, (s) => noop, (s) => result.push(s));
     return result;
 }

@@ -65,7 +65,6 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
-    let mainPanel: MainPanel | undefined;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -163,7 +162,7 @@ suite('History output tests', () => {
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
                 const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
-                mainPanel = getMainPanel(wrapper);
+                getMainPanel(wrapper);
                 try {
                     await testFunc(wrapper);
                 } finally {
