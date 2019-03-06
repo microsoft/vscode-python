@@ -10,6 +10,7 @@ import * as typeMoq from 'typemoq';
 import { StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
+import '../../../client/common/extensions';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { UnitTests } from '../../../client/common/utils/localize';
@@ -284,7 +285,7 @@ suite('Unit Tests - TestResultDisplay', () => {
             .verifiable(typeMoq.Times.once());
 
         statusBar.setup(s => s.show()).verifiable(typeMoq.Times.once());
-        cmdManager.setup(c => c.executeCommand(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+        cmdManager.setup(c => c.executeCommand(typeMoq.It.isValue('setContext'), typeMoq.It.isValue('testsDiscovered'), typeMoq.It.isValue(false)))
             .verifiable(typeMoq.Times.once());
         createTestResultDisplay();
         const def = createDeferred<Tests>();
