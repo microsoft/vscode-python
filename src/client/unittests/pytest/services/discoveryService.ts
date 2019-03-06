@@ -59,7 +59,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
 
     private async discoverTestsInTestDirectory(options: TestDiscoveryOptions): Promise<Tests> {
         const token = options.token ? options.token : new CancellationTokenSource().token;
-        const runOptions: Options = {
+        const discoveryOpts: Options = {
             args: options.args,
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
@@ -67,7 +67,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             outChannel: options.outChannel
         };
 
-        const data = await this.runner.discover(PYTEST_PROVIDER, runOptions);
+        const data = await this.runner.discover(PYTEST_PROVIDER, discoveryOpts);
         if (options.token && options.token.isCancellationRequested) {
             return Promise.reject<Tests>('cancelled');
         }
