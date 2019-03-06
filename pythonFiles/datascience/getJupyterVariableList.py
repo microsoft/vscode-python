@@ -6,8 +6,6 @@ import json
 # who_ls is a Jupyter line magic to fetch currently defined vars
 _VSCode_JupyterVars = %who_ls
 
-#IANHU: Fix to use print
-#IANHU: Add special sizing for np and pd
 print(json.dumps([{'name': var,
                    'type': type(eval(var)).__name__,
                    'size': getsizeof(var),
