@@ -2,27 +2,31 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { join as path_join } from 'path';
 import { CancellationTokenSource } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IServiceContainer } from '../../../ioc/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
-import { ITestDiscoveryService, ITestRunner, ITestsHelper, ITestsParser, Options, TestDiscoveryOptions, Tests } from '../../common/types';
+import {
+    ITestDiscoveryService, ITestRunner, ITestsHelper,
+    ITestsParser, Options, TestDiscoveryOptions, Tests
+} from '../../common/types';
 import { IArgumentsService, TestFilter } from '../../types';
-
-const TEST_DISCOVERY_ADAPTER = path_join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py');
 
 @injectable()
 export class TestDiscoveryService implements ITestDiscoveryService {
+
     private argsService: IArgumentsService;
     private helper: ITestsHelper;
     private runner: ITestRunner;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(ITestsParser) @named(PYTEST_PROVIDER) private testParser: ITestsParser) {
+
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(ITestsParser) @named(PYTEST_PROVIDER) private testParser: ITestsParser
+    ) {
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER);
         this.helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
         this.runner = this.serviceContainer.get<ITestRunner>(ITestRunner);
     }
+
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         const args = this.buildTestCollectionArgs(options);
 
@@ -46,22 +50,13 @@ export class TestDiscoveryService implements ITestDiscoveryService {
 
         return this.helper.mergeTests(results);
     }
+
     private buildTestCollectionArgs(options: TestDiscoveryOptions) {
         // Remove unwanted arguments (which happen to be test directories & test specific args).
-        const args = this.argsService.filterArguments(options.args, TestFilter.discovery);
-        if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
-            args.splice(0, 0, '--cache-clear');
-        }
-        if (args.indexOf('-s') === -1) {
-            args.splice(0, 0, '-s');
-        }
-        args.splice(0, 0, '--collect-only');
-        args.splice(0, 0, 'pytest');
-        args.splice(0, 0, 'discover');
-        //args.splice(0, 0, path_join(EXTENSION_ROOT_DIR, 'pythonFiles', 'tests', 'scripts', 'testing_tools_dummy.py'));
-        args.splice(0, 0, path_join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py'));
-        return args;
+
+        return this.argsService.filterArguments(options.args, TestFilter.discovery);
     }
+
     private async discoverTestsInTestDirectory(options: TestDiscoveryOptions): Promise<Tests> {
         const token = options.token ? options.token : new CancellationTokenSource().token;
         const runOptions: Options = {
@@ -72,7 +67,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             outChannel: options.outChannel
         };
 
-        const data = await this.runner.run(PYTEST_PROVIDER, runOptions);
+        const data = await this.runner.discover(PYTEST_PROVIDER, runOptions);
         if (options.token && options.token.isCancellationRequested) {
             return Promise.reject<Tests>('cancelled');
         }

@@ -16,11 +16,63 @@ import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constan
 import { ITestRunner, ITestsHelper, Options, TestProvider } from './types';
 export { Options } from './types';
 
+const TEST_DISCOVERY_ADAPTER = path.join(
+    EXTENSION_ROOT_DIR,
+    'pythonFiles',
+    'testing_tools',
+    'run_adapter.py'
+);
+
 @injectable()
 export class TestRunner implements ITestRunner {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
-    public run(testProvider: TestProvider, options: Options): Promise<string> {
+    public async run(testProvider: TestProvider, options: Options): Promise<string> {
         return run(this.serviceContainer, testProvider, options);
+    }
+
+    /**
+     * Discover tests (ie. do not run them) and return the result as a string representing valid JSON.
+     *
+     * @param testProvider Which test provider (PYTEST_PROVIDER, etc...) are we using to discover tests.
+     * @param options Specific options that are pertinent to the test discovery runner.
+     * @returns JSON value (provided by the Python test adapter).
+     */
+    public async discover(testProvider: TestProvider, options: Options): Promise<string> {
+        const config = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const settings = config.getSettings(options.workspaceFolder);
+        const testHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
+
+        const executionInfo: ExecutionInfo = {
+            args: [TEST_DISCOVERY_ADAPTER, 'discover', testProvider, ...options.args],
+            execPath: settings.pythonPath,
+            product: testHelper.parseProduct(testProvider)
+        };
+
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const spawnOptions = options as SpawnOptions;
+        spawnOptions.mergeStdOutErr = typeof spawnOptions.mergeStdOutErr === 'boolean' ? spawnOptions.mergeStdOutErr : true;
+        const promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
+
+        return promise.then(result => {
+            return new Promise<string>((resolve, reject) => {
+                let stdOut = '';
+                let stdErr = '';
+
+                result.out.subscribe(output => {
+                    stdOut += output.out;
+                    // If the test runner python module is not installed we'll have something in stderr.
+                    // Hence track that separately and check at the end.
+                    if (output.source === 'stderr') {
+                        stdErr += output.out;
+                    }
+                    if (options.outChannel) {
+                        options.outChannel.append(output.out);
+                    }
+                }, reject, async () => {
+                    resolve(stdOut);
+                });
+            });
+        });
     }
 }
 
@@ -91,7 +143,7 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
             break;
         }
         case PYTEST_PROVIDER: {
-            testRunnerExecutablePath = settings.pythonPath;
+            testRunnerExecutablePath = settings.unitTest.pyTestPath;
             break;
         }
         default: {
@@ -107,7 +159,7 @@ function getTestModuleName(testProvider: TestProvider) {
             return 'nose';
         }
         case PYTEST_PROVIDER: {
-            return undefined;
+            return 'pytest';
             //return 'testing_tools.adapter';
         }
         case UNITTEST_PROVIDER: {

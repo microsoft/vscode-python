@@ -274,6 +274,7 @@ export type Options = {
 export const ITestRunner = Symbol('ITestRunner');
 export interface ITestRunner {
     run(testProvider: TestProvider, options: Options): Promise<string>;
+    discover(testProvider: TestProvider, options: Options): Promise<string>;
 }
 
 export enum PassCalculationFormulae {
