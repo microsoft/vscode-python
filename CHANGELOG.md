@@ -1,5 +1,26 @@
 # Changelog
 
+
+## 2019.2.2 (6 March 2019)
+
+### Fixes
+
+1. If selection is being sent to the Interactive Windows still allow for context menu commands to run selection in terminal or run file in terminal
+   ([#4207](https://github.com/Microsoft/vscode-python/issues/4207))
+1. When sending selection to the Interactive Window nothing selected should send the entire line
+   ([#4604](https://github.com/Microsoft/vscode-python/issues/4604))
+1. Provide telemetry for when we show the shift-enter banner and if the user clicks yes
+   ([#4636](https://github.com/Microsoft/vscode-python/issues/4636))
+
+## 2019.2.5433 (27 Feb 2019)
+
+### Fixes
+
+
+1. Exclude files `travis*.log`, `pythonFiles/tests/**`, `types/**` from the extension.
+   ([#4554](https://github.com/Microsoft/vscode-python/issues/4554))
+   ([#4566](https://github.com/Microsoft/vscode-python/issues/4566))
+
 ## 2019.2.0 (26 Feb 2019)
 
 ### Thanks

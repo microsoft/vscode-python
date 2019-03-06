@@ -122,7 +122,7 @@ def git_rm(path):
     """Run git-rm on the path."""
     status = subprocess.run(
         ["git", "rm", os.fspath(path.resolve())],
-        shell=True,
+        shell=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
