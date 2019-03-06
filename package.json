@@ -2168,7 +2168,7 @@
         "updateBuildNumber": "gulp updateBuildNumber"
     },
     "dependencies": {
-        "@jupyterlab/services": "^3.1.4",
+        "@jupyterlab/services": "^3.2.1",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
