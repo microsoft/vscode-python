@@ -23,7 +23,6 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-// IANHU: Remove vars from this file
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
 
 @injectable()
