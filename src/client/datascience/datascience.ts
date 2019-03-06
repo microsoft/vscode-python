@@ -154,7 +154,10 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
         const varResults = await this.jupyterVars.getVariables();
-        const finalVar = await this.jupyterVars.getValue(varResults[0]);
+        //const finalVar = await this.jupyterVars.getValue(varResults[0]);
+        for (let i = 0; i < varResults.length; i++) {
+            varResults[i] = await this.jupyterVars.getValue(varResults[i]);
+        }
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
     }
 

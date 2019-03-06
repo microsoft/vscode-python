@@ -247,10 +247,12 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 // Get variables from the currently running active Jupyter server
 export interface IJupyterVariable {
     name: string;
-    shortValue: string | undefined;
-    fullValue: string | undefined;
+    value: string | undefined;
     type: string;
     size: number;
+    shape: string;
+    count: number;
+    truncated: boolean;
     expensive: boolean;
 }
 

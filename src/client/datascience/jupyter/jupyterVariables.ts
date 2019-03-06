@@ -42,7 +42,7 @@ export class JupyterVariables implements IJupyterVariables {
         const results = await activeServer.execute(this.fetchVariablesScript!, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
         return this.deserializeVariables(results);
     }
-    
+
     public async getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
         if (!this.fetchVariableValueScript) {
             await this.loadVarValueFile();
@@ -64,7 +64,7 @@ export class JupyterVariables implements IJupyterVariables {
 
         targetVariableCopy = this.deserializeValueData(results);
 
-        return targetVariable;
+        return targetVariableCopy;
     }
 
     // Private methods
@@ -94,15 +94,23 @@ export class JupyterVariables implements IJupyterVariables {
             const codeCell = cells[0].data as nbformat.ICodeCell;
             if (codeCell.outputs.length > 0) {
                 const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
-                if (codeCellOutput.data && codeCellOutput.data.hasOwnProperty('text/plain')) {
-                    // tslint:disable-next-line:no-any
-                    let resultString = ((codeCellOutput.data as any)['text/plain']);
+                if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.hasOwnProperty('text')) {
+                   let resultString = codeCellOutput['text'] as string;
 
                     // Trim the excess ' character on the string
-                    resultString = resultString.slice(1, resultString.length - 1);
+                   //resultString = resultString.slice(1, resultString.length - 1);
 
-                    return JSON.parse(resultString) as IJupyterVariable;
+                   return JSON.parse(resultString) as IJupyterVariable;
                 }
+                //if (codeCellOutput.data && codeCellOutput.data.hasOwnProperty('text/plain')) {
+                    //// tslint:disable-next-line:no-any
+                    //let resultString = ((codeCellOutput.data as any)['text/plain']);
+
+                    //// Trim the excess ' character on the string
+                    //resultString = resultString.slice(1, resultString.length - 1);
+
+                    //return JSON.parse(resultString) as IJupyterVariable;
+                //}
             }
         }
 
@@ -115,15 +123,23 @@ export class JupyterVariables implements IJupyterVariables {
             const codeCell = cells[0].data as nbformat.ICodeCell;
             if (codeCell.outputs.length > 0) {
                 const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
-                if (codeCellOutput.data && codeCellOutput.data.hasOwnProperty('text/plain')) {
-                    // tslint:disable-next-line:no-any
-                    let resultString = ((codeCellOutput.data as any)['text/plain']);
+                if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.hasOwnProperty('text')) {
+                   let resultString = codeCellOutput['text'] as string;
 
                     // Trim the excess ' character on the string
-                    resultString = resultString.slice(1, resultString.length - 1);
+                   //resultString = resultString.slice(1, resultString.length - 1);
 
-                    return JSON.parse(resultString) as IJupyterVariable[];
+                   return JSON.parse(resultString) as IJupyterVariable[];
                 }
+                //if (codeCellOutput.data && codeCellOutput.data.hasOwnProperty('text/plain')) {
+                    //// tslint:disable-next-line:no-any
+                    //let resultString = ((codeCellOutput.data as any)['text/plain']);
+
+                    //// Trim the excess ' character on the string
+                    //resultString = resultString.slice(1, resultString.length - 1);
+
+                    //return JSON.parse(resultString) as IJupyterVariable[];
+                //}
             }
         }
 

@@ -1,9 +1,20 @@
 import json
-#_VSCode_JupyterVar = json.load('_VSCode_JupyterTestValue')
-#_VSCode_JupyterVar['value'] = 'testvaluehere'
-#print(json.dumps(_VSCode_JupyterVar))
-#print(_VSCode_JupyterTestValue)
-_VSCode_JupyterVar = '_VSCode_JupyterTestValue'
-_VSCode_JupyterVar2 = json.loads(_VSCode_JupyterVar)
-_VSCode_JupyterVar2['shortValue'] = 'testingtesting'
-json.dumps(_VSCode_JupyterVar2)
+_VSCODE_max_len = 200
+_VSCODE_targetVariable = json.loads('_VSCode_JupyterTestValue')
+
+_VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
+
+if _VSCODE_targetVariable['type'] in ['ndarray','DataFrame','Series']:
+    _VSCODE_targetVariable['shape'] = str(_VSCODE_evalResult.shape)
+
+if _VSCODE_targetVariable['type'] in ['tuple', 'str', 'dict', 'list', 'set', 'ndarray','DataFrame','Series']:
+    _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+
+_VSCODE_targetValue = str(_VSCODE_evalResult)
+if len(_VSCODE_targetValue) > _VSCODE_max_len:
+    _VSCODE_targetVariable['truncated'] = True
+    _VSCODE_targetVariable['value'] = _VSCODE_targetValue[:_VSCODE_max_len]
+else:
+    _VSCODE_targetVariable['value'] = _VSCODE_targetValue
+
+print(json.dumps(_VSCODE_targetVariable))
