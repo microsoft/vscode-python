@@ -31,7 +31,7 @@ export type DiscoveredTestData = {
  * the current `TestFile` struct (and its peers).
  */
 export class DiscoveredTest {
-    constructor(private readonly data: DiscoveredTestData) { }
+    constructor(private data: DiscoveredTestData) { }
 
     // Expose the fileds of the DiscoveredTestData for convenience
     public get id(): string { return this.data.id; }
@@ -58,19 +58,19 @@ export class DiscoveredTest {
 
         while (suiteNames.length > 0) {
             const suiteName = suiteNames.pop();
-            const suiteId = [path.join(this.testroot, this.relfile), ...suiteNames, suiteName];
-
+            const nameToRun = [path.basename(this.relfile), ...suiteNames, suiteName].join('::');
+            const xmlName = [path.basename(this.relfile, path.extname(this.relfile)), ...suiteNames].join('.');
             const suiteToAdd: TestSuite = {
-                isInstance: true,
-                functions: [],
-                isUnitTest: false,
-                name: suiteName,
-                nameToRun: suiteId.join('::'),
-                suites: [],
-                time: Date.now(),
-                xmlName: suiteId.join(':'),
                 file: this.relfile,
-                status: TestStatus.Idle
+                functions: [],
+                isUnitTest: true,
+                isInstance: false,
+                name: suiteName,
+                nameToRun,
+                status: TestStatus.Idle,
+                suites: [],
+                time: 0,
+                xmlName
             };
 
             if (suiteNames.length <= 0) {
@@ -105,7 +105,7 @@ export class DiscoveredTest {
             name: this.name,
             nameToRun: this.id,
             status: TestStatus.Idle,
-            time: Date.now()
+            time: 0
         };
     }
 
@@ -141,7 +141,7 @@ export class DiscoveredTest {
             nameToRun: this.relfile,
             status: TestStatus.Idle,
             suites,
-            time: Date.now(),
+            time: 0,
             xmlName: this.relfile
         };
     }
