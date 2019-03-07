@@ -96,6 +96,7 @@
     "DataScience.notebookCheckForImportDontAskAgain": "Don't Ask Again",
     "DataScience.notebookCheckForImportTitle": "Do you want to import the Jupyter Notebook into Python code?",
     "DataScience.jupyterNotSupported": "Running cells requires Jupyter notebooks to be installed.",
+    "DataScience.jupyterNotSupportedBecauseOfEnvironment": "Activating {0} to run Jupyter failed with {1}.",
     "DataScience.jupyterNbConvertNotSupported": "Importing notebooks requires Jupyter nbconvert to be installed.",
     "DataScience.jupyterLaunchNoURL": "Failed to find the URL of the launched Jupyter notebook server",
     "DataScience.jupyterLaunchTimedOut": "The Jupyter notebook server failed to launch in time",
