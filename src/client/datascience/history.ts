@@ -27,7 +27,6 @@ import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from './constants';
@@ -616,7 +615,6 @@ export class History implements IHistory {
         } catch {
             // We just switched from host to guest mode. Don't really care
             // if closing the host server kills it.
-            noop();
             this.jupyterServer = undefined;
         }
         return this.load();
