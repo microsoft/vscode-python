@@ -7,7 +7,10 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import '../../../common/extensions';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
-import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
+import {
+    ITestsHelper, ITestsParser, ParserOptions, SubtestParent,
+    TestFile, TestFunction, Tests, TestSuite
+} from '../../common/types';
 
 @injectable()
 export class TestsParser implements ITestsParser {
@@ -138,6 +141,7 @@ export class TestsParser implements ITestsParser {
         return packageName;
     }
 
+    // tslint:disable-next-line:max-func-body-length
     private parsePyTestModuleCollectionResult(
         rootDirectory: string,
         lines: string[],
@@ -240,7 +244,7 @@ export class TestsParser implements ITestsParser {
                     const funcName = name.substring(0, pos);
                     const subtest = name.substring(pos);
 
-                    let subtestParent: TestFunction | undefined;
+                    let subtestParent: SubtestParent | undefined;
                     const last = parentNode!.item.functions.pop();
                     if (last) {
                         parentNode!.item.functions.push(last);
@@ -249,14 +253,26 @@ export class TestsParser implements ITestsParser {
                         }
                     }
                     if (!subtestParent) {
-                        subtestParent = {
+                        const subtestsSuite: TestSuite = {
                             resource: resource,
                             name: funcName,
                             nameToRun: rawName.substring(0, rawName.length - subtest.length),
+                            functions: [],
+                            suites: [],
+                            isUnitTest: false,
+                            isInstance: false,
+                            xmlName: '',
+                            time: 0
+                        };
+                        subtestParent = {
+                            name: subtestsSuite.name,
+                            nameToRun: subtestsSuite.nameToRun,
+                            asSuite: subtestsSuite,
                             time: 0
                         };
                     }
                     fn.subtestParent = subtestParent!;
+                    subtestParent.asSuite.functions.push(fn);
                 }
                 parentNode!.item.functions.push(fn);
                 return;

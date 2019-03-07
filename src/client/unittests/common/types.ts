@@ -72,7 +72,13 @@ export type TestFunction = TestResult & {
     resource: Uri;
     name: string;
     nameToRun: string;
-    subtestParent?: TestFunction;
+    subtestParent?: SubtestParent;
+};
+
+export type SubtestParent = TestResult & {
+    name: string;
+    nameToRun: string;
+    asSuite: TestSuite;
 };
 
 export type TestResult = Node & {
