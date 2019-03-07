@@ -314,9 +314,6 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
         }
         case TestType.testSuite: {
             const suite = data as TestSuite;
-            // const parentSuite = tests.testSuites.find(item => item.testSuite.suites.some(child => child === data));
-            // const parentFile = tests.testFiles.find(item=> item.suites.find(data)
-            // return item && (item.parentTestSuite || item.parentTestFile);
             if (isSubtestsParent(suite)) {
                 const fn = suite.functions[0];
                 const parent = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
@@ -341,8 +338,6 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
                 return parentSuite.testSuite;
             }
             return tests.testFiles.find(item => item.functions.indexOf(fn) >= 0);
-            // const item = findFlattendTestFunction(tests, data as TestFunction);
-            // return item && (item.parentTestSuite || item.parentTestFile);
         }
         default: {
             throw new Error('Unknown test type');
@@ -388,20 +383,6 @@ function getParentTestFolderForFolder(tests: Tests, folder: TestFolder): TestFol
         return;
     }
     return tests.testFolders.find(item => item.folders.some(child => child === folder));
-    // function getParentFolder(folders: TestFolder[], item: TestFolder): TestFolder {
-    //     const index = folders.indexOf(item);
-    //     if (index) {
-    //         return folders[index];
-    //     }
-    //     for (const f of folders) {
-    //         const found = getParentFolder(f.folders, item);
-    //         if (found) {
-    //             return found;
-    //         }
-    //     }
-    // }
-
-    // return getParentFolder(tests.testFolders, folder);
 }
 
 /**

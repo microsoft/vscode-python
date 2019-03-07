@@ -219,8 +219,6 @@ export class TestsParser implements ITestsParser {
                 name = extractBetweenDelimiters(trimmedLine, '<Instance ', '>').trimQuotes();
                 // tslint:disable-next-line:prefer-type-cast
                 const suite = (parentNode!.item as TestSuite);
-                // suite.rawName = suite.rawName + '::()';
-                // suite.xmlName = suite.xmlName + '.()';
                 suite.isInstance = true;
                 return;
             }
