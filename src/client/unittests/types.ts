@@ -130,10 +130,10 @@ export interface IPythonUnitTestMessage {
     code: string | undefined;
     message?: string;
     severity: PythonUnitTestMessageSeverity;
-    provider: string;
+    provider: string | undefined;
     traceback?: string;
     testTime: number;
-    status: TestStatus;
+    status?: TestStatus;
     locationStack?: ILocationStackFrameDetails[];
     testFilePath: string;
 }

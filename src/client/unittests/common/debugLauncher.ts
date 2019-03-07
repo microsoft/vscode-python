@@ -93,6 +93,9 @@ export class DebugLauncher implements ITestDebugLauncher {
         const workspaceFolder = this.workspaceService.workspaceFolders![0];
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
         let configs: DebugConfiguration[] = [];
+        if (!(await this.fs.fileExists(filename))) {
+            return [];
+        }
         try {
             let text = await this.fs.readFile(filename);
             text = stripJsonComments(text);
@@ -105,7 +108,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         } catch (exc) {
             traceError('could not get debug config', exc);
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            await appShell.showErrorMessage('could not load unit test config from launch.json');
+            await appShell.showErrorMessage('Could not load unit test config from launch.json');
         }
         return configs;
     }

@@ -70,7 +70,7 @@ suite('Multiroot Linting', () => {
         const errorMessage = mustHaveErrors ? 'No errors returned by linter' : 'Errors returned by linter';
         assert.equal(messages.length > 0, mustHaveErrors, errorMessage);
     }
-    async function enableDisableSetting(workspaceFolder, configTarget: ConfigurationTarget, setting: string, value: boolean): Promise<void> {
+    async function enableDisableSetting(workspaceFolder: string, configTarget: ConfigurationTarget, setting: string, value: boolean): Promise<void> {
         const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         await config.updateSetting(setting, value, Uri.file(workspaceFolder), configTarget);
     }

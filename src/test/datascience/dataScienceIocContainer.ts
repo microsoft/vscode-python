@@ -3,6 +3,7 @@
 'use strict';
 //tslint:disable:trailing-comma
 import * as child_process from 'child_process';
+import { interfaces } from 'inversify';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import {
@@ -59,6 +60,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
+    IExtensions,
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
@@ -69,19 +71,23 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { History } from '../../client/datascience/history';
+import { HistoryCommandListener } from '../../client/datascience/historycommandlistener';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
-import { JupyterServerManager } from '../../client/datascience/jupyter/jupyterServerManager';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { StatusProvider } from '../../client/datascience/statusProvider';
+import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICodeCssGenerator,
+    ICodeWatcher,
     IDataScience,
+    IDataScienceCommandListener,
     IHistory,
     IHistoryProvider,
     IJupyterCommandFactory,
@@ -90,8 +96,8 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    INotebookServerManager,
-    IStatusProvider
+    IStatusProvider,
+    IThemeFinder
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -162,6 +168,8 @@ import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
+import { MockDocumentManager } from './mockDocumentManager';
+import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager } from './mockJupyterManager';
 import { MockLiveShareApi } from './mockLiveShare';
 
@@ -179,6 +187,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+    private documentManager = new MockDocumentManager();
 
     constructor() {
         super();
@@ -200,20 +209,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public registerDataScienceTypes() {
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<INotebookServerManager>(INotebookServerManager, JupyterServerManager);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
+        this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
+        this.serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+        this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
+        this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -240,7 +252,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const logger = TypeMoq.Mock.ofType<ILogger>();
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
@@ -344,7 +355,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ILogger>(ILogger, logger.object);
         this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-        this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, documentManager.object);
+        this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
         this.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configurationService.object);
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, datascience.object);
@@ -402,7 +413,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('')));
+        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
         // tslint:disable-next-line:no-empty no-console
@@ -442,6 +453,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public get mockJupyter(): MockJupyterManager | undefined {
         return this.jupyterMock;
+    }
+
+    public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>) : T {
+        return this.serviceManager.get<T>(serviceIdentifier);
+    }
+
+    public addDocument(code: string, file: string) {
+        this.documentManager.addDocument(code, file);
     }
 
     private findPythonPath(): string {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
@@ -17,9 +18,15 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
     private ctorArgs : any[];
     private firstTime : boolean = true;
     private createPromise : Promise<T> | undefined;
+    private sessionChangedEmitter = new vscode.EventEmitter<void>();
 
     constructor(private liveShare: ILiveShareApi, private hostCtor: CtorType, private guestCtor: CtorType, ...args: any[]) {
         this.ctorArgs = args;
+        this.createPromise = this.createBasedOnRole(); // We need to start creation immediately or one side may call before we init.
+    }
+
+    public get sessionChanged() : vscode.Event<void> {
+        return this.sessionChangedEmitter.event;
     }
 
     public get() : Promise<T> {
@@ -54,8 +61,10 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         const obj = new ctor(...this.ctorArgs);
 
         // Rewrite the object's dispose so we can get rid of our own state.
+        let objDisposed = false;
         const oldDispose = obj.dispose.bind(obj);
         obj.dispose = () => {
+            objDisposed = true;
             this.createPromise = undefined;
             return oldDispose();
         };
@@ -72,10 +81,19 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                 }
 
                 // Update the object with respect to the api
-                obj.onSessionChange(api).ignoreErrors();
+                if (!objDisposed) {
+                    obj.onSessionChange(api).ignoreErrors();
+                }
+
+                // Fire our event indicating old data is no longer valid.
+                if (newRole !== role) {
+                    this.sessionChangedEmitter.fire();
+                }
             });
             api.onDidChangePeers((e) => {
-                obj.onPeerChange(e).ignoreErrors();
+                if (!objDisposed) {
+                    obj.onPeerChange(e).ignoreErrors();
+                }
             });
         }
 

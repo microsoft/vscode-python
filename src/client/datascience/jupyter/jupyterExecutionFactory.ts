@@ -2,15 +2,27 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger
+} from '../../common/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { IJupyterCommandFactory, IJupyterExecution, IJupyterSessionManager, INotebookServer } from '../types';
+import {
+    IJupyterCommandFactory,
+    IJupyterExecution,
+    IJupyterSessionManager,
+    INotebookServer,
+    INotebookServerOptions
+} from '../types';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
@@ -37,9 +49,10 @@ type JupyterExecutionClassType = {
 };
 
 @injectable()
-export class JupyterExecutionFactory implements IJupyterExecution {
+export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
 
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
+    private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
                 @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
@@ -55,6 +68,7 @@ export class JupyterExecutionFactory implements IJupyterExecution {
                 @inject(IConfigurationService) configuration: IConfigurationService,
                 @inject(IJupyterCommandFactory) commandFactory : IJupyterCommandFactory,
                 @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
             liveShare,
             HostJupyterExecution,
@@ -74,6 +88,17 @@ export class JupyterExecutionFactory implements IJupyterExecution {
             commandFactory,
             serviceContainer
         );
+        this.executionFactory.sessionChanged(() => this.onSessionChanged());
+    }
+
+    public get sessionChanged() : Event<void> {
+        return this.sessionChangedEventEmitter.event;
+    }
+
+    public async dispose() : Promise<void> {
+        // Dispose of our execution object
+        const execution = await this.executionFactory.get();
+        return execution.dispose();
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
@@ -92,15 +117,19 @@ export class JupyterExecutionFactory implements IJupyterExecution {
         const execution = await this.executionFactory.get();
         return execution.isKernelSpecSupported(cancelToken);
     }
-    public async connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
+    public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
-        return execution.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir);
+        return execution.isSpawnSupported(cancelToken);
     }
+    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+        const execution = await this.executionFactory.get();
+        return execution.connectToNotebookServer(options, cancelToken);
+}
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();
         return execution.spawnNotebook(file);
     }
-    public async importNotebook(file: string, template: string): Promise<string> {
+    public async importNotebook(file: string, template: string | undefined): Promise<string> {
         const execution = await this.executionFactory.get();
         return execution.importNotebook(file, template);
     }
@@ -108,8 +137,12 @@ export class JupyterExecutionFactory implements IJupyterExecution {
         const execution = await this.executionFactory.get();
         return execution.getUsableJupyterPython(cancelToken);
     }
-    public async dispose(): Promise<void> {
+    public async getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
-        return execution.dispose();
+        return execution.getServer(options);
+    }
+
+    private onSessionChanged() {
+        this.sessionChangedEventEmitter.fire();
     }
 }

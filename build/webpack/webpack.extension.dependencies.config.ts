@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as webpack from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins, nodeModulesToExternalize } from './common';
+import copyWebpackPlugin = require('copy-webpack-plugin');
 
 const entryItems: Record<string, string> = {};
 nodeModulesToExternalize.forEach(moduleName => {
@@ -31,7 +32,7 @@ const config: webpack.Configuration = {
                         loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
                     }
                 ]
-            }
+            }            
         ]
     },
     externals: [
@@ -39,7 +40,12 @@ const config: webpack.Configuration = {
         'commonjs'
     ],
     plugins: [
-        ...getDefaultPlugins('dependencies')
+        ...getDefaultPlugins('dependencies'),
+        // vsls requires our package.json to be next to node_modules. It's how they
+        // 'find' the calling extension.
+        new copyWebpackPlugin([
+            { from: './package.json', to: '.' }
+        ])
     ],
     resolve: {
         extensions: ['.js']

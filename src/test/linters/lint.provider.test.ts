@@ -97,8 +97,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'auto'), TypeMoq.Times.once());
     });
@@ -108,8 +108,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.once());
     });
@@ -119,8 +119,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
@@ -130,8 +130,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
@@ -140,8 +140,8 @@ suite('Linting - Provider', () => {
         const e = new vscode.EventEmitter<void>();
         interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         e.fire();
         engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
@@ -151,8 +151,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('.pylintrc'));
 
         await lm.setActiveLintersAsync([Product.pylint]);
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
 
         const deferred = createDeferred<void>();
@@ -173,7 +173,8 @@ suite('Linting - Provider', () => {
 
         docManager.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
         // tslint:disable-next-line:prefer-const no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
 
         emitter.fire(document.object);
         const timesExpected = closed ? TypeMoq.Times.once() : TypeMoq.Times.never();

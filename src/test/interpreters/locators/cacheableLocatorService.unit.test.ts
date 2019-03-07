@@ -15,11 +15,12 @@ import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterWatcher, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { CacheableLocatorService } from '../../../client/interpreter/locators/services/cacheableLocatorService';
 import { ServiceContainer } from '../../../client/ioc/container';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Interpreters - Cacheable Locator Service', () => {
     suite('Caching', () => {
         class Locator extends CacheableLocatorService {
-            constructor(name, serviceCcontainer, private readonly mockLocator: MockLocator) {
+            constructor(name: string, serviceCcontainer: IServiceContainer, private readonly mockLocator: MockLocator) {
                 super(name, serviceCcontainer);
             }
             public dispose() {

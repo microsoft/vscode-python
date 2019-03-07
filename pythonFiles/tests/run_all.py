@@ -1,18 +1,13 @@
+# Replace the "." entry.
 import os.path
 import sys
+sys.path[0] = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)))
 
-import pytest
-
-
-TEST_ROOT = os.path.dirname(__file__)
-SRC_ROOT = os.path.dirname(TEST_ROOT)
-DATASCIENCE_ROOT = os.path.join(SRC_ROOT, 'datascience')
+from tests.__main__ import main
 
 
 if __name__ == '__main__':
-    sys.path.insert(1, DATASCIENCE_ROOT)
-    ec = pytest.main([
-        '--rootdir', SRC_ROOT,
-        TEST_ROOT,
-        ])
+    ec = main()
     sys.exit(ec)

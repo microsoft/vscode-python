@@ -62,7 +62,7 @@ export abstract class TestTreeItem extends TreeItem {
                         return ThemeIcon.Folder;
                     }
                     default: {
-                        return '';
+                        return getIcon(Icons.unknown);
                     }
                 }
             }

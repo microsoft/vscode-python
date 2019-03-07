@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
-import { IApplicationShell, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { CancellationError } from '../common/cancellation';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -19,7 +19,6 @@ import { CommandSource } from '../unittests/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from './cellFactory';
 import { Commands, Telemetry } from './constants';
 import {
-    ICommandBroker,
     IDataScienceCommandListener,
     IHistoryProvider,
     IJupyterExecution,
@@ -49,42 +48,45 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry.push(disposable);
     }
 
-    public register(commandManager: ICommandBroker): void {
+    public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ImportNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
-            await this.listenForErrors(async () => {
+        disposable = commandManager.registerCommand(Commands.ImportNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+            return this.listenForErrors(() => {
                 if (file && file.fsPath) {
-                    await this.importNotebookOnFile(file.fsPath);
+                    return this.importNotebookOnFile(file.fsPath);
                 } else {
-                    await this.importNotebook();
+                    return this.importNotebook();
                 }
             });
         });
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAsNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
-            await this.listenForErrors(async () => {
+        disposable = commandManager.registerCommand(Commands.ExportFileAsNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+            return this.listenForErrors(() => {
                 if (file && file.fsPath) {
-                    await this.exportFile(file.fsPath);
+                    return this.exportFile(file.fsPath);
                 } else {
                     const activeEditor = this.documentManager.activeTextEditor;
                     if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                        await this.exportFile(activeEditor.document.fileName);
+                        return this.exportFile(activeEditor.document.fileName);
                     }
                 }
+
+                return Promise.resolve();
             });
         });
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
-            await this.listenForErrors(async () => {
+        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+            return this.listenForErrors(() => {
                 if (file && file.fsPath) {
-                    await this.exportFileAndOutput(file.fsPath);
+                    return this.exportFileAndOutput(file.fsPath);
                 } else {
                     const activeEditor = this.documentManager.activeTextEditor;
                     if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                        await this.exportFileAndOutput(activeEditor.document.fileName);
+                        return this.exportFileAndOutput(activeEditor.document.fileName);
                     }
                 }
+                return Promise.resolve();
             });
         });
         this.disposableRegistry.push(disposable);
@@ -98,9 +100,10 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry.push(commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells()));
     }
 
-    private async listenForErrors(promise: () => Promise<void>) : Promise<void> {
+    // tslint:disable:no-any
+    private listenForErrors(promise: () => Promise<any>) : Promise<any> {
         try {
-            await promise();
+            return promise();
         } catch (err) {
             if (!(err instanceof CancellationError)) {
                 if (err.message) {
@@ -113,6 +116,15 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             } else {
                 this.logger.logInformation('Canceled');
             }
+        }
+        return Promise.resolve();
+    }
+
+    private showInformationMessage(message: string, question?: string) : Thenable<string | undefined> {
+        if (question) {
+            return this.applicationShell.showInformationMessage(message, question);
+        } else {
+            return this.applicationShell.showInformationMessage(message);
         }
     }
 
@@ -148,9 +160,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                     }, localize.DataScience.exportingFormat(), file);
 
                     // When all done, show a notice that it completed.
-                    const openQuestion = localize.DataScience.exportOpenQuestion();
+                    const openQuestion = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
                     if (uri && uri.fsPath) {
-                        this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
+                        this.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
                             if (str === openQuestion) {
                                 // If the user wants to, open the notebook they just generated.
                                 this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
@@ -163,11 +175,11 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutput, undefined, false)
-    private async exportFileAndOutput(file: string): Promise<void> {
+    private async exportFileAndOutput(file: string): Promise<Uri | undefined> {
         if (file && file.length > 0 && this.jupyterExecution.isNotebookSupported()) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
-            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
+            if (activeEditor && activeEditor.document && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
                 const ranges = generateCellRanges(activeEditor.document);
                 if (ranges.length > 0) {
                     // Ask user for path
@@ -185,7 +197,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                                 return this.exportCellsWithOutput(ranges, activeEditor.document, output, cancelSource.token);
                             } catch (err) {
                                 if (!(err instanceof CancellationError)) {
-                                    this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
+                                    this.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
                                 }
                             }
                             return Promise.resolve();
@@ -194,14 +206,15 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                         }, true);
 
                         // When all done, show a notice that it completed.
-                        const openQuestion = localize.DataScience.exportOpenQuestion();
-                        this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), openQuestion).then((str: string | undefined) => {
+                        const openQuestion = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
+                        this.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), openQuestion).then((str: string | undefined) => {
                             if (str === openQuestion && output) {
                                 // If the user wants to, open the notebook they just generated.
                                 this.jupyterExecution.spawnNotebook(output).ignoreErrors();
                             }
                         });
 
+                        return Uri.file(output);
                     }
                 }
             }
@@ -216,8 +229,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             const settings = this.configuration.getSettings();
             const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
-            // Try starting a server.
-            server = await this.jupyterExecution.connectToNotebookServer(undefined, false, useDefaultConfig, cancelToken);
+            // Try starting a server. Purpose should be unique so we
+            // create a brand new one.
+            server = await this.jupyterExecution.connectToNotebookServer({ useDefaultConfig, purpose: uuid()}, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
@@ -347,8 +361,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
-    private showHistoryPane() : Promise<void>{
-        const active = this.historyProvider.getOrCreateActive();
+    private async showHistoryPane() : Promise<void>{
+        const active = await this.historyProvider.getOrCreateActive();
         return active.show();
     }
 

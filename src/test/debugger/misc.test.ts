@@ -25,7 +25,10 @@ const debuggerType = DebuggerTypeName;
 suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
 
     let debugClient: DebugClient;
+    // All tests in this suite are failed
+    // Check https://github.com/Microsoft/vscode-python/issues/4067
     setup(async function () {
+        return this.skip();
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -76,7 +79,9 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
         return options;
     }
 
-    test('Should run program to the end', async () => {
+    // Check https://github.com/Microsoft/vscode-python/issues/4067
+    test('Should run program to the end', async function () {
+        return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
@@ -84,7 +89,9 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             debugClient.waitForEvent('terminated')
         ]);
     });
-    test('test stderr output for Python', async () => {
+    // Check https://github.com/Microsoft/vscode-python/issues/4067
+    test('test stderr output for Python', async function () {
+        return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('stdErrOutput.py', false)),

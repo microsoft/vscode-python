@@ -6,19 +6,11 @@
 import { Progress, ProgressLocation, window } from 'vscode';
 import { Disposable, LanguageClient } from 'vscode-languageclient';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-
-// Draw the line at Language Server analysis 'timing out'
-// and becoming a failure-case at 1 minute:
-const ANALYSIS_TIMEOUT_MS: number = 60000;
 
 export class ProgressReporting implements Disposable {
   private statusBarMessage: Disposable | undefined;
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
   private progressDeferred: Deferred<void> | undefined;
-  private progressTimer?: StopWatch;
 
   constructor(private readonly languageClient: LanguageClient) {
     this.languageClient.onNotification('python/setStatusBarMessage', (m: string) => {
@@ -28,31 +20,17 @@ export class ProgressReporting implements Disposable {
       this.statusBarMessage = window.setStatusBarMessage(m);
     });
 
-    this.languageClient.onNotification('python/beginProgress', async _ => {
+    this.languageClient.onNotification('python/beginProgress', _ => {
       if (this.progressDeferred) {
         return;
       }
-
-      this.progressDeferred = createDeferred<void>();
-      this.progressTimer = new StopWatch();
-      setTimeout(
-        this.handleTimeout.bind(this),
-        ANALYSIS_TIMEOUT_MS
-      );
-
-      window.withProgress({
-        location: ProgressLocation.Window,
-        title: ''
-      }, progress => {
-        this.progress = progress;
-        return this.progressDeferred!.promise;
-      });
+      this.beginProgress();
     });
 
     this.languageClient.onNotification('python/reportProgress', (m: string) => {
       if (!this.progress) {
-        return;
-      }
+        this.beginProgress();
+    }
       this.progress.report({ message: m });
     });
 
@@ -61,28 +39,25 @@ export class ProgressReporting implements Disposable {
         this.progressDeferred.resolve();
         this.progressDeferred = undefined;
         this.progress = undefined;
-        this.completeAnalysisTracking(true);
       }
     });
   }
+
   public dispose() {
     if (this.statusBarMessage) {
       this.statusBarMessage.dispose();
     }
   }
-  private completeAnalysisTracking(success: boolean): void {
-    if (this.progressTimer) {
-      sendTelemetryEvent(
-        EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME,
-        this.progressTimer.elapsedTime,
-        { success }
-      );
-    }
-    this.progressTimer = undefined;
-  }
 
-  // tslint:disable-next-line:no-any
-  private handleTimeout(_args: any[]): void {
-    this.completeAnalysisTracking(false);
+  private beginProgress() : void {
+    this.progressDeferred = createDeferred<void>();
+
+    window.withProgress({
+      location: ProgressLocation.Window,
+      title: ''
+    }, progress => {
+      this.progress = progress;
+      return this.progressDeferred!.promise;
+    });
   }
 }

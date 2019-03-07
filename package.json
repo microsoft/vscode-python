@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.3.0-alpha",
+    "version": "2019.3.0-dev",
     "languageServerVersion": "0.1.80",
     "publisher": "ms-python",
     "author": {
@@ -115,7 +115,7 @@
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorFocus && python.datascience.hascodecells && python.datascience.featureenabled"
+                "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -175,15 +175,6 @@
                 "icon": {
                     "light": "resources/light/run-tests.svg",
                     "dark": "resources/dark/run-tests.svg"
-                }
-            },
-            {
-                "command": "python.runningtests",
-                "title": "%python.command.python.runtests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/starting.svg",
-                    "dark": "resources/dark/starting.svg"
                 }
             },
             {
@@ -281,8 +272,17 @@
                 "title": "%python.command.python.discoverTests.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/dark/discovering-tests.svg",
+                    "light": "resources/light/discovering-tests.svg",
                     "dark": "resources/dark/discovering-tests.svg"
+                }
+            },
+            {
+                "command": "python.stopUnitTests",
+                "title": "%python.command.python.stopUnitTests.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/stop.svg",
+                    "dark": "resources/dark/stop.svg"
                 }
             },
             {
@@ -445,7 +445,7 @@
                 {
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && !python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python"
                 },
                 {
                     "command": "python.execSelectionInDjangoShell",
@@ -453,7 +453,7 @@
                     "when": "editorHasSelection && editorLangId == python && python.isDjangoProject"
                 },
                 {
-                    "when": "resourceLangId == python && !python.datascience.ownsSelection",
+                    "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
                     "group": "Python"
                 },
@@ -548,14 +548,13 @@
                     "when": "config.noExists"
                 },
                 {
-                    "command": "python.debugTestNode",
-                    "title": "Debug",
+                    "command": "python.stopUnitTests",
                     "category": "Python",
                     "when": "config.noExists"
                 },
                 {
-                    "command": "python.runningtests",
-                    "title": "Run",
+                    "command": "python.debugTestNode",
+                    "title": "Debug",
                     "category": "Python",
                     "when": "config.noExists"
                 },
@@ -677,7 +676,7 @@
                 {
                     "command": "python.debugtests",
                     "when": "view == python_tests && !busyTests",
-                    "group": "navigation@4"
+                    "group": "navigation@3"
                 },
                 {
                     "command": "python.runtests",
@@ -685,19 +684,19 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "python.runningtests",
-                    "when": "view == python_tests && runningTests",
+                    "command": "python.stopUnitTests",
+                    "when": "view == python_tests && busyTests",
                     "group": "navigation@1"
                 },
                 {
                     "command": "python.discoverTests",
                     "when": "view == python_tests && !busyTests",
-                    "group": "navigation@3"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "python.discoveringTests",
                     "when": "view == python_tests && discoveringTests",
-                    "group": "navigation@3"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "python.runFailedTests",
@@ -1348,8 +1347,8 @@
                 },
                 "python.dataScience.allowLiveShare": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Allow the Python Interactive window to be shared during a Live Share session (experimental)",
+                    "default": true,
+                    "description": "Allow the Python Interactive window to be shared during a Live Share session",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2205,7 +2204,6 @@
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
-        "file-matcher": "^1.3.0",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
@@ -2218,7 +2216,6 @@
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
         "node-stream-zip": "^1.6.0",
-        "opn": "^5.3.0",
         "pidusage": "^1.2.0",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
@@ -2240,7 +2237,7 @@
         "vscode-languageclient": "^4.4.0",
         "vscode-languageserver": "^4.4.0",
         "vscode-languageserver-protocol": "^3.10.3",
-        "vsls": "^0.3.967",
+        "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "xml2js": "^0.4.19"
     },
@@ -2318,14 +2315,12 @@
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",
-        "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-inline-source": "^3.2.0",
         "gulp-json-editor": "^2.2.2",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
-        "gulp-watch": "^5.0.0",
         "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
         "is-running": "^2.1.0",
@@ -2336,7 +2331,7 @@
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
-        "nyc": "^13.1.0",
+        "nyc": "^13.3.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-codemirror": "^1.0.0",

@@ -4,7 +4,6 @@
 
 // tslint:disable:no-console no-require-imports no-var-requires
 
-import * as arch from 'arch';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -32,6 +31,7 @@ export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
 
+const arch = require('arch');
 export const IS_64_BIT = arch() === 'x64';
 
 export enum OSType {
@@ -399,7 +399,7 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
             storeEntries: true
         });
         zip.on('ready', async () => {
-            zip.extract('extension', targetFolder, err => {
+            zip.extract('extension', targetFolder, (err: any) => {
                 if (err) {
                     reject(err);
                 } else {

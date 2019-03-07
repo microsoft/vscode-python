@@ -3,6 +3,7 @@
 'use strict';
 import { assert } from 'chai';
 
+import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText } from '../../client/datascience/common';
 import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
 
@@ -81,6 +82,28 @@ suite('Data Science Tests', () => {
         assert.equal(history.completeDown('1'), '4');
         assert.equal(history.completeDown('1'), '5');
         assert.equal(history.completeDown('1'), '3');
+    });
+
+    test('parsing cells', () => {
+        let cells = generateCells(undefined, '#%%\na=1\na', 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'Simple cell, not right number found');
+        cells = generateCells(undefined, '#%% [markdown]\na=1\na', 'foo', 0, true, '1');
+        assert.equal(cells.length, 2, 'Split cell, not right number found');
+        cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'Markdown split wrong');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
+        cells = generateCells(undefined, '#%% [markdown]\n\'\'\'\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'Markdown cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
+        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'Markdown cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
+        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'Code cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
+        assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
     });
 
 });

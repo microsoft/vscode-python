@@ -150,7 +150,7 @@ suite('Linting - Arguments', () => {
                     document.setup(d => d.uri).returns(() => fileUri);
 
                     let invoked = false;
-                    (linter as any).run = (args, doc, token) => {
+                    (linter as any).run = (args: any[], doc: any, token: any) => {
                         expect(args[args.length - 1]).to.equal(fileUri.fsPath);
                         invoked = true;
                         return Promise.resolve([]);

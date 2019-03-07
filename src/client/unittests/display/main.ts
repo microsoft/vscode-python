@@ -17,7 +17,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     private statusBar: StatusBarItem;
     private discoverCounter = 0;
     private ticker = ['|', '/', '-', '|', '/', '-', '\\'];
-    private progressTimeout;
+    private progressTimeout: NodeJS.Timer | null = null;
     private _enabled: boolean = false;
     private progressPrefix!: string;
     private readonly didChange = new EventEmitter<void>();
@@ -153,6 +153,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);
         }
+        this.cmdManager.executeCommand('setContext', 'testsDiscovered', false);
     }
 
     private updateWithDiscoverSuccess(tests: Tests, quietMode: boolean = false) {

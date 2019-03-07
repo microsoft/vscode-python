@@ -143,7 +143,7 @@ function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>)
     });
 }
 
-function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1) : Promise<void> {
+export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1) : Promise<void> {
     // tslint:disable-next-line:promise-must-complete
     return new Promise((resolve, reject) => {
         if (component) {
@@ -265,6 +265,11 @@ const keyMap : { [key: string] : { code: number; shift: boolean }} = {
     '\n' : { code: 13, shift: false },
     '\r' : { code: 0, shift: false } // remove \r from the text.
 };
+
+export function createMessageEvent(data: any) : MessageEvent {
+    const domWindow = window as DOMWindow;
+    return new domWindow.MessageEvent('message', { data });
+}
 
 export function createKeyboardEvent(type: string, options: KeyboardEventInit) : KeyboardEvent {
     const domWindow = window as DOMWindow;

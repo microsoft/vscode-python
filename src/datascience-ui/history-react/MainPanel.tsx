@@ -8,7 +8,7 @@ import * as React from 'react';
 
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages, HistoryNonLiveShareMessages } from '../../client/datascience/constants';
+import { HistoryMessages, IHistoryMapping } from '../../client/datascience/historyTypes';
 import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -35,6 +35,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateCount = 0;
     private renderCount = 0;
     private sentStartup = false;
+    private postOffice: PostOffice | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IMainPanelState) {
@@ -75,17 +76,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.renderCount = this.renderCount + 1;
         }
 
-        // If haven't sent our startup message, send it now.
-        if (!this.sentStartup) {
-            this.sentStartup = true;
-            PostOffice.sendMessage({type: HistoryNonLiveShareMessages.Started});
-        }
-
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         return (
             <div className='main-panel'>
-                <PostOffice messageHandlers={[this]} />
+                <PostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 <MenuBar baseTheme={this.props.baseTheme} stylePosition='top-fixed'>
                     {this.renderExtraButtons()}
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
@@ -202,13 +197,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        if (this.postOffice) {
+            this.postOffice.sendMessage(type, payload);
+        }
+    }
+
     private getAllCells = () => {
         // Send all of our cells back to the other side
         const cells = this.state.cellVMs.map((cellVM : ICellViewModel) => {
             return cellVM.cell;
         });
 
-        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload: { contents: cells }});
+        this.sendMessage(HistoryMessages.ReturnAllCells, cells);
     }
 
     private renderExtraButtons = () => {
@@ -296,11 +297,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cellVM = this.state.cellVMs[index];
 
         // Send a message to the other side to jump to a particular cell
-        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: { file : cellVM.cell.file, line: cellVM.cell.line }});
+        this.sendMessage(HistoryMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
     }
 
     private deleteCell = (index: number) => {
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: { }});
+        this.sendMessage(HistoryMessages.DeleteCell);
 
         // Update our state
         this.setState({
@@ -313,17 +314,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private collapseAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
+        this.sendMessage(HistoryMessages.CollapseAll);
         this.collapseAllSilent();
     }
 
     private expandAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
+        this.sendMessage(HistoryMessages.ExpandAll);
         this.expandAllSilent();
     }
 
     private clearAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteAllCells, payload: { }});
+        this.sendMessage(HistoryMessages.DeleteAllCells);
         this.clearAllSilent();
     }
 
@@ -348,7 +349,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.redoStack[this.state.redoStack.length - 1];
         const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
         const undoStack = this.pushStack(this.state.undoStack, this.state.cellVMs);
-        PostOffice.sendMessage({ type: HistoryMessages.Redo, payload: { }});
+        this.sendMessage(HistoryMessages.Redo);
         this.setState({
             cellVMs: cells,
             undoStack: undoStack,
@@ -365,7 +366,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.undoStack[this.state.undoStack.length - 1];
         const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
         const redoStack = this.pushStack(this.state.redoStack, this.state.cellVMs);
-        PostOffice.sendMessage({ type: HistoryMessages.Undo, payload: { }});
+        this.sendMessage(HistoryMessages.Undo);
         this.setState({
             cellVMs: cells,
             undoStack : undoStack,
@@ -379,18 +380,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private restartKernel = () => {
         // Send a message to the other side to restart the kernel
-        PostOffice.sendMessage({ type: HistoryMessages.RestartKernel, payload: { }});
+        this.sendMessage(HistoryMessages.RestartKernel);
     }
 
     private interruptKernel = () => {
         // Send a message to the other side to restart the kernel
-        PostOffice.sendMessage({ type: HistoryMessages.Interrupt, payload: { }});
+        this.sendMessage(HistoryMessages.Interrupt);
     }
 
     private export = () => {
         // Send a message to the other side to export our current list
         const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
-        PostOffice.sendMessage({ type: HistoryMessages.Export, payload: { contents: cellContents }});
+        this.sendMessage(HistoryMessages.Export, cellContents);
     }
 
     private scrollToBottom = () => {
@@ -408,6 +409,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateBottom = (newBottom: HTMLDivElement) => {
         if (newBottom !== this.bottom) {
             this.bottom = newBottom;
+        }
+    }
+
+    private updatePostOffice = (postOffice: PostOffice) => {
+        if (this.postOffice !== postOffice) {
+            this.postOffice = postOffice;
+            if (!this.sentStartup) {
+                this.sentStartup = true;
+                this.postOffice.sendMessage(HistoryMessages.Started);
+            }
         }
     }
 
@@ -561,7 +572,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoCount: this.state.undoStack.length,
             redoCount: this.state.redoStack.length
         };
-        PostOffice.sendMessage({type: HistoryNonLiveShareMessages.SendInfo, payload: { info: info }});
+        this.sendMessage(HistoryMessages.SendInfo, info);
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
@@ -668,7 +679,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             // Send a message to execute this code if necessary.
             if (editCell.cell.state !== CellState.finished) {
-                PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
+                this.sendMessage(HistoryMessages.SubmitNewCell, { code, id: editCell.cell.id });
             }
         }
     }

@@ -30,7 +30,7 @@ suite('Linting Settings', () => {
     let linterManager: ILinterManager;
     let configService: IConfigurationService;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         // These tests are still consistently failing during teardown.
         // See gh-4326.
         // tslint:disable-next-line:no-invalid-this
@@ -96,14 +96,17 @@ suite('Linting Settings', () => {
             const settings = configService.getSettings();
             await resetSettings();
 
-            assert.equal(settings.linting[`${Product[product]}Enabled`], false, 'mismatch');
+            // tslint:disable-next-line:no-any
+            assert.equal((settings.linting as any)[`${Product[product]}Enabled`], false, 'mismatch');
 
             await linterManager.setActiveLintersAsync([product]);
 
-            assert.equal(settings.linting[`${Product[product]}Enabled`], true, 'mismatch');
+            // tslint:disable-next-line:no-any
+            assert.equal((settings.linting as any)[`${Product[product]}Enabled`], true, 'mismatch');
             linterManager.getAllLinterInfos().forEach(async (x) => {
                 if (x.product !== product) {
-                    assert.equal(settings.linting[x.enabledSettingName], false, 'mismatch');
+                    // tslint:disable-next-line:no-any
+                    assert.equal((settings.linting as any)[x.enabledSettingName], false, 'mismatch');
                 }
             });
         });

@@ -17,6 +17,10 @@ export namespace vscMock {
     // It is constructed in a number of places, and this is required for verification.
     // Using mocked objects for verfications does not work in typemoq.
     export class Uri implements vscode.Uri {
+
+        private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+        private static _empty = '';
+
         private constructor(public readonly scheme: string, public readonly authority: string,
             public readonly path: string, public readonly query: string,
             public readonly fragment: string, public readonly fsPath: string) {
@@ -26,8 +30,18 @@ export namespace vscMock {
             return new Uri('file', '', path, '', '', path);
         }
         public static parse(value: string): Uri {
-            return new Uri('http', '', value, '', '', value);
-        }
+            const match = this._regexp.exec(value);
+            if (!match) {
+                return new Uri('', '', '', '', '', '');
+            }
+            return new Uri(
+                match[2] || this._empty,
+                decodeURIComponent(match[4] || this._empty),
+                decodeURIComponent(match[5] || this._empty),
+                decodeURIComponent(match[7] || this._empty),
+                decodeURIComponent(match[9] || this._empty),
+                decodeURIComponent(match[5] || this._empty));
+            }
         public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): vscode.Uri {
             throw new Error('Not implemented');
         }

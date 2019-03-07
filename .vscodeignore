@@ -21,6 +21,7 @@ package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+travis*.log
 tsconfig*.json
 tsfmt.json
 tslint.json
@@ -60,6 +61,7 @@ pythonFiles/**/*.pyc
 pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
 pythonFiles/lib/python/bin/**
+pythonFiles/tests/**
 requirements.txt
 scripts/**
 src/**
@@ -67,3 +69,4 @@ test/**
 tmp/**
 tpn/**
 typings/**
+types/**
