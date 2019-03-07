@@ -79,12 +79,12 @@ class CellSubscriber {
         this.attemptToFinish();
     }
 
-    public reject(reason: Error) {
+    public reject() {
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
             this.subscriber.next(this.cellRef);
             this.subscriber.complete();
-            this.deferred.reject(reason);
+            this.deferred.reject();
             this.promiseComplete(this);
         }
     }
@@ -263,7 +263,7 @@ export class JupyterServerBase implements INotebookServer {
 
             // Complete all pending as an error. We're restarting
             const copyPending = [...this.pendingCellSubscriptions];
-            copyPending.forEach(c => c.reject(new Error('Restarting kernel')));
+            copyPending.forEach(c => c.reject());
 
             // Restart our kernel
             await this.session.restart();
@@ -312,7 +312,7 @@ export class JupyterServerBase implements INotebookServer {
                 // Fail all of the active (might be new ones) pending cell executes. We restarted.
                 const newCopyPending = [...this.pendingCellSubscriptions];
                 newCopyPending.forEach(c => {
-                    c.reject(new Error('Restarted.'));
+                    c.reject();
                 });
             };
             const restartHandlerToken = this.session.onRestarted(restartHandler);
