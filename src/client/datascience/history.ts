@@ -859,8 +859,11 @@ export class History implements IHistory {
             if (!usable) {
                 // Not loading anymore
                 status.dispose();
+
+                // Indicate failing.
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
             }
-            
+
             // Get the web panel to show first
             await this.loadWebPanel();
 

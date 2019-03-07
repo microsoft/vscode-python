@@ -91,12 +91,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
             return this.parseEnvironmentOutput(result.stdout);
         } catch (e) {
+            traceError('getActivatedEnvironmentVariables', e);
+            
             // Some callers want this to bubble out, others don't
             if (allowExceptions) {
                 throw e;
-            } else {
-                traceError('getActivatedEnvironmentVariables', e);
-            }
+            } 
         }
 
 
