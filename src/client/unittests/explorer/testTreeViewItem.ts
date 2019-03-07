@@ -10,8 +10,8 @@ import { Commands } from '../../common/constants';
 import { getIcon } from '../../common/utils/icons';
 import { noop } from '../../common/utils/misc';
 import { Icons } from '../common/constants';
-import { getTestType } from '../common/testUtils';
-import { TestResult, TestStatus, TestType } from '../common/types';
+import { getTestType, isSubtestsParent } from '../common/testUtils';
+import { TestResult, TestStatus, TestSuite, TestType } from '../common/types';
 import { TestDataItem } from '../types';
 
 /**
@@ -114,6 +114,10 @@ export class TestTreeItem extends TreeItem {
                 break;
             }
             case TestType.testSuite: {
+                if (isSubtestsParent(this.data as TestSuite)) {
+                    this.command = { command: Commands.navigateToTestFunction, title: 'Open', arguments: [this.resource, this.data, false] };
+                    break;
+                }
                 this.command = { command: Commands.navigateToTestSuite, title: 'Open', arguments: [this.resource, this.data, false] };
                 break;
             }

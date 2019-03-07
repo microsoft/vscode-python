@@ -317,6 +317,14 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
             // const parentSuite = tests.testSuites.find(item => item.testSuite.suites.some(child => child === data));
             // const parentFile = tests.testFiles.find(item=> item.suites.find(data)
             // return item && (item.parentTestSuite || item.parentTestFile);
+            if (isSubtestsParent(suite)) {
+                const fn = suite.functions[0];
+                const parent = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
+                if (parent) {
+                    return parent.testSuite;
+                }
+                return tests.testFiles.find(item => item.functions.indexOf(fn) >= 0);
+            }
             const parentSuite = tests.testSuites.find(item => item.testSuite.suites.indexOf(suite) >= 0);
             if (parentSuite) {
                 return parentSuite.testSuite;
@@ -325,6 +333,9 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
         }
         case TestType.testFunction: {
             const fn = data as TestFunction;
+            if (fn.subtestParent) {
+                return fn.subtestParent.asSuite;
+            }
             const parentSuite = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
             if (parentSuite) {
                 return parentSuite.testSuite;
@@ -427,22 +438,30 @@ export function findFlattendTestSuite(tests: Tests, suite: TestSuite): Flattened
  */
 export function getChildren(item: TestDataItem): TestDataItem[] {
     switch (getTestType(item)) {
-        case TestType.testFile: {
-            return [
-                ...(item as TestFile).functions,
-                ...(item as TestFile).suites
-            ];
-        }
         case TestType.testFolder: {
             return [
                 ...(item as TestFolder).folders,
                 ...(item as TestFolder).testFiles
             ];
         }
-        case TestType.testSuite: {
+        case TestType.testFile: {
+            const [subSuites, functions] = divideSubtests((item as TestFile).functions);
             return [
-                ...(item as TestSuite).functions,
-                ...(item as TestSuite).suites
+                ...functions,
+                ...(item as TestFile).suites,
+                ...subSuites
+            ];
+        }
+        case TestType.testSuite: {
+            let subSuites: TestSuite[] = [];
+            let functions = (item as TestSuite).functions;
+            if (!isSubtestsParent((item as TestSuite))) {
+                [subSuites, functions] = divideSubtests((item as TestSuite).functions);
+            }
+            return [
+                ...functions,
+                ...(item as TestSuite).suites,
+                ...subSuites
             ];
         }
         case TestType.testFunction: {
@@ -452,6 +471,34 @@ export function getChildren(item: TestDataItem): TestDataItem[] {
             throw new Error('Unknown Test Type');
         }
     }
+}
+
+function divideSubtests(mixed: TestFunction[]): [TestSuite[], TestFunction[]] {
+    const suites: TestSuite[] = [];
+    const functions: TestFunction[] = [];
+    mixed.forEach(func => {
+        if (!func.subtestParent) {
+            functions.push(func);
+            return;
+        }
+        const parent = func.subtestParent.asSuite;
+        if (suites.indexOf(parent) < 0) {
+            suites.push(parent);
+        }
+    });
+    return [suites, functions];
+}
+
+export function isSubtestsParent(suite: TestSuite): boolean {
+    const functions = suite.functions;
+    if (functions.length === 0) {
+        return false;
+    }
+    const subtestParent = functions[0].subtestParent;
+    if (subtestParent === undefined) {
+        return false;
+    }
+    return subtestParent.asSuite === suite;
 }
 
 export function copyTestResults(source: Tests, target: Tests): void {
@@ -511,4 +558,4 @@ function copyValueTypes<T>(source: T, target: T): void {
             target[key] = value;
         }
     });
-}
+ }
