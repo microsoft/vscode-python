@@ -5,7 +5,7 @@
 
 // File without any dependencies on VS Code.
 
-export async function sleep(milliseconds: number) {
+export function sleep(milliseconds: number) {
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 

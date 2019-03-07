@@ -27,6 +27,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from './constants';
@@ -52,7 +53,8 @@ import {
 export enum SysInfoReason {
     Start,
     Restart,
-    Interrupt
+    Interrupt,
+    New
 }
 
 @injectable()
@@ -111,7 +113,7 @@ export class History implements IHistory {
         this.webPanelInit = createDeferred();
 
         // If our execution changes its liveshare session, we need to close our server
-        this.jupyterExecution.sessionChanged(() => this.onInterpreterChanged());
+        this.jupyterExecution.sessionChanged(() => this.loadPromise = this.reloadAfterShutdown());
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -440,14 +442,14 @@ export class History implements IHistory {
     private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
+        // Start a status item
+        const status = this.setStatus(localize.DataScience.executingCode());
+
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
             this.shareMessage(HistoryMessages.RemoteAddCode, {code, file, line, id, originator: this.id});
         }
-
-        // Start a status item
-        const status = this.setStatus(localize.DataScience.executingCode());
 
         // Create a deferred object that will wait until the status is disposed
         const finishedAddingCode = createDeferred<void>();
@@ -579,17 +581,43 @@ export class History implements IHistory {
 
     private onInterpreterChanged = () => {
         // Update our load promise. We need to restart the jupyter server
-        this.loadPromise = this.reload();
+        this.loadPromise = this.reloadWithNew();
     }
 
-    private async reload() : Promise<void> {
-        if (this.loadPromise) {
-            await this.loadPromise;
-            if (this.jupyterServer) {
-                const server = this.jupyterServer;
-                this.jupyterServer = undefined;
-                server.shutdown().ignoreErrors();
+    private async reloadWithNew() : Promise<void> {
+        const status = this.setStatus(localize.DataScience.startingJupyter());
+        try {
+            // Not the same as reload, we need to actually dispose the server.
+            if (this.loadPromise) {
+                await this.loadPromise;
+                if (this.jupyterServer) {
+                    const server = this.jupyterServer;
+                    this.jupyterServer = undefined;
+                    await server.dispose();
+                }
             }
+            await this.load();
+            await this.addSysInfo(SysInfoReason.New);
+        } finally {
+            status.dispose();
+        }
+    }
+
+    private async reloadAfterShutdown() : Promise<void> {
+        try {
+            if (this.loadPromise) {
+                await this.loadPromise;
+                if (this.jupyterServer) {
+                    const server = this.jupyterServer;
+                    this.jupyterServer = undefined;
+                    server.dispose().ignoreErrors(); // Don't care what happens as we're disconnected.
+                }
+            }
+        } catch {
+            // We just switched from host to guest mode. Don't really care
+            // if closing the host server kills it.
+            noop();
+            this.jupyterServer = undefined;
         }
         return this.load();
     }
@@ -733,6 +761,9 @@ export class History implements IHistory {
             case SysInfoReason.Interrupt:
                 return localize.DataScience.pythonInterruptFailedHeader();
                 break;
+            case SysInfoReason.New:
+                return localize.DataScience.pythonNewHeader();
+                break;
             default:
                 this.logger.logError('Invalid SysInfoReason');
                 return '';
@@ -756,7 +787,7 @@ export class History implements IHistory {
     }
 
     private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
-        if (!this.addSysInfoPromise || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
+        if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
             this.logger.logInformation(`Adding sys info for ${this.id} ${reason}`);
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
@@ -767,8 +798,8 @@ export class History implements IHistory {
                 this.onAddCodeEvent([sysInfo]);
             }
 
-            // For interrupt or restart, tell the other sides of a live share session
-            if ((reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) && sysInfo) {
+            // For anything but start, tell the other sides of a live share session
+            if (reason !== SysInfoReason.Start && sysInfo) {
                 this.shareMessage(HistoryMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
             }
 
@@ -849,7 +880,7 @@ export class History implements IHistory {
             await this.loadWebPanel();
 
             // Then load the jupyter server
-            return this.loadJupyterServer();
+            await this.loadJupyterServer();
 
         } finally {
             status.dispose();

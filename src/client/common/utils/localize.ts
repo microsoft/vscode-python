@@ -105,6 +105,7 @@ export namespace DataScience {
     export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
     export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
     export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
+    export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
     export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
 
     export const jupyterSelectURILaunchLocal = localize('DataScience.jupyterSelectURILaunchLocal', 'Launch local Jupyter server');
