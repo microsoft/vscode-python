@@ -148,6 +148,8 @@ export class TestsParser implements ITestsParser {
 
         let currentPackage: string = '';
         const resource = Uri.file(rootDirectory);
+
+        // tslint:disable-next-line:cyclomatic-complexity
         lines.forEach(line => {
             const trimmedLine = line.trim();
             let name: string = '';
@@ -161,9 +163,17 @@ export class TestsParser implements ITestsParser {
                 currentPackage = convertFileToPackage(name);
                 const fullyQualifiedName = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
                 const testFile = {
-                    resource,
-                    functions: [], suites: [], name: name, fullPath: fullyQualifiedName,
-                    nameToRun: name, xmlName: currentPackage, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0
+                    resource: resource,
+                    functions: [],
+                    suites: [],
+                    name: name,
+                    fullPath: fullyQualifiedName,
+                    nameToRun: name,
+                    xmlName: currentPackage,
+                    time: 0,
+                    functionsPassed: 0,
+                    functionsFailed: 0,
+                    functionsDidNotRun: 0
                 };
                 testFiles.push(testFile);
                 parentNodes.push({ indent: indent, item: testFile });
@@ -183,7 +193,20 @@ export class TestsParser implements ITestsParser {
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
                 const xmlName = `${parentNode!.item.xmlName}.${name}`;
-                const testSuite: TestSuite = { resource, name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 };
+                const testSuite: TestSuite = {
+                    resource: resource,
+                    name: name,
+                    nameToRun: rawName,
+                    functions: [],
+                    suites: [],
+                    isUnitTest: isUnitTest,
+                    isInstance: false,
+                    xmlName: xmlName,
+                    time: 0,
+                    functionsPassed: 0,
+                    functionsFailed: 0,
+                    functionsDidNotRun: 0
+                };
                 parentNode!.item.suites.push(testSuite);
                 parentNodes.push({ indent: indent, item: testSuite });
                 return;
@@ -214,7 +237,26 @@ export class TestsParser implements ITestsParser {
                 };
                 const pos = name.indexOf('[');
                 if (pos > 0 && name.endsWith(']')) {
-                    fn.funcName = name.substring(0, pos);
+                    const funcName = name.substring(0, pos);
+                    const subtest = name.substring(pos);
+
+                    let subtestParent: TestFunction | undefined;
+                    const last = parentNode!.item.functions.pop();
+                    if (last) {
+                        parentNode!.item.functions.push(last);
+                        if (last.subtestParent && last.subtestParent.name === funcName) {
+                            subtestParent = last.subtestParent;
+                        }
+                    }
+                    if (!subtestParent) {
+                        subtestParent = {
+                            resource: resource,
+                            name: funcName,
+                            nameToRun: rawName.substring(0, rawName.length - subtest.length),
+                            time: 0
+                        };
+                    }
+                    fn.subtestParent = subtestParent!;
                 }
                 parentNode!.item.functions.push(fn);
                 return;
