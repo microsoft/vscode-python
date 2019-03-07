@@ -197,11 +197,10 @@ export class DiscoveredTest {
             return false;
         }
 
-        if (this.isInSuite) {
-            return this.addToSuite(testFile.suites);
-        } else {
+        if (!this.addToSuite(testFile.suites)) {
+            // this function is not in a suite hierarchy, push it into the direct functions of this file
             testFile.functions.push(this.toTestFunction());
-            return true;
         }
+        return true;
     }
 }
