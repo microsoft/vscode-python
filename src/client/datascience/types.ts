@@ -165,6 +165,8 @@ export interface ICodeWatcher {
     runCurrentCell(id: string): void;
     runCurrentCellAndAdvance(id: string): void;
     runSelectionOrLine(activeEditor: TextEditor | undefined, id: string): void;
+    runToLine(targetLine: number, id: string): void;
+    runFromLine(targetLine: number, id: string): void;
 }
 
 export enum CellState {

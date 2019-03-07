@@ -106,12 +106,26 @@ export class DataScience implements IDataScience {
         }
     }
 
-    public async runAllCellsAbove(): Promise<void> {
-
+    // IANHU: Commands with no file selected 
+    // IANHU: Telemetry between cell and line commands
+    public async runAllCellsAbove(file: string, targetLine: number, id: string): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+        const codeWatcher = this.getCodeWatcher(file);
+        if (codeWatcher) {
+            return codeWatcher.runToLine(targetLine, id);
+        } else {
+            return Promise.resolve();
+        }
     }
 
-    public async runCellAndAllBelow(): Promise<void> {
-
+    public async runCellAndAllBelow(file: string, targetLine: number, id: string): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+        const codeWatcher = this.getCodeWatcher(file);
+        if (codeWatcher) {
+            return codeWatcher.runFromLine(targetLine, id);
+        } else {
+            return Promise.resolve();
+        }
     }
     
 

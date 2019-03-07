@@ -51,15 +51,15 @@ export class CodeWatcher implements ICodeWatcher {
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllAboveCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
+                arguments: [document.fileName, cell.range.start.line],
                 title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                command: Commands.RunAllCells
+                command: Commands.RunAllCellsAbove
             };
             this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
             const runCellAndBelowCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
-                title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                command: Commands.RunAllCells
+                arguments: [document.fileName, cell.range.start.line],
+                title: localize.DataScience.runCellAndAllBelowLensCommandTitle(),
+                command: Commands.RunCellAndAllBelow
             };
             this.codeLenses.push(new CodeLens(cell.range, runCellAndBelowCmd));
         });
@@ -126,6 +126,34 @@ export class CodeWatcher implements ICodeWatcher {
 
             if (code && code.trim().length) {
                 await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, id, activeEditor);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunToLine)
+    public async runToLine(targetLine: number, id: string) {
+        const activeHistory = this.historyProvider.getOrCreateActive();
+
+        if (this.document && targetLine > 0) {
+            const previousLine = this.document.lineAt(targetLine - 1);
+            const code = this.document.getText(new Range(0, 0, previousLine.range.end.line, previousLine.range.end.character));
+
+            if (code && code.trim().length) {
+                await activeHistory.addCode(code, this.getFileName(), 0, id);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunFromLine)
+    public async runFromLine(targetLine: number, id: string) {
+        const activeHistory = this.historyProvider.getOrCreateActive();
+
+        if (this.document && targetLine < this.document.lineCount) {
+            const lastLine = this.document.lineAt(this.document.lineCount - 1);
+            const code = this.document.getText(new Range(targetLine, 0, lastLine.range.end.line, lastLine.range.end.character));
+
+            if (code && code.trim().length) {
+                await activeHistory.addCode(code, this.getFileName(), 0, id);
             }
         }
     }

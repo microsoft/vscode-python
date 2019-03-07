@@ -87,6 +87,8 @@ export enum Telemetry {
     RunAllCellsAbove = 'DATASCIENCE.RUN_ALL_CELLS_ABOVE',
     RunCellAndAllBelow = 'DATASCIENCE.RUN_CELL_AND_ALL_BELOW',
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
+    RunToLine = 'DATASCIENCE.RUN_TO_LINE',
+    RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
