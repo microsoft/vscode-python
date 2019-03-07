@@ -27,7 +27,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from './constants';
 import { HistoryMessageListener } from './historyMessageListener';
@@ -815,21 +815,12 @@ export class History implements IHistory {
         }
     }
 
-    private load = async (): Promise<void> => {
-        // Status depends upon if we're about to connect to existing server or not.
-        const status = (await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions())) ?
-            this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
-
-        // Check to see if we support ipykernel or not
+    private async checkUsable() : Promise<boolean> {
+        let activeInterpreter : PythonInterpreter | undefined;
         try {
+            activeInterpreter = await this.interpreterService.getActiveInterpreter();
             const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-            if (!usableInterpreter) {
-                // Not loading anymore
-                status.dispose();
-
-                // Nobody is useable, throw an exception
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
-            } else {
+            if (usableInterpreter) {
                 // See if the usable interpreter is not our active one. If so, show a warning
                 // Only do this if not the guest in a liveshare session
                 const api = await this.liveShare.getApi();
@@ -845,6 +836,31 @@ export class History implements IHistory {
                 }
             }
 
+            return usableInterpreter ? true: false;
+
+        } catch (e) {
+            // Can't find a usable interpreter, show the error.
+            if (activeInterpreter) {
+                throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(activeInterpreter.displayName, e.toString())); 
+            } else {
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+            }
+        }
+    }
+
+    private load = async (): Promise<void> => {
+        // Status depends upon if we're about to connect to existing server or not.
+        const status = (await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions())) ?
+            this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
+
+        // Check to see if we support ipykernel or not
+        try {
+            const usable = await this.checkUsable();
+            if (!usable) {
+                // Not loading anymore
+                status.dispose();
+            }
+            
             // Get the web panel to show first
             await this.loadWebPanel();
 

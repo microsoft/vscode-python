@@ -356,7 +356,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
         if (bestInterpreter) {
             const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
-            const launcher = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter: bestInterpreter });
+            const launcher = await this.executionFactory.createActivatedEnvironment(
+                { resource: undefined, interpreter: bestInterpreter, allowEnvironmentFetchExceptions: true });
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             const serverInfoString = await launcher.exec([file], newOptions);
 
@@ -732,14 +733,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         }
 
-        // Return result
+        // Return results
         return this.commands.hasOwnProperty(command) ? this.commands[command] : undefined;
     }
 
     private doesModuleExist = async (module: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> => {
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
-            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter });
+            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
             try {
                 // Special case for ipykernel
                 const actualModule = module === JupyterCommands.KernelCreateCommand ? module : 'jupyter';

@@ -60,6 +60,7 @@ export type ExecutionFactoryCreationOptions = {
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
     interpreter?: PythonInterpreter;
+    allowEnvironmentFetchExceptions?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
