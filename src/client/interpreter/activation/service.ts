@@ -6,15 +6,14 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
-import { LogOptions, traceDecorators, traceVerbose, traceError } from '../../common/logger';
+import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
 import {
     cacheResourceSpecificInterpreterData,
-    clearCachedResourceSpecificIngterpreterData,
-    swallowExceptions
+    clearCachedResourceSpecificIngterpreterData
 } from '../../common/utils/decorators';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -66,7 +65,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                 return;
             }
-    
+
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
             const processService = await this.processServiceFactory.create(resource);
@@ -74,15 +73,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
             const env = hasCustomEnvVars ? customEnvVars : this.currentProcess.env;
             traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
-    
+
             // In order to make sure we know where the environment output is,
             // put in a dummy echo we can look for
             const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
             const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
-    
-            // Conda activate can hang on certain systems. Fail after 30 seconds. 
-            // See the discussion from hidesoon in this bug: https://github.com/Microsoft/vscode-python/issues/4424
+
+            // Conda activate can hang on certain systems. Fail after 30 seconds.
+            // See the discussion from hidesoon in this issue: https://github.com/Microsoft/vscode-python/issues/4424
             // His issue is conda never finishing during activate. This is a conda issue, but we
             // should at least tell the user.
             const result = await processService.shellExec(command, { env, shell, timeout: getEnvironmentTimeout });
@@ -92,14 +91,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return this.parseEnvironmentOutput(result.stdout);
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
-            
+
             // Some callers want this to bubble out, others don't
             if (allowExceptions) {
                 throw e;
-            } 
+            }
         }
-
-
     }
     protected onDidEnvironmentVariablesChange(affectedResource: Resource) {
         clearCachedResourceSpecificIngterpreterData('ActivatedEnvironmentVariables', affectedResource);

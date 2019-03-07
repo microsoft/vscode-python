@@ -836,12 +836,13 @@ export class History implements IHistory {
                 }
             }
 
-            return usableInterpreter ? true: false;
+            return usableInterpreter ? true : false;
 
         } catch (e) {
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
-                throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(activeInterpreter.displayName, e.toString())); 
+                const displayName = activeInterpreter.displayName ? activeInterpreter.displayName : activeInterpreter.path;
+                throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString()));
             } else {
                 throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
             }
