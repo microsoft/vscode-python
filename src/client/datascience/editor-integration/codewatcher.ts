@@ -118,7 +118,7 @@ export class CodeWatcher implements ICodeWatcher {
             const pastStop = (lens.range.start.line >= stopLine && lens.range.start.character >= stopCharacter);
             // Make sure we are dealing with cell based code lenses in case more types are added later
             if (lens.command && lens.command.command === Commands.RunAllCellsAbove) {
-                if (!pastStop) {
+                if (!pastStop && this.document) {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
                     await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
@@ -140,11 +140,11 @@ export class CodeWatcher implements ICodeWatcher {
             const pastStart = (lens.range.start.line >= startLine && lens.range.start.character >= startCharacter);
             // Make sure we are dealing with cell based code lenses in case more types are added later
             if (lens.command && lens.command.command === Commands.RunCellAndAllBelow) {
-                if (pastStart) {
+                if (pastStart && this.document) {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
                     await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
-                } 
+                }
             }
         }
     }
