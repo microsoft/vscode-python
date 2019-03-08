@@ -25,9 +25,7 @@ export class TestResultsService implements ITestResultsService {
         this.updateTestSuiteAndFileResults(test);
     }
     private updateParentStatus(tests: Tests, status: TestStatus): void {
-        const visitor = (item: TestDataItem) => {
-            item.status = status;
-        };
+        const visitor = (item: TestDataItem) => item.status = status;
         tests.testFiles.forEach(item => {
             if (typeof item.passed === 'boolean') {
                 if (status === TestStatus.Pass ? item.passed : !item.passed) {
@@ -39,12 +37,12 @@ export class TestResultsService implements ITestResultsService {
     private updateTestFolderResults(testFolder: TestFolder): void {
         let totalTime = 0;
         let allFilesPassed = true;
-        let allFilesSkipped = true;
+        let noFilesRan = true;
 
         testFolder.testFiles.forEach(fl => {
             totalTime += fl.time;
             if (typeof fl.passed === 'boolean') {
-                allFilesSkipped = false;
+                noFilesRan = false;
                 if (!fl.passed) {
                     allFilesPassed = false;
                 }
@@ -55,13 +53,13 @@ export class TestResultsService implements ITestResultsService {
         });
 
         let allFoldersPassed = true;
-        let allFoldersSkipped = true;
+        let noFoldersRan = true;
 
         testFolder.folders.forEach(folder => {
             totalTime += folder.time;
             this.updateTestFolderResults(folder);
             if (typeof folder.passed === 'boolean') {
-                allFoldersSkipped = false;
+                noFoldersRan = false;
                 if (!folder.passed) {
                     allFoldersPassed = false;
                 }
@@ -72,7 +70,7 @@ export class TestResultsService implements ITestResultsService {
         });
 
         testFolder.time = totalTime;
-        if (allFilesSkipped && allFoldersSkipped) {
+        if (noFilesRan && noFoldersRan) {
             testFolder.passed = undefined;
             testFolder.status = TestStatus.Unknown;
         } else {
@@ -83,12 +81,12 @@ export class TestResultsService implements ITestResultsService {
     private updateTestSuiteAndFileResults(test: TestSuite | TestFile): void {
         let totalTime = 0;
         let allFunctionsPassed = true;
-        let allFunctionsSkipped = true;
+        let noFunctionsRan = true;
 
         test.functions.forEach(fn => {
             totalTime += fn.time;
             if (typeof fn.passed === 'boolean') {
-                allFunctionsSkipped = false;
+                noFunctionsRan = false;
                 if (fn.passed) {
                     test.functionsPassed! += 1;
                 } else {
@@ -99,13 +97,13 @@ export class TestResultsService implements ITestResultsService {
         });
 
         let allSuitesPassed = true;
-        let allSuitesSkipped = true;
+        let noSuitesRan = true;
 
         test.suites.forEach(suite => {
             this.updateTestSuiteResults(suite);
             totalTime += suite.time;
             if (typeof suite.passed === 'boolean') {
-                allSuitesSkipped = false;
+                noSuitesRan = false;
                 if (!suite.passed) {
                     allSuitesPassed = false;
                 }
@@ -116,7 +114,7 @@ export class TestResultsService implements ITestResultsService {
         });
 
         test.time = totalTime;
-        if (allSuitesSkipped && allFunctionsSkipped) {
+        if (noSuitesRan && noFunctionsRan) {
             test.passed = undefined;
             test.status = TestStatus.Unknown;
         } else {
