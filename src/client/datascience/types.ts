@@ -166,13 +166,15 @@ export interface ICodeWatcher {
     getVersion() : number;
     getCodeLenses() : CodeLens[];
     getCachedSettings() : IDataScienceSettings | undefined;
-    runAllCells(): void;
-    runCell(range: Range): void;
-    runCurrentCell(): void;
-    runCurrentCellAndAdvance(): void;
-    runSelectionOrLine(activeEditor: TextEditor | undefined): void;
-    runToLine(targetLine: number): void;
-    runFromLine(targetLine: number): void;
+    runAllCells(): Promise<void>;
+    runCell(range: Range): Promise<void>;
+    runCurrentCell(): Promise<void>;
+    runCurrentCellAndAdvance(): Promise<void>;
+    runSelectionOrLine(activeEditor: TextEditor | undefined): Promise<void>;
+    runToLine(targetLine: number): Promise<void>;
+    runFromLine(targetLine: number): Promise<void>;
+    runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
+    runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
 }
 
 export enum CellState {

@@ -51,13 +51,13 @@ export class CodeWatcher implements ICodeWatcher {
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
             const runAllAboveCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line],
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
                 title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
                 command: Commands.RunAllCellsAbove
             };
             this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
             const runCellAndBelowCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line],
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
                 title: localize.DataScience.runCellAndAllBelowLensCommandTitle(),
                 command: Commands.RunCellAndAllBelow
             };
@@ -103,6 +103,48 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 const code = this.document.getText();
                 await activeHistory.addCode(code, this.getFileName(), 0);
+            }
+        }
+    }
+
+    // Run all cells up to the cell containing this start line and character
+    @captureTelemetry(Telemetry.RunAllCellsAbove)
+    public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
+        const activeHistory = await this.historyProvider.getOrCreateActive();
+
+        // Run our code lenses up to this point, lenses are created in order on document load
+        // so we can rely on them being in linear order for this
+        for (const lens of this.codeLenses) {
+            const pastStop = (lens.range.start.line >= stopLine && lens.range.start.character >= stopCharacter);
+            // Make sure we are dealing with cell based code lenses in case more types are added later
+            if (lens.command && lens.command.command === Commands.RunAllCellsAbove) {
+                if (!pastStop) {
+                    // We have a cell and we are not past or at the stop point
+                    const code = this.document.getText(lens.range);
+                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                } else {
+                    // If we get a cell past or at the stop point stop
+                    break;
+                }
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunAllCellsAbove)
+    public async runCellAndAllBelow(startLine: number, startCharacter: number) {
+        const activeHistory = await this.historyProvider.getOrCreateActive();
+
+        // Run our code lenses from this point to the end, lenses are created in order on document load
+        // so we can rely on them being in linear order for this
+        for (const lens of this.codeLenses) {
+            const pastStart = (lens.range.start.line >= startLine && lens.range.start.character >= startCharacter);
+            // Make sure we are dealing with cell based code lenses in case more types are added later
+            if (lens.command && lens.command.command === Commands.RunCellAndAllBelow) {
+                if (pastStart) {
+                    // We have a cell and we are not past or at the stop point
+                    const code = this.document.getText(lens.range);
+                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                } 
             }
         }
     }

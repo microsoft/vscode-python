@@ -365,6 +365,84 @@ testing2`;
         document.verifyAll();
     });
 
+    test('Test the RunCellAndAllBelow command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+`#%%
+testing2`;
+
+        const targetText2 =
+`#%%
+testing3`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runCellAndAllBelow(2, 0);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunAllCellsAbove command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+`#%%
+testing1`;
+
+        const targetText2 =
+`#%%
+testing2`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runAllCellsAbove(4, 0);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
     test('Test the RunToLine command', async () => {
         const fileName = 'test.py';
         const version = 1;

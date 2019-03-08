@@ -98,30 +98,26 @@ export class DataScience implements IDataScience {
         }
     }
 
-    // Normally we capture telemetry at the code watcher level, but for these we also capture here
-    // As the To / From line commands use the same codewatcher base function
-    @captureTelemetry(Telemetry.RunAllCellsAbove)
-    public async runAllCellsAbove(file: string, targetLine: number): Promise<void> {
+    public async runAllCellsAbove(file: string, stopLine: number, stopCharacter: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
-        if (file && targetLine >= 0) {
+        if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
             if (codeWatcher) {
-                return codeWatcher.runToLine(targetLine);
+                return codeWatcher.runAllCellsAbove(stopLine, stopCharacter);
             }
         }
     }
 
-    @captureTelemetry(Telemetry.RunCellAndAllBelow)
-    public async runCellAndAllBelow(file: string, targetLine: number): Promise<void> {
+    public async runCellAndAllBelow(file: string, startLine: number, startCharacter: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
-        if (file && targetLine >= 0) {
+        if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
             if (codeWatcher) {
-                return codeWatcher.runFromLine(targetLine);
+                return codeWatcher.runCellAndAllBelow(startLine, startCharacter);
             }
         }
     }
