@@ -9,10 +9,9 @@ import * as typeMoq from 'typemoq';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { DiscoveredTestData } from '../../../client/unittests/common/discoveredTests';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
-import { TestDiscoveryOptions, Tests } from '../../../client/unittests/common/types';
+import { ITestsHelper, TestDiscoveryOptions, TestFile, Tests } from '../../../client/unittests/common/types';
 import { TestsParser as PyTestsParser } from '../../../client/unittests/pytest/services/parserService';
 import { pytestScenario } from './pytest.testparser.testdata';
 
@@ -27,9 +26,50 @@ use(chaipromise);
 suite('PyTest parser used in discovery', () => {
 
     pytestScenario.forEach((testScenario) => {
-        test('Ensure JSON test data is correct', () => {
-            const t: DiscoveredTestData[] = JSON.parse(testScenario.json);
-            expect(t).to.not.equal(undefined, 'Bad dates');
+        test(`${testScenario.scenarioDescription} (convert to TestFiles)`, () => {
+            // Setup the service container for use by the parser.
+            const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
+            const appShell = typeMoq.Mock.ofType<IApplicationShell>();
+            const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
+            serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny()))
+                .returns(() => {
+                    return appShell.object;
+                });
+            serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny()))
+                .returns(() => {
+                    return cmdMgr.object;
+                });
+
+            // Create mocks used in the test discovery setup.
+            const outChannel = typeMoq.Mock.ofType<OutputChannel>();
+            const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
+            cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
+            const wsFolder = typeMoq.Mock.ofType<Uri>();
+
+            // Create the test options for the mocked-up test. All data is either
+            // mocked or is taken from the JSON test data itself.
+            const options: TestDiscoveryOptions = {
+                args: [],
+                cwd: '.',
+                ignoreCache: true,
+                outChannel: outChannel.object,
+                token: cancelToken.object,
+                workspaceFolder: wsFolder.object
+            };
+
+            let testFilesParsed: TestFile[];
+            // set up the test flattener, but extact the TestFiles for inspection here instead of actually flattening them.
+            const testHelper = typeMoq.Mock.ofType<ITestsHelper>();
+            testHelper.setup(t => t.flattenTestFiles(typeMoq.It.is<TestFile[]>(v => true), typeMoq.It.isAny()))
+                .returns((v: TestFile[]) => {
+                    testFilesParsed = v;
+                    return undefined;
+                });
+
+            const parser = new PyTestsParser(testHelper.object);
+            parser.parse(testScenario.json, options);
+
+            expect(testFilesParsed).to.deep.equal(testScenario.expectedTestFiles);
         });
 
         test(testScenario.scenarioDescription, async () => {
@@ -69,7 +109,7 @@ suite('PyTest parser used in discovery', () => {
             const parser = new PyTestsParser(testHlp);
 
             const tests: Tests = parser.parse(testScenario.json, options);
-            expect(testScenario.expectedResult).to.deep.equal(tests);
+            expect(tests).to.deep.equal(testScenario.expectedResult);
         });
     });
 });

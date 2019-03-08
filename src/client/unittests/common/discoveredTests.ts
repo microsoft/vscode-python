@@ -158,8 +158,7 @@ export class DiscoveredTest {
      * @returns This discovered test function as a `TestFile` with the suite hierarchy in place.
      */
     public toTestFile(): TestFile {
-        const fullpath = path.join(this.testroot, this.relfile);
-
+        const fullPath = path.join(this.testroot, this.relfile);
         // if this function is in a suite, set up the suite hierarchy
         const suites: TestSuite[] = this.isInSuite ? [this.toTestSuite()] : [];
         // otherwise if this is a bare function in the file, just add this function directly to the file.
@@ -168,7 +167,7 @@ export class DiscoveredTest {
         const name = this.getTestFileName();
 
         return {
-            fullPath: fullpath,
+            fullPath,
             functions,
             name,
             nameToRun: name,
