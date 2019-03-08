@@ -72,44 +72,5 @@ suite('PyTest parser used in discovery', () => {
             expect(testFilesParsed).to.deep.equal(testScenario.expectedTestFiles);
         });
 
-        test(testScenario.scenarioDescription, async () => {
-            // Setup the service container for use by the parser.
-            const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-            const appShell = typeMoq.Mock.ofType<IApplicationShell>();
-            const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
-            serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny()))
-                .returns(() => {
-                    return appShell.object;
-                });
-            serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny()))
-                .returns(() => {
-                    return cmdMgr.object;
-                });
-
-            // Create mocks used in the test discovery setup.
-            const outChannel = typeMoq.Mock.ofType<OutputChannel>();
-            const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
-            cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
-            const wsFolder = typeMoq.Mock.ofType<Uri>();
-
-            // Create the test options for the mocked-up test. All data is either
-            // mocked or is taken from the JSON test data itself.
-            const options: TestDiscoveryOptions = {
-                args: [],
-                cwd: '.',
-                ignoreCache: true,
-                outChannel: outChannel.object,
-                token: cancelToken.object,
-                workspaceFolder: wsFolder.object
-            };
-
-            // Setup the parser.
-            const testFlattener: TestFlatteningVisitor = new TestFlatteningVisitor();
-            const testHlp: TestsHelper = new TestsHelper(testFlattener, serviceContainer.object);
-            const parser = new PyTestsParser(testHlp);
-
-            const tests: Tests = parser.parse(testScenario.json, options);
-            expect(tests).to.deep.equal(testScenario.expectedResult);
-        });
     });
 });
