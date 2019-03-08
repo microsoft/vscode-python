@@ -599,18 +599,6 @@
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runallcellsabove",
-                    "title": "%python.command.python.datascience.runallcellsabove.title%",
-                    "category": "Python",
-                    "when": "python.datascience.featureenabled"
-                },
-                {
-                    "command": "python.datascience.runcellandallbelow",
-                    "title": "%python.command.python.datascience.runcellandallbelow.title%",
-                    "category": "Python",
-                    "when": "python.datascience.featureenabled"
-                },
-                {
                     "command": "python.datascience.runcell",
                     "title": "%python.command.python.datascience.runcell.title%",
                     "category": "Python",
