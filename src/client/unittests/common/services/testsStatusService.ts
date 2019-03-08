@@ -48,7 +48,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
         }
         const predicate = (item: TestDataItem) => item.status === TestStatus.Fail || item.status === TestStatus.Error;
         const visitor = (item: TestDataItem) => {
-            if (item.status && predicate(item)){
+            if (item.status && predicate(item)) {
                 item.status = TestStatus.Running;
                 this.storage.update(resource, item);
             }
