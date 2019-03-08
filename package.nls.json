@@ -30,6 +30,8 @@
     "python.command.python.datascience.runallcells.title": "Run All Cells",
     "python.command.python.datascience.runallcellsabove.title": "Run All Cells Above",
     "python.command.python.datascience.runcellandallbelow.title": "Run Cell And All Below",
+    "python.command.python.datascience.runtoline.title": "Run To Line in Python Interactive window",
+    "python.command.python.datascience.runfromline.title": "Run From Line in Python Interactive window",
     "python.command.python.datascience.runcurrentcell.title": "Run Current Cell",
     "python.command.python.datascience.runcurrentcelladvance.title": "Run Current Cell And Advance",
     "python.command.python.datascience.execSelectionInteractive.title": "Run Selection/Line in Python Interactive window",

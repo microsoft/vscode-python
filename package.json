@@ -361,6 +361,16 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.runtoline",
+                "title": "%python.command.python.datascience.runtoline.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runfromline",
+                "title": "%python.command.python.datascience.runfromline.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.selectjupyteruri",
                 "title": "%python.command.python.datascience.selectjupyteruri.title%",
                 "category": "Python",
@@ -475,17 +485,17 @@
                 {
                     "command": "python.datascience.runallcells",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runallcellsabove",
+                    "command": "python.datascience.runfromline",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection && python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runcellandallbelow",
+                    "command": "python.datascience.runtoline",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.execSelectionInteractive",

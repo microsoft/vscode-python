@@ -98,28 +98,55 @@ export class DataScience implements IDataScience {
         }
     }
 
-    // IANHU: Commands with no file selected 
-    // IANHU: Telemetry between cell and line commands
-    public async runAllCellsAbove(file: string, targetLine: number, id: string): Promise<void> {
+    // Normally we capture telemetry at the code watcher level, but for these we also capture here
+    // As the To / From line commands use the same codewatcher base function
+    @captureTelemetry(Telemetry.RunAllCellsAbove)
+    public async runAllCellsAbove(file: string, targetLine: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        const codeWatcher = this.getCodeWatcher(file);
-        if (codeWatcher) {
-            return codeWatcher.runToLine(targetLine);
-        } else {
-            return Promise.resolve();
+
+        if (file && targetLine >= 0) {
+            const codeWatcher = this.getCodeWatcher(file);
+
+            if (codeWatcher) {
+                return codeWatcher.runToLine(targetLine);
+            }
         }
     }
 
-    public async runCellAndAllBelow(file: string, targetLine: number, id: string): Promise<void> {
+    @captureTelemetry(Telemetry.RunCellAndAllBelow)
+    public async runCellAndAllBelow(file: string, targetLine: number): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        const codeWatcher = this.getCodeWatcher(file);
-        if (codeWatcher) {
-            return codeWatcher.runFromLine(targetLine);
-        } else {
-            return Promise.resolve();
+
+        if (file && targetLine >= 0) {
+            const codeWatcher = this.getCodeWatcher(file);
+
+            if (codeWatcher) {
+                return codeWatcher.runFromLine(targetLine);
+            }
         }
     }
-    
+
+    public async runToLine(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        const textEditor = this.documentManager.activeTextEditor;
+
+        if (activeCodeWatcher && textEditor && textEditor.selection) {
+            return activeCodeWatcher.runToLine(textEditor.selection.start.line);
+        }
+    }
+
+    public async runFromLine(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        const textEditor = this.documentManager.activeTextEditor;
+
+        if (activeCodeWatcher && textEditor && textEditor.selection) {
+            return activeCodeWatcher.runFromLine(textEditor.selection.start.line);
+        }
+    }
 
     public async runCurrentCell(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
@@ -250,6 +277,10 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunToLine, this.runToLine, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunFromLine, this.runFromLine, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

@@ -9,6 +9,8 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const RunToLine = 'python.datascience.runtoline';
+    export const RunFromLine = 'python.datascience.runfromline';
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';

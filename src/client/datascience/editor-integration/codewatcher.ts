@@ -153,7 +153,7 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText(new Range(targetLine, 0, lastLine.range.end.line, lastLine.range.end.character));
 
             if (code && code.trim().length) {
-                await activeHistory.addCode(code, this.getFileName(), 0);
+                await activeHistory.addCode(code, this.getFileName(), targetLine);
             }
         }
     }
