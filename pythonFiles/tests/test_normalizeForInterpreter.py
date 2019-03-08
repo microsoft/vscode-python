@@ -16,11 +16,13 @@ class TestNormalizationScript(object):
         assert captured.out == src
 
     def test_moreThanOneLine(self, capsys):
-        src = (
-            "# Some rando comment\n"
-            "\n"
-            "def show_something():\n"
-            '    print("Something")\n'
+        src = "\n".join(
+            [
+                "# Some rando comment",
+                "",
+                "def show_something():",
+                '    print("Something")',
+            ]
         )
 
         normalizeForInterpreter.normalize_lines(src)
@@ -28,14 +30,16 @@ class TestNormalizationScript(object):
         assert captured.out == src
 
     def test_withHangingIndent(self, capsys):
-        src = (
-            "x = 22\n"
-            "y = 30\n"
-            "z = -10\n"
-            "result = x + y + z\n"
-            "\n"
-            "if (result == 42):\n"
-            '    print("The answer to life, the universe, and everything")\n'
+        src = "\n".join(
+            [
+                "x = 22",
+                "y = 30",
+                "z = -10",
+                "result = x + y + z",
+                "",
+                "if (result == 42):",
+                '    print("The answer to life, the universe, and everything")',
+            ]
         )
 
         normalizeForInterpreter.normalize_lines(src)
@@ -43,17 +47,28 @@ class TestNormalizationScript(object):
         assert captured.out == src
 
     def test_clearOutExtraneousNewlines(self, capsys):
-        src = (
-            "x = 22\n",
-            "\n",
-            "y = 30\n",
-            "\n",
-            "z = -10\n",
-            "\n",
-            "print(x + y + z)\n",
+        src = "\n".join(
+            [
+                "value_x = 22",
+                "",
+                "value_y = 30",
+                "",
+                "value_z = -10",
+                "",
+                "print(value_x + value_y + value_z)",
+                "",
+            ]
         )
 
-        expectedResult = ("x = 22\n", "y = 30\n", "z = -10\n", "print(x + y + z)\n")
+        expectedResult = "\n".join(
+            [
+                "value_x = 22",
+                "value_y = 30",
+                "value_z = -10",
+                "print(value_x + value_y + value_z)",
+                "",
+            ]
+        )
 
         normalizeForInterpreter.normalize_lines(src)
         result = capsys.readouterr()
