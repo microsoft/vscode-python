@@ -58,9 +58,10 @@ export class DiscoveredTest {
 
         while (suiteNames.length > 0) {
             const suiteName = suiteNames.pop();
-            const nameToRun = [path.basename(this.relfile), ...suiteNames, suiteName].join('::');
-            const xmlName = [path.basename(this.relfile, path.extname(this.relfile)), ...suiteNames, suiteName].join('.');
-            //const xmlName = path.basename(this.relfile, path.extname(this.relfile));
+            const normalized = path.normalize(this.relfile).replace(/\\/g, '/');
+            const pathParts = path.parse(normalized);
+            const nameToRun = [normalized, ...suiteNames, suiteName].join('::');
+            const xmlName = [this.toFileXmlName(), ...suiteNames, suiteName].join('.');
             const suiteToAdd: TestSuite = {
                 //file: this.relfile,
                 functions: [],
@@ -121,6 +122,35 @@ export class DiscoveredTest {
     }
 
     /**
+     * Function to get a test file name for use in the TestFiles struct.
+     * Note: normalizes all paths with forward slashes even in Windows.
+     *
+     * @returns string value representing a test file relative path.
+     */
+    public getTestFileName(): string {
+        const filePath = path.normalize(this.relfile);
+        return filePath.replace(/\\/g, '/');
+    }
+
+    /**
+     * Build up the xmlName for the TestFiles structure.
+     *
+     * This name requires the full path to the file, minus the extension of the file,
+     * and with the path separator characters converted to dots.
+     *
+     * @returns string representing the 'xmlName' of this test function's file.
+     */
+    public toFileXmlName(): string {
+        const pathParts = path.parse(this.getTestFileName());
+        const dirParts = (pathParts.dir.split('/')).filter((v) => v.length > 0);
+        let xmlName = [path.basename(this.relfile, path.extname(this.relfile))].join('.');
+        if (dirParts.length > 0) {
+            xmlName = [...dirParts, xmlName].join('.');
+        }
+        return xmlName;
+    }
+
+    /**
      * Convert this test function to the `TestFile` that contains it, filling in
      * the suites and sub-suites hierarchy as well. Fill in only those fields required
      * for the rest of the extension.
@@ -134,16 +164,18 @@ export class DiscoveredTest {
         const suites: TestSuite[] = this.isInSuite ? [this.toTestSuite()] : [];
         // otherwise if this is a bare function in the file, just add this function directly to the file.
         const functions: TestFunction[] = this.isInSuite ? [] : [this.toTestFunction()];
+        // test file name is also the name to run.
+        const name = this.getTestFileName();
 
         return {
             fullPath: fullpath,
             functions,
-            name: path.basename(this.relfile),
-            nameToRun: path.normalize(this.relfile),
+            name,
+            nameToRun: name,
             //status: TestStatus.Idle,
             suites,
             time: 0,
-            xmlName: path.basename(this.relfile, path.extname(this.relfile))
+            xmlName: this.toFileXmlName()
         };
     }
 
@@ -195,7 +227,7 @@ export class DiscoveredTest {
      */
     public addToFile(testFile: TestFile): boolean {
         // quick test to ensure this test function actually belongs in this file...
-        if (path.normalize(this.relfile) !== testFile.name) {
+        if (this.getTestFileName() !== testFile.name) {
             return false;
         }
 
