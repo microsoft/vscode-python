@@ -59,15 +59,16 @@ export class DiscoveredTest {
         while (suiteNames.length > 0) {
             const suiteName = suiteNames.pop();
             const nameToRun = [path.basename(this.relfile), ...suiteNames, suiteName].join('::');
-            const xmlName = [path.basename(this.relfile, path.extname(this.relfile)), ...suiteNames].join('.');
+            const xmlName = [path.basename(this.relfile, path.extname(this.relfile)), ...suiteNames, suiteName].join('.');
+            //const xmlName = path.basename(this.relfile, path.extname(this.relfile));
             const suiteToAdd: TestSuite = {
-                file: this.relfile,
+                //file: this.relfile,
                 functions: [],
                 isUnitTest: true,
                 isInstance: false,
                 name: suiteName,
                 nameToRun,
-                status: TestStatus.Idle,
+                //status: TestStatus.Idle,
                 suites: [],
                 time: 0,
                 xmlName
@@ -100,11 +101,11 @@ export class DiscoveredTest {
      */
     public toTestFunction(): TestFunction {
         return {
-            file: this.relfile,
-            line: this.lineno,
+            //file: this.relfile,
+            //line: this.lineno,
             name: this.name,
             nameToRun: this.id,
-            status: TestStatus.Idle,
+            //status: TestStatus.Idle,
             time: 0
         };
     }
@@ -137,12 +138,12 @@ export class DiscoveredTest {
         return {
             fullPath: fullpath,
             functions,
-            name: this.relfile,
-            nameToRun: this.relfile,
-            status: TestStatus.Idle,
+            name: path.basename(this.relfile),
+            nameToRun: path.normalize(this.relfile),
+            //status: TestStatus.Idle,
             suites,
             time: 0,
-            xmlName: this.relfile
+            xmlName: path.basename(this.relfile, path.extname(this.relfile))
         };
     }
 
@@ -183,6 +184,7 @@ export class DiscoveredTest {
         if (owningSuite === undefined) {
             childSuites.push(mySuite);
         }
+        return true;
     }
 
     /**
@@ -193,7 +195,7 @@ export class DiscoveredTest {
      */
     public addToFile(testFile: TestFile): boolean {
         // quick test to ensure this test function actually belongs in this file...
-        if (this.relfile !== testFile.name) {
+        if (path.normalize(this.relfile) !== testFile.name) {
             return false;
         }
 
