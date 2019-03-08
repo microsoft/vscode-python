@@ -304,6 +304,7 @@ export class Cell extends React.Component<ICellProps> {
                     // Change the background if necessary
                     if (forceLightTheme) {
                         style.backgroundColor = this.props.errorBackgroundColor;
+                        style.color = this.invertColor(this.props.errorBackgroundColor);
                     }
 
                     return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
@@ -316,6 +317,40 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return <div></div>;
+    }
+
+    private convertToLinearRgb(color: number) : number {
+        let c = color / 255.0
+        if (c <= 0.03928) {
+            c = c/12.92;
+        } else {
+            c = Math.pow((c+0.055)/1.055, 2.4);
+        } 
+        return c;
+    }
+
+    private invertColor(color: string) {
+        if (color.indexOf('#') === 0) {
+            color = color.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (color.length === 3) {
+            color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+        }
+        if (color.length === 6) {
+            // http://stackoverflow.com/a/3943023/112731
+            const r = this.convertToLinearRgb(parseInt(color.slice(0, 2), 16));
+            const g = this.convertToLinearRgb(parseInt(color.slice(2, 4), 16));
+            const b = this.convertToLinearRgb(parseInt(color.slice(4, 6), 16));
+
+            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+
+            return (L > 0.179)
+                ? '#000000'
+                : '#FFFFFF';
+        } else {
+            return color;
+        }
     }
 
     private renderOutput = (output : nbformat.IOutput, index: number) => {
