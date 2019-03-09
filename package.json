@@ -2213,7 +2213,7 @@
         "vscode-languageserver-protocol": "^3.10.3",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
-        "ws": "^6.2.0",
+        "ws": "^3.3.1",
         "xml2js": "^0.4.19"
     },
     "devDependencies": {
