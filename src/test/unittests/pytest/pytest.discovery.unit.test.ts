@@ -62,11 +62,8 @@ suite('Unit Tests - PyTest - Discovery', () => {
         helper.setup(a => a.mergeTests(typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.run(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
+        runner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
-                expect(opts.args).to.include('--cache-clear');
-                expect(opts.args).to.include('-s');
-                expect(opts.args).to.include('--collect-only');
                 expect(opts.args[opts.args.length - 1]).to.equal(dir);
             })
             .returns(() => Promise.resolve(runOutput))
@@ -108,11 +105,8 @@ suite('Unit Tests - PyTest - Discovery', () => {
         helper.setup(a => a.mergeTests(typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.run(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
+        runner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
-                expect(opts.args).to.include('--cache-clear');
-                expect(opts.args).to.include('-s');
-                expect(opts.args).to.include('--collect-only');
                 const dir = opts.args[opts.args.length - 1];
                 expect(dirs).to.include(dir);
                 dirs.splice(dirs.indexOf(dir) - 1, 1);
@@ -152,12 +146,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         argsService.setup(a => a.getTestFolders(typeMoq.It.isValue(args)))
             .returns(() => [''])
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.run(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
-            .callback((_, opts: Options) => {
-                expect(opts.args).to.include('--cache-clear');
-                expect(opts.args).to.include('-s');
-                expect(opts.args).to.include('--collect-only');
-            })
+        runner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
         testParser.setup(t => t.parse(typeMoq.It.isAny(), typeMoq.It.isAny()))

@@ -27,6 +27,10 @@ export class TestsParser implements ITestsParser {
      * @throws Error if invalid JSON is recieved from the Python adapter.
      */
     public parse(content: string, options: ParserOptions): Tests {
+        // check that there is something to parse...
+        if (content === undefined || content.length <= 0 || content.trim().length <= 0) {
+            return undefined;
+        }
 
         let testsDiscovered: DiscoveredTestData[];
         try {
