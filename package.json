@@ -91,7 +91,7 @@
         "onCommand:python.datascience.selectjupyteruri",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
-        "onCommand:python.python.enableSourceMapSupport"
+        "onCommand:python.enableSourceMapSupport"
     ],
     "main": "./out/client/extension",
     "contributes": {
