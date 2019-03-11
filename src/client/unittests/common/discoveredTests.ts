@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import {
-    TestFile, TestFunction, TestStatus, TestSuite
+    TestFile, TestFunction, TestSuite
 } from './types';
 
 /**

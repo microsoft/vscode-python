@@ -108,8 +108,8 @@ suite('PyTest parser used in discovery', () => {
     });
 
     test('Parser handles the case when there is no test information given', () => {
-        const [_, testHelper] = createTestsHelper();
-        const [__, options] = createParserOptions();
+        const [, testHelper] = createTestsHelper();
+        const [, options] = createParserOptions();
         const parser = new PyTestsParser(testHelper);
 
         let result: Tests = parser.parse('', options);
@@ -121,8 +121,8 @@ suite('PyTest parser used in discovery', () => {
     });
 
     test('Parser throws error when given invalid JSON string', () => {
-        const [_, testHelper] = createTestsHelper();
-        const [__, options] = createParserOptions();
+        const [, testHelper] = createTestsHelper();
+        const [, options] = createParserOptions();
         const parser = new PyTestsParser(testHelper);
         try {
             parser.parse('This is not JSON, it is just a string.', options);
