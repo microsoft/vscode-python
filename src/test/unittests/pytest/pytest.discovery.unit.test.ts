@@ -13,7 +13,7 @@ import { CancellationToken } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { PYTEST_PROVIDER } from '../../../client/unittests/common/constants';
 import {
-    ITestDiscoveryService, ITestRunner, ITestsHelper,
+    ITestDiscoveryRunner, ITestDiscoveryService, ITestsHelper,
     ITestsParser, Options, TestDiscoveryOptions, Tests
 } from '../../../client/unittests/common/types';
 import { TestDiscoveryService } from '../../../client/unittests/pytest/services/discoveryService';
@@ -25,20 +25,20 @@ suite('Unit Tests - PyTest - Discovery', () => {
     let discoveryService: ITestDiscoveryService;
     let argsService: typeMoq.IMock<IArgumentsService>;
     let testParser: typeMoq.IMock<ITestsParser>;
-    let runner: typeMoq.IMock<ITestRunner>;
+    let discoveryRunner: typeMoq.IMock<ITestDiscoveryRunner>;
     let helper: typeMoq.IMock<ITestsHelper>;
 
     setup(() => {
         const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         argsService = typeMoq.Mock.ofType<IArgumentsService>();
         testParser = typeMoq.Mock.ofType<ITestsParser>();
-        runner = typeMoq.Mock.ofType<ITestRunner>();
+        discoveryRunner = typeMoq.Mock.ofType<ITestDiscoveryRunner>();
         helper = typeMoq.Mock.ofType<ITestsHelper>();
 
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny()))
             .returns(() => argsService.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny()))
-            .returns(() => runner.object);
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestDiscoveryRunner), typeMoq.It.isAny()))
+            .returns(() => discoveryRunner.object);
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestsHelper), typeMoq.It.isAny()))
             .returns(() => helper.object);
 
@@ -62,7 +62,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         helper.setup(a => a.mergeTests(typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
+        discoveryRunner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args[opts.args.length - 1]).to.equal(dir);
             })
@@ -83,7 +83,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
 
         expect(result).to.be.equal(tests);
         argsService.verifyAll();
-        runner.verifyAll();
+        discoveryRunner.verifyAll();
         testParser.verifyAll();
         helper.verifyAll();
     });
@@ -105,7 +105,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         helper.setup(a => a.mergeTests(typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
+        discoveryRunner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 const dir = opts.args[opts.args.length - 1];
                 expect(dirs).to.include(dir);
@@ -128,7 +128,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
 
         expect(result).to.be.equal(tests);
         argsService.verifyAll();
-        runner.verifyAll();
+        discoveryRunner.verifyAll();
         testParser.verifyAll();
         helper.verifyAll();
     });
@@ -146,7 +146,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         argsService.setup(a => a.getTestFolders(typeMoq.It.isValue(args)))
             .returns(() => [''])
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
+        discoveryRunner.setup(r => r.discover(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
         testParser.setup(t => t.parse(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -167,7 +167,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
 
         await expect(promise).to.eventually.be.rejectedWith('cancelled');
         argsService.verifyAll();
-        runner.verifyAll();
+        discoveryRunner.verifyAll();
         testParser.verifyAll();
     });
 });

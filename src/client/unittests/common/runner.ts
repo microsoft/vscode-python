@@ -2,7 +2,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { ErrorUtils } from '../../common/errors/errorUtils';
-import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
+import {
+    ModuleNotInstalledError
+} from '../../common/errors/moduleNotInstalledError';
 import {
     IPythonExecutionFactory,
     IPythonExecutionService,
@@ -10,10 +12,17 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
-import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
+import {
+    ExecutionInfo, IConfigurationService, IPythonSettings
+} from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
-import { ITestRunner, ITestsHelper, Options, TestProvider } from './types';
+import {
+    NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER
+} from './constants';
+import {
+    ITestDiscoveryRunner, ITestRunner, ITestsHelper,
+    Options, TestProvider
+} from './types';
 export { Options } from './types';
 
 const TEST_DISCOVERY_ADAPTER = path.join(
@@ -24,8 +33,9 @@ const TEST_DISCOVERY_ADAPTER = path.join(
 );
 
 @injectable()
-export class TestRunner implements ITestRunner {
+export class TestRunner implements ITestRunner, ITestDiscoveryRunner {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+
     public async run(testProvider: TestProvider, options: Options): Promise<string> {
         return run(this.serviceContainer, testProvider, options);
     }
@@ -51,27 +61,9 @@ export class TestRunner implements ITestRunner {
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
         const spawnOptions = options as SpawnOptions;
         spawnOptions.mergeStdOutErr = typeof spawnOptions.mergeStdOutErr === 'boolean' ? spawnOptions.mergeStdOutErr : true;
-        const promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
-
-        return promise.then(result => {
-            return new Promise<string>((resolve, reject) => {
-                let stdOut = '';
-                let stdErr = '';
-
-                result.out.subscribe(output => {
-                    stdOut += output.out;
-                    // If the test runner python module is not installed we'll have something in stderr.
-                    // Hence track that separately and check at the end.
-                    if (output.source === 'stderr') {
-                        stdErr += output.out;
-                    }
-                    if (options.outChannel) {
-                        options.outChannel.append(output.out);
-                    }
-                }, reject, async () => {
-                    resolve(stdOut);
-                });
-            });
+        const result = pythonToolsExecutionService.exec(executionInfo, spawnOptions, options.workspaceFolder);
+        return result.then((execResult) => {
+            return execResult.stdout;
         });
     }
 }

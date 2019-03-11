@@ -274,6 +274,10 @@ export type Options = {
 export const ITestRunner = Symbol('ITestRunner');
 export interface ITestRunner {
     run(testProvider: TestProvider, options: Options): Promise<string>;
+}
+
+export const ITestDiscoveryRunner = Symbol('ITestDiscoveryRunner');
+export interface ITestDiscoveryRunner {
     discover(testProvider: TestProvider, options: Options): Promise<string>;
 }
 

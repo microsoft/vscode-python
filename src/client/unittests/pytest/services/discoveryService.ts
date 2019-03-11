@@ -8,7 +8,7 @@ import { CancellationTokenSource } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import {
-    ITestDiscoveryService, ITestRunner, ITestsHelper,
+    ITestDiscoveryRunner, ITestDiscoveryService, ITestsHelper,
     ITestsParser, Options, TestDiscoveryOptions, Tests
 } from '../../common/types';
 import { IArgumentsService, TestFilter } from '../../types';
@@ -18,7 +18,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
 
     private argsService: IArgumentsService;
     private helper: ITestsHelper;
-    private runner: ITestRunner;
+    private discoveryRunner: ITestDiscoveryRunner;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -26,7 +26,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
     ) {
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER);
         this.helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-        this.runner = this.serviceContainer.get<ITestRunner>(ITestRunner);
+        this.discoveryRunner = this.serviceContainer.get<ITestDiscoveryRunner>(ITestDiscoveryRunner);
     }
 
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
@@ -69,7 +69,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             outChannel: options.outChannel
         };
 
-        const data = await this.runner.discover(PYTEST_PROVIDER, discoveryOpts);
+        const data = await this.discoveryRunner.discover(PYTEST_PROVIDER, discoveryOpts);
         if (options.token && options.token.isCancellationRequested) {
             return Promise.reject<Tests>('cancelled');
         }

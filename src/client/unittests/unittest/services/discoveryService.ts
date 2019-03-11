@@ -5,7 +5,10 @@ import { inject, injectable, named } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { Options } from '../../common/runner';
-import { ITestDiscoveryService, ITestRunner, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
+import {
+    ITestDiscoveryService, ITestRunner, ITestsParser,
+    TestDiscoveryOptions, Tests
+} from '../../common/types';
 import { IArgumentsHelper } from '../../types';
 
 type UnitTestDiscoveryOptions = TestDiscoveryOptions & {

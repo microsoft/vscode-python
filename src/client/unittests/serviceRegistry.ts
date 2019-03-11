@@ -20,10 +20,10 @@ import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
     ITestCollectionStorageService, ITestContextService,
-    ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory,
-    ITestManagerService, ITestManagerServiceFactory, ITestMessageService, ITestResultsService,
-    ITestRunner, ITestsHelper, ITestsParser, ITestsStatusUpdaterService, ITestVisitor,
-    IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
+    ITestDebugLauncher, ITestDiscoveryRunner, ITestDiscoveryService, ITestManager,
+    ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory, ITestMessageService,
+    ITestResultsService, ITestRunner, ITestsHelper, ITestsParser, ITestsStatusUpdaterService,
+    ITestVisitor, IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
 } from './common/types';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
@@ -87,6 +87,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
     serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
+    serviceManager.add<ITestDiscoveryRunner>(ITestDiscoveryRunner, TestRunner);
     serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);
     serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
 
