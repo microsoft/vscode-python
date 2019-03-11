@@ -94,7 +94,7 @@ suite('Test discovery API parser and transformer', () => {
     test('Discovered test produces a valid TestFunction', () => {
         const testData = createDiscoveredTestData();
         const discTest = new DiscoveredTest(testData);
-        const testFn = discTest.toTestFunction();
+        const testFn = DiscoveredTest.toTestFunction(discTest);
 
         expect(testFn.name).to.be.equal(testFunction);
         expect(testFn.nameToRun).to.be.equal(`${testFolder}/${testFileBase}.py::${testSuite}::${testFunction}`);
@@ -104,7 +104,7 @@ suite('Test discovery API parser and transformer', () => {
     test('Discovered test produces a valid TestSuite', () => {
         const testData = createDiscoveredTestData();
         const discTest = new DiscoveredTest(testData);
-        const suite = discTest.toTestSuite();
+        const suite = DiscoveredTest.toTestSuite(discTest);
         expect(suite.name).to.be.equal(testSuite);
         expect(suite.nameToRun).to.be.equal(`${testFolder}/${testFileBase}.py::${testSuite}`);
         expect(suite.isInstance).to.be.equal(false, 'isInstance field should be false.');
@@ -119,7 +119,7 @@ suite('Test discovery API parser and transformer', () => {
     test('Discovered test produces a valid TestFile', () => {
         const testData = createDiscoveredTestData();
         const discTest = new DiscoveredTest(testData);
-        const testFile = discTest.toTestFile();
+        const testFile = DiscoveredTest.toTestFile(discTest);
         expect(testFile.name).to.be.equal(`${testFolder}/${testFileBase}.py`, 'File name does not match the correct file name.');
         expect(testFile.nameToRun).to.be.equal(`${testFolder}/${testFileBase}.py`, 'Name to run does not match the correct pattern.');
         expect(testFile.xmlName).to.be.equal(`${testFolder}.${testFileBase}`, 'xmlName does not include folder and file base name.');
@@ -131,13 +131,13 @@ suite('Test discovery API parser and transformer', () => {
     test('Merging a function into a file is correct', () => {
         const testData = createDiscoveredTestData();
         const discTest = new DiscoveredTest(testData);
-        const testFile = discTest.toTestFile();
+        const testFile = DiscoveredTest.toTestFile(discTest);
 
         // create a second test function in this same file
         const testData2 = createDiscoveredTestData(undefined, undefined, 'TestSuite2', 'test_function_two');
         const discTest2 = new DiscoveredTest(testData2);
 
-        const resultOfMerge = discTest2.addToFile(testFile);
+        const resultOfMerge = DiscoveredTest.addToFile(discTest2, testFile);
         expect(resultOfMerge).to.be.equal(true, 'Could not successfully merge two test functions in the same file/suite.');
 
         expect(testFile.suites.length).to.be.equal(2, 'The merged test file should contain two distinct suites.');
@@ -151,13 +151,13 @@ suite('Test discovery API parser and transformer', () => {
     test('Merging a suite into another suite is correct', () => {
         const testData = createDiscoveredTestData();
         const discTest = new DiscoveredTest(testData);
-        const testFile = discTest.toTestFile();
+        const testFile = DiscoveredTest.toTestFile(discTest);
 
         // create a second test function in this same file
         const testData2 = createDiscoveredTestData(undefined, undefined, undefined, 'test_function_two');
         const discTest2 = new DiscoveredTest(testData2);
 
-        const resultOfMerge = discTest2.addToSuite(testFile.suites);
+        const resultOfMerge = DiscoveredTest.addToSuite(discTest2, testFile.suites);
         expect(resultOfMerge).to.be.equal(true, 'Could not successfully merge two test functions into the same suite.');
 
         expect(testFile.suites.length).to.be.equal(1);

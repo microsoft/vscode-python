@@ -47,9 +47,9 @@ export class TestsParser implements ITestsParser {
             const tstFile: TestFile = testsParsed.get(dt.relfile);
             if (tstFile !== undefined) {
                 // we've already encountered this test file, merge this function into it
-                dt.addToFile(tstFile);
+                DiscoveredTest.addToFile(dt, tstFile);
             } else {
-                testsParsed.set(dt.relfile, dt.toTestFile());
+                testsParsed.set(dt.relfile, DiscoveredTest.toTestFile(dt));
             }
         });
 

@@ -47,21 +47,21 @@ export class DiscoveredTest {
      * Convert this test function to the TestSuite hierarchy that it is contained in, filling
      * in all fields of each suite and sub-suite required by the extension.
      *
+     * @param from The DiscoveredTest to convert into a `TestSuite`.
      * @returns `TestSuite` containing the function (and any sub-suites), or if this function
      *                      is not contained in a test suite, returns undefined
      */
-    public toTestSuite(): TestSuite {
-        const suiteNames = this.testfunc.split('.');
+    public static toTestSuite(from: DiscoveredTest): TestSuite {
+        const suiteNames = from.testfunc.split('.');
         suiteNames.pop(); // remove the function leaving only the suites.
         let resultSuites: TestSuite;
         let currentSuite: TestSuite[];
 
         while (suiteNames.length > 0) {
             const suiteName = suiteNames.pop();
-            const normalized = path.normalize(this.relfile).replace(/\\/g, '/');
-            const pathParts = path.parse(normalized);
+            const normalized = path.normalize(from.relfile).replace(/\\/g, '/');
             const nameToRun = [normalized, ...suiteNames, suiteName].join('::');
-            const xmlName = [this.toFileXmlName(), ...suiteNames, suiteName].join('.');
+            const xmlName = [from.toFileXmlName(), ...suiteNames, suiteName].join('.');
             const suiteToAdd: TestSuite = {
                 //file: this.relfile,
                 functions: [],
@@ -77,7 +77,7 @@ export class DiscoveredTest {
 
             if (suiteNames.length <= 0) {
                 // this is the last suite, push the function into it
-                suiteToAdd.functions.push(this.toTestFunction());
+                suiteToAdd.functions.push(DiscoveredTest.toTestFunction(from));
             }
 
             if (resultSuites === undefined) {
@@ -98,17 +98,111 @@ export class DiscoveredTest {
      * Convert discovered test function to the TestFunction format, filling in all the
      * necessary fields for the extension to use elsewhere.
      *
+     * @param from The DiscoveredTest to convert into a `TestFunction`.
      * @returns this test function in `TestFunction` form.
      */
-    public toTestFunction(): TestFunction {
+    public static toTestFunction(from: DiscoveredTest): TestFunction {
         return {
             //file: this.relfile,
             //line: this.lineno,
             name: this.name,
-            nameToRun: this.id,
+            nameToRun: from.id,
             //status: TestStatus.Idle,
             time: 0
         };
+    }
+
+    /**
+     * Convert this test function to the `TestFile` that contains it, filling in
+     * the suites and sub-suites hierarchy as well. Fill in only those fields required
+     * for the rest of the extension.
+     *
+     * @param from The DiscoveredTest to convert into a `TestFile`.
+     * @returns This discovered test function as a `TestFile` with the suite hierarchy in place.
+     */
+    public static toTestFile(from: DiscoveredTest): TestFile {
+        const fullPath = path.join(from.testroot, from.relfile);
+        // if this function is in a suite, set up the suite hierarchy
+        const suites: TestSuite[] = from.isInSuite ? [DiscoveredTest.toTestSuite(from)] : [];
+        // otherwise if this is a bare function in the file, just add this function directly to the file.
+        const functions: TestFunction[] = from.isInSuite ? [] : [DiscoveredTest.toTestFunction(from)];
+        // test file name is also the name to run.
+        const name = from.getTestFileName();
+
+        return {
+            fullPath,
+            functions,
+            name,
+            nameToRun: name,
+            //status: TestStatus.Idle,
+            suites,
+            time: 0,
+            xmlName: from.toFileXmlName()
+        };
+    }
+
+    /**
+     * Merge this test function into a list of already found test suites, in the approprate place in the
+     * hierarchy.
+     *
+     * @param from The DiscoveredTest to add to a list of `TestSuite`.
+     * @param testSuites The current test suites in the hierarchy to find where this test function belongs
+     * @returns `true` if the given `from` is a test suite (and is added to the test suites list, or one of
+     *          the subordinate test suite's lists). `false` if the given `from` is not a test within a suite.
+     */
+    public static addToSuite(from: DiscoveredTest, testSuites: TestSuite[]): boolean {
+        let mySuite = DiscoveredTest.toTestSuite(from);
+
+        // ensure we are in a suite first, exit otherwise
+        if (mySuite === undefined) {
+            return false;
+        }
+
+        // begin walking recursively through the testSuites hierarchy as this function's suites match
+        let childSuites = testSuites;
+        let owningSuite = childSuites.find((ts: TestSuite) => ts.name === mySuite.name);
+
+        while (owningSuite !== undefined) {
+            if (mySuite.suites.length <= 0) {
+                // we've run out of child suites from my function - push the function into this owning suite.
+                owningSuite.functions.push(...mySuite.functions);
+                break;
+            }
+
+            // drop to the next level in the found owning suite's hierarchy
+            childSuites = owningSuite.suites;
+            // drop to the next level in this test's hierarchy
+            mySuite = mySuite.suites[0];
+            owningSuite = childSuites.find((ts: TestSuite) => ts.name === mySuite.name);
+        }
+
+        // if we got to the end of the owning suite's hierarchy and still have a part of this
+        // function's hierarchy left, push this function's hierarchy into the childSuites.
+        if (owningSuite === undefined) {
+            childSuites.push(mySuite);
+        }
+        return true;
+    }
+
+    /**
+     * Merge this test function into an already-found test file that matches this functions
+     * test file.
+     *
+     * @param from The DiscoveredTest to merge into the given `testFile`.
+     * @param testFile The test file to merge into.
+     * @returns `true` if the given `from` test exists within the given `testFile`, `false otherwise.
+     */
+    public static addToFile(from: DiscoveredTest, testFile: TestFile): boolean {
+        // quick test to ensure this test function actually belongs in this file...
+        if (from.getTestFileName() !== testFile.name) {
+            return false;
+        }
+
+        if (!DiscoveredTest.addToSuite(from, testFile.suites)) {
+            // this function is not in a suite hierarchy, push it into the direct functions of this file
+            testFile.functions.push(DiscoveredTest.toTestFunction(from));
+        }
+        return true;
     }
 
     /**
@@ -148,92 +242,5 @@ export class DiscoveredTest {
             xmlName = [...dirParts, xmlName].join('.');
         }
         return xmlName;
-    }
-
-    /**
-     * Convert this test function to the `TestFile` that contains it, filling in
-     * the suites and sub-suites hierarchy as well. Fill in only those fields required
-     * for the rest of the extension.
-     *
-     * @returns This discovered test function as a `TestFile` with the suite hierarchy in place.
-     */
-    public toTestFile(): TestFile {
-        const fullPath = path.join(this.testroot, this.relfile);
-        // if this function is in a suite, set up the suite hierarchy
-        const suites: TestSuite[] = this.isInSuite ? [this.toTestSuite()] : [];
-        // otherwise if this is a bare function in the file, just add this function directly to the file.
-        const functions: TestFunction[] = this.isInSuite ? [] : [this.toTestFunction()];
-        // test file name is also the name to run.
-        const name = this.getTestFileName();
-
-        return {
-            fullPath,
-            functions,
-            name,
-            nameToRun: name,
-            //status: TestStatus.Idle,
-            suites,
-            time: 0,
-            xmlName: this.toFileXmlName()
-        };
-    }
-
-    /**
-     * Merge this test function into a list of already found test suites, in the approprate place in the
-     * hierarchy.
-     *
-     * @param testSuites The current test suites in the hierarchy to find where this test function belongs
-     */
-    public addToSuite(testSuites: TestSuite[]): boolean {
-        let mySuite = this.toTestSuite();
-
-        // ensure we are in a suite first, exit otherwise
-        if (mySuite === undefined) {
-            return false;
-        }
-
-        // begin walking recursively through the testSuites hierarchy as this function's suites match
-        let childSuites = testSuites;
-        let owningSuite = childSuites.find((ts: TestSuite) => ts.name === mySuite.name);
-
-        while (owningSuite !== undefined) {
-            if (mySuite.suites.length <= 0) {
-                // we've run out of child suites from my function - push the function into this owning suite.
-                owningSuite.functions.push(...mySuite.functions);
-                break;
-            }
-
-            // drop to the next level in the found owning suite's hierarchy
-            childSuites = owningSuite.suites;
-            // drop to the next level in this test's hierarchy
-            mySuite = mySuite.suites[0];
-            owningSuite = childSuites.find((ts: TestSuite) => ts.name === mySuite.name);
-        }
-
-        // if we got to the end of the owning suite's hierarchy and still have a part of this
-        // function's hierarchy left, push this function's hierarchy into the childSuites.
-        if (owningSuite === undefined) {
-            childSuites.push(mySuite);
-        }
-        return true;
-    }
-
-    /**
-     * Merge this test function into an already-found test file that matches this functions
-     * test file.
-     *
-     * @param testFile The test file to merge into.
-     */
-    public addToFile(testFile: TestFile): boolean {
-        // quick test to ensure this test function actually belongs in this file...
-        if (this.getTestFileName() !== testFile.name) {
-            return false;
-        }
-
-        if (!this.addToSuite(testFile.suites)) {
-            // this function is not in a suite hierarchy, push it into the direct functions of this file
-            testFile.functions.push(this.toTestFunction());
-        }
-        return true;
     }
 }
