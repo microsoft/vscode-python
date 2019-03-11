@@ -851,6 +851,11 @@ export interface IWebPanel {
      * Sends a message to the hosted html page
      */
     postMessage(message: WebPanelMessage): void;
+
+    /**
+     * Attempts to close the panel if it's visible
+     */
+    close(): void;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -870,4 +875,12 @@ export interface IWebPanelProvider {
 export const ILiveShareApi = Symbol('ILiveShareApi');
 export interface ILiveShareApi {
     getApi(): Promise<vsls.LiveShare | null>;
+}
+
+// Wraps the liveshare api for testing
+export const ILiveShareTestingApi = Symbol('ILiveShareTestingApi');
+export interface ILiveShareTestingApi extends ILiveShareApi {
+    isSessionStarted: boolean;
+    forceRole(role: vsls.Role);
+    startSession() : Promise<void>;
 }

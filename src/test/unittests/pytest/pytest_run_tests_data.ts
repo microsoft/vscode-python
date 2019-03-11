@@ -392,7 +392,7 @@ export interface ITestScenarioDetails {
     scenarioName: string;
     discoveryOutput: string;
     runOutput: string;
-    testsToRun: TestsToRun;
+    testsToRun?: TestsToRun;
     testDetails?: ITestDetails[];
     testSuiteIndex?: number;
     testFunctionIndex?: number;

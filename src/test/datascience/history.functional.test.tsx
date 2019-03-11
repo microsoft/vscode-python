@@ -4,12 +4,11 @@
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
-import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, Disposable, TextDocument, TextEditor } from 'vscode';
+import { Disposable, TextDocument, TextEditor } from 'vscode';
 
 import {
     IApplicationShell,
@@ -19,8 +18,6 @@ import {
     IWebPanelProvider,
     WebPanelMessage
 } from '../../client/common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
@@ -32,26 +29,32 @@ import { InterpreterType, PythonInterpreter } from '../../client/interpreter/con
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
-import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import {
+    addCode,
+    addContinuousMockData,
+    addMockData,
+    CellInputState,
+    CellPosition,
+    defaultDataScienceSettings,
+    enterInput,
+    escapePath,
+    findButton,
+    getCellResults,
+    getLastOutputCell,
+    getMainPanel,
+    initialDataScienceSettings,
+    srcDirectory,
+    toggleCellExpansion,
+    updateDataScienceSettings,
+    verifyHtmlOnCell,
+    verifyLastCellInputState
+} from './historyTestHelpers';
 import { SupportedCommands } from './mockJupyterManager';
-import { blurWindow, createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { blurWindow, waitForUpdate } from './reactHelpers';
 
-//tslint:disable:trailing-comma no-any no-multiline-string
-enum CellInputState {
-    Hidden,
-    Visible,
-    Collapsed,
-    Expanded
-}
-
-enum CellPosition {
-    First = 'first',
-    Last = 'last'
-}
-
-// tslint:disable-next-line:max-func-body-length no-any
+// tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('History output tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
@@ -153,30 +156,10 @@ suite('History output tests', () => {
         return result;
     }
 
-    function addMockData(code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
-        if (ioc.mockJupyter) {
-            if (cellType && cellType === 'error') {
-                ioc.mockJupyter.addError(code, result ? result.toString() : '');
-            } else {
-                if (result) {
-                    ioc.mockJupyter.addCell(code, result, mimeType);
-                } else {
-                    ioc.mockJupyter.addCell(code);
-                }
-            }
-        }
-    }
-
-    function addContinuousMockData(code: string, resultGenerator: (c: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
-        if (ioc.mockJupyter) {
-            ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
-        }
-    }
-
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
         test(name, async () => {
-            addMockData('a=1\na', 1);
+            addMockData(ioc, 'a=1\na', 1);
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
                 const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
@@ -197,88 +180,6 @@ suite('History output tests', () => {
         });
     }
 
-    function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : ReactWrapper<any, Readonly<{}>, React.Component> {
-        // Skip the edit cell
-        const foundResult = wrapper.find('Cell');
-        assert.ok(foundResult.length >= 2, 'Didn\'t find any cells being rendered');
-        return foundResult.at(foundResult.length - 2);
-    }
-
-    function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
-        const foundResult = wrapper.find('Cell');
-        assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
-
-        let targetCell: ReactWrapper;
-        // Get the correct result that we are dealing with
-        if (typeof cellIndex === 'number') {
-            if (cellIndex >= 0 && cellIndex <= (foundResult.length - 1)) {
-                targetCell = foundResult.at(cellIndex);
-            }
-        } else if (typeof cellIndex === 'string') {
-            switch (cellIndex) {
-                case CellPosition.First:
-                    targetCell = foundResult.first();
-                    break;
-
-                case CellPosition.Last:
-                    // Skip the input cell on these checks.
-                    targetCell = getLastOutputCell(wrapper);
-                    break;
-
-                default:
-                    // Fall through, targetCell check will fail out
-                    break;
-            }
-        }
-
-        // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
-        assert.ok(targetCell!, 'Target cell doesn\'t exist');
-
-        // If html is specified, check it
-        if (html) {
-            // Extract only the first 100 chars from the input string
-            const sliced = html.substr(0, min([html.length, 100]));
-            const output = targetCell!.find('div.cell-output');
-            assert.ok(output.length > 0, 'No output cell found');
-            const outHtml = output.html();
-            assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
-        } else {
-            // html not specified, look for an empty render
-            assert.ok(targetCell!.isEmptyRender(), 'Target cell is not empty render');
-        }
-    }
-
-    function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, state: CellInputState) {
-
-        const lastCell = getLastOutputCell(wrapper);
-        assert.ok(lastCell, 'Last call doesn\'t exist');
-
-        const inputBlock = lastCell.find('div.cell-input');
-        const toggleButton = lastCell.find('polygon.collapse-input-svg');
-
-        switch (state) {
-            case CellInputState.Hidden:
-                assert.ok(inputBlock.length === 0, 'Cell input not hidden');
-                break;
-
-            case CellInputState.Visible:
-                assert.ok(inputBlock.length === 1, 'Cell input not visible');
-                break;
-
-            case CellInputState.Expanded:
-                assert.ok(toggleButton.html().includes('collapse-input-svg-rotate'), 'Cell input toggle not expanded');
-                break;
-
-            case CellInputState.Collapsed:
-                assert.ok(!toggleButton.html().includes('collapse-input-svg-rotate'), 'Cell input toggle not collapsed');
-                break;
-
-            default:
-                assert.fail('Unknown cellInputStat');
-                break;
-        }
-    }
-
     async function waitForMessageResponse(action: () => void): Promise<void> {
         webPanelMessagePromise = createDeferred();
         action();
@@ -286,110 +187,8 @@ suite('History output tests', () => {
         webPanelMessagePromise = undefined;
     }
 
-    async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-
-        // Get a render promise with the expected number of renders
-        const renderPromise = waitForUpdate(wrapper, MainPanel, expectedRenders);
-
-        // Call our function to update the react control
-        await updater();
-
-        // Wait for all of the renders to go through
-        await renderPromise;
-
-        // Return the result
-        return wrapper.find('Cell');
-    }
-
-    async function addCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        // Adding code should cause 5 renders to happen.
-        // 1) Input
-        // 2) Status ready
-        // 3) Execute_Input message
-        // 4) Output message (if there's only one)
-        // 5) Status finished
-        return getCellResults(wrapper, expectedRenderCount, async () => {
-            const history = await getOrCreateHistory();
-            await history.addCode(code, 'foo.py', 2);
-        });
-    }
-
-    function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean) {
-        // Submit a keypress into the textarea. Simulate doesn't work here because the keydown
-        // handler is not registered in any react code. It's being handled with DOM events
-
-        // According to this:
-        // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Usage_notes
-        // The normal events are
-        // 1) keydown
-        // 2) keypress
-        // 3) keyup
-        let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown });
-
-        // Dispatch. Result can be swallowed. If so skip the next event.
-        let result = domNode.dispatchEvent(event);
-        if (result) {
-            event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown });
-            result = domNode.dispatchEvent(event);
-            if (result) {
-                event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown });
-                domNode.dispatchEvent(event);
-
-                // Dispatch an input event so we update the textarea
-                domNode.value = domNode.value + key;
-                domNode.dispatchEvent(createInputEvent());
-            }
-        }
-
-    }
-
-    async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement) : Promise<void> {
-        // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
-        // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-        const renderPromise = waitForUpdate(wrapper, MainPanel, 6);
-
-        // Submit a keypress into the textarea
-        simulateKey(textArea, '\n', true);
-
-        return renderPromise;
-    }
-
-    function enterKey(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
-        // Simulate a key press
-        simulateKey(textArea, key);
-    }
-
-    async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-
-        // First we have to type the code into the input box
-
-        // Find the last cell. It should have a CodeMirror object. We need to search
-        // through its DOM to find the actual codemirror textarea to send input to
-        // (we can't actually find it with the enzyme wrappers because they only search
-        //  React accessible nodes and the codemirror html is not react)
-        const cells = wrapper.find('Cell');
-        const lastCell = cells.last();
-        const rcm = lastCell.find('div.ReactCodeMirror');
-        const rcmDom = rcm.getDOMNode();
-        assert.ok(rcmDom, 'rcm DOM object not found');
-        const textArea = rcmDom!.querySelector('.CodeMirror')!.querySelector('textarea');
-        assert.ok(textArea!, 'Cannot find the textarea inside the code mirror');
-        textArea!.focus();
-
-        // Now simulate entering all of the keys
-        for (let i = 0; i < code.length; i += 1) {
-            enterKey(wrapper, textArea!, code.charAt(i));
-        }
-
-        // Now simulate a shift enter. This should cause a new cell to be added
-        await submitInput(wrapper, textArea!);
-
-        // Return the result
-        return wrapper.find('Cell');
-    }
-
     runMountedTest('Simple text', async (wrapper) => {
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
@@ -397,13 +196,13 @@ suite('History output tests', () => {
     runMountedTest('Hide inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Hidden);
 
         // Add a cell without output, this cell should not show up at all
-        addMockData('a=1', undefined, 'text/plain');
-        await addCode(wrapper, 'a=1', 4);
+        addMockData(ioc, 'a=1', undefined, 'text/plain');
+        await addCode(getOrCreateHistory, wrapper, 'a=1', 4);
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.First);
         verifyHtmlOnCell(wrapper, undefined, CellPosition.Last);
@@ -412,7 +211,7 @@ suite('History output tests', () => {
     runMountedTest('Show inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
 
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -420,14 +219,14 @@ suite('History output tests', () => {
 
     runMountedTest('Expand inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Expanded);
     });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -445,7 +244,7 @@ suite('History output tests', () => {
 
     runMountedTest('Hide / show cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -461,71 +260,6 @@ suite('History output tests', () => {
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
     });
-
-    // The default base set of data science settings to use
-    function defaultDataScienceSettings(): IDataScienceSettings {
-        return {
-            allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 10,
-            enabled: true,
-            jupyterServerURI: 'local',
-            notebookFileRoot: 'WORKSPACE',
-            changeDirOnImportExport: true,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            maxOutputSize: 400,
-            sendSelectionToInteractiveWindow: false,
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
-        };
-    }
-
-    // Set initial data science settings to use for a test (initially loaded via settingsReactSide.ts)
-    function initialDataScienceSettings(newSettings: IDataScienceSettings) {
-        const settingsString = JSON.stringify(newSettings);
-        updateSettings(settingsString);
-    }
-
-    function getMainPanel(wrapper: ReactWrapper<any, Readonly<{}>>) : MainPanel | undefined {
-        const mainObj = wrapper.find(MainPanel);
-        if (mainObj) {
-            return mainObj.instance() as MainPanel;
-        }
-
-        return undefined;
-    }
-
-    // Update data science settings while running (goes through the UpdateSettings channel)
-    function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}>>, newSettings: IDataScienceSettings) {
-        const settingsString = JSON.stringify(newSettings);
-        mainPanel = getMainPanel(wrapper);
-        if (mainPanel) {
-            mainPanel.handleMessage(HistoryMessages.UpdateSettings, settingsString);
-        }
-        wrapper.update();
-    }
-
-    function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-        // Find the last cell added
-        const lastCell = getLastOutputCell(wrapper);
-        assert.ok(lastCell, 'Last call doesn\'t exist');
-
-        const toggleButton = lastCell.find('button.collapse-input');
-        assert.ok(toggleButton);
-        toggleButton.simulate('click');
-    }
-
-    function escapePath(p: string) {
-        return p.replace(/\\/g, '\\\\');
-    }
-
-    function srcDirectory() {
-        return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-    }
 
     runMountedTest('Mime Types', async (wrapper) => {
 
@@ -552,13 +286,13 @@ for _ in range(50):
     time.sleep(0.1)
     sys.stdout.write('\\r')`;
 
-        addMockData(badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
-        addMockData(goodPanda, `<td>A table</td>`, 'text/html');
-        addMockData(matPlotLib, matPlotLibResults, 'text/html');
+        addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
+        addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
+        addMockData(ioc, matPlotLib, matPlotLibResults, 'text/html');
         const cursors = ['|', '/', '-', '\\'];
         let cursorPos = 0;
         let loops = 3;
-        addContinuousMockData(spinningCursor, async (c) => {
+        addContinuousMockData(ioc, spinningCursor, async (c) => {
             const result = `${cursors[cursorPos]}\r`;
             cursorPos += 1;
             if (cursorPos >= cursors.length) {
@@ -568,16 +302,16 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCode(wrapper, badPanda, 4);
+        await addCode(getOrCreateHistory, wrapper, badPanda, 4);
         verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
 
-        await addCode(wrapper, goodPanda);
+        await addCode(getOrCreateHistory, wrapper, goodPanda);
         verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
 
-        await addCode(wrapper, matPlotLib);
+        await addCode(getOrCreateHistory, wrapper, matPlotLib);
         verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
-        await addCode(wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        await addCode(getOrCreateHistory, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
     });
 
@@ -585,7 +319,7 @@ for _ in range(50):
         const history = await getOrCreateHistory();
 
         // Get a cell into the list
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         // Now verify if we undo, we have no cells
         let afterUndo = await getCellResults(wrapper, 1, () => {
@@ -603,7 +337,7 @@ for _ in range(50):
         assert.equal(afterRedo.length, 2, 'Redo should put cells back');
 
         // Get another cell into the list
-        const afterAdd = await addCode(wrapper, 'a=1\na');
+        const afterAdd = await addCode(getOrCreateHistory, wrapper, 'a=1\na');
         assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
@@ -622,16 +356,6 @@ for _ in range(50):
         assert.equal(afterUndo.length, 3, `Undo should put cells back`);
     });
 
-    function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
-        const mainObj = wrapper.find(MainPanel);
-        if (mainObj) {
-            const buttons = mainObj.find(CellButton);
-            if (buttons) {
-                return buttons.at(index);
-            }
-        }
-    }
-
     runMountedTest('Click buttons', async (wrapper) => {
         // Goto source should cause the visible editor to be picked as long as its filename matches
         const showedEditor = createDeferred();
@@ -648,7 +372,7 @@ for _ in range(50):
         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
         // Get a cell into the list
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         // 'Click' the buttons in the react control
         const undo = findButton(wrapper, 5);
@@ -671,7 +395,7 @@ for _ in range(50):
         assert.equal(afterRedo.length, 2, 'Redo should put cells back');
 
         // Get another cell into the list
-        const afterAdd = await addCode(wrapper, 'a=1\na');
+        const afterAdd = await addCode(getOrCreateHistory, wrapper, 'a=1\na');
         assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
@@ -725,7 +449,7 @@ for _ in range(50):
         ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Make sure to create the history after the rebind or it gets the wrong application shell.
-        await addCode(wrapper, 'a=1\na');
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
         const history = await getOrCreateHistory();
 
         // Export should cause exportCalled to change to true
@@ -869,7 +593,7 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
         // Try a 3rd time with some new input
-        addMockData('print("hello")', 'hello');
+        addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
         verifyHtmlOnCell(wrapper, '<span>hello</span>', CellPosition.Last);
     });

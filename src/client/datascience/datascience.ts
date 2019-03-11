@@ -98,6 +98,52 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public async runAllCellsAbove(file: string, stopLine: number, stopCharacter: number): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        if (file) {
+            const codeWatcher = this.getCodeWatcher(file);
+
+            if (codeWatcher) {
+                return codeWatcher.runAllCellsAbove(stopLine, stopCharacter);
+            }
+        }
+    }
+
+    public async runCellAndAllBelow(file: string, startLine: number, startCharacter: number): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        if (file) {
+            const codeWatcher = this.getCodeWatcher(file);
+
+            if (codeWatcher) {
+                return codeWatcher.runCellAndAllBelow(startLine, startCharacter);
+            }
+        }
+    }
+
+    public async runToLine(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        const textEditor = this.documentManager.activeTextEditor;
+
+        if (activeCodeWatcher && textEditor && textEditor.selection) {
+            return activeCodeWatcher.runToLine(textEditor.selection.start.line);
+        }
+    }
+
+    public async runFromLine(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        const textEditor = this.documentManager.activeTextEditor;
+
+        if (activeCodeWatcher && textEditor && textEditor.selection) {
+            return activeCodeWatcher.runFromLine(textEditor.selection.start.line);
+        }
+    }
+
     public async runCurrentCell(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
@@ -223,6 +269,14 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.ExecSelectionInInteractiveWindow, this.runSelectionOrLine, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterURI, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunToLine, this.runToLine, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunFromLine, this.runFromLine, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

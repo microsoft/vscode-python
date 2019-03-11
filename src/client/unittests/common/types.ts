@@ -232,7 +232,7 @@ export interface ITestManager extends Disposable {
     readonly onDidStatusChange: Event<WorkspaceTestStatus>;
     stop(): void;
     resetTestResults(): void;
-    discoverTests(cmdSource: CommandSource, ignoreCache?: boolean, quietMode?: boolean, userInitiated?: boolean): Promise<Tests>;
+    discoverTests(cmdSource: CommandSource, ignoreCache?: boolean, quietMode?: boolean, userInitiated?: boolean, clearTestStatus?: boolean): Promise<Tests>;
     runTest(cmdSource: CommandSource, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests>;
 }
 

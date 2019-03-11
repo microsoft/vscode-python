@@ -51,6 +51,12 @@ export class WebPanel implements IWebPanel {
         }
     }
 
+    public close() {
+        if (this.panel) {
+            this.panel.dispose();
+        }
+    }
+
     public isVisible() : boolean {
         return this.panel ? this.panel.visible : false;
     }

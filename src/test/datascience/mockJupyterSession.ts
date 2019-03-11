@@ -64,8 +64,8 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
-    public async dispose(): Promise<void> {
-        await sleep(10);
+    public dispose(): Promise<void> {
+        return sleep(10);
     }
 
     public getExecutes() : string [] {

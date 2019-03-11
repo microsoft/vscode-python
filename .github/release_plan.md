@@ -24,6 +24,7 @@
 - [ ] Update [Component Governance](https://vscode-python.visualstudio.com/VSCode-Python/)
   - [ ] Provide details for any automatically detected npm dependencies
   - [ ] Manually add any repository dependencies
+- [ ] GDPR bookkeeping
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
 
@@ -64,3 +65,4 @@
 ## Clean up after _this_ release
 - [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22)
 - [ ] Go through [`needs more info` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc) and close any that have no activity for over a month
+- [ ] GDPR bookkeeping

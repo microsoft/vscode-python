@@ -17,7 +17,7 @@ import { IS_WINDOWS } from '../common/platform/constants';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { BANNER_NAME_PROPOSE_LS, IConfigurationService, ILogger, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { debounce, swallowExceptions } from '../common/utils/decorators';
+import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -296,7 +296,7 @@ export class JediProxy implements Disposable {
         this.additionalAutoCompletePaths = await this.buildAutoCompletePaths();
         this.restartLanguageServer().ignoreErrors();
     }
-    @debounce(1500)
+    // @debounce(1500)
     @swallowExceptions('JediProxy')
     private async environmentVariablesChangeHandler() {
         const newAutoComletePaths = await this.buildAutoCompletePaths();

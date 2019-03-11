@@ -9,36 +9,38 @@ import { getParent, getTestFile, getTestFolder, getTestFunction, getTestSuite, g
 import { FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder, TestFunction, Tests, TestSuite, TestType } from '../../../client/unittests/common/types';
 import { TestDataItem } from '../../../client/unittests/types';
 
-export function createMockTestDataItem<T extends TestDataItem>(type: TestType) {
+// tslint:disable:prefer-template
+
+export function createMockTestDataItem<T extends TestDataItem>(type: TestType, nameSuffix: string = '') {
     const folder: TestFolder = {
         folders: [],
-        name: 'Some Folder',
-        nameToRun: ' Some Folder',
+        name: 'Some Folder' + nameSuffix,
+        nameToRun: ' Some Folder' + nameSuffix,
         testFiles: [],
         time: 0
     };
     const file: TestFile = {
-        name: 'Some File',
-        nameToRun: ' Some File',
+        name: 'Some File' + nameSuffix,
+        nameToRun: ' Some File' + nameSuffix,
         fullPath: __filename,
-        xmlName: 'some xml name',
+        xmlName: 'some xml name' + nameSuffix,
         functions: [],
         suites: [],
         time: 0
     };
     const func: TestFunction = {
-        name: 'Some Function',
-        nameToRun: ' Some Function',
+        name: 'Some Function' + nameSuffix,
+        nameToRun: ' Some Function' + nameSuffix,
         time: 0
     };
     const suite: TestSuite = {
-        name: 'Some Suite',
-        nameToRun: ' Some Suite',
+        name: 'Some Suite' + nameSuffix,
+        nameToRun: ' Some Suite' + nameSuffix,
         functions: [],
         isInstance: true,
         isUnitTest: false,
         suites: [],
-        xmlName: 'some name',
+        xmlName: 'some name' + nameSuffix,
         time: 0
     };
 

@@ -44,7 +44,6 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
     private readonly disposableRegistry: Disposable[];
     private workspaceTestManagerService?: IWorkspaceTestManagerService;
     private documentManager: IDocumentManager;
-    private commandManager: ICommandManager;
     private workspaceService: IWorkspaceService;
     private testResultDisplay?: ITestResultDisplay;
     private autoDiscoverTimer?: NodeJS.Timer;
@@ -57,7 +56,6 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
 
         this.disposableRegistry.push(this);
     }
@@ -174,13 +172,9 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             return;
         }
 
-        // No need to display errors.
-        // tslint:disable-next-line:no-empty
-        this.discoverTests(CommandSource.auto, this.workspaceService.workspaceFolders![0].uri, true).then(
-            _tests => this.commandManager.executeCommand('setContext', 'testsDiscovered', true)
-        ).ignoreErrors();
+        this.discoverTests(CommandSource.auto, this.workspaceService.workspaceFolders![0].uri, true).ignoreErrors();
     }
-    public async discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean) {
+    public async discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean, clearTestStatus?: boolean) {
         const testManager = await this.getTestManager(true, resource);
         if (!testManager) {
             return;
@@ -193,7 +187,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         if (!this.testResultDisplay) {
             this.testResultDisplay = this.serviceContainer.get<ITestResultDisplay>(ITestResultDisplay);
         }
-        const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, quietMode, userInitiated);
+        const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
         this.testResultDisplay.displayDiscoverStatus(discoveryPromise, quietMode)
             .catch(ex => console.error('Python Extension: displayDiscoverStatus', ex));
         await discoveryPromise;
@@ -360,7 +354,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             commandManager.registerCommand(constants.Commands.Tests_Discover, (_, cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {
                 // Ignore the exceptions returned.
                 // This command will be invoked from other places of the extension.
-                this.discoverTests(cmdSource, resource, true, true)
+                this.discoverTests(cmdSource, resource, true, true, false, true)
                     .ignoreErrors();
             }),
             commandManager.registerCommand(constants.Commands.Tests_Configure, (_, cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {

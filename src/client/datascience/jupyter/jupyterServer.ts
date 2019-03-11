@@ -10,6 +10,7 @@ import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
+import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
@@ -116,11 +117,13 @@ export class JupyterServerBase implements INotebookServer {
     private ranInitialSetup = false;
     private id = uuid();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
+    private connectionInfoDisconnectHandler: Disposable | undefined;
+    private serverExitCode: number | undefined;
 
     constructor(
         liveShare: ILiveShareApi,
         dataScience: IDataScience,
-        private logger: ILogger,
+        protected logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
@@ -128,7 +131,7 @@ export class JupyterServerBase implements INotebookServer {
         this.asyncRegistry.push(this);
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void> {
+    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
         this.logger.logInformation(`Connecting server ${this.id}`);
 
         // Save our launch info
@@ -136,6 +139,15 @@ export class JupyterServerBase implements INotebookServer {
 
         // Indicate connect started
         this.connectPromise.resolve(launchInfo);
+
+        // Listen to the process going down
+        if (this.launchInfo && this.launchInfo.connectionInfo) {
+            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
+                this.logger.logError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
+                this.serverExitCode = c;
+                this.shutdown().ignoreErrors();
+            });
+        }
 
         // Start our session
         this.session = await this.sessionManager.startNew(launchInfo.connectionInfo, launchInfo.kernelSpec, cancelToken);
@@ -153,6 +165,10 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public shutdown(): Promise<void> {
+        if (this.connectionInfoDisconnectHandler) {
+            this.connectionInfoDisconnectHandler.dispose();
+            this.connectionInfoDisconnectHandler = undefined;
+        }
         this.logger.logInformation(`Shutting down ${this.id}`);
         const dispose = this.session ? this.session.dispose() : undefined;
         return dispose ? dispose : Promise.resolve();
@@ -208,7 +224,7 @@ export class JupyterServerBase implements INotebookServer {
         return this.executeObservableImpl(code, file, line, id, false);
     }
 
-    public async getSysInfo() : Promise<ICell> {
+    public async getSysInfo(): Promise<ICell> {
         // tslint:disable-next-line:no-multiline-string
         const versionCells = await this.executeSilently(`import sys\r\nsys.version`);
         // tslint:disable-next-line:no-multiline-string
@@ -259,7 +275,7 @@ export class JupyterServerBase implements INotebookServer {
             return;
         }
 
-        throw new Error(localize.DataScience.sessionDisposed());
+        throw this.getDisposedError();
     }
 
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
@@ -338,7 +354,7 @@ export class JupyterServerBase implements INotebookServer {
             }
         }
 
-        throw new Error(localize.DataScience.sessionDisposed());
+        throw this.getDisposedError();
     }
 
     public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
@@ -356,6 +372,16 @@ export class JupyterServerBase implements INotebookServer {
             ...this.launchInfo.connectionInfo,
             dispose: noop
         };
+    }
+
+    private getDisposedError(): Error {
+        // We may have been disposed because of a crash. See if our connection info is indicating shutdown
+        if (this.serverExitCode) {
+            return new Error(localize.DataScience.jupyterServerCrashed().format(this.serverExitCode.toString()));
+        }
+
+        // Default is just say session was disposed
+        return new Error(localize.DataScience.sessionDisposed());
     }
 
     private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
@@ -410,7 +436,7 @@ export class JupyterServerBase implements INotebookServer {
         return result;
     }
 
-    private executeObservableImpl(code: string, file: string, line: number, id: string, silent?: boolean) : Observable<ICell[]> {
+    private executeObservableImpl(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
         // Do initial setup if necessary
         this.initialNotebookSetup();
 
@@ -434,7 +460,7 @@ export class JupyterServerBase implements INotebookServer {
 
         // Can't run because no session
         return new Observable<ICell[]>(subscriber => {
-            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            subscriber.error(this.getDisposedError());
             subscriber.complete();
         });
     }
@@ -527,53 +553,76 @@ export class JupyterServerBase implements INotebookServer {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
 
-            const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), silent);
-
-            // tslint:disable-next-line:no-require-imports
-            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
-            // Transition to the busy stage
-            subscriber.cell.state = CellState.executing;
-
-            // Listen to the reponse messages and update state as we go
-            if (request) {
-                request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                    try {
-                        if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                            this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, subscriber.cell);
-                        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                            this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, subscriber.cell);
-                        } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg, subscriber.cell);
-                        } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                            this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, subscriber.cell);
-                        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                            this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, subscriber.cell);
-                        } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                            this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, subscriber.cell);
-                        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                            this.handleError(msg as KernelMessage.IErrorMsg, subscriber.cell);
-                        } else {
-                            this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-                        }
-
-                        // Set execution count, all messages should have it
-                        if (msg.content.execution_count) {
-                            subscriber.cell.data.execution_count = msg.content.execution_count as number;
-                        }
-
-                        // Show our update if any new output
-                        subscriber.next(this.sessionStartTime);
-                    } catch (err) {
-                        // If not a restart error, then tell the subscriber
-                        subscriber.error(this.sessionStartTime, err);
-                    }
-                };
-
-                // When the request finishes we are done
-                request.done.then(() => subscriber.complete(this.sessionStartTime)).catch(e => subscriber.error(this.sessionStartTime, e));
+            // Double check process is still running
+            if (this.launchInfo && this.launchInfo.connectionInfo && this.launchInfo.connectionInfo.localProcExitCode) {
+                // Not running, just exit
+                const exitCode = this.launchInfo.connectionInfo.localProcExitCode;
+                subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
+                subscriber.complete(this.sessionStartTime);
             } else {
-                subscriber.error(this.sessionStartTime, new Error(localize.DataScience.sessionDisposed()));
+                const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), silent);
+
+                // tslint:disable-next-line:no-require-imports
+                const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+                // Transition to the busy stage
+                subscriber.cell.state = CellState.executing;
+
+                // Make sure our connection doesn't go down
+                let exitHandlerDisposable: Disposable | undefined;
+                if (this.launchInfo && this.launchInfo.connectionInfo) {
+                    // If the server crashes, cancel the current observable
+                    exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected((c) => {
+                        subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(c.toString())));
+                        subscriber.complete(this.sessionStartTime);
+                    });
+                }
+
+                // Listen to the reponse messages and update state as we go
+                if (request) {
+                    request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                        try {
+                            if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+                                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+                                this.handleStatusMessage(msg as KernelMessage.IStatusMsg, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+                                this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                                this.handleError(msg as KernelMessage.IErrorMsg, subscriber.cell);
+                            } else {
+                                this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                            }
+
+                            // Set execution count, all messages should have it
+                            if (msg.content.execution_count) {
+                                subscriber.cell.data.execution_count = msg.content.execution_count as number;
+                            }
+
+                            // Show our update if any new output
+                            subscriber.next(this.sessionStartTime);
+                        } catch (err) {
+                            // If not a restart error, then tell the subscriber
+                            subscriber.error(this.sessionStartTime, err);
+                        }
+                    };
+
+                    // When the request finishes we are done
+                    request.done.then(() => {
+                        subscriber.complete(this.sessionStartTime);
+                        if (exitHandlerDisposable) {
+                            exitHandlerDisposable.dispose();
+                        }
+                    }).catch(e => subscriber.error(this.sessionStartTime, e));
+                } else {
+                    subscriber.error(this.sessionStartTime, this.getDisposedError());
+                }
             }
         } else {
             // Otherwise just set to an error

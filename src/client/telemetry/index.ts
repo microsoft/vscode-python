@@ -307,6 +307,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
@@ -321,10 +322,15 @@ interface IEventNamePropertyMapping {
     [Telemetry.RunSelectionOrLine]: never | undefined;
     [Telemetry.RunCell]: never | undefined;
     [Telemetry.RunCurrentCell]: never | undefined;
+    [Telemetry.RunAllCellsAbove]: never | undefined;
+    [Telemetry.RunCellAndAllBelow]: never | undefined;
     [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
+    [Telemetry.RunToLine]: never | undefined;
+    [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
+    [Telemetry.ShiftEnterBannerShown]: never | undefined;
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;

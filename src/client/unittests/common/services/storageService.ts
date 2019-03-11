@@ -1,28 +1,30 @@
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { TestDataItem } from '../../types';
 import { FlattenedTestFunction, FlattenedTestSuite, ITestCollectionStorageService, TestFunction, Tests, TestSuite } from './../types';
 
 @injectable()
 export class TestCollectionStorageService implements ITestCollectionStorageService {
-    private _onDidChange = new EventEmitter<{ uri: Uri; data?: TestDataItem }>();
-    private testsIndexedByWorkspaceUri = new Map<string, Tests | undefined>();
+    private readonly _onDidChange = new EventEmitter<{ uri: Uri; data?: TestDataItem }>();
+    private readonly testsIndexedByWorkspaceUri = new Map<string, Tests | undefined>();
 
-    constructor(@inject(IDisposableRegistry) disposables: Disposable[]) {
+    constructor(@inject(IDisposableRegistry) disposables: Disposable[],
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         disposables.push(this);
     }
     public get onDidChange(): Event<{ uri: Uri; data?: TestDataItem }> {
         return this._onDidChange.event;
     }
-    public getTests(wkspace: Uri): Tests | undefined {
-        const workspaceFolder = this.getWorkspaceFolderPath(wkspace) || '';
+    public getTests(resource: Uri): Tests | undefined {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolderIdentifier(resource);
         return this.testsIndexedByWorkspaceUri.has(workspaceFolder) ? this.testsIndexedByWorkspaceUri.get(workspaceFolder) : undefined;
     }
-    public storeTests(wkspace: Uri, tests: Tests | undefined): void {
-        const workspaceFolder = this.getWorkspaceFolderPath(wkspace) || '';
+    public storeTests(resource: Uri, tests: Tests | undefined): void {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolderIdentifier(resource);
         this.testsIndexedByWorkspaceUri.set(workspaceFolder, tests);
-        this._onDidChange.fire({ uri: wkspace });
+        this._onDidChange.fire({ uri: resource });
     }
     public findFlattendTestFunction(resource: Uri, func: TestFunction): FlattenedTestFunction | undefined {
         const tests = this.getTests(resource);
@@ -41,11 +43,7 @@ export class TestCollectionStorageService implements ITestCollectionStorageServi
     public dispose() {
         this.testsIndexedByWorkspaceUri.clear();
     }
-    public update(resource: Uri, item: TestDataItem): void{
+    public update(resource: Uri, item: TestDataItem): void {
         this._onDidChange.fire({ uri: resource, data: item });
-    }
-    private getWorkspaceFolderPath(resource: Uri): string | undefined {
-        const folder = workspace.getWorkspaceFolder(resource);
-        return folder ? folder.uri.path : undefined;
     }
 }

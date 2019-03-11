@@ -54,7 +54,7 @@ export class TestsHelper implements ITestsHelper {
     private readonly appShell: IApplicationShell;
     private readonly commandManager: ICommandManager;
     constructor(
-        @inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor,
+        @inject(ITestVisitor) @named('TestFlatteningVisitor') private readonly flatteningVisitor: TestFlatteningVisitor,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -450,4 +450,63 @@ export function getChildren(item: TestDataItem): TestDataItem[] {
             throw new Error('Unknown Test Type');
         }
     }
+}
+
+export function copyTestResults(source: Tests, target: Tests): void {
+    copyResultsForFolders(source.testFolders, target.testFolders);
+}
+
+function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void {
+    source.forEach(sourceFolder => {
+        const targetFolder = target.find(folder => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun);
+        if (!targetFolder) {
+            return;
+        }
+        copyValueTypes<TestFolder>(sourceFolder, targetFolder);
+        copyResultsForFiles(sourceFolder.testFiles, targetFolder.testFiles);
+    });
+}
+function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
+    source.forEach(sourceFile => {
+        const targetFile = target.find(file => file.name === sourceFile.name && file.nameToRun === sourceFile.nameToRun);
+        if (!targetFile) {
+            return;
+        }
+        copyValueTypes<TestFile>(sourceFile, targetFile);
+        copyResultsForFunctions(sourceFile.functions, targetFile.functions);
+        copyResultsForSuites(sourceFile.suites, targetFile.suites);
+    });
+}
+
+function copyResultsForFunctions(source: TestFunction[], target: TestFunction[]): void {
+    source.forEach(sourceFn => {
+        const targetFn = target.find(fn => fn.name === sourceFn.name && fn.nameToRun === sourceFn.nameToRun);
+        if (!targetFn) {
+            return;
+        }
+        copyValueTypes<TestFunction>(sourceFn, targetFn);
+    });
+}
+
+function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
+    source.forEach(sourceSuite => {
+        const targetSuite = target.find(suite => suite.name === sourceSuite.name &&
+            suite.nameToRun === sourceSuite.nameToRun &&
+            suite.xmlName === sourceSuite.xmlName);
+        if (!targetSuite) {
+            return;
+        }
+        copyValueTypes<TestSuite>(sourceSuite, targetSuite);
+        copyResultsForFunctions(sourceSuite.functions, targetSuite.functions);
+        copyResultsForSuites(sourceSuite.suites, targetSuite.suites);
+    });
+}
+
+function copyValueTypes<T>(source: T, target: T): void {
+    Object.keys(source).forEach(key => {
+        const value = source[key];
+        if (['boolean', 'number', 'string', 'undefined'].indexOf(typeof value) >= 0) {
+            target[key] = value;
+        }
+    });
 }

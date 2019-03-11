@@ -156,7 +156,7 @@ jobs:
         arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
 
-    - bash: 'python -m pythonFiles.tests'
+    - bash: 'python pythonFiles/tests/run_all.py'
       displayName: 'run pythonFiles unit tests'
 
 

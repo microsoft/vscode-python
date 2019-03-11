@@ -27,7 +27,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from './constants';
 import { HistoryMessageListener } from './historyMessageListener';
@@ -52,7 +52,8 @@ import {
 export enum SysInfoReason {
     Start,
     Restart,
-    Interrupt
+    Interrupt,
+    New
 }
 
 @injectable()
@@ -110,8 +111,16 @@ export class History implements IHistory {
         // react control.
         this.webPanelInit = createDeferred();
 
+        // If our execution changes its liveshare session, we need to close our server
+        this.jupyterExecution.sessionChanged(() => this.loadPromise = this.reloadAfterShutdown());
+
         // Load on a background thread.
         this.loadPromise = this.load();
+    }
+
+    public get ready() : Promise<void> {
+        // We need this to ensure the history window is up and ready to receive messages.
+        return this.loadPromise;
     }
 
     public async show(): Promise<void> {
@@ -231,6 +240,9 @@ export class History implements IHistory {
                 this.closedEvent.fire(this);
             }
             this.updateContexts(undefined);
+            if (this.webPanel) {
+                this.webPanel.close();
+            }
         }
         if (this.changeHandler) {
             this.changeHandler.dispose();
@@ -427,14 +439,16 @@ export class History implements IHistory {
     }
 
     private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
+        this.logger.logInformation(`Submitting code for ${this.id}`);
+
+        // Start a status item
+        const status = this.setStatus(localize.DataScience.executingCode());
+
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
             this.shareMessage(HistoryMessages.RemoteAddCode, {code, file, line, id, originator: this.id});
         }
-
-        // Start a status item
-        const status = this.setStatus(localize.DataScience.executingCode());
 
         // Create a deferred object that will wait until the status is disposed
         const finishedAddingCode = createDeferred<void>();
@@ -448,6 +462,7 @@ export class History implements IHistory {
 
             // Make sure we're loaded first.
             try {
+                this.logger.logInformation('Waiting for jupyter server and web panel ...');
                 await this.loadPromise;
             } catch (exc) {
                 // We should dispose ourselves if the load fails. Othewise the user
@@ -483,7 +498,7 @@ export class History implements IHistory {
                     (error) => {
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error);
+                            this.applicationShell.showErrorMessage(error.toString());
                         }
                     },
                     () => {
@@ -563,15 +578,46 @@ export class History implements IHistory {
         this.postMessage(HistoryMessages.UpdateSettings, dsSettings).ignoreErrors();
     }
 
-    private onInterpreterChanged = async () => {
+    private onInterpreterChanged = () => {
         // Update our load promise. We need to restart the jupyter server
-        if (this.loadPromise) {
-            await this.loadPromise;
-            if (this.jupyterServer) {
-                await this.jupyterServer.shutdown();
+        this.loadPromise = this.reloadWithNew();
+    }
+
+    private async reloadWithNew() : Promise<void> {
+        const status = this.setStatus(localize.DataScience.startingJupyter());
+        try {
+            // Not the same as reload, we need to actually dispose the server.
+            if (this.loadPromise) {
+                await this.loadPromise;
+                if (this.jupyterServer) {
+                    const server = this.jupyterServer;
+                    this.jupyterServer = undefined;
+                    await server.dispose();
+                }
             }
+            await this.load();
+            await this.addSysInfo(SysInfoReason.New);
+        } finally {
+            status.dispose();
         }
-        this.loadPromise = this.load();
+    }
+
+    private async reloadAfterShutdown() : Promise<void> {
+        try {
+            if (this.loadPromise) {
+                await this.loadPromise;
+                if (this.jupyterServer) {
+                    const server = this.jupyterServer;
+                    this.jupyterServer = undefined;
+                    server.dispose().ignoreErrors(); // Don't care what happens as we're disconnected.
+                }
+            }
+        } catch {
+            // We just switched from host to guest mode. Don't really care
+            // if closing the host server kills it.
+            this.jupyterServer = undefined;
+        }
+        return this.load();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -661,11 +707,17 @@ export class History implements IHistory {
     }
 
     private async loadJupyterServer(restart?: boolean): Promise<void> {
+        this.logger.logInformation('Getting jupyter server options ...');
+
         // Extract our options
         const options = await this.historyProvider.getNotebookOptions();
 
+        this.logger.logInformation('Connecting to jupyter server ...');
+
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
+
+        this.logger.logInformation('Connected to jupyter server.');
     }
 
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
@@ -707,6 +759,9 @@ export class History implements IHistory {
             case SysInfoReason.Interrupt:
                 return localize.DataScience.pythonInterruptFailedHeader();
                 break;
+            case SysInfoReason.New:
+                return localize.DataScience.pythonNewHeader();
+                break;
             default:
                 this.logger.logError('Invalid SysInfoReason');
                 return '';
@@ -730,8 +785,8 @@ export class History implements IHistory {
     }
 
     private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
-        if (!this.addSysInfoPromise || reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) {
-            this.logger.logInformation(`Adding sys info for ${reason}`);
+        if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
+            this.logger.logInformation(`Adding sys info for ${this.id} ${reason}`);
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
 
@@ -741,15 +796,15 @@ export class History implements IHistory {
                 this.onAddCodeEvent([sysInfo]);
             }
 
-            // For interrupt or restart, tell the other sides of a live share session
-            if ((reason === SysInfoReason.Interrupt || reason === SysInfoReason.Restart) && sysInfo) {
+            // For anything but start, tell the other sides of a live share session
+            if (reason !== SysInfoReason.Start && sysInfo) {
                 this.shareMessage(HistoryMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
             }
 
-            this.logger.logInformation(`Sys info for ${reason} complete`);
+            this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);
             deferred.resolve(true);
         } else if (this.addSysInfoPromise) {
-            this.logger.logInformation(`Wait for sys info for ${reason}`);
+            this.logger.logInformation(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
         }
     }
@@ -789,21 +844,12 @@ export class History implements IHistory {
         }
     }
 
-    private load = async (): Promise<void> => {
-        // Status depends upon if we're about to connect to existing server or not.
-        const status = (await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions())) ?
-            this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
-
-        // Check to see if we support ipykernel or not
+    private async checkUsable() : Promise<boolean> {
+        let activeInterpreter : PythonInterpreter | undefined;
         try {
+            activeInterpreter = await this.interpreterService.getActiveInterpreter();
             const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-            if (!usableInterpreter) {
-                // Not loading anymore
-                status.dispose();
-
-                // Nobody is useable, throw an exception
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
-            } else {
+            if (usableInterpreter) {
                 // See if the usable interpreter is not our active one. If so, show a warning
                 // Only do this if not the guest in a liveshare session
                 const api = await this.liveShare.getApi();
@@ -819,11 +865,40 @@ export class History implements IHistory {
                 }
             }
 
+            return usableInterpreter ? true : false;
+
+        } catch (e) {
+            // Can't find a usable interpreter, show the error.
+            if (activeInterpreter) {
+                const displayName = activeInterpreter.displayName ? activeInterpreter.displayName : activeInterpreter.path;
+                throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString()));
+            } else {
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+            }
+        }
+    }
+
+    private load = async (): Promise<void> => {
+        // Status depends upon if we're about to connect to existing server or not.
+        const status = (await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions())) ?
+            this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
+
+        // Check to see if we support ipykernel or not
+        try {
+            const usable = await this.checkUsable();
+            if (!usable) {
+                // Not loading anymore
+                status.dispose();
+
+                // Indicate failing.
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+            }
+
             // Get the web panel to show first
             await this.loadWebPanel();
 
             // Then load the jupyter server
-            return this.loadJupyterServer();
+            await this.loadJupyterServer();
 
         } finally {
             status.dispose();

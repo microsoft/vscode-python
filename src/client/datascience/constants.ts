@@ -7,6 +7,10 @@ import { IS_WINDOWS } from '../common/platform/constants';
 
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
+    export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
+    export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const RunToLine = 'python.datascience.runtoline';
+    export const RunFromLine = 'python.datascience.runfromline';
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
@@ -55,7 +59,11 @@ export enum Telemetry {
     RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL',
     RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE',
     RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS',
+    RunAllCellsAbove = 'DATASCIENCE.RUN_ALL_CELLS_ABOVE',
+    RunCellAndAllBelow = 'DATASCIENCE.RUN_CELL_AND_ALL_BELOW',
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
+    RunToLine = 'DATASCIENCE.RUN_TO_LINE',
+    RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
@@ -77,8 +85,10 @@ export enum Telemetry {
     ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER',
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
-    RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE'
-}
+    RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
+    ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
+    EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER'
+ }
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';

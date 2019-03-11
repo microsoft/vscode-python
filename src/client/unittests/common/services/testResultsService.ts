@@ -1,4 +1,6 @@
 import { inject, injectable, named } from 'inversify';
+import { TestDataItem } from '../../types';
+import { visitParentsRecursive } from '../testVisitors/visitor';
 import { ITestResultsService, ITestVisitor, TestFile, TestFolder, Tests, TestStatus, TestSuite } from './../types';
 
 @injectable()
@@ -12,7 +14,9 @@ export class TestResultsService implements ITestResultsService {
     }
     public updateResults(tests: Tests): void {
         tests.testFiles.forEach(test => this.updateTestFileResults(test));
-        tests.testFolders.forEach(folder => this.updateTestFolderResults(folder));
+        tests.rootTestFolders.forEach(folder => this.updateTestFolderResults(folder));
+        // List items should be updated in order
+        [TestStatus.Pass, TestStatus.Fail].forEach(item => this.updateParentStatus(tests, item));
     }
     private updateTestSuiteResults(test: TestSuite): void {
         this.updateTestSuiteAndFileResults(test);
@@ -20,17 +24,28 @@ export class TestResultsService implements ITestResultsService {
     private updateTestFileResults(test: TestFile): void {
         this.updateTestSuiteAndFileResults(test);
     }
+    private updateParentStatus(tests: Tests, status: TestStatus): void {
+        const visitor = (item: TestDataItem) => item.status = status;
+        tests.testFiles.forEach(item => {
+            if (typeof item.passed === 'boolean') {
+                if (status === TestStatus.Pass ? item.passed : !item.passed) {
+                    visitParentsRecursive(tests, item, visitor);
+                }
+            }
+        });
+    }
     private updateTestFolderResults(testFolder: TestFolder): void {
+        let totalTime = 0;
         let allFilesPassed = true;
-        let allFilesRan = true;
+        let noFilesRan = true;
 
         testFolder.testFiles.forEach(fl => {
-            if (allFilesPassed && typeof fl.passed === 'boolean') {
+            totalTime += fl.time;
+            if (typeof fl.passed === 'boolean') {
+                noFilesRan = false;
                 if (!fl.passed) {
                     allFilesPassed = false;
                 }
-            } else {
-                allFilesRan = false;
             }
 
             testFolder.functionsFailed! += fl.functionsFailed!;
@@ -38,61 +53,60 @@ export class TestResultsService implements ITestResultsService {
         });
 
         let allFoldersPassed = true;
-        let allFoldersRan = true;
+        let noFoldersRan = true;
 
         testFolder.folders.forEach(folder => {
+            totalTime += folder.time;
             this.updateTestFolderResults(folder);
-            if (allFoldersPassed && typeof folder.passed === 'boolean') {
+            if (typeof folder.passed === 'boolean') {
+                noFoldersRan = false;
                 if (!folder.passed) {
                     allFoldersPassed = false;
                 }
-            } else {
-                allFoldersRan = false;
             }
 
             testFolder.functionsFailed! += folder.functionsFailed!;
             testFolder.functionsPassed! += folder.functionsPassed!;
         });
 
-        if (allFilesRan && allFoldersRan) {
-            testFolder.passed = allFilesPassed && allFoldersPassed;
-            testFolder.status = testFolder.passed ? TestStatus.Idle : TestStatus.Fail;
-        } else {
+        testFolder.time = totalTime;
+        if (noFilesRan && noFoldersRan) {
             testFolder.passed = undefined;
             testFolder.status = TestStatus.Unknown;
+        } else {
+            testFolder.passed = allFilesPassed && allFoldersPassed;
+            testFolder.status = testFolder.passed ? TestStatus.Pass : TestStatus.Fail;
         }
     }
     private updateTestSuiteAndFileResults(test: TestSuite | TestFile): void {
         let totalTime = 0;
         let allFunctionsPassed = true;
-        let allFunctionsRan = true;
+        let noFunctionsRan = true;
 
         test.functions.forEach(fn => {
             totalTime += fn.time;
             if (typeof fn.passed === 'boolean') {
+                noFunctionsRan = false;
                 if (fn.passed) {
                     test.functionsPassed! += 1;
                 } else {
                     test.functionsFailed! += 1;
                     allFunctionsPassed = false;
                 }
-            } else {
-                allFunctionsRan = false;
             }
         });
 
         let allSuitesPassed = true;
-        let allSuitesRan = true;
+        let noSuitesRan = true;
 
         test.suites.forEach(suite => {
             this.updateTestSuiteResults(suite);
             totalTime += suite.time;
-            if (allSuitesRan && typeof suite.passed === 'boolean') {
+            if (typeof suite.passed === 'boolean') {
+                noSuitesRan = false;
                 if (!suite.passed) {
                     allSuitesPassed = false;
                 }
-            } else {
-                allSuitesRan = false;
             }
 
             test.functionsFailed! += suite.functionsFailed!;
@@ -100,12 +114,12 @@ export class TestResultsService implements ITestResultsService {
         });
 
         test.time = totalTime;
-        if (allSuitesRan && allFunctionsRan) {
-            test.passed = allFunctionsPassed && allSuitesPassed;
-            test.status = test.passed ? TestStatus.Idle : TestStatus.Error;
-        } else {
+        if (noSuitesRan && noFunctionsRan) {
             test.passed = undefined;
             test.status = TestStatus.Unknown;
+        } else {
+            test.passed = allFunctionsPassed && allSuitesPassed;
+            test.status = test.passed ? TestStatus.Pass : TestStatus.Error;
         }
     }
 }

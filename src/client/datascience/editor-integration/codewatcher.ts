@@ -50,12 +50,18 @@ export class CodeWatcher implements ICodeWatcher {
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
-            const runAllCmd: Command = {
-                arguments: [document.fileName],
-                title: localize.DataScience.runAllCellsLensCommandTitle(),
-                command: Commands.RunAllCells
+            const runAllAboveCmd: Command = {
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
+                title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
+                command: Commands.RunAllCellsAbove
             };
-            this.codeLenses.push(new CodeLens(cell.range, runAllCmd));
+            this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
+            const runCellAndBelowCmd: Command = {
+                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
+                title: localize.DataScience.runCellAndAllBelowLensCommandTitle(),
+                command: Commands.RunCellAndAllBelow
+            };
+            this.codeLenses.push(new CodeLens(cell.range, runCellAndBelowCmd));
         });
     }
 
@@ -101,6 +107,48 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    // Run all cells up to the cell containing this start line and character
+    @captureTelemetry(Telemetry.RunAllCellsAbove)
+    public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
+        const activeHistory = await this.historyProvider.getOrCreateActive();
+
+        // Run our code lenses up to this point, lenses are created in order on document load
+        // so we can rely on them being in linear order for this
+        for (const lens of this.codeLenses) {
+            const pastStop = (lens.range.start.line >= stopLine && lens.range.start.character >= stopCharacter);
+            // Make sure we are dealing with cell based code lenses in case more types are added later
+            if (lens.command && lens.command.command === Commands.RunAllCellsAbove) {
+                if (!pastStop && this.document) {
+                    // We have a cell and we are not past or at the stop point
+                    const code = this.document.getText(lens.range);
+                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                } else {
+                    // If we get a cell past or at the stop point stop
+                    break;
+                }
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunAllCellsAbove)
+    public async runCellAndAllBelow(startLine: number, startCharacter: number) {
+        const activeHistory = await this.historyProvider.getOrCreateActive();
+
+        // Run our code lenses from this point to the end, lenses are created in order on document load
+        // so we can rely on them being in linear order for this
+        for (const lens of this.codeLenses) {
+            const pastStart = (lens.range.start.line >= startLine && lens.range.start.character >= startCharacter);
+            // Make sure we are dealing with cell based code lenses in case more types are added later
+            if (lens.command && lens.command.command === Commands.RunCellAndAllBelow) {
+                if (pastStart && this.document) {
+                    // We have a cell and we are not past or at the stop point
+                    const code = this.document.getText(lens.range);
+                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                }
+            }
+        }
+    }
+
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
         const activeHistory = await this.historyProvider.getOrCreateActive();
@@ -120,6 +168,34 @@ export class CodeWatcher implements ICodeWatcher {
 
             if (code && code.trim().length) {
                 await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunToLine)
+    public async runToLine(targetLine: number) {
+        const activeHistory = await this.historyProvider.getOrCreateActive();
+
+        if (this.document && targetLine > 0) {
+            const previousLine = this.document.lineAt(targetLine - 1);
+            const code = this.document.getText(new Range(0, 0, previousLine.range.end.line, previousLine.range.end.character));
+
+            if (code && code.trim().length) {
+                await activeHistory.addCode(code, this.getFileName(), 0);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.RunFromLine)
+    public async runFromLine(targetLine: number) {
+        const activeHistory = await this.historyProvider.getOrCreateActive();
+
+        if (this.document && targetLine < this.document.lineCount) {
+            const lastLine = this.document.lineAt(this.document.lineCount - 1);
+            const code = this.document.getText(new Range(targetLine, 0, lastLine.range.end.line, lastLine.range.end.character));
+
+            if (code && code.trim().length) {
+                await activeHistory.addCode(code, this.getFileName(), targetLine);
             }
         }
     }

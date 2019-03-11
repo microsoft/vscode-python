@@ -1,8 +1,10 @@
+from __future__ import print_function
+
 import json
 
 
 def report_discovered(tests, debug=False,
-               _send=print):
+                      _send=print):
     """Serialize the discovered tests and write to stdout."""
     data = [{
             'id': test.id,

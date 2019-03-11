@@ -68,6 +68,9 @@
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+            },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [

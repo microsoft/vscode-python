@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode-jsonrpc';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
@@ -41,6 +41,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private commands: Record<string, IJupyterCommand> = {};
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
+    private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(liveShare: ILiveShareApi,
                 private executionFactory: IPythonExecutionFactory,
@@ -69,6 +70,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             });
             this.disposableRegistry.push(disposable);
         }
+    }
+
+    public get sessionChanged() : Event<void> {
+        return this.eventEmitter.event;
     }
 
     public dispose() : Promise<void> {
@@ -183,7 +188,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         notebookCommand.exec(args, { throwOnStdErr: false, encoding: 'utf8' }).ignoreErrors();
     }
 
-    public async importNotebook(file: string, template: string): Promise<string> {
+    public async importNotebook(file: string, template: string | undefined): Promise<string> {
         // First we find a way to start a nbconvert
         const convert = await this.findBestCommand(JupyterCommands.ConvertCommand);
         if (!convert) {
@@ -191,7 +196,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         // Wait for the nbconvert to finish
-        const result = await convert.exec([file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
+        const args = template ? [file, '--to', 'python', '--stdout', '--template', template] : [file, '--to', 'python', '--stdout'];
+        const result = await convert.exec(args, { throwOnStdErr: false, encoding: 'utf8' });
         if (result.stderr) {
             // Stderr on nbconvert doesn't indicate failure. Just log the result
             this.logger.logInformation(result.stderr);
@@ -205,27 +211,37 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
-        // If not using an active connection, check on disk
-        if (!connection) {
-            // Get our best interpreter. We want its python path
-            const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
+        try {
+            // If not using an active connection, check on disk
+            if (!connection) {
+                // Get our best interpreter. We want its python path
+                const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
 
-            // Enumerate our kernel specs that jupyter will know about and see if
-            // one of them already matches based on path
-            if (bestInterpreter && !await this.hasSpecPathMatch(bestInterpreter, cancelToken)) {
+                // Enumerate our kernel specs that jupyter will know about and see if
+                // one of them already matches based on path
+                if (bestInterpreter && !await this.hasSpecPathMatch(bestInterpreter, cancelToken)) {
 
-                // Nobody matches on path, so generate a new kernel spec
-                if (await this.isKernelCreateSupported(cancelToken)) {
-                    await this.addMatchingSpec(bestInterpreter, cancelToken);
+                    // Nobody matches on path, so generate a new kernel spec
+                    if (await this.isKernelCreateSupported(cancelToken)) {
+                        await this.addMatchingSpec(bestInterpreter, cancelToken);
+                    }
                 }
             }
+
+            // Now enumerate them again
+            const enumerator = connection ? () => this.sessionManager.getActiveKernelSpecs(connection) : () => this.enumerateSpecs(cancelToken);
+
+            // Then find our match
+            return this.findSpecMatch(enumerator);
+        } catch (e) {
+            // ECONNREFUSED seems to happen here. Log the error, but don't let it bubble out. We don't really need a kernel spec
+            this.logger.logWarning(e);
+
+            // Double check our jupyter server is still running.
+            if (connection && connection.localProcExitCode) {
+                throw new Error(localize.DataScience.jupyterServerCrashed().format(connection.localProcExitCode.toString()));
+            }
         }
-
-        // Now enumerate them again
-        const enumerator = connection ? () => this.sessionManager.getActiveKernelSpecs(connection) : () => this.enumerateSpecs(cancelToken);
-
-        // Then find our match
-        return this.findSpecMatch(enumerator);
     }
 
     private createRemoteConnectionInfo = (uri: string): IConnection => {
@@ -241,6 +257,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,
+            localProcExitCode: undefined,
+            disconnected: (l) => { return { dispose: noop }; },
             dispose: noop
         };
     }
@@ -254,6 +272,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         // Now actually launch it
+        let exitCode = 0;
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDir = await this.generateTempDir();
@@ -288,6 +307,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Then use this to launch our notebook process.
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 
+            // Watch for premature exits
+            if (launchResult.proc) {
+                launchResult.proc.on('exit', (c) => exitCode = c);
+            }
+
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
             if (launchResult && cancelToken) {
                 cancelToken.onCancellationRequested(() => {
@@ -308,8 +332,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 throw err;
             }
 
-            // Something else went wrong
-            throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+            // Something else went wrong. See if the local proc died or not.
+            if (exitCode !== 0) {
+                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
+            } else {
+                throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+            }
         }
     }
 
@@ -328,7 +356,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
         if (bestInterpreter) {
             const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
-            const launcher = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter: bestInterpreter });
+            const launcher = await this.executionFactory.createActivatedEnvironment(
+                { resource: undefined, interpreter: bestInterpreter, allowEnvironmentFetchExceptions: true });
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             const serverInfoString = await launcher.exec([file], newOptions);
 
@@ -704,14 +733,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         }
 
-        // Return result
+        // Return results
         return this.commands.hasOwnProperty(command) ? this.commands[command] : undefined;
     }
 
     private doesModuleExist = async (module: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> => {
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
-            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter });
+            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
             try {
                 // Special case for ipykernel
                 const actualModule = module === JupyterCommands.KernelCreateCommand ? module : 'jupyter';

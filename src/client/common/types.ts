@@ -143,6 +143,7 @@ export interface IPythonSettings {
     readonly venvFolders: string[];
     readonly condaPath: string;
     readonly pipenvPath: string;
+    readonly poetryPath: string;
     readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
@@ -298,6 +299,7 @@ export interface IDataScienceSettings {
     markdownRegularExpression: string;
     codeRegularExpression: string;
     allowLiveShare? : boolean;
+    errorBackgroundColor: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
