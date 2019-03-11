@@ -5,9 +5,31 @@ import os
 import os.path
 import requests
 import shutil
+import sys
 import time
+from enum import Enum
 from progress.bar import Bar
 from subprocess import run, PIPE, Popen
+
+
+
+class Platform(Enum):
+    OSX = 4
+    Windows = 2
+    Linux = 3
+
+
+def get_platform() -> Platform:
+    platforms = {
+        "linux1": Platform.Linux,
+        "linux2": Platform.Linux,
+        "darwin": Platform.OSX,
+        "win32": Platform.Windows,
+    }
+    if sys.platform not in platforms:
+        return sys.platform
+
+    return platforms[sys.platform]
 
 
 def ensure_directory(dir: str):
@@ -22,10 +44,10 @@ def run_command(command, cwd=None, silent=False, progress_message=None, env=None
         print(progress_message)
     executable = shutil.which(command[0])
     command[0] = executable
-    print(command)
     stdout = PIPE if silent else None
 
-    run(command, cwd=cwd, stdout=stdout, shell=False, check=True, env=env)
+    proc = run(command, cwd=cwd, stdout=stdout, shell=False, env=env)
+    proc.check_returncode()
     # Note, we'll need some output to tell CI servers that process is still active.
     # if progress_message:
     #     progress = Spinner(progress_message)

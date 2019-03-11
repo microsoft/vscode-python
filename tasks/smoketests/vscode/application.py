@@ -3,19 +3,21 @@
 
 import os
 import shutil
+import time
 from typing import List
 from dataclasses import dataclass
 from enum import Enum
 from selenium import webdriver
 from .utils import get_binary_location, get_cli_location
-from ..utils.tools import run_command, ensure_directory
 from ..bootstrap.main import get_extension_path as get_bootstrap_ext_path
-
-
-class LaunchPurpose(Enum):
-    InstallExtension = 1
-    Launch = 2
-
+from ..utils.tools import run_command, ensure_directory
+from selenium.common.exceptions import NoSuchElementException
+from .quick_open import QuickOpen
+import selenium
+import selenium.common
+import selenium.webdriver
+from .core import Core
+from .documents import Documents
 
 @dataclass
 class Options:
@@ -49,13 +51,6 @@ def _setup_environment(dirs: Options):
         pass
 
 
-def _get_launch_args(options: Options):
-    args: List[str] = []
-    args.append(options.workspace_folder)
-
-    return args
-
-
 def uninstall_extension(options: Options):
     command = [
         get_binary_location(options.executable_dir),
@@ -84,30 +79,42 @@ def install_extension(options: Options):
 
 
 def launch_extension(options: Options):
-    with open(os.path.join(options.executable_dir, "smokin.cfg"), "w") as fs:
-        fs.write(options.workspace_folder)
     chrome_options = webdriver.ChromeOptions()
+    for arg in [
+        f"folder-uri=file:{options.workspace_folder}",
+        "skip-getting-started",
+        "skip-release-notes",
+        "sticky-quickopen",
+        "disable-telemetry",
+        "disable-updates",
+        "disable-crash-reporter",
+    ]:
+        chrome_options.add_argument(arg)
+
     chrome_options.binary_location = get_binary_location(options.executable_dir)
     driver = webdriver.Chrome(options=chrome_options)
-    import time
-    time.sleep(10)
     return driver
 
 
-class VSCode(object):
-    def __init__(self, driver: webdriver.Chrome):
-        self.driver = driver
+class Application(object):
+    def __init__(self, core: Core):
+        self.core = core
+        self.quick_open = QuickOpen(self)
+        self.documents = Documents(self)
 
     @classmethod
     def start(cls, options: Options):
         _setup_environment(options)
-        print(options.executable_dir)
-        install_extension(options)
         driver = launch_extension(options)
-        return cls(driver)
+        core = Core(driver)
+        app = cls(core)
+        return app
 
     def exit(self):
         pass
 
     def reload(self):
+        pass
+
+    def capture_screen(self):
         pass

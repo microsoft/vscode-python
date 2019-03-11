@@ -15,6 +15,7 @@ npm-debug.log
 !yarn.lock
 coverage/
 .vscode-test/**
+.vscode-smoke/**
 **/.venv*/
 precommit.hook
 pythonFiles/experimental/ptvsd/**

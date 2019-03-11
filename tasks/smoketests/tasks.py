@@ -3,12 +3,11 @@
 
 import os.path
 from invoke import task
-from .vscode.download import (
-    download_vscode,
-    download_chrome_driver as download_chrome_drv,
-)
+from .vscode.application import get_options, install_extension
+from .vscode.download import download_chrome_driver as download_chrome_drv
+from .vscode.download import download_vscode
 from .bootstrap.main import build_extension
-from .vscode.application import VSCode, get_options
+from .main import start_smoketests
 
 
 @task(name="download")
@@ -38,11 +37,12 @@ def download_chrome_driver(ctx, destination=".vscode-smoke", channel="stable"):
     download_chrome_drv(destination, channel)
 
 
-@task(name="build_smoke_extension")
-def download_chrome_driver(ctx):
-    """Builds the smoke test extension."""
+@task(name="install_extension")
+def install_ext(ctx, destination=".vscode-smoke", vsix="ms-python-insiders.vsix"):
 
-    build_extension()
+    vsix = os.path.abspath(vsix)
+    options = get_options(destination, vsix)
+    install_extension(options)
 
 
 @task(name="smoke")
@@ -51,7 +51,4 @@ def smoke(
 ):
     """Starts the smoke tests"""
 
-    vsix = os.path.abspath(vsix)
-    options = get_options(destination, vsix)
-    print(options)
-    VSCode.start(options=options)
+    start_smoketests(destination, channel, vsix)

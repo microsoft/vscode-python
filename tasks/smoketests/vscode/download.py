@@ -9,30 +9,11 @@ import shutil
 import sys
 import tempfile
 from enum import Enum
-from ..utils.tools import run_command, download_file, unzip_file, ensure_directory
-
-
-class Platform(Enum):
-    OSX = 4
-    Windows = 2
-    Linux = 3
-
-
-def _get_platform() -> Platform:
-    platforms = {
-        "linux1": Platform.Linux,
-        "linux2": Platform.Linux,
-        "darwin": Platform.OSX,
-        "win32": Platform.Windows,
-    }
-    if sys.platform not in platforms:
-        return sys.platform
-
-    return platforms[sys.platform]
+from ..utils.tools import run_command, download_file, unzip_file, ensure_directory, Platform, get_platform
 
 
 def _get_download_platform() -> str:
-    platform_type = _get_platform()
+    platform_type = get_platform()
     if platform_type == Platform.Linux:
         return "linux-x64"
     if platform_type == Platform.OSX:
@@ -85,7 +66,8 @@ def download_chrome_driver(download_path: str, channel: str = "stable"):
     download_path = os.path.abspath(download_path)
     ensure_directory(download_path)
     electron_version = _get_electron_version(channel)
-    js_file = os.path.join(os.getcwd(), "wow", "chrome_downloader.js")
+    dir = os.path.dirname(os.path.realpath(__file__))
+    js_file = os.path.join(dir, "chromeDownloader.js")
     # Use an exising npm package.
     run_command(
         ["node", js_file, electron_version, download_path],
