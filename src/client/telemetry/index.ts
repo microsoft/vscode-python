@@ -305,6 +305,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;

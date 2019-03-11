@@ -143,6 +143,7 @@
     "DataScience.jupyterSelectURIInvalidURI": "Invalid URI specified",
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.jupyterNotebookConnectFailed": "Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}",
+    "DataScience.jupyterNotebookRemoteConnectFailed": "Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}",
     "DataScience.notebookVersionFormat": "Jupyter Notebook Version: {0}",
     "DataScience.jupyterKernelNotSupportedOnActive": "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
     "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
