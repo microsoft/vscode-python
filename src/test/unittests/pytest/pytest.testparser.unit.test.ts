@@ -100,7 +100,7 @@ suite('PyTest parser used in discovery', () => {
                 });
 
             const parser = new PyTestsParser(testHelper.object);
-            const [_, options] = createParserOptions();
+            const [, options] = createParserOptions();
             parser.parse(testScenario.json, options);
 
             expect(testFilesParsed).to.deep.equal(testScenario.expectedTestFiles);
