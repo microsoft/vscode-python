@@ -105,7 +105,7 @@ export class TestsParser implements ITestsParser {
         const testFile = {
             resource: Uri.file(rootDirectory),
             functions: [], suites: [], name: fileName, fullPath: fullyQualifiedName,
-            nameToRun: fileName, xmlName: currentPackage, time: 0, errorsWhenDiscovering: lines.join('\n')
+            nameToRun: fileName, xmlName: currentPackage, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0, errorsWhenDiscovering: lines.join('\n')
         };
         testFiles.push(testFile);
         parentNodes.push({ indent: 0, item: testFile });
@@ -163,7 +163,7 @@ export class TestsParser implements ITestsParser {
                 const testFile = {
                     resource,
                     functions: [], suites: [], name: name, fullPath: fullyQualifiedName,
-                    nameToRun: name, xmlName: currentPackage, time: 0
+                    nameToRun: name, xmlName: currentPackage, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0
                 };
                 testFiles.push(testFile);
                 parentNodes.push({ indent: indent, item: testFile });
@@ -183,7 +183,7 @@ export class TestsParser implements ITestsParser {
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
                 const xmlName = `${parentNode!.item.xmlName}.${name}`;
-                const testSuite: TestSuite = { resource, name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
+                const testSuite: TestSuite = { resource, name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 };
                 parentNode!.item.suites.push(testSuite);
                 parentNodes.push({ indent: indent, item: testSuite });
                 return;
