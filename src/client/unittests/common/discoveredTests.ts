@@ -105,7 +105,7 @@ export class DiscoveredTest {
         return {
             //file: this.relfile,
             //line: this.lineno,
-            name: this.name,
+            name: from.name,
             nameToRun: from.id,
             //status: TestStatus.Idle,
             time: 0

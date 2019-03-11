@@ -117,8 +117,7 @@ suite('Unit Tests - Debug Launcher', () => {
         const args = expected.args;
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
         expected.args = debugArgs;
-
-        debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
+        debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(TypeMoq.Times.once());
     }
@@ -226,6 +225,7 @@ suite('Unit Tests - Debug Launcher', () => {
     }
 
     const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
+
     // tslint:disable-next-line:max-func-body-length
     testProviders.forEach(testProvider => {
         const testTitleSuffix = `(Test Framework '${testProvider}')`;
@@ -385,32 +385,32 @@ suite('Unit Tests - Debug Launcher', () => {
     const malformedFiles = [
         '// test 1',
         '// test 2 \n\
-{ \n\
-    "name": "spam", \n\
-    "type": "python", \n\
-    "request": "test" \n\
-} \n\
-        ',
-        '// test 3 \n\
-[ \n\
     { \n\
         "name": "spam", \n\
         "type": "python", \n\
         "request": "test" \n\
     } \n\
-] \n\
-        ',
-        '// test 4 \n\
-{ \n\
-    "configurations": [ \n\
+            ',
+        '// test 3 \n\
+    [ \n\
         { \n\
             "name": "spam", \n\
             "type": "python", \n\
             "request": "test" \n\
         } \n\
     ] \n\
-} \n\
-        '
+            ',
+        '// test 4 \n\
+    { \n\
+        "configurations": [ \n\
+            { \n\
+                "name": "spam", \n\
+                "type": "python", \n\
+                "request": "test" \n\
+            } \n\
+        ] \n\
+    } \n\
+            '
     ];
     for (const text of malformedFiles) {
         const testID = text.split('\n')[0].substring(3).trim();
@@ -534,21 +534,21 @@ suite('Unit Tests - Debug Launcher', () => {
         expected.name = 'spam';
         expected.stopOnEntry = true;
         setupSuccess(options, 'unittest', expected, ' \n\
-{ \n\
-    "version": "0.1.0", \n\
-    "configurations": [ \n\
-        // my thing \n\
-        { \n\
-            // "test" debug config \n\
-            "name": "spam",  /* non-empty */ \n\
-            "type": "python",  /* must be "python" */ \n\
-            "request": "test",  /* must be "test" */ \n\
-            // extra stuff here: \n\
-            "stopOnEntry": true \n\
-        } \n\
-    ] \n\
-} \n\
-        ');
+    { \n\
+        "version": "0.1.0", \n\
+        "configurations": [ \n\
+            // my thing \n\
+            { \n\
+                // "test" debug config \n\
+                "name": "spam",  /* non-empty */ \n\
+                "type": "python",  /* must be "python" */ \n\
+                "request": "test",  /* must be "test" */ \n\
+                // extra stuff here: \n\
+                "stopOnEntry": true \n\
+            } \n\
+        ] \n\
+    } \n\
+            ');
 
         await debugLauncher.launchDebugger(options);
 
