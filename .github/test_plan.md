@@ -356,14 +356,14 @@ def test_failure():
 
 ### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
 #### P0 Test Scenarios
-- [ ] Start and connect to local server
-    1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py
+- [ ] Start and connect to local Jupyter server
+    1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
     1. At the top of the file it will list the things that you need installed in your Python environment
     1. On the first cell click `Run Cell And All Below`
     1. Interactive Window should open, show connection information, and execute cells
-    1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d`
+    1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
 - [ ] Verify basic outputs
-    1. When the manualTestFile.py is run you should see a number of basic cells run
+    1. Run all the cells in manualTestFile.py
     1. Check to make sure that no outputs have errors
     1. Verify that graphs and progress bars are shown
 - [ ] Verify export / import
@@ -381,9 +381,9 @@ def test_failure():
 
 #### P1 Test Scenarios
 - [ ] Connect to a `remote` server
-    1. Open up a valid command prompt that can run `jupyter notebook` (a default Anaconda prompt works well)
-    1. Run `jupyter notebook` to start up a local jupyter server 
-    1. In the command line that launched jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d 
+    1. Open up a valid python command prompt that can run `jupyter notebook` (a default Anaconda prompt works well)
+    1. Run `jupyter notebook` to start up a local Jupyter server 
+    1. In the command window that launched Jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d 
     1. Run the command `Python: Select Jupyter server URI` then `Type in the URI to connect to a running jupyter server`
     1. Input the server / token name here
     1. Now run the cells in the manualTestFile.py 
@@ -393,15 +393,15 @@ def test_failure():
     - [ ] Verify per-cell commands
         1. Expand and collapse the input area of a cell
         1. Use the `X` button to remove a cell
-        1. Use the Goto Code button to go to a matching bit of code
+        1. Use the `Goto Code` button to jump to the part of the .py file that submitted the code
     - [ ] Verify top menu commands
         1. Use `X` to delete all cells
         1. Undo the delete action with `Undo`
         1. Redo the delete action with `Redo`
-        1. in manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt iPython Kernel` button`
+        1. In manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt iPython Kernel` button
         1. The progress bar should be interrupted and you should see a KeyboardInterrupt error message in the output
         1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
-        1. Use the expand all input and collapse all input commands
+        1. Use the expand all input and collapse all input commands to collapse all cell inputs
 - [ ] Verify code lenses
     1. Check that `Run Cell` `Run All Cells Above` and `Run Cell And All Below` all do the correct thing
 - [ ] Verify context menu navigation commands
@@ -422,7 +422,7 @@ def test_failure():
     1. Move your cursor to a line, but don't select anything. Shift-enter should send that line to the Interactive Window
 - [ ] Multiple installs
     1. Close and re-open VSCode to make sure that all jupyter servers are closed
-    1. Also make sure you are set to locally launch Jupyter and not connect to an existing URI
+    1. Also make sure you are set to locally launch Jupyter and not to connect to an existing URI
     1. In addition to your main testing environment install a new python or miniconda install (conda won't work as it has Jupyter by default)
     1. In VS code change the python interpreter to the new install
     1. Try `Run Cell` 
@@ -432,7 +432,7 @@ def test_failure():
 - [ ] Directory change
     - [ ] Verify directory change in export
         1. Follow the previous steps for export, but export the ipynb to a directory outside of the current workspace
-        1. Open the file in the browser, you should get an initial cell to change directory back to your workspace directory
+        1. Open the file in the browser, you should get an initial cell added to change directory back to your workspace directory
     - [ ] Verify directory change in import
         1. Follow the previous steps for import, but import an ipynb that is located outside of your current workspace
         1. Open the file in the editor. There should be python code at the start to change directory to the previous location of the .ipynb file
