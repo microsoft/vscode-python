@@ -427,6 +427,24 @@ def test_failure():
     1. In VS code change the python interpreter to the new install
     1. Try `Run Cell` 
     1. You should get a message that Jupyter was not found and that it is defaulting back to launch on the python instance that has Jupyter
+- [ ] LiveShare Support
+    1. Install the LiveShare VSCode Extension
+    1. Open manualTestFile.py in VSCode
+    1. Run the first cell in the file
+    1. Switch to the `Live Share` tab in VS Code and start a session
+        - [ ] Verify server start
+            1. Jupyter server instance should appear in the live share tab
+    1. Open another window of VSCode
+    1. Connect the second instance of VSCode as a Guest to the first Live Share session
+    1. After the workspace opens, open the manualTestFile.py on the Guest instance
+    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command 
+        - [ ] Verify results
+            1. Output should show up on the Guest Interactive Window
+            1. Same output should show up in the Host Interactive Window
+    1. On the Host instance run a cell from the file, both via the codelens and via the command palette
+        - [ ] Verify results
+            1. Output should show up on the Guest Interactive Window
+            1. Same output should show up in the Host Interactive Window
 
 #### P2 Test Scenarios
 - [ ] Directory change

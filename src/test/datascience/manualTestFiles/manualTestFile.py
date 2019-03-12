@@ -1,4 +1,6 @@
-# Needed installs: jupyter, numpy, pandas, matplotlib, tqdm, time
+# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh
+# Or run the requirements.txt file included next to this file
+
 #%% Basic Imports
 import numpy as np
 import pandas as pd
