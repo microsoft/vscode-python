@@ -4,6 +4,7 @@
 'use strict';
 
 import * as path from 'path';
+import { Uri } from 'vscode';
 import {
     TestFile, TestFunction, TestSuite
 } from './types';
@@ -69,6 +70,7 @@ export class DiscoveredTest {
                 isInstance: false,
                 name: suiteName,
                 nameToRun,
+                resource: Uri.file(from.testroot),
                 //status: TestStatus.Idle,
                 suites: [],
                 time: 0,
@@ -107,6 +109,7 @@ export class DiscoveredTest {
             //line: this.lineno,
             name: from.name,
             nameToRun: from.id,
+            resource: Uri.file(from.testroot),
             //status: TestStatus.Idle,
             time: 0
         };
@@ -134,6 +137,7 @@ export class DiscoveredTest {
             functions,
             name,
             nameToRun: name,
+            resource: Uri.file(from.testroot),
             //status: TestStatus.Idle,
             suites,
             time: 0,
