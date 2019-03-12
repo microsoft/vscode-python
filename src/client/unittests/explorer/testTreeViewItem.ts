@@ -72,6 +72,9 @@ export class TestTreeItem extends TreeItem {
             return '';
         }
         const result = this.data as TestResult;
+        if (!result.status || result.status === TestStatus.Idle || result.status === TestStatus.Unknown || result.status === TestStatus.Skipped){
+            return '';
+        }
         if (this.testType !== TestType.testFunction) {
             return `${result.functionsFailed} failed, ${result.functionsPassed} passed in ${result.time} seconds`;
         }
