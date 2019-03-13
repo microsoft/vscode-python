@@ -1,4 +1,64 @@
-[{"id": "test_root.py::Test_Root_test1::test_Root_A", "name": "test_Root_A", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": ".\\test_root.py", "lineno": 4, "testfunc": "Test_Root_test1.test_Root_A", "subtest": null, "markers": null}, {"id": "test_root.py::Test_Root_test1::test_Root_B", "name": "test_Root_B", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": ".\\test_root.py", "lineno": 7, "testfunc": "Test_Root_test1.test_Root_B", "subtest": null, "markers": null}, {"id": "test_root.py::Test_Root_test1::test_Root_C", "name": "test_Root_C", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": ".\\test_root.py", "lineno": 10, "testfunc": "Test_Root_test1.test_Root_C", "subtest": null, "markers": null}, {"id": "tests/test_another_pytest.py::test_username", "name": "test_username", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_another_pytest.py", "lineno": 2, "testfunc": "test_username", "subtest": null, "markers": null}, {"id": "tests/test_another_pytest.py::test_parametrized_username[one]", "name": "test_parametrized_username[one]", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_another_pytest.py", "lineno": 6, "testfunc": "test_parametrized_username", "subtest": ["[one]"], "markers": null}, {"id": "tests/test_another_pytest.py::test_parametrized_username[two]", "name": "test_parametrized_username[two]", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_another_pytest.py", "lineno": 6, "testfunc": "test_parametrized_username", "subtest": ["[two]"], "markers": null}, {"id": "tests/test_another_pytest.py::test_parametrized_username[three]", "name": "test_parametrized_username[three]", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_another_pytest.py", "lineno": 6, "testfunc": "test_parametrized_username", "subtest": ["[three]"], "markers": null}, {"id": "tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign", "name": "test_super_deep_foreign", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_foreign_nested_tests.py", "lineno": 5, "testfunc": "TestNestedForeignTests.TestInheritingHere.TestExtraNestedForeignTests.test_super_deep_foreign", "subtest": null, "markers": null}, {"id": "tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test", "name": "test_foreign_test", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_foreign_nested_tests.py", "lineno": 7, "testfunc": "TestNestedForeignTests.TestInheritingHere.test_foreign_test", "subtest": null, "markers": null}, {"id": "tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal", "name": "test_nested_normal", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile":
-"tests\\test_foreign_nested_tests.py", "lineno": 10, "testfunc": "TestNestedForeignTests.TestInheritingHere.test_nested_normal", "subtest": null, "markers": null}, {"id": "tests/test_foreign_nested_tests.py::TestNestedForeignTests::test_normal", "name": "test_normal", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_foreign_nested_tests.py", "lineno": 14, "testfunc": "TestNestedForeignTests.test_normal", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::test_simple_check", "name": "test_simple_check", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile":
-"tests\\test_pytest.py", "lineno": 3, "testfunc": "Test_CheckMyApp.test_simple_check", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::test_complex_check", "name": "test_complex_check", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 6, "testfunc": "Test_CheckMyApp.test_complex_check", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB", "name": "test_nested_class_methodB", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 10, "testfunc": "Test_CheckMyApp.Test_NestedClassA.test_nested_class_methodB", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d", "name": "test_d", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 14, "testfunc": "Test_CheckMyApp.Test_NestedClassA.Test_nested_classB_Of_A.test_d", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC", "name": "test_nested_class_methodC", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 17, "testfunc": "Test_CheckMyApp.Test_NestedClassA.test_nested_class_methodC", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::test_simple_check2", "name": "test_simple_check2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 20, "testfunc": "Test_CheckMyApp.test_simple_check2", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::Test_CheckMyApp::test_complex_check2", "name": "test_complex_check2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 23, "testfunc": "Test_CheckMyApp.test_complex_check2", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::test_username", "name": "test_username", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 26, "testfunc": "test_username", "subtest": null, "markers": null}, {"id": "tests/test_pytest.py::test_parametrized_username[one]", "name": "test_parametrized_username[one]", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 29, "testfunc": "test_parametrized_username", "subtest": ["[one]"], "markers": null}, {"id": "tests/test_pytest.py::test_parametrized_username[two]", "name": "test_parametrized_username[two]", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 29, "testfunc": "test_parametrized_username", "subtest": ["[two]"], "markers": null}, {"id": "tests/test_pytest.py::test_parametrized_username[three]", "name": "test_parametrized_username[three]", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_pytest.py", "lineno": 29, "testfunc": "test_parametrized_username", "subtest": ["[three]"], "markers": null}, {"id": "tests/test_unittest_one.py::Test_test1::test_A", "name": "test_A", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_one.py", "lineno": 4, "testfunc": "Test_test1.test_A", "subtest": null, "markers": null}, {"id": "tests/test_unittest_one.py::Test_test1::test_B", "name": "test_B", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_one.py", "lineno": 7, "testfunc": "Test_test1.test_B", "subtest": null, "markers": null}, {"id": "tests/test_unittest_one.py::Test_test1::test_C", "name": "test_C", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_one.py", "lineno": 10, "testfunc": "Test_test1.test_C", "subtest": null, "markers": null}, {"id": "tests/test_unittest_two.py::Test_test2::test_A2", "name": "test_A2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_two.py", "lineno": 4, "testfunc": "Test_test2.test_A2", "subtest": null, "markers": null}, {"id": "tests/test_unittest_two.py::Test_test2::test_B2", "name": "test_B2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_two.py", "lineno": 7, "testfunc": "Test_test2.test_B2", "subtest": null, "markers": null}, {"id": "tests/test_unittest_two.py::Test_test2::test_C2", "name": "test_C2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_two.py", "lineno": 10, "testfunc": "Test_test2.test_C2", "subtest": null, "markers": null}, {"id": "tests/test_unittest_two.py::Test_test2::test_D2", "name": "test_D2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_two.py", "lineno": 13, "testfunc": "Test_test2.test_D2", "subtest": null, "markers": null}, {"id": "tests/test_unittest_two.py::Test_test2a::test_222A2", "name": "test_222A2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_two.py", "lineno": 17, "testfunc": "Test_test2a.test_222A2", "subtest": null, "markers": null}, {"id": "tests/test_unittest_two.py::Test_test2a::test_222B2", "name": "test_222B2", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\test_unittest_two.py", "lineno": 20, "testfunc": "Test_test2a.test_222B2", "subtest": null, "markers": null}, {"id": "tests/unittest_three_test.py::Test_test3::test_A", "name": "test_A", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\unittest_three_test.py", "lineno": 4, "testfunc": "Test_test3.test_A", "subtest": null, "markers": null}, {"id": "tests/unittest_three_test.py::Test_test3::test_B", "name": "test_B", "testroot": "D:\\dev\\github\\d3r3kk\\test\\test_scenario\\five", "relfile": "tests\\unittest_three_test.py",
-"lineno": 7, "testfunc": "Test_test3.test_B", "subtest": null, "markers": null}]
+============================= test session starts ==============================
+platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
+rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard, inifile:
+plugins: pylama-7.4.3
+collected 33 items
+<Module 'test_root.py'>
+  <UnitTestCase 'Test_Root_test1'>
+    <TestCaseFunction 'test_Root_A'>
+    <TestCaseFunction 'test_Root_B'>
+    <TestCaseFunction 'test_Root_c'>
+<Module 'tests/test_another_pytest.py'>
+  <Function 'test_username'>
+  <Function 'test_parametrized_username[one]'>
+  <Function 'test_parametrized_username[two]'>
+  <Function 'test_parametrized_username[three]'>
+<Module 'tests/test_foreign_nested_tests.py'>
+  <Class 'TestNestedForeignTests'>
+    <Instance '()'>
+      <Class 'TestInheritingHere'>
+        <Instance '()'>
+          <Class 'TestExtraNestedForeignTests'>
+            <Instance '()'>
+              <Function 'test_super_deep_foreign'>
+          <Function 'test_foreign_test'>
+          <Function 'test_nested_normal'>
+      <Function 'test_normal'>
+<Module 'tests/test_pytest.py'>
+  <Class 'Test_CheckMyApp'>
+    <Instance '()'>
+      <Function 'test_simple_check'>
+      <Function 'test_complex_check'>
+      <Class 'Test_NestedClassA'>
+        <Instance '()'>
+          <Function 'test_nested_class_methodB'>
+          <Class 'Test_nested_classB_Of_A'>
+            <Instance '()'>
+              <Function 'test_d'>
+          <Function 'test_nested_class_methodC'>
+      <Function 'test_simple_check2'>
+      <Function 'test_complex_check2'>
+  <Function 'test_username'>
+  <Function 'test_parametrized_username[one]'>
+  <Function 'test_parametrized_username[two]'>
+  <Function 'test_parametrized_username[three]'>
+<Module 'tests/test_unittest_one.py'>
+  <UnitTestCase 'Test_test1'>
+    <TestCaseFunction 'test_A'>
+    <TestCaseFunction 'test_B'>
+    <TestCaseFunction 'test_c'>
+<Module 'tests/test_unittest_two.py'>
+  <UnitTestCase 'Test_test2'>
+    <TestCaseFunction 'test_A2'>
+    <TestCaseFunction 'test_B2'>
+    <TestCaseFunction 'test_C2'>
+    <TestCaseFunction 'test_D2'>
+  <UnitTestCase 'Test_test2a'>
+    <TestCaseFunction 'test_222A2'>
+    <TestCaseFunction 'test_222B2'>
+<Module 'tests/unittest_three_test.py'>
+  <UnitTestCase 'Test_test3'>
+    <TestCaseFunction 'test_A'>
+    <TestCaseFunction 'test_B'>
+
+========================= no tests ran in 0.06 seconds =========================
