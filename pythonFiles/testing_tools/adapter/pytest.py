@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os.path
+import sys
 
 import pytest
 
@@ -26,7 +27,14 @@ def discover(pytestargs=None,
         _plugin = TestCollector()
 
     pytestargs = _adjust_pytest_args(pytestargs)
+    old_out = sys.stdout
+    old_err = sys.stderr
+    sys.stdout = open(os.devnull, 'w')
+    sys.stderr = open(os.devnull, 'w')
     ec = _pytest_main(pytestargs, [_plugin])
+    sys.stdout = old_out
+    sys.stderr = old_err
+
     if ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if _plugin.discovered is None:

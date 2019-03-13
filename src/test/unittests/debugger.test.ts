@@ -13,7 +13,10 @@ import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/uni
 import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
 import { CANCELLATION_REASON, CommandSource, NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { TestRunner } from '../../client/unittests/common/runner';
-import { ITestDebugLauncher, ITestManagerFactory, ITestMessageService, ITestRunner, IXUnitParser, TestProvider } from '../../client/unittests/common/types';
+import {
+    ITestDebugLauncher, ITestDiscoveryRunner, ITestManagerFactory,
+    ITestMessageService, ITestRunner, IXUnitParser, TestProvider
+} from '../../client/unittests/common/types';
 import { XUnitParser } from '../../client/unittests/common/xUnitParser';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/unittests/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/unittests/pytest/services/argsService';
@@ -77,6 +80,7 @@ suite('Unit Tests - debugging', () => {
         ioc.registerMockUnitTestSocketServer();
         ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
+        ioc.serviceManager.add<ITestDiscoveryRunner>(ITestDiscoveryRunner, TestRunner);
         ioc.serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);
         ioc.serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
         ioc.serviceManager.add<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);
