@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import os.path
-import sys
 
 import pytest
 
@@ -27,14 +26,7 @@ def discover(pytestargs=None,
         _plugin = TestCollector()
 
     pytestargs = _adjust_pytest_args(pytestargs)
-    old_out = sys.stdout
-    old_err = sys.stderr
-    sys.stdout = open(os.devnull, 'w')
-    sys.stderr = open(os.devnull, 'w')
     ec = _pytest_main(pytestargs, [_plugin])
-    sys.stdout = old_out
-    sys.stderr = old_err
-
     if ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if _plugin.discovered is None:
@@ -45,10 +37,8 @@ def discover(pytestargs=None,
 def _adjust_pytest_args(pytestargs):
     pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
-    pytestargs.insert(0, '-pno:terminal')
     pytestargs.insert(0, '--collect-only')
-    pytestargs.insert(0, '--cache-clear')
-    pytestargs.insert(0, '-s')
+    pytestargs.insert(0, '-pno:terminal')
     # TODO: pull in code from:
     #  src/client/unittests/pytest/services/discoveryService.ts
     #  src/client/unittests/pytest/services/argsService.ts
@@ -112,8 +102,8 @@ def _parse_item(item):
     # Figure out the func (and subs).
     funcname = item.function.__name__
     parts = item.nodeid.split('::')
-    if os.path.normcase(parts.pop(0)) != filename:
-        # The filename of this node doesn't match the filename within the node id?
+    if parts.pop(0) != filename:
+        # TODO: What to do?
         raise NotImplementedError
     suites = []
     while len(parts) > 1:
