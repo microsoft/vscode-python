@@ -4,15 +4,17 @@
 'use strict';
 
 import * as assert from 'assert';
+import { Uri } from 'vscode';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { getParent, getTestFile, getTestFolder, getTestFunction, getTestSuite, getTestType } from '../../../client/unittests/common/testUtils';
 import { FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder, TestFunction, Tests, TestSuite, TestType } from '../../../client/unittests/common/types';
-import { TestDataItem } from '../../../client/unittests/types';
+import { TestDataItem, TestWorkspaceFolder } from '../../../client/unittests/types';
 
 // tslint:disable:prefer-template
 
 export function createMockTestDataItem<T extends TestDataItem>(type: TestType, nameSuffix: string = '') {
     const folder: TestFolder = {
+        resource: Uri.file(__filename),
         folders: [],
         name: 'Some Folder' + nameSuffix,
         nameToRun: ' Some Folder' + nameSuffix,
@@ -20,6 +22,7 @@ export function createMockTestDataItem<T extends TestDataItem>(type: TestType, n
         time: 0
     };
     const file: TestFile = {
+        resource: Uri.file(__filename),
         name: 'Some File' + nameSuffix,
         nameToRun: ' Some File' + nameSuffix,
         fullPath: __filename,
@@ -29,11 +32,13 @@ export function createMockTestDataItem<T extends TestDataItem>(type: TestType, n
         time: 0
     };
     const func: TestFunction = {
+        resource: Uri.file(__filename),
         name: 'Some Function' + nameSuffix,
         nameToRun: ' Some Function' + nameSuffix,
         time: 0
     };
     const suite: TestSuite = {
+        resource: Uri.file(__filename),
         name: 'Some Suite' + nameSuffix,
         nameToRun: ' Some Suite' + nameSuffix,
         functions: [],
@@ -53,6 +58,8 @@ export function createMockTestDataItem<T extends TestDataItem>(type: TestType, n
             return func as T;
         case TestType.testSuite:
             return suite as T;
+        case TestType.testWorkspaceFolder:
+            return (new TestWorkspaceFolder({ uri: Uri.file(''), name: 'a', index: 0 })) as T;
         default:
             throw new Error('Unknown type');
     }
@@ -116,8 +123,16 @@ suite('Unit Tests - TestUtils', () => {
                         assert.equal(func, undefined);
                         break;
                     }
+                case TestType.testWorkspaceFolder:
+                    {
+                        assert.equal(file, undefined);
+                        assert.equal(folder, undefined);
+                        assert.equal(suite, undefined);
+                        assert.equal(func, undefined);
+                        break;
+                    }
                 default:
-                    throw new Error('Unknown type');
+                    throw new Error(`Unknown type ${typeName.name},${typeName.value}`);
             }
         }
     });

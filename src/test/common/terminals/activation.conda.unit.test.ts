@@ -170,6 +170,59 @@ suite('Terminal Environment Activation conda', () => {
         expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
     });
 
+    const interpreterPath = path.join('path', 'to', 'interpreter');
+    const environmentName = 'Env';
+    const environmentNameHasSpaces = 'Env with spaces';
+    const testsForActivationUsingInterpreterPath =
+        [
+            {
+                testName: 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
+                envName: environmentName,
+                expectedResult: ['path/to/activate', 'conda activate Env'],
+                isWindows: true
+            },
+            {
+                testName: 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
+                envName: environmentName,
+                expectedResult: ['source path/to/activate', 'conda activate Env'],
+                isWindows: false
+            },
+            {
+                testName: 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
+                envName: environmentNameHasSpaces,
+                expectedResult: ['path/to/activate', 'conda activate \"Env with spaces\"'],
+                isWindows: true
+            },
+            {
+                testName: 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
+                envName: environmentNameHasSpaces,
+                expectedResult: ['source path/to/activate', 'conda activate \"Env with spaces\"'],
+                isWindows: false
+            }
+        ];
+
+    testsForActivationUsingInterpreterPath.forEach((testParams) => {
+        test(testParams.testName, async () => {
+            const pythonPath = 'python3';
+            platformService.setup(p => p.isWindows).returns(() => testParams.isWindows);
+            condaService.reset();
+            condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({
+                    name: testParams.envName,
+                    path: path.dirname(pythonPath)
+                }));
+            condaService.setup(c => c.getCondaVersion())
+                .returns(() => Promise.resolve(parse('4.4.0', true)!));
+            condaService.setup(c => c.getCondaFileFromInterpreter(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(interpreterPath));
+
+            const provider = new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object);
+            const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
+
+            expect(activationCommands).to.deep.equal(testParams.expectedResult, 'Incorrect Activation command');
+        });
+    });
+
     async function expectNoCondaActivationCommandForPowershell(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, shellType: TerminalShellType, hasSpaceInEnvironmentName = false) {
         terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
         platformService.setup(p => p.isLinux).returns(() => isLinux);

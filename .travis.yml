@@ -48,6 +48,9 @@ matrix:
         - os: linux
           python: "3.7-dev"
           env: FUNCTIONAL_TEST=true
+        - os: linux
+          python: "3.7-dev"
+          env: CHECK_BUNDLE=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -116,5 +119,13 @@ script:
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
         npx gulp uploadReleaseExtension;
+    fi
+  - if [[ $CHECK_BUNDLE == "true" ]]; then
+        npm run clean;
+        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER;
+        npm run package;
+        npx gulp clean:cleanExceptTests;
+        npm run testSmoke;
+        npm run verifyBundle;
     fi
   - bash <(curl -s https://codecov.io/bash)

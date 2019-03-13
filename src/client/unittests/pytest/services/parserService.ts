@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import '../../../common/extensions';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
 import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
@@ -102,6 +103,7 @@ export class TestsParser implements ITestsParser {
         const currentPackage = convertFileToPackage(fileName);
         const fullyQualifiedName = path.isAbsolute(fileName) ? fileName : path.resolve(rootDirectory, fileName);
         const testFile = {
+            resource: Uri.file(rootDirectory),
             functions: [], suites: [], name: fileName, fullPath: fullyQualifiedName,
             nameToRun: fileName, xmlName: currentPackage, time: 0, errorsWhenDiscovering: lines.join('\n')
         };
@@ -145,7 +147,7 @@ export class TestsParser implements ITestsParser {
     ) {
 
         let currentPackage: string = '';
-
+        const resource = Uri.file(rootDirectory);
         lines.forEach(line => {
             const trimmedLine = line.trim();
             let name: string = '';
@@ -159,6 +161,7 @@ export class TestsParser implements ITestsParser {
                 currentPackage = convertFileToPackage(name);
                 const fullyQualifiedName = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
                 const testFile = {
+                    resource,
                     functions: [], suites: [], name: name, fullPath: fullyQualifiedName,
                     nameToRun: name, xmlName: currentPackage, time: 0
                 };
@@ -180,7 +183,7 @@ export class TestsParser implements ITestsParser {
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
                 const xmlName = `${parentNode!.item.xmlName}.${name}`;
-                const testSuite: TestSuite = { name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
+                const testSuite: TestSuite = { resource, name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
                 parentNode!.item.suites.push(testSuite);
                 parentNodes.push({ indent: indent, item: testSuite });
                 return;
@@ -203,7 +206,7 @@ export class TestsParser implements ITestsParser {
                 name = name.trimQuotes();
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
-                const fn: TestFunction = { name: name, nameToRun: rawName, time: 0 };
+                const fn: TestFunction = { resource, name: name, nameToRun: rawName, time: 0 };
                 parentNode!.item.functions.push(fn);
                 return;
             }

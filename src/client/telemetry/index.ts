@@ -305,6 +305,7 @@ interface IEventNamePropertyMapping {
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
@@ -338,4 +339,5 @@ interface IEventNamePropertyMapping {
     [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus: boolean };
     [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus: boolean };
+    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
 }

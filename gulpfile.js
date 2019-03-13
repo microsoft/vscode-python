@@ -242,6 +242,16 @@ gulp.task('renameSourceMaps', async () => {
     await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
 });
 
+gulp.task('verifyBundle', async () => {
+    const matches = await glob.sync(path.join(__dirname, '*.vsix'));
+    if (!matches || matches.length == 0) {
+        throw new Error('Bundle does not exist');
+    } else {
+        console.log(`Bundle ${matches[0]} exists.`);
+    }
+
+});
+
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 

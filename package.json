@@ -91,7 +91,7 @@
         "onCommand:python.datascience.selectjupyteruri",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
-        "onCommand:python.python.enableSourceMapSupport"
+        "onCommand:python.enableSourceMapSupport"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -709,6 +709,21 @@
             ],
             "view/item/context": [
                 {
+                    "command": "python.runtests",
+                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "python.debugtests",
+                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "python.discoverTests",
+                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
+                    "group": "inline@2"
+                },
+                    {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testFunction",
                     "group": "inline@2"
@@ -2201,7 +2216,8 @@
         "cover:enable": "gulp cover:enable",
         "debugger-coverage": "gulp debugger-coverage",
         "cover:inlinesource": "gulp inlinesource",
-        "updateBuildNumber": "gulp updateBuildNumber"
+        "updateBuildNumber": "gulp updateBuildNumber",
+        "verifyBundle": "gulp verifyBundle"
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",

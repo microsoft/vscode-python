@@ -7,16 +7,15 @@
 import {
     DiagnosticSeverity, Disposable, DocumentSymbolProvider,
     Event, Location, ProviderResult, TextDocument,
-    TreeDataProvider, Uri
+    TreeDataProvider, TreeItem, Uri, WorkspaceFolder
 } from 'vscode';
-import { Product } from '../common/types';
+import { Product, Resource } from '../common/types';
 import { CommandSource } from './common/constants';
 import {
     FlattenedTestFunction, ITestManager, ITestResultsService,
     TestFile, TestFolder, TestFunction, TestRunOptions, Tests,
     TestStatus, TestsToRun, TestSuite, UnitTestProduct
 } from './common/types';
-import { TestTreeItem } from './explorer/testTreeViewItem';
 
 export const IUnitTestConfigurationService = Symbol('IUnitTestConfigurationService');
 export interface IUnitTestConfigurationService {
@@ -50,7 +49,7 @@ export interface IUnitTestManagementService {
     activate(symbolProvider: DocumentSymbolProvider): Promise<void>;
     getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
     discoverTestsForDocument(doc: TextDocument): Promise<void>;
-    autoDiscoverTests(): Promise<void>;
+    autoDiscoverTests(resource: Resource): Promise<void>;
     discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean): Promise<void>;
     stopTests(resource: Uri): Promise<void>;
     displayStopUI(message: string): Promise<void>;
@@ -157,13 +156,25 @@ export interface ILocationStackFrameDetails {
 
 export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };
 
-export type TestDataItem = TestFolder | TestFile | TestSuite | TestFunction;
+export type TestDataItem = TestWorkspaceFolder | TestFolder | TestFile | TestSuite | TestFunction;
+
+export class TestWorkspaceFolder {
+    public status?: TestStatus;
+    constructor(public readonly workspaceFolder: WorkspaceFolder) { }
+    public get resource(): Uri {
+        return this.workspaceFolder.uri;
+    }
+    public get name(): string {
+        return this.workspaceFolder.name;
+    }
+}
 
 export const ITestTreeViewProvider = Symbol('ITestTreeViewProvider');
 export interface ITestTreeViewProvider extends TreeDataProvider<TestDataItem> {
     onDidChangeTreeData: Event<TestDataItem | undefined>;
-    getTreeItem(element: TestDataItem): Promise<TestTreeItem>;
+    getTreeItem(element: TestDataItem): Promise<TreeItem>;
     getChildren(element?: TestDataItem): ProviderResult<TestDataItem[]>;
+    refresh(resource: Uri): void;
 }
 
 export const ITestDataItemResource = Symbol('ITestDataItemResource');

@@ -8,8 +8,10 @@
  */
 
 import { join, parse as path_parse } from 'path';
+import * as tsmockito from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
+import { CommandManager } from '../../../client/common/application/commandManager';
 import {
     IApplicationShell, ICommandManager, IWorkspaceService
 } from '../../../client/common/application/types';
@@ -29,7 +31,6 @@ import {
     TestTreeViewProvider
 } from '../../../client/unittests/explorer/testTreeViewProvider';
 import { IUnitTestManagementService } from '../../../client/unittests/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
 /**
  * Disposable class that doesn't do anything, help for event-registration against
@@ -44,6 +45,7 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
 
     // tslint:disable-next-line:no-unnecessary-local-variable
     const folder: TestFolder = {
+        resource: Uri.file(__filename),
         folders: [],
         name: folderPath,
         nameToRun: folderPath,
@@ -58,6 +60,7 @@ export function getMockTestFile(filePath: string, testSuites: TestSuite[] = [], 
 
     // tslint:disable-next-line:no-unnecessary-local-variable
     const testFile: TestFile = {
+        resource: Uri.file(__filename),
         name: (path_parse(filePath)).base,
         nameToRun: filePath,
         time: 0,
@@ -82,6 +85,7 @@ export function getMockTestSuite(
 
     // tslint:disable-next-line:no-unnecessary-local-variable
     const testSuite: TestSuite = {
+        resource: Uri.file(__filename),
         functions: testFunctions,
         isInstance: instance,
         isUnitTest: unitTest,
@@ -101,6 +105,7 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
 
     // tslint:disable-next-line:no-unnecessary-local-variable
     const fn: TestFunction = {
+        resource: Uri.file(__filename),
         name: fnName,
         nameToRun: fnNameToRun,
         time: 0
@@ -194,15 +199,13 @@ export function createMockUnitTestMgmtService(): typemoq.IMock<IUnitTestManageme
  * Create an IWorkspaceService mock that will work with the TestTreeViewProvider class.
  *
  * @param workspaceFolderPath Optional, the path to use as the current Resource-path for
- * the tests within the TestTree. Defaults to EXTENSION_ROOT_DIR_FOR_TESTS.
+ * the tests within the TestTree.
  */
-export function createMockWorkspaceService(
-    workspaceFolderPath: string = EXTENSION_ROOT_DIR_FOR_TESTS
-): typemoq.IMock<IWorkspaceService> {
+export function createMockWorkspaceService(): typemoq.IMock<IWorkspaceService> {
     const workspcSrvMoq = typemoq.Mock.ofType<IWorkspaceService>();
     class ExplorerTestsWorkspaceFolder implements WorkspaceFolder {
         public get uri(): Uri {
-            return Uri.parse(workspaceFolderPath);
+            return Uri.parse('');
         }
         public get name(): string {
             return (path_parse(this.uri.fsPath)).base;
@@ -229,7 +232,8 @@ export function createMockTestExplorer(
     testStore?: ITestCollectionStorageService,
     testsData?: Tests,
     unitTestMgmtService?: IUnitTestManagementService,
-    workspaceService?: IWorkspaceService
+    workspaceService?: IWorkspaceService,
+    commandManager?: ICommandManager
 ): TestTreeViewProvider {
 
     if (!testStore) {
@@ -243,15 +247,14 @@ export function createMockTestExplorer(
     if (!workspaceService) {
         workspaceService = createMockWorkspaceService().object;
     }
+    if (!commandManager) {
+        commandManager = tsmockito.instance(tsmockito.mock(CommandManager));
+    }
 
     const dispRegMoq = typemoq.Mock.ofType<IDisposableRegistry>();
     dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
 
-    // tslint:disable-next-line:no-unnecessary-local-variable
-    const viewProvider: TestTreeViewProvider =
-        new TestTreeViewProvider(
-            testStore, unitTestMgmtService, workspaceService, dispRegMoq.object
-        );
-
-    return viewProvider;
+    return new TestTreeViewProvider(
+        testStore, unitTestMgmtService, workspaceService, commandManager, dispRegMoq.object
+    );
 }

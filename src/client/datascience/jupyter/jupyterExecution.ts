@@ -169,8 +169,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 return result;
             } catch (err) {
                 // Something else went wrong
-                sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err));
+                if (options && options.uri) {
+                    sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
+                    throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err));
+                } else {
+                    sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
+                    throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err));
+                }
             }
         }, cancelToken);
     }

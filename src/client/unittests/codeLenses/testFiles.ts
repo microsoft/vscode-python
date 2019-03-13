@@ -203,20 +203,6 @@ function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites,
     if (functions.length === 0) {
         return [];
     }
-    if (functions.length === 0) {
-        return [
-            new CodeLens(range, {
-                title: constants.Text.CodeLensRunUnitTest,
-                command: constants.Commands.Tests_Run,
-                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: functions }]
-            }),
-            new CodeLens(range, {
-                title: constants.Text.CodeLensDebugUnitTest,
-                command: constants.Commands.Tests_Debug,
-                arguments: [undefined, CommandSource.codelens, file, <TestsToRun>{ testFunction: functions }]
-            })
-        ];
-    }
 
     // Find all flattened functions.
     return [

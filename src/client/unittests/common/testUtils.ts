@@ -5,7 +5,7 @@ import { IApplicationShell, ICommandManager } from '../../common/application/typ
 import * as constants from '../../common/constants';
 import { IUnitTestSettings, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { TestDataItem } from '../types';
+import { TestDataItem, TestWorkspaceFolder } from '../types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import {
@@ -145,7 +145,7 @@ export class TestsHelper implements ITestsHelper {
         tests.testFolders = [];
         const folderMap = new Map<string, TestFolder>();
         folders.sort();
-
+        const resource = Uri.file(workspaceFolder);
         folders.forEach(dir => {
             dir.split(path.sep).reduce((parentPath, currentName, index, values) => {
                 let newPath = currentName;
@@ -155,7 +155,7 @@ export class TestsHelper implements ITestsHelper {
                     newPath = path.join(parentPath, currentName);
                 }
                 if (!folderMap.has(newPath)) {
-                    const testFolder: TestFolder = { name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0 };
+                    const testFolder: TestFolder = { resource, name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0 };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
                         parentFolder!.folders.push(testFolder);
@@ -198,8 +198,7 @@ export class TestsHelper implements ITestsHelper {
         }
 
         // Just return this as a test file.
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        return <TestsToRun>{ testFile: [{ name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0 }] };
+        return { testFile: [{ resource: Uri.file(rootDirectory), name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0 }] };
     }
     public displayTestErrorMessage(message: string) {
         this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
@@ -246,6 +245,9 @@ export class TestsHelper implements ITestsHelper {
 }
 
 export function getTestType(test: TestDataItem): TestType {
+    if (test instanceof TestWorkspaceFolder) {
+        return TestType.testWorkspaceFolder;
+    }
     if (getTestFile(test)) {
         return TestType.testFile;
     }
@@ -285,7 +287,7 @@ export function getTestFunction(test: TestDataItem): TestFunction | undefined {
     if (!test) {
         return;
     }
-    if (getTestFile(test) || getTestFolder(test) || getTestSuite(test)) {
+    if (test instanceof TestWorkspaceFolder || getTestFile(test) || getTestFolder(test) || getTestSuite(test)) {
         return;
     }
     return test as TestFunction;
@@ -468,7 +470,7 @@ function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void
 }
 function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
     source.forEach(sourceFile => {
-        const targetFile = target.find(file => file.name === sourceFile.name && file.nameToRun === sourceFile.nameToRun);
+        const targetFile = target.find(file => file.name === sourceFile.name);
         if (!targetFile) {
             return;
         }

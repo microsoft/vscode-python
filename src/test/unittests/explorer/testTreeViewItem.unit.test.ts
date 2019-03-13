@@ -10,7 +10,7 @@ import {
     TestFunction, TestSuite
 } from '../../../client/unittests/common/types';
 import {
-    createTreeViewItemFrom, TestTreeItem
+    TestTreeItem
 } from '../../../client/unittests/explorer/testTreeViewItem';
 import { getTestExplorerViewItemData } from './explorerTestData';
 
@@ -26,27 +26,27 @@ suite('Unit Tests Test Explorer View Items', () => {
     });
 
     test('Test folder created into test view item', () => {
-        const viewItem: TestTreeItem = createTreeViewItemFrom(resource, testFolder, undefined);
+        const viewItem = new TestTreeItem(resource, testFolder);
         expect(viewItem.contextValue).is.equal('testFolder');
     });
 
     test('Test file created into test view item', () => {
-        const viewItem: TestTreeItem = createTreeViewItemFrom(resource, testFile, testFolder);
+        const viewItem = new TestTreeItem(resource, testFile);
         expect(viewItem.contextValue).is.equal('testFile');
     });
 
     test('Test folder created into test view item', () => {
-        const viewItem: TestTreeItem = createTreeViewItemFrom(resource, testSuite, testFile);
+        const viewItem = new TestTreeItem(resource, testSuite);
         expect(viewItem.contextValue).is.equal('testSuite');
     });
 
     test('Test folder created into test view item', () => {
-        const viewItem: TestTreeItem = createTreeViewItemFrom(resource, testFunction, testFile);
+        const viewItem = new TestTreeItem(resource, testFunction);
         expect(viewItem.contextValue).is.equal('testFunction');
     });
 
     test('Test folder created into test view item', () => {
-        const viewItem: TestTreeItem = createTreeViewItemFrom(resource, testSuiteFunction, testSuite);
+        const viewItem = new TestTreeItem(resource, testSuiteFunction);
         expect(viewItem.contextValue).is.equal('testFunction');
     });
 });

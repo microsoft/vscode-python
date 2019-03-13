@@ -4,7 +4,8 @@
         "target": "es6",
         "outDir": "out",
         "lib": [
-            "es6", "dom"
+            "es6",
+            "dom"
         ],
         "jsx": "react",
         "sourceMap": true,
@@ -13,9 +14,10 @@
         "allowSyntheticDefaultImports": true,
         "noImplicitThis": false
         // TODO: enable to ensure all code complies with strict coding standards
-        // , "noUnusedLocals": true
-        // , "noUnusedParameters": false
-        // , "strict": true
+        // ,
+        // "noUnusedLocals": true,
+        // "noUnusedParameters": false,
+        // "strict": true
     },
     "exclude": [
         "node_modules",
