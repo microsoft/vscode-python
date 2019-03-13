@@ -482,7 +482,7 @@ export function isSubtestsParent(suite: TestSuite): boolean {
     return subtestParent.asSuite === suite;
 }
 
-export function copyTestResults(source: Tests, target: Tests): void {
+export function copyDesiredTestResults(source: Tests, target: Tests): void {
     copyResultsForFolders(source.testFolders, target.testFolders);
 }
 
@@ -494,6 +494,8 @@ function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void
         }
         copyValueTypes<TestFolder>(sourceFolder, targetFolder);
         copyResultsForFiles(sourceFolder.testFiles, targetFolder.testFiles);
+        // These should be reinitialized
+        targetFolder.functionsPassed = targetFolder.functionsDidNotRun = targetFolder.functionsFailed = 0;
     });
 }
 function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
@@ -505,6 +507,8 @@ function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
         copyValueTypes<TestFile>(sourceFile, targetFile);
         copyResultsForFunctions(sourceFile.functions, targetFile.functions);
         copyResultsForSuites(sourceFile.suites, targetFile.suites);
+        // These should be reinitialized
+        targetFile.functionsPassed = targetFile.functionsDidNotRun = targetFile.functionsFailed = 0;
     });
 }
 
@@ -529,6 +533,8 @@ function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
         copyValueTypes<TestSuite>(sourceSuite, targetSuite);
         copyResultsForFunctions(sourceSuite.functions, targetSuite.functions);
         copyResultsForSuites(sourceSuite.suites, targetSuite.suites);
+        // These should be reinitialized
+        targetSuite.functionsPassed = targetSuite.functionsDidNotRun = targetSuite.functionsFailed = 0;
     });
 }
 
@@ -539,4 +545,4 @@ function copyValueTypes<T>(source: T, target: T): void {
             target[key] = value;
         }
     });
- }
+}

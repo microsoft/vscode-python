@@ -72,7 +72,7 @@ export class TestTreeItem extends TreeItem {
             return '';
         }
         const result = this.data as TestResult;
-        if (!result.status || result.status === TestStatus.Idle || result.status === TestStatus.Unknown || result.status === TestStatus.Skipped){
+        if (!result.status || result.status === TestStatus.Idle || result.status === TestStatus.Unknown || result.status === TestStatus.Skipped) {
             return '';
         }
         if (this.testType !== TestType.testFunction) {

@@ -4,7 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import { copyTestResults } from '../../../../client/unittests/common/testUtils';
+import { copyDesiredTestResults } from '../../../../client/unittests/common/testUtils';
 import { FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../../client/unittests/common/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
@@ -114,7 +114,7 @@ suite('Unit Tests - Storage Service', () => {
         assert.notDeepEqual(testData1.testFunctions[1].testFunction, testData2.testFunctions[1].testFunction);
         assert.notDeepEqual(testData1.testFunctions[2].testFunction, testData2.testFunctions[2].testFunction);
 
-        copyTestResults(testData1, testData2);
+        copyDesiredTestResults(testData1, testData2);
 
         // Function 1 is in a different suite now, hence should not get updated.
         assert.notDeepEqual(testData1.testFunctions[0].testFunction, testData2.testFunctions[0].testFunction);

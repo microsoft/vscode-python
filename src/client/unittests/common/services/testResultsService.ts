@@ -38,6 +38,7 @@ export class TestResultsService implements ITestResultsService {
         let totalTime = 0;
         let allFilesPassed = true;
         let noFilesRan = true;
+        testFolder.functionsPassed = testFolder.functionsFailed = testFolder.functionsDidNotRun = 0;
 
         testFolder.testFiles.forEach(fl => {
             totalTime += fl.time;
@@ -50,6 +51,7 @@ export class TestResultsService implements ITestResultsService {
 
             testFolder.functionsFailed! += fl.functionsFailed!;
             testFolder.functionsPassed! += fl.functionsPassed!;
+            testFolder.functionsDidNotRun! += fl.functionsDidNotRun!;
         });
 
         let allFoldersPassed = true;
@@ -67,6 +69,7 @@ export class TestResultsService implements ITestResultsService {
 
             testFolder.functionsFailed! += folder.functionsFailed!;
             testFolder.functionsPassed! += folder.functionsPassed!;
+            testFolder.functionsDidNotRun! += folder.functionsDidNotRun!;
         });
 
         testFolder.time = totalTime;
@@ -82,6 +85,7 @@ export class TestResultsService implements ITestResultsService {
         let totalTime = 0;
         let allFunctionsPassed = true;
         let noFunctionsRan = true;
+        test.functionsPassed = test.functionsFailed = test.functionsDidNotRun = 0;
 
         test.functions.forEach(fn => {
             totalTime += fn.time;
@@ -93,6 +97,8 @@ export class TestResultsService implements ITestResultsService {
                     test.functionsFailed! += 1;
                     allFunctionsPassed = false;
                 }
+            } else {
+                test.functionsDidNotRun! += 1;
             }
         });
 
@@ -111,6 +117,7 @@ export class TestResultsService implements ITestResultsService {
 
             test.functionsFailed! += suite.functionsFailed!;
             test.functionsPassed! += suite.functionsPassed!;
+            test.functionsDidNotRun! += suite.functionsDidNotRun!;
         });
 
         test.time = totalTime;

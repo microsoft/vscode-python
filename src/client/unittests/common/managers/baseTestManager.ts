@@ -24,7 +24,7 @@ import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
 import { IPythonUnitTestMessage, IUnitTestDiagnosticService, WorkspaceTestStatus } from '../../types';
-import { copyTestResults } from '../testUtils';
+import { copyDesiredTestResults } from '../testUtils';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import {
     ITestCollectionStorageService,
@@ -175,7 +175,7 @@ export abstract class BaseTestManager implements ITestManager {
                 if (clearTestStatus) {
                     this.resetTestResults();
                 } else if (existingTests) {
-                    copyTestResults(existingTests, tests);
+                    copyDesiredTestResults(existingTests, tests);
                     this._testResultsService.updateResults(tests);
                 }
                 this.testCollectionStorage.storeTests(wkspace, tests);
