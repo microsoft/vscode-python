@@ -82,10 +82,10 @@ suite('Import Tracker', () => {
         expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);
     });
 
-    test('Already opened documents', () => {
+    test('Already opened documents', async () => {
         const doc = createDocument('import pandas\r\n', 'foo.py', 1, TypeMoq.Times.atMost(100), true);
         documentManager.setup(d => d.textDocuments).returns(() => [doc.object]);
-        importTracker.activate();
+        await importTracker.activate();
 
         expect(Reporter.eventNames).to.deep.equal([EventName.KNOWN_IMPORT_FROM_FILE]);
         expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);

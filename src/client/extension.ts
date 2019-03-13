@@ -164,7 +164,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     // Activate import tracking
     const importTracker = serviceManager.get<IImportTracker>(IImportTracker);
-    importTracker.activate();
+    importTracker.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
     const linterProvider = new LinterProvider(context, serviceManager);

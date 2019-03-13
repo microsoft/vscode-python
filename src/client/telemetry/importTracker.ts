@@ -8,6 +8,7 @@ import * as path from 'path';
 import { TextDocument } from 'vscode';
 
 import { sendTelemetryEvent } from '.';
+import { sleep } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
@@ -51,8 +52,10 @@ export class ImportTracker implements IImportTracker {
         this.executionManager.onExecutedCode(c => this.onExecutedCode(c));
     }
 
-    public activate() {
-        // Act like all of our open documents just opened
+    public async activate() : Promise<void> {
+        // Act like all of our open documents just opened. Don't do this now though. We don't want
+        // to hold up the activate.
+        await sleep(1000);
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
