@@ -374,6 +374,8 @@ suite('Multiroot Environment Variables Provider', () => {
 
     test('Change event will be raised when when .env file is created, modified and deleted', async function () {
         // tslint:disable-next-line:no-invalid-this
+        this.skip();
+        // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
         const env3 = path.join(workspace4Path.fsPath, '.env3');
         const fileExists = await fs.pathExists(env3);
