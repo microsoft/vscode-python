@@ -153,7 +153,7 @@ export class TestsParser implements ITestsParser {
         let currentPackage: string = '';
         const resource = Uri.file(rootDirectory);
 
-        // tslint:disable-next-line:cyclomatic-complexity
+        // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
         lines.forEach(line => {
             const trimmedLine = line.trim();
             let name: string = '';
