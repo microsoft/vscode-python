@@ -155,7 +155,7 @@ export class TestsHelper implements ITestsHelper {
                     newPath = path.join(parentPath, currentName);
                 }
                 if (!folderMap.has(newPath)) {
-                    const testFolder: TestFolder = { resource, name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0 };
+                    const testFolder: TestFolder = { resource, name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
                         parentFolder!.folders.push(testFolder);
@@ -198,7 +198,7 @@ export class TestsHelper implements ITestsHelper {
         }
 
         // Just return this as a test file.
-        return { testFile: [{ resource: Uri.file(rootDirectory), name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0 }] };
+        return { testFile: [{ resource: Uri.file(rootDirectory), name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 }] };
     }
     public displayTestErrorMessage(message: string) {
         this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
