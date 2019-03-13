@@ -148,7 +148,7 @@ collected 2 items
             name: 'test_with_subtests',
             nameToRun: 'tests/test_spam.py::test_with_subtests',
             asSuite: {
-                resource: Uri.file(__filename),
+                resource: Uri.file('/home/user/test/pytest_scenario'),
                 name: 'test_with_subtests',
                 nameToRun: 'tests/test_spam.py::test_with_subtests',
                 functions: [
