@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" enable-background="new 0 0 16 16" height="16" width="16">
-  <circle cx="8" cy="8" r="6" fill="yellow"/>
-  <text x="5" y="12" fill="#E51400">?</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><defs><style>.icon-canvas-transparent,.icon-vs-out-2{fill:#f6f6f6;}.icon-canvas-transparent{opacity:0;}.icon-vs-blue-2{fill:#1ba1e2;}.icon-white-2{fill:#fff;}</style></defs><title>StatusAlert_16x</title><g id="canvas"><path class="icon-canvas-transparent" d="M16,16H0V0H16Z"/></g><g id="outline" style="display: none;"><path class="icon-vs-out-2" d="M10,0l6,6v4l-6,6H6L0,10V6L6,0Z"/></g><g id="iconBg"><path class="icon-vs-blue-2" d="M9.586,1H6.415L1,6.415V9.586L6.414,15H9.587L15,9.587V6.414ZM9,13H7V11H9Zm0-3H7V3H9Z"/></g><g id="iconFg" style="display: none;"><path class="icon-white-2" d="M7,3H9v7H7ZM7,13H9V11H7Z"/></g></svg>
