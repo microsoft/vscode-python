@@ -55,7 +55,7 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {'simple': False})
+        self.assertEqual(args, {'show_pytest': False, 'simple': False})
         self.assertEqual(toolargs, [])
 
     def test_pytest_full(self):
@@ -73,7 +73,7 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {'simple': False})
+        self.assertEqual(args, {'show_pytest': False, 'simple': False})
         self.assertEqual(toolargs, [
             '--',
             '--strict',
