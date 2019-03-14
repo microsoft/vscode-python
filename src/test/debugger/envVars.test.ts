@@ -28,7 +28,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-        initialize();
+        await initialize();
     });
 
     setup(async () => {
@@ -193,22 +193,22 @@ suite('Resolving Environment Variables when Debugging', () => {
         }
     }
 
-    test('Confirm paths get appended correctly when using json variables and launched in external terminal', function () {
+    test('Confirm paths get appended correctly when using json variables and launched in external terminal', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-        testAppendingOfPaths('externalTerminal', 6, false);
+        await testAppendingOfPaths('externalTerminal', 6, false);
     });
 
-    test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', function () {
+    test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-        testAppendingOfPaths('integratedTerminal', 6, false);
+        await testAppendingOfPaths('integratedTerminal', 6, false);
     });
 
     test('Confirm paths get appended correctly when using json variables and launched in debug console', async function () {
