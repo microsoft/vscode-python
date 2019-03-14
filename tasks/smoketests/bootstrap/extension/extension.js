@@ -13,6 +13,19 @@ function activate(context) {
     statusBarItem.show();
 
     context.subscriptions.push(statusBarItem);
+
+    const ext = vscode.extensions.getExtension('ms-python.python');
+    if (!ext.isActive){
+        ext.activate();
+    }
+
+    vscode.commands.registerCommand('smoketest.activatePython', async ()=>{
+        const ext = vscode.extensions.getExtension('ms-python.python');
+        if (!ext.isActive){
+            await ext.activate();
+        }
+        vscode.window.showInformationMessage('Python Extension Activated');
+    })
 }
 
 exports.activate = activate;

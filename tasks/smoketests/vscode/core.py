@@ -1,20 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
-import shutil
+
 import time
-from typing import List
-from dataclasses import dataclass
-from enum import Enum
 from selenium import webdriver
-from .utils import get_binary_location, get_cli_location
-from ..bootstrap.main import get_extension_path as get_bootstrap_ext_path
-from ..utils.tools import run_command, ensure_directory
-from selenium.common.exceptions import NoSuchElementException
-import selenium
-import selenium.common
-import selenium.webdriver
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
+
 
 def _try_and_find(fn, **kwargs):
     timeout_messge: str = kwargs.get("timeout_messge", "Timeout")
@@ -32,9 +26,8 @@ def _try_and_find(fn, **kwargs):
         if time.time() - start > timeout:
             trial_counter = retry_count + 1
         try:
-            ele = fn.__call__()
-            return ele
-        except NoSuchElementException:
+            return fn.__call__()
+        except (NoSuchElementException, StaleElementReferenceException):
             trial_counter += 1
             time.sleep(retry_interval / 1000)
     else:
@@ -47,8 +40,8 @@ class Core(object):
         self.driver = driver
 
     def dispatch_keys(self, keys: str, **kwargs):
-        ele = kwargs.get('element', self.driver.switch_to.active_element)
-        ele.send_keys(keys)
+        element = kwargs.get("element", self.driver.switch_to.active_element)
+        element.send_keys(keys)
 
     def wait_and_click(self):
         pass
@@ -58,26 +51,44 @@ class Core(object):
 
     def wait_for_element(self, css_selector, predicate=lambda ele: True, **kwargs):
         def find():
-            ele = self.driver.find_element_by_css_selector(css_selector)
-            if predicate(ele) == True:
-                return ele
+            element = self.driver.find_element_by_css_selector(css_selector)
+            if not element.is_displayed():
+                raise NoSuchElementException(
+                    "Element not yet visible, so lets wait again"
+                )
+            if predicate(element) is True:
+                return element
             raise NoSuchElementException("Predicate returned False in wait_for_element")
 
         return _try_and_find(find, **kwargs)
 
-    def wait_for_elements(self, css_selector, predicate=lambda eles: True, **kwargs):
+    def wait_for_elements(self, css_selector, predicate=lambda elements: [], **kwargs):
         def find():
-            eles = self.driver.find_elements_by_css_selector(css_selector)
-            if predicate(eles) == True:
-                return eles
-            raise NoSuchElementException("Predicate returned False in wait_for_elements")
+            elements = self.driver.find_elements_by_css_selector(css_selector)
+            filtered = predicate(elements)
+            if len(filtered) > 0:
+                # Ensure all items returned are visible.
+                for element in filtered:
+                    if not element.is_displayed():
+                        raise NoSuchElementException(
+                            "Element not yet visible, so lets wait again"
+                        )
+
+                return filtered
+            raise NoSuchElementException(
+                "Predicate returned False in wait_for_elements"
+            )
 
         return _try_and_find(find, **kwargs)
 
     def wait_for_active_element(self, css_selector, **kwargs):
         def is_active():
-            ele = self.driver.find_element_by_css_selector(css_selector)
-            assert ele == self.driver.switch_to.active_element
-            return ele
+            element = self.driver.find_element_by_css_selector(css_selector)
+            assert element == self.driver.switch_to.active_element
+            if not element.is_displayed():
+                raise NoSuchElementException(
+                    "Element not yet visible, so lets wait again"
+                )
+            return element
 
         return _try_and_find(is_active, **kwargs)

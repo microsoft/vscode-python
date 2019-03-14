@@ -183,6 +183,32 @@
             "args": [
                 "watch"
             ]
+        },
+        {
+            "name": "Behave Smoke Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "behave",
+            "args": [
+                "-f",
+                "plain",
+                "-T",
+                "--no-capture",
+                "tasks/smoketests"
+            ],
+            "debugStdLib": true,
+            "console": "none"
+        },
+        {
+            "name": "PyInvoke",
+            "type": "python",
+            "request": "launch",
+            "module": "invoke",
+            "args": [
+                // Change to debug a specific task.
+                "smoke"
+            ],
+            "console": "none"
         }
     ],
     "compounds": [

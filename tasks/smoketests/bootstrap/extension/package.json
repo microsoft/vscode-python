@@ -29,6 +29,10 @@
             {
                 "command": "smoketest.openworkspace",
                 "title": "Open Smoke Test Workspace"
+            },
+            {
+                "command": "smoketest.activatePython",
+                "title": "Activate Python Extension"
             }
         ]
     }

@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+
 import os.path
 from ..utils.tools import run_command
 
@@ -10,7 +11,7 @@ EXTENSION_FILE = os.path.join(EXTENSION_DIR, "smoketest-0.0.1.vsix")
 
 
 def build_extension():
-    """Buids the bootstrap extension"""
+    """Build the bootstrap extension"""
     command = ["vsce", "package"]
     run_command(
         command, cwd=EXTENSION_DIR, progress_message="Build Bootstrap Extension"  # noqa
@@ -18,7 +19,7 @@ def build_extension():
 
 
 def get_extension_path():
-    """Gets the path to the VSIX of the bootstrap extension"""
+    """Get the path to the VSIX of the bootstrap extension"""
     if not os.path.isfile(EXTENSION_FILE):
         build_extension()
     return EXTENSION_FILE

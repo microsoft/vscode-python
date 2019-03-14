@@ -21,12 +21,14 @@
     "tslint.enable": true,
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
+    "python.linting.enabled": true,
+    "python.jediEnabled": false,
+    "python.analysis.downloadChannel": "beta",
+    "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "none",
+    "python.formatting.provider": "black",
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
-    "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.tslintIntegration": false,
-    "prettier.printWidth": 180,
-    "prettier.singleQuote": true
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": ["--max-line-length=120"]
 }

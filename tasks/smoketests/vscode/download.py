@@ -1,15 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+
 import os
 import os.path
 import re
 import requests
 import shutil
-import sys
 import tempfile
-from enum import Enum
-from ..utils.tools import run_command, download_file, unzip_file, ensure_directory, Platform, get_platform
+from ..utils.tools import run_command, Platform, get_platform
+from ..utils.io import download_file, unzip_file, ensure_directory
 
 
 def _get_download_platform() -> str:
@@ -23,7 +23,7 @@ def _get_download_platform() -> str:
 
 
 def _get_latest_version(channel: str = "stable") -> str:
-    """Gets the latest version of VS Code
+    """Get the latest version of VS Code
     The channel defines the channel for VSC (stable or insiders)."""
 
     download_platform = _get_download_platform()
@@ -35,7 +35,7 @@ def _get_latest_version(channel: str = "stable") -> str:
 def _get_download_url(
     version: str, download_platform: str, channel: str = "stable"
 ) -> str:
-    """Gets the download url for vs code."""
+    """Get the download url for vs code."""
     return f"https://vscode-update.azurewebsites.net/{version}/{download_platform}/{channel}"  # noqa
 
 
@@ -76,7 +76,7 @@ def download_chrome_driver(download_path: str, channel: str = "stable"):
 
 
 def download_vscode(download_path: str, channel: str = "stable"):
-    """Downloads VS Code"""
+    """Download VS Code"""
 
     download_path = os.path.abspath(download_path)
     shutil.rmtree(download_path, ignore_errors=True)
