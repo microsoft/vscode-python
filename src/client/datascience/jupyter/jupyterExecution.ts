@@ -35,6 +35,12 @@ import {
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
+enum ModuleExistsResult {
+    NotFound,
+    FoundJupyter,
+    Found
+}
+
 export class JupyterExecutionBase implements IJupyterExecution {
 
     private processServicePromise: Promise<IProcessService>;
@@ -619,11 +625,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> => {
         // If the module is found on this interpreter, then we found it.
-        if (interpreter && await this.doesModuleExist(command, interpreter, cancelToken) && !Cancellation.isCanceled(cancelToken)) {
+        if (interpreter && !Cancellation.isCanceled(cancelToken)) {
+            const exists = await this.doesModuleExist(command, interpreter, cancelToken);
 
-            // Our command args are different based on the command. ipykernel is not a jupyter command
-            const args = command === JupyterCommands.KernelCreateCommand ? ['-m', command] : ['-m', 'jupyter', command];
-            return this.commandFactory.createInterpreterCommand(args, interpreter);
+            if (exists === ModuleExistsResult.FoundJupyter) {
+                return this.commandFactory.createInterpreterCommand(['-m', 'jupyter', command], interpreter);
+            } else if (exists === ModuleExistsResult.Found) {
+                return this.commandFactory.createInterpreterCommand(['-m', command], interpreter);
+            }
         }
 
         return undefined;
@@ -742,23 +751,41 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.commands.hasOwnProperty(command) ? this.commands[command] : undefined;
     }
 
-    private doesModuleExist = async (module: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> => {
+    private doesModuleExist = async (moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<ModuleExistsResult> => {
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
             const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
-            try {
-                // Special case for ipykernel
-                const actualModule = module === JupyterCommands.KernelCreateCommand ? module : 'jupyter';
-                const args = module === JupyterCommands.KernelCreateCommand ? ['--version'] : [module, '--version'];
 
-                const result = await pythonService.execModule(actualModule, args, newOptions);
-                return !result.stderr;
+            // For commands not 'ipykernel' first try them as jupyter commands
+            if (moduleName !== JupyterCommands.KernelCreateCommand) {
+                try {
+                    const result = await pythonService.execModule('jupyter', [moduleName, '--version'], newOptions);
+                    if (!result.stderr) {
+                        return ModuleExistsResult.FoundJupyter;
+                    } else {
+                        this.logger.logWarning(`${result.stderr} for ${interpreter.path}`);
+                    }
+                } catch (err) {
+                    this.logger.logWarning(`${err} for ${interpreter.path}`);
+                }
+            }
+
+            // After trying first as "-m jupyter <module> --version" then try "-m <module> --version" as this works in some cases
+            // for example if not running in an activated environment without script on the path
+            try {
+                const result = await pythonService.execModule(moduleName, ['--version'], newOptions);
+                if (!result.stderr) {
+                    return ModuleExistsResult.Found;
+                } else {
+                    this.logger.logWarning(`${result.stderr} for ${interpreter.path}`);
+                    return ModuleExistsResult.NotFound;
+                }
             } catch (err) {
                 this.logger.logWarning(`${err} for ${interpreter.path}`);
-                return false;
+                return ModuleExistsResult.NotFound;
             }
         } else {
-            return false;
+            return ModuleExistsResult.NotFound;
         }
     }
 
