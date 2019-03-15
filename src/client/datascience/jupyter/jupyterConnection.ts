@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
@@ -76,9 +78,9 @@ class JupyterConnectionWaiter {
         }, jupyterLaunchTimeout);
 
         // Listen for crashes
-        let exitCode = 0;
+        let exitCode = '0';
         if (launchResult.proc) {
-            launchResult.proc.on('exit', (c) => exitCode = c);
+            launchResult.proc.on('exit', (c) => exitCode = c ? c.toString() : '0');
         }
 
         // Listen on stderr for its connection information
@@ -92,7 +94,7 @@ class JupyterConnectionWaiter {
         },
         (e) => this.rejectStartPromise(e.message),
         // If the process dies, we can't extract connection information.
-        () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
+        () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode)));
     }
 
     public waitForConnection() : Promise<IConnection> {
