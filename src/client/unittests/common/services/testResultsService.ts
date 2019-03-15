@@ -33,6 +33,20 @@ export class TestResultsService implements ITestResultsService {
                 }
             }
         });
+        tests.testSuites.forEach(item => {
+            if (typeof item.testSuite.passed === 'boolean') {
+                if (status === TestStatus.Pass ? item.testSuite.passed : !item.testSuite.passed) {
+                    visitParentsRecursive(tests, item.testSuite, visitor);
+                }
+            }
+        });
+        tests.testFunctions.forEach(item => {
+            if (typeof item.testFunction.passed === 'boolean') {
+                if (status === TestStatus.Pass ? item.testFunction.passed : !item.testFunction.passed) {
+                    visitParentsRecursive(tests, item.testFunction, visitor);
+                }
+            }
+        });
     }
     private updateTestFolderResults(testFolder: TestFolder): void {
         let totalTime = 0;
