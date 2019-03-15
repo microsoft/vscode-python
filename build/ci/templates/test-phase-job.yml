@@ -36,12 +36,12 @@ jobs:
 
   strategy:
     matrix:
-      SingleWorkspace:
-        TestSuiteName: 'testSingleWorkspace'
-      MultiWorkspace:
-        TestSuiteName: 'testMultiWorkspace'
-      Debugger:
-        TestSuiteName: 'testDebugger'
+      # SingleWorkspace:
+      #   TestSuiteName: 'testSingleWorkspace'
+      # MultiWorkspace:
+      #   TestSuiteName: 'testMultiWorkspace'
+      # Debugger:
+      #   TestSuiteName: 'testDebugger'
       Functional:
         TestSuiteName: 'test:functional -- --reporter-options mochaFile=${{ parameters.MOCHA_CI_REPORTFILE }} --reporter-options toConsole=true'
         HasFunctionalRequirements: 'true'
