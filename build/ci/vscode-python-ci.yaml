@@ -1,15 +1,8 @@
-# PR Validation build.
-# Notes: Only trigger a PR build for master and release, and skip build/rebuild
-#        on changes in the news and .vscode folders.
-pr:
-  autoCancel: true
-  branches:
-    include: [ 'master', 'release']
-  paths:
-    exclude: [ '/news', '/.vscode' ]
+# CI definition only
+pr: none
 
 # CI build for merges to master and release.
-# Note: We are 'batching' builds at the moment. This will mean only one CI build 
+# Note: We are 'batching' builds at the moment. This will mean only one CI build
 #       will be triggered. If we find the resources available, turn off batching
 #       as it is nicer to have feedback on each and every merge.
 trigger:
@@ -52,7 +45,7 @@ jobs:
 
 - template: templates/test-phase-job.yml
   parameters:
-    pool: 
+    pool:
       name: 'Hosted VS2017'
     Platform: 'Windows'
 
