@@ -316,7 +316,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const kernelSpec = await this.getMatchingKernelSpec(undefined, cancelToken);
 
             // Make sure we haven't canceled already.
-            if (cancelToken.isCancellationRequested) {
+            if (cancelToken && cancelToken.isCancellationRequested) {
                 throw new CancellationError();
             }
 
