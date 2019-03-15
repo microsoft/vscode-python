@@ -3,7 +3,9 @@
 
 
 from selenium.webdriver.common.keys import Keys
-from .base import QuickOpen as BaseQuickOpen, Component
+
+from .base import Component
+from .base import QuickOpen as BaseQuickOpen
 
 QUICK_OPEN = "div.monaco-quick-open-widget"
 QUICK_OPEN_HIDDEN = 'div.monaco-quick-open-widget[aria-hidden="true"]'
@@ -11,8 +13,8 @@ QUICK_OPEN_INPUT = f"{QUICK_OPEN} .quick-open-input input"
 QUICK_OPEN_FOCUSED_ELEMENT = (
     f"{QUICK_OPEN} .quick-open-tree .monaco-tree-row.focused .monaco-highlighted-label"
 )
-QUICK_OPEN_ENTRY_SELECTOR = 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry' # noqa
-QUICK_OPEN_ENTRY_LABEL_SELECTOR = 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry .label-name' # noqa
+QUICK_OPEN_ENTRY_SELECTOR = 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry'  # noqa
+QUICK_OPEN_ENTRY_LABEL_SELECTOR = 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry .label-name'  # noqa
 
 
 class QuickOpen(BaseQuickOpen, Component):

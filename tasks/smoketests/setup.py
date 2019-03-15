@@ -2,13 +2,18 @@
 # Licensed under the MIT License.
 
 
-import os.path
 import json
 import os
+import os.path
 import time
+
+from tasks.smoketests.utils.tools import (
+    copy_recursive,
+    empty_directory,
+    ensure_directory,
+    run_command,
+)
 from tasks.smoketests.vscode.application import Application, Options
-from tasks.smoketests.utils.tools import run_command
-from tasks.smoketests.utils.io import ensure_directory, empty_directory, copy_recursive
 
 
 def start_application(options: Options):

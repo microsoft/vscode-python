@@ -3,8 +3,8 @@
 
 
 from abc import ABC, abstractmethod
+
 from .core import Core
-from dataclasses import dataclass
 
 
 class Documents:
@@ -39,6 +39,12 @@ class StatusBar:
 class QuickInput:
     @abstractmethod
     def select_value(self, value: str, **kwargs):
+        pass
+
+
+class Terminal:
+    @abstractmethod
+    def wait_for_terminal_text(self, value: str, **kwargs):
         pass
 
 
@@ -83,6 +89,16 @@ class BaseApplication:
 
     @property
     def notifications(self) -> Notifications:
+        pass
+
+    @property
+    def terminal(self) -> Terminal:
+        pass
+
+    def reload(self):
+        pass
+
+    def capture_screen(self):
         pass
 
 

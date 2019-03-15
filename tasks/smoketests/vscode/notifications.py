@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 
 
-from .base import Notifications as BaseNotifications, Component
+from .base import Component
+from .base import Notifications as BaseNotifications
 
 
 class Notifications(BaseNotifications, Component):
@@ -11,10 +12,14 @@ class Notifications(BaseNotifications, Component):
 
     def wait_for_message(self, value: str, **kwargs):
         selector = ".notifications-toasts.visible .notifications-list-container .notification-list-item-message"
-        find = lambda elements: [element for element in elements if element.text == value]
+        find = lambda elements: [
+            element for element in elements if element.text == value
+        ]
         return self.app.core.wait_for_elements(selector, find)
 
     def wait_for_message_containing(self, value: str, **kwargs):
         selector = ".notifications-toasts.visible .notifications-list-container .notification-list-item-message"
-        find = lambda elements: [element for element in elements if element.text.index(value) >= 0]
+        find = lambda elements: [
+            element for element in elements if element.text.index(value) >= 0
+        ]
         return self.app.core.wait_for_elements(selector, find)

@@ -2,9 +2,12 @@
 # Licensed under the MIT License.
 
 
-from selenium.webdriver.common.keys import Keys
 from urllib.parse import quote
-from .base import Documents as BaseDocuments, Component
+
+from selenium.webdriver.common.keys import Keys
+
+from .base import Component
+from .base import Documents as BaseDocuments
 
 
 class Documents(BaseDocuments, Component):

@@ -3,10 +3,13 @@
 
 import os.path
 import time
+
 from .vscode.application import Application, get_options
 
 
-def start_smoketests(vscode_directory=".vscode-smoke", channel="stable", vsix="ms-python-insiders.vsix"):
+def start_smoketests(
+    vscode_directory=".vscode-smoke", channel="stable", vsix="ms-python-insiders.vsix"
+):
     """Start the smoke tests"""
     vsix = os.path.abspath(vsix)
     options = get_options(vscode_directory, vsix)

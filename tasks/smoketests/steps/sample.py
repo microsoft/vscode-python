@@ -2,12 +2,13 @@
 # Licensed under the MIT License.
 
 
-from behave import given, when, then
+from behave import given, then, when
 
 
 @given("we have behave installed")
 def step_impl(context):
     print("11234")
+    context.app.capture_screen()
     pass
 
 
@@ -19,6 +20,7 @@ def implement_test(context):
 
 @then("behave will test it for us!")
 def test_it(context):
+    context.app.capture_screen()
     assert True
 
 

@@ -3,16 +3,17 @@
 
 
 import sys
-from tasks.smoketests.vscode.application import get_options
+
 from tasks.smoketests.setup import (
-    start_application,
+    clear_code,
     setup_user_settings,
     setup_workspace,
-    clear_code,
+    start_application,
 )
-from tasks.smoketests.utils.io import empty_directory
-from tasks.smoketests.vscode.extension import load_python_extension
+from tasks.smoketests.utils.tools import empty_directory
+from tasks.smoketests.vscode.application import get_options
 from tasks.smoketests.vscode.base import Context
+from tasks.smoketests.vscode.extension import load_python_extension
 
 
 def before_all(context: Context):
@@ -38,6 +39,8 @@ def before_feature(context: Context, feature):
 
 
 def before_scenario(context: Context, feature):
+    context.options = get_options(**context.config.userdata)
+    empty_directory(context.options.workspace_folder)
     clear_code(context.app)
 
 

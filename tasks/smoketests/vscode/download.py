@@ -5,11 +5,13 @@
 import os
 import os.path
 import re
-import requests
 import shutil
 import tempfile
-from ..utils.tools import run_command, Platform, get_platform
-from ..utils.io import download_file, unzip_file, ensure_directory
+
+import requests
+
+from ..utils.tools import (Platform, download_file, ensure_directory,
+                           get_platform, run_command, unzip_file)
 
 
 def _get_download_platform() -> str:

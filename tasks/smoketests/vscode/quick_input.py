@@ -3,7 +3,9 @@
 
 
 from selenium.webdriver.common.keys import Keys
-from .base import QuickInput as BaseQuickInput, Component
+
+from .base import Component
+from .base import QuickInput as BaseQuickInput
 
 QUICK_OPEN_GENERIC = f".quick-input-widget"
 QUICK_OPEN_GENERIC_INPUT = f"{QUICK_OPEN_GENERIC} .quick-input-box input"

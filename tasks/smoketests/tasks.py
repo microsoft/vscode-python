@@ -4,11 +4,13 @@
 
 import os.path
 import time
+
+from behave import __main__
 from invoke import task
-from .vscode.application import get_options, install_extension, Application
+
+from .vscode.application import Application, get_options, install_extension
 from .vscode.download import download_chrome_driver as download_chrome_drv
 from .vscode.download import download_vscode
-from behave import __main__
 
 
 @task(
@@ -50,13 +52,36 @@ def launch(
 @task(
     name="smoke",
     help={
+        "output": "Whether to send output to the console or a file (console/file).",
+        "embed_screenshots": "Whether to embed screenshots into the report or save as a separate file.",
         "destination": "Directory where VS Code will be downloaded, files will be created.",
         "channel": "Whether to download the stable or insiders build of VS Code",
         "vsix": "Path to the extension file (vsix)",
     },
 )
 def smoke(
-    ctx, destination=".vscode-smoke", channel="stable", vsix="ms-python-insiders.vsix"
+    ctx,
+    output="console",
+    embed_screenshots=True,
+    destination=".vscode-smoke",
+    channel="stable",
+    vsix="ms-python-insiders.vsix",
 ):
     """Start the smoke tests"""
-    __main__.main(["-f", "plain", "-T", "--no-capture", "tasks/smoketests"])
+    report_args = [
+        "-f",
+        "tasks.smoketests.utils.report:PrettyCucumberJSONFormatter",
+        os.path.join(destination, "reports", "report.json"),
+        "-D",
+        f"embed_screenshots={embed_screenshots}",
+    ]
+    stdout_args = [
+        "-f",
+        "plain",
+        "-T",
+        "--no-capture",
+        "-D",
+        f"embed_screenshots=False",
+    ]
+    args = report_args if output == "file" else stdout_args
+    __main__.main(args + ["-D", f"output={output}", "tasks/smoketests"])

@@ -30,5 +30,12 @@
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": ["--max-line-length=120"]
+    "python.linting.flake8Args": [
+        "--max-line-length=120"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "editor.formatOnSave": true,
+    "python.linting.pylintEnabled": false
 }

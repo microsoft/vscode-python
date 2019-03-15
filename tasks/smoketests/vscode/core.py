@@ -3,6 +3,7 @@
 
 
 import time
+
 from selenium import webdriver
 from selenium.common.exceptions import (
     NoSuchElementException,
@@ -66,7 +67,7 @@ class Core(object):
         def find():
             elements = self.driver.find_elements_by_css_selector(css_selector)
             filtered = predicate(elements)
-            if len(filtered) > 0:
+            if filtered:
                 # Ensure all items returned are visible.
                 for element in filtered:
                     if not element.is_displayed():

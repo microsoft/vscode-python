@@ -2,21 +2,24 @@
 # Licensed under the MIT License.
 
 
-from behave import when, then
+from behave import given, when
+
 from tasks.smoketests.vscode.base import Context
 
 
-@when("I select default mac Interpreter")
+@given('a Python Interpreter containing the name "{name}" is selected')
+def given_select_interpreter_with_name(context: Context, name: str):
+    context.app.quick_open.select_command("Python: Select Interpreter")
+    context.app.quick_input.select_value(name)
+
+
+@when('I select the Python Interpreter containing the name "{name}" is selected')
+def when_select_interpreter_with_name(context: Context, name: str):
+    context.app.quick_open.select_command("Python: Select Interpreter")
+    context.app.quick_input.select_value(name)
+
+
+@when("I select the default mac Interpreter")
 def select_interpreter(context: Context):
     context.app.quick_open.select_command("Python: Select Interpreter")
     context.app.quick_input.select_value("/usr/bin/python")
-
-
-@then('a message with the text "{message}" is displayed')
-def show_message(context: Context, message: str):
-    context.app.notifications.wait_for_message(message)
-
-
-@then('a message containing the text "{message}" is displayed')
-def show_message_containing(context: Context, message: str):
-    context.app.notifications.wait_for_message_containing(message)
