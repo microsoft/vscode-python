@@ -163,7 +163,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
                         const options = capture(processService.shellExec).first()[1];
 
                         const expectedShell = defaultShells[osType.value];
-                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000 });
+                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
                     });
                     test('Use current process variables if there are no custom variables', async () => {
                         const cmd = ['1', '2'];
@@ -187,7 +187,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
                         const options = capture(processService.shellExec).first()[1];
 
                         const expectedShell = defaultShells[osType.value];
-                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000 });
+                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
                     });
                     test('Error must be swallowed when activation fails', async () => {
                         const cmd = ['1', '2'];
