@@ -80,12 +80,6 @@ suite('LiveShare tests', () => {
     };
 
     setup(function () {
-        if (isOs(OSType.Windows)) {
-            // not working on Windows. See GH #4757
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
         hostContainer = createContainer(vsls.Role.Host);
         guestContainer = createContainer(vsls.Role.Guest);
     });
@@ -365,6 +359,7 @@ suite('LiveShare tests', () => {
         });
         fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => true);
+        fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
         const listener = guestContainer.ioc!.get<IDataScienceCommandListener>(IDataScienceCommandListener);
