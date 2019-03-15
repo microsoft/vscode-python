@@ -98,6 +98,9 @@ export namespace DataScience {
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
     export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting iPython Kernel');
+    export const restartingKernelFailed = localize('DataScience.restartingKernelFailed', 'Kernel restart failed. Jupyter server is hung. Please reload VS code.');
+    export const interruptingKernelFailed = localize('DataScience.interruptingKernelFailed', 'Kernel interrupt failed. Jupyter server is hung. Please reload VS code.');
+
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
