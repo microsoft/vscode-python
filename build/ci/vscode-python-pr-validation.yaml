@@ -101,10 +101,14 @@ jobs:
         versionSpec: ${{ coalesce(variables['NodeVersion'], variables['DefaultNodeVersion']) }}
 
     # Ensure the required Python version is made available on PATH for subsequent tasks.
+    #
     # `PythonVersion` is set in the `variables` section above.
+    #
     # You can reproduce this on your local machine via virtual envs.
+    #
     # See the available versions on each Hosted agent here:
-    # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software
+    # https://docs.microsoft.com/en-us/azure/DevOps/pipelines/agents/hosted?view=azure-DevOps&tabs=yaml#software
+    #
     # Example command line (windows pwsh):
     # > py -m venv .venv
     # > .venv\Scripts\Activate.ps1
@@ -112,6 +116,24 @@ jobs:
       displayName: ${{ format('Use Python {0}', coalesce(variables['PythonVersion'], variables['DefaultPythonVersion'])) }}
       inputs:
         versionSpec: ${{ coalesce(variables['DefaultPythonVersion'], variables['PythonVersion']) }}
+
+    # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
+    # the specified Python interpreter.
+    #
+    # Example command line (windows pwsd):
+    # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
+    - task: PythonScript@0
+      displayName: 'Set CI_PYTHON_PATH'
+      inputs:
+        scriptSource: inline
+        failOnStderr: true
+        script: |
+          from __future__ import print_function
+
+          import sys
+
+          print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
+
 
     # Ensure that npm is upgraded to the necessary version specified in `variables` above.
     # Example command line (windows pwsh):
@@ -143,12 +165,9 @@ jobs:
     - bash: echo AVAILABLE DEPENDENCY VERSIONS
 
         echo Node Version = `node -v`
+          echo NPM Version = `npm -v`
+          echo Python Version = `python --version`
 
-        echo NPM Version = `npm -v`
-
-        echo Python Version = `python --version`
-
-      displayName: 'Show build dependency versions'
       condition: and(succeeded(), eq(variables['system.debug'], 'true'))
 
     # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
@@ -230,7 +249,7 @@ jobs:
       displayName: 'Python unittests'
       condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
 
-    # Upload the test results to Azure Devops to facilitate test reporting in their UX.
+    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
     - task: PublishTestResults@2
       displayName: 'Publish Python unit test results'
       condition: contains(variables['TestsToRun'], 'pythonUnitTests')
@@ -359,8 +378,9 @@ jobs:
         python -m pip install --upgrade -r news/requirements.txt
         python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
       displayName: 'Run Python tests for news'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
 
-    # Upload the test results to Azure Devops to facilitate test reporting in their UX.
+    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
     - task: PublishTestResults@2
       displayName: 'Publish News test results'
       condition: contains(variables['TestsToRun'], 'pythonUnitTests')
@@ -384,7 +404,7 @@ jobs:
       displayName: 'Run Python tests for TPN tool'
       condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
 
-    # Upload the test results to Azure Devops to facilitate test reporting in their UX.
+    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
     - task: PublishTestResults@2
       displayName: 'Publish JUnit test results'
       condition: contains(variables['TestsToRun'], 'pythonUnitTests')
