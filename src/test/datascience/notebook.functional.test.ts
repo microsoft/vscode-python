@@ -149,11 +149,15 @@ suite('Jupyter notebook tests', () => {
                 assert.ok(false, `${index}: Unexpected error: ${error}`);
             }
             const data = cell.outputs[0].data;
-            assert.ok(data, `${index}: No data object on the cell`);
+            const text = cell.outputs[0].text;
+            assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
+            }
+            if (text) {
+                verifyValue(text);
             }
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -679,7 +683,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.equal(d, 'hello', 'Multiline cell magic incorrect')
+                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
             },
             {
                 // Test shell command should work on PC / Mac / Linux
@@ -689,7 +693,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'world',
-                verifyValue: (d) => assert.equal(d, 'world', 'Cell command incorrect')
+                verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
             },
             {
                 // Plotly

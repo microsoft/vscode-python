@@ -42,6 +42,7 @@ class JupyterConnectionWaiter {
     private launchResult : ObservableExecutionResult<string>;
     private cancelToken : CancellationToken | undefined;
     private stderr: string[] = [];
+    private connectionDisposed = false;
 
     constructor(
         launchResult : ObservableExecutionResult<string>,
@@ -103,7 +104,7 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private output = (data: any) => {
-        if (this.logger) {
+        if (this.logger && !this.connectionDisposed) {
             this.logger.logInformation(data.toString('utf8'));
         }
     }
@@ -173,7 +174,16 @@ class JupyterConnectionWaiter {
 
     private resolveStartPromise = (baseUrl: string, token: string) => {
         clearTimeout(this.launchTimeout);
-        this.startPromise.resolve(this.createConnection(baseUrl, token, this.launchResult));
+        if (!this.startPromise.rejected) {
+            const connection = this.createConnection(baseUrl, token, this.launchResult);
+            const origDispose = connection.dispose.bind(connection);
+            connection.dispose = () => {
+                // Stop listening when we disconnect
+                this.connectionDisposed = true;
+                return origDispose();
+            }
+            this.startPromise.resolve(connection);
+        }
     }
 
     // tslint:disable-next-line:no-any

@@ -594,6 +594,6 @@ for _ in range(50):
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
-        verifyHtmlOnCell(wrapper, '<span>hello</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
     });
 });
