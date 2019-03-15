@@ -71,6 +71,7 @@ def smoke(
     report_args = [
         "-f",
         "tasks.smoketests.utils.report:PrettyCucumberJSONFormatter",
+        "-o",
         os.path.join(destination, "reports", "report.json"),
         "-D",
         f"embed_screenshots={embed_screenshots}",
