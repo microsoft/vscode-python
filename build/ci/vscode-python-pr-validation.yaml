@@ -168,7 +168,7 @@ jobs:
       displayName: 'gulp code hygiene'
       inputs:
         targets: 'hygiene-modified'
-      condition: and(succeeded(), eq(variables['runHygiene'], 'true'))
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
 
     # Enable test coverage reporting, and run the unit tests in our codebase.
     #
