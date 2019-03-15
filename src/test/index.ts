@@ -40,11 +40,6 @@ const options: testRunner.SetupOptions & { retries: number } = {
     testFilesSuffix
 };
 
-// VSTS CI doesn't display colours correctly (yet).
-if (IS_VSTS) {
-    options.useColors = false;
-}
-
 // CI can ask for a JUnit reporter if the environment variable
 // 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
 // by other 'MOCHA_CI_...' variables. See constants.ts for info.
