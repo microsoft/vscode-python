@@ -33,6 +33,7 @@ import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/unittests/common/debugLauncher';
 import { LaunchOptions, TestProvider } from '../../../client/unittests/common/types';
+import { isOs, OSType } from '../../common';
 
 use(chaiAsPromised);
 
@@ -118,8 +119,11 @@ suite('Unit Tests - Debug Launcher', () => {
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
         expected.args = debugArgs;
 
+        //debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
-            .returns(() => Promise.resolve(undefined as any))
+            .returns((wspc: WorkspaceFolder, expectedParam: DebugConfiguration) => {
+                return Promise.resolve(undefined as any);
+            })
             .verifiable(TypeMoq.Times.once());
     }
     function createWorkspaceFolder(folderPath: string): WorkspaceFolder {
@@ -217,6 +221,9 @@ suite('Unit Tests - Debug Launcher', () => {
         if (expected.redirectOutput) {
             expected.debugOptions.push(DebugOptions.RedirectOutput);
         }
+        if (isOs(OSType.Windows)) {
+            expected.debugOptions.push(DebugOptions.FixFilePathCase);
+        }
 
         setupDebugManager(
             workspaceFolders[0],
@@ -256,7 +263,9 @@ suite('Unit Tests - Debug Launcher', () => {
         });
         test(`Must not launch debugger if cancelled ${testTitleSuffix}`, async () => {
             debugService.setup(d => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(undefined as any))
+                .returns(() => {
+                    return Promise.resolve(undefined as any);
+                })
                 .verifiable(TypeMoq.Times.never());
 
             const cancellationToken = new CancellationTokenSource();
