@@ -10,7 +10,7 @@ if ((Reflect as any).metadata === undefined) {
 
 import {
     IS_CI_SERVER_TEST_DEBUGGER,
-    IS_VSTS, MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
+    MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
     MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
