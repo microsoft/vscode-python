@@ -181,7 +181,7 @@ class JupyterConnectionWaiter {
                 // Stop listening when we disconnect
                 this.connectionDisposed = true;
                 return origDispose();
-            }
+            };
             this.startPromise.resolve(connection);
         }
     }

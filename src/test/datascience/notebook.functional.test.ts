@@ -835,15 +835,18 @@ plt.show()`,
     });
 
     class DyingProcess implements ChildProcess {
-        public stdin: Writable = null;
-        public stdout: Readable = null;
-        public stderr: Readable = null;
-        public stdio: [Writable, Readable, Readable] = [null, null, null];
+        public stdin: Writable;
+        public stdout: Readable;
+        public stderr: Readable;
+        public stdio: [Writable, Readable, Readable];
         public killed: boolean = false;
         public pid: number = 1;
         public connected: boolean = true;
         constructor(private timeout: number) {
             noop();
+            this.stderr = this.stdout = new Readable();
+            this.stdin = new Writable();
+            this.stdio = [this.stdin, this.stdout, this.stderr];
         }
         public kill(signal?: string): void {
             throw new Error('Method not implemented.');

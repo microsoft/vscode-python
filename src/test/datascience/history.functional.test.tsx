@@ -261,7 +261,6 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Mime Types', async (wrapper) => {
-
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
