@@ -6,25 +6,25 @@ import os
 import os.path
 import re
 import shutil
+import sys
 import tempfile
 
 import requests
 
-from ..utils.tools import (Platform, download_file, ensure_directory,
-                           get_platform, run_command, unzip_file)
+from tasks.smoketests import tools
 
 
-def _get_download_platform() -> str:
-    platform_type = get_platform()
-    if platform_type == Platform.Linux:
+def _get_download_platform():
+    platform = sys.platform
+    if platform.startswith('linux'):
         return "linux-x64"
-    if platform_type == Platform.OSX:
+    if platform.startswith('darwin'):
         return "darwin"
-    if platform_type == Platform.Windows:
+    if platform.startswith('win'):
         return "win32-archive"
 
 
-def _get_latest_version(channel: str = "stable") -> str:
+def _get_latest_version(channel="stable"):
     """Get the latest version of VS Code
     The channel defines the channel for VSC (stable or insiders)."""
 
@@ -55,8 +55,7 @@ def _get_electron_version(channel: str = "stable"):
         url = "https://raw.githubusercontent.com/Microsoft/vscode/master/.yarnrc" # noqa
 
     response = requests.get(url)
-    regex = r"target\s\"(\d+.\d+.\d+)\""
-    matches = re.finditer(regex, response.text, re.MULTILINE)
+    matches = re.finditer(r'target\s"(\d+.\d+.\d+)"', response.text, re.MULTILINE)
     for _, match in enumerate(matches, start=1):
         return match.groups()[0]
 
@@ -66,12 +65,12 @@ def download_chrome_driver(download_path: str, channel: str = "stable"):
     Basically check version of chrome released with the version of Electron."""
 
     download_path = os.path.abspath(download_path)
-    ensure_directory(download_path)
+    os.makedirs(download_path, exist_ok=True)
     electron_version = _get_electron_version(channel)
     dir = os.path.dirname(os.path.realpath(__file__))
     js_file = os.path.join(dir, "chromeDownloader.js")
     # Use an exising npm package.
-    run_command(
+    tools.run_command(
         ["node", js_file, electron_version, download_path],
         progress_message="Downloading chrome driver",
     )
@@ -82,12 +81,12 @@ def download_vscode(download_path: str, channel: str = "stable"):
 
     download_path = os.path.abspath(download_path)
     shutil.rmtree(download_path, ignore_errors=True)
-    ensure_directory(download_path)
+    os.makedirs(download_path, exist_ok=True)
 
     download_platform = _get_download_platform()
     version = _get_latest_version(channel)
     url = _get_download_url(version, download_platform, channel)
 
     zip_file = os.path.join(tempfile.mkdtemp(), "vscode.zip")
-    download_file(url, zip_file, f"Downloading VS Code {channel}")
-    unzip_file(zip_file, download_path)
+    tools.download_file(url, zip_file, f"Downloading VS Code {channel}")
+    tools.unzip_file(zip_file, download_path)

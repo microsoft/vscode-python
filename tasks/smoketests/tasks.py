@@ -5,15 +5,13 @@
 import os.path
 import time
 
+import invoke
 from behave import __main__
-from invoke import task
 
-from .vscode.application import Application, get_options, install_extension
-from .vscode.download import download_chrome_driver as download_chrome_drv
-from .vscode.download import download_vscode
+from .vscode import application, download, setup
 
 
-@task(
+@invoke.task(
     name="download",
     help={
         "destination": "Directory where VS Code will be downloaded, files will be created.",
@@ -26,30 +24,32 @@ def download_all(ctx, destination=".vscode-smoke", channel="stable"):
     The channel defines the channel for VSC (stable or insiders).
     """
     destination = os.path.join(destination, "vscode")
-    download_vscode(destination, channel)
-    download_chrome_drv(destination, channel)
+    download.download_vscode(destination, channel)
+    download.download_chrome_driver(destination, channel)
 
 
-@task(name="install")
+@invoke.task(name="install")
 def install_ext(ctx, destination=".vscode-smoke", vsix="ms-python-insiders.vsix"):
     """Installs the Python Extension into VS Code in preparation for the smoke tests"""
     vsix = os.path.abspath(vsix)
-    options = get_options(destination, vsix)
-    install_extension(options)
+    options = application.get_options(destination, vsix)
+    application.install_extension(options)
 
 
-@task(name="launch", help={"timeout": "Time after which VS Code will be closed."})
+@invoke.task(
+    name="launch", help={"timeout": "Time after which VS Code will be closed."}
+)
 def launch(
     ctx, timeout=30, destination=".vscode-smoke", vsix="ms-python-insiders.vsix"
 ):
     """Launches VS Code (the same instance used for smoke tests)"""
     vsix = os.path.abspath(vsix)
-    options = get_options(destination, vsix)
-    Application.start(options=options)
+    options = application.get_options(destination, vsix)
+    setup.start(options)
     time.sleep(30)
 
 
-@task(
+@invoke.task(
     name="smoke",
     help={
         "output": "Whether to send output to the console or a file (console/file).",

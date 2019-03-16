@@ -2,28 +2,28 @@
 # Licensed under the MIT License.
 
 
-from behave import given, then, when
+import behave
 
 
-@given("we have behave installed")
+@behave.given("we have behave installed")
 def step_impl(context):
     print("11234")
     context.app.capture_screen()
     pass
 
 
-@when("we implement a test")
+@behave.when("we implement a test")
 def implement_test(context):
     print("test implemented")
     assert True is not False
 
 
-@then("behave will test it for us!")
+@behave.then("behave will test it for us!")
 def test_it(context):
     context.app.capture_screen()
     assert True
 
 
-@then("Another one!")
+@behave.then("Another one!")
 def another(context):
     assert True

@@ -5,43 +5,24 @@
 import os
 import os.path
 import shutil
-import sys
-from enum import Enum
-from subprocess import PIPE, run
+import subprocess
 
+import progress.bar
 import requests
-from progress.bar import Bar
-
-
-class Platform(Enum):
-    OSX = 4
-    Windows = 2
-    Linux = 3
-
-
-def get_platform() -> Platform:
-    platforms = {
-        "linux1": Platform.Linux,
-        "linux2": Platform.Linux,
-        "darwin": Platform.OSX,
-        "win32": Platform.Windows,
-    }
-    if sys.platform not in platforms:
-        return sys.platform
-
-    return platforms[sys.platform]
 
 
 def run_command(command, cwd=None, silent=False, progress_message=None, env=None):
-    """Run the specified command in a subprocess shell."""
+    """Run the specified command in a subprocess shell with the following options:
+    - Pipe output from subprocess into current console.
+    - Display a progress message."""
 
     if progress_message is not None:
         print(progress_message)
     executable = shutil.which(command[0])
     command[0] = executable
-    stdout = PIPE if silent else None
+    stdout = subprocess.PIPE if silent else None
 
-    proc = run(command, cwd=cwd, stdout=stdout, shell=False, env=env)
+    proc = subprocess.run(command, cwd=cwd, stdout=stdout, shell=False, env=env)
     proc.check_returncode()
     # Note, we'll need some output to tell CI servers that process is still active.
     # if progress_message:
@@ -63,11 +44,6 @@ def run_command(command, cwd=None, silent=False, progress_message=None, env=None
     #         )  # noqa
 
 
-def ensure_directory(dir: str):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-
-
 def unzip_file(zip_file: str, destination: str):
     """Unzip a file"""
 
@@ -81,14 +57,14 @@ def unzip_file(zip_file: str, destination: str):
 
 
 def download_file(url: str, download_file: str, progress_message="Downloading"):  # noqa
-    """Downloads a file and optionally displays a progress indicator"""
+    """Download a file and optionally displays a progress indicator"""
 
     download_file = os.path.abspath(download_file)
     try:
         os.remove(download_file)
     except FileNotFoundError:
         pass
-    progress = Bar(progress_message, max=100)
+    progress_bar = progress.bar.Bar(progress_message, max=100)
     response = requests.get(url, stream=True)
     total = response.headers.get("content-length")
 
@@ -104,15 +80,15 @@ def download_file(url: str, download_file: str, progress_message="Downloading"):
                 for data in response.iter_content(chunk_size=chunk_size):
                     downloaded += len(data)
                     fs.write(data)
-                    change_in_percent = int(downloaded * 100 / total) - percent
-                    percent = int(downloaded * 100 / total)
+                    change_in_percent = (downloaded * 100 // total) - percent
+                    percent = downloaded * 100 // total
                     for i in range(change_in_percent):
-                        progress.next()
+                        progress_bar.next()
     except Exception:
         os.remove(download_file)
         raise
     finally:
-        progress.finish()
+        progress_bar.finish()
 
 
 def empty_directory(dir: str):

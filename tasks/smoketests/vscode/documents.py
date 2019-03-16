@@ -6,41 +6,45 @@ from urllib.parse import quote
 
 from selenium.webdriver.common.keys import Keys
 
-from .base import Component
-from .base import Documents as BaseDocuments
+from . import core, quick_input, quick_open
 
 
-class Documents(BaseDocuments, Component):
-    def open_file(self, filename: str, **kwargs):
-        element = self.app.quick_open.open(filename)
-        self.app.core.dispatch_keys(Keys.ENTER, element=element)
-        self._wait_for_editor_focus(filename)
+def open_file(context, filename: str):
+    element = quick_open.open(filename)
+    core.dispatch_keys(context.driver, Keys.ENTER, element=element)
+    _wait_for_editor_focus(filename)
 
-    def is_file_open(self, filename: str, **kwargs):
-        self._wait_for_active_tab(filename, **kwargs)
-        self._wait_for_editor_focus(filename)
 
-    def create_new_untitled_file(self, language="Python", **kwargs):
-        self.app.quick_open.select_command("File: New Untitled File")
-        self._wait_for_editor_focus("Untitled-1")
-        self.app.quick_open.select_command("Change Language Mode")
-        self.app.quick_input.select_value(language)
+def is_file_open(context, filename: str, **kwargs):
+    _wait_for_active_tab(filename, **kwargs)
+    _wait_for_editor_focus(filename)
 
-    def scroll_to_top(self, **kwargs):
-        self.app.quick_open.select_command("Go to Line...")
-        self.app.quick_open.select_value("1")
 
-    def _wait_for_active_tab(self, filename: str, is_dirty=False, **kwargs):
-        dirty_class = ".dirty" if is_dirty else ""
-        selector = f'.tabs-container div.tab.active{dirty_class}[aria-selected="true"][aria-label="{filename}, tab"]'
-        self.app.core.wait_for_element(selector)
+def create_new_untitled_file(context, language="Python"):
+    quick_open.select_command(context, "File: New Untitled File")
+    _wait_for_editor_focus(context, "Untitled-1")
+    quick_open.select_command(context, "Change Language Mode")
+    quick_input.select_value(context, language)
 
-    def _wait_for_active_editor(self, filename: str, is_dirty=False, **kwargs):
-        selector = (
-            f'.editor-instance .monaco-editor[data-uri$="{quote(filename)}"] textarea'
-        )
-        self.app.core.wait_for_element(selector)
 
-    def _wait_for_editor_focus(self, filename: str, is_dirty=False, **kwargs):
-        self._wait_for_active_tab(filename, is_dirty, **kwargs)
-        self._wait_for_active_editor(filename, is_dirty, **kwargs)
+def scroll_to_top(context, self):
+    quick_open.select_command(context, "Go to Line...")
+    quick_open.select_value(context, "1")
+
+
+def _wait_for_active_tab(context, filename: str, is_dirty=False):
+    dirty_class = ".dirty" if is_dirty else ""
+    selector = f'.tabs-container div.tab.active{dirty_class}[aria-selected="true"][aria-label="{filename}, tab"]'
+    core.wait_for_element(context.driver, selector)
+
+
+def _wait_for_active_editor(context, filename: str, is_dirty=False):
+    selector = (
+        f'.editor-instance .monaco-editor[data-uri$="{quote(filename)}"] textarea'
+    )
+    core.wait_for_element(context.driver, selector)
+
+
+def _wait_for_editor_focus(context, filename: str, is_dirty=False, **kwargs):
+    _wait_for_active_tab(context, filename, is_dirty, **kwargs)
+    _wait_for_active_editor(context, filename, is_dirty, **kwargs)

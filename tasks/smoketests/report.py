@@ -9,12 +9,12 @@ import base64
 import copy
 import json
 
+import behave.formatter.base
+import behave.model_core
 import six
-from behave.formatter.base import Formatter
-from behave.model_core import Status
 
 
-class CucumberJSONFormatter(Formatter):
+class CucumberJSONFormatter(behave.formatter.base.Formatter):
     instance = None
     name = "json"
     description = "JSON dump of test run"
@@ -48,9 +48,9 @@ class CucumberJSONFormatter(Formatter):
         pass
 
     def status(self, status_obj):
-        if status_obj == Status.passed:
+        if status_obj == behave.model_core.Status.passed:
             return "passed"
-        elif status_obj == Status.failed:
+        elif status_obj == behave.model_core.Status.failed:
             return "failed"
         else:
             return "skipped"

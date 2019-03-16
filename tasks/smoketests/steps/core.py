@@ -3,16 +3,14 @@
 
 import time
 
-from behave import then, when
-
-from tasks.smoketests.vscode.base import Context
+import behave
 
 
-@when("I wait for {seconds:n} seconds")
-def sleep(context: Context, seconds: int):
+@behave.when("I wait for {seconds:n} seconds")
+def sleep(context, seconds: int):
     time.sleep(seconds)
 
 
-@then("take a screenshot")
-def capture_screen(context: Context):
+@behave.then("take a screenshot")
+def capture_screen(context):
     context.app.capture_screen()

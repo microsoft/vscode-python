@@ -10,17 +10,10 @@ import tempfile
 from selenium import webdriver
 
 from dataclasses import dataclass
+from tasks.smoketests import report, tools
+from tasks.smoketests.bootstrap import main
 
-from ..bootstrap.main import get_extension_path as get_bootstrap_ext_path
-from ..utils import report
-from ..utils.tools import ensure_directory, run_command
-from .core import Core
-from .documents import Documents
-from .notifications import Notifications
-from .quick_input import QuickInput
-from .quick_open import QuickOpen
-from .status_bar import StatusBar
-from .utils import get_binary_location, get_cli_location
+from . import quick_open, utils
 
 
 @dataclass
@@ -54,49 +47,48 @@ def get_options(
         embed_screenshots,
         output,
     )
-    ensure_directory(options.extensions_dir)
-    ensure_directory(options.user_dir)
-    ensure_directory(options.workspace_folder)
-    ensure_directory(options.temp_folder)
-    ensure_directory(options.screenshots_dir)
+    os.makedirs(options.extensions_dir, exist_ok=True)
+    os.makedirs(options.user_dir, exist_ok=True)
+    os.makedirs(options.workspace_folder, exist_ok=True)
+    os.makedirs(options.temp_folder, exist_ok=True)
+    os.makedirs(options.screenshots_dir, exist_ok=True)
     return options
 
 
-def _setup_environment(dirs: Options):
+def setup_environment(dirs):
     os.environ["PATH"] += os.pathsep + dirs.executable_dir
 
 
-def uninstall_extension(options: Options):
-    try:
-        shutil.rmtree(options.extensions_dir)
-    except Exception:
-        pass
+def uninstall_extension(options):
+    shutil.rmtree(options.extensions_dir, ignore_errors=True)
 
 
-def install_extension(options: Options):
+def install_extension(options):
     uninstall_extension(options)
     env = {"ELECTRON_RUN_AS_NODE": "1"}
     command = [
-        get_binary_location(options.executable_dir),
-        get_cli_location(options.executable_dir),
+        utils.get_binary_location(options.executable_dir),
+        utils.get_cli_location(options.executable_dir),
         f"--user-data-dir={options.user_dir}",
         f"--extensions-dir={options.extensions_dir}",
         f"--install-extension={options.extension_path}",
     ]
-    run_command(command, progress_message="Installing Python Extension", env=env)
+    tools.run_command(command, progress_message="Installing Python Extension", env=env)
 
-    bootstrap_extension = get_bootstrap_ext_path()
+    bootstrap_extension = main.get_extension_path()
     command = [
-        get_binary_location(options.executable_dir),
-        get_cli_location(options.executable_dir),
+        utils.get_binary_location(options.executable_dir),
+        utils.get_cli_location(options.executable_dir),
         f"--user-data-dir={options.user_dir}",
         f"--extensions-dir={options.extensions_dir}",
         f"--install-extension={bootstrap_extension}",
     ]
-    run_command(command, progress_message="Installing Smoke Test Extension", env=env)
+    tools.run_command(
+        command, progress_message="Installing Smoke Test Extension", env=env
+    )
 
 
-def launch_extension(options: Options):
+def launch_extension(options):
     chrome_options = webdriver.ChromeOptions()
     # Remember to remove the leading `--`.
     # Chromedriver will add `--` for ALL arguments.
@@ -114,52 +106,35 @@ def launch_extension(options: Options):
     ]:
         chrome_options.add_argument(arg)
 
-    chrome_options.binary_location = get_binary_location(options.executable_dir)
+    chrome_options.binary_location = utils.get_binary_location(options.executable_dir)
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
 
-class Application:
-    def __init__(self, core: Core, options: Options):
-        self.options = options
-        self.core = core
-        self.quick_open = QuickOpen(self)
-        self.quick_input = QuickInput(self)
-        self.documents = Documents(self)
-        self.status_bar = StatusBar(self)
-        self.notifications = Notifications(self)
-        # self.terminal = Terminal(self)
-
-    @classmethod
-    def start(cls, options: Options):
-        _setup_environment(options)
-        driver = launch_extension(options)
-        core = Core(driver)
-        app = cls(core, options)
-        return app
-
-    def exit(self):
-        try:
-            self.quick_open.select_command("Close Window")
-        except Exception:
-            pass
-
-    def reload(self):
+def exit(context):
+    try:
+        quick_open.select_command(context, "Close Window")
+    except Exception:
         pass
 
-    def capture_screen(self):
-        if self.options.output != "file":
-            return
 
-        if self.options.embed_screenshots:
-            screenshot = self.core.driver.get_screenshot_as_base64()
-            report.PrettyCucumberJSONFormatter.instance.attach_image(screenshot)
-        else:
-            filename = tempfile.NamedTemporaryFile(prefix="screen_capture_")
-            filename = f"{os.path.basename(filename.name)}.png"
-            filename = os.path.join(self.options.screenshots_dir, filename)
-            self.core.driver.save_screenshot(filename)
-            html = f'<a href="{filename}" target="_blank">Screen Shot</a>'
-            html = base64.b64encode(html.encode("utf-8")).decode("utf-8")
+def reload(self):
+    raise NotImplementedError()
 
-            report.PrettyCucumberJSONFormatter.instance.attach_html(html)
+
+def capture_screen(context):
+    if context.options.output != "file":
+        return
+
+    if context.options.embed_screenshots:
+        screenshot = context.driver.get_screenshot_as_base64()
+        report.PrettyCucumberJSONFormatter.instance.attach_image(screenshot)
+    else:
+        filename = tempfile.NamedTemporaryFile(prefix="screen_capture_")
+        filename = f"{os.path.basename(filename.name)}.png"
+        filename = os.path.join(context.options.screenshots_dir, filename)
+        context.driver.save_screenshot(filename)
+        html = f'<a href="{filename}" target="_blank">Screen Shot</a>'
+        html = base64.b64encode(html.encode("utf-8")).decode("utf-8")
+
+        report.PrettyCucumberJSONFormatter.instance.attach_html(html)

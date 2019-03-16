@@ -4,17 +4,13 @@
 
 import time
 
-from selenium import webdriver
-from selenium.common.exceptions import (
-    NoSuchElementException,
-    StaleElementReferenceException,
-)
+from selenium.common import exceptions
 
 
 def _try_and_find(fn, **kwargs):
-    timeout_messge: str = kwargs.get("timeout_messge", "Timeout")
-    retry_count: int = kwargs.get("retry_count", 100)
-    retry_interval: int = kwargs.get("retry_interval", 100)
+    timeout_messge = kwargs.get("timeout_messge", "Timeout")
+    retry_count = kwargs.get("retry_count", 100)
+    retry_interval = kwargs.get("retry_interval", 100)
     timeout = kwargs.get("timeout", None)
     if timeout is not None:
         retry_count = (timeout * 1000) / retry_interval
@@ -28,7 +24,10 @@ def _try_and_find(fn, **kwargs):
             trial_counter = retry_count + 1
         try:
             return fn.__call__()
-        except (NoSuchElementException, StaleElementReferenceException):
+        except (
+            exceptions.NoSuchElementException,
+            exceptions.StaleElementReferenceException,
+        ):
             trial_counter += 1
             time.sleep(retry_interval / 1000)
     else:
@@ -36,60 +35,51 @@ def _try_and_find(fn, **kwargs):
         raise SystemError(msg)
 
 
-class Core(object):
-    def __init__(self, driver: webdriver.Chrome):
-        self.driver = driver
+def dispatch_keys(driver, keys: str, **kwargs):
+    element = kwargs.get("element", driver.switch_to.active_element)
+    element.send_keys(keys)
 
-    def dispatch_keys(self, keys: str, **kwargs):
-        element = kwargs.get("element", self.driver.switch_to.active_element)
-        element.send_keys(keys)
 
-    def wait_and_click(self):
-        pass
+def wait_for_element(driver, css_selector, predicate=lambda ele: True, **kwargs):
+    def find():
 
-    def wait_and_double_click(self):
-        pass
+        element = driver.find_element_by_css_selector(css_selector)
+        if not element.is_displayed():
+            raise exceptions.NoSuchElementException(
+                "Element not yet visible, so lets wait again"
+            )
+        raise exceptions.NoSuchElementException(
+            "Predicate returned False in wait_for_element"
+        )
 
-    def wait_for_element(self, css_selector, predicate=lambda ele: True, **kwargs):
-        def find():
-            element = self.driver.find_element_by_css_selector(css_selector)
-            if not element.is_displayed():
-                raise NoSuchElementException(
-                    "Element not yet visible, so lets wait again"
-                )
-            if predicate(element) is True:
-                return element
-            raise NoSuchElementException("Predicate returned False in wait_for_element")
+    return _try_and_find(find, **kwargs)
 
-        return _try_and_find(find, **kwargs)
 
-    def wait_for_elements(self, css_selector, predicate=lambda elements: [], **kwargs):
-        def find():
-            elements = self.driver.find_elements_by_css_selector(css_selector)
-            filtered = predicate(elements)
-            if filtered:
-                # Ensure all items returned are visible.
-                for element in filtered:
-                    if not element.is_displayed():
-                        raise NoSuchElementException(
-                            "Element not yet visible, so lets wait again"
-                        )
+def wait_for_elements(driver, css_selector, predicate=lambda elements: [], **kwargs):
+    def find():
+        elements = driver.find_elements_by_css_selector(css_selector)
+        filtered = predicate(elements)
+        if filtered:
+            # Ensure all items returned are visible.
+            for element in filtered:
+                if not element.is_displayed():
+                    raise exceptions.NoSuchElementException(
+                        "Element not yet visible, so lets wait again"
+                    )
 
-                return filtered
-            raise NoSuchElementException(
-                "Predicate returned False in wait_for_elements"
+            return filtered
+        raise exceptions.NoSuchElementException(
+            "Predicate returned False in wait_for_elements"
+        )
+
+
+def wait_for_active_element(driver, css_selector, **kwargs):
+    def is_active():
+        element = driver.find_element_by_css_selector(css_selector)
+        assert element == driver.switch_to.active_element
+        if not element.is_displayed():
+            raise exceptions.NoSuchElementException(
+                "Element not yet visible, so lets wait again"
             )
 
-        return _try_and_find(find, **kwargs)
-
-    def wait_for_active_element(self, css_selector, **kwargs):
-        def is_active():
-            element = self.driver.find_element_by_css_selector(css_selector)
-            assert element == self.driver.switch_to.active_element
-            if not element.is_displayed():
-                raise NoSuchElementException(
-                    "Element not yet visible, so lets wait again"
-                )
-            return element
-
-        return _try_and_find(is_active, **kwargs)
+    return _try_and_find(is_active, **kwargs)

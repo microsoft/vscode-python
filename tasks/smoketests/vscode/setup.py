@@ -5,21 +5,27 @@
 import json
 import os
 import os.path
+import sys
 import time
 
-from tasks.smoketests.utils.tools import (
-    copy_recursive,
-    empty_directory,
-    ensure_directory,
-    run_command,
-)
-from tasks.smoketests.vscode.application import Application, Options
+from tasks.smoketests import tools
+
+from . import application, extension, quick_open
 
 
-def start_application(options: Options):
+def start(options):
+    tools.empty_directory(options.workspace_folder)
+    settings = {"python.pythonPath": sys.executable}
+    setup_user_settings(options.user_dir, user_settings=settings)
+    app_context = start_vscode(options)
+    extension.load_python_extension(app_context)
+
+
+def start_vscode(options):
     print("Starting application")
-    app = Application.start(options=options)
-
+    application.setup_environment(options)
+    driver = application.launch_extension(options)
+    context = {"options": options, "driver": driver}
     # Wait for sometime, until some messages appear.
     time.sleep(2)
 
@@ -29,40 +35,40 @@ def start_application(options: Options):
     # however it isn't, it is VSC and those args are not recognized by VSC,
     # hence VSC assumes they are files and opens editors for those.
     # Just do 3 times, to be sure chrome driver doesn't open other files.
-    app.quick_open.select_command("View: Revert and Close Editor")
-    app.quick_open.select_command("View: Revert and Close Editor")
-    app.quick_open.select_command("View: Revert and Close Editor")
-    clear_code(app)
+    quick_open.select_command(context, "View: Revert and Close Editor")
+    quick_open.select_command(context, "View: Revert and Close Editor")
+    quick_open.select_command(context, "View: Revert and Close Editor")
+    clear_code(context)
     # Do this last, some popups open a few seconds after opening VSC.
-    app.quick_open.select_command("Notifications: Clear All Notifications")
+    quick_open.select_command(context, "Notifications: Clear All Notifications")
 
-    return app
-
-
-def clear_code(app: Application):
-    app.quick_open.select_command("View: Revert and Close Editor")
-    app.quick_open.select_command("Terminal: Kill the Active Terminal Instance")
-    app.quick_open.select_command("Debug: Remove All Breakpoints")
-    app.quick_open.select_command("View: Close All Editors")
-    app.quick_open.select_command("View: Close Panel")
-    app.quick_open.select_command("Notifications: Clear All Notifications")
+    return context
 
 
-def setup_workspace(source_repo: str, target: str, temp_folder: str):
+def clear_code(context):
+    quick_open.select_command(context, "View: Revert and Close Editor")
+    quick_open.select_command(context, "Terminal: Kill the Active Terminal Instance")
+    quick_open.select_command(context, "Debug: Remove All Breakpoints")
+    quick_open.select_command(context, "View: Close All Editors")
+    quick_open.select_command(context, "View: Close Panel")
+    quick_open.select_command(context, "Notifications: Clear All Notifications")
+
+
+def setup_workspace(source_repo, target, temp_folder):
     print(f"Setting up workspace folder as {target}")
     print(f"Setting up workspace folder from {source_repo}")
-    empty_directory(target)
+    tools.empty_directory(target)
     source_folder = os.path.join(temp_folder, os.path.basename(source_repo))
     print(f"Closing repo into {source_folder}")
     _download_repo(source_repo, source_folder)
-    copy_recursive(source_folder, target)
+    tools.copy_recursive(source_folder, target)
     settings_json = os.path.join(target, ".vscode", "settings.json")
     _setup_setttings_json(settings_json)
 
 
-def setup_user_settings(user_folder: str, **kwargs):
+def setup_user_settings(user_folder, **kwargs):
     folder = os.path.join(user_folder, "User")
-    ensure_directory(folder)
+    os.makedirs(folder, exist_ok=True)
     settings_json = os.path.join(folder, "settings.json")
     _setup_setttings_json(settings_json)
     user_settings = kwargs.get("user_settings", None)
@@ -70,20 +76,20 @@ def setup_user_settings(user_folder: str, **kwargs):
         _update_settings(settings_json, user_settings)
 
 
-def _download_repo(source_repo: str, target: str):
+def _download_repo(source_repo, target):
     if os.path.exists(target):
         return
-    run_command(["git", "clone", source_repo, target])
+    tools.run_command(["git", "clone", source_repo, target])
 
 
-def _setup_setttings_json(settings_json: str):
+def _setup_setttings_json(settings_json):
     if os.path.exists(settings_json):
         return
     with open(settings_json, "w") as file:
         file.write("{}")
 
 
-def _update_settings(settings_json: str, settings: dict):
+def _update_settings(settings_json, settings):
     existing_settings = {}
     if os.path.exists(settings_json):
         with open(settings_json, "r") as file:

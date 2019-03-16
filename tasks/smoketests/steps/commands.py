@@ -2,16 +2,14 @@
 # Licensed under the MIT License.
 
 
-from behave import given, when
-
-from tasks.smoketests.vscode.base import Context
+import behave
 
 
-@given('the command "{command}" is selected')
-def given_command_selected(context: Context, command: str):
+@behave.given('the command "{command}" is selected')
+def given_command_selected(context, command: str):
     context.app.quick_open.select_command(command)
 
 
-@when('I select the command "{command}"')
-def when_select_command(context: Context, command: str):
+@behave.when('I select the command "{command}"')
+def when_select_command(context, command: str):
     context.app.quick_open.select_command(command)
