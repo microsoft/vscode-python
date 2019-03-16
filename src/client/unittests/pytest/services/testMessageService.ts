@@ -246,13 +246,13 @@ export class TestMessageService implements ITestMessageService {
             }
             // Found the line to process.
             parentScopeStartIndex = suiteDefLineIndex;
-            parentIndentation = indentation;
+            parentIndentation = indentation!;
 
             // Invert the index to get the unreversed equivalent.
             const realIndex = (reversedTestFileLines.length - 1) - suiteDefLineIndex;
-            const startChar = indentation + classPrefix.length;
+            const startChar = indentation! + classPrefix.length;
             const suiteStartPos = new Position(realIndex, startChar);
-            const suiteEndPos = new Position(realIndex, (startChar + suiteName.length));
+            const suiteEndPos = new Position(realIndex, (startChar + suiteName!.length));
             const suiteRange = new Range(suiteStartPos, suiteEndPos);
             const suiteLocation = new Location(testFileUri, suiteRange);
             suiteLocationStackFrameDetails.push({ location: suiteLocation, lineText: testFile.getText(suiteRange) });

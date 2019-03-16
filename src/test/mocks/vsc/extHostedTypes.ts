@@ -1562,14 +1562,14 @@ export namespace vscMockExtHostedTypes {
 
         private __id: string | undefined;
 
-        private _definition: vscode.TaskDefinition;
+        private _definition!: vscode.TaskDefinition;
         private _scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder | undefined;
-        private _name: string;
+        private _name!: string;
         private _execution: ProcessExecution | ShellExecution | undefined;
         private _problemMatchers: string[];
         private _hasDefinedMatchers: boolean;
         private _isBackground: boolean;
-        private _source: string;
+        private _source!: string;
         private _group: TaskGroup | undefined;
         private _presentationOptions: vscode.TaskPresentationOptions;
         private _runOptions: vscode.RunOptions;

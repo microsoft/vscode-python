@@ -71,7 +71,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     constructor(args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter) {
         this.requiredArgs = args;
         this.interpreterPromise = Promise.resolve(interpreter);
-        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter });
+        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
     }
 
     public interpreter() : Promise<PythonInterpreter | undefined> {

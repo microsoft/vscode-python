@@ -24,7 +24,7 @@ export class TestFunctionCodeNavigator implements ITestCodeNavigator {
     @swallowExceptions('Navigate to test function')
     @captureTelemetry(EventName.UNITTEST_NAVIGATE_TEST_FUNCTION, undefined, true)
     public async navigateTo(resource: Uri, fn: TestFunction, focus: boolean = true): Promise<void> {
-        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE_TEST_FUNCTION, undefined, { focus });
+        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE_TEST_FUNCTION, undefined, { focus_code: focus });
         if (this.cancellationToken) {
             this.cancellationToken.cancel();
         }

@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import {
     ITestsHelper, ITestsParser, TestFile,
     TestFunction, Tests, TestStatus,
@@ -64,11 +65,13 @@ export class TestsParser implements ITestsParser {
         const functionName = testIdParts.pop()!;
         const suiteToRun = testIdParts.join('.');
         const className = testIdParts.pop()!;
+        const resource = Uri.file(rootDirectory);
 
         // Check if we already have this test file
         let testFile = testFiles.find(test => test.fullPath === filePath);
         if (!testFile) {
             testFile = {
+                resource,
                 name: path.basename(filePath),
                 fullPath: filePath,
                 functions: [],
@@ -86,6 +89,7 @@ export class TestsParser implements ITestsParser {
         let testSuite = testFile.suites.find(cls => cls.nameToRun === suiteToRun);
         if (!testSuite) {
             testSuite = {
+                resource,
                 name: className,
                 functions: [],
                 suites: [],
@@ -100,6 +104,7 @@ export class TestsParser implements ITestsParser {
         }
 
         const testFunction: TestFunction = {
+            resource,
             name: functionName,
             nameToRun: testId,
             status: TestStatus.Idle,

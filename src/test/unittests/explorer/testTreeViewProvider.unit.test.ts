@@ -4,15 +4,26 @@
 'use strict';
 
 import { expect } from 'chai';
+import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { IDisposable } from '../../../client/common/types';
+import { TestCollectionStorageService } from '../../../client/unittests/common/services/storageService';
 import { getTestType } from '../../../client/unittests/common/testUtils';
-import { ITestCollectionStorageService, TestStatus, TestType } from '../../../client/unittests/common/types';
+import {
+    ITestCollectionStorageService, TestStatus, TestType
+} from '../../../client/unittests/common/types';
+import { TestTreeItem } from '../../../client/unittests/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/unittests/explorer/testTreeViewProvider';
 import { TestDataItem } from '../../../client/unittests/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { createMockTestExplorer, createMockTestsData, getMockTestFile, getMockTestFunction, getMockTestSuite } from './explorerTestData';
+import { noop } from '../../core';
+import {
+    createMockTestExplorer as createMockTestTreeProvider, createMockTestsData,
+    getMockTestFile, getMockTestFolder, getMockTestFunction, getMockTestSuite
+} from './explorerTestData';
+
+// tslint:disable:no-any
 
 /**
  * Class that is useful to track any Tree View update requests made by the view provider.
@@ -38,7 +49,7 @@ class TestExplorerCaptureRefresh implements IDisposable {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
-    const testResource: Uri = Uri.parse(EXTENSION_ROOT_DIR_FOR_TESTS);
+    const testResource: Uri = Uri.parse('anything');
     let disposables: IDisposable[] = [];
 
     teardown(() => {
@@ -49,25 +60,32 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
     });
 
     test('Create the initial view and ensure it provides a default view', async () => {
-        const testExplorer = createMockTestExplorer();
-        expect(testExplorer).is.not.equal(undefined, 'Could not create a mock test explorer, check the parameters of the test setup.');
-        const treeRoot = testExplorer.getChildren();
+        const testTreeProvider = createMockTestTreeProvider();
+        expect(testTreeProvider).is.not.equal(undefined, 'Could not create a mock test explorer, check the parameters of the test setup.');
+        const treeRoot = await testTreeProvider.getChildren();
         expect(treeRoot.length).to.be.greaterThan(0, 'No children returned from default view of the TreeViewProvider.');
     });
 
     test('Ensure that updates from the test manager propagate to the TestExplorer', async () => {
         const testsData = createMockTestsData();
+        const workspaceService = mock(WorkspaceService);
+        const testStore = mock(TestCollectionStorageService);
+        const workspaceFolder = { uri: Uri.file(''), name: 'root', index: 0 };
+        when(workspaceService.getWorkspaceFolder(testResource)).thenReturn(workspaceFolder);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(noop as any);
+        when(testStore.getTests(testResource)).thenReturn(testsData);
+        when(testStore.onDidChange).thenReturn(noop as any);
         const changeItem = testsData.testFolders[1].testFiles[0].functions[0];
-        const testExplorer = createMockTestExplorer(undefined, testsData);
-        const refreshCap = new TestExplorerCaptureRefresh(testExplorer, disposables);
+        const testTreeProvider = createMockTestTreeProvider(instance(testStore), testsData, undefined, instance(workspaceService));
+        const refreshCap = new TestExplorerCaptureRefresh(testTreeProvider, disposables);
 
-        testExplorer.refresh(testResource);
-        const originalTreeItem = await testExplorer.getTreeItem(changeItem);
+        testTreeProvider.refresh(testResource);
+        const originalTreeItem = await testTreeProvider.getTreeItem(changeItem) as TestTreeItem;
         const origStatus = originalTreeItem.testStatus;
 
         changeItem.status = TestStatus.Fail;
-        testExplorer.refresh(testResource);
-        const changedTreeItem = await testExplorer.getTreeItem(changeItem);
+        testTreeProvider.refresh(testResource);
+        const changedTreeItem = await testTreeProvider.getTreeItem(changeItem) as TestTreeItem;
         const updatedStatus = changedTreeItem.testStatus;
 
         expect(origStatus).to.not.equal(updatedStatus);
@@ -75,7 +93,16 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
     });
 
     test('When the test data is updated, the update event is emitted', () => {
-        const testView = createMockTestExplorer();
+        const testsData = createMockTestsData();
+        const workspaceService = mock(WorkspaceService);
+        const testStore = mock(TestCollectionStorageService);
+        const workspaceFolder = { uri: Uri.file(''), name: 'root', index: 0 };
+        when(workspaceService.getWorkspaceFolder(testResource)).thenReturn(workspaceFolder);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(noop as any);
+        when(testStore.getTests(testResource)).thenReturn(testsData);
+        when(testStore.onDidChange).thenReturn(noop as any);
+        const testView = createMockTestTreeProvider(instance(testStore), testsData, undefined, instance(workspaceService));
+
         const refreshCap = new TestExplorerCaptureRefresh(testView, disposables);
         testView.refresh(testResource);
 
@@ -98,18 +125,18 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
         testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
-        const testExplorer = createMockTestExplorer(testStoreMoq.object);
+        const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
-        testExplorer.refresh(testResource);
-        let unchangedItem = await testExplorer.getTreeItem(fl1);
+        testTreeProvider.refresh(testResource);
+        let unchangedItem = await testTreeProvider.getTreeItem(fl1);
         expect(unchangedItem).to.not.be.equal(undefined, 'The file that will always be present, is not present.');
 
         testData = updatedTestData;
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        unchangedItem = await testExplorer.getTreeItem(fl1);
+        unchangedItem = await testTreeProvider.getTreeItem(fl1);
         expect(unchangedItem).to.not.be.equal(undefined, 'The file that will always be present, is not present.');
-        let addedTreeItem = await testExplorer.getTreeItem(fl2);
+        let addedTreeItem = await testTreeProvider.getTreeItem(fl2) as TestTreeItem;
         expect(addedTreeItem).to.not.be.equal(undefined, 'The file has been added to the tests tree but not found?');
         expect(addedTreeItem.data.name).to.be.equal(`${origName}.py`);
 
@@ -122,11 +149,11 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         fl2.nameToRun = fl2.nameToRun.replace(origName, newName);
         fl2.xmlName = fl2.xmlName.replace(origName, newName);
 
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        unchangedItem = await testExplorer.getTreeItem(fl1);
+        unchangedItem = await testTreeProvider.getTreeItem(fl1);
         expect(unchangedItem).to.not.be.equal(undefined, 'The file that will always be present, is not present.');
-        addedTreeItem = await testExplorer.getTreeItem(fl2);
+        addedTreeItem = await testTreeProvider.getTreeItem(fl2) as TestTreeItem;
         expect(addedTreeItem).to.not.be.equal(undefined, 'The file has been updated in the tests tree but in tree view?');
         expect(addedTreeItem.data.name).to.be.equal(`${newName}.py`);
     });
@@ -149,18 +176,18 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
         testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
-        const testExplorer = createMockTestExplorer(testStoreMoq.object);
+        const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
-        testExplorer.refresh(testResource);
-        let unchangedItem = await testExplorer.getTreeItem(suite);
+        testTreeProvider.refresh(testResource);
+        let unchangedItem = await testTreeProvider.getTreeItem(suite);
         expect(unchangedItem).to.not.be.equal(undefined, 'The suite that will always be present, is not present.');
 
         testData = updatedTestData;
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        unchangedItem = await testExplorer.getTreeItem(suite);
+        unchangedItem = await testTreeProvider.getTreeItem(suite);
         expect(unchangedItem).to.not.be.equal(undefined, 'The suite that will always be present, is not present.');
-        let addedTreeItem = await testExplorer.getTreeItem(suite2);
+        let addedTreeItem = await testTreeProvider.getTreeItem(suite2) as TestTreeItem;
         expect(addedTreeItem).to.not.be.equal(undefined, 'The suite has been added to the tests tree but not found?');
 
         const newName = 'suite_two';
@@ -168,11 +195,11 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         suite2.nameToRun = suite2.nameToRun.replace(origName, newName);
         suite2.xmlName = suite2.xmlName.replace(origName, newName);
 
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        unchangedItem = await testExplorer.getTreeItem(suite);
+        unchangedItem = await testTreeProvider.getTreeItem(suite);
         expect(unchangedItem).to.not.be.equal(undefined, 'The suite that will always be present, is not present.');
-        addedTreeItem = await testExplorer.getTreeItem(suite2);
+        addedTreeItem = await testTreeProvider.getTreeItem(suite2) as TestTreeItem;
         expect(addedTreeItem).to.not.be.equal(undefined, 'The suite has been updated in the tests tree but in tree view?');
         expect(addedTreeItem.data.name).to.be.equal(newName);
     });
@@ -193,18 +220,18 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
         testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
-        const testExplorer = createMockTestExplorer(testStoreMoq.object);
+        const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
-        testExplorer.refresh(testResource);
-        let unchangedItem = await testExplorer.getTreeItem(fn);
+        testTreeProvider.refresh(testResource);
+        let unchangedItem = await testTreeProvider.getTreeItem(fn);
         expect(unchangedItem).to.not.be.equal(undefined, 'The function that will always be present, is not present.');
 
         testData = updatedTestData;
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        unchangedItem = await testExplorer.getTreeItem(fn);
+        unchangedItem = await testTreeProvider.getTreeItem(fn);
         expect(unchangedItem).to.not.be.equal(undefined, 'The function that will always be present, is not present.');
-        let addedTreeItem = await testExplorer.getTreeItem(fn2);
+        let addedTreeItem = await testTreeProvider.getTreeItem(fn2) as TestTreeItem;
         expect(addedTreeItem).to.not.be.equal(undefined, 'The function has been added to the tests tree but not found?');
         expect(addedTreeItem.data.name).to.be.equal('test_fn2');
 
@@ -212,11 +239,11 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         fn2.name = fn2.name.replace(origName, newName);
         fn2.nameToRun = fn2.nameToRun.replace(origName, newName);
 
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        unchangedItem = await testExplorer.getTreeItem(fn);
+        unchangedItem = await testTreeProvider.getTreeItem(fn);
         expect(unchangedItem).to.not.be.equal(undefined, 'The function that will always be present, is not present.');
-        addedTreeItem = await testExplorer.getTreeItem(fn2);
+        addedTreeItem = await testTreeProvider.getTreeItem(fn2) as TestTreeItem;
         expect(addedTreeItem).to.not.be.equal(undefined, 'The function has been updated in the tests tree but in tree view?');
         expect(addedTreeItem.data.name).to.be.equal(newName);
     });
@@ -228,23 +255,23 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const testFile = getMockTestFile('test/test_file.py', [], [testFunction]);
         const testData = createMockTestsData([testFile]);
 
-        const testExplorer = createMockTestExplorer(undefined, testData);
+        const testTreeProvider = createMockTestTreeProvider(undefined, testData);
 
         // test's initial state is success
-        testExplorer.refresh(testResource);
-        const treeItem = await testExplorer.getTreeItem(testFunction);
+        testTreeProvider.refresh(testResource);
+        const treeItem = await testTreeProvider.getTreeItem(testFunction) as TestTreeItem;
         expect(treeItem.testStatus).to.be.equal(TestStatus.Pass);
 
         // test's next state is fail
         testFunction.status = TestStatus.Fail;
-        testExplorer.refresh(testResource);
-        let updatedTreeItem = await testExplorer.getTreeItem(testFunction);
+        testTreeProvider.refresh(testResource);
+        let updatedTreeItem = await testTreeProvider.getTreeItem(testFunction) as TestTreeItem;
         expect(updatedTreeItem.testStatus).to.be.equal(TestStatus.Fail);
 
         // test's next state is skip
         testFunction.status = TestStatus.Skipped;
-        testExplorer.refresh(testResource);
-        updatedTreeItem = await testExplorer.getTreeItem(testFunction);
+        testTreeProvider.refresh(testResource);
+        updatedTreeItem = await testTreeProvider.getTreeItem(testFunction) as TestTreeItem;
         expect(updatedTreeItem.testStatus).to.be.equal(TestStatus.Skipped);
     });
 
@@ -256,28 +283,28 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const testFile = getMockTestFile('test/test_file.py', [testSuite], [outerTestFunction]);
         const testData = createMockTestsData([testFile]);
 
-        const testExplorer = createMockTestExplorer(undefined, testData);
+        const testTreeProvider = createMockTestTreeProvider(undefined, testData);
 
         // build up the view item tree
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        let parent = await testExplorer.getParent!(testFunction)!;
+        let parent = (await testTreeProvider.getParent(testFunction))!;
         expect(parent.name).to.be.equal(testSuite.name, 'Function within a test suite not returning the suite as parent.');
         let parentType = getTestType(parent);
         expect(parentType).to.be.equal(TestType.testSuite);
 
-        parent = await testExplorer.getParent!(testSuite)!;
+        parent = (await testTreeProvider.getParent(testSuite))!;
         expect(parent.name).to.be.equal(testFile.name, 'Suite within a test file not returning the test file as parent.');
         parentType = getTestType(parent);
         expect(parentType).to.be.equal(TestType.testFile);
 
-        parent = await testExplorer.getParent!(outerTestFunction)!;
+        parent = (await testTreeProvider.getParent(outerTestFunction))!;
         expect(parent.name).to.be.equal(testFile.name, 'Function within a test file not returning the test file as parent.');
         parentType = getTestType(parent);
         expect(parentType).to.be.equal(TestType.testFile);
 
-        parent = await testExplorer.getParent!(testFile)!;
-        parentType = getTestType(parent);
+        parent = (await testTreeProvider.getParent(testFile))!;
+        parentType = getTestType(parent!);
         expect(parentType).to.be.equal(TestType.testFolder);
     });
 
@@ -289,28 +316,279 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
         const testFile = getMockTestFile('test/test_file.py', [testSuite], [outerTestFunction]);
         const testData = createMockTestsData([testFile]);
 
-        const testExplorer = createMockTestExplorer(undefined, testData);
+        const testTreeProvider = createMockTestTreeProvider(undefined, testData);
 
         // build up the view item tree
-        testExplorer.refresh(testResource);
+        testTreeProvider.refresh(testResource);
 
-        let children = testExplorer.getChildren(testFunction);
+        let children = await testTreeProvider.getChildren(testFunction);
         expect(children.length).to.be.equal(0, 'A function should never have children.');
 
-        children = testExplorer.getChildren(testSuite);
+        children = await testTreeProvider.getChildren(testSuite);
         expect(children.length).to.be.equal(1, 'Suite a single function should only return one child.');
         children.forEach((child: TestDataItem) => {
             expect(child.name).oneOf(['test_fn']);
             expect(getTestType(child)).to.be.equal(TestType.testFunction);
         });
 
-        children = testExplorer.getChildren(outerTestFunction);
+        children = await testTreeProvider.getChildren(outerTestFunction);
         expect(children.length).to.be.equal(0, 'A function should never have children.');
 
-        children = testExplorer.getChildren(testFile);
+        children = await testTreeProvider.getChildren(testFile);
         expect(children.length).to.be.equal(2, 'A file with one suite and one function should have a total of 2 children.');
         children.forEach((child: TestDataItem) => {
             expect(child.name).oneOf(['test_suite', 'test_outer_fn']);
         });
+    });
+
+    test('Tree items for subtests are correct', async () => {
+        const resource = Uri.file(__filename);
+        // Set up the folder & file.
+        const folder = getMockTestFolder('tests');
+        const file = getMockTestFile(`${folder.name}/test_file.py`);
+        folder.testFiles.push(file);
+        // Set up the file-level tests.
+        const func1 = getMockTestFunction(`${file.name}::test_spam`);
+        file.functions.push(func1);
+        const func2 = getMockTestFunction(`${file.name}::test_ham[1-2]`);
+        func2.subtestParent = {
+            name: 'test_ham',
+            nameToRun: `${file.name}::test_ham`,
+            asSuite: {
+                resource: resource,
+                name: 'test_ham',
+                nameToRun: `${file.name}::test_ham`,
+                functions: [func2],
+                suites: [],
+                isUnitTest: false,
+                isInstance: false,
+                xmlName: 'test_ham',
+                time: 0
+            },
+            time: 0
+        };
+        file.functions.push(func2);
+        const func3 = getMockTestFunction(`${file.name}::test_ham[3-4]`);
+        func3.subtestParent = func2.subtestParent;
+        func3.subtestParent.asSuite.functions.push(func3);
+        file.functions.push(func3);
+        // Set up the suite.
+        const suite = getMockTestSuite(`${file.name}::MyTests`);
+        file.suites.push(suite);
+        const func4 = getMockTestFunction('MyTests::test_foo');
+        suite.functions.push(func4);
+        const func5 = getMockTestFunction('MyTests::test_bar[2-3]');
+        func5.subtestParent = {
+            name: 'test_bar',
+            nameToRun: `${file.name}::MyTests::test_bar`,
+            asSuite: {
+                resource: resource,
+                name: 'test_bar',
+                nameToRun: `${file.name}::MyTests::test_bar`,
+                functions: [func5],
+                suites: [],
+                isUnitTest: false,
+                isInstance: false,
+                xmlName: 'test_bar',
+                time: 0
+            },
+            time: 0
+        };
+        suite.functions.push(func5);
+        // Set up the tests data.
+        const testData = createMockTestsData([file]);
+
+        const testExplorer = createMockTestTreeProvider(undefined, testData);
+        const items = [
+            await testExplorer.getTreeItem(func1),
+            await testExplorer.getTreeItem(func2),
+            await testExplorer.getTreeItem(func3),
+            await testExplorer.getTreeItem(func4),
+            await testExplorer.getTreeItem(func5),
+            await testExplorer.getTreeItem(file),
+            await testExplorer.getTreeItem(suite),
+            await testExplorer.getTreeItem(func2.subtestParent.asSuite),
+            await testExplorer.getTreeItem(func5.subtestParent.asSuite)
+        ];
+
+        expect(items).to.deep.equal([
+            new TestTreeItem(func1.resource, func1),
+            new TestTreeItem(func2.resource, func2),
+            new TestTreeItem(func3.resource, func3),
+            new TestTreeItem(func4.resource, func4),
+            new TestTreeItem(func5.resource, func5),
+            new TestTreeItem(file.resource, file),
+            new TestTreeItem(suite.resource, suite),
+            new TestTreeItem(resource, func2.subtestParent.asSuite),
+            new TestTreeItem(resource, func5.subtestParent.asSuite)
+        ]);
+    });
+
+    test('Parents for subtests are correct', async () => {
+        const resource = Uri.file(__filename);
+        // Set up the folder & file.
+        const folder = getMockTestFolder('tests');
+        const file = getMockTestFile(`${folder.name}/test_file.py`);
+        folder.testFiles.push(file);
+        // Set up the file-level tests.
+        const func1 = getMockTestFunction(`${file.name}::test_spam`);
+        file.functions.push(func1);
+        const func2 = getMockTestFunction(`${file.name}::test_ham[1-2]`);
+        func2.subtestParent = {
+            name: 'test_ham',
+            nameToRun: `${file.name}::test_ham`,
+            asSuite: {
+                resource: resource,
+                name: 'test_ham',
+                nameToRun: `${file.name}::test_ham`,
+                functions: [func2],
+                suites: [],
+                isUnitTest: false,
+                isInstance: false,
+                xmlName: 'test_ham',
+                time: 0
+            },
+            time: 0
+        };
+        file.functions.push(func2);
+        const func3 = getMockTestFunction(`${file.name}::test_ham[3-4]`);
+        func3.subtestParent = func2.subtestParent;
+        func3.subtestParent.asSuite.functions.push(func3);
+        file.functions.push(func3);
+        // Set up the suite.
+        const suite = getMockTestSuite(`${file.name}::MyTests`);
+        file.suites.push(suite);
+        const func4 = getMockTestFunction('MyTests::test_foo');
+        suite.functions.push(func4);
+        const func5 = getMockTestFunction('MyTests::test_bar[2-3]');
+        func5.subtestParent = {
+            name: 'test_bar',
+            nameToRun: `${file.name}::MyTests::test_bar`,
+            asSuite: {
+                resource: resource,
+                name: 'test_bar',
+                nameToRun: `${file.name}::MyTests::test_bar`,
+                functions: [func5],
+                suites: [],
+                isUnitTest: false,
+                isInstance: false,
+                xmlName: 'test_bar',
+                time: 0
+            },
+            time: 0
+        };
+        suite.functions.push(func5);
+        // Set up the tests data.
+        const testData = createMockTestsData([file]);
+
+        const testExplorer = createMockTestTreeProvider(undefined, testData);
+        const parents = [
+            await testExplorer.getParent(func1),
+            await testExplorer.getParent(func2),
+            await testExplorer.getParent(func3),
+            await testExplorer.getParent(func4),
+            await testExplorer.getParent(func5),
+            await testExplorer.getParent(suite),
+            await testExplorer.getParent(func2.subtestParent.asSuite),
+            await testExplorer.getParent(func3.subtestParent.asSuite),
+            await testExplorer.getParent(func5.subtestParent.asSuite)
+        ];
+
+        expect(parents).to.deep.equal([
+            file,
+            func2.subtestParent.asSuite,
+            func3.subtestParent.asSuite,
+            suite,
+            func5.subtestParent.asSuite,
+            file,
+            file,
+            file,
+            suite
+        ]);
+    });
+
+    test('Children for subtests are correct', async () => {
+        const resource = Uri.file(__filename);
+        // Set up the folder & file.
+        const folder = getMockTestFolder('tests');
+        const file = getMockTestFile(`${folder.name}/test_file.py`);
+        folder.testFiles.push(file);
+        // Set up the file-level tests.
+        const func1 = getMockTestFunction(`${file.name}::test_spam`);
+        file.functions.push(func1);
+        const func2 = getMockTestFunction(`${file.name}::test_ham[1-2]`);
+        func2.subtestParent = {
+            name: 'test_ham',
+            nameToRun: `${file.name}::test_ham`,
+            asSuite: {
+                resource: resource,
+                name: 'test_ham',
+                nameToRun: `${file.name}::test_ham`,
+                functions: [func2],
+                suites: [],
+                isUnitTest: false,
+                isInstance: false,
+                xmlName: 'test_ham',
+                time: 0
+            },
+            time: 0
+        };
+        file.functions.push(func2);
+        const func3 = getMockTestFunction(`${file.name}::test_ham[3-4]`);
+        func3.subtestParent = func2.subtestParent;
+        func3.subtestParent.asSuite.functions.push(func3);
+        file.functions.push(func3);
+        // Set up the suite.
+        const suite = getMockTestSuite(`${file.name}::MyTests`);
+        file.suites.push(suite);
+        const func4 = getMockTestFunction('MyTests::test_foo');
+        suite.functions.push(func4);
+        const func5 = getMockTestFunction('MyTests::test_bar[2-3]');
+        func5.subtestParent = {
+            name: 'test_bar',
+            nameToRun: `${file.name}::MyTests::test_bar`,
+            asSuite: {
+                resource: resource,
+                name: 'test_bar',
+                nameToRun: `${file.name}::MyTests::test_bar`,
+                functions: [func5],
+                suites: [],
+                isUnitTest: false,
+                isInstance: false,
+                xmlName: 'test_bar',
+                time: 0
+            },
+            time: 0
+        };
+        suite.functions.push(func5);
+        // Set up the tests data.
+        const testData = createMockTestsData([file]);
+
+        const testExplorer = createMockTestTreeProvider(undefined, testData);
+        const childrens = [
+            await testExplorer.getChildren(func1),
+            await testExplorer.getChildren(func2),
+            await testExplorer.getChildren(func3),
+            await testExplorer.getChildren(func4),
+            await testExplorer.getChildren(func5),
+            await testExplorer.getChildren(file),
+            await testExplorer.getChildren(suite),
+            await testExplorer.getChildren(func2.subtestParent.asSuite),
+            await testExplorer.getChildren(func3.subtestParent.asSuite),
+            await testExplorer.getChildren(func5.subtestParent.asSuite)
+        ];
+
+        expect(childrens).to.deep.equal([
+            [],
+            [],
+            [],
+            [],
+            [],
+            [func1, suite, func2.subtestParent.asSuite],
+            [func4, func5.subtestParent.asSuite],
+            [func2, func3],
+            [func2, func3],
+            [func5]
+        ]);
     });
 });

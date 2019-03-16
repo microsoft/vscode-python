@@ -2078,5 +2078,28 @@ export const pytestScenarioData: PytestDiscoveryScenario[] =
                 "",
                 "======================== no tests ran in 0.36 seconds ========================="
             ]
+        },
+        {
+            pytest_version_spec: ">= 4.1",
+            platform: PytestDataPlatformType.NonWindows,
+            description: "Parameterized tests",
+            rootdir: "/home/user/test/pytest_scenario",
+            test_functions: [
+                "tests/test_spam.py::test_with_subtests[1-2]",
+                "tests/test_spam.py::test_with_subtests[3-4]"
+            ],
+            functionCount: 2,
+            stdout: [
+                "============================= test session starts ==============================",
+                "platform linux -- Python 3.7.1, pytest-4.2.1, py-1.7.0, pluggy-0.8.1",
+                "rootdir: /home/user/test/pytest_scenario, inifile:",
+                "collected 2 items",
+                "<Package /home/user/test/pytest_scenario/tests>",
+                "  <Module test_spam.py>",
+                "    <Function test_with_subtests[1-2]>",
+                "    <Function test_with_subtests[3-4]>",
+                "",
+                "========================= no tests ran in 0.02 seconds ========================="
+            ]
         }
     ];

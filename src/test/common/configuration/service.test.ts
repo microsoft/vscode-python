@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposable } from '../../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
 import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
@@ -17,7 +17,7 @@ suite('Configuration Service', () => {
     });
     teardown(() => ioc.dispose());
 
-    test('Ensure same instance of settings return',  () => {
+    test('Ensure same instance of settings return', () => {
         const workspaceUri = workspace.workspaceFolders![0].uri;
         const settings = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
         const instanceIsSame = settings === getExtensionSettings(workspaceUri);
@@ -27,8 +27,8 @@ suite('Configuration Service', () => {
     test('Ensure async registry works', async () => {
         const asyncRegistry = ioc.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         let disposed = false;
-        const disposable : IDisposable = {
-            dispose() : Promise<void> {
+        const disposable = {
+            dispose(): Promise<void> {
                 disposed = true;
                 return Promise.resolve();
             }

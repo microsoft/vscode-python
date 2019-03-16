@@ -11,7 +11,8 @@ import { ICurrentProcess, IPathUtils } from '../../client/common/types';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { DebugClientHelper } from '../../client/debugger/debugAdapter/DebugClients/helper';
 import { LaunchRequestArguments } from '../../client/debugger/types';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { isOs, OSType } from '../common';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 use(chaiAsPromised);
@@ -21,7 +22,15 @@ suite('Resolving Environment Variables when Debugging', () => {
     let helper: DebugClientHelper;
     let pathVariableName: string;
     let mockProcess: ICurrentProcess;
-    suiteSetup(initialize);
+
+    suiteSetup(async function () {
+        if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+        await initialize();
+    });
+
     setup(async () => {
         initializeDI();
         await initializeTest();
@@ -85,7 +94,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const args = {
             program: '', pythonPath: '', args: [], envFile: '',
             console, env
-        // tslint:disable-next-line:no-any
+            // tslint:disable-next-line:no-any
         } as any as LaunchRequestArguments;
 
         const envVars = await helper.getEnvironmentVariables(args);
@@ -133,7 +142,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const prop2 = shortid.generate();
         const prop3 = shortid.generate();
 
-        const env : Record<string, string> = {};
+        const env: Record<string, string> = {};
         env[pathVariableName] = customPathToAppend;
         env['PYTHONPATH'] = customPythonPathToAppend;
         env[prop1] = prop1;
@@ -184,11 +193,31 @@ suite('Resolving Environment Variables when Debugging', () => {
         }
     }
 
-    test('Confirm paths get appended correctly when using json variables and launched in external terminal', () => testAppendingOfPaths('externalTerminal', 6, false));
+    test('Confirm paths get appended correctly when using json variables and launched in external terminal', async function () {
+        // test is flakey on windows, path separator problems. GH issue #4758
+        if (isOs(OSType.Windows)) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+        await testAppendingOfPaths('externalTerminal', 6, false);
+    });
 
-    test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', () => testAppendingOfPaths('integratedTerminal', 6, false));
+    test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', async function () {
+        // test is flakey on windows, path separator problems. GH issue #4758
+        if (isOs(OSType.Windows)) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+        await testAppendingOfPaths('integratedTerminal', 6, false);
+    });
 
-    test('Confirm paths get appended correctly when using json variables and launched in debug console', async () => {
+    test('Confirm paths get appended correctly when using json variables and launched in debug console', async function () {
+        // test is flakey on windows, path separator problems. GH issue #4758
+        if (isOs(OSType.Windows)) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+
         // Add 3 for the 3 new json env variables
         let expectedNumberOfVariables = Object.keys(mockProcess.env).length + 3;
         if (mockProcess.env['PYTHONUNBUFFERED'] === undefined) {

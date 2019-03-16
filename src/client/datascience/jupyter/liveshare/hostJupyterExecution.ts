@@ -33,7 +33,7 @@ import { ServerCache } from './serverCache';
 export class HostJupyterExecution
     extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
     implements IRoleBasedObject, IJupyterExecution {
-    private serverCache : ServerCache;
+    private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
@@ -47,7 +47,7 @@ export class HostJupyterExecution
         sessionManager: IJupyterSessionManager,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        commandFactory : IJupyterCommandFactory,
+        commandFactory: IJupyterCommandFactory,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
@@ -67,7 +67,7 @@ export class HostJupyterExecution
         this.serverCache = new ServerCache(configService, workspace, fileSys);
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         await super.dispose();
         const api = await this.api;
         await this.onDetach(api);
@@ -90,7 +90,7 @@ export class HostJupyterExecution
         }
     }
 
-    public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         if (api) {
             const service = await this.waitForService();
 
@@ -106,14 +106,14 @@ export class HostJupyterExecution
         }
     }
 
-    public async onDetach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
         await super.onDetach(api);
 
         // clear our cached servers. We need to reconnect
         await this.serverCache.dispose();
     }
 
-    public getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // See if we have this server or not.
         return this.serverCache.get(options);
     }
@@ -147,7 +147,14 @@ export class HostJupyterExecution
             // on the guest side. However we need to eliminate the dispose method. Methods are not serializable
             const connectionInfo = localServer.getConnectionInfo();
             if (connectionInfo) {
-                return { baseUrl: connectionInfo.baseUrl, token: connectionInfo.token, localLaunch: false, dispose: noop };
+                return {
+                    baseUrl: connectionInfo.baseUrl,
+                    token: connectionInfo.token,
+                    localLaunch: false,
+                    localProcExitCode: undefined,
+                    disconnected: (l) => { return { dispose: noop }; },
+                    dispose: noop
+                };
             }
         }
     }

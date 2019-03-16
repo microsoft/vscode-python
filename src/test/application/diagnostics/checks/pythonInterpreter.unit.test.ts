@@ -13,6 +13,7 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
 import { IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
+import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
 import { noop } from '../../../../client/common/utils/misc';
@@ -152,7 +153,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
-                typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })))
+                typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({ type: 'executeVSCCommand' })))
                 .returns(() => cmd)
                 .verifiable(typemoq.Times.once());
 
@@ -173,7 +174,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
-                typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })))
+                typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({ type: 'executeVSCCommand' })))
                 .returns(() => cmd)
                 .verifiable(typemoq.Times.once());
 

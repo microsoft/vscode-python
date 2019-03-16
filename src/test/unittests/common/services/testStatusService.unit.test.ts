@@ -155,6 +155,7 @@ suite('Unit Tests - Tests Status Updater', () => {
         tests.testFiles[3].status = TestStatus.Error;
         tests.testFunctions[2].testFunction.status = TestStatus.Fail;
         tests.testFunctions[3].testFunction.status = TestStatus.Error;
+        tests.testFunctions[4].testFunction.status = TestStatus.Pass;
         tests.testSuites[1].testSuite.status = TestStatus.Fail;
         tests.testSuites[2].testSuite.status = TestStatus.Error;
 
@@ -168,7 +169,11 @@ suite('Unit Tests - Tests Status Updater', () => {
 
         // Update status of test functions and suites.
         const updatedItems: TestDataItem[] = [];
-        const visitor = (item: TestDataItem) => updatedItems.push(item);
+        const visitor = (item: TestDataItem) => {
+            if (item.status && item.status !== TestStatus.Pass) {
+                updatedItems.push(item);
+            }
+        };
         const failedItems = [
             tests.testFunctions[2].testFunction,
             tests.testFunctions[3].testFunction,
@@ -181,6 +186,9 @@ suite('Unit Tests - Tests Status Updater', () => {
             assert.equal(item.status, TestStatus.Running);
             verify(storage.update(workspaceUri, item)).once();
         }
+
+        // Only items with status Fail & Error should be modified
+        assert.equal(tests.testFunctions[4].testFunction.status, TestStatus.Pass);
 
         // Should only be called for failed items.
         verify(storage.update(workspaceUri, anything())).times(updatedItems.length);

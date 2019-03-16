@@ -355,9 +355,109 @@ def test_failure():
 - [ ] The first `"request": "test"` entry in launch.json is used for running unit tests
 
 ### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
-- [ ] Set Python environment to Anaconda
-- [ ] Single cell execution works
-- [ ] `Run All Cells` in Jupyter code works
-- [ ] Typing code into Python interactive window works
+#### P0 Test Scenarios
+- [ ] Start and connect to local Jupyter server
+    1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
+    1. At the top of the file it will list the things that you need installed in your Python environment
+    1. On the first cell click `Run Cell And All Below`
+    1. Interactive Window should open, show connection information, and execute cells
+    1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
+- [ ] Verify basic outputs
+    1. Run all the cells in manualTestFile.py
+    1. Check to make sure that no outputs have errors
+    1. Verify that graphs and progress bars are shown
+- [ ] Verify export / import
+    1. With the results from `Start and connect to local server` open click the `Export as Jupyter Notebook` button in the Interactive Window
+    1. Choose a file location and save the generated .ipynb file
+    1. When the prompt comes up in the lower right choose to open the file in the browser
+    1. The file should open in the web browser and contain the output from the Interactive Window
+    1. In VSCode open up the exported .ipynb file in the editor, when the prompt for `Do you want to import the Jupyter Notebook into Python code?` appears click import
+    1. The imported file should match the original python file
+- [ ] Verify text entry
+    1. In the Interactive Window type in some new code `print('testing')` and submit it to the Interactive Windows
+    1. Verify the output from what you added
+- [ ] Verify dark and light main themes
+    1. Repeat the `Start and connect to local server` and `Verify basic outputs` steps using `Default Dark+` and `Default Light+` themes
 
+#### P1 Test Scenarios
+- [ ] Connect to a `remote` server
+    1. Open up a valid python command prompt that can run `jupyter notebook` (a default Anaconda prompt works well)
+    1. Run `jupyter notebook` to start up a local Jupyter server 
+    1. In the command window that launched Jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d 
+    1. Run the command `Python: Select Jupyter server URI` then `Type in the URI to connect to a running jupyter server`
+    1. Input the server / token name here
+    1. Now run the cells in the manualTestFile.py 
+    1. Verify that you see the server name in the initial connection message
+    1. Verify the outputs of the cells
+- [ ] Interactive Window commands
+    - [ ] Verify per-cell commands
+        1. Expand and collapse the input area of a cell
+        1. Use the `X` button to remove a cell
+        1. Use the `Goto Code` button to jump to the part of the .py file that submitted the code
+    - [ ] Verify top menu commands
+        1. Use `X` to delete all cells
+        1. Undo the delete action with `Undo`
+        1. Redo the delete action with `Redo`
+        1. In manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt iPython Kernel` button
+        1. The progress bar should be interrupted and you should see a KeyboardInterrupt error message in the output
+        1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
+        1. Use the expand all input and collapse all input commands to collapse all cell inputs
+- [ ] Verify code lenses
+    1. Check that `Run Cell` `Run All Cells Above` and `Run Cell And All Below` all do the correct thing
+- [ ] Verify context menu navigation commands
+    1. Check the `Run Current Cell` and `Run Current Cell And Advance` context menu commands
+    1. If run on the last cell of the file `Run Current Cell And Advance` should create a new empty cell and advance to it
+- [ ] Verify command palette commands
+    1. Close the Interactive Window then pick `Python: Show Interactive Window`
+    1. Restart the kernel and pick `Python: Run Current File In Python Interactive Window` it should run the whole file again
+- [ ] Verify shift-enter
+    1. Move to the top cell in the .py file
+    1. Shift-enter should run each cell and advance to the next
+    1. Shift-enter on the final cell should create a new cell and move to it
+- [ ] Verify file without cells
+    1. Open the manualTestFileNoCells.py file
+    1. Select a chunk of code, shift-enter should send it to the terminal
+    1. Open VSCode settings, change `Send Selection To Interactive Window` to true
+    1. Select a chunk of code, shift-enter should send that selection to the Interactive Windows
+    1. Move your cursor to a line, but don't select anything. Shift-enter should send that line to the Interactive Window
+- [ ] Multiple installs
+    1. Close and re-open VSCode to make sure that all jupyter servers are closed
+    1. Also make sure you are set to locally launch Jupyter and not to connect to an existing URI
+    1. In addition to your main testing environment install a new python or miniconda install (conda won't work as it has Jupyter by default)
+    1. In VS code change the python interpreter to the new install
+    1. Try `Run Cell` 
+    1. You should get a message that Jupyter was not found and that it is defaulting back to launch on the python instance that has Jupyter
+- [ ] LiveShare Support
+    1. Install the LiveShare VSCode Extension
+    1. Open manualTestFile.py in VSCode
+    1. Run the first cell in the file
+    1. Switch to the `Live Share` tab in VS Code and start a session
+        - [ ] Verify server start
+            1. Jupyter server instance should appear in the live share tab
+    1. Open another window of VSCode
+    1. Connect the second instance of VSCode as a Guest to the first Live Share session
+    1. After the workspace opens, open the manualTestFile.py on the Guest instance
+    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command 
+        - [ ] Verify results
+            1. Output should show up on the Guest Interactive Window
+            1. Same output should show up in the Host Interactive Window
+    1. On the Host instance run a cell from the file, both via the codelens and via the command palette
+        - [ ] Verify results
+            1. Output should show up on the Guest Interactive Window
+            1. Same output should show up in the Host Interactive Window
+
+#### P2 Test Scenarios
+- [ ] Directory change
+    - [ ] Verify directory change in export
+        1. Follow the previous steps for export, but export the ipynb to a directory outside of the current workspace
+        1. Open the file in the browser, you should get an initial cell added to change directory back to your workspace directory
+    - [ ] Verify directory change in import
+        1. Follow the previous steps for import, but import an ipynb that is located outside of your current workspace
+        1. Open the file in the editor. There should be python code at the start to change directory to the previous location of the .ipynb file
+- [ ] Interactive Window input history history
+    1. Start up an Interactive Window session
+    1. Input several lines into the Interactive Window terminal
+    1. Press up to verify that those previously entered lines show in the Interactive Window terminal history
+- [ ] Extra themes
+    1. Try several of the themes that come with VSCode that are not the default Dark+ and Light+
 </details>

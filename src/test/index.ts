@@ -10,7 +10,7 @@ if ((Reflect as any).metadata === undefined) {
 
 import {
     IS_CI_SERVER_TEST_DEBUGGER,
-    IS_VSTS, MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
+    MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
     MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
@@ -19,10 +19,13 @@ import * as testRunner from './testRunner';
 process.env.VSC_PYTHON_CI_TEST = '1';
 process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST.toString();
 
+// Check for a grep setting. Might be running a subset of the tests
+const defaultGrep = process.env.VSC_PYTHON_CI_TEST_GREP;
+
 // If running on CI server and we're running the debugger tests, then ensure we only run debug tests.
 // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
 // So the solution is to run them separately and first on CI.
-const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : undefined;
+const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
 const testFilesSuffix = process.env.TEST_FILES_SUFFIX;
 
 // You can directly control Mocha options by uncommenting the following lines.
@@ -36,11 +39,6 @@ const options: testRunner.SetupOptions & { retries: number } = {
     grep,
     testFilesSuffix
 };
-
-// VSTS CI doesn't display colours correctly (yet).
-if (IS_VSTS) {
-    options.useColors = false;
-}
 
 // CI can ask for a JUnit reporter if the environment variable
 // 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded

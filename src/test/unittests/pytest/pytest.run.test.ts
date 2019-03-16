@@ -57,7 +57,7 @@ async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Test
             scenario.testsToRun.testFunction!.push(tests.testSuites[scenario.testFunctionIndex].testSuite);
         }
     }
-    return scenario.testsToRun;
+    return scenario.testsToRun!;
 }
 
 /**
@@ -371,27 +371,26 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 await ioc.dispose();
                 await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
             });
-            const shouldRunProperly = (suiteName, failedRun = false) => {
+            const shouldRunProperly = (suiteName: string, failedRun = false) => {
                 suite(suiteName, () => {
                     testDetails = getScenarioTestDetails(scenario, failedRun);
                     const uniqueIssueFiles = getUniqueIssueFilesFromTestDetails(testDetails);
-                    let expectedSummaryCount;
+                    let expectedSummaryCount: IResultsSummaryCount;
                     suiteSetup(async () => {
                         testDetails = getScenarioTestDetails(scenario, failedRun);
-                        results = await getResultsFromTestManagerRunTest(testManager, scenario.testsToRun, failedRun);
+                        results = await getResultsFromTestManagerRunTest(testManager, scenario.testsToRun!, failedRun);
                         expectedSummaryCount = getExpectedSummaryCount(testDetails, failedRun);
                     });
                     test('Test results summary', async () => { await testResultsSummary(results, expectedSummaryCount); });
                     uniqueIssueFiles.forEach(fileName => {
                         suite(fileName, () => {
                             let testFileUri: vscode.Uri;
-                            let expectedDiagnosticCount: number;
                             const relevantTestDetails = getRelevantTestDetailsForFile(testDetails, fileName);
                             const relevantSkippedIssues = getRelevantSkippedIssuesFromTestDetailsForFile(scenario.testDetails!, fileName);
                             suiteSetup(async () => {
                                 testFileUri = vscode.Uri.file(path.join(UNITTEST_TEST_FILES_PATH, fileName));
                                 diagnostics = testManager.diagnosticCollection.get(testFileUri)!;
-                                expectedDiagnosticCount = getIssueCountFromRelevantTestDetails(relevantTestDetails, relevantSkippedIssues, failedRun);
+                                getIssueCountFromRelevantTestDetails(relevantTestDetails, relevantSkippedIssues, failedRun);
                             });
                             // test('Test DiagnosticCollection', async () => { assert.equal(diagnostics.length, expectedDiagnosticCount, 'Diagnostics count'); });
                             const validateTestFunctionAndDiagnostics = (td: ITestDetails) => {

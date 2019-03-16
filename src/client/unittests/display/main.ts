@@ -153,6 +153,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);
         }
+        this.cmdManager.executeCommand('setContext', 'testsDiscovered', false);
     }
 
     private updateWithDiscoverSuccess(tests: Tests, quietMode: boolean = false) {
@@ -172,7 +173,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                     this.disableTests()
                         .catch(ex => console.error('Python Extension: disableTests', ex));
                 } else if (item === UnitTests.configureTests()) {
-                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure).then(noop);
+                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
                 }
             });
         }

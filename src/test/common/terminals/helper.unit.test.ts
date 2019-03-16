@@ -186,7 +186,7 @@ suite('Terminal Service helpers', () => {
         test('Ensure empty args are ignored', async () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
                 const command = 'python3.7.exe';
-                const args = [];
+                const args: string[] = [];
                 const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
                 const expectedTerminalCommand = `${commandPrefix}${command}`;
 
@@ -198,7 +198,7 @@ suite('Terminal Service helpers', () => {
         test('Ensure empty args are ignored with s in command', async () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
                 const command = 'c:\\python 3.7.exe';
-                const args = [];
+                const args: string[] = [];
                 const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
                 const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()}`;
 

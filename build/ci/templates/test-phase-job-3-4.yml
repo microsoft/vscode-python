@@ -3,9 +3,9 @@ parameters:
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
   PoolName: 'Hosted Ubuntu 1604'
-  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTER_ID: ''
   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
-  MOCHA_REPORTER_JUNIT: true
+  #MOCHA_REPORTER_JUNIT: false
   UploadBinary: false
   AzureStorageAccountName: 'vscodepythonci'
   AzureStorageContainerName: 'vscode-python-ci'

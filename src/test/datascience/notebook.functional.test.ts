@@ -3,10 +3,12 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
+import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
@@ -23,7 +25,6 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
-    ICell,
     IConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
@@ -72,9 +73,6 @@ suite('Jupyter notebook tests', () => {
         ioc.registerDataScienceTypes();
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
-        if (ioc.mockJupyter) {
-            ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all);
-        }
     });
 
     teardown(async () => {
@@ -120,8 +118,8 @@ suite('Jupyter notebook tests', () => {
         assert.ok(data, `No data object on the cell`);
         if (data) { // For linter
             assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
-            assert.ok(data['text/plain'], `Cell mime type not correct`);
-            assert.equal(data['text/plain'], expectedValue, 'Cell value does not match');
+            assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
+            assert.equal((data as any)['text/plain'], expectedValue, 'Cell value does not match');
         }
     }
 
@@ -154,8 +152,8 @@ suite('Jupyter notebook tests', () => {
             assert.ok(data, `${index}: No data object on the cell`);
             if (data) { // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
-                assert.ok(data[mimeType], `${index}: Cell mime type not correct`);
-                verifyValue(data[mimeType]);
+                assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
+                verifyValue((data as any)[mimeType]);
             }
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -191,9 +189,12 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>) {
+    function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
+            if (ioc.mockJupyter) {
+                ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all, undefined, notebookProc);
+            }
             if (await jupyterExecution.isNotebookSupported()) {
                 return func();
             } else {
@@ -207,7 +208,7 @@ suite('Jupyter notebook tests', () => {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1'});
+            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1' });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -255,7 +256,7 @@ suite('Jupyter notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: ''});
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
@@ -356,7 +357,7 @@ suite('Jupyter notebook tests', () => {
             const nbcells = notebook['cells'];
             if (nbcells) {
                 // tslint:disable-next-line:no-string-literal
-                const firstCellText: string = nbcells[0]['source'] as string;
+                const firstCellText: string = (nbcells as any)[0]['source'] as string;
                 assert.ok(firstCellText.includes('os.chdir'));
             }
         }
@@ -428,7 +429,7 @@ suite('Jupyter notebook tests', () => {
 
         try {
             // tslint:disable-next-line:no-string-literal
-            tokenSource.token['tag'] = messageFormat.format(timeout.toString());
+            (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
             assert.ok(false, messageFormat.format(timeout.toString()));
         } catch (exc) {
@@ -492,9 +493,7 @@ suite('Jupyter notebook tests', () => {
         const finishedPromise = createDeferred();
         let error;
         const observable = server!.executeObservable(code, 'foo.py', 0, uuid(), false);
-        let cells: ICell[] = [];
         observable.subscribe(c => {
-            cells = c;
             if (c.length > 0 && c[0].state === CellState.error) {
                 finishedBefore = !interrupted;
                 finishedPromise.resolve();
@@ -590,17 +589,17 @@ while keep_going:
         await sleep(100);
 
         // Try with something we can interrupt
-        let interruptResult = await interruptExecute(server, returnable, 1000, 1000);
+        await interruptExecute(server, returnable, 1000, 1000);
 
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
-        interruptResult = await interruptExecute(server, fourSecondSleep, 7000, 7000);
+        await interruptExecute(server, fourSecondSleep, 7000, 7000);
 
         // Try again with something that doesn't return. Make sure it times out
-        interruptResult = await interruptExecute(server, fourSecondSleep, 100, 7000);
+        await interruptExecute(server, fourSecondSleep, 100, 7000);
 
         // The tough one, somethign that causes a kernel reset.
-        interruptResult = await interruptExecute(server, kill, 1000, 1000);
+        await interruptExecute(server, kill, 1000, 1000);
     });
 
     testMimeTypes(
@@ -770,7 +769,7 @@ plt.show()`,
         }
     });
 
-    async function getNotebookSession(server: INotebookServer | undefined) : Promise<MockJupyterSession | undefined> {
+    async function getNotebookSession(server: INotebookServer | undefined): Promise<MockJupyterSession | undefined> {
         if (server) {
             // This is kinda fragile. It reliese on impl details to get to the session. Might
             // just expose it?
@@ -827,6 +826,101 @@ plt.show()`,
         assert.ok(s1 !== s3, 'Different config should create different server');
         const s4 = await createNotebookServer(true, false, false, 'different');
         assert.ok(s1 !== s4, 'Different purpose should create different server');
+        const s5 = await createNotebookServer(true, false, true, 'different');
+        assert.ok(s4 === s5, 'Dark theme should be same server');
     });
+
+    class DyingProcess implements ChildProcess {
+        public stdin: Writable = null;
+        public stdout: Readable = null;
+        public stderr: Readable = null;
+        public stdio: [Writable, Readable, Readable] = [null, null, null];
+        public killed: boolean = false;
+        public pid: number = 1;
+        public connected: boolean = true;
+        constructor(private timeout: number) {
+            noop();
+        }
+        public kill(signal?: string): void {
+            throw new Error('Method not implemented.');
+        }
+        public send(message: any, sendHandle?: any, options?: any, callback?: any) : any {
+            throw new Error('Method not implemented.');
+        }
+        public disconnect(): void {
+            throw new Error('Method not implemented.');
+        }
+        public unref(): void {
+            throw new Error('Method not implemented.');
+        }
+        public ref(): void {
+            throw new Error('Method not implemented.');
+        }
+        public addListener(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]) : any {
+            throw new Error('Method not implemented.');
+        }
+        public on(event: any, listener: any) : this {
+            if (event === 'exit') {
+                setTimeout(() => listener(2), this.timeout);
+            }
+            return this;
+        }
+        public once(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public prependListener(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public prependOnceListener(event: any, listener: any) : this {
+            throw new Error('Method not implemented.');
+        }
+        public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+            return this;
+        }
+        public removeAllListeners(event?: string | symbol): this {
+            throw new Error('Method not implemented.');
+        }
+        public setMaxListeners(n: number): this {
+            throw new Error('Method not implemented.');
+        }
+        public getMaxListeners(): number {
+            throw new Error('Method not implemented.');
+        }
+        public listeners(event: string | symbol): Function[] {
+            throw new Error('Method not implemented.');
+        }
+        public rawListeners(event: string | symbol): Function[] {
+            throw new Error('Method not implemented.');
+        }
+        public eventNames(): (string | symbol)[] {
+            throw new Error('Method not implemented.');
+        }
+        public listenerCount(type: string | symbol): number {
+            throw new Error('Method not implemented.');
+        }
+    }
+
+    runTest('Server death', async () => {
+        if (ioc.mockJupyter) {
+            // Only run this test for mocks. We need to mock the server dying.
+            addMockData(`a=1${os.EOL}a`, 1);
+            const server = await createNotebookServer(true);
+            assert.ok(server, 'Server died before running');
+
+            // Sleep for 100 ms so it crashes
+            await sleep(100);
+
+            try {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
+                assert.ok(false, 'Exception should have been thrown');
+            } catch {
+                noop();
+            }
+
+        }
+    }, new DyingProcess(100));
 
 });

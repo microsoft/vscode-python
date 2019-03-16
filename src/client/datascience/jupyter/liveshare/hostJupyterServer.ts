@@ -221,13 +221,17 @@ export class HostJupyterServer
         if (args.hasOwnProperty('code')) {
             const obj = args as IExecuteInfo;
             if (!this.requestLog.has(obj.id)) {
-                // Convert the file name
-                const uri = vscode.Uri.parse(`vsls:${obj.file}`);
-                const file = this.finishedApi ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
+                try {
+                    // Convert the file name
+                    const uri = vscode.Uri.parse(`vsls:${obj.file}`);
+                    const file = this.finishedApi ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
 
-                // Just call the execute. Locally we won't listen, but if an actual call comes in for the same
-                // request, it will use the saved responses.
-                this.execute(obj.code, file, obj.line, obj.id).ignoreErrors();
+                    // Just call the execute. Locally we won't listen, but if an actual call comes in for the same
+                    // request, it will use the saved responses.
+                    this.execute(obj.code, file, obj.line, obj.id).ignoreErrors();
+                } catch (e) {
+                    this.logger.logError(e);
+                }
             }
         }
     }

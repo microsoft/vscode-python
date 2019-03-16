@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IDisposableRegistry, IPythonExtensionBanner } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -15,12 +17,18 @@ import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } fr
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
+    private eventEmitter: EventEmitter<string> = new EventEmitter<string>();
     constructor(@inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
+        @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_INTERACTIVE_SHIFTENTER) private readonly shiftEnterBanner: IPythonExtensionBanner,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
+    }
+
+    public get onExecutedCode() : Event<string> {
+        return this.eventEmitter.event;
     }
 
     public registerCommands() {
@@ -37,6 +45,16 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             return;
         }
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
+
+        try {
+            const contents = await this.fileSystem.readFile(file.fsPath);
+            this.eventEmitter.fire(contents);
+        } catch {
+            // Ignore any errors that occur for firing this event. It's only used
+            // for telemetry
+            noop();
+        }
+
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
         await executionService.executeFile(fileToExecute);
     }
@@ -66,6 +84,14 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!);
         if (!normalizedCode || normalizedCode.trim().length === 0) {
             return;
+        }
+
+        try {
+            this.eventEmitter.fire(normalizedCode);
+        } catch {
+            // Ignore any errors that occur for firing this event. It's only used
+            // for telemetry
+            noop();
         }
 
         await executionService.execute(normalizedCode, activeEditor!.document.uri);

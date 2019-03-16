@@ -41,6 +41,7 @@ export class PythonSettings implements IPythonSettings {
     public venvFolders: string[] = [];
     public condaPath = '';
     public pipenvPath = '';
+    public poetryPath = '';
     public devOptions: string[] = [];
     public linting!: ILintingSettings;
     public formatting!: IFormattingSettings;
@@ -143,6 +144,8 @@ export class PythonSettings implements IPythonSettings {
         this.condaPath = condaPath && condaPath.length > 0 ? getAbsolutePath(condaPath, workspaceRoot) : condaPath;
         const pipenvPath = systemVariables.resolveAny(pythonSettings.get<string>('pipenvPath'))!;
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
+        const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
+        this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
 
         this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;

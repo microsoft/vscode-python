@@ -35,15 +35,20 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
 
     // Get text is a bit trickier
     if (implementGetText) {
+        document.setup(d => d.getText()).returns(() => inputText);
         document.setup(d => d.getText(TypeMoq.It.isAny())).returns((r: Range) => {
             let results = '';
-            for (let line = r.start.line; line <= r.end.line; line += 1) {
-                const startIndex = line === r.start.line ? r.start.character : 0;
-                const endIndex = line === r.end.line ? r.end.character : inputLines[line].length - 1;
-                results += inputLines[line].slice(startIndex, endIndex + 1);
-                if (line !== r.end.line) {
-                    results += '\n';
+            if (r) {
+                for (let line = r.start.line; line <= r.end.line; line += 1) {
+                    const startIndex = line === r.start.line ? r.start.character : 0;
+                    const endIndex = line === r.end.line ? r.end.character : inputLines[line].length - 1;
+                    results += inputLines[line].slice(startIndex, endIndex + 1);
+                    if (line !== r.end.line) {
+                        results += '\n';
+                    }
                 }
+            } else {
+                results = inputText;
             }
             return results;
         });

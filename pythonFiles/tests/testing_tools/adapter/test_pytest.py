@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os.path
 import unittest
 
@@ -12,7 +15,7 @@ from testing_tools.adapter.pytest import (
 class StubSubparsers(StubProxy):
 
     def __init__(self, stub=None, name='subparsers'):
-        super().__init__(stub, name)
+        super(StubSubparsers, self).__init__(stub, name)
 
     def add_parser(self, name):
         self.add_call('add_parser', None, {'name': name})
@@ -22,7 +25,7 @@ class StubSubparsers(StubProxy):
 class StubArgParser(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'argparser')
+        super(StubArgParser, self).__init__(stub, 'argparser')
 
     def add_argument(self, *args, **kwargs):
         self.add_call('add_argument', args, kwargs)
@@ -31,7 +34,7 @@ class StubArgParser(StubProxy):
 class StubPyTest(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'pytest')
+        super(StubPyTest, self).__init__(stub, 'pytest')
         self.return_main = 0
 
     def main(self, args, plugins):
@@ -42,7 +45,7 @@ class StubPyTest(StubProxy):
 class StubPlugin(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'plugin')
+        super(StubPlugin, self).__init__(stub, 'plugin')
 
     def __getattr__(self, name):
         if not name.startswith('pytest_'):
@@ -67,7 +70,7 @@ class FakeMarker(object):
 class StubPytestItem(StubProxy):
 
     def __init__(self, stub=None, **attrs):
-        super().__init__(stub, 'pytest.Item')
+        super(StubPytestItem, self).__init__(stub, 'pytest.Item')
         self.__dict__.update(attrs)
         if 'own_markers' not in attrs:
             self.own_markers = ()
@@ -82,7 +85,7 @@ class StubPytestItem(StubProxy):
 class StubPytestSession(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'pytest.Session')
+        super(StubPytestSession, self).__init__(stub, 'pytest.Session')
 
     def __getattr__(self, name):
         self.add_call(name + ' (attr)', None, None)
@@ -94,7 +97,7 @@ class StubPytestSession(StubProxy):
 class StubPytestConfig(StubProxy):
 
     def __init__(self, stub=None):
-        super().__init__(stub, 'pytest.Config')
+        super(StubPytestConfig, self).__init__(stub, 'pytest.Config')
 
     def __getattr__(self, name):
         self.add_call(name + ' (attr)', None, None)

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
+import { ImportTracker } from '../telemetry/importTracker';
+import { IImportTracker } from '../telemetry/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
@@ -112,4 +114,5 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
+    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
 }

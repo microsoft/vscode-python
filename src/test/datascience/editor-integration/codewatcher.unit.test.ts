@@ -65,6 +65,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
@@ -98,6 +99,23 @@ suite('DataScience Code Watcher Unit Tests', () => {
         return result;
     }
 
+    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range) {
+        if (codeLenses[startLensIndex].command) {
+            expect(codeLenses[startLensIndex].command!.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        }
+        expect(codeLenses[startLensIndex].range).to.be.deep.equal(targetRange, 'Run Cell code lens range incorrect');
+
+        if (codeLenses[startLensIndex + 1].command) {
+            expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run All Cells Above code lens command incorrect');
+        }
+        expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
+
+        if (codeLenses[startLensIndex + 2].command) {
+            expect(codeLenses[startLensIndex + 2].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Cell And All Below code lens command incorrect');
+        }
+        expect(codeLenses[startLensIndex + 2].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
+    }
+
     test('Add a file with just a #%% mark to a code watcher', () => {
         const fileName = 'test.py';
         const version = 1;
@@ -112,15 +130,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(2, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(0, 0, 0, 3), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(0, 0, 0, 3), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(3, 'Incorrect count of code lenses');
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3));
 
         // Verify function calls
         document.verifyAll();
@@ -168,23 +179,10 @@ fourth line`;
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(4, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
-        if (codeLenses[2].command) {
-            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 7, 11), 'Run Cell code lens range incorrect');
-        if (codeLenses[3].command) {
-            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 7, 11), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0));
+        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 7, 11));
 
         // Verify function calls
         document.verifyAll();
@@ -218,28 +216,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
-        if (codeLenses[2].command) {
-            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[3].command) {
-            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run All Cells code lens range incorrect');
-        expect(codeLenses[4].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run Cell code lens range incorrect');
-        if (codeLenses[5].command) {
-            expect(codeLenses[5].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[5].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(9, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0));
+        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12));
 
         // Verify function calls
         document.verifyAll();
@@ -273,28 +254,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
-        if (codeLenses[2].command) {
-            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[3].command) {
-            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run All Cells code lens range incorrect');
-        expect(codeLenses[4].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run Cell code lens range incorrect');
-        if (codeLenses[5].command) {
-            expect(codeLenses[5].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[5].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(9, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0));
+        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12));
 
         // Verify function calls
         document.verifyAll();
@@ -396,6 +360,148 @@ testing2`;
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runCurrentCell();
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunCellAndAllBelow command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+`#%%
+testing2`;
+
+        const targetText2 =
+`#%%
+testing3`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runCellAndAllBelow(2, 0);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunAllCellsAbove command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+`#%%
+testing1`;
+
+        const targetText2 =
+`#%%
+testing2`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runAllCellsAbove(4, 0);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunToLine command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText =
+`#%%
+testing1`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runToLine(2);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunFromLine command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText =
+`#%%
+testing2
+#%%
+testing3`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runFromLine(2);
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -526,7 +632,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         let codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
 
         // Change settings
         pythonSettings.datascience.codeRegularExpression = '#%%%.*dude';
@@ -540,6 +646,6 @@ testing2`; // Command tests override getText, so just need the ranges here
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
     });
 });

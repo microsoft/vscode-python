@@ -8,7 +8,7 @@ import { createDeferred } from '../../../common/utils/async';
 
 export async function waitForHostService(api: vsls.LiveShare, name: string) : Promise<vsls.SharedService | null> {
     const service = await api.shareService(name);
-    if (service !== null && !service.isServiceAvailable) {
+    if (service && !service.isServiceAvailable) {
         return waitForAvailability(service);
     }
     return service;
@@ -16,7 +16,7 @@ export async function waitForHostService(api: vsls.LiveShare, name: string) : Pr
 
 export async function waitForGuestService(api: vsls.LiveShare, name: string) : Promise<vsls.SharedServiceProxy | null> {
     const service = await api.getSharedService(name);
-    if (service !== null && !service.isServiceAvailable) {
+    if (service && !service.isServiceAvailable) {
         return waitForAvailability(service);
     }
     return service;

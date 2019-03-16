@@ -79,6 +79,7 @@ export namespace DataScience {
     export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
+    export const jupyterNotSupportedBecauseOfEnvironment = localize('DataScience.jupyterNotSupportedBecauseOfEnvironment', 'Activating {0} to run Jupyter failed with {1}');
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
     export const jupyterLaunchTimedOut = localize('DataScience.jupyterLaunchTimedOut', 'The Jupyter notebook server failed to launch in time');
     export const jupyterLaunchNoURL = localize('DataScience.jupyterLaunchNoURL', 'Failed to find the URL of the launched Jupyter notebook server');
@@ -88,6 +89,8 @@ export namespace DataScience {
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
+    export const runAllCellsAboveLensCommandTitle = localize('python.command.python.datascience.runallcellsabove.title', 'Run All Cells Above');
+    export const runCellAndAllBelowLensCommandTitle = localize('python.command.python.datascience.runcellandallbelow.title', 'Run Cell And All Below');
     export const importChangeDirectoryComment = localize('DataScience.importChangeDirectoryComment', '#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting');
     export const exportChangeDirectoryComment = localize('DataScience.exportChangeDirectoryComment', '# Change directory to VSCode workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting');
 
@@ -105,6 +108,7 @@ export namespace DataScience {
     export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
     export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
     export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
+    export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
     export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
 
     export const jupyterSelectURILaunchLocal = localize('DataScience.jupyterSelectURILaunchLocal', 'Launch local Jupyter server');
@@ -113,6 +117,8 @@ export namespace DataScience {
     export const jupyterSelectURIInvalidURI = localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
     export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
     export const jupyterNotebookConnectFailed = localize('DataScience.jupyterNotebookConnectFailed', 'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}');
+    export const jupyterNotebookRemoteConnectFailed = localize('DataScience.jupyterNotebookRemoteConnectFailed', 'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}');
+    export const jupyterServerCrashed = localize('DataScience.jupyterServerCrashed', 'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}');
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     //tslint:disable-next-line:no-multiline-string
     export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `iPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
@@ -132,7 +138,7 @@ export namespace DataScience {
     export const liveShareSyncFailure = localize('DataScience.liveShareSyncFailure', 'Synchronization failure during live share startup.');
     export const liveShareServiceFailure = localize('DataScience.liveShareServiceFailure', 'Failure starting \'{0}\' service during live share connection.');
     export const documentMismatch = localize('DataScience.documentMismatch', 'Cannot run cells, duplicate documents for {0} found.');
-    export const jupyterGetVariablesBadResults = localize('DataScience.jupyterGetVariablesBadResults', 'Failed to fetch variables from the Jupyter server.');
+    export const jupyterGetVariablesBadResults = localize('DataScience.jupyterGetVariablesBadResults', 'Failed to fetch variable info from the Jupyter server.');
 }
 
 export namespace DebugConfigurationPrompts {
