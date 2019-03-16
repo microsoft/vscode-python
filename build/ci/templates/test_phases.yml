@@ -83,7 +83,7 @@ steps:
 
   # Show all versions installed/available on PATH if in verbose mode.
   # Example command line (windows pwsh):
-  # > Write-Host Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
+  # > Write-Host "Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
   - bash: |
       echo AVAILABLE DEPENDENCY VERSIONS
       echo Node Version = `node -v`
@@ -127,6 +127,7 @@ steps:
   # Example command line (windows pwsh):
   # > npm run test:unittests
   - bash: |
+      npm run cover:enable
       npm run test:unittests:cover
     displayName: 'run test:unittest'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
