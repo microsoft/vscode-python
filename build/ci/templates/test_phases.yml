@@ -246,6 +246,54 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
+  # Run the News tool tests.
+  #
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -U -r news/requirements.txt
+  # > python -m pytest tpn --color=yes --junit-xml=python-news-junit.xml
+  - script: |
+      python -m pip install --upgrade -r news/requirements.txt
+      python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
+    displayName: 'Run Python tests for news'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish News test results'
+    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+    inputs:
+      testResultsFiles: 'python-news-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'NEWS-$(Platform)-Py$(pythonVersion)'
+      buildPlatform: '$(Platform)-Py$(pythonVersion)'
+      buildConfiguration: 'Unittests'
+
+  # Run the TPN tool tests.
+  #
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -U -r tpn/requirements.txt
+  # > python -m pytest tpn --color=yes --junit-xml=python-tpn-junit.xml
+  - script: |
+      python -m pip install --upgrade -r tpn/requirements.txt
+      python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
+    displayName: 'Run Python tests for TPN tool'
+    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish JUnit test results'
+    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+    inputs:
+      testResultsFiles: 'python-tpn-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'TPN-$(Platform)-Py$(pythonVersion)'
+      buildPlatform: '$(Platform)-Py$(pythonVersion)'
+      buildConfiguration: 'Unittests'
+
   # Start the X virtual frame buffer (X-windows in memory only) on Linux. Linux VMs do not
   # provide a desktop so VS Code cannot properly launch there. To get around this we use the
   # xvfb service to emulate a desktop instead. See
