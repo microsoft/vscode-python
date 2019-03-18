@@ -17,6 +17,8 @@ variables:
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
+  # This is for the venvTests to use, not needed if you don't run venv tests...
+  # PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
 
 jobs:
 

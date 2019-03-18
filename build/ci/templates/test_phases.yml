@@ -26,6 +26,7 @@
 # 'testFunctional'
 # 'perfomanceTests'
 # 'testSmoke'
+# 'venvTests'
 
 steps:
 
@@ -81,7 +82,7 @@ steps:
 
   # Show all versions installed/available on PATH if in verbose mode.
   # Example command line (windows pwsh):
-  # > Write-Host "Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
+  # > Write-Host Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
   - bash: |
       echo AVAILABLE DEPENDENCY VERSIONS
       echo Node Version = `node -v`
@@ -259,6 +260,72 @@ steps:
         from __future__ import print_function
         import sys
         print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
+
+  # Venv tests: Prepare the various virtual environments and record their details into the
+  # JSON file that venvTests require to run.
+  #
+  # This task only runs if the string 'venvTests' exists in variable 'TestsToRun'
+  #
+  # This task has a bunch of steps, all of which are to fill the `EnvPath` struct found in
+  # the file:
+  # `src/test/common/terminals/environmentActionProviders/terminalActivation.testvirtualenvs.ts`
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install pipenv
+  # > python -m pipenv run python build/ci/addEnvPath.py ./src/tmp/envPaths.json venvPath
+  # > python -m venv .venv
+  # > python -m
+  # VenvTestEnvFolder: 'Scripts'
+  # PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+  # VenvTestFileExtension: 'testvirtualenvs'
+  # VenvTestSuiteName: 'testSingleWorkspace'
+  - pwsh: |
+      # pipenv
+      python -m pip install pipenv
+      python -m pipenv run python build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
+
+      # venv
+      # what happens when running under Python 2.7?
+      python -m venv .venv
+      .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
+
+      # virtualenv
+      python -m pip install virtualenv
+      python -m virtualenv .virtualenv
+      .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
+
+      # conda
+      if( '$(Agent.Os)' -match '.*Windows.*' ){
+          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+      } else{
+          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
+          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
+          & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
+      }
+      & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
+
+    displayName: 'Prepare Venv-Test Environment'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
+
+  # Run the virtual environment based tests.
+  # This set of tests is simply using the `testSingleWorkspace` set of tests, but
+  # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`.
+  # **Note**: Azure DevOps tasks set environment variables via a specially formatted
+  # string sent to stdout.
+  #
+  # This task only runs if the string 'venvTests' exists in variable 'TestsToRun'
+  #
+  # Example command line (windows pwsh):
+  # > $Env:TEST_FILES_SUFFIX=testvirtualenvs
+  # > npm run testSingleWorkspace
+  - script: |
+      cat $PYTHON_VIRTUAL_ENVS_LOCATION
+      echo ##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs
+
+      npm run testSingleWorkspace
+
+    displayName: 'Run Venv-Tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
 
   # Run the functional tests.
   #
