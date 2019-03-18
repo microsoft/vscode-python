@@ -1,7 +1,14 @@
-name: $(Date:yyyyMMdd)$(Rev:.r)
+name: 'CI $(Date:yyyyMMdd)$(Rev:.r)'
 # PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
+trigger:
+  branches:
+    include: ["master", "release"]
+  paths:
+    exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
+
+# Not the PR build for merges to master and release.
 pr:
   autoCancel: true
   branches:
@@ -9,20 +16,15 @@ pr:
   paths:
     exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
 
-# Not the CI build for merges to master and release.
-trigger: none
-
 # Variables that are available for the entire pipeline.
 variables:
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
-  # This is for the venvTests to use, not needed if you don't run venv tests...
-  # PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
 
 jobs:
 
-- job: 'PR'
+- job: 'CI'
 
   timeoutInMinutes: 30
   cancelTimeoutInMinutes: 3
@@ -39,43 +41,164 @@ jobs:
         # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
         # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-      'Win-Py3.7 Unit':
+
+      ## Virtual Environment Tests:
+
+      'Win Unit':
         VMImageName: 'vs2017-win2016'
-        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests'
+        TestsToRun: 'testUnitTests, pythonUnitTests'
         NeedsPythonTestReqs: true
-      'Win-Py2.7 Unit':
-        PythonVersion: '2.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonUnitTests'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Unit+Single':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py2.7 Unit+Single':
-        PythonVersion: '2.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Unit+Single':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py2.7 Unit+Single':
+      'Linux Unit':
         PythonVersion: '2.7'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        TestsToRun: 'testUnitTests, pythonUnitTests'
         NeedsPythonTestReqs: true
+      'Mac Unit':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testUnitTests, pythonUnitTests'
+        NeedsPythonTestReqs: true
+
+      'Win-Py3.7 Venv':
+        VMImageName: 'vs2017-win2016'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        # This is for the venvTests to use, not needed if you don't run venv tests...
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Linux-Py3.7 Venv':
+        VMImageName: 'ubuntu-16.04'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Mac-Py3.7 Venv':
+        VMImageName: 'macos-10.13'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Win-Py3.6 Venv':
+        VMImageName: 'vs2017-win2016'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Linux-Py3.6 Venv':
+        VMImageName: 'ubuntu-16.04'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Mac-Py3.6 Venv':
+        VMImageName: 'macos-10.13'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+
+      # SingleWorkspace Tests
+      'Win-Py3.7 Single':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Single':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Single':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Single':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Single':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Single':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+
+      # MultiWorkspace Tests
+      'Win-Py3.7 Multi':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Multi':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Multi':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Multi':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Multi':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Multi':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+
+      # Functional tests (not mocked Jupyter)
+      'Windows-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        # This tells the functional tests to not mock out Jupyter...
+        VSCODE_PYTHON_ROLLING: true
       'Linux-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-
-  # displayName: ${{ format('{0} Py{1}', variables['AGENT_OS'], variables['PythonVersion']) }}
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
 
   pool:
     vmImage: $(VMImageName)
