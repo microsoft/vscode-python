@@ -2171,7 +2171,6 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
-        "@nteract/data-explorer": "^6.0.5",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -2191,7 +2190,6 @@
         "pidusage": "^1.2.0",
         "react-data-grid": "^6.0.2-0",
         "react-data-grid-addons": "^6.0.2-0",
-        "react-tabulator": "^0.8.4",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
