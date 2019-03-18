@@ -50,6 +50,7 @@ def parse_args(
             if cmdname == 'discover':
                 subsub.add_argument('--simple', action='store_true')
                 subsub.add_argument('--show-' + toolname, action='store_true')
+                subsub.add_argument('--pretty', action='store_true')
 
     # Parse the args!
     if '--' in argv:
@@ -87,7 +88,6 @@ def main(toolname, cmdname, subargs, toolargs,
 
     parents, result = run(toolargs, **subargs)
     report_result(result, parents,
-                  debug=('-v' in toolargs or '--verbose' in toolargs),
                   **subargs
                   )
 

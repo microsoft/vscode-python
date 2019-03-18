@@ -24,7 +24,7 @@ def add_cli_subparser(cmd, name, parent):
 
 
 def discover(pytestargs=None, show_pytest=False,
-             _pytest_main=pytest.main, _plugin=None, **kwargs):
+             _pytest_main=pytest.main, _plugin=None, **_ignored):
     """Return the results of test discovery."""
     if _plugin is None:
         _plugin = TestCollector()

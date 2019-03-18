@@ -6,7 +6,7 @@ from __future__ import print_function
 import json
 
 
-def report_discovered(tests, parents, debug=False, simple=False,
+def report_discovered(tests, parents, pretty=False, simple=False,
                       _send=print, **_ignored):
     """Serialize the discovered tests and write to stdout."""
     if simple:
@@ -62,7 +62,7 @@ def report_discovered(tests, parents, debug=False, simple=False,
             } for root in sorted(byroot)]
 
     kwargs = {}
-    if debug:
+    if pretty:
         # human-formatted
         kwargs = dict(
             sort_keys=True,
