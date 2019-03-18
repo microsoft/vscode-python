@@ -106,7 +106,9 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         );
         await Promise.all(
             diagnostics.map(async diagnostic => {
-                if (!this.canHandle(diagnostic)) {
+                const canHandle = await this.canHandle(diagnostic);
+                const shouldIgnore = await this.filterService.shouldIgnoreDiagnostic(diagnostic.code);
+                if (!canHandle || shouldIgnore) {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
@@ -168,6 +170,13 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'launch',
                             options: 'https://www.python.org/downloads'
+                        })
+                    },
+                    {
+                        prompt: 'Do not show again',
+                        command: commandFactory.createCommand(diagnostic, {
+                            type: 'ignore',
+                            options: DiagnosticScope.Global
                         })
                     }
                 ];
