@@ -55,9 +55,9 @@ steps:
   # > py -m venv .venv
   # > .venv\Scripts\Activate.ps1
   - task: UsePythonVersion@0
-    displayName: ${{ format('Use Python {0}', coalesce(variables['PythonVersion'], variables['DefaultPythonVersion'])) }}
+    displayName: 'Use Python $(PythonVersion)'
     inputs:
-      versionSpec: ${{ coalesce(variables['DefaultPythonVersion'], variables['PythonVersion']) }}
+      versionSpec: $(PythonVersion)
 
   # Ensure that npm is upgraded to the necessary version specified in `variables` above.
   # Example command line (windows pwsh):
