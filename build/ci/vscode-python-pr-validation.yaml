@@ -1,4 +1,4 @@
-name: 'CI $(Date:yyyyMMdd)$(Rev:.r)'
+name: 'PR_$(Date:yyyyMMdd)$(Rev:.r)'
 # PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
@@ -63,32 +63,38 @@ jobs:
         VMImageName: 'vs2017-win2016'
         PythonVersion: '3.7'
         TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
         # This is for the venvTests to use, not needed if you don't run venv tests...
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Linux-Py3.7 Venv':
         VMImageName: 'ubuntu-16.04'
         PythonVersion: '3.7'
         TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.7 Venv':
         VMImageName: 'macos-10.13'
         PythonVersion: '3.7'
         TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Win-Py3.6 Venv':
         VMImageName: 'vs2017-win2016'
         PythonVersion: '3.7'
         TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Linux-Py3.6 Venv':
         VMImageName: 'ubuntu-16.04'
         PythonVersion: '3.7'
         TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.6 Venv':
         VMImageName: 'macos-10.13'
         PythonVersion: '3.7'
         TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
 
       # SingleWorkspace Tests
