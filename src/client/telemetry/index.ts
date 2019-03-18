@@ -260,7 +260,6 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER]: DebuggerTelemetry;
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
-    [EventName.DEBUGGER_PERFORMANCE]: any;
     [EventName.DEFINITION]: never | undefined;
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
@@ -273,8 +272,8 @@ export interface IEventNamePropertyMapping {
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
-    [EventName.KNOWN_IMPORT_FROM_FILE] : { import: string };
-    [EventName.KNOWN_IMPORT_FROM_EXECUTION] : { import: string };
+    [EventName.KNOWN_IMPORT_FROM_FILE]: { import: string };
+    [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: string };
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;
@@ -350,7 +349,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus: boolean };
-    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus: boolean };
+    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
+    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
     [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
 }

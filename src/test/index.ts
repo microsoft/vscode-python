@@ -10,7 +10,7 @@ if ((Reflect as any).metadata === undefined) {
 
 import {
     IS_CI_SERVER_TEST_DEBUGGER,
-    IS_VSTS, MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
+    MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
     MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
@@ -39,11 +39,6 @@ const options: testRunner.SetupOptions & { retries: number } = {
     grep,
     testFilesSuffix
 };
-
-// VSTS CI doesn't display colours correctly (yet).
-if (IS_VSTS) {
-    options.useColors = false;
-}
 
 // CI can ask for a JUnit reporter if the environment variable
 // 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded

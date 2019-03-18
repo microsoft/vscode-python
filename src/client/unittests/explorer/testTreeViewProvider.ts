@@ -86,7 +86,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
             if (element instanceof TestWorkspaceFolder) {
                 let tests = this.testStore.getTests(element.workspaceFolder.uri);
                 if (!tests) {
-                    await this.commandManager.executeCommand(Commands.Tests_Discover, element, CommandSource.testExplorer);
+                    await this.commandManager.executeCommand(Commands.Tests_Discover, undefined, CommandSource.testExplorer, element.workspaceFolder.uri);
                     tests = this.testStore.getTests(element.workspaceFolder.uri);
                 }
                 return tests ? tests.rootTestFolders : [];

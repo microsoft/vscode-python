@@ -1,70 +1,419 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
 # PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 pr:
   autoCancel: true
   branches:
-    include: [ 'master', 'release']
+    include: ["master", "release"]
   paths:
-    exclude: [ '/news', '/.vscode' ]
+    exclude: ["/news", "/.vscode"]
 
-# CI build for merges to master and release.
-# Note: We are 'batching' builds at the moment. This will mean only one CI build 
-#       will be triggered. If we find the resources available, turn off batching
-#       as it is nicer to have feedback on each and every merge.
+# Not the CI build for merges to master and release.
 trigger:
-  batch: true
   branches:
-    include: [ 'master', 'release' ] # branches that will trigger a CI build
-  paths:
-    exclude: [ '/news', '/.vscode' ] # file paths which will not trigger a build
+    include: ["4123_pr_validation_speedups"]
+
+# Variables that are available for the entire pipeline.
+variables:
+  DefaultPythonVersion: '3.7'
+  DefaultNodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+
+# TestsToRun variable should contain one or more of the following strings:
+# 'testUnitTests'
+# 'pythonUnitTests'
+# 'testSingleWorkspace'
+# 'testMultiWorkspace'
+# 'testDebugger'
+# 'testFunctional'
+# 'perfomanceTests'
+# 'testSmoke'
 
 jobs:
 
-- template: templates/compile-and-validate.yml
-  parameters:
-    name: 'Prebuild'
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    UploadBinary: true
-    Platform: 'Linux'
+- job:
 
+  timeoutInMinutes: 30
+  cancelTimeoutInMinutes: 3
 
-- template: templates/virtual_env_tests.yml
-  parameters:
-    Platform: 'Windows'
-    pool:
-      name: 'Hosted VS2017'
+  strategy:
+    matrix:
+      # Each member of this list must contain these values:
+        # VMImageName: '[name]' - the VM image to run the tests on.
+        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+      # Each member of this list may contain these values:
+        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+      'Win-Py3.7 Unit':
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Win-Py2.7 Unit':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Unit+Single':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Unit+Single':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Unit+Single':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7 Unit+Single':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        NeedsPythonTestReqs: true
 
-- template: templates/virtual_env_tests.yml
-  parameters:
-    Platform: 'Linux'
-    EnvironmentExecutableFolder: 'bin'
-    pool:
-      name: 'Hosted Ubuntu 1604'
+  # displayName: ${{ format('{0} Py{1}', variables['AGENT_OS'], variables['PythonVersion']) }}
 
-- template: templates/virtual_env_tests.yml
-  parameters:
-    Platform: 'macOS'
-    EnvironmentExecutableFolder: 'bin'
-    pool:
-      name: 'Hosted macOS'
+  pool:
+    vmImage: $(VMImageName)
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool: 
-      name: 'Hosted VS2017'
-    Platform: 'Windows'
+  steps:
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    Platform: 'Linux'
+    # Show the complete set of environment variabes if we are in verbose mode.
+    - bash: |
+        printenv
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted macOS'
-    Platform: 'macOS'
+      displayName: 'Show all env vars'
+      condition: eq(variables['system.debug'], 'true')
 
+    # Ensure the required node version is made available on PATH for subsequent tasks.
+    # This would be like using nvm to specify a version on your local machine.
+    - task: NodeTool@0
+      displayName: ${{ format('Use Node {0}', coalesce(variables['NodeVersion'], variables['DefaultNodeVersion'])) }}
+      inputs:
+        versionSpec: ${{ coalesce(variables['NodeVersion'], variables['DefaultNodeVersion']) }}
+
+    # Ensure the required Python version is made available on PATH for subsequent tasks.
+    #
+    # `PythonVersion` is set in the `variables` section above.
+    #
+    # You can reproduce this on your local machine via virtual envs.
+    #
+    # See the available versions on each Hosted agent here:
+    # https://docs.microsoft.com/en-us/azure/DevOps/pipelines/agents/hosted?view=azure-DevOps&tabs=yaml#software
+    #
+    # Example command line (windows pwsh):
+    # > py -m venv .venv
+    # > .venv\Scripts\Activate.ps1
+    - task: UsePythonVersion@0
+      displayName: ${{ format('Use Python {0}', coalesce(variables['PythonVersion'], variables['DefaultPythonVersion'])) }}
+      inputs:
+        versionSpec: ${{ coalesce(variables['DefaultPythonVersion'], variables['PythonVersion']) }}
+
+    # Ensure that npm is upgraded to the necessary version specified in `variables` above.
+    # Example command line (windows pwsh):
+    # > npm install -g npm@latest
+    - task: Npm@1
+      displayName: 'Use NPM $(NpmVersion)'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: 'install -g npm@$(NpmVersion)'
+
+    # Install node_modules.
+    # Example command line (windows pwsh):
+    # > npm ci
+    - task: Npm@1
+      displayName: 'npm ci'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: ci
+
+    # Show all versions installed/available on PATH if in verbose mode.
+    # Example command line (windows pwsh):
+    # > Write-Host "Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
+    - bash: echo AVAILABLE DEPENDENCY VERSIONS
+
+        echo Node Version = `node -v`
+          echo NPM Version = `npm -v`
+          echo Python Version = `python --version`
+
+      condition: and(succeeded(), eq(variables['system.debug'], 'true'))
+
+    # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
+    # This produces the .js files required into the out/ folder.
+    # Example command line (windows pwsh):
+    # > gulp prePublishNonBundle
+    - task: Gulp@0
+      displayName: 'gulp prePublishNonBundle'
+      inputs:
+        targets: 'prePublishNonBundle'
+
+    # Run the `hygiene-modified` gulp task to ensure that the added code adheres to the
+    # code standards we are trying to maintain.
+    # Example command line (windows pwsh):
+    # > gulp hygiene-modified
+    - task: Gulp@0
+      displayName: 'gulp code hygiene'
+      inputs:
+        targets: 'hygiene-modified'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
+
+    # Enable test coverage reporting, and run the unit tests in our codebase.
+    #
+    # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
+    #
+    # Example command line (windows pwsh):
+    # > npm run test:unittests
+    - bash: |
+        npm run cover:enable
+        npm run test:unittests:cover
+
+      displayName: 'run test:unittest'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
+
+    # Install the requirements for the Python or the system tests. This includes the supporting libs that
+    # we ship in our extension such as PTVSD and Jedi.
+    #
+    # This task will only run if variable `NeedsPythonTestReqs` is true.
+    #
+    # Example command line (windows pwsh):
+    # > python -m pip install -m -U pip
+    # > python -m pip install --upgrade -r build/test-requirements.txt
+    # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+    - bash: |
+        python -m pip install -U pip
+        python -m pip install --upgrade -r build/test-requirements.txt
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+
+      displayName: 'pip install system test requirements'
+      condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
+
+    # Install the requirements for functional tests.
+    #
+    # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+    #
+    # Example command line (windows pwsh):
+    # > python -m pip install numpy
+    # > python -m pip install --upgrade -r build/functional-test-requirements.txt
+    # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+    - bash: |
+        python -m pip install numpy
+        python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+
+      displayName: 'pip install functional requirements'
+      condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
+
+    # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
+    # will be uploaded after all tests are complete.
+    #
+    # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > python -m pip install -m -U pip
+    # > python -m pip install -U -r build/test-requirements.txt
+    # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
+    - bash: |
+        python pythonFiles/tests/run_all.py --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
+
+      displayName: 'Python unittests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
+
+    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+    - task: PublishTestResults@2
+      displayName: 'Publish Python unit test results'
+      condition: contains(variables['TestsToRun'], 'pythonUnitTests')
+      inputs:
+        testResultsFiles: 'python-tests-junit.xml'
+        searchFolder: '$(Common.TestResultsDirectory)'
+        testRunTitle: 'UNIT-$(Platform)-Py$(pythonVersion)'
+        buildPlatform: '$(Platform)-Py$(pythonVersion)'
+        buildConfiguration: 'Unittests'
+
+    # Start the X virtual frame buffer (X-windows in memory only) on Linux. Linux VMs do not
+    # provide a desktop so VS Code cannot properly launch there. To get around this we use the
+    # xvfb service to emulate a desktop instead. See
+    # https://code.visualstudio.com/api/working-with-extensions/continuous-integration#azure-pipelines
+    #
+    # This task will only run if we are running on Linux and variable SkipXvfb is false.
+    #
+    # Example command line (windows pwsh): N/A
+    - bash: |
+        set -e
+        /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+        disown -ar
+      displayName: 'Start xvfb'
+      condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), not(variables['SkipXvfb']))
+
+    # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
+    # the specified Python interpreter.
+    #
+    # This is how to set an environment variable in the Azure DevOps pipeline, write
+    # a specially formatted string to stdout. For details, please see
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#set-in-script
+    #
+    # Example command line (windows pwsd):
+    # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
+    - task: PythonScript@0
+      displayName: 'Set CI_PYTHON_PATH'
+      inputs:
+        scriptSource: inline
+        failOnStderr: true
+        script: |
+          from __future__ import print_function
+
+          import sys
+
+          print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
+
+    # Run the functional tests.
+    #
+    # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > npm run test:functional
+    - script: |
+        npm run test:functional
+
+      displayName: 'Run Functional Tests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
+      env:
+        DISPLAY: :10
+
+    # Run the single workspace tests.
+    #
+    # This task only runs if the string 'testSingleWorkspace' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > npm run testSingleWorkspace
+    - script: |
+        npm run testSingleWorkspace
+
+      displayName: 'Run Single Workspace Tests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspace'))
+      env:
+        DISPLAY: :10
+
+    # Run the multi-workspace tests.
+    #
+    # This task only runs if the string 'testMultiWorkspace' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > npm run testMultiWorkspace
+    - script: |
+        npm run testMultiWorkspace
+
+      displayName: 'Run Multi-Workspace Tests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testMultiWorkspace'))
+      env:
+        DISPLAY: :10
+
+    # Run the debugger integration tests.
+    #
+    # This task only runs if the string 'testDebugger' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > npm run testDebugger
+    - script: |
+        npm run testDebugger
+
+      displayName: 'Run Debugger Tests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testDebugger'))
+      env:
+        DISPLAY: :10
+
+    # Run the performance tests.
+    #
+    # This task only runs if the string 'testPerformance' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > npm run testPerformance
+    - script: |
+        npm run testPerformance
+
+      displayName: 'Run Performance Tests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testPerformance'))
+      env:
+        DISPLAY: :10
+
+    # Run the smoke tests.
+    #
+    # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
+    #
+    # Example command line (windows pwsh):
+    # > npm run clean
+    # > npm run updateBuildNumber -- --buildNumber 0.0.0-local
+    # > npm run package
+    # > npx gulp clean:cleanExceptTests
+    # > npm run testSmoke
+    - script: |
+        npm run clean
+        npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER
+        npm run package
+        npx gulp clean:cleanExceptTests
+        npm run testSmoke
+
+      displayName: 'Run Smoke Tests'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
+      env:
+        DISPLAY: :10
+
+    # Run the News tool tests.
+    #
+    # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+    #
+    # Example command line (windows pwsh):
+    # > python -m pip install -U -r news/requirements.txt
+    # > python -m pytest tpn --color=yes --junit-xml=python-news-junit.xml
+    - script: |
+        python -m pip install --upgrade -r news/requirements.txt
+        python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
+      displayName: 'Run Python tests for news'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
+
+    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+    - task: PublishTestResults@2
+      displayName: 'Publish News test results'
+      condition: contains(variables['TestsToRun'], 'pythonUnitTests')
+      inputs:
+        testResultsFiles: 'python-news-junit.xml'
+        searchFolder: '$(Common.TestResultsDirectory)'
+        testRunTitle: 'NEWS-$(Platform)-Py$(pythonVersion)'
+        buildPlatform: '$(Platform)-Py$(pythonVersion)'
+        buildConfiguration: 'Unittests'
+
+    # Run the TPN tool tests.
+    #
+    # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+    #
+    # Example command line (windows pwsh):
+    # > python -m pip install -U -r tpn/requirements.txt
+    # > python -m pytest tpn --color=yes --junit-xml=python-tpn-junit.xml
+    - script: |
+        python -m pip install --upgrade -r tpn/requirements.txt
+        python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
+      displayName: 'Run Python tests for TPN tool'
+      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
+
+    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+    - task: PublishTestResults@2
+      displayName: 'Publish JUnit test results'
+      condition: contains(variables['TestsToRun'], 'pythonUnitTests')
+      inputs:
+        testResultsFiles: 'python-tpn-junit.xml'
+        searchFolder: '$(Common.TestResultsDirectory)'
+        testRunTitle: 'TPN-$(Platform)-Py$(pythonVersion)'
+        buildPlatform: '$(Platform)-Py$(pythonVersion)'
+        buildConfiguration: 'Unittests'

@@ -1,9 +1,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { commands, QuickPickItem, Uri } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { QuickPickItem, Uri } from 'vscode';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
-import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from '../common/constants';
 import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
@@ -13,21 +12,22 @@ import { ITestDisplay } from '../types';
 export class TestDisplay implements ITestDisplay {
     private readonly testCollectionStorage: ITestCollectionStorageService;
     private readonly appShell: IApplicationShell;
-    constructor(@inject(IServiceContainer) serviceRegistry: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceRegistry: IServiceContainer,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
         this.testCollectionStorage = serviceRegistry.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.appShell = serviceRegistry.get<IApplicationShell>(IApplicationShell);
     }
     public displayStopTestUI(workspace: Uri, message: string) {
         this.appShell.showQuickPick([message]).then(item => {
             if (item === message) {
-                commands.executeCommand(constants.Commands.Tests_Stop, undefined, workspace);
+                this.commandManager.executeCommand(constants.Commands.Tests_Stop, undefined, workspace);
             }
         });
     }
     public displayTestUI(cmdSource: CommandSource, wkspace: Uri) {
         const tests = this.testCollectionStorage.getTests(wkspace);
         this.appShell.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
-            .then(item => item ? onItemSelected(cmdSource, wkspace, item, false) : noop());
+            .then(item => item ? onItemSelected(this.commandManager, cmdSource, wkspace, item, false) : Promise.resolve());
     }
     public selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction> {
         return new Promise<FlattenedTestFunction>((resolve, reject) => {
@@ -68,11 +68,11 @@ export class TestDisplay implements ITestDisplay {
 
         this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
             { matchOnDescription: true, matchOnDetail: true })
-            .then(testItem => testItem ? onItemSelected(cmdSource, wkspace, testItem, debug) : noop());
+            .then(testItem => testItem ? onItemSelected(this.commandManager, cmdSource, wkspace, testItem, debug) : Promise.resolve());
     }
 }
 
-enum Type {
+export enum Type {
     RunAll = 0,
     ReDiscover = 1,
     RunFailed = 2,
@@ -207,58 +207,43 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
     });
     return fileItems;
 }
-function onItemSelected(cmdSource: CommandSource, wkspace: Uri, selection: TestItem, debug?: boolean) {
+export function onItemSelected(commandManager: ICommandManager, cmdSource: CommandSource, wkspace: Uri, selection: TestItem, debug?: boolean) {
     if (!selection || typeof selection.type !== 'number') {
         return;
     }
-    let cmd = '';
-    // tslint:disable-next-line:no-any
-    const args: any[] = [undefined, cmdSource, wkspace];
     switch (selection.type) {
         case Type.Null: {
             return;
         }
         case Type.RunAll: {
-            cmd = constants.Commands.Tests_Run;
-            break;
+            return commandManager.executeCommand(constants.Commands.Tests_Run, undefined, cmdSource, wkspace, undefined);
         }
         case Type.ReDiscover: {
-            cmd = constants.Commands.Tests_Discover;
-            break;
+            return commandManager.executeCommand(constants.Commands.Tests_Discover, undefined, cmdSource, wkspace);
         }
         case Type.ViewTestOutput: {
-            cmd = constants.Commands.Tests_ViewOutput;
-            break;
+            return commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, cmdSource);
         }
         case Type.RunFailed: {
-            cmd = constants.Commands.Tests_Run_Failed;
-            break;
+            return commandManager.executeCommand(constants.Commands.Tests_Run_Failed, undefined, cmdSource, wkspace);
         }
         case Type.SelectAndRunMethod: {
-            cmd = debug ? constants.Commands.Tests_Select_And_Debug_Method : constants.Commands.Tests_Select_And_Run_Method;
-            break;
+            const cmd = debug ? constants.Commands.Tests_Select_And_Debug_Method : constants.Commands.Tests_Select_And_Run_Method;
+            return commandManager.executeCommand(cmd, undefined, cmdSource, wkspace);
         }
         case Type.RunMethod: {
-            cmd = constants.Commands.navigateToTestFunction;
-            // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
-            args.push(selection.fn!.testFunction);
-            break;
+            const testsToRun: TestsToRun = { testFunction: [selection.fn!.testFunction] };
+            return commandManager.executeCommand(constants.Commands.Tests_Run, undefined, cmdSource, wkspace, testsToRun);
         }
         case Type.DebugMethod: {
-            cmd = constants.Commands.Tests_Debug;
-            // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
-            args.push({ testFunction: [selection.fn!.testFunction] } as TestsToRun);
-            args.push(true);
-            break;
+            const testsToRun: TestsToRun = { testFunction: [selection.fn!.testFunction] };
+            return commandManager.executeCommand(constants.Commands.Tests_Debug, undefined, cmdSource, wkspace, testsToRun);
         }
         case Type.Configure: {
-            cmd = constants.Commands.Tests_Configure;
-            break;
+            return commandManager.executeCommand(constants.Commands.Tests_Configure, undefined, cmdSource, wkspace);
         }
         default: {
             return;
         }
     }
-
-    commands.executeCommand(cmd, ...args);
 }

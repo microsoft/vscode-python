@@ -51,7 +51,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ImportNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+        disposable = commandManager.registerCommand(Commands.ImportNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
             return this.listenForErrors(() => {
                 if (file && file.fsPath) {
                     return this.importNotebookOnFile(file.fsPath);
@@ -61,7 +61,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             });
         });
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAsNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+        disposable = commandManager.registerCommand(Commands.ExportFileAsNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
             return this.listenForErrors(() => {
                 if (file && file.fsPath) {
                     return this.exportFile(file.fsPath);
