@@ -7,7 +7,7 @@ import json
 
 
 def report_discovered(tests, parents, debug=False, simple=False,
-                      _send=print, **kwargs):
+                      _send=print, **_ignored):
     """Serialize the discovered tests and write to stdout."""
     if simple:
         data = [{

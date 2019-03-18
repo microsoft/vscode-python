@@ -75,7 +75,6 @@ class ParseDiscoverTests(unittest.TestCase):
         self.assertEqual(cmd, 'discover')
         self.assertEqual(args, {'show_pytest': False, 'simple': False})
         self.assertEqual(toolargs, [
-            '--',
             '--strict',
             '--ignore', 'spam,ham,eggs',
             '--pastebin=xyz',
