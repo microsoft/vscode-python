@@ -194,7 +194,6 @@ class AddCLISubparserTests(unittest.TestCase):
 class DiscoverTests(unittest.TestCase):
 
     DEFAULT_ARGS = [
-        '-pno:terminal',
         '--collect-only',
         ]
 

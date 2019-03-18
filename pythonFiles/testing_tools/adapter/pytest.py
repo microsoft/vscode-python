@@ -7,6 +7,7 @@ import os.path
 
 import pytest
 
+from . import util
 from .errors import UnsupportedCommandError
 from .info import TestInfo, TestPath, ParentInfo
 
@@ -29,7 +30,10 @@ def discover(pytestargs=None, show_pytest=False,
         _plugin = TestCollector()
 
     pytestargs = _adjust_pytest_args(pytestargs, show_pytest=show_pytest)
-    ec = _pytest_main(pytestargs, [_plugin])
+    # We use this helper rather than "-pno:terminal" due to possible
+    # platform-dependent issues.
+    with util.hide_stdio() if not show_pytest else util.noop_cm():
+        ec = _pytest_main(pytestargs, [_plugin])
     if ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
@@ -49,8 +53,6 @@ def _adjust_pytest_args(pytestargs, show_pytest):
     pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
     pytestargs.insert(0, '--collect-only')
-    if not show_pytest:
-        pytestargs.insert(0, '-pno:terminal')
     # TODO: pull in code from:
     #  src/client/unittests/pytest/services/discoveryService.ts
     #  src/client/unittests/pytest/services/argsService.ts
