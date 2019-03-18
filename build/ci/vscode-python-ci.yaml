@@ -150,6 +150,38 @@ jobs:
         TestsToRun: 'testMultiWorkspace'
         NeedsPythonTestReqs: true
 
+      # Debugger integration Tests
+      'Win-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+
       # Functional tests (not mocked Jupyter)
       'Windows-Py3.7 Functional':
         PythonVersion: '3.7'
