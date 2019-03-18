@@ -271,15 +271,14 @@ steps:
   # `src/test/common/terminals/environmentActionProviders/terminalActivation.testvirtualenvs.ts`
   #
   # Example command line (windows pwsh):
-  # > python -m pip install pipenv
-  # > python -m pipenv run python build/ci/addEnvPath.py ./src/tmp/envPaths.json venvPath
-  # > python -m venv .venv
-  # > python -m
-  # VenvTestEnvFolder: 'Scripts'
-  # PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-  # VenvTestFileExtension: 'testvirtualenvs'
-  # VenvTestSuiteName: 'testSingleWorkspace'
+  # // This is done in powershell. Copy/paste the code below.
   - pwsh: |
+      # venv/bin or venv\\Scripts (windows)?
+      $environmentExecutableFolder = 'bin'
+      if ($Env:AGENT_OS -match '.*Windows.*') {
+        $environmentExecutableFolder = 'Scripts'
+      }
+
       # pipenv
       python -m pip install pipenv
       python -m pipenv run python build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
@@ -287,19 +286,19 @@ steps:
       # venv
       # what happens when running under Python 2.7?
       python -m venv .venv
-      .venv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
+      .venv/$environmentExecutableFolder/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
 
       # virtualenv
       python -m pip install virtualenv
       python -m virtualenv .virtualenv
-      .virtualenv/$(environmentExecutableFolder)/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
+      .virtualenv/$environmentExecutableFolder/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
 
       # conda
       if( '$(Agent.Os)' -match '.*Windows.*' ){
           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
       } else{
-          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath python
-          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $(environmentExecutableFolder) | Join-Path -ChildPath conda
+          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
+          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
           & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
       }
       & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
