@@ -46,8 +46,7 @@ const noop = function () { };
 */
 
 const all = [
-    'src/**/*',
-    'src/client/**/*',
+    'src/**/*.ts'
 ];
 
 const tsFilter = [
