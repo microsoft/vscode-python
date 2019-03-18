@@ -286,12 +286,12 @@ steps:
       # venv
       # what happens when running under Python 2.7?
       python -m venv .venv
-      .venv/$environmentExecutableFolder/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
+      & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
 
       # virtualenv
       python -m pip install virtualenv
       python -m virtualenv .virtualenv
-      .virtualenv/$environmentExecutableFolder/python ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
+      & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
 
       # conda
       if( '$(Agent.Os)' -match '.*Windows.*' ){

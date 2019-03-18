@@ -196,6 +196,15 @@ suite('Jupyter notebook tests', () => {
 
     function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
         test(name, async () => {
+            if ((name === 'Cancel execution') && isOs(OSType.Linux)) {
+                // Failing on 'Cancel did not cancel getusable after 30ms'
+                // and 'Cancel did not cancel isNotebook after 10ms' on AzDO in Linux.
+
+                // Tracked by GH #4818
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+
             console.log(`Starting test ${name} ...`);
             if (ioc.mockJupyter) {
                 ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all, undefined, notebookProc);
@@ -460,15 +469,7 @@ suite('Jupyter notebook tests', () => {
         return true;
     }
 
-    runTest('Cancel execution', async function () {
-        if (isOs(OSType.Linux)) {
-            // Failing on 'Cancel did not cancel getusable after 30ms'
-            // and 'Cancel did not cancel isNotebook after 10ms' on AzDO in Linux.
-            // Tracked by GH #4818
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Cancel execution', async () => {
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(2000);
             addMockData(`a=1${os.EOL}a`, 1);
