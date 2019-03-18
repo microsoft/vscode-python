@@ -87,7 +87,9 @@ steps:
       echo Node Version = `node -v`
       echo NPM Version = `npm -v`
       echo Python Version = `python --version`
+      echo Gulp Version = `gulp --version`
     condition: and(succeeded(), eq(variables['system.debug'], 'true'))
+    displayName: Show Dependency Versions
 
   # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
   # This produces the .js files required into the out/ folder.
@@ -145,6 +147,7 @@ steps:
   # > python -m pip install --upgrade -r build/functional-test-requirements.txt
   # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
+      python -m pip install -U pip
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
     displayName: 'pip install functional requirements'
@@ -171,8 +174,8 @@ steps:
     inputs:
       testResultsFiles: 'python-tests-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'UNIT-$(Platform)-Py$(pythonVersion)'
-      buildPlatform: '$(Platform)-Py$(pythonVersion)'
+      testRunTitle: 'UNIT-$(AGENT_OS)-Py$(pythonVersion)'
+      buildPlatform: '$(AGENT_OS)-Py$(pythonVersion)'
       buildConfiguration: 'Unittests'
 
   # Start the X virtual frame buffer (X-windows in memory only) on Linux. Linux VMs do not
