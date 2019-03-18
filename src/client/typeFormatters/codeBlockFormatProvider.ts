@@ -1,5 +1,11 @@
-import { FormattingOptions, TextDocument, TextEdit } from 'vscode';
-import { Position, Range, TextLine } from 'vscode';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
+import {
+    FormattingOptions, Position, Range, TextDocument, TextEdit, TextLine
+} from 'vscode';
 import { BlockRegEx } from './contracts';
 
 export class CodeBlockFormatProvider {
