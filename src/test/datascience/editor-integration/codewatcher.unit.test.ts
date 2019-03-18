@@ -99,21 +99,24 @@ suite('DataScience Code Watcher Unit Tests', () => {
         return result;
     }
 
-    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range) {
+    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range, firstCell: boolean = false) {
         if (codeLenses[startLensIndex].command) {
             expect(codeLenses[startLensIndex].command!.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
         }
         expect(codeLenses[startLensIndex].range).to.be.deep.equal(targetRange, 'Run Cell code lens range incorrect');
 
-        if (codeLenses[startLensIndex + 1].command) {
-            expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run All Cells Above code lens command incorrect');
+        if (!firstCell) {
+            if (codeLenses[startLensIndex + 1].command) {
+                expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run All Cells Above code lens command incorrect');
+            }
+            expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
         }
-        expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
 
-        if (codeLenses[startLensIndex + 2].command) {
-            expect(codeLenses[startLensIndex + 2].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Cell And All Below code lens command incorrect');
+        const indexAdd = firstCell ? 1 : 2;
+        if (codeLenses[startLensIndex + indexAdd].command) {
+            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Cell And All Below code lens command incorrect');
         }
-        expect(codeLenses[startLensIndex + 2].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
+        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
     }
 
     test('Add a file with just a #%% mark to a code watcher', () => {
@@ -130,8 +133,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(3, 'Incorrect count of code lenses');
-        verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3));
+        expect(codeLenses.length).to.be.equal(2, 'Incorrect count of code lenses');
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3), true);
 
         // Verify function calls
         document.verifyAll();
@@ -179,10 +182,10 @@ fourth line`;
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(5, 'Incorrect count of code lenses');
 
-        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0));
-        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 7, 11));
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 7, 11));
 
         // Verify function calls
         document.verifyAll();
@@ -216,11 +219,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(9, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
 
-        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0));
-        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12));
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12));
 
         // Verify function calls
         document.verifyAll();
@@ -254,11 +257,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(9, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
 
-        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0));
-        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12));
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12));
 
         // Verify function calls
         document.verifyAll();
@@ -326,7 +329,6 @@ testing2`; // Command tests override getText, so just need the ranges here
                                 TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
-        // Try our RunCell command
         await codeWatcher.runAllCells();
 
         // Verify function calls
@@ -358,7 +360,6 @@ testing2`;
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
 
-        // Try our RunCell command with the first selection point
         await codeWatcher.runCurrentCell();
 
         // Verify function calls
@@ -397,7 +398,6 @@ testing3`;
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
 
-        // Try our RunCell command with the first selection point
         await codeWatcher.runCellAndAllBelow(2, 0);
 
         // Verify function calls
@@ -436,7 +436,6 @@ testing2`;
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
 
-        // Try our RunCell command with the first selection point
         await codeWatcher.runAllCellsAbove(4, 0);
 
         // Verify function calls
@@ -467,10 +466,35 @@ testing1`;
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
 
-        // Try our RunCell command with the first selection point
         await codeWatcher.runToLine(2);
 
         // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunToLine command with nothing on the lines', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`
+
+print('testing')`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // If adding empty lines nothing should be added and history should not be started
+        historyProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeHistory.object)).verifiable(TypeMoq.Times.never());
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isAnyNumber())).verifiable(TypeMoq.Times.never());
+
+        await codeWatcher.runToLine(2);
+
+        // Verify function calls
+        historyProvider.verifyAll();
         activeHistory.verifyAll();
         document.verifyAll();
     });
@@ -632,7 +656,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         let codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
 
         // Change settings
         pythonSettings.datascience.codeRegularExpression = '#%%%.*dude';
@@ -646,6 +670,6 @@ testing2`; // Command tests override getText, so just need the ranges here
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
     });
 });

@@ -41,6 +41,7 @@ export class CodeWatcher implements ICodeWatcher {
         const cells = generateCellRanges(document, this.cachedSettings);
 
         this.codeLenses = [];
+        let firstCell = true;
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
         cells.forEach(cell => {
@@ -55,7 +56,12 @@ export class CodeWatcher implements ICodeWatcher {
                 title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
                 command: Commands.RunAllCellsAbove
             };
-            this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
+            // The first cell should not have a run all above command
+            if (firstCell) {
+                firstCell = false;
+            } else {
+                this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
+            }
             const runCellAndBelowCmd: Command = {
                 arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
                 title: localize.DataScience.runCellAndAllBelowLensCommandTitle(),
@@ -83,8 +89,6 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunAllCells)
     public async runAllCells() {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
-
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
         for (const lens of this.codeLenses) {
@@ -93,6 +97,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
+                    const activeHistory = await this.historyProvider.getOrCreateActive();
                     await activeHistory.addCode(code, this.getFileName(), range.start.line);
                 }
             }
@@ -102,6 +107,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (this.codeLenses.length === 0) {
             if (this.document) {
                 const code = this.document.getText();
+                const activeHistory = await this.historyProvider.getOrCreateActive();
                 await activeHistory.addCode(code, this.getFileName(), 0);
             }
         }
@@ -110,17 +116,16 @@ export class CodeWatcher implements ICodeWatcher {
     // Run all cells up to the cell containing this start line and character
     @captureTelemetry(Telemetry.RunAllCellsAbove)
     public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
-
         // Run our code lenses up to this point, lenses are created in order on document load
         // so we can rely on them being in linear order for this
         for (const lens of this.codeLenses) {
             const pastStop = (lens.range.start.line >= stopLine && lens.range.start.character >= stopCharacter);
-            // Make sure we are dealing with cell based code lenses in case more types are added later
-            if (lens.command && lens.command.command === Commands.RunAllCellsAbove) {
+            // Make sure we are dealing with run cell based code lenses in case more types are added later
+            if (lens.command && lens.command.command === Commands.RunCell) {
                 if (!pastStop && this.document) {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
+                    const activeHistory = await this.historyProvider.getOrCreateActive();
                     await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
                 } else {
                     // If we get a cell past or at the stop point stop
@@ -132,17 +137,16 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunAllCellsAbove)
     public async runCellAndAllBelow(startLine: number, startCharacter: number) {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
-
         // Run our code lenses from this point to the end, lenses are created in order on document load
         // so we can rely on them being in linear order for this
         for (const lens of this.codeLenses) {
             const pastStart = (lens.range.start.line >= startLine && lens.range.start.character >= startCharacter);
-            // Make sure we are dealing with cell based code lenses in case more types are added later
-            if (lens.command && lens.command.command === Commands.RunCellAndAllBelow) {
+            // Make sure we are dealing with run cell based code lenses in case more types are added later
+            if (lens.command && lens.command.command === Commands.RunCell) {
                 if (pastStart && this.document) {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
+                    const activeHistory = await this.historyProvider.getOrCreateActive();
                     await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
                 }
             }
@@ -151,8 +155,6 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
-
         if (this.document && activeEditor &&
             this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
 
@@ -167,6 +169,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             if (code && code.trim().length) {
+                const activeHistory = await this.historyProvider.getOrCreateActive();
                 await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
             }
         }
@@ -174,13 +177,12 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunToLine)
     public async runToLine(targetLine: number) {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
-
         if (this.document && targetLine > 0) {
             const previousLine = this.document.lineAt(targetLine - 1);
             const code = this.document.getText(new Range(0, 0, previousLine.range.end.line, previousLine.range.end.character));
 
             if (code && code.trim().length) {
+                const activeHistory = await this.historyProvider.getOrCreateActive();
                 await activeHistory.addCode(code, this.getFileName(), 0);
             }
         }
@@ -188,13 +190,12 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunFromLine)
     public async runFromLine(targetLine: number) {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
-
         if (this.document && targetLine < this.document.lineCount) {
             const lastLine = this.document.lineAt(this.document.lineCount - 1);
             const code = this.document.getText(new Range(targetLine, 0, lastLine.range.end.line, lastLine.range.end.character));
 
             if (code && code.trim().length) {
+                const activeHistory = await this.historyProvider.getOrCreateActive();
                 await activeHistory.addCode(code, this.getFileName(), targetLine);
             }
         }
@@ -202,17 +203,16 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCell)
     public async runCell(range: Range) {
-        const activeHistory = await this.historyProvider.getOrCreateActive();
         if (this.document) {
             // Use that to get our code.
             const code = this.document.getText(range);
 
             try {
+                const activeHistory = await this.historyProvider.getOrCreateActive();
                 await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
             } catch (err) {
                 this.handleError(err);
             }
-
         }
     }
 
