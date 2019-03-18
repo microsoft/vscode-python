@@ -78,6 +78,12 @@ jobs:
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
         NeedsPythonTestReqs: true
+      'Linux-Py3.7 Unit+Single':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'test:functional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
 
   # displayName: ${{ format('{0} Py{1}', variables['AGENT_OS'], variables['PythonVersion']) }}
 
