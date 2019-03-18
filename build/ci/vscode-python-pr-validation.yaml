@@ -7,12 +7,10 @@ pr:
   branches:
     include: ["master", "release"]
   paths:
-    exclude: ["/news", "/.vscode"]
+    exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
 
 # Not the CI build for merges to master and release.
-trigger:
-  branches:
-    include: ["4123_pr_validation_speedups"]
+trigger: none
 
 # Variables that are available for the entire pipeline.
 variables:
