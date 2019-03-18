@@ -68,8 +68,6 @@ export class JupyterSession implements IJupyterSession {
 
     public async waitForIdle() : Promise<void> {
         if (this.session && this.session.kernel) {
-            await this.session.kernel.ready;
-
             while (this.session.kernel.status !== 'idle') {
                 await sleep(0);
             }
