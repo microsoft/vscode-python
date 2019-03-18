@@ -97,6 +97,9 @@ export class CodeWatcher implements ICodeWatcher {
                 const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
                 if (this.document && range) {
                     const code = this.document.getText(range);
+
+                    // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
+                    // or if we do not we need to start it up as these commands are all expected to start a new history if needed
                     const activeHistory = await this.historyProvider.getOrCreateActive();
                     await activeHistory.addCode(code, this.getFileName(), range.start.line);
                 }
