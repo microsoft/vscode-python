@@ -78,10 +78,10 @@ jobs:
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
         NeedsPythonTestReqs: true
-      'Linux-Py3.7 Unit+Single':
+      'Linux-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'test:functional'
+        TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
 
