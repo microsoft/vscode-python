@@ -17,9 +17,9 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './const
 
 class TestRunner {
     public async start() {
-        await this.enableLanguageServer(true);
-        await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
-        await this.launchSmokeTests();
+        await this.enableLanguageServer(true).catch(ex => console.error('Error in enabling language server', ex));
+        await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR).catch(ex => console.error('Error in extracting latest extension', ex));
+        await this.launchSmokeTests().catch(ex => console.error('Error in launching Smoke Tests', ex));
     }
     private async  launchSmokeTests() {
         const env: Record<string, {}> = {
