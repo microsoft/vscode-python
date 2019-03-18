@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:no-console no-require-imports no-var-requires
 import * as path from 'path';
 
