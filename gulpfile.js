@@ -455,6 +455,7 @@ let reRunCompilation = false;
  * @returns {NodeJS.ReadWriteStream}
  */
 const hygiene = (options, done) => {
+    done = done || noop;
     if (compilationInProgress) {
         reRunCompilation = true;
         return done();
