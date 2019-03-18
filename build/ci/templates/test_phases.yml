@@ -38,9 +38,9 @@ steps:
   # Ensure the required node version is made available on PATH for subsequent tasks.
   # This would be like using nvm to specify a version on your local machine.
   - task: NodeTool@0
-    displayName: ${{ format('Use Node {0}', coalesce(variables['NodeVersion'], variables['DefaultNodeVersion'])) }}
+    displayName: 'Use Node $(NodeVersion)'
     inputs:
-      versionSpec: ${{ coalesce(variables['NodeVersion'], variables['DefaultNodeVersion']) }}
+      versionSpec: $(NodeVersion)
 
   # Ensure the required Python version is made available on PATH for subsequent tasks.
   #

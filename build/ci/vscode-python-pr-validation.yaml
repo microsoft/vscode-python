@@ -16,8 +16,8 @@ trigger:
 
 # Variables that are available for the entire pipeline.
 variables:
-  DefaultPythonVersion: '3.7'
-  DefaultNodeVersion: '8.11.2'
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
   NpmVersion: 'latest'
 
 jobs:
