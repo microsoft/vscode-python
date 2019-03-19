@@ -158,13 +158,7 @@ suite('History output tests', () => {
 
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
-        test(name, async function () {
-            if ((name === 'Simple text' || name === 'Click buttons') && isOs(OSType.Windows)) {
-                // The 'Simple text' and 'Click buttons' test is failing on Windows with a timeout of 120s.
-                // See GH #4827
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
+        test(name, async () => {
             addMockData(ioc, 'a=1\na', 1);
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render

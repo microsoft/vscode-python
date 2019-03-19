@@ -79,13 +79,7 @@ suite('LiveShare tests', () => {
         architecture: Architecture.x64,
     };
 
-    setup(function () {
-
-        if (isOs(OSType.OSX)) {
-            // LiveShare tests failing on MacOS. See GH #4820
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
+    setup(() => {
         hostContainer = createContainer(vsls.Role.Host);
         guestContainer = createContainer(vsls.Role.Guest);
     });
