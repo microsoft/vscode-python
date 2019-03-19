@@ -242,25 +242,6 @@ steps:
     displayName: 'Start xvfb'
     condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), not(variables['SkipXvfb']))
 
-  # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
-  # the specified Python interpreter.
-  #
-  # This is how to set an environment variable in the Azure DevOps pipeline, write
-  # a specially formatted string to stdout. For details, please see
-  # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#set-in-script
-  #
-  # Example command line (windows pwsd):
-  # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
-  - task: PythonScript@0
-    displayName: 'Set CI_PYTHON_PATH'
-    inputs:
-      scriptSource: inline
-      failOnStderr: true
-      script: |
-        from __future__ import print_function
-        import sys
-        print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
-
   # Venv tests: Prepare the various virtual environments and record their details into the
   # JSON file that venvTests require to run.
   #
@@ -330,6 +311,25 @@ steps:
     condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
     env:
       DISPLAY: :10
+
+  # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
+  # the specified Python interpreter.
+  #
+  # This is how to set an environment variable in the Azure DevOps pipeline, write
+  # a specially formatted string to stdout. For details, please see
+  # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#set-in-script
+  #
+  # Example command line (windows pwsd):
+  # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
+  - task: PythonScript@0
+    displayName: 'Set CI_PYTHON_PATH'
+    inputs:
+      scriptSource: inline
+      failOnStderr: true
+      script: |
+        from __future__ import print_function
+        import sys
+        print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
 
   # Run the functional tests.
   #

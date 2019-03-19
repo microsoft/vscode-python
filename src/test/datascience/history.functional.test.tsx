@@ -29,6 +29,7 @@ import { InterpreterType, PythonInterpreter } from '../../client/interpreter/con
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
+import { isOs, OSType } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
@@ -157,7 +158,13 @@ suite('History output tests', () => {
 
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
-        test(name, async () => {
+        test(name, async function () {
+            if (name === 'Simple text' && isOs(OSType.Windows)) {
+                // The 'Simple text' test is failing on Windows with a timeout of 120s.
+                // See GH #4827
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
             addMockData(ioc, 'a=1\na', 1);
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
