@@ -23,16 +23,16 @@ def add_cli_subparser(cmd, name, parent):
     return parser
 
 
-def discover(pytestargs=None, show_pytest=False,
+def discover(pytestargs=None, hidestdio=False,
              _pytest_main=pytest.main, _plugin=None, **_ignored):
     """Return the results of test discovery."""
     if _plugin is None:
         _plugin = TestCollector()
 
-    pytestargs = _adjust_pytest_args(pytestargs, show_pytest=show_pytest)
+    pytestargs = _adjust_pytest_args(pytestargs)
     # We use this helper rather than "-pno:terminal" due to possible
     # platform-dependent issues.
-    with util.hide_stdio() if not show_pytest else util.noop_cm():
+    with util.hide_stdio() if hidestdio else util.noop_cm():
         ec = _pytest_main(pytestargs, [_plugin])
     if ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
@@ -49,7 +49,7 @@ def discover(pytestargs=None, show_pytest=False,
             )
 
 
-def _adjust_pytest_args(pytestargs, show_pytest):
+def _adjust_pytest_args(pytestargs):
     pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
     pytestargs.insert(0, '--collect-only')

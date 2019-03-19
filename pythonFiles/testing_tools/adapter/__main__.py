@@ -49,7 +49,8 @@ def parse_args(
             subsub = add_subparser(cmdname, toolname, subsubs)
             if cmdname == 'discover':
                 subsub.add_argument('--simple', action='store_true')
-                subsub.add_argument('--show-' + toolname, action='store_true')
+                subsub.add_argument('--no-hide-stdio', dest='hidestdio',
+                                    action='store_false')
                 subsub.add_argument('--pretty', action='store_true')
 
     # Parse the args!

@@ -250,7 +250,7 @@ class DiscoverTests(unittest.TestCase):
 
         sys.stdout = buf
         try:
-            discover([], show_pytest=False,
+            discover([], hidestdio=True,
                      _pytest_main=fake_pytest_main, _plugin=plugin)
         finally:
             sys.stdout = sys.__stdout__
@@ -279,7 +279,7 @@ class DiscoverTests(unittest.TestCase):
 
         sys.stdout = buf
         try:
-            discover([], show_pytest=True,
+            discover([], hidestdio=False,
                      _pytest_main=fake_pytest_main, _plugin=plugin)
         finally:
             sys.stdout = sys.__stdout__

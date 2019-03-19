@@ -56,7 +56,7 @@ class ParseDiscoverTests(unittest.TestCase):
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
         self.assertEqual(args, {'pretty': False,
-                                'show_pytest': False,
+                                'hidestdio': True,
                                 'simple': False})
         self.assertEqual(toolargs, [])
 
@@ -76,7 +76,7 @@ class ParseDiscoverTests(unittest.TestCase):
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
         self.assertEqual(args, {'pretty': False,
-                                'show_pytest': False,
+                                'hidestdio': True,
                                 'simple': False})
         self.assertEqual(toolargs, [
             '--strict',
@@ -85,6 +85,22 @@ class ParseDiscoverTests(unittest.TestCase):
             '--no-cov',
             '-d',
             ])
+
+    def test_pytest_opts(self):
+        tool, cmd, args, toolargs = parse_args([
+            'discover',
+            'pytest',
+            '--simple',
+            '--no-hide-stdio',
+            '--pretty',
+            ])
+
+        self.assertEqual(tool, 'pytest')
+        self.assertEqual(cmd, 'discover')
+        self.assertEqual(args, {'pretty': True,
+                                'hidestdio': False,
+                                'simple': True})
+        self.assertEqual(toolargs, [])
 
     def test_unsupported_tool(self):
         with self.assertRaises(SystemExit):
