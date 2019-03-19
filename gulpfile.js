@@ -46,7 +46,11 @@ const noop = function () { };
 */
 
 const all = [
-    'src/**/*.ts'
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    'src/**/*.d.ts',
+    'src/**/*.js',
+    'src/**/*.jsx'
 ];
 
 const tsFilter = [
