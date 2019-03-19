@@ -2,7 +2,7 @@
     margin: 0px;
     padding: 2px;
     display: block;
-    border-bottom-color: var(--vscode-editorGroupHeader-tabsBackground);
+    border-bottom-color: var(--override-widget-background, var(--vscode-editorGroupHeader-tabsBackground));
     border-bottom-style: solid;
     border-bottom-width: 1px;
 }
@@ -57,7 +57,7 @@
 
 .cell-output {
     margin-top: 5px;
-    background: var(--vscode-notifications-background);
+    background: var(--override-widget-background, var(--vscode-notifications-background));
     white-space: pre-wrap;
     font-family: monospace;
 }
@@ -77,7 +77,7 @@
 }
 
 .cell-output thead {
-    border-bottom-color: var(--vscode-editor-foreground);
+    border-bottom-color: var(--override-foreground, var(--vscode-editor-foreground));
     border-bottom-style: solid;
     border-bottom-width: 1px;
     vertical-align: bottom;
@@ -98,10 +98,10 @@
   font-weight: bold;
 }
 .cell-output tbody tr:nth-child(even) {
-  background: var(--vscode-editor-background); /* Force to white because the default color for output is gray */
+  background: var(--override-background, var(--vscode-editor-background)); /* Force to white because the default color for output is gray */
 }
 .cell-output tbody tr:hover {
-  background: var(--vscode-editor-selectionBackground);
+  background: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 .cell-output * + table {
   margin-top: 1em;

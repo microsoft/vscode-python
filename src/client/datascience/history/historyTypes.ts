@@ -28,6 +28,7 @@ export namespace HistoryMessages {
     export const Started = 'started';
     export const AddedSysInfo = 'added_sys_info';
     export const RemoteAddCode = 'remote_add_code';
+    export const Activate = 'activate';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -89,4 +90,5 @@ export class IHistoryMapping {
     public [HistoryMessages.Started]: never | undefined;
     public [HistoryMessages.AddedSysInfo]: IAddedSysInfo;
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
+    public [HistoryMessages.Activate] : never | undefined;
 }

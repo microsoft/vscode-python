@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
 import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
 
@@ -69,6 +70,7 @@ export class TestsParser implements ITestsParser {
         let currentPackage: string = '';
         let fileName = '';
         let testFile: TestFile;
+        const resource = Uri.file(rootDirectory);
         lines.forEach(line => {
             if (line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) {
                 fileName = line.substring(NOSE_WANT_FILE_PREFIX.length);
@@ -83,6 +85,7 @@ export class TestsParser implements ITestsParser {
                 currentPackage = convertFileToPackage(fileName);
                 const fullyQualifiedName = path.isAbsolute(fileName) ? fileName : path.resolve(rootDirectory, fileName);
                 testFile = {
+                    resource,
                     functions: [], suites: [], name: fileName, nameToRun: fileName,
                     xmlName: currentPackage, time: 0, functionsFailed: 0, functionsPassed: 0,
                     fullPath: fullyQualifiedName
@@ -95,6 +98,7 @@ export class TestsParser implements ITestsParser {
                 const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass <class \'', '\'>? True');
                 const clsName = path.extname(name).substring(1);
                 const testSuite: TestSuite = {
+                    resource,
                     name: clsName, nameToRun: `${fileName}:${clsName}`,
                     functions: [], suites: [], xmlName: name, time: 0, isUnitTest: false,
                     isInstance: false, functionsFailed: 0, functionsPassed: 0
@@ -105,6 +109,7 @@ export class TestsParser implements ITestsParser {
             if (line.startsWith('nose.selector: DEBUG: wantClass ')) {
                 const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass ', '? True');
                 const testSuite: TestSuite = {
+                    resource,
                     name: path.extname(name).substring(1), nameToRun: `${fileName}:.${name}`,
                     functions: [], suites: [], xmlName: name, time: 0, isUnitTest: false,
                     isInstance: false, functionsFailed: 0, functionsPassed: 0
@@ -117,6 +122,7 @@ export class TestsParser implements ITestsParser {
                 const fnName = path.extname(name).substring(1);
                 const clsName = path.basename(name, path.extname(name));
                 const fn: TestFunction = {
+                    resource,
                     name: fnName, nameToRun: `${fileName}:${clsName}.${fnName}`,
                     time: 0, functionsFailed: 0, functionsPassed: 0
                 };
@@ -130,6 +136,7 @@ export class TestsParser implements ITestsParser {
             if (line.startsWith('nose.selector: DEBUG: wantFunction <function ')) {
                 const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantFunction <function ', ' at ');
                 const fn: TestFunction = {
+                    resource,
                     name: name, nameToRun: `${fileName}:${name}`,
                     time: 0, functionsFailed: 0, functionsPassed: 0
                 };

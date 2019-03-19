@@ -5,16 +5,16 @@ parameters:
   AzureStorageAccountName: 'vscodepythonci'
   AzureStorageContainerName: 'vscode-python-ci'
   Platform: 'Windows'
-  pool: 
+  pool:
     name: 'Hosted VS2017'
   EnvironmentExecutableFolder: 'Scripts'
   PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
   TEST_FILES_SUFFIX: 'testvirtualenvs'
   TestSuiteName: 'testSingleWorkspace'
   DependsOn: 'Prebuild'
-  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTER_ID: ''
   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
-  MOCHA_REPORTER_JUNIT: true
+  #MOCHA_REPORTER_JUNIT: false
 
 jobs:
 - job:
@@ -179,44 +179,38 @@ jobs:
       condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
 
-    - task: Npm@1
+    - bash: |
+        npm run $(TestSuiteName)
+
       displayName: 'run $(TestSuiteName)'
-      inputs:
-        command: custom
-
-        verbose: true
-
-        customCommand: 'run $(TestSuiteName)'
       env:
         DISPLAY: :10
 
-    - task: PythonScript@0
-      displayName: 'Ensure test results'
-      inputs:
-        scriptSource: inline
-        failOnStderr: true
-        script: |
-          from __future__ import print_function
-
-          import os
-          import sys
-
-
-          test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
-
-          if not os.path.exists(test_logfile):
-              print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
-              print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
-
-
-    - task: PublishTestResults@2
-      displayName: 'Publish JUnit test results'
-      condition: always()
-      inputs:
-        testResultsFiles: '$(MOCHA_CI_REPORTFILE)'
-        searchFolder: '$(Build.ArtifactStagingDirectory)'
-        testRunTitle: '$(Platform) py$(pythonVersion) TestVirtualEnv'
-        buildPlatform: '$(Platform)-py$(pythonVersion)'
-        buildConfiguration: 'TestVirtualEnv'
-
-
+#    - task: PythonScript@0
+#      displayName: 'Ensure test results'
+#      inputs:
+#        scriptSource: inline
+#        failOnStderr: true
+#        script: |
+#          from __future__ import print_function
+#
+#          import os
+#          import sys
+#
+#
+#          test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
+#
+#          if not os.path.exists(test_logfile):
+#              print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
+#              print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
+#
+#
+#    - task: PublishTestResults@2
+#      displayName: 'Publish JUnit test results'
+#      condition: always()
+#      inputs:
+#        testResultsFiles: '$(MOCHA_CI_REPORTFILE)'
+#        searchFolder: '$(Build.ArtifactStagingDirectory)'
+#        testRunTitle: '$(Platform) py$(pythonVersion) TestVirtualEnv'
+#        buildPlatform: '$(Platform)-py$(pythonVersion)'
+#        buildConfiguration: 'TestVirtualEnv'

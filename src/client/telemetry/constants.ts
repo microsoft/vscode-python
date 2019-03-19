@@ -35,7 +35,6 @@ export enum EventName {
     EXECUTION_DJANGO = 'EXECUTION_DJANGO',
     DEBUGGER = 'DEBUGGER',
     DEBUGGER_ATTACH_TO_CHILD_PROCESS = 'DEBUGGER.ATTACH_TO_CHILD_PROCESS',
-    DEBUGGER_PERFORMANCE = 'DEBUGGER.PERFORMANCE',
     DEBUGGER_CONFIGURATION_PROMPTS = 'DEBUGGER.CONFIGURATION.PROMPTS',
     UNITTEST_STOP = 'UNITTEST.STOP',
     UNITTEST_RUN = 'UNITTEST.RUN',
@@ -46,6 +45,7 @@ export enum EventName {
     UNITTEST_NAVIGATE_TEST_FILE = 'UNITTEST.NAVIGATE.TEST_FILE',
     UNITTEST_NAVIGATE_TEST_FUNCTION = 'UNITTEST.NAVIGATE.TEST_FUNCTION',
     UNITTEST_NAVIGATE_TEST_SUITE = 'UNITTEST.NAVIGATE.TEST_SUITE',
+    UNITTEST_EXPLORER_WORK_SPACE_COUNT = 'UNITTEST.TEST_EXPLORER.WORK_SPACE_COUNT',
     PYTHON_LANGUAGE_SERVER_ANALYSISTIME = 'PYTHON_LANGUAGE_SERVER.ANALYSIS_TIME',
     PYTHON_LANGUAGE_SERVER_ENABLED = 'PYTHON_LANGUAGE_SERVER.ENABLED',
     PYTHON_LANGUAGE_SERVER_EXTRACTED = 'PYTHON_LANGUAGE_SERVER.EXTRACTED',
@@ -65,10 +65,44 @@ export enum EventName {
 
     SELECT_LINTER = 'LINTING.SELECT',
 
-    LINTER_NOT_INSTALLED_PROMPT = 'LINTER_NOT_INSTALLED_PROMPT'
+    LINTER_NOT_INSTALLED_PROMPT = 'LINTER_NOT_INSTALLED_PROMPT',
+    KNOWN_IMPORT_FROM_FILE = 'KNOWN_IMPORT_FROM_FILE',
+    KNOWN_IMPORT_FROM_EXECUTION = 'KNOWN_IMPORT_FROM_EXECUTION'
 }
 
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToDetermineOS = 'FailedToDetermineOS'
+}
+
+export enum KnownImports {
+    // Don't change the order of these as they are the value returned in telemetry and changing
+    // the order will break old telemetry data.
+    //
+    // This list was generated from here: https://activewizards.com/blog/top-20-python-libraries-for-data-science-in-2018/
+    pandas,
+    numpy,
+    matlplotlib,
+    scipy,
+    sklearn,
+    statsmodels,
+    seaborn,
+    plotly,
+    bokeh,
+    pydot,
+    xgboost,
+    lightgbm,
+    catboost,
+    eli5,
+    tensorflow,
+    pytorch,
+    keras,
+    distkeras,
+    elephas,
+    pyspark,
+    nltk,
+    spacy,
+    gensim,
+    scrapy,
+    sparkdl
 }

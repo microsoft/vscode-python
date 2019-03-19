@@ -52,7 +52,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
 
         const cwdUri = cwd ? Uri.file(cwd) : undefined;
-        let workspaceFolder = this.workspaceService.getWorkspaceFolder(cwdUri!);
+        let workspaceFolder = this.workspaceService.getWorkspaceFolder(cwdUri);
         if (!workspaceFolder) {
             workspaceFolder = this.workspaceService.workspaceFolders![0];
         }
@@ -64,7 +64,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings
     ): Promise<LaunchRequestArguments> {
-        let debugConfig = await this.readDebugConfig();
+        let debugConfig = await this.readDebugConfig(workspaceFolder);
         if (!debugConfig) {
             debugConfig = {
                 name: 'Debug Unit Test',
@@ -77,8 +77,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
 
-    private async readDebugConfig(): Promise<ITestDebugConfig | undefined> {
-        const configs = await this.readAllDebugConfigs();
+    private async readDebugConfig(workspaceFolder: WorkspaceFolder): Promise<ITestDebugConfig | undefined> {
+        const configs = await this.readAllDebugConfigs(workspaceFolder);
         for (const cfg of configs) {
             if (!cfg.name || cfg.type !== DebuggerTypeName || cfg.request !== 'test') {
                 continue;
@@ -89,8 +89,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         return undefined;
     }
 
-    private async readAllDebugConfigs(): Promise<DebugConfiguration[]> {
-        const workspaceFolder = this.workspaceService.workspaceFolders![0];
+    private async readAllDebugConfigs(workspaceFolder: WorkspaceFolder): Promise<DebugConfiguration[]> {
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
         let configs: DebugConfiguration[] = [];
         if (!(await this.fs.fileExists(filename))) {

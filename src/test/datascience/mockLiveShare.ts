@@ -78,7 +78,7 @@ class Emitter<T> {
 
     private _event: Event<T> | undefined;
     private _disposed: boolean = false;
-    private _deliveryQueue: {listener: Listener; event?: T}[] = [];
+    private _deliveryQueue: { listener: Listener; event?: T }[] = [];
     private _listeners: Listener[] = [];
 
     get event(): Event<T> {
@@ -115,7 +115,7 @@ class Emitter<T> {
             }
 
             for (const l of this._listeners) {
-                this._deliveryQueue.push({listener: l, event});
+                this._deliveryQueue.push({ listener: l, event });
             }
 
             while (this._deliveryQueue.length > 0) {

@@ -1,15 +1,15 @@
 .CodeMirror {
     text-align: left!important;
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     font-family: var(--vscode-editor-font-family);
     font-weight: var(--vscode-editor-font-weight);
     font-size: var(--vscode-editor-font-size);
 }
 
 .cm-s-default {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     font-family: var(--code-font-family);
     font-weight: var(--vscode-editor-font-weight);
     font-size: var(--code-font-size);
@@ -43,7 +43,7 @@
     left: 30px;
     z-index: 500;
     font-style: italic;
-    color: var(--vscode-pickerGroup-border);
+    color: var(--override-watermark-color, var(--vscode-pickerGroup-border));
 }
 
 .hide {

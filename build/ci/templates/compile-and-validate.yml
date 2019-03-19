@@ -5,9 +5,9 @@ parameters:
   NpmVersion: 'latest'
   pool:
     name: 'Hosted Ubuntu 1604'
-  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTER_ID: ''
   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
-  MOCHA_REPORTER_JUNIT: true
+  MOCHA_REPORTER_JUNIT: false
   RunHygiene: true
   UploadBinary: false
   AzureStorageAccountName: 'vscodepythonci'
@@ -39,11 +39,11 @@ jobs:
       condition: variables['system.debug']
 
 
-    - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
-      displayName: 'Component Detection'
-
-      continueOnError: true
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+#    - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+#      displayName: 'Component Detection'
+#
+#      continueOnError: true
+#      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 
     - task: NodeTool@0
@@ -104,24 +104,11 @@ jobs:
       condition: and(succeeded(), eq(variables['runHygiene'], 'true'))
 
 
-    - task: Npm@1
-      displayName: 'run cover:enable'
-      inputs:
-        command: custom
+    - bash: |
+        npm run cover:enable
+        npm run test:unittests:cover
 
-        verbose: false
-
-        customCommand: 'run cover:enable'
-
-
-    - task: Npm@1
-      displayName: 'run test:unittests'
-      inputs:
-        command: custom
-
-        verbose: false
-
-        customCommand: 'run test:unittests:cover'
+      displayName: 'run test:unittests:cover'
 
 
     - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID)'
@@ -140,32 +127,24 @@ jobs:
         buildConfiguration: 'Unittests'
 
 
-    - task: CmdLine@1
+    - bash: |
+        python -m pip install --upgrade pip
+
       displayName: 'pip upgrade pip'
-      inputs:
-        filename: python
-
-        arguments: '-m pip install --upgrade "pip<19"'
 
 
-    - task: CmdLine@1
-      displayName: 'pip install test requirements'
-      inputs:
-        filename: python
+    - bash: |
+        python -m pip install --upgrade -r ./build/test-requirements.txt
 
-        arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
-
+      displayName: 'pip install test-requirements'
 
     - bash: 'python pythonFiles/tests/run_all.py'
       displayName: 'run pythonFiles unit tests'
 
+    - bash: |
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 
-    - task: CmdLine@1
       displayName: 'pip install python packages'
-      inputs:
-        filename: python
-
-        arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
 
 
     - task: ArchiveFiles@2

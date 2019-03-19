@@ -132,7 +132,7 @@ suite('LiveShare tests', () => {
                 throw new Error('postMessage callback not defined');
             }
         });
-        webPanel.setup(p => p.show());
+        webPanel.setup(p => p.show(true));
 
         // We need to mount the react control before we even create a history object. Otherwise the mount will miss rendering some parts
         mountReactControl(result);
@@ -183,7 +183,7 @@ suite('LiveShare tests', () => {
 
         // Remap event handlers to point to the container.
         const oldListener = window.addEventListener;
-        window.addEventListener = (event, cb) => {
+        window.addEventListener = (event: string, cb: any) => {
             if (event === 'message') {
                 container.postMessage = cb;
             }
@@ -210,7 +210,7 @@ suite('LiveShare tests', () => {
         return api.isSessionStarted;
     }
 
-    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5) : Promise<ReactWrapper<any, Readonly<{}>, React.Component>>  {
+    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
 
         // If just the host session has started or nobody, just run the host.
@@ -358,6 +358,7 @@ suite('LiveShare tests', () => {
         });
         fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => true);
+        fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
         const listener = guestContainer.ioc!.get<IDataScienceCommandListener>(IDataScienceCommandListener);

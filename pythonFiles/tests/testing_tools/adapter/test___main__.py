@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import unittest
 
 from ...util import Stub, StubProxy
@@ -24,8 +27,8 @@ class StubReporter(StubProxy):
     def __init__(self, stub=None):
         super(StubReporter, self).__init__(stub, 'reporter')
 
-    def report(self, discovered, **kwargs):
-        self.add_call('report', (discovered,), kwargs or None)
+    def report(self, tests, parents, **kwargs):
+        self.add_call('report', (tests, parents), kwargs or None)
 
 
 ##################################
@@ -52,7 +55,7 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {})
+        self.assertEqual(args, {'show_pytest': False, 'simple': False})
         self.assertEqual(toolargs, [])
 
     def test_pytest_full(self):
@@ -70,7 +73,7 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {})
+        self.assertEqual(args, {'show_pytest': False, 'simple': False})
         self.assertEqual(toolargs, [
             '--',
             '--strict',
@@ -96,8 +99,8 @@ class MainTests(unittest.TestCase):
     def test_discover(self):
         stub = Stub()
         tool = StubTool('spamspamspam', stub)
-        expected = object()
-        tool.return_discover = expected
+        tests, parents = object(), object()
+        tool.return_discover = (parents, tests)
         reporter = StubReporter(stub)
         main(tool.name, 'discover', {'spam': 'eggs'}, [],
              _tools={tool.name: {
@@ -109,7 +112,8 @@ class MainTests(unittest.TestCase):
 
         self.assertEqual(tool.calls, [
             ('spamspamspam.discover', ([],), {'spam': 'eggs'}),
-            ('reporter.report', (expected,), {'debug': False}),
+            ('reporter.report', (tests, parents), {'debug': False,
+                                                   'spam': 'eggs'}),
             ])
 
     def test_unsupported_tool(self):

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
@@ -40,6 +42,7 @@ class JupyterConnectionWaiter {
     private launchResult : ObservableExecutionResult<string>;
     private cancelToken : CancellationToken | undefined;
     private stderr: string[] = [];
+    private connectionDisposed = false;
 
     constructor(
         launchResult : ObservableExecutionResult<string>,
@@ -76,9 +79,9 @@ class JupyterConnectionWaiter {
         }, jupyterLaunchTimeout);
 
         // Listen for crashes
-        let exitCode = 0;
+        let exitCode = '0';
         if (launchResult.proc) {
-            launchResult.proc.on('exit', (c) => exitCode = c);
+            launchResult.proc.on('exit', (c) => exitCode = c ? c.toString() : '0');
         }
 
         // Listen on stderr for its connection information
@@ -92,7 +95,7 @@ class JupyterConnectionWaiter {
         },
         (e) => this.rejectStartPromise(e.message),
         // If the process dies, we can't extract connection information.
-        () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
+        () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode)));
     }
 
     public waitForConnection() : Promise<IConnection> {
@@ -101,7 +104,7 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private output = (data: any) => {
-        if (this.logger) {
+        if (this.logger && !this.connectionDisposed) {
             this.logger.logInformation(data.toString('utf8'));
         }
     }
@@ -171,7 +174,16 @@ class JupyterConnectionWaiter {
 
     private resolveStartPromise = (baseUrl: string, token: string) => {
         clearTimeout(this.launchTimeout);
-        this.startPromise.resolve(this.createConnection(baseUrl, token, this.launchResult));
+        if (!this.startPromise.rejected) {
+            const connection = this.createConnection(baseUrl, token, this.launchResult);
+            const origDispose = connection.dispose.bind(connection);
+            connection.dispose = () => {
+                // Stop listening when we disconnect
+                this.connectionDisposed = true;
+                return origDispose();
+            };
+            this.startPromise.resolve(connection);
+        }
     }
 
     // tslint:disable-next-line:no-any

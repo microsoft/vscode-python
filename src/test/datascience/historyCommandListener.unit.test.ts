@@ -139,6 +139,7 @@ suite('History command listener', async () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
@@ -215,12 +216,12 @@ suite('History command listener', async () => {
     test('Import', async () => {
         createCommandListener(undefined);
         when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(Promise.resolve([Uri.file('foo')]));
-        await commandManager.executeCommand(Commands.ImportNotebook);
+        await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Import File', async () => {
         createCommandListener(undefined);
-        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'));
+        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Export File', async () => {
@@ -229,7 +230,7 @@ suite('History command listener', async () => {
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
 
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'));
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });
     test('Export File and output', async () => {
@@ -258,7 +259,7 @@ suite('History command listener', async () => {
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook);
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook, undefined, undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });
 

@@ -73,6 +73,20 @@ export class TestManagerRunner implements ITestManagerRunner {
             const statusDetails = outcomeMapping.get(data.outcome)!;
             if (test) {
                 test.testFunction.status = statusDetails.status;
+                switch (test.testFunction.status){
+                    case TestStatus.Error:
+                    case TestStatus.Fail: {
+                        test.testFunction.passed = false;
+                        break;
+                    }
+                    case TestStatus.Pass: {
+                        test.testFunction.passed = true;
+                        break;
+                    }
+                    default: {
+                        test.testFunction.passed = undefined;
+                    }
+                }
                 test.testFunction.message = data.message;
                 test.testFunction.traceback = data.traceback;
                 options.tests.summary[statusDetails.summaryProperty] += 1;

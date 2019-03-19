@@ -65,7 +65,6 @@ suite('History output tests', () => {
     let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
     let webPanelMessagePromise: Deferred<void> | undefined;
-    let mainPanel: MainPanel | undefined;
 
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -99,7 +98,7 @@ suite('History output tests', () => {
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             window.postMessage(m, '*');
         }); // See JSDOM valid target origins
-        webPanel.setup(p => p.show());
+        webPanel.setup(p => p.show(true));
 
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         historyProvider = ioc.serviceManager.get<IHistoryProvider>(IHistoryProvider);
@@ -145,7 +144,7 @@ suite('History output tests', () => {
         delete (global as any)['ascquireVsCodeApi'];
     });
 
-    async function getOrCreateHistory() : Promise<IHistory> {
+    async function getOrCreateHistory(): Promise<IHistory> {
         const result = await historyProvider.getOrCreateActive();
 
         // During testing the MainPanel sends the init message before our history is created.
@@ -163,7 +162,7 @@ suite('History output tests', () => {
             if (await jupyterExecution.isNotebookSupported()) {
                 // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
                 const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
-                mainPanel = getMainPanel(wrapper);
+                getMainPanel(wrapper);
                 try {
                     await testFunc(wrapper);
                 } finally {
@@ -262,7 +261,6 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Mime Types', async (wrapper) => {
-
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
@@ -595,6 +593,6 @@ for _ in range(50):
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
-        verifyHtmlOnCell(wrapper, '<span>hello</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
     });
 });

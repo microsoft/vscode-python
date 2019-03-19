@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from __future__ import absolute_import
 
 import argparse
@@ -6,10 +9,6 @@ import sys
 from . import pytest, report
 from .errors import UnsupportedToolError, UnsupportedCommandError
 
-
-# Set this to True to pretty-print the output.
-DEBUG=False
-#DEBUG=True
 
 TOOLS = {
     'pytest': {
@@ -20,6 +19,7 @@ TOOLS = {
 REPORTERS = {
     'discover': report.report_discovered,
     }
+
 
 
 def parse_args(
@@ -40,6 +40,9 @@ def parse_args(
     # Add "run" and "debug" subcommands when ready.
     for cmdname in ['discover']:
         sub = cmdsubs.add_parser(cmdname)
+        if cmdname == 'discover':
+            sub.add_argument('--simple', action='store_true')
+            sub.add_argument('--show-pytest', action='store_true')
         subsubs = sub.add_subparsers(dest='tool')
         for toolname in sorted(TOOLS):
             try:
@@ -55,6 +58,14 @@ def parse_args(
     cmd = ns.pop('cmd')
     if not cmd:
         parser.error('missing command')
+    if cmd == 'discover':
+        if '--simple' in toolargs:
+            toolargs.remove('--simple')
+            ns['simple'] = True
+        if '--show-pytest' in toolargs:
+            toolargs.remove('--show-pytest')
+            ns['show_pytest'] = True
+
     tool = ns.pop('tool')
     if not tool:
         parser.error('missing tool')
@@ -75,8 +86,11 @@ def main(toolname, cmdname, subargs, toolargs,
     except KeyError:
         raise UnsupportedCommandError(cmdname)
 
-    result = run(toolargs, **subargs)
-    report_result(result, debug=DEBUG)
+    parents, result = run(toolargs, **subargs)
+    report_result(result, parents,
+                  debug=('-v' in toolargs or '--verbose' in toolargs),
+                  **subargs
+                  )
 
 
 if __name__ == '__main__':

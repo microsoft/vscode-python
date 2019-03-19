@@ -91,7 +91,7 @@
         "onCommand:python.datascience.selectjupyteruri",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
-        "onCommand:python.python.enableSourceMapSupport"
+        "onCommand:python.enableSourceMapSupport"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -346,8 +346,28 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.runallcellsabove",
+                "title": "%python.command.python.datascience.runallcellsabove.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcellandallbelow",
+                "title": "%python.command.python.datascience.runcellandallbelow.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runtoline",
+                "title": "%python.command.python.datascience.runtoline.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runfromline",
+                "title": "%python.command.python.datascience.runfromline.title%",
                 "category": "Python"
             },
             {
@@ -465,7 +485,17 @@
                 {
                     "command": "python.datascience.runallcells",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runfromline",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runtoline",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.execSelectionInteractive",
@@ -679,6 +709,21 @@
             ],
             "view/item/context": [
                 {
+                    "command": "python.runtests",
+                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "python.debugtests",
+                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "python.discoverTests",
+                    "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
+                    "group": "inline@2"
+                },
+                    {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testFunction",
                     "group": "inline@2"
@@ -1295,6 +1340,12 @@
                     "description": "Maximum size (in pixels) of text output in the Python Interactive window before a scrollbar appears. Set to -1 for infinity.",
                     "scope": "resource"
                 },
+                "python.dataScience.errorBackgroundColor": {
+                    "type": "string",
+                    "default": "#FFFFFF",
+                    "description": "Background color (in hex) for exception messages in the Python Interactive window.",
+                    "scope": "resource"
+                },
                 "python.dataScience.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
                     "default": false,
@@ -1317,6 +1368,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Allow the Python Interactive window to be shared during a Live Share session",
+                    "scope": "resource"
+                },
+                "python.dataScience.ignoreVscodeTheme": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Don't use the VS Code theme in the Python Interactive window (requires reload of VS Code). This forces the Python Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -1857,6 +1914,12 @@
                     "description": "Path to the pipenv executable to use for activation.",
                     "scope": "resource"
                 },
+                "python.poetryPath": {
+                    "type": "string",
+                    "default": "poetry",
+                    "description": "Path to the poetry executable.",
+                    "scope": "resource"
+                },
                 "python.sortImports.args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
@@ -2165,7 +2228,8 @@
         "cover:enable": "gulp cover:enable",
         "debugger-coverage": "gulp debugger-coverage",
         "cover:inlinesource": "gulp inlinesource",
-        "updateBuildNumber": "gulp updateBuildNumber"
+        "updateBuildNumber": "gulp updateBuildNumber",
+        "verifyBundle": "gulp verifyBundle"
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
@@ -2207,7 +2271,7 @@
         "vscode-languageserver-protocol": "^3.10.3",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
-        "ws": "^6.2.0",
+        "ws": "^3.3.1",
         "xml2js": "^0.4.19"
     },
     "devDependencies": {

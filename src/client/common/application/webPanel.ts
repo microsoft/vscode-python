@@ -44,10 +44,10 @@ export class WebPanel implements IWebPanel {
         this.loadPromise = this.load(mainScriptPath, embeddedCss, settings);
     }
 
-    public async show() {
+    public async show(preserveFocus: boolean) {
         await this.loadPromise;
         if (this.panel) {
-            this.panel.reveal(this.panel.viewColumn, true);
+            this.panel.reveal(this.panel.viewColumn, preserveFocus);
         }
     }
 
@@ -59,6 +59,10 @@ export class WebPanel implements IWebPanel {
 
     public isVisible() : boolean {
         return this.panel ? this.panel.visible : false;
+    }
+
+    public isActive() : boolean {
+        return this.panel ? this.panel.active : false;
     }
 
     public postMessage(message: WebPanelMessage) {
@@ -86,6 +90,14 @@ export class WebPanel implements IWebPanel {
                     // Pass the message onto our listener
                     this.listener.onMessage(message.type, message.payload);
                 }));
+
+                this.disposableRegistry.push(this.panel.onDidChangeViewState((e) => {
+                    // Pass the state change onto our listener
+                    this.listener.onChangeViewState(this);
+                }));
+
+                // Set initial state
+                this.listener.onChangeViewState(this);
             } else {
                 // Indicate that we can't load the file path
                 const badPanelString = localize.DataScience.badWebPanelFormatString();

@@ -7,9 +7,9 @@
 #   PythonVersion: '3.7'
 #   NodeVersion: '8.11.2'
 #   NpmVersion: 'latest'
-#   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
+#   MOCHA_CI_REPORTER_ID: ''
 #   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
-#   MOCHA_REPORTER_JUNIT: true
+#   MOCHA_REPORTER_JUNIT: false
 #   AzureStorageAccountName: 'vscodepythonartifacts'
 #   AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
 
@@ -113,35 +113,30 @@ steps:
       customCommand: ci
 
 
-  - task: CmdLine@1
+  - bash: |
+      python -m pip install --upgrade pip
+
     displayName: 'pip upgrade pip'
-    inputs:
-      filename: python
-
-      arguments: '-m pip install --upgrade "pip<19"'
 
 
-  - task: CmdLine@1
+  - bash: |
+      python -m pip install --upgrade -r ./build/test-requirements.txt
+
     displayName: 'pip install requirements'
-    inputs:
-      filename: python
 
-      arguments: '-m pip install --upgrade -r ./build/test-requirements.txt'
 
   - bash: |
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-    
+
     displayName: 'pip install  functional requirements'
-    condition: variables['HasFunctionalRequirements']
+    condition: eq(variables['HasFunctionalRequirements'], 'true')
 
 
-  - task: CmdLine@1
+  - bash: |
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+
     displayName: 'pip install ptvsd'
-    inputs:
-      filename: python
-
-      arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt'
 
 
   - script: |
@@ -151,47 +146,50 @@ steps:
     displayName: 'Start xvfb'
     condition: and(succeeded(), eq(variables['Platform'], 'Linux'))
 
+  - bash: |
+      npm run $(TestSuiteName)
+      echo "End test run (if we don't get here, we failed to exit from mocha test.)"
 
-  - task: Npm@1
-    displayName: 'run $(TestSuiteName)'
-    inputs:
-      command: custom
-
-      verbose: true
-
-      customCommand: 'run $(TestSuiteName)'
+    displayName: 'run $(TestSuiteName) [Non-Windows]'
     env:
       DISPLAY: :10
+    condition: ne(variables['Platform'], 'Windows')
+
+  - powershell: |
+      npm run $(TestSuiteName)
+      Write-Host "End test run (if we don't get here, we failed to exit from mocha test.)"
+
+    displayName: 'run $(TestSuiteName) [Windows]'
+    condition: eq(variables['Platform'], 'Windows')
+
+#  - task: PythonScript@0
+#    displayName: 'Ensure test results'
+#    inputs:
+#      scriptSource: inline
+#      failOnStderr: true
+#      script: |
+#        from __future__ import print_function
+#
+#        import os
+#        import sys
+#
+#
+#        test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
+#
+#        if (not os.path.exists(test_logfile)):
+#            print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
+#            print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
 
 
-  - task: PythonScript@0
-    displayName: 'Ensure test results'
-    inputs:
-      scriptSource: inline
-      failOnStderr: true
-      script: |
-        from __future__ import print_function
-
-        import os
-        import sys
-
-
-        test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
-
-        if (not os.path.exists(test_logfile)):
-            print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
-            print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
-
-
-  - task: PublishTestResults@2
-    displayName: 'Publish JUnit test results'
-    condition: always()
-    inputs:
-      testResultsFiles: '$(MOCHA_CI_REPORTFILE)'
-      searchFolder: '$(Build.ArtifactStagingDirectory)'
-      testRunTitle: '$(Platform) py$(pythonVersion) $(TestSuiteName)'
-      buildPlatform: '$(Platform)-py$(pythonVersion)'
-      buildConfiguration: '$(TestSuiteName)'
+#  - task: PublishTestResults@2
+#    displayName: 'Publish JUnit test results'
+#    condition: always()
+#    inputs:
+#      testResultsFiles: '$(MOCHA_CI_REPORTFILE)'
+#      searchFolder: '$(Build.ArtifactStagingDirectory)'
+#      testRunTitle: '$(Platform) py$(pythonVersion) $(TestSuiteName)'
+#      buildPlatform: '$(Platform)-py$(pythonVersion)'
+#      buildConfiguration: '$(TestSuiteName)'
 
 
   - bash: 'bash <(curl -s https://codecov.io/bash) -t $(COV_UUID) -F $(Platform)'

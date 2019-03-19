@@ -5,9 +5,9 @@
 
 ---
 
-| macOS/Windows CI | Linux CI | Rolling CI (macOS/Windows) | Code Coverage |
+| macOS/Linux/Windows CI | Linux CI | Nightly CI (macOS/Linux/Windows) | Code Coverage |
 |-|-|-|-|
-|[![Build Status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/vscode-python-ci-pr_validation)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=18) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/PR%20Validation?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=84&branchName=master) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -37,7 +37,7 @@ npm ci
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
 python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-# Optionally Update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter. 
+# Optionally Update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter.
 ```
 You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
 

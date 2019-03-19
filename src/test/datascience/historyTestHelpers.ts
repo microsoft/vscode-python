@@ -261,6 +261,7 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         collapseCellInputCodeByDefault: true,
         allowInput: true,
         maxOutputSize: 400,
+        errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'

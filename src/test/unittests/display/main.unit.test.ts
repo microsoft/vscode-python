@@ -21,7 +21,7 @@ import { ITestsHelper, Tests } from '../../../client/unittests/common/types';
 import { TestResultDisplay } from '../../../client/unittests/display/main';
 import { sleep } from '../../core';
 
-suite('Unit Tests - TestResultDisplay', () => {
+suite('xUnit Tests - TestResultDisplay', () => {
     const workspaceUri = Uri.file(__filename);
     let appShell: typeMoq.IMock<IApplicationShell>;
     let unitTestSettings: typeMoq.IMock<IUnitTestSettings>;
@@ -338,7 +338,10 @@ suite('Unit Tests - TestResultDisplay', () => {
             .returns(() => Promise.resolve(UnitTests.configureTests()))
             .verifiable(typeMoq.Times.once());
 
-        cmdManager.setup(c => c.executeCommand(typeMoq.It.isValue(Commands.Tests_Configure)))
+        const undefinedArg = typeMoq.It.isValue(undefined);
+        cmdManager
+            .setup(c => c.executeCommand(typeMoq.It.isValue(Commands.Tests_Configure as any), undefinedArg, undefinedArg, undefinedArg))
+            .returns(() => Promise.resolve() as any)
             .verifiable(typeMoq.Times.once());
         def.resolve(undefined as any);
         await sleep(1);

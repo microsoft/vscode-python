@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
@@ -25,6 +26,8 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
     private postOffice : PostOffice;
     private id: string;
     private pendingSyncs : Map<string, ISyncData> = new Map<string, ISyncData>();
+    private executedCode: EventEmitter<string> = new EventEmitter<string>();
+    private activeHistoryExecuteHandler: Disposable | undefined;
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -55,6 +58,10 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         return this.activeHistory;
     }
 
+    public get onExecutedCode() : Event<string> {
+        return this.executedCode.event;
+    }
+
     public async getOrCreateActive() : Promise<IHistory> {
         if (!this.activeHistory) {
             this.activeHistory = await this.create();
@@ -77,7 +84,8 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         const workbench = this.workspaceService.getConfiguration('workbench');
         if (workbench) {
             const theme = workbench.get<string>('colorTheme');
-            if (theme) {
+            const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
+            if (theme && !ignoreTheme) {
                 darkTheme = await this.themeFinder.isThemeDark(theme);
             }
         }
@@ -104,6 +112,8 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         const handler = result.closed(this.onHistoryClosed);
         this.disposables.push(result);
         this.disposables.push(handler);
+        this.activeHistoryExecuteHandler = result.onExecutedCode(this.onHistoryExecute);
+        this.disposables.push(this.activeHistoryExecuteHandler);
         await result.ready;
         return result;
     }
@@ -151,6 +161,10 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
     private onHistoryClosed = (history: IHistory) => {
         if (this.activeHistory === history) {
             this.activeHistory = undefined;
+            if (this.activeHistoryExecuteHandler) {
+                this.activeHistoryExecuteHandler.dispose();
+                this.activeHistoryExecuteHandler = undefined;
+            }
         }
     }
 
@@ -169,6 +183,10 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         }
 
         return Promise.resolve();
+    }
+
+    private onHistoryExecute = (code: string) => {
+        this.executedCode.fire(code);
     }
 
 }
