@@ -414,8 +414,9 @@ steps:
   # > npx gulp clean:cleanExceptTests
   # > npm run testSmoke
   - script: |
+      npm install -g vsce
       npm run clean
-      npm run updateBuildNumber -- --buildNumber $TRAVIS_BUILD_NUMBER
+      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx gulp clean:cleanExceptTests
       npm run testSmoke
