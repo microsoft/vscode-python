@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.3.0-dev",
+    "version": "2019.3.0-rc",
     "languageServerVersion": "0.1.80",
     "publisher": "ms-python",
     "author": {
@@ -723,7 +723,7 @@
                     "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
                     "group": "inline@2"
                 },
-                    {
+                {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testFunction",
                     "group": "inline@2"
