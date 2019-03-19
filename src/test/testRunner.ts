@@ -134,6 +134,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
                     const sliceEnd = sliceNum * sliceSize; // this will overshoot the end on a rounded up quantity, but that's ok
                     const sliceToRun = files.slice(sliceStart, sliceEnd);
                     sliceToRun.forEach((file) => mocha.addFile((path.join(testsRoot, file))));
+                    mocha.checkLeaks();
                 } else {
                     files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
                 }

@@ -303,12 +303,16 @@ steps:
       }
       & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
 
+      # Set the TEST_FILES_SUFFIX
+      Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
+
     displayName: 'Prepare Venv-Test Environment'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
 
   # Run the virtual environment based tests.
   # This set of tests is simply using the `testSingleWorkspace` set of tests, but
-  # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`.
+  # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
+  # got set in the Prepare Venv-Test Environmant task above.
   # **Note**: Azure DevOps tasks set environment variables via a specially formatted
   # string sent to stdout.
   #
@@ -319,7 +323,6 @@ steps:
   # > npm run testSingleWorkspace
   - script: |
       cat $PYTHON_VIRTUAL_ENVS_LOCATION
-      echo ##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs
 
       npm run testSingleWorkspace
 
