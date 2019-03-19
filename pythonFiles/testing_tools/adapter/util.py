@@ -21,7 +21,7 @@ def hide_stdio():
     sys.stdout = buf
     sys.stderr = buf
     try:
-        yield buf
+        yield
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
