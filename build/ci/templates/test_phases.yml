@@ -325,6 +325,8 @@ steps:
 
     displayName: 'Run Venv-Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
+    env:
+      DISPLAY: :10
 
   # Run the functional tests.
   #
