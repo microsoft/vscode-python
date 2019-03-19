@@ -31,6 +31,7 @@ interface IMainPanelState {
     gridRows: IGridRow[];
     initialGridRows: IGridRow[];
     filters:{};
+    gridHeight: number;
 }
 
 interface IGridRow {
@@ -41,6 +42,7 @@ class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> {};
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private postOffice: DataExplorerPostOffice | undefined;
+    private container: HTMLDivElement | null = null;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IMainPanelState) {
@@ -52,35 +54,43 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 gridColumns: data.columns,
                 gridRows: data.rows,
                 initialGridRows: data.rows,
-                filters: {}
+                filters: {},
+                gridHeight: 100
             };
         } else {
             this.state = {
                 gridColumns: [],
                 gridRows: [],
                 initialGridRows: [],
-                filters: {}
+                filters: {},
+                gridHeight: 100
             };
         }
     }
 
+    public componentDidMount() {
+        window.addEventListener('resize', this.updateDimensions);
+        this.updateDimensions();
+    }
+
+    public componentWillUnmount() {
+        window.removeEventListener('resize', this.updateDimensions);
+    }
+
     public render = () => {
 
-        const filteredRows = this.getRows(this.state.gridRows, this.state.filters);
-        
+        const maxStyle: React.CSSProperties = {
+            position: 'absolute',
+            bottom: '0',
+            top: '0px',
+            left: '0px',
+            right: '0'
+        };
+
         return (
-            <div className='main-panel'>
+            <div className='main-panel' style={maxStyle} ref={el => this.container = el}>
                 <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
-                <div>Hello from React Data Grid</div>
-                <AdazzleReactDataGrid
-                    columns={this.state.gridColumns.map(c => { return {...c, ...defaultColumnProperties };})}
-                    rowGetter={i => filteredRows[i]} 
-                    rowsCount={filteredRows.length}
-                    toolbar={<Toolbar enableFilter={true}/>}
-                    onAddFilter={filter => this.handleFilterChange(filter)}
-                    onClearFilters={() => this.setState({filters: {}})}
-                    onGridSort={(sortColumn: string, sortDirection: string) => this.sortRows(sortColumn, sortDirection)}
-                />
+                {this.container && this.renderGrid()}
             </div>
         );
     }
@@ -93,6 +103,29 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return false;
+    }
+
+    private updateDimensions = () => {
+        if (this.container) {
+            const height = this.container.offsetHeight;
+            this.setState({gridHeight: height -100});
+        }
+    }
+
+    private renderGrid() {
+        const filteredRows = this.getRows(this.state.gridRows, this.state.filters);
+        return(
+        <AdazzleReactDataGrid
+            columns={this.state.gridColumns.map(c => { return {...c, ...defaultColumnProperties };})}
+            rowGetter={i => filteredRows[i]} 
+            rowsCount={filteredRows.length}
+            minHeight={this.state.gridHeight}
+            toolbar={<Toolbar enableFilter={true}/>}
+            onAddFilter={filter => this.handleFilterChange(filter)}
+            onClearFilters={() => this.setState({filters: {}})}
+            onGridSort={(sortColumn: string, sortDirection: string) => this.sortRows(sortColumn, sortDirection)}
+        />
+        );
     }
 
     private updatePostOffice = (postOffice: DataExplorerPostOffice) => {
