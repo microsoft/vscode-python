@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:no-string-literal no-unused-expression chai-vague-errors max-func-body-length no-any
 
 import { expect, use } from 'chai';

@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 // tslint:disable:no-any max-classes-per-file max-func-body-length no-stateless-class no-require-imports no-var-requires no-empty
 
 import { expect } from 'chai';

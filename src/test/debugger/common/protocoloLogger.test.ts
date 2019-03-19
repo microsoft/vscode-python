@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { PassThrough } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Logger } from 'vscode-debugadapter';

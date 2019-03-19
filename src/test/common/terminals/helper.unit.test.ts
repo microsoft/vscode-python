@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
+
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';

@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
+
 import { expect } from 'chai';
 import { workspace } from 'vscode';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';

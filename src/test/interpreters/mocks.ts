@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { injectable } from 'inversify';
 import { IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IPersistentState } from '../../client/common/types';

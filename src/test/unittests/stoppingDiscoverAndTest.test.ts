@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';

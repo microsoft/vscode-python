@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 // tslint:disable:max-func-body-length
 
 import { expect } from 'chai';

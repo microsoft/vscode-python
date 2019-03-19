@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 // tslint:disable:no-require-imports no-var-requires no-any max-func-body-length
 import * as assert from 'assert';
 import { expect } from 'chai';

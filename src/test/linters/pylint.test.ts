@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect } from 'chai';
 import { Container } from 'inversify';
 import * as os from 'os';

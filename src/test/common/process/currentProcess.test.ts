@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect } from 'chai';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { ICurrentProcess } from '../../../client/common/types';

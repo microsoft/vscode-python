@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as assert from 'assert';
 import { sep } from 'path';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
