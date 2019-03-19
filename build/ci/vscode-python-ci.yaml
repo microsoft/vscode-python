@@ -1,4 +1,4 @@
-name: 'CI_$(Date:yyyyMMdd)$(Rev:.r)'
+name: '$(Date:yyyy).$(Date:MM)$(Rev:.r).$(BuildID)-ci'
 # PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
