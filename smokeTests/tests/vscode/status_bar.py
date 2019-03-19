@@ -4,8 +4,7 @@
 
 from typing import List
 
-from . import core
-from .constants import PYTHON_STATUS_BAR_PREFIX, PYTHON_STATUS_BAR_PRIORITY
+from . import constants, core
 
 STATUS_BAR_SELECTOR = 'div[id="workbench.parts.statusbar"]'
 
@@ -16,11 +15,11 @@ def wait_for_item_with_tooltip(context, value: str, **kwargs):
 
 
 def wait_for_python_statusbar(context, parts: List[str] = []):
-    selector = f"div.statusbar-item.left.statusbar-entry[statusbar-entry-priority='{PYTHON_STATUS_BAR_PRIORITY}']"
+    selector = f"div.statusbar-item.left.statusbar-entry[statusbar-entry-priority='{constants.PYTHON_STATUS_BAR_PRIORITY}']"  # noqa
 
     def find(elements):
         for element in elements:
-            if element.text.index(PYTHON_STATUS_BAR_PREFIX) != 0:
+            if element.text.index(constants.PYTHON_STATUS_BAR_PREFIX) != 0:
                 continue
             if not parts:
                 return [element]
@@ -29,4 +28,8 @@ def wait_for_python_statusbar(context, parts: List[str] = []):
                 return [element]
         return []
 
-    return core.wait_for_elements(context, selector, find)[0]
+    item = core.wait_for_elements(context.driver, selector, find)
+    if item is None:
+        breakpoint()
+    return item[0]
+    # return core.wait_for_elements(context.driver, selector, find)[0]

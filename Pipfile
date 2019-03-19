@@ -1,0 +1,30 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+jedi = "==0.12.0"
+parso = "==0.2.1"
+isort = "==4.3.4"
+ptvsd = "==4.2.4"
+behave = "*"
+selenium = "*"
+progress = "*"
+requests = "*"
+docopt = "*"
+black = "*"
+
+
+[dev-packages]
+
+"flake8" = "*"
+black = "*"
+
+
+[requires]
+
+python_version = "3.7"

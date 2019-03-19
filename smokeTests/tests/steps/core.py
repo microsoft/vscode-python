@@ -4,6 +4,7 @@
 import time
 
 import behave
+import tests
 
 
 @behave.when("I wait for {seconds:n} seconds")
@@ -13,4 +14,4 @@ def sleep(context, seconds: int):
 
 @behave.then("take a screenshot")
 def capture_screen(context):
-    context.app.capture_screen()
+    tests.vscode.application.capture_screen(context)

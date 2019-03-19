@@ -8,9 +8,18 @@ import os.path
 import sys
 import time
 
-from tasks.smoketests import tools
+from selenium import webdriver
+
+from dataclasses import dataclass
 
 from . import application, extension, quick_open
+from .. import tools
+
+
+@dataclass
+class Context:
+    options: application.Options
+    driver: webdriver.Chrome
 
 
 def start(options):
@@ -19,13 +28,15 @@ def start(options):
     setup_user_settings(options.user_dir, user_settings=settings)
     app_context = start_vscode(options)
     extension.load_python_extension(app_context)
+    return app_context
 
 
 def start_vscode(options):
     print("Starting application")
     application.setup_environment(options)
     driver = application.launch_extension(options)
-    context = {"options": options, "driver": driver}
+    context = Context(options, driver)
+    # context = {"options": options, "driver": driver}
     # Wait for sometime, until some messages appear.
     time.sleep(2)
 

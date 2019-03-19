@@ -35,7 +35,7 @@ def wait_until_selected(context, value: str, **kwargs):
             return []
 
     return core.wait_for_elements(
-        context, QUICK_OPEN_ENTRY_LABEL_SELECTOR, find, **kwargs
+        context.driver, QUICK_OPEN_ENTRY_LABEL_SELECTOR, find, **kwargs
     )
 
 

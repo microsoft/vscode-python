@@ -7,7 +7,7 @@
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "node_modules": true,
+        "node_modules": false,
         ".vscode-test": true,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
@@ -34,8 +34,10 @@
         "--max-line-length=120"
     ],
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true
+        "source.organizeImports": false
     },
     "editor.formatOnSave": true,
-    "python.linting.pylintEnabled": false
+    "python.linting.pylintEnabled": false,
+    "python.analysis.logLevel": "Trace",
+    "python.pythonPath": "/Users/donjayamanne/.local/share/virtualenvs/pythonVSCode-5rU-mS3t/bin/python"
 }

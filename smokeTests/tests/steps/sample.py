@@ -3,12 +3,13 @@
 
 
 import behave
+import tests
 
 
 @behave.given("we have behave installed")
 def step_impl(context):
     print("11234")
-    context.app.capture_screen()
+    tests.vscode.application.capture_screen(context)
     pass
 
 
@@ -20,7 +21,7 @@ def implement_test(context):
 
 @behave.then("behave will test it for us!")
 def test_it(context):
-    context.app.capture_screen()
+    tests.vscode.application.capture_screen(context)
     assert True
 
 

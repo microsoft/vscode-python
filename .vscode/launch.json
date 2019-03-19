@@ -188,13 +188,9 @@
             "name": "Behave Smoke Tests",
             "type": "python",
             "request": "launch",
-            "module": "behave",
+            "program": "${workspaceFolder}/smokeTests/__main__.py",
             "args": [
-                "-f",
-                "plain",
-                "-T",
-                "--no-capture",
-                "tasks/smoketests"
+                "test"
             ],
             "debugStdLib": true,
             "console": "none"

@@ -2241,6 +2241,7 @@
         "copy-webpack-plugin": "^4.6.0",
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
+        "cucumber-html-reporter": "^4.0.5",
         "decache": "^4.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",

@@ -7,11 +7,14 @@ import time
 from selenium.common import exceptions
 
 
-def _try_and_find(fn, **kwargs):
-    timeout_messge = kwargs.get("timeout_messge", "Timeout")
-    retry_count = kwargs.get("retry_count", 100)
-    retry_interval = kwargs.get("retry_interval", 100)
-    timeout = kwargs.get("timeout", None)
+def _try_and_find(
+    fn,
+    timeout_messge="Timeout",
+    retry_count=100,
+    retry_interval=100,
+    timeout=None,
+    **kwargs,
+):
     if timeout is not None:
         retry_count = (timeout * 1000) / retry_interval
     else:
@@ -35,8 +38,8 @@ def _try_and_find(fn, **kwargs):
         raise SystemError(msg)
 
 
-def dispatch_keys(driver, keys: str, **kwargs):
-    element = kwargs.get("element", driver.switch_to.active_element)
+def dispatch_keys(driver, keys: str, element=None):
+    element = driver.switch_to.active_element if element is None else element
     element.send_keys(keys)
 
 
@@ -48,9 +51,11 @@ def wait_for_element(driver, css_selector, predicate=lambda ele: True, **kwargs)
             raise exceptions.NoSuchElementException(
                 "Element not yet visible, so lets wait again"
             )
-        raise exceptions.NoSuchElementException(
-            "Predicate returned False in wait_for_element"
-        )
+        if element is None:
+            raise exceptions.NoSuchElementException(
+                "Predicate returned False in wait_for_element"
+            )
+        return element
 
     return _try_and_find(find, **kwargs)
 
@@ -71,6 +76,7 @@ def wait_for_elements(driver, css_selector, predicate=lambda elements: [], **kwa
         raise exceptions.NoSuchElementException(
             "Predicate returned False in wait_for_elements"
         )
+    return _try_and_find(find, **kwargs)
 
 
 def wait_for_active_element(driver, css_selector, **kwargs):

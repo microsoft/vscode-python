@@ -11,7 +11,7 @@ import tempfile
 
 import requests
 
-from tasks.smoketests import tools
+from .. import tools
 
 
 def _get_download_platform():
@@ -68,7 +68,7 @@ def download_chrome_driver(download_path: str, channel: str = "stable"):
     os.makedirs(download_path, exist_ok=True)
     electron_version = _get_electron_version(channel)
     dir = os.path.dirname(os.path.realpath(__file__))
-    js_file = os.path.join(dir, "chromeDownloader.js")
+    js_file = os.path.join(dir, "..", "js", "chromeDownloader.js")
     # Use an exising npm package.
     tools.run_command(
         ["node", js_file, electron_version, download_path],

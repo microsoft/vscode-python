@@ -9,9 +9,9 @@ def load_python_extension(context):
     documents.create_new_untitled_file(context, "Python")
     last_error = None
     for _ in range(5):
-        quick_open.select_command("Activate Python Extension")
+        quick_open.select_command(context, "Activate Python Extension")
         try:
-            notifications.wait_for_message("Python Extension Activated")
+            notifications.wait_for_message(context, "Python Extension Activated")
             break
         except Exception as ex:
             last_error = ex

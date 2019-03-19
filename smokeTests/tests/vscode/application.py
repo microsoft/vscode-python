@@ -6,14 +6,14 @@ import base64
 import os
 import shutil
 import tempfile
+import traceback
 
 from selenium import webdriver
 
 from dataclasses import dataclass
-from tasks.smoketests import report, tools
-from tasks.smoketests.bootstrap import main
 
 from . import quick_open, utils
+from .. import bootstrap, report, tools
 
 
 @dataclass
@@ -30,20 +30,24 @@ class Options:
 
 
 def get_options(
-    vscode_directory=".vscode-smoke",
+    destination=".vscode-test",
     vsix="ms-python-insiders.vsix",
     embed_screenshots=True,
     output="file",
+    channel="stable",
 ):
-    vscode_directory = os.path.abspath(vscode_directory)
+    print("vscode_directory")
+    print(destination)
+    print("vscode_directory")
+    vscode_directory = os.path.abspath(destination)
     options = Options(
-        os.path.join(vscode_directory, "vscode"),
-        os.path.join(vscode_directory, "user"),
-        os.path.join(vscode_directory, "extensions"),
+        os.path.join(destination, channel),
+        os.path.join(destination, "user"),
+        os.path.join(destination, "extensions"),
         os.path.abspath(vsix),
-        os.path.join(vscode_directory, "workspace folder"),
-        os.path.join(vscode_directory, "temp"),
-        os.path.join(vscode_directory, "screenshots"),
+        os.path.join(destination, "workspace folder"),
+        os.path.join(destination, "temp"),
+        os.path.join(destination, "screenshots"),
         embed_screenshots,
         output,
     )
@@ -57,6 +61,7 @@ def get_options(
 
 def setup_environment(dirs):
     os.environ["PATH"] += os.pathsep + dirs.executable_dir
+    print(os.environ["PATH"])
 
 
 def uninstall_extension(options):
@@ -73,9 +78,10 @@ def install_extension(options):
         f"--extensions-dir={options.extensions_dir}",
         f"--install-extension={options.extension_path}",
     ]
+    print(options)
     tools.run_command(command, progress_message="Installing Python Extension", env=env)
 
-    bootstrap_extension = main.get_extension_path()
+    bootstrap_extension = bootstrap.main.get_extension_path()
     command = [
         utils.get_binary_location(options.executable_dir),
         utils.get_cli_location(options.executable_dir),
@@ -138,3 +144,16 @@ def capture_screen(context):
         html = base64.b64encode(html.encode("utf-8")).decode("utf-8")
 
         report.PrettyCucumberJSONFormatter.instance.attach_html(html)
+
+
+def capture_exception(context, info=None):
+    if info is None or info.exc_traceback is None or info.exception is None:
+        return
+
+    formatted_ex = traceback.format_exception(
+        type(info.exception), info.exception, info.exc_traceback
+    )
+    html = f"<h>Error</h><p>{formatted_ex}</p>"
+    html = base64.b64encode(html.encode("utf-8")).decode("utf-8")
+
+    report.PrettyCucumberJSONFormatter.instance.attach_html(html)
