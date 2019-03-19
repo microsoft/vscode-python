@@ -21,7 +21,7 @@ import { ITestsHelper, Tests } from '../../../client/unittests/common/types';
 import { TestResultDisplay } from '../../../client/unittests/display/main';
 import { sleep } from '../../core';
 
-suite('xUnit Tests - TestResultDisplay', () => {
+suite('Unit Tests - TestResultDisplay', () => {
     const workspaceUri = Uri.file(__filename);
     let appShell: typeMoq.IMock<IApplicationShell>;
     let unitTestSettings: typeMoq.IMock<IUnitTestSettings>;
