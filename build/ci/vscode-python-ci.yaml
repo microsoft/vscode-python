@@ -93,30 +93,11 @@ jobs:
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
 
       # SingleWorkspace Tests
-      'Win-Py3.7 Single(1/4)':
+      'Win-Py3.7 Single':
         PythonVersion: '3.7'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testSingleWorkspace'
         NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '1/4'
-      'Win-Py3.7 Single(2/4)':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '2/4'
-      'Win-Py3.7 Single(3/4)':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '3/4'
-      'Win-Py3.7 Single(4/4)':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '4/4'
       'Linux-Py3.7 Single':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
@@ -127,30 +108,11 @@ jobs:
         VMImageName: 'macos-10.13'
         TestsToRun: 'testSingleWorkspace'
         NeedsPythonTestReqs: true
-      'Win-Py3.6 Single(1/4)':
+      'Win-Py3.6 Single':
         PythonVersion: '3.6'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testSingleWorkspace'
         NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '1/4'
-      'Win-Py3.6 Single(2/4)':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '2/4'
-      'Win-Py3.6 Single(3/4)':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '3/4'
-      'Win-Py3.6 Single(4/4)':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '4/4'
       'Linux-Py3.6 Single':
         PythonVersion: '3.6'
         VMImageName: 'ubuntu-16.04'
@@ -163,30 +125,11 @@ jobs:
         NeedsPythonTestReqs: true
 
       # MultiWorkspace Tests
-      'Win-Py3.7 Multi(1/4)':
+      'Win-Py3.7 Multi':
         PythonVersion: '3.7'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testMultiWorkspace'
         NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '1/4'
-      'Win-Py3.7 Multi(2/4)':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '2/4'
-      'Win-Py3.7 Multi(3/4)':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '3/4'
-      'Win-Py3.7 Multi(4/4)':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '4/4'
       'Linux-Py3.7 Multi':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
@@ -197,30 +140,11 @@ jobs:
         VMImageName: 'macos-10.13'
         TestsToRun: 'testMultiWorkspace'
         NeedsPythonTestReqs: true
-      'Win-Py3.6 Multi(1/4)':
+      'Win-Py3.6 Multi':
         PythonVersion: '3.6'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testMultiWorkspace'
         NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '1/4'
-      'Win-Py3.6 Multi(2/4)':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '2/4'
-      'Win-Py3.6 Multi(3/4)':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '3/4'
-      'Win-Py3.6 Multi(4/4)':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-        CI_SPLIT_TESTS: '4/4'
       'Linux-Py3.6 Multi':
         PythonVersion: '3.6'
         VMImageName: 'ubuntu-16.04'
