@@ -29,7 +29,6 @@ import { InterpreterType, PythonInterpreter } from '../../client/interpreter/con
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
-import { isOs, OSType } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {

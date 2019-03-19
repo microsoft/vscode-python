@@ -19,7 +19,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture, OSType } from '../../client/common/utils/platform';
+import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
@@ -42,7 +42,6 @@ import {
 import { ClassType } from '../../client/ioc/types';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
-import { isOs } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { SupportedCommands } from './mockJupyterManager';

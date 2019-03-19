@@ -21,7 +21,7 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { Architecture, OSType } from '../../client/common/utils/platform';
+import { Architecture } from '../../client/common/utils/platform';
 import { Commands } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/historyTypes';
@@ -35,7 +35,6 @@ import {
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
-import { isOs } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { addMockData, CellPosition, verifyHtmlOnCell } from './historyTestHelpers';
