@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as React from 'react';
-// tslint:disable-next-line:import-name
+// tslint:disable-next-line:import-name match-default-export-name
 import InlineSVG from 'svg-inline-react';
 
 // This react component loads our svg files inline so that we can load them in vscode as it no longer
