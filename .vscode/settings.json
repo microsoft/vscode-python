@@ -8,7 +8,6 @@
         "bin": true,
         "**/__pycache__": true,
         "node_modules": false,
-        ".vscode-test": true,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
     },
