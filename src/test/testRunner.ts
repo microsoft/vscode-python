@@ -116,7 +116,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
                 return callback(error);
             }
             try {
-                const splitFiles = process.env.CI_SPLIT_TESTS;
+                const splitFiles = process.env.CI_SPLIT_TESTS || '';
                 if (splitFiles !== '') {
                     // environment variable CI_SPLIT_TESTS is a string in the format `[slice]/[num_slices]`.
                     //
