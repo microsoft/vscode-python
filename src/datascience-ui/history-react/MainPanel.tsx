@@ -113,6 +113,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     <CellButton baseTheme={baseTheme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
                         <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
+                    <CellButton baseTheme={baseTheme} onClick={this.showDataExplorer} tooltip={'Show Data Explorer'}>
+                        D
+                    </CellButton>
                 </MenuBar>
                 <div className='top-spacing'/>
                 {progressBar}
@@ -243,6 +246,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
         }
+    }
+
+    private showDataExplorer = () => {
+        this.sendMessage(HistoryMessages.ShowDataExplorer);
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {

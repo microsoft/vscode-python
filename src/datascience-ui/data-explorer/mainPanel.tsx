@@ -15,8 +15,10 @@ import { DataGridRowRenderer } from './dataGridRow';
 const selectors = Data.Selectors;
 
 const defaultColumnProperties = {
-    filterable: true,
-    sortable: true    
+    // filterable: true,
+    // sortable: true,
+    resizable: true,
+    width: 120
 }
 export interface IMainPanelProps {
     skipDefault?: boolean;

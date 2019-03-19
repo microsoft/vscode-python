@@ -22,6 +22,7 @@ export class WebPanel implements IWebPanel {
     private rootPath: string;
 
     constructor(
+        viewColumn: ViewColumn,
         serviceContainer: IServiceContainer,
         listener: IWebPanelMessageListener,
         title: string,
@@ -35,7 +36,7 @@ export class WebPanel implements IWebPanel {
         this.panel = window.createWebviewPanel(
             title.toLowerCase().replace(' ', ''),
             title,
-            {viewColumn: ViewColumn.Two, preserveFocus: true},
+            {viewColumn , preserveFocus: true},
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,

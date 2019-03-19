@@ -13,6 +13,6 @@ import { MainPanel } from './mainPanel';
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
 ReactDOM.render(
-  <MainPanel skipDefault={typeof acquireVsCodeApi !== 'undefined'}/>,
+  <MainPanel skipDefault={false}/>, // Turn this back off when we have real variable explorer data
   document.getElementById('root') as HTMLElement
 );

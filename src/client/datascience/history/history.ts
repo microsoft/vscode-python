@@ -46,7 +46,8 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider
+    IStatusProvider,
+    IDataExplorerProvider
 } from '../types';
 
 export enum SysInfoReason {
@@ -92,7 +93,8 @@ export class History implements IHistory {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider
+        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
+        @inject(IDataExplorerProvider) private dataExplorerProvider: IDataExplorerProvider
         ) {
 
         // Create our unique id. We use this to skip messages we send to other history windows
@@ -235,6 +237,10 @@ export class History implements IHistory {
                 this.dispatchMessage(message, payload, this.onRemoteAddedCode);
                 break;
 
+            case HistoryMessages.ShowDataExplorer:
+                this.showDataExplorer();
+                break;
+
             default:
                 break;
         }
@@ -347,6 +353,14 @@ export class History implements IHistory {
                     this.logger.logError(err);
                     this.applicationShell.showErrorMessage(err);
                 });
+        }
+    }
+
+    private async showDataExplorer() {
+        try {
+            return this.dataExplorerProvider.create([]);
+        } catch (e) {
+            this.applicationShell.showErrorMessage(e);
         }
     }
 
@@ -881,7 +895,7 @@ export class History implements IHistory {
             this.logger.logInformation('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+            this.webPanel = this.provider.create(ViewColumn.Two, this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
 
             this.logger.logInformation('Web view created.');
         }
