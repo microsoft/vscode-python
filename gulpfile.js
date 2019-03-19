@@ -153,10 +153,8 @@ gulp.task("compile", () => {
         .js.pipe(gulp.dest("out"));
 });
 
-gulp.task('compile-history', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-history.config.js', '--mode', 'production']));
 
-gulp.task('compile-dataexplorer', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-dataexplorer.config.js', '--mode', 'production']));
-
+gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 
 gulp.task('webpack', async () => {
     await buildWebPack('production', []);
@@ -245,7 +243,7 @@ gulp.task('renameSourceMaps', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
-gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webview-history', 'compile-webview-dataexplorer'));
+gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
 gulp.task('installPythonLibs', async () => {
     const requirements = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8').split('\n').map(item => item.trim()).filter(item => item.length > 0);
