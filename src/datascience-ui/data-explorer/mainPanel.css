@@ -1,0 +1,34 @@
+/*
+  See here for defaults:
+  https://github.com/adazzle/react-data-grid/blob/master/themes
+  
+ */
+
+ .main-panel .react-grid-HeaderRow {
+    padding: 0px;
+    overflow-y: hidden;
+}
+
+.main-panel .react-grid-HeaderCell {
+    padding: 0px;
+}
+
+.main-panel .widget-HeaderCell__value {
+    padding: 0px;
+    margin: 1px;
+}
+
+.main-panel .react-grid-Cell {
+    padding: 0px;
+    border: none;
+    outline: 1px solid var(--override-widget-background, var(--vscode-notifications-background));
+}
+
+.main-panel .react-grid-Cell--value {
+    padding: 0px;
+    margin: 1px;
+}
+
+.main-panel .rdg-selected {
+    visibility: hidden;
+}

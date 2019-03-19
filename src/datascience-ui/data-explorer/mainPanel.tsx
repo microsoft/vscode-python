@@ -10,13 +10,14 @@ import { generateTestData } from './testData';
 
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Toolbar, Data } from 'react-data-grid-addons';
-import { DataGridRowRenderer } from './dataGridRow';
+
+import './mainPanel.css';
 
 const selectors = Data.Selectors;
 
 const defaultColumnProperties = {
-    // filterable: true,
-    // sortable: true,
+    filterable: true,
+    sortable: true,
     resizable: true,
     width: 120
 }
@@ -74,9 +75,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     columns={this.state.gridColumns.map(c => { return {...c, ...defaultColumnProperties };})}
                     rowGetter={i => filteredRows[i]} 
                     rowsCount={filteredRows.length}
-                    minHeight={300}
                     toolbar={<Toolbar enableFilter={true}/>}
-                    rowRenderer={DataGridRowRenderer}
                     onAddFilter={filter => this.handleFilterChange(filter)}
                     onClearFilters={() => this.setState({filters: {}})}
                     onGridSort={(sortColumn: string, sortDirection: string) => this.sortRows(sortColumn, sortDirection)}
