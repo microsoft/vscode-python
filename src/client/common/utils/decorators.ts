@@ -24,7 +24,7 @@ export function debounce(wait?: number) {
         // If running tests, lets not debounce (so tests run fast).
         wait = wait && isTestExecution() ? undefined : wait;
         // tslint:disable-next-line:no-invalid-this no-any
-        (descriptor as any).value = _debounce(function () { return originalMethod.apply(this, arguments as any); }, wait);
+        (descriptor as any).value = _debounce(function (this: any) { return originalMethod.apply(this, arguments as any); }, wait);
     };
 }
 
