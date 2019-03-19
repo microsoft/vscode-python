@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -10,6 +10,7 @@ import { TextDocument } from 'vscode';
 import { sendTelemetryEvent } from '.';
 import { sleep } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
+import '../common/extensions';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
 import { EventName, KnownImports } from './constants';
@@ -84,7 +85,7 @@ export class ImportTracker implements IImportTracker {
                 const actual = match[1] ? match[1] : match[2];
 
                 // See if this matches any known imports
-                let knownMatch: RegExpExecArray = this.knownImportsMatch.exec(actual);
+                let knownMatch = this.knownImportsMatch.exec(actual);
                 while (knownMatch) {
                     knownMatch.forEach(val => {
                         // Skip if already sent this telemetry
