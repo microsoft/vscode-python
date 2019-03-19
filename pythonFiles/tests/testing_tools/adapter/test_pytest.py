@@ -364,7 +364,7 @@ class CollectorTests(unittest.TestCase):
                     # ignored (pytest-supported)
                     'parameterize', 'usefixtures', 'filterwarnings',
                     # ignored (custom)
-                    'timeout', 
+                    'timeout',
                     ]],
                 ),
             ])
