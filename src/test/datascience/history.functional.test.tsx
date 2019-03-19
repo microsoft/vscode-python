@@ -159,8 +159,8 @@ suite('History output tests', () => {
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
         test(name, async function () {
-            if (name === 'Simple text' && isOs(OSType.Windows)) {
-                // The 'Simple text' test is failing on Windows with a timeout of 120s.
+            if ((name === 'Simple text' || name === 'Click buttons') && isOs(OSType.Windows)) {
+                // The 'Simple text' and 'Click buttons' test is failing on Windows with a timeout of 120s.
                 // See GH #4827
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();

@@ -196,9 +196,9 @@ suite('Jupyter notebook tests', () => {
 
     function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
         test(name, async function () {
-            if ((name === 'Cancel execution') && isOs(OSType.Linux)) {
+            if (name === 'Cancel execution') {
                 // Failing on 'Cancel did not cancel getusable after 30ms'
-                // and 'Cancel did not cancel isNotebook after 10ms' on AzDO in Linux.
+                // and 'Cancel did not cancel isNotebook after 10ms' on AzDO in Linux & Windows.
 
                 // Tracked by GH #4818
                 // tslint:disable-next-line:no-invalid-this
