@@ -18,6 +18,7 @@ import { ILanguageServerAnalysisOptions, ILanguageServerFolderService } from '..
 
 @injectable()
 export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOptions {
+    private envPythonPath: string = '';
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private disposables: Disposable[] = [];
@@ -43,6 +44,9 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         this.disposables.push(disposable);
 
         disposable = this.interpreterService.onDidChangeInterpreter(() => this.didChange.fire(), this);
+        this.disposables.push(disposable);
+
+        disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
         this.disposables.push(disposable);
     }
     public get onDidChange(): Event<void> {
@@ -83,8 +87,9 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        if (vars.PYTHONPATH && vars.PYTHONPATH.length > 0) {
-            const paths = vars.PYTHONPATH.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
+        this.envPythonPath = vars.PYTHONPATH;
+        if (this.envPythonPath && this.envPythonPath.length > 0) {
+            const paths = this.envPythonPath.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
             searchPaths.push(...paths);
         }
 
@@ -199,6 +204,20 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 this.didChange.fire();
                 return;
             }
+        }
+    }
+
+    @debounce(1000)
+    protected onEnvVarChange(): void {
+        this.notifyifEnvPythonPathChanged().ignoreErrors();
+    }
+
+    protected async notifyifEnvPythonPathChanged(): Promise<void> {
+        const vars = await this.envVarsProvider.getEnvironmentVariables();
+        const envPythonPath = vars.PYTHONPATH;
+
+        if (this.envPythonPath !== envPythonPath) {
+            this.didChange.fire();
         }
     }
 }
