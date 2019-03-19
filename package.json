@@ -723,7 +723,7 @@
                     "when": "view == python_tests && viewItem == testWorkspaceFolder && !busyTests",
                     "group": "inline@2"
                 },
-                    {
+                {
                     "command": "python.openTestNodeInEditor",
                     "when": "view == python_tests && viewItem == testFunction",
                     "group": "inline@2"
