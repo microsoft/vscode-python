@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 try:
     from io import StringIO
