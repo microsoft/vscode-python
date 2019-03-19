@@ -116,7 +116,27 @@ export function run(testsRoot: string, callback: TestCallback): void {
                 return callback(error);
             }
             try {
-                files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                const splitFiles = process.env.CI_SPLIT_TESTS;
+                if (splitFiles !== '') {
+                    // environment variable CI_SPLIT_TESTS is a string in the format `[slice]/[num_slices]`.
+                    //
+                    // take the number of files returned from the glob, and slice it
+                    // into `num_slices`. Then take only the `slice` that is requested
+                    // and add that to the mocha run.
+                    //
+                    // This is to split up the tests in a way that makes Windows tests run in less time
+                    // over parallel test run instances.
+                    const sliceInfo: string[] = splitFiles.split('/');
+                    const sliceNum = Number.parseInt(sliceInfo[0]);
+                    const numberOfSlices = Number.parseInt(sliceInfo[1]);
+                    const sliceSize = Math.round((files.length / numberOfSlices) + 0.5);
+                    const sliceStart = (sliceNum - 1) * sliceSize;
+                    const sliceEnd = sliceNum * sliceSize; // this will overshoot the end on a rounded up quantity, but that's ok
+                    const sliceToRun = files.slice(sliceStart, sliceEnd);
+                    sliceToRun.forEach((file) => mocha.addFile((path.join(testsRoot, file))));
+                } else {
+                    files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                }
                 initializationScript()
                     .then(() => mocha.run(failures => callback(undefined, failures)))
                     .catch(callback);
