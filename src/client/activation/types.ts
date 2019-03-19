@@ -76,7 +76,7 @@ export enum LanguageClientFactory {
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
-    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions): Promise<LanguageClient>;
+    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient>;
 }
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
