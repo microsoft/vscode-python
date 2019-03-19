@@ -540,9 +540,11 @@ function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
 
 function copyValueTypes<T>(source: T, target: T): void {
     Object.keys(source).forEach(key => {
-        const value = source[key];
+        // tslint:disable-next-line:no-any
+        const value = (source as any)[key];
         if (['boolean', 'number', 'string', 'undefined'].indexOf(typeof value) >= 0) {
-            target[key] = value;
+            // tslint:disable-next-line:no-any
+            (target as any)[key] = value;
         }
     });
 }
