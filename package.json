@@ -2330,6 +2330,7 @@
         "babel-plugin-inline-json-import": "^0.3.1",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
+        "bootstrap": "^4.3.1",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",

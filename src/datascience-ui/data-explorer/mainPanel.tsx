@@ -11,6 +11,7 @@ import { generateTestData } from './testData';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Toolbar, Data } from 'react-data-grid-addons';
 
+import 'bootstrap/dist/css/bootstrap.css'
 import './mainPanel.css';
 
 const selectors = Data.Selectors;
