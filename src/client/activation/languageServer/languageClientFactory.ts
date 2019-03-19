@@ -41,10 +41,9 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
     public async createLanguageClient(_resource: Resource, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineExecutableName);
-
         const options = { stdio: 'pipe' };
         const serverOptions: ServerOptions = {
-            run: { command: serverModule, rgs: [], options: options },
+            run: { command: serverModule, rgs: [], options },
             debug: { command: serverModule, args: ['--debug'], options }
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
@@ -65,11 +64,11 @@ export class SimpleLanguageClientFactory implements ILanguageClientFactory {
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) { }
     public async createLanguageClient(_resource: Resource, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
-        const commandOptions = { stdio: 'pipe' };
+        const options = { stdio: 'pipe' };
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineDllName);
         const serverOptions: ServerOptions = {
-            run: { command: dotNetCommand, args: [serverModule], options: commandOptions },
-            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
+            run: { command: dotNetCommand, args: [serverModule], options },
+            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options }
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
         return new vscodeLanguageClient.LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
