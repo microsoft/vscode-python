@@ -17,11 +17,17 @@ def noop_cm():
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
-    buf = StringIO()
-    sys.stdout = buf
-    sys.stderr = buf
+    ignored = IgnoredIO()
+    sys.stdout = ignored
+    sys.stderr = ignored
     try:
         yield
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
+
+class IgnoredIO(StringIO):
+    """A noop "file"."""
+    def write(self, msg):
+        pass
