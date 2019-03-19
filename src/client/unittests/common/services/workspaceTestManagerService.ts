@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable, named } from 'inversify';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../../common/types';

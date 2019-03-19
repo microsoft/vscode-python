@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { IServiceManager } from '../ioc/types';
 import { FormatterHelper } from './helper';
 import { IFormatterHelper } from './types';

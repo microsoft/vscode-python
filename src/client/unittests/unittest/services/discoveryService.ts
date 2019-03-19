@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable, named } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';

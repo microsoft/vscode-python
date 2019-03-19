@@ -1,6 +1,9 @@
-// tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-"use strict";
+'use strict';
+
+// tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
 
 import * as net from "net";
 import { EventEmitter } from "events";

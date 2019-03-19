@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { EOL } from 'os';
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';

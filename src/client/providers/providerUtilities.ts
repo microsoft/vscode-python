@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { Position, Range, TextDocument } from 'vscode';
 import { Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenizerMode, TokenType } from '../language/types';

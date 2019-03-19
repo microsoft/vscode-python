@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 export class BlockRegEx {
     constructor(private regEx: RegExp, public startWord: String) {
 

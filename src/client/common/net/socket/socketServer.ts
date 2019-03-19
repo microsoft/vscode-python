@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import * as net from 'net';

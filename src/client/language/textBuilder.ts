@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isWhiteSpace } from './characters';
+'use strict';
 
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+import { isWhiteSpace } from './characters';
 
 export class TextBuilder {
     private segments: string[] = [];

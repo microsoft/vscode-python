@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import * as vscode from 'vscode';
 import { getTextEditsFromPatch } from '../common/editor';
 import { IConfigurationService, IInstaller, Product } from '../common/types';

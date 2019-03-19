@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { DocumentFilter } from 'vscode';
 
 export const PYTHON_LANGUAGE = 'python';

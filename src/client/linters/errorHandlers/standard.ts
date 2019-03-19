@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { ExecutionInfo, Product } from '../../common/types';

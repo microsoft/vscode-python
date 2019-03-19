@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
+
 import { exec, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import * as tk from 'tree-kill';
