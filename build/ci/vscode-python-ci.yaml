@@ -91,19 +91,19 @@ jobs:
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Win-Py3.6 Venv':
         VMImageName: 'vs2017-win2016'
-        PythonVersion: '3.7'
+        PythonVersion: '3.6'
         TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Linux-Py3.6 Venv':
         VMImageName: 'ubuntu-16.04'
-        PythonVersion: '3.7'
+        PythonVersion: '3.6'
         TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.6 Venv':
         VMImageName: 'macos-10.13'
-        PythonVersion: '3.7'
+        PythonVersion: '3.6'
         TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
