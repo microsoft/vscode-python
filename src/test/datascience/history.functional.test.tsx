@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { Disposable, TextDocument, TextEditor, ViewColumn } from 'vscode';
 
 import {
     IApplicationShell,
@@ -88,12 +88,13 @@ suite('History output tests', () => {
         ioc.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns((listener: IWebPanelMessageListener, title: string, script: string, css: string) => {
-            // Keep track of the current listener. It listens to messages through the vscode api
-            webPanelListener = listener;
+        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+            (viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, script: string, css: string) => {
+                // Keep track of the current listener. It listens to messages through the vscode api
+                webPanelListener = listener;
 
-            // Return our dummy web panel
-            return webPanel.object;
+                // Return our dummy web panel
+                return webPanel.object;
         });
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             window.postMessage(m, '*');

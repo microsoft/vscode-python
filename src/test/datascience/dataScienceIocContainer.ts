@@ -71,6 +71,8 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { DataExplorer } from '../../client/datascience/data-viewing/dataExplorer';
+import { DataExplorerProvider } from '../../client/datascience/data-viewing/dataExplorerProvider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { History } from '../../client/datascience/history/history';
 import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
@@ -86,6 +88,8 @@ import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICodeCssGenerator,
     ICodeWatcher,
+    IDataExplorer,
+    IDataExplorerProvider,
     IDataScience,
     IDataScienceCommandListener,
     IHistory,
@@ -210,7 +214,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
+        this.serviceManager.addSingleton<IDataExplorerProvider>(IDataExplorerProvider, DataExplorerProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
+        this.serviceManager.add<IDataExplorer>(IDataExplorer, DataExplorer);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
