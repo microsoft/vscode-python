@@ -336,7 +336,7 @@ steps:
     displayName: 'Publish Venv-Tests results'
     condition: contains(variables['TestsToRun'], 'venvTests')
     inputs:
-      testResultsFiles: $MOCHA_FILE
+      testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'venvTest-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
@@ -378,7 +378,7 @@ steps:
     displayName: 'Publish functional tests results'
     condition: contains(variables['TestsToRun'], 'testFunctional')
     inputs:
-      testResultsFiles: $MOCHA_FILE
+      testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'FunctionalTests'
@@ -401,7 +401,7 @@ steps:
     displayName: 'Publish single workspace tests results'
     condition: contains(variables['TestsToRun'], 'testSingleWorkspace')
     inputs:
-      testResultsFiles: $MOCHA_FILE
+      testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'singleWorkspace-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
@@ -424,7 +424,7 @@ steps:
     displayName: 'Publish multi-workspace tests results'
     condition: contains(variables['TestsToRun'], 'testMultiWorkspace')
     inputs:
-      testResultsFiles: $MOCHA_FILE
+      testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'multiWorkspace-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
@@ -447,7 +447,7 @@ steps:
     displayName: 'Publish debugger tests results'
     condition: contains(variables['TestsToRun'], 'testDebugger')
     inputs:
-      testResultsFiles: $MOCHA_FILE
+      testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'debugger-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
