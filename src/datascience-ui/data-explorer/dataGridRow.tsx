@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 
 export class DataGridRowRenderer extends AdazzleReactDataGrid.Row {
@@ -13,14 +12,12 @@ export class DataGridRowRenderer extends AdazzleReactDataGrid.Row {
     }
 
     public render = () => {
-        const parent = super.render();
-        if (super.props.idx) {
-            const style: React.CSSProperties = {
-                color: super.props.idx % 2 ? 'red' : 'blue'
-            };
-            return <div id='wrapper' style={style}>{parent}</div>;
-        }
-
-        return parent;
+        return super.render();
+        // if (this.props.idx) {
+        //     const style: React.CSSProperties = {
+        //         color: this.props.idx % 2 ? 'red' : 'blue'
+        //     };
+        //     return <div id='wrapper' style={style}>{parent}</div>;
+        // }
     }
 }
