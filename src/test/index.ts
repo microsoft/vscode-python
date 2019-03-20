@@ -39,8 +39,9 @@ const options: testRunner.SetupOptions & { retries: number } = {
 };
 
 // If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
-// reporting to the console as well as to the JUnit XML file (defaults to
-// test-report.xml in root folder, or to the value of env var `MOCHA_FILE`).
+// reporting to both the console (spec) and to a JUnit XML file. The xml file
+// written to is `test-report.xml` in the root folder by default, but can be
+// changed by setting env var `MOCHA_FILE` (we do this in our CI).
 if (MOCHA_REPORTER_JUNIT) {
     options.reporter = 'mocha-multi-reporters';
     options.reporterOptions = {

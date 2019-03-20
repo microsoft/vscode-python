@@ -91,7 +91,7 @@ suite('Module Installer', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             // If resource is provided, then ensure we do not invoke without the resource.
             mockTerminalFactory.setup(t => t.getTerminalService(TypeMoq.It.isAny()))
-                .callback(passedInResource => chai.expect(passedInResource).to.be.equal(resource))
+                .callback(passedInResource => expect(passedInResource).to.be.equal(resource))
                 .returns(() => mockTerminalService.object);
             ioc.serviceManager.addSingletonInstance<ITerminalServiceFactory>(ITerminalServiceFactory, mockTerminalFactory.object);
 

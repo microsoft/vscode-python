@@ -49,20 +49,40 @@ jobs:
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'pythonUnitTests'
         NeedsPythonTestReqs: true
-      'Mac-Py3.7 Unit+Single':
+      'Mac-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Single Workspace':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
       'Mac-Py2.7 Unit+Single':
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
         NeedsPythonTestReqs: true
-      'Linux-Py3.7 Unit+Single':
+      'Linux-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Single Workspace':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
       'Linux-Py2.7 Unit+Single':
         PythonVersion: '2.7'
