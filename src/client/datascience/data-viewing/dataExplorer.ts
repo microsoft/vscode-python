@@ -70,6 +70,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
 
     public dispose = async () => {
         if (!this.disposed) {
+            this.disposed = true;
             if (this.webPanel) {
                 this.webPanel.close();
                 this.webPanel = undefined;
