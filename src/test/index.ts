@@ -38,13 +38,13 @@ const options: testRunner.SetupOptions & { retries: number } = {
     testFilesSuffix
 };
 
-// CI can ask for a JUnit reporter if the environment variable
-// 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
-// by other 'MOCHA_CI_...' variables. See constants.ts for info.
+// If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
+// reporting to the console as well as to the JUnit XML file (defaults to
+// test-report.xml in root folder, or to the value of env var `MOCHA_FILE`).
 if (MOCHA_REPORTER_JUNIT) {
     options.reporter = 'mocha-multi-reporters';
     options.reporterOptions = {
-        reporterEnabled: 'spec,mocha-junit-reporter'
+        reporterEnabled: 'mocha.reporters.spec,mocha-junit-reporter'
     };
 }
 
