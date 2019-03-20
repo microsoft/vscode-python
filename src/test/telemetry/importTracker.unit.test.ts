@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 //tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
+import stringHash from 'string-hash';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, TextDocument } from 'vscode';
-import stringHash from 'string-hash';
 
 import { IDocumentManager } from '../../client/common/application/types';
 import { IHistoryProvider } from '../../client/datascience/types';
-import { EventName } from '../../client/telemetry/constants'; 
+import { EventName } from '../../client/telemetry/constants';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { ICodeExecutionManager } from '../../client/terminals/types';
 import { createDocument } from '../datascience/editor-integration/helpers';

@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import '../common/extensions';
-import stringHash from 'string-hash';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import stringHash from 'string-hash';
 import { TextDocument } from 'vscode';
 
 import { sendTelemetryEvent } from '.';
-import { sleep, noop } from '../../test/core';
+import { noop, sleep } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
