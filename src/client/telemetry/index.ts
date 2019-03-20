@@ -272,8 +272,8 @@ export interface IEventNamePropertyMapping {
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
-    [EventName.KNOWN_IMPORT_FROM_FILE]: { import: string };
-    [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: string };
+    [EventName.KNOWN_IMPORT_FROM_FILE]: { import: number };
+    [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: number };
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;

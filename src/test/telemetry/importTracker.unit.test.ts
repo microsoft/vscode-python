@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, TextDocument } from 'vscode';
+import stringHash from 'string-hash';
 
 import { IDocumentManager } from '../../client/common/application/types';
 import { IHistoryProvider } from '../../client/datascience/types';
@@ -26,6 +27,14 @@ suite('Import Tracker', () => {
     let savedEventEmitter: EventEmitter<TextDocument>;
     let historyEventEmitter: EventEmitter<string>;
     let codeExecutionEmitter: EventEmitter<string>;
+    const pandasHash = stringHash('pandas');
+    const elephasHash = stringHash('elephas');
+    const kerasHash = stringHash('keras');
+    const pysparkHash = stringHash('pyspark');
+    const sparkdlHash = stringHash('sparkdl');
+    const numpyHash = stringHash('numpy');
+    const scipyHash = stringHash('scipy');
+    const sklearnHash = stringHash('sklearn');
 
     class Reporter {
         public static eventNames: string[] = [];
@@ -79,7 +88,7 @@ suite('Import Tracker', () => {
         emitDocEvent('import pandas\r\n', openedEventEmitter);
 
         expect(Reporter.eventNames).to.deep.equal([EventName.KNOWN_IMPORT_FROM_FILE]);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }]);
     });
 
     test('Already opened documents', async () => {
@@ -88,27 +97,27 @@ suite('Import Tracker', () => {
         await importTracker.activate();
 
         expect(Reporter.eventNames).to.deep.equal([EventName.KNOWN_IMPORT_FROM_FILE]);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }]);
     });
 
     test('Save document', () => {
         emitDocEvent('import pandas\r\n', savedEventEmitter);
 
         expect(Reporter.eventNames).to.deep.equal([EventName.KNOWN_IMPORT_FROM_FILE]);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }]);
     });
 
     test('Execute', () => {
         historyEventEmitter.fire('import pandas\r\n');
 
         expect(Reporter.eventNames).to.deep.equal([EventName.KNOWN_IMPORT_FROM_EXECUTION]);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }]);
 
         codeExecutionEmitter.fire('import pandas\r\n');
 
         // Should not emit another event.
         expect(Reporter.eventNames).to.deep.equal([EventName.KNOWN_IMPORT_FROM_EXECUTION]);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }]);
     });
 
     test('elephas', () => {
@@ -135,7 +144,7 @@ suite('Import Tracker', () => {
         model.set_weights(weights)`;
 
         historyEventEmitter.fire(elephas);
-        expect(Reporter.properties).to.deep.equal([{ import: 'elephas' }, { import: 'keras' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: elephasHash }, { import: kerasHash }]);
     });
 
     test('pyspark', () => {
@@ -157,7 +166,7 @@ suite('Import Tracker', () => {
         print("Training set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))`;
 
         historyEventEmitter.fire(pyspark);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pyspark' }, { import: 'sparkdl' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pysparkHash }, { import: sparkdlHash }]);
     });
 
     test('numpy', () => {
@@ -173,7 +182,7 @@ def simplify_ages(df):
     df.Age = categories
     return df`;
         historyEventEmitter.fire(code);
-        expect(Reporter.properties).to.deep.equal([{ import: 'pandas' }, { import: 'numpy' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }, { import: numpyHash }]);
     });
 
     test('scipy', () => {
@@ -187,7 +196,7 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         historyEventEmitter.fire(code);
-        expect(Reporter.properties).to.deep.equal([{ import: 'scipy' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: scipyHash }]);
     });
 
     test('function', () => {
@@ -201,7 +210,7 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         historyEventEmitter.fire(code);
-        expect(Reporter.properties).to.deep.equal([{ import: 'sklearn' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: sklearnHash }]);
     });
 
     test('Comma separated', () => {
@@ -215,7 +224,7 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         historyEventEmitter.fire(code);
-        expect(Reporter.properties).to.deep.equal([{ import: 'sklearn' }, { import: 'pandas' }]);
+        expect(Reporter.properties).to.deep.equal([{ import: sklearnHash }, { import: pandasHash }]);
     });
 
     // That's probably enough different variants of code to verify nothing is wonky.
