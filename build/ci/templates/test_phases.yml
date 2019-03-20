@@ -20,6 +20,7 @@
 #
 # 'testUnitTests'
 # 'pythonUnitTests'
+# 'pythonInternalTools'
 # 'testSingleWorkspace'
 # 'testMultiWorkspace'
 # 'testDebugger'
@@ -198,8 +199,7 @@ steps:
 
   # Run the News tool tests.
   #
-  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`,
-  # and if Python version == 3.7.
+  # This task only runs if the string 'pythonInternalTools' exists in variable `TestsToRun`
   #
   # Example command line (windows pwsh):
   # > python -m pip install -U -r news/requirements.txt
@@ -208,12 +208,12 @@ steps:
       python -m pip install --upgrade -r news/requirements.txt
       python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
     displayName: 'Run Python tests for news'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
     displayName: 'Publish Python tests for news results'
-    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
+    condition: contains(variables['TestsToRun'], 'pythonInternalTools')
     inputs:
       testResultsFiles: 'python-news-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
@@ -223,8 +223,7 @@ steps:
 
   # Run the TPN tool tests.
   #
-  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`,
-  # and if Python version == 3.7.
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
   #
   # Example command line (windows pwsh):
   # > python -m pip install -U -r tpn/requirements.txt
@@ -233,12 +232,12 @@ steps:
       python -m pip install --upgrade -r tpn/requirements.txt
       python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
     displayName: 'Run Python tests for TPN tool'
-    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
     displayName: 'Publish Python tests for TPN tool results'
-    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
+    condition: contains(variables['TestsToRun'], 'pythonInternalTools')
     inputs:
       testResultsFiles: 'python-tpn-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'

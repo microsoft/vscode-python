@@ -42,7 +42,7 @@ jobs:
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
       'Win-Py3.7 Unit':
         VMImageName: 'vs2017-win2016'
-        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests'
+        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools'
         NeedsPythonTestReqs: true
     #   'Win-Py2.7 Unit':
     #     PythonVersion: '2.7'
