@@ -135,7 +135,7 @@ steps:
     displayName: 'Publish test:unittest results'
     condition: contains(variables['TestsToRun'], 'testUnitTests')
     inputs:
-      testResultsFiles: $MOCHA_FILE
+      testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'unittests-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
