@@ -85,6 +85,7 @@
     "LanguageService.lsFailedToExtract": "We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.",
     "DataScience.unknownMimeTypeFormat": "Mime type {0} is not currently supported.",
     "DataScience.historyTitle": "Python Interactive",
+    "DataScience.dataExplorerTitle": "Data Viewer",
     "DataScience.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
     "DataScience.sessionDisposed": "Cannot execute code, session has been disposed.",
     "DataScience.exportDialogTitle": "Export to Jupyter Notebook",

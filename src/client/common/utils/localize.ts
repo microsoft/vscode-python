@@ -63,6 +63,7 @@ export namespace DataScienceSurveyBanner {
 
 export namespace DataScience {
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
+    export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
     export const unknownMimeTypeFormat = localize('DataScience.unknownMimeTypeFormat', 'Mime type {0} is not currently supported');

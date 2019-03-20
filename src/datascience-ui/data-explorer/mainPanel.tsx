@@ -79,16 +79,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public render = () => {
 
-        const maxStyle: React.CSSProperties = {
-            position: 'absolute',
-            bottom: '0',
-            top: '0px',
-            left: '0px',
-            right: '0'
-        };
-
         return (
-            <div className='main-panel' style={maxStyle} ref={el => this.container = el}>
+            <div className='main-panel' ref={el => this.container = el}>
                 <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 {this.container && this.renderGrid()}
             </div>

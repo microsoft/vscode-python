@@ -152,7 +152,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
             this.logger.logInformation('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(ViewColumn.One, this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+            this.webPanel = this.provider.create(ViewColumn.One, this.messageListener, localize.DataScience.dataExplorerTitle(), mainScriptPath, css, settings);
 
             this.logger.logInformation('Web view created.');
         }
