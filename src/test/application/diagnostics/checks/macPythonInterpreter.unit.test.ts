@@ -263,6 +263,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, undefined);
             const cmd = {} as any as IDiagnosticCommand;
+            const cmdIgnore = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
@@ -273,13 +274,20 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({ type: 'executeVSCCommand' })))
                 .returns(() => cmd)
                 .verifiable(typemoq.Times.once());
+            commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
+                typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore', options: DiagnosticScope.Global })))
+                .returns(() => cmdIgnore)
+                .verifiable(typemoq.Times.once());
 
             await diagnosticService.handle([diagnostic]);
 
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
-            expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Select Python Interpreter', command: cmd }]);
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
+                { prompt: 'Select Python Interpreter', command: cmd },
+                { prompt: 'Do not show again', command: cmdIgnore }
+            ]);
         });
         test('Handling no interpreters diagnostisc should return 3 commands', async () => {
             const diagnostic = new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic, undefined);
@@ -347,7 +355,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Event Handler is registered and invoked', async () => {
             let invoked = false;
             let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
-            const workspaceService = { onDidChangeConfiguration: (cb : (e: ConfigurationChangeEvent) => Promise<void>) => callbackHandler = cb } as any;
+            const workspaceService = { onDidChangeConfiguration: (cb: (e: ConfigurationChangeEvent) => Promise<void>) => callbackHandler = cb } as any;
             const serviceContainerObject = createContainer();
             serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService);

@@ -153,6 +153,13 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                             type: 'executeVSCCommand',
                             options: 'python.setInterpreter'
                         })
+                    },
+                    {
+                        prompt: 'Do not show again',
+                        command: commandFactory.createCommand(diagnostic, {
+                            type: 'ignore',
+                            options: DiagnosticScope.Global
+                        })
                     }
                 ];
             }
