@@ -18,7 +18,7 @@ variables:
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
-  MOCHA_FILE: ${{ format('{0}/test-junit.xml', variables['Build.ArtifactStagingDirectory']) }}
+  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml'
   MOCHA_JUNIT_REPORTER: true
 
 jobs:
