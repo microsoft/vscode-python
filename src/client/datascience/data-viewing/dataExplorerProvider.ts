@@ -2,19 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter } from 'vscode';
-import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
+import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
-import { PostOffice } from '../liveshare/postOffice';
-import { IHistory, IHistoryProvider, INotebookServerOptions, IThemeFinder, IDataExplorer, IDataExplorerProvider, IDataExplorerRow } from '../types';
-import { DataExplorer } from './dataExplorer';
-
+import { IDataExplorer, IDataExplorerProvider, IDataExplorerRow } from '../types';
 
 @injectable()
 export class DataExplorerProvider implements IDataExplorerProvider, IAsyncDisposable {

@@ -5,17 +5,16 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 import { ViewColumn } from 'vscode';
 
 import { IWebPanel, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { IAsyncDisposable, IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
+import { IAsyncDisposable, IConfigurationService, IDisposable, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ICodeCssGenerator, IDataExplorer, IDataExplorerRow, IDataScienceExtraSettings, IStatusProvider } from '../types';
+import { ICodeCssGenerator, IDataExplorer, IDataExplorerRow, IDataScienceExtraSettings } from '../types';
 import { DataExplorerMessageListener } from './dataExplorerMessageListener';
 import { DataExplorerMessages, IDataExplorerMapping } from './types';
 
@@ -27,22 +26,15 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     private loadPromise: Promise<void>;
     private messageListener : DataExplorerMessageListener;
     private changeHandler: IDisposable | undefined;
-    private id : string;
     private viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
 
     constructor(
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(ILogger) private logger: ILogger,
-        @inject(IStatusProvider) private statusProvider: IStatusProvider,
+        @inject(ILogger) private logger: ILogger
         ) {
-
-        // Create our unique id. We use this to skip messages we send to other windows
-        this.id = uuid();
-
         this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
 
         // Create a message listener to listen to messages from our webpanel (or remote session)
@@ -82,6 +74,10 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
                 this.webPanel.close();
                 this.webPanel = undefined;
             }
+            if (this.changeHandler) {
+                this.changeHandler.dispose();
+                this.changeHandler = undefined;
+            }
         }
     }
 
@@ -98,6 +94,10 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     // tslint:disable-next-line: no-any no-empty
     private onMessage = (message: string, payload: any) => {
         switch (message) {
+            case DataExplorerMessages.Started:
+                this.webPanelRendered();
+                break;
+
             default:
                 break;
         }
@@ -107,7 +107,6 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         this.viewState.active = webPanel.isActive();
         this.viewState.visible = webPanel.isVisible();
     }
-
 
     // tslint:disable-next-line:no-any
     private webPanelRendered() {

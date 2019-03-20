@@ -273,7 +273,6 @@ export interface IJupyterVariables {
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
 }
 
-
 export interface IDataExplorerRow {
     [column: string] : string | number | {};
 }

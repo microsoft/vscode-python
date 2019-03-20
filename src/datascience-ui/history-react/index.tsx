@@ -15,7 +15,7 @@ import { MainPanel } from './MainPanel';
 export declare function acquireVsCodeApi(): IVsCodeApi;
 const baseTheme = detectBaseTheme();
 
-
+// tslint:disable:no-typeof-undefined
 ReactDOM.render(
   <MainPanel baseTheme={baseTheme} codeTheme={Identifiers.GeneratedThemeName} skipDefault={typeof acquireVsCodeApi !== 'undefined'} />,
   document.getElementById('root') as HTMLElement

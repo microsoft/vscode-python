@@ -3,15 +3,15 @@
 'use strict';
 
 import * as React from 'react';
+import * as AdazzleReactDataGrid from 'react-data-grid';
+import { Data, Toolbar } from 'react-data-grid-addons';
 
 import { DataExplorerMessages, IDataExplorerMapping } from '../../client/datascience/data-viewing/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { generateTestData } from './testData';
 
-import * as AdazzleReactDataGrid from 'react-data-grid';
-import { Toolbar, Data } from 'react-data-grid-addons';
+import 'bootstrap/dist/css/bootstrap.css';
 
-import 'bootstrap/dist/css/bootstrap.css'
 import './mainPanel.css';
 
 const selectors = Data.Selectors;
@@ -21,24 +21,26 @@ const defaultColumnProperties = {
     sortable: true,
     resizable: true,
     width: 120
-}
+};
+
 export interface IMainPanelProps {
     skipDefault?: boolean;
 }
 
 interface IMainPanelState {
-    gridColumns: {key:string, name: string}[];
+    gridColumns: AdazzleReactDataGrid.Column<object>[];
     gridRows: IGridRow[];
     initialGridRows: IGridRow[];
-    filters:{};
+    filters: {};
     gridHeight: number;
 }
 
+// tslint:disable:no-any
 interface IGridRow {
-    [name: string] : any;
+    [name: string]: any;
 }
 
-class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> {};
+class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> { }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private postOffice: DataExplorerPostOffice | undefined;
@@ -51,7 +53,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
             this.state = {
-                gridColumns: data.columns,
+                gridColumns: data.columns.map(c => { return { ...c, ...defaultColumnProperties }; }),
                 gridRows: data.rows,
                 initialGridRows: data.rows,
                 filters: {},
@@ -80,7 +82,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     public render = () => {
 
         return (
-            <div className='main-panel' ref={el => this.container = el}>
+            <div className='main-panel' ref={this.updateContainer}>
                 <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 {this.container && this.renderGrid()}
             </div>
@@ -100,24 +102,31 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateDimensions = () => {
         if (this.container) {
             const height = this.container.offsetHeight;
-            this.setState({gridHeight: height -100});
+            this.setState({ gridHeight: height - 100 });
         }
     }
 
+    private updateContainer = (el: HTMLDivElement) => {
+        this.container = el;
+    }
+
     private renderGrid() {
-        const filteredRows = this.getRows(this.state.gridRows, this.state.filters);
-        return(
-        <AdazzleReactDataGrid
-            columns={this.state.gridColumns.map(c => { return {...c, ...defaultColumnProperties };})}
-            rowGetter={i => filteredRows[i]} 
-            rowsCount={filteredRows.length}
-            minHeight={this.state.gridHeight}
-            toolbar={<Toolbar enableFilter={true}/>}
-            onAddFilter={filter => this.handleFilterChange(filter)}
-            onClearFilters={() => this.setState({filters: {}})}
-            onGridSort={(sortColumn: string, sortDirection: string) => this.sortRows(sortColumn, sortDirection)}
-        />
+        return (
+            <AdazzleReactDataGrid
+                columns={this.state.gridColumns}
+                rowGetter={this.getRow}
+                rowsCount={this.state.gridRows.length}
+                minHeight={this.state.gridHeight}
+                toolbar={<Toolbar enableFilter={true} />}
+                onAddFilter={this.handleFilterChange}
+                onClearFilters={this.clearFilters}
+                onGridSort={this.sortRows}
+            />
         );
+    }
+
+    private getRow = (index: number) => {
+        return this.state.gridRows[index];
     }
 
     private updatePostOffice = (postOffice: DataExplorerPostOffice) => {
@@ -135,7 +144,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // tslint:disable:no-any
     private handleFilterChange = (filter: any) => {
-        const newFilters: {[key: string] : any } = { ...this.state.filters };
+        const newFilters: { [key: string]: any } = { ...this.state.filters };
         if (filter.column.key) {
             if (filter.filterTerm) {
                 newFilters[filter.column.key] = filter;
@@ -143,28 +152,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 delete newFilters[filter.column.key];
             }
         }
-        this.setState({filters: newFilters});
-      };
-      
-      private getRows(rows: any, filters: any) {
-        return selectors.getRows({ rows, filters });
-      }
-      
-      private sortRows = (sortColumn: string | number, sortDirection: string) => {
+        this.setState({ filters: newFilters, gridRows: selectors.getRows({rows: this.state.initialGridRows, filters: newFilters})});
+    }
+
+    private clearFilters = () => {
+        this.setState({ filters: {} });
+    }
+
+    private sortRows = (sortColumn: string | number, sortDirection: string) => {
         if (sortDirection === 'NONE') {
             sortColumn = 'index';
             sortDirection = 'ASC';
         }
-        const comparer = (a: IGridRow, b: IGridRow) : number =>  {
-          if (sortDirection === "ASC") {
-            return a[sortColumn] > b[sortColumn] ? 1 : -1;
-          } else if (sortDirection === "DESC") {
-            return a[sortColumn] < b[sortColumn] ? 1 : -1;
-          }
-          return -1;
+        const comparer = (a: IGridRow, b: IGridRow): number => {
+            if (sortDirection === 'ASC') {
+                return a[sortColumn] > b[sortColumn] ? 1 : -1;
+            } else if (sortDirection === 'DESC') {
+                return a[sortColumn] < b[sortColumn] ? 1 : -1;
+            }
+            return -1;
         };
         const sorted = this.state.initialGridRows.sort(comparer);
-        this.setState({gridRows: sorted});
-      };
+        this.setState({ gridRows: selectors.getRows({rows: sorted, filters: this.state.filters}) });
+    }
 
 }

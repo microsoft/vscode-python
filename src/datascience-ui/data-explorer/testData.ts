@@ -3,11 +3,12 @@
 'use strict';
 
 export interface ITestData {
-    columns: {key: string, name: string }[];
+    columns: {key: string; name: string }[];
     primaryKeys: string[];
     rows: {}[];
 }
 
+// tslint:disable
 export function generateTestData(numberOfRows: number) : ITestData {
     const columns = [
       { key: 'PassengerId', name: 'PassengerId', type: 'integer'},
