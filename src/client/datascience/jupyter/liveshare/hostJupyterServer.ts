@@ -108,7 +108,12 @@ export class HostJupyterServer
         const launchInfo = await this.waitForConnect();
 
         // Use our base name plus our purpose. This means one unique server per purpose
-        return LiveShare.JupyterServerSharedService + (launchInfo ? launchInfo.purpose : '');
+        if (!launchInfo) {
+            return LiveShare.JupyterServerSharedService;
+        }
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Should there be some separator in the name?
+        return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
     public async onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void> {
