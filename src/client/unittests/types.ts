@@ -164,6 +164,7 @@ export class TestWorkspaceFolder {
     public functionsPassed?: number;
     public functionsFailed?: number;
     public functionsDidNotRun?: number;
+    public passed?: boolean;
     constructor(public readonly workspaceFolder: WorkspaceFolder) { }
     public get resource(): Uri {
         return this.workspaceFolder.uri;

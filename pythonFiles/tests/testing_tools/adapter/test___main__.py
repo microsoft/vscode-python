@@ -55,7 +55,9 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {'show_pytest': False, 'simple': False})
+        self.assertEqual(args, {'pretty': False,
+                                'hidestdio': True,
+                                'simple': False})
         self.assertEqual(toolargs, [])
 
     def test_pytest_full(self):
@@ -73,15 +75,32 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {'show_pytest': False, 'simple': False})
+        self.assertEqual(args, {'pretty': False,
+                                'hidestdio': True,
+                                'simple': False})
         self.assertEqual(toolargs, [
-            '--',
             '--strict',
             '--ignore', 'spam,ham,eggs',
             '--pastebin=xyz',
             '--no-cov',
             '-d',
             ])
+
+    def test_pytest_opts(self):
+        tool, cmd, args, toolargs = parse_args([
+            'discover',
+            'pytest',
+            '--simple',
+            '--no-hide-stdio',
+            '--pretty',
+            ])
+
+        self.assertEqual(tool, 'pytest')
+        self.assertEqual(cmd, 'discover')
+        self.assertEqual(args, {'pretty': True,
+                                'hidestdio': False,
+                                'simple': True})
+        self.assertEqual(toolargs, [])
 
     def test_unsupported_tool(self):
         with self.assertRaises(SystemExit):
@@ -112,8 +131,7 @@ class MainTests(unittest.TestCase):
 
         self.assertEqual(tool.calls, [
             ('spamspamspam.discover', ([],), {'spam': 'eggs'}),
-            ('reporter.report', (tests, parents), {'debug': False,
-                                                   'spam': 'eggs'}),
+            ('reporter.report', (tests, parents), {'spam': 'eggs'}),
             ])
 
     def test_unsupported_tool(self):

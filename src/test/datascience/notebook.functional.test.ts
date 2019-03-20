@@ -435,7 +435,9 @@ suite('Jupyter notebook tests', () => {
             // tslint:disable-next-line:no-string-literal
             (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
-            assert.ok(false, messageFormat.format(timeout.toString()));
+            // We might get here before the cancel finishes. Wait for a timeout and then check cancel fired.
+            await sleep(timeout);
+            assert.ok(!tokenSource.token.isCancellationRequested, messageFormat.format(timeout.toString()));
         } catch (exc) {
             // This should happen. This means it was canceled.
             assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);
@@ -823,15 +825,24 @@ plt.show()`,
     });
 
     runTest('Server cache working', async () => {
+        console.log('Staring server cache test');
         const s1 = await createNotebookServer(true, false, false, 'same');
+        console.log('Creating s2');
         const s2 = await createNotebookServer(true, false, false, 'same');
+        console.log('Testing s1 and s2, creating s3');
         assert.ok(s1 === s2, 'Two servers not the same when they should be');
         const s3 = await createNotebookServer(false, false, false, 'same');
+        console.log('Testing s1 and s3, creating s4');
         assert.ok(s1 !== s3, 'Different config should create different server');
         const s4 = await createNotebookServer(true, false, false, 'different');
+        console.log('Testing s1 and s4, creating s5');
         assert.ok(s1 !== s4, 'Different purpose should create different server');
         const s5 = await createNotebookServer(true, false, true, 'different');
         assert.ok(s4 === s5, 'Dark theme should be same server');
+        console.log('Disposing of all');
+        await s1.dispose();
+        await s3.dispose();
+        await s4.dispose();
     });
 
     class DyingProcess implements ChildProcess {
@@ -851,7 +862,7 @@ plt.show()`,
         public kill(signal?: string): void {
             throw new Error('Method not implemented.');
         }
-        public send(message: any, sendHandle?: any, options?: any, callback?: any) : any {
+        public send(message: any, sendHandle?: any, options?: any, callback?: any): any {
             throw new Error('Method not implemented.');
         }
         public disconnect(): void {
@@ -863,25 +874,25 @@ plt.show()`,
         public ref(): void {
             throw new Error('Method not implemented.');
         }
-        public addListener(event: any, listener: any) : this {
+        public addListener(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]) : any {
+        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]): any {
             throw new Error('Method not implemented.');
         }
-        public on(event: any, listener: any) : this {
+        public on(event: any, listener: any): this {
             if (event === 'exit') {
                 setTimeout(() => listener(2), this.timeout);
             }
             return this;
         }
-        public once(event: any, listener: any) : this {
+        public once(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependListener(event: any, listener: any) : this {
+        public prependListener(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependOnceListener(event: any, listener: any) : this {
+        public prependOnceListener(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
         public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {

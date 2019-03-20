@@ -40,31 +40,32 @@ def parse_args(
     # Add "run" and "debug" subcommands when ready.
     for cmdname in ['discover']:
         sub = cmdsubs.add_parser(cmdname)
-        if cmdname == 'discover':
-            sub.add_argument('--simple', action='store_true')
-            sub.add_argument('--show-pytest', action='store_true')
         subsubs = sub.add_subparsers(dest='tool')
         for toolname in sorted(TOOLS):
             try:
                 add_subparser = TOOLS[toolname]['_add_subparser']
             except KeyError:
                 continue
-            add_subparser(cmdname, toolname, subsubs)
+            subsub = add_subparser(cmdname, toolname, subsubs)
+            if cmdname == 'discover':
+                subsub.add_argument('--simple', action='store_true')
+                subsub.add_argument('--no-hide-stdio', dest='hidestdio',
+                                    action='store_false')
+                subsub.add_argument('--pretty', action='store_true')
 
     # Parse the args!
-    args, toolargs = parser.parse_known_args(argv)
+    if '--' in argv:
+        seppos = argv.index('--')
+        toolargs = argv[seppos + 1:]
+        argv = argv[:seppos]
+    else:
+        toolargs = []
+    args = parser.parse_args(argv)
     ns = vars(args)
 
     cmd = ns.pop('cmd')
     if not cmd:
         parser.error('missing command')
-    if cmd == 'discover':
-        if '--simple' in toolargs:
-            toolargs.remove('--simple')
-            ns['simple'] = True
-        if '--show-pytest' in toolargs:
-            toolargs.remove('--show-pytest')
-            ns['show_pytest'] = True
 
     tool = ns.pop('tool')
     if not tool:
@@ -88,7 +89,6 @@ def main(toolname, cmdname, subargs, toolargs,
 
     parents, result = run(toolargs, **subargs)
     report_result(result, parents,
-                  debug=('-v' in toolargs or '--verbose' in toolargs),
                   **subargs
                   )
 

@@ -1,8 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+from __future__ import print_function, unicode_literals
 
+try:
+    from io import StringIO
+except ImportError:  # 2.7
+    from StringIO import StringIO
 import os
 import os.path
+import sys
 import unittest
 
 from ...util import Stub, StubProxy
@@ -11,6 +17,7 @@ from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.pytest import (
         discover, add_cli_subparser, TestCollector, DiscoveredTests
         )
+import pytest
 
 
 class StubSubparsers(StubProxy):
@@ -194,7 +201,6 @@ class AddCLISubparserTests(unittest.TestCase):
 class DiscoverTests(unittest.TestCase):
 
     DEFAULT_ARGS = [
-        '-pno:terminal',
         '--collect-only',
         ]
 
@@ -229,6 +235,64 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('pytest.main', None, {'args': self.DEFAULT_ARGS,
                                    'plugins': [plugin]}),
+            ])
+
+    def test_stdio_hidden(self):
+        pytest_stdout = 'spamspamspamspamspamspamspammityspam'
+        stub = Stub()
+        def fake_pytest_main(args, plugins):
+            stub.add_call('pytest.main', None, {'args': args,
+                                                'plugins': plugins})
+            print(pytest_stdout, end='')
+            return 0
+        plugin = StubPlugin(stub)
+        plugin.discovered = []
+        buf = StringIO()
+
+        sys.stdout = buf
+        try:
+            discover([], hidestdio=True,
+                     _pytest_main=fake_pytest_main, _plugin=plugin)
+        finally:
+            sys.stdout = sys.__stdout__
+        captured = buf.getvalue()
+
+        self.assertEqual(captured, '')
+        self.assertEqual(stub.calls, [
+            ('pytest.main', None, {'args': self.DEFAULT_ARGS,
+                                   'plugins': [plugin]}),
+            ('discovered.parents', None, None),
+            ('discovered.__len__', None, None),
+            ('discovered.__getitem__', (0,), None),
+            ])
+
+    def test_stdio_not_hidden(self):
+        pytest_stdout = 'spamspamspamspamspamspamspammityspam'
+        stub = Stub()
+        def fake_pytest_main(args, plugins):
+            stub.add_call('pytest.main', None, {'args': args,
+                                                'plugins': plugins})
+            print(pytest_stdout, end='')
+            return 0
+        plugin = StubPlugin(stub)
+        plugin.discovered = []
+        buf = StringIO()
+
+        sys.stdout = buf
+        try:
+            discover([], hidestdio=False,
+                     _pytest_main=fake_pytest_main, _plugin=plugin)
+        finally:
+            sys.stdout = sys.__stdout__
+        captured = buf.getvalue()
+
+        self.assertEqual(captured, pytest_stdout)
+        self.assertEqual(stub.calls, [
+            ('pytest.main', None, {'args': self.DEFAULT_ARGS,
+                                   'plugins': [plugin]}),
+            ('discovered.parents', None, None),
+            ('discovered.__len__', None, None),
+            ('discovered.__getitem__', (0,), None),
             ])
 
 
@@ -301,7 +365,7 @@ class CollectorTests(unittest.TestCase):
                     # ignored (pytest-supported)
                     'parameterize', 'usefixtures', 'filterwarnings',
                     # ignored (custom)
-                    'timeout', 
+                    'timeout',
                     ]],
                 ),
             ])

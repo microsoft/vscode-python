@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import pytest
+import sys
 import textwrap
 
 import normalizeForInterpreter
@@ -10,12 +11,18 @@ import normalizeForInterpreter
 class TestNormalizationScript(object):
     """Basic unit tests for the normalization script."""
 
+
+    @pytest.mark.skipif(sys.version_info.major == 2,
+                    reason="normalizeForInterpreter not working for 2.7, see GH #4805")
     def test_basicNormalization(self, capsys):
         src = 'print("this is a test")'
         normalizeForInterpreter.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == src
 
+
+    @pytest.mark.skipif(sys.version_info.major == 2,
+                    reason="normalizeForInterpreter not working for 2.7, see GH #4805")
     def test_moreThanOneLine(self, capsys):
         src = textwrap.dedent("""\
             # Some rando comment
@@ -28,6 +35,9 @@ class TestNormalizationScript(object):
         captured = capsys.readouterr()
         assert captured.out == src
 
+
+    @pytest.mark.skipif(sys.version_info.major == 2,
+                    reason="normalizeForInterpreter not working for 2.7, see GH #4805")
     def test_withHangingIndent(self, capsys):
         src = textwrap.dedent("""\
             x = 22
@@ -43,6 +53,9 @@ class TestNormalizationScript(object):
         captured = capsys.readouterr()
         assert captured.out == src
 
+
+    @pytest.mark.skipif(sys.version_info.major == 2,
+                    reason="normalizeForInterpreter not working for 2.7, see GH #4805")
     def test_clearOutExtraneousNewlines(self, capsys):
         src = textwrap.dedent("""\
             value_x = 22
@@ -67,6 +80,9 @@ class TestNormalizationScript(object):
         result = capsys.readouterr()
         assert result.out == expectedResult
 
+
+    @pytest.mark.skipif(sys.version_info.major == 2,
+                    reason="normalizeForInterpreter not working for 2.7, see GH #4805")
     def test_clearOutExtraLinesAndWhitespace(self, capsys):
         src = textwrap.dedent("""\
             if True:

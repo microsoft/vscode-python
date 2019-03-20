@@ -7,6 +7,8 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../../client/common/platform/platformService';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import { PYTHON_PATH, restorePythonPathInWorkspaceRoot, setPythonPathInWorkspaceRoot, updateSetting, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
@@ -18,6 +20,7 @@ suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
     let outputFile = '';
     let outputFileCounter = 0;
+    const fileSystem = new FileSystem(new PlatformService());
     const outputFilesCreated: string[] = [];
     const envsLocation = PYTHON_VIRTUAL_ENVS_LOCATION !== undefined ?
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
@@ -108,13 +111,13 @@ suite('Activation of Environments in Terminal', () => {
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-        expect(content).to.equal(envPath);
+        expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
 
     test('Should not activate', async () => {
         await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-        expect(content).to.not.equal(PYTHON_PATH);
+        expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
     });
 
     test('Should activate with venv', async () => {
