@@ -43,7 +43,7 @@ suite('Theme colors', () => {
                 return undefined;
             });
         workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-            .returns((s, d) => {
+            .returns((_s, d) => {
                 return d;
             });
 
@@ -94,7 +94,7 @@ suite('Theme colors', () => {
                     return 16;
                 });
                 workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                .returns((s, d) => {
+                .returns((_s, d) => {
                     return d;
                 });
                 const colors = await cssGenerator.generateThemeCss();

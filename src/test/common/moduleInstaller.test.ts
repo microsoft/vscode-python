@@ -141,7 +141,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-            processService.onExec((file, args, options, callback) => {
+            processService.onExec((file, args, _options, callback) => {
                 if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                     callback({ stdout: '' });
                 }
@@ -177,7 +177,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-            processService.onExec((file, args, options, callback) => {
+            processService.onExec((file, args, _options, callback) => {
                 if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                     callback({ stdout: '' });
                 }
@@ -250,7 +250,7 @@ suite('Module Installer', () => {
             let argsSent: string[] = [];
             mockTerminalService
                 .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+                .returns((_cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
             // tslint:disable-next-line:no-any
             interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve({ type: InterpreterType.Unknown } as any));
 
@@ -277,7 +277,7 @@ suite('Module Installer', () => {
             let argsSent: string[] = [];
             mockTerminalService
                 .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+                .returns((_cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
 
             await pipInstaller.installModule(moduleName, resource);
 

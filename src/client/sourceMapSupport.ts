@@ -70,7 +70,7 @@ export function initialize(vscode: VSCode = require('vscode')) {
         new SourceMapSupport(vscode).disable().ignoreErrors();
         return;
     }
-    new SourceMapSupport(vscode).initialize().catch(ex => {
+    new SourceMapSupport(vscode).initialize().catch(_ex => {
         console.error('Failed to initialize source map support in extension');
     });
 }

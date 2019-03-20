@@ -32,13 +32,13 @@ class SimpleMessageProducer implements IMessageProducer {
     }
 
     public produceNextMessage() : Promise<IMessageResult> {
-        return new Promise<IMessageResult>((resolve, reject) => {
+        return new Promise<IMessageResult>((resolve, _reject) => {
             const message = this.generateMessage(this.type, this.result, this.channel);
             resolve({message: message, haveMore: false});
         });
     }
 
-    protected generateMessage(msgType: string, result: any, channel: string = 'iopub') : KernelMessage.IIOPubMessage {
+    protected generateMessage(msgType: string, result: any, _channel: string = 'iopub') : KernelMessage.IIOPubMessage {
         return {
             channel: 'iopub',
             header: {
@@ -139,13 +139,13 @@ export class MockJupyterRequest implements Kernel.IFuture {
     public get done() : Promise<KernelMessage.IShellMessage> {
         return this.deferred.promise;
     }
-    public registerMessageHook(hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
+    public registerMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
-    public removeMessageHook(hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
+    public removeMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
-    public sendInputReply(content: KernelMessage.IInputReply): void {
+    public sendInputReply(_content: KernelMessage.IInputReply): void {
         noop();
     }
     public dispose(): void {

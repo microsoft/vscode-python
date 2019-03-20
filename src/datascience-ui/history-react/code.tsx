@@ -49,7 +49,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: '', allowWatermark: true};
     }
 
-    public componentDidUpdate(prevProps: Readonly<ICodeProps>, prevState: Readonly<ICodeState>, snapshot?: {}) {
+    public componentDidUpdate(prevProps: Readonly<ICodeProps>, _prevState: Readonly<ICodeState>, _snapshot?: {}) {
         // Force our new value. the RCM control doesn't do this correctly
         if (this.codeMirror && this.props.readOnly && this.codeMirror.getValue() !== this.props.code) {
             this.codeMirror.setValue(this.props.code);
@@ -298,7 +298,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return CodeMirror.Pass;
     }
 
-    private onChange = (newValue: string, change: CodeMirror.EditorChange) => {
+    private onChange = (_newValue: string, _change: CodeMirror.EditorChange) => {
         this.setState({allowWatermark: false});
     }
 }

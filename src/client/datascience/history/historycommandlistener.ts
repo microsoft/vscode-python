@@ -76,7 +76,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             });
         });
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
             return this.listenForErrors(() => {
                 if (file && file.fsPath) {
                     return this.exportFileAndOutput(file.fsPath);

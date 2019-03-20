@@ -101,7 +101,7 @@ export class JupyterServerFactory implements INotebookServer {
             this.serverFactory.get().then(s => {
                 s.executeObservable(code, file, line, id, silent)
                     .forEach(n => subscriber.next(n), Promise)
-                    .then(f => subscriber.complete())
+                    .then(_f => subscriber.complete())
                     .catch(e => subscriber.error(e));
             },
             r => {

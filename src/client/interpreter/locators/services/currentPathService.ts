@@ -97,7 +97,7 @@ export class CurrentPathService extends CacheableLocatorService {
                     traceError(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed as file ${value} does not exist`);
                     return '';
                 })
-                .catch(ex => {
+                .catch(_ex => {
                     traceInfo(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed`);
                     return '';
                 });    // Ignore exceptions in getting the executable.

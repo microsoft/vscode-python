@@ -66,20 +66,20 @@ export class MockDocumentManager implements IDocumentManager {
     public get onDidSaveTextDocument(): Event<TextDocument> {
         return this.didSaveEmitter.event;
     }
-    public showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
-    public showTextDocument(document: TextDocument | Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
-    public showTextDocument(document: any, column?: any, preserveFocus?: any): Thenable<TextEditor> {
+    public showTextDocument(_document: TextDocument, _column?: ViewColumn, _preserveFocus?: boolean): Thenable<TextEditor>;
+    public showTextDocument(_document: TextDocument | Uri, _options?: TextDocumentShowOptions): Thenable<TextEditor>;
+    public showTextDocument(_document: any, _column?: any, _preserveFocus?: any): Thenable<TextEditor> {
         const mockEditor = createTypeMoq<TextEditor>('TextEditor');
         mockEditor.setup(e => e.document).returns(() => this.lastDocument);
         this.activeTextEditor = mockEditor.object;
         return Promise.resolve(mockEditor.object);
     }
-    public openTextDocument(fileName: string | Uri): Thenable<TextDocument>;
-    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
-    public openTextDocument(options?: any): Thenable<TextDocument> {
+    public openTextDocument(_fileName: string | Uri): Thenable<TextDocument>;
+    public openTextDocument(_options?: { language?: string; content?: string }): Thenable<TextDocument>;
+    public openTextDocument(_options?: any): Thenable<TextDocument> {
         return Promise.resolve(this.lastDocument);
     }
-    public applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
+    public applyEdit(_edit: WorkspaceEdit): Thenable<boolean> {
         throw new Error('Method not implemented.');
     }
 

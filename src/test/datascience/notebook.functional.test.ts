@@ -307,25 +307,25 @@ suite('Jupyter notebook tests', () => {
             public onDidChangeInterpreterInformation(_listener: (e: PythonInterpreter) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+            public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
                 return Promise.resolve([]);
             }
             public autoSetInterpreter(): Promise<void> {
                 throw new Error('Method not implemented');
             }
-            public getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+            public getActiveInterpreter(_resource?: Uri): Promise<PythonInterpreter | undefined> {
                 return Promise.resolve(undefined);
             }
-            public getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<PythonInterpreter> {
+            public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonInterpreter> {
                 throw new Error('Method not implemented');
             }
-            public refresh(resource: Uri): Promise<void> {
+            public refresh(_resource: Uri): Promise<void> {
                 throw new Error('Method not implemented');
             }
             public initialize(): void {
                 throw new Error('Method not implemented');
             }
-            public getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string> {
+            public getDisplayName(_interpreter: Partial<PythonInterpreter>): Promise<string> {
                 throw new Error('Method not implemented');
             }
             public shouldAutoSetInterpreter(): Promise<boolean> {
@@ -346,8 +346,8 @@ suite('Jupyter notebook tests', () => {
     runTest('Export/Import', async () => {
         // Get a bunch of test cells (use our test cells from the react controls)
         const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-        const testState = generateTestState(id => { return; }, testFolderPath);
-        const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
+        const testState = generateTestState(_id => { return; }, testFolderPath);
+        const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
@@ -428,7 +428,7 @@ suite('Jupyter notebook tests', () => {
     async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
         let canceled = false;
-        const disp = setTimeout((s) => {
+        const disp = setTimeout((_s) => {
             canceled = true;
             tokenSource.cancel();
         }, timeout, tokenSource.tag);
@@ -567,13 +567,13 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((t) => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
             return { result: '.', haveMore: haveMore };
         });
-        addInterruptableMockData(fourSecondSleep, async (cancelToken: CancellationToken) => {
+        addInterruptableMockData(fourSecondSleep, async (_cancelToken: CancellationToken) => {
             // This one sleeps for four seconds and then it's done.
             await sleep(4000);
             return { result: 'foo', haveMore: false };
@@ -582,7 +582,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((t) => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -712,7 +712,7 @@ plt.show()`,
                 result: `00000`,
                 mimeType: 'image/png',
                 cellType: 'code',
-                verifyValue: (d) => { return; }
+                verifyValue: (_d) => { return; }
             }
         ]
     );
@@ -810,7 +810,7 @@ plt.show()`,
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
             class FailedKernelSpec extends JupyterExecutionFactory {
-                protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+                protected async getMatchingKernelSpec(_connection?: IConnection, _cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);
                 }
             }
@@ -860,10 +860,10 @@ plt.show()`,
             this.stdin = new Writable();
             this.stdio = [this.stdin, this.stdout, this.stderr];
         }
-        public kill(signal?: string): void {
+        public kill(_signal?: string): void {
             throw new Error('Method not implemented.');
         }
-        public send(message: any, sendHandle?: any, options?: any, callback?: any): any {
+        public send(_message: any, _sendHandle?: any, _options?: any, _callback?: any): any {
             throw new Error('Method not implemented.');
         }
         public disconnect(): void {
@@ -875,10 +875,10 @@ plt.show()`,
         public ref(): void {
             throw new Error('Method not implemented.');
         }
-        public addListener(event: any, listener: any): this {
+        public addListener(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]): any {
+        public emit(_event: any, _message?: any, _sendHandle?: any, ..._rest: any[]): any {
             throw new Error('Method not implemented.');
         }
         public on(event: any, listener: any): this {
@@ -887,37 +887,37 @@ plt.show()`,
             }
             return this;
         }
-        public once(event: any, listener: any): this {
+        public once(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependListener(event: any, listener: any): this {
+        public prependListener(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependOnceListener(event: any, listener: any): this {
+        public prependOnceListener(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+        public removeListener(_event: string | symbol, _listener: (...args: any[]) => void): this {
             return this;
         }
-        public removeAllListeners(event?: string | symbol): this {
+        public removeAllListeners(_event?: string | symbol): this {
             throw new Error('Method not implemented.');
         }
-        public setMaxListeners(n: number): this {
+        public setMaxListeners(_n: number): this {
             throw new Error('Method not implemented.');
         }
         public getMaxListeners(): number {
             throw new Error('Method not implemented.');
         }
-        public listeners(event: string | symbol): Function[] {
+        public listeners(_event: string | symbol): Function[] {
             throw new Error('Method not implemented.');
         }
-        public rawListeners(event: string | symbol): Function[] {
+        public rawListeners(_event: string | symbol): Function[] {
             throw new Error('Method not implemented.');
         }
         public eventNames(): (string | symbol)[] {
             throw new Error('Method not implemented.');
         }
-        public listenerCount(type: string | symbol): number {
+        public listenerCount(_type: string | symbol): number {
             throw new Error('Method not implemented.');
         }
     }

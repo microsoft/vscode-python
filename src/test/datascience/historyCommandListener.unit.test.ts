@@ -45,13 +45,13 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
 }
 
 class MockStatusProvider implements IStatusProvider {
-    public set(message: string, timeout?: number): Disposable {
+    public set(_message: string, _timeout?: number): Disposable {
         return {
             dispose: noop
         };
     }
 
-    public waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T> {
+    public waitWithStatus<T>(promise: () => Promise<T>, _message: string, _timeout?: number, _canceled?: () => void): Promise<T> {
         return promise();
     }
 

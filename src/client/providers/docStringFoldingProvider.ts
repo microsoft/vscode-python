@@ -9,7 +9,7 @@ import { IToken, TokenizerMode, TokenType } from '../language/types';
 import { getDocumentTokens } from './providerUtilities';
 
 export class DocStringFoldingProvider implements FoldingRangeProvider {
-    public provideFoldingRanges(document: TextDocument, _context: FoldingContext, token: CancellationToken): ProviderResult<FoldingRange[]> {
+    public provideFoldingRanges(document: TextDocument, _context: FoldingContext, _token: CancellationToken): ProviderResult<FoldingRange[]> {
         return this.getFoldingRanges(document);
     }
 

@@ -118,7 +118,7 @@ suite('LiveShare tests', () => {
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
         webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
-            (viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, script: string, css: string) => {
+            (viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
             // Keep track of the current listener. It listens to messages through the vscode api
             result.webPanelListener = listener;
 
@@ -170,7 +170,7 @@ suite('LiveShare tests', () => {
                     }
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (msg: any) => {
+                setState: (_msg: any) => {
 
                 },
                 // tslint:disable-next-line:no-any no-empty
@@ -353,7 +353,7 @@ suite('LiveShare tests', () => {
         let outputContents: string | undefined;
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         guestContainer.ioc!.serviceManager.rebindInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((f, c) => {
+        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_f, c) => {
             outputContents = c.toString();
             return Promise.resolve();
         });

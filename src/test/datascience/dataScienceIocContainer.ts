@@ -290,7 +290,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString()))
             .returns(() => undefined);
         workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-            .returns((s, d) => d);
+            .returns((_s, d) => d);
 
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
@@ -452,7 +452,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.pythonPath = newPath;
         this.pythonSettings.fireChangeEvent();
         this.configChangeEvent.fire({
-            affectsConfiguration(s: string, r?: Uri) : boolean {
+            affectsConfiguration(_s: string, _r?: Uri) : boolean {
                 return true;
             }
         });

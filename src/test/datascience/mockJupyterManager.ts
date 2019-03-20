@@ -224,7 +224,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
     }
 
-    public getActiveKernelSpecs(connection: IConnection) : Promise<IJupyterKernelSpec[]> {
+    public getActiveKernelSpecs(_connection: IConnection) : Promise<IJupyterKernelSpec[]> {
         return Promise.resolve([]);
     }
 

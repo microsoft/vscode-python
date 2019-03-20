@@ -201,7 +201,7 @@ async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Compon
     return renderPromise;
 }
 
-function enterKey(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
+function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
     // Simulate a key press
     simulateKey(textArea, key);
 }

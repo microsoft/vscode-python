@@ -92,7 +92,7 @@ export class WebPanel implements IWebPanel {
                     this.listener.onMessage(message.type, message.payload);
                 }));
 
-                this.disposableRegistry.push(this.panel.onDidChangeViewState((e) => {
+                this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
                     // Pass the state change onto our listener
                     this.listener.onChangeViewState(this);
                 }));

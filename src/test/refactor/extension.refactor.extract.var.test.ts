@@ -36,7 +36,7 @@ suite('Variable Extraction', () => {
         refactorTargetFile = path.join(refactorTargetFileDir, `refactor${new Date().getTime()}.py`);
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initializeTest();
-        (<any>commands).executeCommand = (cmd: any) => Promise.resolve();
+        (<any>commands).executeCommand = (_cmd: any) => Promise.resolve();
     });
     teardown(async () => {
         commands.executeCommand = oldExecuteCommand;

@@ -394,7 +394,7 @@ export class History implements IHistory {
     }
 
     // tslint:disable-next-line:no-any
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -492,7 +492,7 @@ export class History implements IHistory {
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -763,7 +763,7 @@ export class History implements IHistory {
         }
     }
 
-    private async loadJupyterServer(restart?: boolean): Promise<void> {
+    private async loadJupyterServer(_restart?: boolean): Promise<void> {
         this.logger.logInformation('Getting jupyter server options ...');
 
         // Extract our options

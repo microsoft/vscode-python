@@ -49,20 +49,22 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(liveShare: ILiveShareApi,
-                private executionFactory: IPythonExecutionFactory,
-                private interpreterService: IInterpreterService,
-                private processServiceFactory: IProcessServiceFactory,
-                private knownSearchPaths: IKnownSearchPathsForInterpreters,
-                private logger: ILogger,
-                private disposableRegistry: IDisposableRegistry,
-                private asyncRegistry: IAsyncDisposableRegistry,
-                private fileSystem: IFileSystem,
-                private sessionManager: IJupyterSessionManager,
-                workspace: IWorkspaceService,
-                private configuration: IConfigurationService,
-                private commandFactory : IJupyterCommandFactory,
-                private serviceContainer: IServiceContainer) {
+    constructor(
+        _liveShare: ILiveShareApi,
+        private executionFactory: IPythonExecutionFactory,
+        private interpreterService: IInterpreterService,
+        private processServiceFactory: IProcessServiceFactory,
+        private knownSearchPaths: IKnownSearchPathsForInterpreters,
+        private logger: ILogger,
+        private disposableRegistry: IDisposableRegistry,
+        private asyncRegistry: IAsyncDisposableRegistry,
+        private fileSystem: IFileSystem,
+        private sessionManager: IJupyterSessionManager,
+        workspace: IWorkspaceService,
+        private configuration: IConfigurationService,
+        private commandFactory : IJupyterCommandFactory,
+        private serviceContainer: IServiceContainer
+    ) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -216,7 +218,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return result.stdout;
     }
 
-    public getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public getServer(_options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
     }
@@ -269,7 +271,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,
             localProcExitCode: undefined,
-            disconnected: (l) => { return { dispose: noop }; },
+            disconnected: (_l) => { return { dispose: noop }; },
             dispose: noop
         };
     }
@@ -600,7 +602,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return undefined;
     }
 
-    private enumerateSpecs = async (cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.findBestCommand(JupyterCommands.KernelSpecCommand);
 

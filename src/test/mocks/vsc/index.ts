@@ -42,10 +42,10 @@ export namespace vscMock {
                 decodeURIComponent(match[9] || this._empty),
                 decodeURIComponent(match[5] || this._empty));
             }
-        public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): vscode.Uri {
+        public with(_change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): vscode.Uri {
             throw new Error('Not implemented');
         }
-        public toString(skipEncoding?: boolean): string {
+        public toString(_skipEncoding?: boolean): string {
             return this.fsPath;
         }
         public toJSON(): any {
@@ -79,7 +79,7 @@ export namespace vscMock {
             this.emitter.removeAllListeners();
         }
 
-        protected add = (listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]): Disposable => {
+        protected add = (listener: (e: T) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable => {
             this.emitter.addListener('evt', listener);
             return {
                 dispose: () => {

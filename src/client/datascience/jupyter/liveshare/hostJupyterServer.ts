@@ -77,15 +77,15 @@ export class HostJupyterServer
             // Attach event handlers to different requests
             if (service) {
                 // Requests return arrays
-                service.onRequest(LiveShareCommands.syncRequest, (args: any[], cancellation: CancellationToken) => this.onSync());
-                service.onRequest(LiveShareCommands.getSysInfo, (args:  any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
-                service.onRequest(LiveShareCommands.restart, (args:  any[], cancellation: CancellationToken) => this.onRestartRequest(cancellation));
+                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
+                service.onRequest(LiveShareCommands.getSysInfo, (_args:  any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
+                service.onRequest(LiveShareCommands.restart, (_args:  any[], cancellation: CancellationToken) => this.onRestartRequest(cancellation));
                 service.onRequest(LiveShareCommands.interrupt, (args:  any[], cancellation: CancellationToken) => this.onInterruptRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
 
                 // Notifications are always objects.
                 service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(args));
                 service.onNotify(LiveShareCommands.executeObservable, (args: object) => this.onExecuteObservableRequest(args));
-                service.onNotify(LiveShareCommands.disposeServer, (args: object) => this.dispose().ignoreErrors());
+                service.onNotify(LiveShareCommands.disposeServer, (_args: object) => this.dispose().ignoreErrors());
 
                 // See if we need to forward the port
                 await this.attemptToForwardPort(api, this.portToForward);
@@ -191,16 +191,16 @@ export class HostJupyterServer
         return Promise.resolve(true);
     }
 
-    private onGetSysInfoRequest(cancellation: CancellationToken) : Promise<any> {
+    private onGetSysInfoRequest(_cancellation: CancellationToken) : Promise<any> {
         // Get the sys info from our local server
         return super.getSysInfo();
     }
 
-    private onRestartRequest(cancellation: CancellationToken) : Promise<any> {
+    private onRestartRequest(_cancellation: CancellationToken) : Promise<any> {
         // Just call the base
         return super.restartKernel();
     }
-    private onInterruptRequest(timeout: number, cancellation: CancellationToken) : Promise<any> {
+    private onInterruptRequest(timeout: number, _cancellation: CancellationToken) : Promise<any> {
         // Just call the base
         return super.interruptKernel(timeout);
     }
@@ -283,7 +283,7 @@ export class HostJupyterServer
         this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
     }
 
-    private postResult<R extends IResponseMapping, T extends keyof R>(type: T, result: R[T]) : void {
+    private postResult<R extends IResponseMapping, T extends keyof R>(_type: T, result: R[T]) : void {
             const typedResult = ((result as any) as IServerResponse);
             if (typedResult) {
                 this.waitForService().then(s => {
