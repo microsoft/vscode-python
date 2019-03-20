@@ -315,6 +315,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Before starting the notebook process, make sure we generate a kernel spec
             const kernelSpec = await this.getMatchingKernelSpec(undefined, cancelToken);
 
+            // Make sure we haven't canceled already.
+            if (cancelToken && cancelToken.isCancellationRequested) {
+                throw new CancellationError();
+            }
+
             // Then use this to launch our notebook process.
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 

@@ -301,6 +301,7 @@ export interface IDataScienceSettings {
     codeRegularExpression: string;
     allowLiveShare?: boolean;
     errorBackgroundColor: string;
+    ignoreVscodeTheme?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

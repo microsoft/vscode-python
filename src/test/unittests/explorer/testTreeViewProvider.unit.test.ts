@@ -4,11 +4,14 @@
 'use strict';
 
 import { expect } from 'chai';
-import { instance, mock, when } from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+import { CommandManager } from '../../../client/common/application/commandManager';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { Commands } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
+import { CommandSource } from '../../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../../client/unittests/common/services/storageService';
 import { getTestType } from '../../../client/unittests/common/testUtils';
 import {
@@ -16,7 +19,7 @@ import {
 } from '../../../client/unittests/common/types';
 import { TestTreeItem } from '../../../client/unittests/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/unittests/explorer/testTreeViewProvider';
-import { TestDataItem } from '../../../client/unittests/types';
+import { TestDataItem, TestWorkspaceFolder } from '../../../client/unittests/types';
 import { noop } from '../../core';
 import {
     createMockTestExplorer as createMockTestTreeProvider, createMockTestsData,
@@ -47,7 +50,7 @@ class TestExplorerCaptureRefresh implements IDisposable {
     }
 }
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:max-func-body-length
 suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
     const testResource: Uri = Uri.parse('anything');
     let disposables: IDisposable[] = [];
@@ -506,7 +509,6 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
             suite
         ]);
     });
-
     test('Children for subtests are correct', async () => {
         const resource = Uri.file(__filename);
         // Set up the folder & file.
@@ -590,5 +592,23 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
             [func2, func3],
             [func5]
         ]);
+        test('Get children will discover only once', async () => {
+            const commandManager = mock(CommandManager);
+            const testStore = mock(TestCollectionStorageService);
+            const testWorkspaceFolder = new TestWorkspaceFolder({ uri: Uri.file(__filename), name: '', index: 0 });
+            when(testStore.getTests(testWorkspaceFolder.workspaceFolder.uri)).thenReturn();
+            when(testStore.onDidChange).thenReturn(noop as any);
+
+            const testTreeProvider = createMockTestTreeProvider(instance(testStore), undefined, undefined, undefined, instance(commandManager));
+
+            let tests = await testTreeProvider.getChildren(testWorkspaceFolder);
+
+            expect(tests).to.be.lengthOf(0);
+            verify(commandManager.executeCommand(Commands.Tests_Discover, testWorkspaceFolder, CommandSource.testExplorer, undefined)).once();
+
+            tests = await testTreeProvider.getChildren(testWorkspaceFolder);
+            expect(tests).to.be.lengthOf(0);
+            verify(commandManager.executeCommand(Commands.Tests_Discover, testWorkspaceFolder, CommandSource.testExplorer, undefined)).once();
+        });
     });
 });

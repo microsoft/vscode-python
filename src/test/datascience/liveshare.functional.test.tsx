@@ -21,7 +21,7 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { Architecture, OSType } from '../../client/common/utils/platform';
+import { Architecture } from '../../client/common/utils/platform';
 import { Commands } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/historyTypes';
@@ -35,7 +35,6 @@ import {
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
-import { isOs } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { addMockData, CellPosition, verifyHtmlOnCell } from './historyTestHelpers';
@@ -79,13 +78,7 @@ suite('LiveShare tests', () => {
         architecture: Architecture.x64,
     };
 
-    setup(function () {
-        if (isOs(OSType.Windows)) {
-            // not working on Windows. See GH #4757
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    setup(() => {
         hostContainer = createContainer(vsls.Role.Host);
         guestContainer = createContainer(vsls.Role.Guest);
     });
@@ -139,7 +132,7 @@ suite('LiveShare tests', () => {
                 throw new Error('postMessage callback not defined');
             }
         });
-        webPanel.setup(p => p.show());
+        webPanel.setup(p => p.show(true));
 
         // We need to mount the react control before we even create a history object. Otherwise the mount will miss rendering some parts
         mountReactControl(result);
@@ -365,6 +358,7 @@ suite('LiveShare tests', () => {
         });
         fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => true);
+        fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
         const listener = guestContainer.ioc!.get<IDataScienceCommandListener>(IDataScienceCommandListener);

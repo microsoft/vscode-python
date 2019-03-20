@@ -1,157 +1,437 @@
-resources:
-- repo: self
-  clean: true
+# Nightly build
+# Notes: Scheduled builds don't have a trigger in YAML (as of this writing).
+#        Trigger is set through the Azure DevOps UI `Nightly Build->Edit->...->Triggers`.
 
-variables:
-    VSCODE_PYTHON_ROLLING: true
+name: '$(Year:yyyy).$(Month).0.$(BuildID)-alpha'
 
-# No trigger specified here. This is a nightly build only and
-# there isn't a way to specify scheduled builds in YAML at time
-# of writing...
+# Not the CI build, see `vscode-python-ci.yaml`.
 trigger: none
 
-# Only nightly builds.
+# Not the PR build for merges to master and release.
 pr: none
+
+# Variables that are available for the entire pipeline.
+variables:
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
 
 jobs:
 
-# Build the extension and run unit tests on it, if successful upload
-# the bits to be used in each subsequent job
-- template: templates/compile-and-validate.yml
-  parameters:
-    name: 'Prebuild'
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    UploadBinary: true
-    Platform: 'Linux'
-    PythonVersion: '3.7'
+- job: 'Nightly'
 
-# Begin test phases:
+  timeoutInMinutes: 30
+  cancelTimeoutInMinutes: 3
 
-## Virtual Env System Tests
-- template: templates/virtual_env_tests.yml
-  parameters:
-    Platform: 'Windows'
-    pool:
-      name: 'Hosted VS2017'
+  strategy:
+    matrix:
+      # Each member of this list must contain these values:
+        # VMImageName: '[name]' - the VM image to run the tests on.
+        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+      # Each member of this list may contain these values:
+        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
 
-- template: templates/virtual_env_tests.yml
-  parameters:
-    Platform: 'Linux'
-    EnvironmentExecutableFolder: 'bin'
-    pool:
-      name: 'Hosted Ubuntu 1604'
+      ## Virtual Environment Tests:
 
-- template: templates/virtual_env_tests.yml
-  parameters:
-    Platform: 'macOS'
-    EnvironmentExecutableFolder: 'bin'
-    pool:
-      name: 'Hosted macOS'
+      'Win-Py3.7 Unit':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testUnitTests, pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Unit':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testUnitTests, pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Unit':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testUnitTests, pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Unit':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Unit':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Unit':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Win-Py3.5 Unit':
+        PythonVersion: '3.5'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.5 Unit':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.5 Unit':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Win-Py2.7 Unit':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7 Unit':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Unit':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
 
-## System Tests
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted VS2017'
-    Platform: 'Windows'
-    PythonVersion: '3.7'
+      'Win-Py3.7 Venv':
+        VMImageName: 'vs2017-win2016'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        # This is for the venvTests to use, not needed if you don't run venv tests...
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Linux-Py3.7 Venv':
+        VMImageName: 'ubuntu-16.04'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Mac-Py3.7 Venv':
+        VMImageName: 'macos-10.13'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Win-Py3.6 Venv':
+        VMImageName: 'vs2017-win2016'
+        PythonVersion: '3.6'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Linux-Py3.6 Venv':
+        VMImageName: 'ubuntu-16.04'
+        PythonVersion: '3.6'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Mac-Py3.6 Venv':
+        VMImageName: 'macos-10.13'
+        PythonVersion: '3.6'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Win-Py3.5 Venv':
+        VMImageName: 'vs2017-win2016'
+        PythonVersion: '3.5'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Linux-Py3.5 Venv':
+        VMImageName: 'ubuntu-16.04'
+        PythonVersion: '3.5'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      'Mac-Py3.5 Venv':
+        VMImageName: 'macos-10.13'
+        PythonVersion: '3.5'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+      # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted VS2017'
-    Platform: 'Windows'
-    PythonVersion: '3.6'
+      # SingleWorkspace Tests
+      'Win-Py3.7 Single':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Single':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Single':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Single':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Single':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Single':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py3.5 Single':
+        PythonVersion: '3.5'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.5 Single':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.5 Single':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py2.7 Single':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7 Single':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Single':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted VS2017'
-    Platform: 'Windows'
-    PythonVersion: '3.5'
+      # MultiWorkspace Tests
+      'Win-Py3.7 Multi':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Multi':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Multi':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Multi':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Multi':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Multi':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py3.5 Multi':
+        PythonVersion: '3.5'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.5 Multi':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.5 Multi':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Win-Py2.7 Multi':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7 Multi':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Multi':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testMultiWorkspace'
+        NeedsPythonTestReqs: true
 
-- template: templates/test-phase-job-3-4.yml
-  parameters:
-    pool:
-      name: 'Hosted VS2017'
-    Platform: 'Windows'
-    PythonVersion: '3.4'
+      # Debugger integration Tests
+      'Win-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Win-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Win-Py3.5 Debugger':
+        PythonVersion: '3.5'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.5 Debugger':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.5 Debugger':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Win-Py2.7 Debugger':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7 Debugger':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Debugger':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted VS2017'
-    Platform: 'Windows'
-    PythonVersion: '2.7'
+      # Functional tests (not mocked Jupyter)
+      'Windows-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        # This tells the functional tests to not mock out Jupyter...
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py3.5 Functional':
+        PythonVersion: '3.5'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.5 Functional':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.5 Functional':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py2.7 Functional':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py2.7 Functional':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py2.7 Functional':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    Platform: 'Linux'
-    PythonVersion: '3.7'
+  pool:
+    vmImage: $(VMImageName)
 
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    Platform: 'Linux'
-    PythonVersion: '3.6'
-
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    Platform: 'Linux'
-    PythonVersion: '3.5'
-
-- template: templates/test-phase-job-3-4.yml
-  parameters:
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    Platform: 'Linux'
-    PythonVersion: '3.4'
-
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted Ubuntu 1604'
-    Platform: 'Linux'
-    PythonVersion: '2.7'
-
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted macOS'
-    Platform: 'macOS'
-    PythonVersion: '3.7'
-
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted macOS'
-    Platform: 'macOS'
-    PythonVersion: '3.6'
-
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted macOS'
-    Platform: 'macOS'
-    PythonVersion: '3.5'
-
-- template: templates/test-phase-job-3-4.yml
-  parameters:
-    pool:
-      name: 'Hosted macOS'
-    Platform: 'macOS'
-    PythonVersion: '3.4'
-
-- template: templates/test-phase-job.yml
-  parameters:
-    pool:
-      name: 'Hosted macOS'
-    Platform: 'macOS'
-    PythonVersion: '2.7'
+  steps:
+    - template: templates/test_phases.yml
 

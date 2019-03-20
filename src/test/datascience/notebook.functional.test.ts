@@ -149,11 +149,15 @@ suite('Jupyter notebook tests', () => {
                 assert.ok(false, `${index}: Unexpected error: ${error}`);
             }
             const data = cell.outputs[0].data;
-            assert.ok(data, `${index}: No data object on the cell`);
+            const text = cell.outputs[0].text;
+            assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
+            }
+            if (text) {
+                verifyValue(text);
             }
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -431,7 +435,9 @@ suite('Jupyter notebook tests', () => {
             // tslint:disable-next-line:no-string-literal
             (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
-            assert.ok(false, messageFormat.format(timeout.toString()));
+            // We might get here before the cancel finishes. Wait for a timeout and then check cancel fired.
+            await sleep(timeout);
+            assert.ok(!tokenSource.token.isCancellationRequested, messageFormat.format(timeout.toString()));
         } catch (exc) {
             // This should happen. This means it was canceled.
             assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);
@@ -679,7 +685,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.equal(d, 'hello', 'Multiline cell magic incorrect')
+                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
             },
             {
                 // Test shell command should work on PC / Mac / Linux
@@ -689,7 +695,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'world',
-                verifyValue: (d) => assert.equal(d, 'world', 'Cell command incorrect')
+                verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
             },
             {
                 // Plotly
@@ -819,32 +825,44 @@ plt.show()`,
     });
 
     runTest('Server cache working', async () => {
+        console.log('Staring server cache test');
         const s1 = await createNotebookServer(true, false, false, 'same');
+        console.log('Creating s2');
         const s2 = await createNotebookServer(true, false, false, 'same');
+        console.log('Testing s1 and s2, creating s3');
         assert.ok(s1 === s2, 'Two servers not the same when they should be');
         const s3 = await createNotebookServer(false, false, false, 'same');
+        console.log('Testing s1 and s3, creating s4');
         assert.ok(s1 !== s3, 'Different config should create different server');
         const s4 = await createNotebookServer(true, false, false, 'different');
+        console.log('Testing s1 and s4, creating s5');
         assert.ok(s1 !== s4, 'Different purpose should create different server');
         const s5 = await createNotebookServer(true, false, true, 'different');
         assert.ok(s4 === s5, 'Dark theme should be same server');
+        console.log('Disposing of all');
+        await s1.dispose();
+        await s3.dispose();
+        await s4.dispose();
     });
 
     class DyingProcess implements ChildProcess {
-        public stdin: Writable = null;
-        public stdout: Readable = null;
-        public stderr: Readable = null;
-        public stdio: [Writable, Readable, Readable] = [null, null, null];
+        public stdin: Writable;
+        public stdout: Readable;
+        public stderr: Readable;
+        public stdio: [Writable, Readable, Readable];
         public killed: boolean = false;
         public pid: number = 1;
         public connected: boolean = true;
         constructor(private timeout: number) {
             noop();
+            this.stderr = this.stdout = new Readable();
+            this.stdin = new Writable();
+            this.stdio = [this.stdin, this.stdout, this.stderr];
         }
         public kill(signal?: string): void {
             throw new Error('Method not implemented.');
         }
-        public send(message: any, sendHandle?: any, options?: any, callback?: any) : any {
+        public send(message: any, sendHandle?: any, options?: any, callback?: any): any {
             throw new Error('Method not implemented.');
         }
         public disconnect(): void {
@@ -856,25 +874,25 @@ plt.show()`,
         public ref(): void {
             throw new Error('Method not implemented.');
         }
-        public addListener(event: any, listener: any) : this {
+        public addListener(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]) : any {
+        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]): any {
             throw new Error('Method not implemented.');
         }
-        public on(event: any, listener: any) : this {
+        public on(event: any, listener: any): this {
             if (event === 'exit') {
                 setTimeout(() => listener(2), this.timeout);
             }
             return this;
         }
-        public once(event: any, listener: any) : this {
+        public once(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependListener(event: any, listener: any) : this {
+        public prependListener(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependOnceListener(event: any, listener: any) : this {
+        public prependOnceListener(event: any, listener: any): this {
             throw new Error('Method not implemented.');
         }
         public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {

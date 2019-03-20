@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 
 class UnsupportedToolError(ValueError):
     def __init__(self, tool):

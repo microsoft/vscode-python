@@ -43,7 +43,7 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         }
         const textDocument = await openFile(file);
 
-        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri, outputFile);
+        await vscode.commands.executeCommand<void>('python.execInTerminal', textDocument.uri);
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
     });

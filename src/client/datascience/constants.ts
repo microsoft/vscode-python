@@ -5,6 +5,8 @@
 
 import { IS_WINDOWS } from '../common/platform/constants';
 
+export const DefaultTheme = 'Default Light+';
+
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';

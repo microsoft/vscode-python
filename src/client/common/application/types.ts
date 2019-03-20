@@ -820,6 +820,10 @@ export interface IWebPanelMessageListener extends IAsyncDisposable {
      * @return A IWebPanel that can be used to show html pages.
      */
     onMessage(message: string, payload: any): void;
+    /**
+     * Listens to web panel state changes
+     */
+    onChangeViewState(panel: IWebPanel): void;
 }
 
 export type WebPanelMessage = {
@@ -841,7 +845,7 @@ export interface IWebPanel {
      * Makes the webpanel show up.
      * @return A Promise that can be waited on
      */
-    show(): Promise<void>;
+    show(preserveFocus: boolean): Promise<void>;
 
     /**
      * Indicates if this web panel is visible or not.
@@ -857,6 +861,10 @@ export interface IWebPanel {
      * Attempts to close the panel if it's visible
      */
     close(): void;
+    /**
+     * Indicates if the webview has the focus or not.
+     */
+    isActive(): boolean;
 }
 
 // Wraps the VS Code api for creating a web panel

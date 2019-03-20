@@ -68,8 +68,6 @@ export class JupyterSession implements IJupyterSession {
 
     public async waitForIdle() : Promise<void> {
         if (this.session && this.session.kernel) {
-            await this.session.kernel.ready;
-
             while (this.session.kernel.status !== 'idle') {
                 await sleep(0);
             }
@@ -77,11 +75,15 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public restart() : Promise<void> {
-        return this.session && this.session.kernel ? this.session.kernel.restart() : Promise.resolve();
+        return this.session && this.session.kernel ?
+            this.waitForKernelPromise(this.session.kernel.restart(), localize.DataScience.restartingKernelFailed()) :
+            Promise.resolve();
     }
 
     public interrupt() : Promise<void> {
-        return this.session && this.session.kernel ? this.session.kernel.interrupt() : Promise.resolve();
+        return this.session && this.session.kernel ?
+            this.waitForKernelPromise(this.session.kernel.interrupt(), localize.DataScience.interruptingKernelFailed()) :
+            Promise.resolve();
     }
 
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined {
@@ -129,6 +131,24 @@ export class JupyterSession implements IJupyterSession {
 
     public get isConnected() : boolean {
         return this.connected;
+    }
+
+    private async waitForKernelPromise(kernelPromise: Promise<void>, errorMessage: string, secondTime?: boolean) : Promise<void> {
+        // Wait for five seconds for this kernel promise to happen
+        await Promise.race([kernelPromise, sleep(5000)]);
+
+        // If that didn't work, check status. Might have just not responded.
+        if (this.session && this.session.kernel && this.session.kernel.status === 'idle') {
+            return;
+        }
+
+        // Otherwise wait another 5 seconds and check again
+        if (!secondTime) {
+            return this.waitForKernelPromise(kernelPromise, errorMessage, true);
+        }
+
+        // If this is our second try, then show an error
+        throw new Error(errorMessage);
     }
 
     private onStatusChanged(s: Session.ISession, a: Kernel.Status) {

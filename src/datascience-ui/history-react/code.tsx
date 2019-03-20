@@ -122,6 +122,13 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         }
     }
 
+    public giveFocus() {
+        const readOnly = this.props.testMode || this.props.readOnly;
+        if (this.codeMirror && !readOnly) {
+            this.codeMirror.focus();
+        }
+    }
+
     private updateRoot = (div: HTMLDivElement) => {
         this.codeMirrorOwner = div;
     }

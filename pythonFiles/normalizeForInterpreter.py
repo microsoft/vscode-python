@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import ast
 import io
 import operator
@@ -26,6 +29,8 @@ def _tokenize(source):
     """Tokenize Python source code."""
     # Using an undocumented API as the documented one in Python 2.7 does not work as needed
     # cross-version.
+    if sys.version_info < (3,) and isinstance(source, str):
+        source = source.decode()
     return tokenize.generate_tokens(io.StringIO(source).readline)
 
 

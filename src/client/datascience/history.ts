@@ -74,6 +74,7 @@ export class History implements IHistory {
     private messageListener : HistoryMessageListener;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
+    private viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
 
     constructor(
         @inject(ILiveShareApi) private liveShare : ILiveShareApi,
@@ -105,8 +106,12 @@ export class History implements IHistory {
         this.closedEvent = new EventEmitter<IHistory>();
         this.disposables.push(this.closedEvent);
 
+        // Listen for active text editor changes. This is the only way we can tell that we might be needing to gain focus
+        const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activate().ignoreErrors());
+        this.disposables.push(handler);
+
         // Create a history message listener to listen to messages from our webpanel (or remote session)
-        this.messageListener = new HistoryMessageListener(this.liveShare, this.onMessage, this.dispose);
+        this.messageListener = new HistoryMessageListener(this.liveShare, this.onMessage, this.onViewStateChanged, this.dispose);
 
         // Setup our init promise for the web panel. We use this to make sure we're in sync with our
         // react control.
@@ -134,7 +139,7 @@ export class History implements IHistory {
 
             // Then show our web panel.
             if (this.webPanel && this.jupyterServer) {
-                await this.webPanel.show();
+                await this.webPanel.show(true);
             }
         }
     }
@@ -247,6 +252,7 @@ export class History implements IHistory {
             this.updateContexts(undefined);
             if (this.webPanel) {
                 this.webPanel.close();
+                this.webPanel = undefined;
             }
         }
         if (this.changeHandler) {
@@ -341,6 +347,35 @@ export class History implements IHistory {
                     this.logger.logError(err);
                     this.applicationShell.showErrorMessage(err);
                 });
+        }
+    }
+
+    private onViewStateChanged = (webPanel: IWebPanel) => {
+        const oldActive = this.viewState.active;
+        this.viewState.active = webPanel.isActive();
+        this.viewState.visible = webPanel.isVisible();
+
+        // See if suddenly becoming active or not
+        if (!oldActive && this.viewState.active) {
+            this.activate().ignoreErrors();
+        }
+    }
+
+    private async activate() {
+        // Only activate if the active editor is empty. This means that
+        // vscode thinks we are actually supposed to have focus. It would be
+        // nice if they would more accurrately tell us this, but this works for now.
+        // Essentially the problem is the webPanel.active state doesn't track
+        // if the focus is supposed to be in the webPanel or not. It only tracks if
+        // it's been activated. However if there's no active text editor and we're active, we
+        // can safely attempt to give ourselves focus. This won't actually give us focus if we aren't
+        // allowed to have it.
+        if (this.webPanel && this.viewState.active && !this.documentManager.activeTextEditor) {
+            // Force the webpanel to reveal and take focus.
+            await this.webPanel.show(false);
+
+            // Send this to the react control
+            await this.postMessage(HistoryMessages.Activate);
         }
     }
 

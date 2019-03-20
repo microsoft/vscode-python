@@ -7,11 +7,15 @@ import { WorkspaceConfiguration } from 'vscode';
 
 import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
+import { PythonSettings } from '../../client/common/configSettings';
 import { Logger } from '../../client/common/logger';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
+import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 
+// tslint:disable:max-func-body-length
 suite('Theme colors', () => {
     let themeFinder: ThemeFinder;
     let extensions : Extensions;
@@ -20,6 +24,8 @@ suite('Theme colors', () => {
     let workspaceService : TypeMoq.IMock<IWorkspaceService>;
     let workspaceConfig : TypeMoq.IMock<WorkspaceConfiguration>;
     let cssGenerator: CodeCssGenerator;
+    let configService : TypeMoq.IMock<IConfigurationService>;
+    const settings : PythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
 
     setup(() => {
         extensions = new Extensions();
@@ -41,11 +47,33 @@ suite('Theme colors', () => {
                 return d;
             });
 
+        settings.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 20000,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+        };
+        configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);
+
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
 
-        cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, logger);
+        cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, logger);
     });
 
     function runTest(themeName: string, isDark: boolean, shouldExist: boolean) {

@@ -19,6 +19,7 @@ import { TestTreeItem } from './testTreeViewItem';
 @injectable()
 export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataItemResource, IDisposable {
     public readonly onDidChangeTreeData: Event<TestDataItem | undefined>;
+    public readonly discovered = new Set<string>();
     public readonly testsAreBeingDiscovered: Map<string, boolean>;
 
     private _onDidChangeTreeData = new EventEmitter<TestDataItem | undefined>();
@@ -85,8 +86,9 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         if (element) {
             if (element instanceof TestWorkspaceFolder) {
                 let tests = this.testStore.getTests(element.workspaceFolder.uri);
-                if (!tests) {
-                    await this.commandManager.executeCommand(Commands.Tests_Discover, undefined, CommandSource.testExplorer, element.workspaceFolder.uri);
+                if (!tests && !this.discovered.has(element.workspaceFolder.uri.fsPath)) {
+                    this.discovered.add(element.workspaceFolder.uri.fsPath);
+                    await this.commandManager.executeCommand(Commands.Tests_Discover, element, CommandSource.testExplorer, undefined);
                     tests = this.testStore.getTests(element.workspaceFolder.uri);
                 }
                 return tests ? tests.rootTestFolders : [];

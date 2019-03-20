@@ -114,6 +114,8 @@
     "DataScience.restartKernelMessage": "Do you want to restart the iPython kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes": "Restart",
     "DataScience.restartKernelMessageNo": "Cancel",
+    "DataScience.restartingKernelFailed": "Kernel restart failed. Jupyter server is hung. Please reload VS Code.",
+    "DataScience.interruptingKernelFailed": "Kernel interrupt failed. Jupyter server is hung. Please reload VS Code.",
     "DataScienceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Data Science features are working for you?",
     "DataScienceSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "DataScienceSurveyBanner.bannerLabelNo": "No, thanks",

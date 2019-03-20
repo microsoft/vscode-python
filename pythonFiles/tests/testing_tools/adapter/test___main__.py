@@ -27,8 +27,8 @@ class StubReporter(StubProxy):
     def __init__(self, stub=None):
         super(StubReporter, self).__init__(stub, 'reporter')
 
-    def report(self, discovered, **kwargs):
-        self.add_call('report', (discovered,), kwargs or None)
+    def report(self, tests, parents, **kwargs):
+        self.add_call('report', (tests, parents), kwargs or None)
 
 
 ##################################
@@ -55,7 +55,9 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {})
+        self.assertEqual(args, {'pretty': False,
+                                'hidestdio': True,
+                                'simple': False})
         self.assertEqual(toolargs, [])
 
     def test_pytest_full(self):
@@ -73,15 +75,32 @@ class ParseDiscoverTests(unittest.TestCase):
 
         self.assertEqual(tool, 'pytest')
         self.assertEqual(cmd, 'discover')
-        self.assertEqual(args, {})
+        self.assertEqual(args, {'pretty': False,
+                                'hidestdio': True,
+                                'simple': False})
         self.assertEqual(toolargs, [
-            '--',
             '--strict',
             '--ignore', 'spam,ham,eggs',
             '--pastebin=xyz',
             '--no-cov',
             '-d',
             ])
+
+    def test_pytest_opts(self):
+        tool, cmd, args, toolargs = parse_args([
+            'discover',
+            'pytest',
+            '--simple',
+            '--no-hide-stdio',
+            '--pretty',
+            ])
+
+        self.assertEqual(tool, 'pytest')
+        self.assertEqual(cmd, 'discover')
+        self.assertEqual(args, {'pretty': True,
+                                'hidestdio': False,
+                                'simple': True})
+        self.assertEqual(toolargs, [])
 
     def test_unsupported_tool(self):
         with self.assertRaises(SystemExit):
@@ -99,8 +118,8 @@ class MainTests(unittest.TestCase):
     def test_discover(self):
         stub = Stub()
         tool = StubTool('spamspamspam', stub)
-        expected = object()
-        tool.return_discover = expected
+        tests, parents = object(), object()
+        tool.return_discover = (parents, tests)
         reporter = StubReporter(stub)
         main(tool.name, 'discover', {'spam': 'eggs'}, [],
              _tools={tool.name: {
@@ -112,7 +131,7 @@ class MainTests(unittest.TestCase):
 
         self.assertEqual(tool.calls, [
             ('spamspamspam.discover', ([],), {'spam': 'eggs'}),
-            ('reporter.report', (expected,), {'debug': False}),
+            ('reporter.report', (tests, parents), {'spam': 'eggs'}),
             ])
 
     def test_unsupported_tool(self):

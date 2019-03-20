@@ -98,7 +98,7 @@ suite('History output tests', () => {
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             window.postMessage(m, '*');
         }); // See JSDOM valid target origins
-        webPanel.setup(p => p.show());
+        webPanel.setup(p => p.show(true));
 
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         historyProvider = ioc.serviceManager.get<IHistoryProvider>(IHistoryProvider);
@@ -261,7 +261,6 @@ suite('History output tests', () => {
     });
 
     runMountedTest('Mime Types', async (wrapper) => {
-
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
@@ -594,6 +593,6 @@ for _ in range(50):
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
-        verifyHtmlOnCell(wrapper, '<span>hello</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
     });
 });

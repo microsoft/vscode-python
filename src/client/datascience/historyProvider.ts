@@ -84,7 +84,8 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         const workbench = this.workspaceService.getConfiguration('workbench');
         if (workbench) {
             const theme = workbench.get<string>('colorTheme');
-            if (theme) {
+            const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
+            if (theme && !ignoreTheme) {
                 darkTheme = await this.themeFinder.isThemeDark(theme);
             }
         }

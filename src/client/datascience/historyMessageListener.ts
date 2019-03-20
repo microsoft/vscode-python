@@ -6,7 +6,7 @@ import '../common/extensions';
 import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWebPanelMessageListener } from '../common/application/types';
+import { ILiveShareApi, IWebPanel, IWebPanelMessageListener } from '../common/application/types';
 import { Identifiers, LiveShare } from './constants';
 import { HistoryMessages, HistoryRemoteMessages } from './historyTypes';
 import { PostOffice } from './liveshare/postOffice';
@@ -18,9 +18,10 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
     private postOffice : PostOffice;
     private disposedCallback : () => void;
     private callback :  (message: string, payload: any) => void;
+    private viewChanged: (panel: IWebPanel) => void;
     private historyMessages : string[] = [];
 
-    constructor(liveShare: ILiveShareApi, callback: (message: string, payload: any) => void, disposed: () => void) {
+    constructor(liveShare: ILiveShareApi, callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) {
         this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare, (api, command, role, args) => this.translateHostArgs(api, role, args));
 
         // Save our dispose callback so we remove our history window
@@ -28,6 +29,9 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
 
         // Save our local callback so we can handle the non broadcast case(s)
         this.callback = callback;
+
+        // Save view changed so we can forward view change events.
+        this.viewChanged = viewChanged;
 
         // Remember the list of history messages we registered for
         this.historyMessages = this.getHistoryMessages();
@@ -50,6 +54,13 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
         } else {
             // Send to just our local callback.
             this.callback(message, payload);
+        }
+    }
+
+    public onChangeViewState(panel: IWebPanel) {
+        // Forward this onto our callback
+        if (this.viewChanged) {
+            this.viewChanged(panel);
         }
     }
 

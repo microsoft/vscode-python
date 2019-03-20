@@ -70,6 +70,12 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
+    public giveFocus() {
+        if (this.code) {
+            this.code.giveFocus();
+        }
+    }
+
     // Public for testing
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
@@ -320,12 +326,12 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private convertToLinearRgb(color: number) : number {
-        let c = color / 255.0
+        let c = color / 255;
         if (c <= 0.03928) {
-            c = c/12.92;
+            c = c / 12.92;
         } else {
-            c = Math.pow((c+0.055)/1.055, 2.4);
-        } 
+            c = Math.pow((c + 0.055) / 1.055, 2.4);
+        }
         return c;
     }
 
@@ -343,7 +349,7 @@ export class Cell extends React.Component<ICellProps> {
             const g = this.convertToLinearRgb(parseInt(color.slice(2, 4), 16));
             const b = this.convertToLinearRgb(parseInt(color.slice(4, 6), 16));
 
-            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
 
             return (L > 0.179)
                 ? '#000000'
