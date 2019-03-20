@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import stringHash from 'string-hash';
 import { TextDocument } from 'vscode';
 
 import { sendTelemetryEvent } from '.';
 import { noop, sleep } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
-import '../common/extensions';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
 import { EventName } from './constants';
@@ -23,7 +21,9 @@ const MAX_DOCUMENT_LINES = 1000;
 @injectable()
 export class ImportTracker implements IImportTracker {
 
-    private sentMatches: Set<number> = new Set<number>();
+    private sentMatches: Set<string> = new Set<string>();
+    // tslint:disable-next-line:no-require-imports
+    private hashFn = require('hash.js').sha256;
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -67,21 +67,25 @@ export class ImportTracker implements IImportTracker {
     private lookForImports(lines: string[], eventName: string) {
         try {
             // Use a regex to parse each line, looking for imports
-            const matches: Set<number> = new Set<number>();
+            const matches: Set<string> = new Set<string>();
             for (const s of lines) {
                 const match = ImportRegEx.exec(s);
                 if (match && match.length > 2) {
                     // Could be a from or a straight import. from is the first entry.
                     const actual = match[1] ? match[1] : match[2];
 
-                    // Pull out the beginning part
-                    const baseImport = actual.split('.')[0];
+                    // Use just the bits to the left of ' as '
+                    const left = actual.split(' as ')[0];
 
-                    // Hash this value and save this in our import
-                    const hash = stringHash(baseImport);
-                    if (!this.sentMatches.has(hash)) {
-                        matches.add(hash);
-                    }
+                    // Now split this based on, and chop off all .
+                    const baseNames = left.split(',').map(s => s.split('.')[0].trim());
+                    baseNames.forEach(l => {
+                        // Hash this value and save this in our import
+                        const hash = this.hashFn().update(l).digest('hex');
+                        if (!this.sentMatches.has(hash)) {
+                            matches.add(hash);
+                        }
+                    });
                 }
             }
 

@@ -4,7 +4,6 @@
 //tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
-import stringHash from 'string-hash';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, TextDocument } from 'vscode';
 
@@ -18,6 +17,8 @@ import { createDocument } from '../datascience/editor-integration/helpers';
 suite('Import Tracker', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
+    // tslint:disable-next-line:no-require-imports
+    const hashJs = require('hash.js');
     let importTracker: ImportTracker;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let historyProvider: TypeMoq.IMock<IHistoryProvider>;
@@ -26,14 +27,15 @@ suite('Import Tracker', () => {
     let savedEventEmitter: EventEmitter<TextDocument>;
     let historyEventEmitter: EventEmitter<string>;
     let codeExecutionEmitter: EventEmitter<string>;
-    const pandasHash = stringHash('pandas');
-    const elephasHash = stringHash('elephas');
-    const kerasHash = stringHash('keras');
-    const pysparkHash = stringHash('pyspark');
-    const sparkdlHash = stringHash('sparkdl');
-    const numpyHash = stringHash('numpy');
-    const scipyHash = stringHash('scipy');
-    const sklearnHash = stringHash('sklearn');
+    const pandasHash = hashJs.sha256().update('pandas').digest('hex');
+    const elephasHash = hashJs.sha256().update('elephas').digest('hex');
+    const kerasHash = hashJs.sha256().update('keras').digest('hex');
+    const pysparkHash = hashJs.sha256().update('pyspark').digest('hex');
+    const sparkdlHash = hashJs.sha256().update('sparkdl').digest('hex');
+    const numpyHash = hashJs.sha256().update('numpy').digest('hex');
+    const scipyHash = hashJs.sha256().update('scipy').digest('hex');
+    const sklearnHash = hashJs.sha256().update('sklearn').digest('hex');
+    const randomHash = hashJs.sha256().update('random').digest('hex');
 
     class Reporter {
         public static eventNames: string[] = [];
@@ -181,7 +183,7 @@ def simplify_ages(df):
     df.Age = categories
     return df`;
         historyEventEmitter.fire(code);
-        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }, { import: numpyHash }]);
+        expect(Reporter.properties).to.deep.equal([{ import: pandasHash }, { import: numpyHash }, { import: randomHash }]);
     });
 
     test('scipy', () => {
