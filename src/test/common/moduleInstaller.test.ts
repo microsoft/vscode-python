@@ -1,6 +1,7 @@
 // tslint:disable:max-func-body-length
 
-import { expect } from 'chai';
+import { expect, should as chai_should, use as chai_use } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { instance, mock } from 'ts-mockito';
@@ -33,6 +34,8 @@ import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initializeTest } from './../initialize';
 
+chai_use(chaiAsPromised);
+
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
@@ -56,6 +59,7 @@ suite('Module Installer', () => {
         const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
         suiteSetup(initializeTest);
         setup(async () => {
+            chai_should();
             initializeDI();
             await initializeTest();
             await resetSettings();
@@ -87,7 +91,7 @@ suite('Module Installer', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             // If resource is provided, then ensure we do not invoke without the resource.
             mockTerminalFactory.setup(t => t.getTerminalService(TypeMoq.It.isAny()))
-                .callback(passedInResource => expect(passedInResource).to.be.equal(resource))
+                .callback(passedInResource => chai.expect(passedInResource).to.be.equal(resource))
                 .returns(() => mockTerminalService.object);
             ioc.serviceManager.addSingletonInstance<ITerminalServiceFactory>(ITerminalServiceFactory, mockTerminalFactory.object);
 
