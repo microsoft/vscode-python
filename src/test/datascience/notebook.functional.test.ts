@@ -427,7 +427,9 @@ suite('Jupyter notebook tests', () => {
 
     async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
+        let canceled = false;
         const disp = setTimeout((s) => {
+            canceled = true;
             tokenSource.cancel();
         }, timeout, tokenSource.tag);
 
@@ -435,9 +437,8 @@ suite('Jupyter notebook tests', () => {
             // tslint:disable-next-line:no-string-literal
             (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
-            // We might get here before the cancel finishes. Wait for a timeout and then check cancel fired.
-            await sleep(timeout);
-            assert.ok(!tokenSource.token.isCancellationRequested, messageFormat.format(timeout.toString()));
+            // We might get here before the cancel finishes
+            assert.ok(!canceled, messageFormat.format(timeout.toString()));
         } catch (exc) {
             // This should happen. This means it was canceled.
             assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);

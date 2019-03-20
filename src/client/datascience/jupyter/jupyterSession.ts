@@ -16,7 +16,7 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
-import { sleep } from '../../common/utils/async';
+import { callWithTimeout, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
@@ -180,22 +180,23 @@ export class JupyterSession implements IJupyterSession {
                     this.statusHandler = undefined;
                 }
                 if (this.session) {
-                    // Shutdown may fail if the process has been killed
-                    await Promise.race([this.session.shutdown(), sleep(100)]);
+                    try {
+                        // Shutdown may fail if the process has been killed
+                        await Promise.race([this.session.shutdown(), sleep(100)]);
+                    } catch {
+                        noop();
+                    }
+                    // Dispose may not return. Wrap in a promise instead. Kernel futures can die if
+                    // process is already dead.
                     if (this.session) {
-                        this.session.dispose();
+                        await callWithTimeout(this.session.dispose.bind(this.session), 100);
                     }
                 }
                 if (this.sessionManager) {
-                    this.sessionManager.dispose();
+                    await callWithTimeout(this.sessionManager.dispose.bind(this.sessionManager), 100);
                 }
             } catch {
-                if (this.session) {
-                    this.session.dispose();
-                }
-                if (this.sessionManager) {
-                    this.sessionManager.dispose();
-                }
+                noop();
             }
             this.session = undefined;
             this.sessionManager = undefined;
