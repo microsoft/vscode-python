@@ -18,8 +18,8 @@ variables:
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
-  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml'
-  MOCHA_JUNIT_REPORTER: true
+  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
+  MOCHA_JUNIT_REPORTER: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
 
 jobs:
 
@@ -44,37 +44,37 @@ jobs:
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools'
         NeedsPythonTestReqs: true
-    #   'Win-Py2.7 Unit':
-    #     PythonVersion: '2.7'
-    #     VMImageName: 'vs2017-win2016'
-    #     TestsToRun: 'pythonUnitTests'
-    #     NeedsPythonTestReqs: true
-    #   'Mac-Py3.7 Unit+Single':
-    #     PythonVersion: '3.7'
-    #     VMImageName: 'macos-10.13'
-    #     TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
-    #     NeedsPythonTestReqs: true
-    #   'Mac-Py2.7 Unit+Single':
-    #     PythonVersion: '2.7'
-    #     VMImageName: 'macos-10.13'
-    #     TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-    #     NeedsPythonTestReqs: true
+      'Win-Py2.7 Unit':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonUnitTests'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Unit+Single':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Unit+Single':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        NeedsPythonTestReqs: true
       'Linux-Py3.7 Unit+Single':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
         NeedsPythonTestReqs: true
-    #   'Linux-Py2.7 Unit+Single':
-    #     PythonVersion: '2.7'
-    #     VMImageName: 'ubuntu-16.04'
-    #     TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-    #     NeedsPythonTestReqs: true
-    #   'Linux-Py3.7 Functional':
-    #     PythonVersion: '3.7'
-    #     VMImageName: 'ubuntu-16.04'
-    #     TestsToRun: 'testfunctional'
-    #     NeedsPythonTestReqs: true
-    #     NeedsPythonFunctionalReqs: true
+      'Linux-Py2.7 Unit+Single':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
 
   pool:
     vmImage: $(VMImageName)

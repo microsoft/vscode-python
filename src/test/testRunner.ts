@@ -117,7 +117,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
                 return callback(error);
             }
             try {
-                files.splice(0, 10).forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
                 initializationScript()
                     .then(() => mocha.run(failures => callback(undefined, failures)))
                     .catch(callback);
