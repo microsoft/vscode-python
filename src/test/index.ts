@@ -44,7 +44,7 @@ const options: testRunner.SetupOptions & { retries: number } = {
 if (MOCHA_REPORTER_JUNIT) {
     options.reporter = 'mocha-multi-reporters';
     options.reporterOptions = {
-        reporterEnabled: 'mocha.reporters.spec,mocha-junit-reporter'
+        reporterEnabled: 'spec,mocha-junit-reporter'
     };
 }
 
