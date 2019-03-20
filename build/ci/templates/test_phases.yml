@@ -130,6 +130,16 @@ steps:
     displayName: 'run test:unittest'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish test:unittest results'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    inputs:
+      testResultsFiles: $MOCHA_FILE
+      testRunTitle: 'unittests-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
+
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
   #
@@ -177,18 +187,19 @@ steps:
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
-    displayName: 'Publish Python unit test results'
+    displayName: 'Publish Python unittests results'
     condition: contains(variables['TestsToRun'], 'pythonUnitTests')
     inputs:
       testResultsFiles: 'python-tests-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'UNIT-$(AGENT_OS)-Py$(pythonVersion)'
-      buildPlatform: '$(AGENT_OS)-Py$(pythonVersion)'
-      buildConfiguration: 'Unittests'
+      testRunTitle: 'pythonUnitTests-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
   # Run the News tool tests.
   #
-  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`,
+  # and if Python version == 3.7.
   #
   # Example command line (windows pwsh):
   # > python -m pip install -U -r news/requirements.txt
@@ -197,22 +208,23 @@ steps:
       python -m pip install --upgrade -r news/requirements.txt
       python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
     displayName: 'Run Python tests for news'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
-    displayName: 'Publish News test results'
-    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+    displayName: 'Publish Python tests for news results'
+    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
     inputs:
       testResultsFiles: 'python-news-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'NEWS-$(Platform)-Py$(pythonVersion)'
-      buildPlatform: '$(Platform)-Py$(pythonVersion)'
-      buildConfiguration: 'Unittests'
+      testRunTitle: 'news-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
   # Run the TPN tool tests.
   #
-  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`,
+  # and if Python version == 3.7.
   #
   # Example command line (windows pwsh):
   # > python -m pip install -U -r tpn/requirements.txt
@@ -221,18 +233,18 @@ steps:
       python -m pip install --upgrade -r tpn/requirements.txt
       python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
     displayName: 'Run Python tests for TPN tool'
-    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
-    displayName: 'Publish JUnit test results'
-    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3'))
+    displayName: 'Publish Python tests for TPN tool results'
+    condition: and(contains(variables['TestsToRun'], 'pythonUnitTests'), startsWith(variables['PythonVersion'], '3.7'))
     inputs:
       testResultsFiles: 'python-tpn-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'TPN-$(Platform)-Py$(pythonVersion)'
-      buildPlatform: '$(Platform)-Py$(pythonVersion)'
-      buildConfiguration: 'Unittests'
+      testRunTitle: 'tpn-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
   # Start the X virtual frame buffer (X-windows in memory only) on Linux. Linux VMs do not
   # provide a desktop so VS Code cannot properly launch there. To get around this we use the
@@ -319,6 +331,16 @@ steps:
     env:
       DISPLAY: :10
 
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish Venv-Tests results'
+    condition: contains(variables['TestsToRun'], 'venvTests')
+    inputs:
+      testResultsFiles: $MOCHA_FILE
+      testRunTitle: 'venvTest-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
+
   # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
   # the specified Python interpreter.
   #
@@ -346,10 +368,20 @@ steps:
   # > npm run test:functional
   - script: |
       npm run test:functional
-    displayName: 'Run Functional Tests'
+    displayName: 'Run functional tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
     env:
       DISPLAY: :10
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish functional tests results'
+    condition: contains(variables['TestsToRun'], 'testFunctional')
+    inputs:
+      testResultsFiles: $MOCHA_FILE
+      testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'FunctionalTests'
 
   # Run the single workspace tests.
   #
@@ -359,10 +391,20 @@ steps:
   # > npm run testSingleWorkspace
   - script: |
       npm run testSingleWorkspace
-    displayName: 'Run Single Workspace Tests'
+    displayName: 'Run single workspace tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspace'))
     env:
       DISPLAY: :10
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish single workspace tests results'
+    condition: contains(variables['TestsToRun'], 'testSingleWorkspace')
+    inputs:
+      testResultsFiles: $MOCHA_FILE
+      testRunTitle: 'singleWorkspace-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
   # Run the multi-workspace tests.
   #
@@ -372,10 +414,20 @@ steps:
   # > npm run testMultiWorkspace
   - script: |
       npm run testMultiWorkspace
-    displayName: 'Run Multi-Workspace Tests'
+    displayName: 'Run multi-workspace tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testMultiWorkspace'))
     env:
       DISPLAY: :10
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish multi-workspace tests results'
+    condition: contains(variables['TestsToRun'], 'testMultiWorkspace')
+    inputs:
+      testResultsFiles: $MOCHA_FILE
+      testRunTitle: 'multiWorkspace-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
   # Run the debugger integration tests.
   #
@@ -385,10 +437,20 @@ steps:
   # > npm run testDebugger
   - script: |
       npm run testDebugger
-    displayName: 'Run Debugger Tests'
+    displayName: 'Run debugger tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testDebugger'))
     env:
       DISPLAY: :10
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish debugger tests results'
+    condition: contains(variables['TestsToRun'], 'testDebugger')
+    inputs:
+      testResultsFiles: $MOCHA_FILE
+      testRunTitle: 'debugger-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
   # Run the performance tests.
   #
