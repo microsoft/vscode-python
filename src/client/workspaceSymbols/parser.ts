@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { fsExistsAsync } from '../common/utils/fs';
-import { Tag } from './contracts';
+import { ITag } from './contracts';
 
 // tslint:disable:no-require-imports no-var-requires no-suspicious-comment
 // tslint:disable:no-any
@@ -109,16 +109,16 @@ export function parseTags(
     query: string,
     token: vscode.CancellationToken,
     maxItems: number = 200
-): Promise<Tag[]> {
+): Promise<ITag[]> {
     return fsExistsAsync(tagFile).then(exists => {
         if (!exists) {
             return Promise.resolve([]);
         }
 
-        return new Promise<Tag[]>((resolve, reject) => {
+        return new Promise<ITag[]>((resolve, reject) => {
             const lr = new LineByLineReader(tagFile);
             let lineNumber = 0;
-            const tags: Tag[] = [];
+            const tags: ITag[] = [];
 
             lr.on('error', (err: Error) => {
                 reject(err);
@@ -145,7 +145,7 @@ export function parseTags(
         });
     });
 }
-function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): Tag | undefined {
+function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): ITag | undefined {
     if (IsFileRegEx.test(line)) {
         return;
     }

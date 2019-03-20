@@ -113,7 +113,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
             }
 
             const filename = document.fileName;
-            const cmd: proxy.ICommand<proxy.ISymbolResult> = {
+            const cmd: proxy.ICommand = {
                 command: proxy.CommandType.Symbols,
                 fileName: filename,
                 columnIndex: 0,

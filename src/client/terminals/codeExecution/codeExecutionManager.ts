@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -7,6 +8,7 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
+import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IDisposableRegistry, IPythonExtensionBanner } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -32,12 +34,12 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     }
 
     public registerCommands() {
-        this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_In_Terminal, this.executeFileInterTerminal.bind(this)));
+        this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_In_Terminal, this.executeFileInTerminal.bind(this)));
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal, this.executeSelectionInTerminal.bind(this)));
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Django_Shell, this.executeSelectionInDjangoShell.bind(this)));
     }
     @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'file' }, false)
-    private async executeFileInterTerminal(file?: Uri) {
+    private async executeFileInTerminal(file?: Uri) {
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
@@ -47,7 +49,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
 
         try {
-            const contents = await this.fileSystem.readFile(file.fsPath);
+            const contents = await this.fileSystem.readFile(fileToExecute.fsPath);
             this.eventEmitter.fire(contents);
         } catch {
             // Ignore any errors that occur for firing this event. It's only used

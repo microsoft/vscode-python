@@ -841,9 +841,9 @@ plt.show()`,
         const s5 = await createNotebookServer(true, false, true, 'different');
         assert.ok(s4 === s5, 'Dark theme should be same server');
         console.log('Disposing of all');
-        await s1.dispose();
-        await s3.dispose();
-        await s4.dispose();
+        await s1!.dispose();
+        await s3!.dispose();
+        await s4!.dispose();
     });
 
     class DyingProcess implements ChildProcess {

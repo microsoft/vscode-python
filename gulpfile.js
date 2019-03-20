@@ -46,8 +46,11 @@ const noop = function () { };
 */
 
 const all = [
-    'src/**/*',
-    'src/client/**/*',
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    'src/**/*.d.ts',
+    'src/**/*.js',
+    'src/**/*.jsx'
 ];
 
 const tsFilter = [
@@ -458,6 +461,7 @@ let reRunCompilation = false;
  * @returns {NodeJS.ReadWriteStream}
  */
 const hygiene = (options, done) => {
+    done = done || noop;
     if (compilationInProgress) {
         reRunCompilation = true;
         return done();

@@ -1,9 +1,13 @@
-import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, TextDocument, TextEdit } from 'vscode';
-import { Position } from 'vscode';
+import {
+    CancellationToken, FormattingOptions, OnTypeFormattingEditProvider,
+    Position, TextDocument, TextEdit
+} from 'vscode';
 import { CodeBlockFormatProvider } from './codeBlockFormatProvider';
-import { ASYNC_FOR_IN_REGEX, ELIF_REGEX, ELSE_REGEX, FOR_IN_REGEX, IF_REGEX, WHILE_REGEX } from './contracts';
-import { EXCEPT_REGEX, FINALLY_REGEX, TRY_REGEX } from './contracts';
-import { ASYNC_DEF_REGEX, CLASS_REGEX, DEF_REGEX } from './contracts';
+import {
+    ASYNC_DEF_REGEX, ASYNC_FOR_IN_REGEX, CLASS_REGEX, DEF_REGEX,
+    ELIF_REGEX, ELSE_REGEX, EXCEPT_REGEX, FINALLY_REGEX,
+    FOR_IN_REGEX, IF_REGEX, TRY_REGEX, WHILE_REGEX
+ } from './contracts';
 
 export class BlockFormatProviders implements OnTypeFormattingEditProvider {
     private providers: CodeBlockFormatProvider[];

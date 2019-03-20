@@ -169,7 +169,7 @@ suite('Activation - ActivationManager', () => {
         expect(fileOpenedHandler).not.to.be.equal(undefined, 'Handler not set');
 
         // Check if activate workspace is called on opening a file
-        fileOpenedHandler.call(managerTest, document.object);
+        await fileOpenedHandler.call(managerTest, document.object);
         await sleep(1);
 
         documentManager.verifyAll();

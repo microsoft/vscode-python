@@ -74,10 +74,11 @@ export class ServerCache implements IAsyncDisposable {
             return this.emptyKey;
         } else {
             // combine all the values together to make a unique key
-            return options.purpose +
-                (options.uri ? options.uri : '') +
-                (options.useDefaultConfig ? 'true' : 'false') +
-                (options.workingDir);
+            const uri = options.uri ? options.uri : '';
+            const useFlag = options.useDefaultConfig ? 'true' : 'false';
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Should there be some separator in the key?
+            return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
         }
     }
 

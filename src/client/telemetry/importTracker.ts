@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -11,6 +11,7 @@ import { TextDocument } from 'vscode';
 import { sendTelemetryEvent } from '.';
 import { noop, sleep } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
+import '../common/extensions';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
 import { EventName } from './constants';

@@ -1,5 +1,6 @@
-import { FormattingOptions, TextDocument, TextEdit } from 'vscode';
-import { Position, Range, TextLine } from 'vscode';
+import {
+    FormattingOptions, Position, Range, TextDocument, TextEdit, TextLine
+} from 'vscode';
 import { BlockRegEx } from './contracts';
 
 export class CodeBlockFormatProvider {

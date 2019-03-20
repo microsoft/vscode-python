@@ -192,7 +192,7 @@ export class JediProxy implements Disposable {
         return result;
     }
 
-    public async sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
+    public async sendCommand<T extends ICommandResult>(cmd: ICommand): Promise<T> {
         await this.initialized.promise;
         await this.languageServerStarted.promise;
         if (!this.proc) {
@@ -721,7 +721,7 @@ export class JediProxy implements Disposable {
 }
 
 // tslint:disable-next-line:no-unused-variable
-export interface ICommand<T extends ICommandResult> {
+export interface ICommand {
     telemetryEvent?: string;
     command: CommandType;
     source?: string;
@@ -730,7 +730,7 @@ export interface ICommand<T extends ICommandResult> {
     columnIndex: number;
 }
 
-interface IExecutionCommand<T extends ICommandResult> extends ICommand<T> {
+interface IExecutionCommand<T extends ICommandResult> extends ICommand {
     id: number;
     deferred?: Deferred<T>;
     token: CancellationToken;
@@ -835,7 +835,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         }
     }
 
-    public sendCommand(cmd: ICommand<R>, token?: CancellationToken): Promise<R | undefined> {
+    public sendCommand(cmd: ICommand, token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
 
@@ -857,7 +857,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
             });
     }
 
-    public sendCommandNonCancellableCommand(cmd: ICommand<R>, token?: CancellationToken): Promise<R | undefined> {
+    public sendCommandNonCancellableCommand(cmd: ICommand, token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
         if (token) {
