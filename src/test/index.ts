@@ -9,9 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 import {
-    IS_CI_SERVER_TEST_DEBUGGER,
-    MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
-    MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
+    IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
 import * as testRunner from './testRunner';
@@ -44,10 +42,9 @@ const options: testRunner.SetupOptions & { retries: number } = {
 // 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
 // by other 'MOCHA_CI_...' variables. See constants.ts for info.
 if (MOCHA_REPORTER_JUNIT) {
-    options.reporter = MOCHA_CI_REPORTER_ID;
+    options.reporter = 'mocha-multi-reporters';
     options.reporterOptions = {
-        mochaFile: MOCHA_CI_REPORTFILE,
-        properties: MOCHA_CI_PROPERTIES
+        reporterEnabled: 'spec,mocha-junit-reporter'
     };
 }
 

@@ -10,6 +10,7 @@ import * as glob from 'glob';
 import * as istanbul from 'istanbul';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import * as process from 'process';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
 import { IS_SMOKE_TEST } from './constants';
@@ -116,7 +117,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
                 return callback(error);
             }
             try {
-                files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                files.splice(0, 10).forEach(file => mocha.addFile(path.join(testsRoot, file)));
                 initializationScript()
                     .then(() => mocha.run(failures => callback(undefined, failures)))
                     .catch(callback);

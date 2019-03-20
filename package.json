@@ -2366,6 +2366,7 @@
         "loader-utils": "^1.1.0",
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
+        "mocha-multi-reporters": "^1.1.7",
         "node-has-native-dependencies": "^1.0.2",
         "nyc": "^13.3.0",
         "raw-loader": "^0.5.1",
