@@ -74,4 +74,3 @@ export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToDetermineOS = 'FailedToDetermineOS'
 }
-
