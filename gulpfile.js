@@ -437,7 +437,17 @@ const tsProjectMap = {};
  * @param {hygieneOptions} options
  */
 function getTsProject(options) {
-    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
+    // TODO: Get rid of this!
+    const tsOptions = options.mode === 'compile' ? undefined : {
+        strict: true,
+        noImplicitAny: true,
+        noImplicitThis: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+        // We don't worry about this one:
+        //noImplicitReturns: true,
+        noFallthroughCasesInSwitch: true
+    };
     const mode = tsOptions && tsOptions.mode ? tsOptions.mode : '';
     return tsProjectMap[mode] ? tsProjectMap[mode] : tsProjectMap[mode] = ts.createProject('tsconfig.json', tsOptions);
 }
