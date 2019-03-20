@@ -2316,6 +2316,7 @@
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^4.3.0",
         "@types/stack-trace": "0.0.29",
+        "@types/string-hash": "^1.1.1",
         "@types/strip-json-comments": "0.0.30",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
