@@ -33,8 +33,10 @@ export class BaseLanguageClientFactory implements ILanguageClientFactory {
 
     private async getEnvVars(resource: Resource): Promise<NodeJS.ProcessEnv> {
         const envVars = await this.environmentActivationService.getActivatedEnvironmentVariables(resource);
-        const hasEnvVars = envVars && Object.keys(envVars).length > 0;
-        return hasEnvVars ? envVars : this.envVarsProvider.getEnvironmentVariables(resource);
+        if (envVars && Object.keys(envVars).length > 0) {
+            return envVars;
+        }
+        return this.envVarsProvider.getEnvironmentVariables(resource);
     }
 }
 
