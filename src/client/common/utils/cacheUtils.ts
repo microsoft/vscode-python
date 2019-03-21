@@ -70,7 +70,7 @@ export class InMemoryInterpreterSpecificCache<T> {
     private readonly resource: Resource;
     private readonly args: any[];
     constructor(private readonly keyPrefix: string,
-        private readonly expiryDurationMs: number,
+        protected readonly expiryDurationMs: number,
         args: [Uri | undefined, ...any[]],
         private readonly vscode: VSCodeType = require('vscode')) {
         this.resource = args[0];
@@ -112,7 +112,7 @@ export class InMemoryInterpreterSpecificCache<T> {
         const store = getCacheStore(this.resource, this.vscode);
         const key = getCacheKeyFromFunctionArgs(this.keyPrefix, this.args);
         store.set(key, {
-            expiry: Date.now() + this.expiryDurationMs,
+            expiry: this.calculateExpiry(),
             value
         });
     }
@@ -131,5 +131,15 @@ export class InMemoryInterpreterSpecificCache<T> {
      */
     protected hasExpired(expiry: number): boolean {
         return expiry < Date.now();
+    }
+
+    /**
+     * When should this data item expire?
+     * (protected class method to allow for reliable non-data-time-based testing)
+     *
+     * @returns number representing the expiry time for this item.
+     */
+    protected calculateExpiry(): number {
+        return Date.now() + this.expiryDurationMs;
     }
 }

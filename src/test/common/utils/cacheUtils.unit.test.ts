@@ -34,6 +34,11 @@ class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCa
     public set simulatedElapsedMs(value: number) {
         this.elapsed = value;
     }
+
+    protected calculateExpiry(): number {
+        return this.expiryDurationMs;
+    }
+
     protected hasExpired(expiry: number): boolean {
         return expiry < this.elapsed;
     }
