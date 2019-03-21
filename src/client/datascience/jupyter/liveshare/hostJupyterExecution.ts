@@ -118,21 +118,21 @@ export class HostJupyterExecution
         return this.serverCache.get(options);
     }
 
-    private onRemoteIsNotebookSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
     }
 
-    private onRemoteIsImportSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
     }
 
-    private onRemoteIsKernelCreateSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsKernelCreateSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelCreateSupported(cancellation);
     }
-    private onRemoteIsKernelSpecSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsKernelSpecSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelSpecSupported(cancellation);
     }
@@ -152,14 +152,14 @@ export class HostJupyterExecution
                     token: connectionInfo.token,
                     localLaunch: false,
                     localProcExitCode: undefined,
-                    disconnected: (l) => { return { dispose: noop }; },
+                    disconnected: (_l) => { return { dispose: noop }; },
                     dispose: noop
                 };
             }
         }
     }
 
-    private onRemoteGetUsableJupyterPython = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteGetUsableJupyterPython = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.getUsableJupyterPython(cancellation);
     }

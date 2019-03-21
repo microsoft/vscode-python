@@ -39,19 +39,19 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
     const result = TypeMoq.Mock.ofType<T>();
-    (result as any)['tag'] = tag;
+    (result as any).tag = tag;
     result.setup((x: any) => x.then).returns(() => undefined);
     return result;
 }
 
 class MockStatusProvider implements IStatusProvider {
-    public set(message: string, timeout?: number): Disposable {
+    public set(_message: string, _timeout?: number): Disposable {
         return {
             dispose: noop
         };
     }
 
-    public waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T> {
+    public waitWithStatus<T>(promise: () => Promise<T>, _message: string, _timeout?: number, _canceled?: () => void): Promise<T> {
         return promise();
     }
 

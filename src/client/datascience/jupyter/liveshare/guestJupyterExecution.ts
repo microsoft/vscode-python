@@ -84,7 +84,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
     }
-    public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
     }
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
@@ -125,7 +125,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
 
         return result;
     }
-    public spawnNotebook(file: string): Promise<void> {
+    public spawnNotebook(_file: string): Promise<void> {
         // Not supported in liveshare
         throw new Error(localize.DataScience.liveShareCannotSpawnNotebooks());
     }

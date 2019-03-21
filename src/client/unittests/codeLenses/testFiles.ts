@@ -47,7 +47,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         return this.getCodeLenses(document, cancelTokenSrc.token, this.symbolProvider);
     }
 
-    public resolveCodeLens(codeLens: CodeLens, token: CancellationToken): CodeLens | Thenable<CodeLens> {
+    public resolveCodeLens(codeLens: CodeLens, _token: CancellationToken): CodeLens | Thenable<CodeLens> {
         codeLens.command = { command: 'python.runtests', title: 'Test' };
         return Promise.resolve(codeLens);
     }

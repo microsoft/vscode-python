@@ -29,3 +29,4 @@ tmp/**
 .python-version
 .vs/
 test-results.xml
+!build/

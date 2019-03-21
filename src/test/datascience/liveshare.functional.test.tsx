@@ -84,14 +84,14 @@ suite('LiveShare tests', () => {
     });
 
     teardown(async () => {
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                // tslint:disable-next-line:no-any
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
-                }
+        for (const disposable of disposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
             }
         }
         await hostContainer.dispose();
@@ -118,7 +118,7 @@ suite('LiveShare tests', () => {
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
         webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
-            (viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, script: string, css: string) => {
+            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
             // Keep track of the current listener. It listens to messages through the vscode api
             result.webPanelListener = listener;
 
@@ -150,7 +150,7 @@ suite('LiveShare tests', () => {
 
             // During testing the MainPanel sends the init message before our history is created.
             // Pretend like it's happening now
-            const listener = ((createResult as any)['messageListener']) as HistoryMessageListener;
+            const listener = ((createResult as any).messageListener) as HistoryMessageListener;
             listener.onMessage(HistoryMessages.Started, {});
 
             return createResult;
@@ -170,7 +170,7 @@ suite('LiveShare tests', () => {
                     }
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (msg: any) => {
+                setState: (_msg: any) => {
 
                 },
                 // tslint:disable-next-line:no-any no-empty
@@ -195,7 +195,7 @@ suite('LiveShare tests', () => {
         container.wrapper = mounted;
 
         // We can remove the global api and event listener now.
-        delete (global as any)['acquireVsCodeApi'];
+        delete (global as any).acquireVsCodeApi;
         window.addEventListener = oldListener;
     }
 
@@ -353,7 +353,7 @@ suite('LiveShare tests', () => {
         let outputContents: string | undefined;
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         guestContainer.ioc!.serviceManager.rebindInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((f, c) => {
+        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_f, c) => {
             outputContents = c.toString();
             return Promise.resolve();
         });

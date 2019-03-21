@@ -49,7 +49,7 @@ if (MOCHA_REPORTER_JUNIT) {
     };
 }
 
-process.on('unhandledRejection', (ex: string | Error, a) => {
+process.on('unhandledRejection', (ex: string | Error, _a) => {
     const message = [`${ex}`];
     if (typeof ex !== 'string' && ex && ex.message) {
         message.push(ex.name);

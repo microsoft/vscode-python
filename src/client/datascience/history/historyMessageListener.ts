@@ -8,8 +8,8 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
 import { Identifiers, LiveShare } from '../constants';
-import { HistoryMessages, HistoryRemoteMessages } from './historyTypes';
 import { PostOffice } from '../liveshare/postOffice';
+import { HistoryMessages, HistoryRemoteMessages } from './historyTypes';
 
 // tslint:disable:no-any
 
@@ -22,7 +22,7 @@ export class HistoryMessageListener implements IWebPanelMessageListener {
     private historyMessages : string[] = [];
 
     constructor(liveShare: ILiveShareApi, callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) {
-        this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare, (api, command, role, args) => this.translateHostArgs(api, role, args));
+        this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare, (api, _command, role, args) => this.translateHostArgs(api, role, args));
 
         // Save our dispose callback so we remove our history window
         this.disposedCallback = disposed;

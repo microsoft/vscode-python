@@ -53,7 +53,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         return this.loadPromise;
     }
 
-    public async show(rows: IDataExplorerRow[]): Promise<void> {
+    public async show(_rows: IDataExplorerRow[]): Promise<void> {
         if (!this.disposed) {
             // Make sure we're loaded first
             await this.loadPromise;
@@ -93,7 +93,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     }
 
     // tslint:disable-next-line: no-any no-empty
-    private onMessage = (message: string, payload: any) => {
+    private onMessage = (message: string, _payload: any) => {
         switch (message) {
             case DataExplorerMessages.Started:
                 this.webPanelRendered();

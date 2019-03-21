@@ -94,7 +94,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result: TypeMoq.IMock<T> = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }
@@ -629,7 +629,7 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // To get around this, override the advanceToRange function called from within runCurrentCellAndAdvance
         // this will tell us if we are calling the correct range
-        codeWatcher['advanceToRange'] = (targetRange: Range) => {
+        (codeWatcher as any).advanceToRange = (targetRange: Range) => {
             expect(targetRange.start.line).is.equal(2, 'Incorrect range in run cell and advance');
             expect(targetRange.start.character).is.equal(0, 'Incorrect range in run cell and advance');
             expect(targetRange.end.line).is.equal(3, 'Incorrect range in run cell and advance');

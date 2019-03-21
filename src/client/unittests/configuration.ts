@@ -1,15 +1,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
+import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TestConfiguringTelemetry, TestTool } from '../telemetry/types';
-import { TEST_OUTPUT_CHANNEL } from './common/constants';
 import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
 import { ITestsHelper, UnitTestProduct } from './common/types';
 import {
@@ -21,14 +20,10 @@ import {
 export class UnitTestConfigurationService implements IUnitTestConfigurationService {
     private readonly configurationService: IConfigurationService;
     private readonly appShell: IApplicationShell;
-    private readonly installer: IInstaller;
-    private readonly outputChannel: OutputChannel;
     private readonly workspaceService: IWorkspaceService;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.installer = serviceContainer.get<IInstaller>(IInstaller);
-        this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
@@ -37,12 +32,12 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
         enabledCount += settings.unitTest.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.unitTest.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
-            return this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
+            return this._promptToEnableAndConfigureTestFramework(wkspace, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
         } else {
             const option = 'Enable and configure a Test Framework';
             const item = await this.appShell.showInformationMessage('No test framework configured (unittest, pytest or nosetest)', option);
             if (item === option) {
-                return this._promptToEnableAndConfigureTestFramework(wkspace, this.installer, this.outputChannel);
+                return this._promptToEnableAndConfigureTestFramework(wkspace);
             }
             return Promise.reject(null);
         }
@@ -86,8 +81,6 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
     public async promptToEnableAndConfigureTestFramework(wkspace: Uri) {
         await this._promptToEnableAndConfigureTestFramework(
             wkspace,
-            this.installer,
-            this.outputChannel,
             undefined,
             false,
             'commandpalette'
@@ -109,8 +102,6 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
 
     private async _promptToEnableAndConfigureTestFramework(
         wkspace: Uri,
-        installer: IInstaller,
-        outputChannel: OutputChannel,
         messageToDisplay: string = 'Select a test framework/tool to enable',
         enableOnly: boolean = false,
         trigger: 'ui' | 'commandpalette' = 'ui'

@@ -121,13 +121,14 @@ export class JupyterServerBase implements INotebookServer {
     private serverExitCode: number | undefined;
 
     constructor(
-        liveShare: ILiveShareApi,
-        dataScience: IDataScience,
+        _liveShare: ILiveShareApi,
+        _dataScience: IDataScience,
         protected logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
-        private sessionManager: IJupyterSessionManager) {
+        private sessionManager: IJupyterSessionManager
+    ) {
         this.asyncRegistry.push(this);
     }
 
@@ -220,7 +221,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, id: string, _silent: boolean = false): Observable<ICell[]> {
         return this.executeObservableImpl(code, file, line, id, false);
     }
 

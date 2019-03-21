@@ -19,6 +19,8 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
+import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
@@ -38,30 +40,40 @@ suite('Language Server - LanguageClient Factory', () => {
     test('Download factory is used when required to download the LS', async () => {
         const downloadFactory = mock(DownloadedLanguageClientFactory);
         const simpleFactory = mock(SimpleLanguageClientFactory);
-        const factory = new BaseLanguageClientFactory(instance(downloadFactory), instance(simpleFactory), instance(configurationService));
+        const envVarProvider = mock(EnvironmentVariablesProvider);
+        const activationService = mock(EnvironmentActivationService);
+        const factory = new BaseLanguageClientFactory(instance(downloadFactory), instance(simpleFactory), instance(configurationService), instance(envVarProvider), instance(activationService));
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+        const env = { FOO: 'bar' };
         when(settings.downloadLanguageServer).thenReturn(true);
+        when(envVarProvider.getEnvironmentVariables(uri)).thenReturn(Promise.resolve(env));
+        when(activationService.getActivatedEnvironmentVariables(uri)).thenReturn();
 
         await factory.createLanguageClient(uri, options);
 
         verify(configurationService.getSettings(uri)).once();
-        verify(downloadFactory.createLanguageClient(uri, options)).once();
-        verify(simpleFactory.createLanguageClient(uri, options)).never();
+        verify(downloadFactory.createLanguageClient(uri, options, env)).once();
+        verify(simpleFactory.createLanguageClient(uri, options, env)).never();
     });
     test('Simple factory is used when not required to download the LS', async () => {
         const downloadFactory = mock(DownloadedLanguageClientFactory);
         const simpleFactory = mock(SimpleLanguageClientFactory);
-        const factory = new BaseLanguageClientFactory(instance(downloadFactory), instance(simpleFactory), instance(configurationService));
+        const envVarProvider = mock(EnvironmentVariablesProvider);
+        const activationService = mock(EnvironmentActivationService);
+        const factory = new BaseLanguageClientFactory(instance(downloadFactory), instance(simpleFactory), instance(configurationService), instance(envVarProvider), instance(activationService));
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+        const env = { FOO: 'bar' };
         when(settings.downloadLanguageServer).thenReturn(false);
+        when(envVarProvider.getEnvironmentVariables(uri)).thenReturn(Promise.resolve(env));
+        when(activationService.getActivatedEnvironmentVariables(uri)).thenReturn();
 
         await factory.createLanguageClient(uri, options);
 
         verify(configurationService.getSettings(uri)).once();
-        verify(downloadFactory.createLanguageClient(uri, options)).never();
-        verify(simpleFactory.createLanguageClient(uri, options)).once();
+        verify(downloadFactory.createLanguageClient(uri, options, env)).never();
+        verify(simpleFactory.createLanguageClient(uri, options, env)).once();
     });
     test('Download factory will make use of the language server folder name and client will be created', async () => {
         const platformData = mock(PlatformData);
@@ -76,8 +88,8 @@ suite('Language Server - LanguageClient Factory', () => {
 
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
         const expectedServerOptions = {
-            run: { command: serverModule, rgs: [], options: { stdio: 'pipe' } },
-            debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe' } }
+            run: { command: serverModule, rgs: [], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
+            debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } }
         };
         rewiremock.enable();
 
@@ -91,7 +103,7 @@ suite('Language Server - LanguageClient Factory', () => {
         }
         rewiremock('vscode-languageclient').with({ LanguageClient: MockClass });
 
-        const client = await factory.createLanguageClient(uri, options);
+        const client = await factory.createLanguageClient(uri, options, { FOO: 'bar' });
 
         verify(lsFolderService.getLanguageServerFolderName()).once();
         verify(platformData.engineExecutableName).atLeast(1);
@@ -112,8 +124,8 @@ suite('Language Server - LanguageClient Factory', () => {
 
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
         const expectedServerOptions = {
-            run: { command: dotNetCommand, args: [serverModule], options: { stdio: 'pipe' } },
-            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: { stdio: 'pipe' } }
+            run: { command: dotNetCommand, args: [serverModule], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
+            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } }
         };
         rewiremock.enable();
 
@@ -127,7 +139,7 @@ suite('Language Server - LanguageClient Factory', () => {
         }
         rewiremock('vscode-languageclient').with({ LanguageClient: MockClass });
 
-        const client = await factory.createLanguageClient(uri, options);
+        const client = await factory.createLanguageClient(uri, options, { FOO: 'bar' });
 
         verify(lsFolderService.getLanguageServerFolderName()).once();
         verify(platformData.engineExecutableName).never();

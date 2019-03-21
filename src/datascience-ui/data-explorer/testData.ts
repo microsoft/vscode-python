@@ -9,7 +9,7 @@ export interface ITestData {
 }
 
 // tslint:disable
-export function generateTestData(numberOfRows: number) : ITestData {
+export function generateTestData(_numberOfRows: number) : ITestData {
     const columns = [
       { key: 'PassengerId', name: 'PassengerId', type: 'integer'},
       { key: 'SibSp', name: 'SibSp', type: 'integer'},

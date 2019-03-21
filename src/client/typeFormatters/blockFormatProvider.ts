@@ -49,7 +49,7 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
         this.providers.push(new CodeBlockFormatProvider(FINALLY_REGEX, finallyParentBlocks, boundaryBlocks));
     }
 
-    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): TextEdit[] {
+    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, _token: CancellationToken): TextEdit[] {
         if (position.line === 0) {
             return [];
         }

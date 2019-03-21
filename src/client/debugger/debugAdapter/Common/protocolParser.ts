@@ -53,22 +53,22 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
                 const event = message as DebugProtocol.Event;
                 if (typeof event.event === 'string') {
                     this.emit(`${message.type}_${event.event}`, event);
-                    break;
                 }
+                break;
             }
             case 'request': {
                 const request = message as DebugProtocol.Request;
                 if (typeof request.command === 'string') {
                     this.emit(`${message.type}_${request.command}`, request);
-                    break;
                 }
+                break;
             }
             case 'response': {
                 const reponse = message as DebugProtocol.Response;
                 if (typeof reponse.command === 'string') {
                     this.emit(`${message.type}_${reponse.command}`, reponse);
-                    break;
                 }
+                break;
             }
             default: {
                 this.emit(`${message.type}`, message);

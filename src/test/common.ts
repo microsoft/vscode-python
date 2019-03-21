@@ -131,7 +131,7 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
     const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
     return pythonSettings.PythonSettings.getInstance(resource, new AutoSelectionService());
 }
-export function retryAsync(wrapped: Function, retryCount: number = 2) {
+export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {
             const reasons: any[] = [];

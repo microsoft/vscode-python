@@ -21,7 +21,7 @@ export class MockCommandManager implements ICommandManager {
         };
     }
 
-    public registerTextEditorCommand(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, thisArg?: any): Disposable {
+    public registerTextEditorCommand(_command: string, _callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, _thisArg?: any): Disposable {
         throw new Error('Method not implemented.');
     }
     public executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined> {
@@ -37,7 +37,7 @@ export class MockCommandManager implements ICommandManager {
         return Promise.resolve(undefined);
     }
 
-    public getCommands(filterInternal?: boolean): Thenable<string[]> {
+    public getCommands(_filterInternal?: boolean): Thenable<string[]> {
         const keys = Object.keys(this.commands);
         return Promise.resolve(keys);
     }

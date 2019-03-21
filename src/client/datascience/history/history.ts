@@ -30,14 +30,13 @@ import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
-import { HistoryMessageListener } from './historyMessageListener';
-import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     CellState,
     ICell,
     ICodeCssGenerator,
     IConnection,
+    IDataExplorerProvider,
     IDataScienceExtraSettings,
     IHistory,
     IHistoryInfo,
@@ -46,9 +45,10 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider,
-    IDataExplorerProvider
+    IStatusProvider
 } from '../types';
+import { HistoryMessageListener } from './historyMessageListener';
+import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 
 export enum SysInfoReason {
     Start,
@@ -238,7 +238,8 @@ export class History implements IHistory {
                 break;
 
             case HistoryMessages.ShowDataExplorer:
-                this.showDataExplorer();
+                this.showDataExplorer()
+                    .ignoreErrors();
                 break;
 
             default:
@@ -394,7 +395,7 @@ export class History implements IHistory {
     }
 
     // tslint:disable-next-line:no-any
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -492,7 +493,7 @@ export class History implements IHistory {
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -763,7 +764,7 @@ export class History implements IHistory {
         }
     }
 
-    private async loadJupyterServer(restart?: boolean): Promise<void> {
+    private async loadJupyterServer(_restart?: boolean): Promise<void> {
         this.logger.logInformation('Getting jupyter server options ...');
 
         // Extract our options

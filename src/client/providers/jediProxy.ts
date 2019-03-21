@@ -835,7 +835,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         }
     }
 
-    public sendCommand(cmd: ICommand, token?: CancellationToken): Promise<R | undefined> {
+    public sendCommand(cmd: ICommand, _token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
 

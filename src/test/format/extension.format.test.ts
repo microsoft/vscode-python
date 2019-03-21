@@ -104,7 +104,7 @@ suite('Formatting - General', () => {
 
     async function injectFormatOutput(outputFileName: string) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(formatFilesPath, outputFileName), 'utf8'),

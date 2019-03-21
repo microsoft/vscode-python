@@ -47,7 +47,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private container: HTMLDivElement | null = null;
 
     // tslint:disable-next-line:max-func-body-length
-    constructor(props: IMainPanelProps, state: IMainPanelState) {
+    constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         if (!this.props.skipDefault) {
@@ -90,7 +90,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // tslint:disable-next-line:no-any
-    public handleMessage = (msg: string, payload?: any) => {
+    public handleMessage = (msg: string, _payload?: any) => {
         switch (msg) {
             default:
                 break;

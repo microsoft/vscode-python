@@ -107,8 +107,7 @@ export function parseTags(
     workspaceFolder: string,
     tagFile: string,
     query: string,
-    token: vscode.CancellationToken,
-    maxItems: number = 200
+    token: vscode.CancellationToken
 ): Promise<ITag[]> {
     return fsExistsAsync(tagFile).then(exists => {
         if (!exists) {

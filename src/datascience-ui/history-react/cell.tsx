@@ -445,7 +445,7 @@ export class Cell extends React.Component<ICellProps> {
         return <div key={index}>{str}</div>;
     }
 
-    private onChangeLineCount = (lineCount: number) => {
+    private onChangeLineCount = (_lineCount: number) => {
         // Ignored for now. Might use this to update the . next to the code lines
     }
 }

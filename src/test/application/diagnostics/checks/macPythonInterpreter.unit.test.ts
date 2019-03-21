@@ -267,7 +267,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
-                .callback((d, p: MessageCommandPrompt) => messagePrompt = p)
+                .callback((_d, p: MessageCommandPrompt) => messagePrompt = p)
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
@@ -297,7 +297,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
-                .callback((d, p: MessageCommandPrompt) => messagePrompt = p)
+                .callback((_d, p: MessageCommandPrompt) => messagePrompt = p)
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),

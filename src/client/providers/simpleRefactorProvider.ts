@@ -57,7 +57,7 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
             return response.results[0].diff;
         });
 
-        return extractName(extensionDir, textEditor, range, newName, rename, outputChannel);
+        return extractName(textEditor, newName, rename, outputChannel);
     });
 }
 
@@ -80,7 +80,7 @@ export function extractMethod(extensionDir: string, textEditor: vscode.TextEdito
             return response.results[0].diff;
         });
 
-        return extractName(extensionDir, textEditor, range, newName, rename, outputChannel);
+        return extractName(textEditor, newName, rename, outputChannel);
     });
 }
 
@@ -102,7 +102,7 @@ function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any
     });
 }
 
-function extractName(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range, newName: string,
+function extractName(textEditor: vscode.TextEditor, newName: string,
     // tslint:disable-next-line:no-any
     renameResponse: Promise<string>, outputChannel: vscode.OutputChannel): Promise<any> {
     let changeStartsAtLine = -1;

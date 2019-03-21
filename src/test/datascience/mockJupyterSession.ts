@@ -43,7 +43,7 @@ export class MockJupyterSession implements IJupyterSession {
     public waitForIdle(): Promise<void> {
         return sleep(this.timedelay);
     }
-    public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture {
+    public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {

@@ -83,7 +83,7 @@ suite('Installer', () => {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
-        processService.onExec((file, args, options, callback) => {
+        processService.onExec((_file, args, _options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);
             if (args.length > 1 && args[0] === '-c' && args[1] === `import ${moduleName}`) {
                 checkInstalledDef.resolve(true);

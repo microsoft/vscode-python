@@ -33,7 +33,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.documentSelector = PYTHON;
     }
 
-    public async activate(resource: Resource): Promise<void> {
+    public async activate(_resource: Resource): Promise<void> {
         if (this.jediFactory) {
             throw new Error('Jedi already started');
         }

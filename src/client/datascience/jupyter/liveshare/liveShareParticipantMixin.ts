@@ -14,7 +14,7 @@ import { waitForGuestService, waitForHostService } from './utils';
 // tslint:disable:no-any
 
 export class LiveShareParticipantDefault implements IAsyncDisposable {
-    constructor(...rest: any[]) {
+    constructor(..._rest: any[]) {
         noop();
     }
 
@@ -90,11 +90,11 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             return this.actualRole;
         }
 
-        public async onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void> {
+        public async onPeerChange(_ev: vsls.PeersChangeEvent) : Promise<void> {
             noop();
         }
 
-        public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+        public async onAttach(_api: vsls.LiveShare | null) : Promise<void> {
             noop();
         }
 
