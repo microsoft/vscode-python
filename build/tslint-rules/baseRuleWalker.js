@@ -4,16 +4,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const Lint = require("tslint");
-const constants_1 = require("../constants");
+const util = require("../util");
 class BaseRuleWalker extends Lint.RuleWalker {
-    constructor() {
-        super(...arguments);
-        this.filesToIgnore = constants_1.filesNotToCheck;
-    }
-    shouldIgnoreCurrentFile(node) {
+    shouldIgnoreCurrentFile(node, filesToIgnore) {
         const sourceFile = node.getSourceFile();
         if (sourceFile && sourceFile.fileName) {
-            if (this.filesToIgnore.indexOf(sourceFile.fileName.replace(/\//g, path.sep)) >= 0) {
+            const filename = path.resolve(util.ExtensionRootDir, sourceFile.fileName);
+            if (filesToIgnore.indexOf(filename.replace(/\//g, path.sep)) >= 0) {
                 return true;
             }
         }

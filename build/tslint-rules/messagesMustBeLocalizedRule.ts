@@ -6,16 +6,20 @@
 import * as path from 'path';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
+import * as util from '../util';
 import { BaseRuleWalker } from './baseRuleWalker';
 
 const methodNames = [
-    // From IApplicationShell (vscode.window)
+    // From IApplicationShell (vscode.window):
     'showErrorMessage', 'showInformationMessage',
     'showWarningMessage', 'setStatusBarMessage',
-    // From IOutputChannel (vscode.OutputChannel)
+    // From IOutputChannel (vscode.OutputChannel):
     'appendLine', 'appendLine'
 ];
-const ignoredPrefix = 'src/test'.replace(/\//g, path.sep);
+// tslint:ignore-next-line:no-suspicious-comments
+// TODO: Ideally we would not ignore any files.
+const ignoredFiles = util.getListOfFiles('unlocalizedFiles.json');
+const ignoredPrefix = path.normalize('src/test');
 
 const failureMessage = 'Messages must be localized in the Python Extension (use src/client/common/utils/localize.ts)';
 
@@ -31,7 +35,10 @@ class NoStringLiteralsInMessages extends BaseRuleWalker {
         super.visitCallExpression(node);
     }
     protected shouldIgnoreCurrentFile(node: ts.Node) {
-        if (super.shouldIgnoreCurrentFile(node)) {
+        //console.log('');
+        //console.log(node.getSourceFile().fileName);
+        //console.log(ignoredFiles);
+        if (super.shouldIgnoreCurrentFile(node, ignoredFiles)) {
             return true;
         }
         const sourceFile = node.getSourceFile();

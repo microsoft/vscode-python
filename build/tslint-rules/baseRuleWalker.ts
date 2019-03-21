@@ -6,14 +6,14 @@
 import * as path from 'path';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
-import { filesNotToCheck } from '../constants';
+import * as util from '../util';
 
 export class BaseRuleWalker extends Lint.RuleWalker {
-    private readonly filesToIgnore = filesNotToCheck;
-    protected shouldIgnoreCurrentFile(node: ts.Node): boolean {
+    protected shouldIgnoreCurrentFile(node: ts.Node, filesToIgnore: string[]): boolean {
         const sourceFile = node.getSourceFile();
         if (sourceFile && sourceFile.fileName) {
-            if (this.filesToIgnore.indexOf(sourceFile.fileName.replace(/\//g, path.sep)) >= 0) {
+            const filename = path.resolve(util.ExtensionRootDir, sourceFile.fileName);
+            if (filesToIgnore.indexOf(filename.replace(/\//g, path.sep)) >= 0) {
                 return true;
             }
         }

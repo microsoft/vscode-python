@@ -28,3 +28,4 @@ obj/**
 tmp/**
 .python-version
 .vs/
+!build/

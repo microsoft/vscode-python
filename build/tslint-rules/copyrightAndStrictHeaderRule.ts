@@ -6,7 +6,10 @@
 import { EOL } from 'os';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
+import { existingFiles, contributedFiles } from '../constants';
 import { BaseRuleWalker } from './baseRuleWalker';
+
+const ignoredFiles = [...existingFiles, ...contributedFiles];
 
 const copyrightHeader = [
     '// Copyright (c) Microsoft Corporation. All rights reserved.',
@@ -36,6 +39,12 @@ class NoFileWithoutCopyrightHeader extends BaseRuleWalker {
         }
 
         super.visitSourceFile(sourceFile);
+    }
+    protected shouldIgnoreCurrentFile(node: ts.Node) {
+        if (super.shouldIgnoreCurrentFile(node, ignoredFiles)) {
+            return true;
+        }
+        return false;
     }
     private validateHeader(_sourceFile: ts.SourceFile, sourceFileContents: string) {
         for (const allowedHeader of allowedCopyrightHeaders) {
