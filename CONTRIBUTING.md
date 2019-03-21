@@ -168,7 +168,7 @@ Now you have debug bits installed.
 Follow the directions here:
 https://github.com/Microsoft/vscode/wiki/Performance-Issues
 
-You should generate a profile and save it. You can then load it into any chrome Javscript Profiler and look at the results. 
+You should generate a profile and save it. You can then load it into any Chrome javscript profiler and look at the results. 
 
 I found using the 'Chart' view and searching (CTRL+F) for classes/functions I thought might be expensive was a good way to start:
 
