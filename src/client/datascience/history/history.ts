@@ -30,14 +30,13 @@ import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
-import { HistoryMessageListener } from './historyMessageListener';
-import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     CellState,
     ICell,
     ICodeCssGenerator,
     IConnection,
+    IDataExplorerProvider,
     IDataScienceExtraSettings,
     IHistory,
     IHistoryInfo,
@@ -46,9 +45,10 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider,
-    IDataExplorerProvider
+    IStatusProvider
 } from '../types';
+import { HistoryMessageListener } from './historyMessageListener';
+import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 
 export enum SysInfoReason {
     Start,
@@ -238,7 +238,8 @@ export class History implements IHistory {
                 break;
 
             case HistoryMessages.ShowDataExplorer:
-                this.showDataExplorer();
+                this.showDataExplorer()
+                    .ignoreErrors();
                 break;
 
             default:

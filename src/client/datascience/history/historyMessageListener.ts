@@ -8,8 +8,8 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
 import { Identifiers, LiveShare } from '../constants';
-import { HistoryMessages, HistoryRemoteMessages } from './historyTypes';
 import { PostOffice } from '../liveshare/postOffice';
+import { HistoryMessages, HistoryRemoteMessages } from './historyTypes';
 
 // tslint:disable:no-any
 
