@@ -8,8 +8,9 @@ import * as path from 'path';
 import { TextDocument } from 'vscode';
 
 import { sendTelemetryEvent } from '.';
-import { noop, sleep } from '../../test/core';
+import { noop } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
 import { EventName } from './constants';
@@ -18,9 +19,14 @@ import { IImportTracker } from './types';
 const ImportRegEx = /^(?!['"#]).*from\s+([a-zA-Z0-9_\.]+)\s+import.*(?!['"])|^(?!['"#]).*import\s+([a-zA-Z0-9_\., ]+).*(?!['"])/;
 const MAX_DOCUMENT_LINES = 1000;
 
+// Capture isTestExecution on module load so that a test can turn it off and still
+// have this value set.
+const testExecution = isTestExecution();
+
 @injectable()
 export class ImportTracker implements IImportTracker {
 
+    private pendingDocs = new Map<string, NodeJS.Timer>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
@@ -44,19 +50,49 @@ export class ImportTracker implements IImportTracker {
     }
 
     public async activate(): Promise<void> {
-        // Act like all of our open documents just opened. Don't do this now though. We don't want
-        // to hold up the activate.
-        await sleep(1000);
+        // Act like all of our open documents just opened. Our timeout will make sure this is delayed
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
+    }
+
+    private getDocumentLines(document: TextDocument) : string [] {
+        return Array.apply(null, {length: Math.min(document.lineCount, MAX_DOCUMENT_LINES)}).map((a, i) => {
+            const line = document.lineAt(i);
+            if (line && !line.isEmptyOrWhitespace) {
+                return line.text;
+            }
+            return undefined;
+        }).filter((f: string | undefined) => f);
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a python file.
         if (path.extname(document.fileName) === '.py') {
             // Parse the contents of the document, looking for import matches on each line
-            const lines = document.getText().splitLines({ trim: true, removeEmptyEntries: true });
-            this.lookForImports(lines.slice(0, Math.min(lines.length, MAX_DOCUMENT_LINES)), EventName.KNOWN_IMPORT_FROM_FILE);
+            this.scheduleDocument(document);
         }
+    }
+
+    private scheduleDocument(document: TextDocument) {
+        // If already scheduled, cancel.
+        if (this.pendingDocs.has(document.fileName)) {
+            clearTimeout(this.pendingDocs.get(document.fileName));
+            this.pendingDocs.delete(document.fileName);
+        }
+
+        // Now schedule a new one.
+        if (testExecution) {
+            // During a test, check right away. It needs to be synchronous.
+            this.checkDocument(document);
+        } else {
+            // Wait five seconds to make sure we don't already have this document pending.
+            this.pendingDocs.set(document.fileName, setTimeout(() => this.checkDocument(document), 5000));
+        }
+    }
+
+    private checkDocument(document: TextDocument) {
+        this.pendingDocs.delete(document.fileName);
+        const lines = this.getDocumentLines(document);
+        this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_FILE);
     }
 
     private onExecutedCode(code: string) {

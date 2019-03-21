@@ -29,6 +29,7 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
         const testRange = new Range(index, 0, index, line.length);
         textLine.setup(l => l.text).returns(() => line);
         textLine.setup(l => l.range).returns(() => testRange);
+        textLine.setup(l => l.isEmptyOrWhitespace).returns(() => line.trim().length === 0);
         return textLine;
     });
     document.setup(d => d.lineAt(TypeMoq.It.isAnyNumber())).returns((index: number) => textLines[index].object);
