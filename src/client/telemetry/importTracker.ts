@@ -26,7 +26,7 @@ const testExecution = isTestExecution();
 @injectable()
 export class ImportTracker implements IImportTracker {
 
-    private pendingDocs = new Set<string>();
+    private pendingDocs = new Map<string, NodeJS.Timer>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
@@ -56,12 +56,12 @@ export class ImportTracker implements IImportTracker {
 
     private getDocumentLines(document: TextDocument) : string [] {
         return Array.apply(null, {length: Math.min(document.lineCount, MAX_DOCUMENT_LINES)}).map((a, i) => {
-            const text = document.lineAt(i).text.trim();
-            if (text && text.length) {
-                return text;
+            const line = document.lineAt(i);
+            if (line && !line.isEmptyOrWhitespace) {
+                return line.text;
             }
             return undefined;
-        }).filter(f => f);
+        }).filter((f: string | undefined) => f);
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
@@ -73,15 +73,19 @@ export class ImportTracker implements IImportTracker {
     }
 
     private scheduleDocument(document: TextDocument) {
-        if (!this.pendingDocs.has(document.fileName)) {
-            this.pendingDocs.add(document.fileName);
-            if (testExecution) {
-                // During a test, check right away. It needs to be synchronous.
-                this.checkDocument(document);
-            } else {
-                // Wait five seconds to make sure we don't already have this document pending.
-                setTimeout(() => this.checkDocument(document), 5000);
-            }
+        // If already scheduled, cancel.
+        if (this.pendingDocs.has(document.fileName)) {
+            clearTimeout(this.pendingDocs.get(document.fileName));
+            this.pendingDocs.delete(document.fileName);
+        }
+
+        // Now schedule a new one.
+        if (testExecution) {
+            // During a test, check right away. It needs to be synchronous.
+            this.checkDocument(document);
+        } else {
+            // Wait five seconds to make sure we don't already have this document pending.
+            this.pendingDocs.set(document.fileName, setTimeout(() => this.checkDocument(document), 5000));
         }
     }
 
