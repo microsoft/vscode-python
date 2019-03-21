@@ -14,7 +14,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ICodeCssGenerator, IDataExplorer, IDataExplorerRow, IDataScienceExtraSettings } from '../types';
+import { ICodeCssGenerator, IDataExplorer, IDataScienceExtraSettings, IJupyterVariable } from '../types';
 import { DataExplorerMessageListener } from './dataExplorerMessageListener';
 import { DataExplorerMessages, IDataExplorerMapping } from './types';
 
@@ -53,7 +53,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         return this.loadPromise;
     }
 
-    public async show(rows: IDataExplorerRow[]): Promise<void> {
+    public async show(variable: IJupyterVariable): Promise<void> {
         if (!this.disposed) {
             // Make sure we're loaded first
             await this.loadPromise;

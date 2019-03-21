@@ -238,7 +238,7 @@ export class History implements IHistory {
                 break;
 
             case HistoryMessages.ShowDataExplorer:
-                this.showDataExplorer();
+                this.dispatchMessage(message, payload, this.showDataExplorer);
                 break;
 
             default:
@@ -356,9 +356,9 @@ export class History implements IHistory {
         }
     }
 
-    private async showDataExplorer() {
+    private async showDataExplorer(variable: string) {
         try {
-            return this.dataExplorerProvider.create([]);
+            return this.dataExplorerProvider.create(variable);
         } catch (e) {
             this.applicationShell.showErrorMessage(e);
         }

@@ -3,7 +3,7 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import { JSONObject } from '@phosphor/coreutils';
+import { JSONObject, JSONArray } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
@@ -265,24 +265,25 @@ export interface IJupyterVariable {
     count: number;
     truncated: boolean;
     expensive: boolean;
+    columns: string[] | undefined;
+    rows: { [row: number] : JSONObject } | undefined ;
+    rowCount: number | undefined;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
-}
-
-export interface IDataExplorerRow {
-    [column: string] : string | number | {};
+    getDataFrameLikeData(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
+    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<IJupyterVariable>;
 }
 
 export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
 export interface IDataExplorerProvider {
-    create(rows: IDataExplorerRow[]) : Promise<IDataExplorer>;
+    create(variable: string) : Promise<IDataExplorer>;
 }
 export const IDataExplorer = Symbol('IDataExplorer');
 
 export interface IDataExplorer extends IAsyncDisposable {
-    show(rows: IDataExplorerRow[]) : Promise<void>;
+    show(variable: IJupyterVariable) : Promise<void>;
 }
