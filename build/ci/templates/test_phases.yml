@@ -102,14 +102,14 @@ steps:
     inputs:
       targets: 'prePublishNonBundle'
 
-  # Run the `hygiene-modified` gulp task to ensure that the added code adheres to the
+  # Run the `hygiene` gulp task to ensure that the added code adheres to the
   # code standards we are trying to maintain.
   # Example command line (windows pwsh):
-  # > gulp hygiene-modified
+  # > gulp hygiene
   - task: Gulp@0
     displayName: 'gulp code hygiene'
     inputs:
-      targets: 'hygiene-modified'
+      targets: 'hygiene'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
 
   # Enable test coverage reporting for all subsequent tests (typescript-based)
