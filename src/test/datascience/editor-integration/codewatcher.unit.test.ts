@@ -107,16 +107,16 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         if (!firstCell) {
             if (codeLenses[startLensIndex + 1].command) {
-                expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run All Cells Above code lens command incorrect');
+                expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run Above code lens command incorrect');
             }
-            expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
+            expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run Above code lens range incorrect');
         }
 
         const indexAdd = firstCell ? 1 : 2;
         if (codeLenses[startLensIndex + indexAdd].command) {
-            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Cell And All Below code lens command incorrect');
+            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Below code lens command incorrect');
         }
-        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Run All Cells Above code lens range incorrect');
+        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Run Below code lens range incorrect');
     }
 
     test('Add a file with just a #%% mark to a code watcher', () => {
