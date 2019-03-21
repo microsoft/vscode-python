@@ -106,10 +106,11 @@ steps:
   # code standards we are trying to maintain.
   # Example command line (windows pwsh):
   # > gulp hygiene
-  - task: Gulp@0
+  - bash: |
+      npx tsc -p ./
+      npx tslint ./src/**/*.ts{,x}
+      #npx gulp hygiene
     displayName: 'gulp code hygiene'
-    inputs:
-      targets: 'hygiene'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
 
   # Enable test coverage reporting for all subsequent tests (typescript-based)
