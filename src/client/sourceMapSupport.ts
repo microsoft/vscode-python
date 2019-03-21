@@ -18,7 +18,7 @@ const setting = 'sourceMapsEnabled';
 export class SourceMapSupport {
     private readonly config: WorkspaceConfiguration;
     constructor(private readonly vscode: VSCode) {
-        this.config = this.vscode.workspace.getConfiguration('python.diagnostics', undefined);
+        this.config = this.vscode.workspace.getConfiguration('python.diagnostics', null);
     }
     public async initialize(): Promise<void> {
         if (!this.enabled) {
@@ -66,7 +66,7 @@ export class SourceMapSupport {
     }
 }
 export function initialize(vscode: VSCode = require('vscode')) {
-    if (!vscode.workspace.getConfiguration('python.diagnostics', undefined).get('sourceMapsEnabled', false)) {
+    if (!vscode.workspace.getConfiguration('python.diagnostics', null).get('sourceMapsEnabled', false)) {
         new SourceMapSupport(vscode).disable().ignoreErrors();
         return;
     }

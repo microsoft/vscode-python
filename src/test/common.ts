@@ -60,7 +60,12 @@ async function disposePythonSettings() {
 
 export async function updateSetting(setting: PythonSettingKeys, value: {} | undefined, resource: Uri | undefined, configTarget: ConfigurationTarget) {
     const vscode = require('vscode') as typeof import('vscode');
-    const settings = vscode.workspace.getConfiguration('python', resource);
+    let settings: import('vscode').WorkspaceConfiguration;
+    if (resource) {
+        settings = vscode.workspace.getConfiguration('python', resource);
+    } else {
+        settings = vscode.workspace.getConfiguration('python', null);
+    }
     const currentValue = settings.inspect(setting);
     if (currentValue !== undefined && ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
         (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
@@ -160,7 +165,12 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
         return;
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
-    const settings = vscode.workspace.getConfiguration('python', resourceUri);
+    let settings: import('vscode').WorkspaceConfiguration;
+    if (resourceUri) {
+        settings = vscode.workspace.getConfiguration('python', resourceUri);
+    } else {
+        settings = vscode.workspace.getConfiguration('python', null);
+    }
     const value = settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' = config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
