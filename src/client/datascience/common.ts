@@ -85,12 +85,17 @@ export function parseForComments(
     for (const l of lines) {
         const trim = l.trim();
         // Multiline is triple quotes of either kind
-        const isMultiline = trim === '\'\'\'' || trim === '\"\"\"';
+        const isMultiline = trim.startsWith('\'\'\'') || trim.startsWith('\"\"\"');
         if (insideMultiline) {
             if (!isMultiline) {
                 foundCommentLine(l, pos);
             } else {
                 insideMultiline = false;
+
+                // Might end with text too
+                if (trim.length > 3) {
+                    foundNonCommentLine(trim.slice(3), pos);
+                }
             }
         } else {
             if (!isMultiline) {
@@ -101,6 +106,11 @@ export function parseForComments(
                 }
             } else {
                 insideMultiline = true;
+
+                // Might end with text too
+                if (trim.length > 3) {
+                    foundCommentLine(trim.slice(3), pos);
+                }
             }
         }
         pos += 1;
