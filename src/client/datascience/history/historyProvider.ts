@@ -9,6 +9,7 @@ import * as vsls from 'vsls/vscode';
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
@@ -64,14 +65,18 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
 
     public async getOrCreateActive() : Promise<IHistory> {
         if (!this.activeHistory) {
-            this.activeHistory = await this.create();
+            await this.create();
         }
 
         // Make sure all other providers have an active history.
         await this.synchronizeCreate();
 
         // Now that all of our peers have sync'd, return the history to use.
-        return this.activeHistory;
+        if (this.activeHistory) {
+            return this.activeHistory;
+        }
+
+        throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
     }
 
     public async getNotebookOptions() : Promise<INotebookServerOptions> {
@@ -107,15 +112,16 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         return this.postOffice.dispose();
     }
 
-    private async create() : Promise<IHistory> {
-        const result = this.serviceContainer.get<IHistory>(IHistory);
-        const handler = result.closed(this.onHistoryClosed);
-        this.disposables.push(result);
+    private async create() : Promise<void> {
+        // Set it as soon as we create it. The .ctor for the history window
+        // may cause a subclass to talk to the IHistoryProvider to get the active history.
+        this.activeHistory = this.serviceContainer.get<IHistory>(IHistory);
+        const handler = this.activeHistory.closed(this.onHistoryClosed);
+        this.disposables.push(this.activeHistory);
         this.disposables.push(handler);
-        this.activeHistoryExecuteHandler = result.onExecutedCode(this.onHistoryExecute);
+        this.activeHistoryExecuteHandler = this.activeHistory.onExecutedCode(this.onHistoryExecute);
         this.disposables.push(this.activeHistoryExecuteHandler);
-        await result.ready;
-        return result;
+        await this.activeHistory.ready;
     }
 
     private onPeerCountChanged(newCount: number) {
@@ -133,7 +139,7 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
             // The other side is creating a history window. Create on this side. We don't need to show
             // it as the running of new code should do that.
             if (!this.activeHistory) {
-                this.activeHistory = await this.create();
+                await this.create();
             }
 
             // Tell the requestor that we got its message (it should be waiting for all peers to sync)

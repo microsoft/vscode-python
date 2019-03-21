@@ -158,6 +158,7 @@
     "DataScience.liveShareSyncFailure": "Synchronization failure during live share startup.",
     "DataScience.liveShareServiceFailure": "Failure starting '{0}' service during live share connection.",
     "DataScience.documentMismatch": "Cannot run cells, duplicate documents for {0} found.",
+    "DataScience.pythonInteractiveCreateFailed": "Failure to create a 'Python Interactive' window. Try reinstalling the Python extension.",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
     "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
