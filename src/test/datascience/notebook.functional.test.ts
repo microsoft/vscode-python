@@ -780,10 +780,10 @@ plt.show()`,
         if (server) {
             // This is kinda fragile. It reliese on impl details to get to the session. Might
             // just expose it?
-            const innerServerFactory = (server as any)['serverFactory'] as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
+            const innerServerFactory = (server as any).serverFactory as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
             const innerServer = await innerServerFactory.get();
             assert.ok(innerServer, 'Cannot find the inner server');
-            return (innerServer as any)['session'] as MockJupyterSession;
+            return (innerServer as any).session as MockJupyterSession;
         }
     }
 

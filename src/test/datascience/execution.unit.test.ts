@@ -130,14 +130,14 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
     }
 
     public dispose = async () : Promise<void> => {
-        for (let i = 0; i < this.disposables.length; i += 1) {
-            const disposable = this.disposables[i];
-            if (disposable) {
-                const val = disposable.dispose();
-                if (val instanceof Promise) {
-                    const promise = val as Promise<void>;
-                    await promise;
-                }
+        for (const disposable of this.disposables) {
+            if (!disposable) {
+                continue;
+            }
+            const val = disposable.dispose();
+            if (val instanceof Promise) {
+                const promise = val as Promise<void>;
+                await promise;
             }
         }
         this.disposables = [];
@@ -265,7 +265,7 @@ suite('Jupyter Execution', async () => {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result: TypeMoq.IMock<T> = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }

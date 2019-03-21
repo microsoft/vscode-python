@@ -84,14 +84,14 @@ suite('LiveShare tests', () => {
     });
 
     teardown(async () => {
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                // tslint:disable-next-line:no-any
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
-                }
+        for (const disposable of disposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
             }
         }
         await hostContainer.dispose();
@@ -150,7 +150,7 @@ suite('LiveShare tests', () => {
 
             // During testing the MainPanel sends the init message before our history is created.
             // Pretend like it's happening now
-            const listener = ((createResult as any)['messageListener']) as HistoryMessageListener;
+            const listener = ((createResult as any).messageListener) as HistoryMessageListener;
             listener.onMessage(HistoryMessages.Started, {});
 
             return createResult;
@@ -195,7 +195,7 @@ suite('LiveShare tests', () => {
         container.wrapper = mounted;
 
         // We can remove the global api and event listener now.
-        delete (global as any)['acquireVsCodeApi'];
+        delete (global as any).acquireVsCodeApi;
         window.addEventListener = oldListener;
     }
 

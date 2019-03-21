@@ -73,7 +73,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
         // Special case the 'generator' cell that returns a function
         // to generate output.
         if (this.output.output_type === 'generator') {
-            const resultEntry = <any>this.output['resultGenerator'];
+            const resultEntry = <any>this.output.resultGenerator;
             const resultGenerator = resultEntry as (t: CancellationToken) => Promise<{result: nbformat.IStream; haveMore: boolean}>;
             if (resultGenerator) {
                 const streamResult = await resultGenerator(this.cancelToken);

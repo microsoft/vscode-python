@@ -163,7 +163,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 data.outputs = [...data.outputs, taggedResult];
 
                 // Tag on our extra data
-                (taggedResult as any)['resultGenerator'] = async (t: CancellationToken) => {
+                (taggedResult as any).resultGenerator = async (t: CancellationToken) => {
                     const result = await resultGenerator(t);
                     return {
                         result: this.createStreamResult(result.result),
@@ -299,7 +299,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }
