@@ -145,15 +145,14 @@ suite('LiveShare tests', () => {
         // The history provider create needs to be rewritten to make the history window think the mounted web panel is
         // ready.
         const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<IHistory> => {
-            const createResult = await origFunc();
+        (historyProvider as any).create = async (): Promise<void> => {
+            await origFunc();
+            const history = historyProvider.getActive();
 
             // During testing the MainPanel sends the init message before our history is created.
             // Pretend like it's happening now
-            const listener = ((createResult as any).messageListener) as HistoryMessageListener;
+            const listener = ((history as any).messageListener) as HistoryMessageListener;
             listener.onMessage(HistoryMessages.Started, {});
-
-            return createResult;
         };
 
         return result;

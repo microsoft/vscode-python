@@ -54,8 +54,8 @@ export class ImportTracker implements IImportTracker {
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
-    private getDocumentLines(document: TextDocument) : string [] {
-        return Array.apply(null, {length: Math.min(document.lineCount, MAX_DOCUMENT_LINES)}).map((a, i) => {
+    private getDocumentLines(document: TextDocument) : (string | undefined)[] {
+        return (new Array(Math.min(document.lineCount, MAX_DOCUMENT_LINES))).map((_a: any, i: number) => {
             const line = document.lineAt(i);
             if (line && !line.isEmptyOrWhitespace) {
                 return line.text;
@@ -74,8 +74,9 @@ export class ImportTracker implements IImportTracker {
 
     private scheduleDocument(document: TextDocument) {
         // If already scheduled, cancel.
-        if (this.pendingDocs.has(document.fileName)) {
-            clearTimeout(this.pendingDocs.get(document.fileName));
+        const currentTimeout = this.pendingDocs.get(document.fileName);
+        if (currentTimeout) {
+            clearTimeout(currentTimeout);
             this.pendingDocs.delete(document.fileName);
         }
 
@@ -100,12 +101,12 @@ export class ImportTracker implements IImportTracker {
         this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_EXECUTION);
     }
 
-    private lookForImports(lines: string[], eventName: string) {
+    private lookForImports(lines: (string | undefined)[], eventName: string) {
         try {
             // Use a regex to parse each line, looking for imports
             const matches: Set<string> = new Set<string>();
             for (const s of lines) {
-                const match = ImportRegEx.exec(s);
+                const match = s ? ImportRegEx.exec(s) : null;
                 if (match && match.length > 2) {
                     // Could be a from or a straight import. from is the first entry.
                     const actual = match[1] ? match[1] : match[2];
