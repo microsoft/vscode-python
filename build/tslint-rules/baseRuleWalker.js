@@ -12,7 +12,12 @@ class BaseRuleWalker extends Lint.RuleWalker {
     }
     shouldIgnoreCurrentFile(node) {
         const sourceFile = node.getSourceFile();
-        return sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName.replace(/\//g, path.sep)) >= 0;
+        if (sourceFile && sourceFile.fileName) {
+            if (this.filesToIgnore.indexOf(sourceFile.fileName.replace(/\//g, path.sep)) >= 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 exports.BaseRuleWalker = BaseRuleWalker;

@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as path from 'path';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
 import { BaseRuleWalker } from './baseRuleWalker';
@@ -14,15 +15,13 @@ const methodNames = [
     // From IOutputChannel (vscode.OutputChannel)
     'appendLine', 'appendLine'
 ];
+const ignoredPrefix = 'src/test'.replace(/\//g, path.sep);
 
 const failureMessage = 'Messages must be localized in the Python Extension (use src/client/common/utils/localize.ts)';
 
 class NoStringLiteralsInMessages extends BaseRuleWalker {
     protected visitCallExpression(node: ts.CallExpression): void {
-        const prop = node.expression as ts.PropertyAccessExpression;
-        if (!this.shouldIgnoreCurrentFile(node) &&
-            ts.isPropertyAccessExpression(node.expression) &&
-            methodNames.indexOf(prop.name.text) >= 0) {
+        if (!this.shouldIgnoreNode(node)) {
             node.arguments
                 .filter(arg => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
                 .forEach(arg => {
@@ -30,6 +29,31 @@ class NoStringLiteralsInMessages extends BaseRuleWalker {
                 });
         }
         super.visitCallExpression(node);
+    }
+    protected shouldIgnoreCurrentFile(node: ts.Node) {
+        if (super.shouldIgnoreCurrentFile(node)) {
+            return true;
+        }
+        const sourceFile = node.getSourceFile();
+        if (sourceFile && sourceFile.fileName) {
+            if (sourceFile.fileName.startsWith(ignoredPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private shouldIgnoreNode(node: ts.CallExpression) {
+        if (this.shouldIgnoreCurrentFile(node)) {
+            return true;
+        }
+        if (!ts.isPropertyAccessExpression(node.expression)) {
+            return true;
+        }
+        const prop = node.expression as ts.PropertyAccessExpression;
+        if (methodNames.indexOf(prop.name.text) < 0) {
+            return true;
+        }
+        return false;
     }
 }
 

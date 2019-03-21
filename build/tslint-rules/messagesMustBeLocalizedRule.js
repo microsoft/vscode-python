@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+const path = require("path");
 const Lint = require("tslint");
 const ts = require("typescript");
 const baseRuleWalker_1 = require("./baseRuleWalker");
@@ -12,13 +13,11 @@ const methodNames = [
     // From IOutputChannel (vscode.OutputChannel)
     'appendLine', 'appendLine'
 ];
+const ignoredPrefix = 'src/test'.replace(/\//g, path.sep);
 const failureMessage = 'Messages must be localized in the Python Extension (use src/client/common/utils/localize.ts)';
 class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
     visitCallExpression(node) {
-        const prop = node.expression;
-        if (!this.shouldIgnoreCurrentFile(node) &&
-            ts.isPropertyAccessExpression(node.expression) &&
-            methodNames.indexOf(prop.name.text) >= 0) {
+        if (!this.shouldIgnoreNode(node)) {
             node.arguments
                 .filter(arg => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
                 .forEach(arg => {
@@ -26,6 +25,31 @@ class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
             });
         }
         super.visitCallExpression(node);
+    }
+    shouldIgnoreCurrentFile(node) {
+        if (super.shouldIgnoreCurrentFile(node)) {
+            return true;
+        }
+        const sourceFile = node.getSourceFile();
+        if (sourceFile && sourceFile.fileName) {
+            if (sourceFile.fileName.startsWith(ignoredPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    shouldIgnoreNode(node) {
+        if (this.shouldIgnoreCurrentFile(node)) {
+            return true;
+        }
+        if (!ts.isPropertyAccessExpression(node.expression)) {
+            return true;
+        }
+        const prop = node.expression;
+        if (methodNames.indexOf(prop.name.text) < 0) {
+            return true;
+        }
+        return false;
     }
 }
 class Rule extends Lint.Rules.AbstractRule {
