@@ -20,7 +20,7 @@ const failureMessage = 'Messages must be localized in the Python Extension (use 
 class NoStringLiteralsInMessages extends BaseRuleWalker {
     protected visitCallExpression(node: ts.CallExpression): void {
         const prop = node.expression as ts.PropertyAccessExpression;
-        if (!this.sholdIgnoreCcurrentFile(node) &&
+        if (!this.shouldIgnoreCurrentFile(node) &&
             ts.isPropertyAccessExpression(node.expression) &&
             methodNames.indexOf(prop.name.text) >= 0) {
             node.arguments

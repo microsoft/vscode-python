@@ -28,7 +28,7 @@ const failureMessage = 'Header must contain either \'use strict\' or [copyright]
 
 class NoFileWithoutCopyrightHeader extends BaseRuleWalker {
     public visitSourceFile(sourceFile: ts.SourceFile) {
-        if (!this.sholdIgnoreCcurrentFile(sourceFile)) {
+        if (!this.shouldIgnoreCurrentFile(sourceFile)) {
             const sourceFileContents = sourceFile.getFullText();
             if (sourceFileContents) {
                 this.validateHeader(sourceFile, sourceFileContents);

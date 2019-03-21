@@ -10,7 +10,7 @@ class BaseRuleWalker extends Lint.RuleWalker {
         super(...arguments);
         this.filesToIgnore = constants_1.filesNotToCheck;
     }
-    sholdIgnoreCcurrentFile(node) {
+    shouldIgnoreCurrentFile(node) {
         const sourceFile = node.getSourceFile();
         return sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName.replace(/\//g, path.sep)) >= 0;
     }

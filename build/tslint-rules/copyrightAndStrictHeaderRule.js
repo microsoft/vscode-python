@@ -24,7 +24,7 @@ const allowedCopyrightHeaders = [
 const failureMessage = 'Header must contain either \'use strict\' or [copyright] & \'use strict\' in the Python Extension files';
 class NoFileWithoutCopyrightHeader extends baseRuleWalker_1.BaseRuleWalker {
     visitSourceFile(sourceFile) {
-        if (!this.sholdIgnoreCcurrentFile(sourceFile)) {
+        if (!this.shouldIgnoreCurrentFile(sourceFile)) {
             const sourceFileContents = sourceFile.getFullText();
             if (sourceFileContents) {
                 this.validateHeader(sourceFile, sourceFileContents);
