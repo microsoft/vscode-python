@@ -138,6 +138,43 @@ Clone the repo into any directory, open that directory in VSCode, and use the `L
 The easiest way to debug the Python Debugger (in our opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.
 From there use the ```Extension + Debugger``` launch option.
 
+### Profiling the Extension
+
+If you find yourself with the need to profile the extension, here's some steps you can take to get a usable profile:
+
+1. npm install -g vsce <- This is the vscode extension packager. It needs to be global
+1. npm run package <- This will generate a vsix of your development bits
+1. Close VS code
+1. Navigate to your user/.vscode/extensions directory
+1. Delete all ms-python directories there. 
+1. Open VS Code and run the 'Install From VSIX' command to install the vsix you just generated.
+
+This gets your bits (and only your bits) installed as a package inside of VS Code without having to run the debugger.
+
+#### Debug Bits
+
+The next step is to make those bits non-minified.
+
+1. npm run clean <- This will clean your output directory
+1. npm run compile
+1. npm run compile-webviews
+1. Copy the 'out' directory from your source code overtop of the 'out' directory in your user/.vscode/extensions/ms-python directory
+1. Copy the 'node_modules' directory from your source next to the 'out' directory in your user/.vscode/extensions/ms-python directory. This might take a while.
+
+Now you have debug bits installed. 
+
+#### Running the profiler
+
+Follow the directions here:
+https://github.com/Microsoft/vscode/wiki/Performance-Issues
+
+You should generate a profile and save it. You can then load it into any chrome Javscript Profiler and look at the results. 
+
+I found using the 'Chart' view and searching (CTRL+F) for classes/functions I thought might be expensive was a good way to start:
+
+![JavascriptProfiler](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/JavascriptProfiler.png)
+
+
 ### Coding Standards
 
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).

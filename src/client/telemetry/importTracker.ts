@@ -8,8 +8,9 @@ import * as path from 'path';
 import { TextDocument } from 'vscode';
 
 import { sendTelemetryEvent } from '.';
-import { noop, sleep } from '../../test/core';
+import { noop } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
+import { debounce } from '../common/utils/decorators';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
 import { EventName } from './constants';
@@ -44,9 +45,8 @@ export class ImportTracker implements IImportTracker {
     }
 
     public async activate(): Promise<void> {
-        // Act like all of our open documents just opened. Don't do this now though. We don't want
-        // to hold up the activate.
-        await sleep(1000);
+        // Act like all of our open documents just opened. Debounce will make sure this is delayed and only one of them 
+        // goes through. 
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
@@ -64,6 +64,8 @@ export class ImportTracker implements IImportTracker {
         this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_EXECUTION);
     }
 
+    // Debounce every 5 seconds. We don't need that much telemetry. 
+    @debounce(5000, true)
     private lookForImports(lines: string[], eventName: string) {
         try {
             // Use a regex to parse each line, looking for imports
