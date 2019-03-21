@@ -78,7 +78,7 @@ export class ImportTracker implements IImportTracker {
                     const left = actual.split(' as ')[0];
 
                     // Now split this based on, and chop off all .
-                    const baseNames = left.split(',').map(s => s.split('.')[0].trim());
+                    const baseNames = left.split(',').map(l => l.split('.')[0].trim());
                     baseNames.forEach(l => {
                         // Hash this value and save this in our import
                         const hash = this.hashFn().update(l).digest('hex');
