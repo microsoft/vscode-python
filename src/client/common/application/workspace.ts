@@ -24,11 +24,7 @@ export class WorkspaceService implements IWorkspaceService {
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0;
     }
     public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
-        if (resource) {
-            return workspace.getConfiguration(section, resource);
-        } else {
-            return workspace.getConfiguration(section, null);
-        }
+        return workspace.getConfiguration(section, resource || null);
     }
     public getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
         return uri ? workspace.getWorkspaceFolder(uri) : undefined;
