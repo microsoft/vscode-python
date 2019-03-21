@@ -83,7 +83,7 @@ export class InMemoryInterpreterSpecificCache<T> {
         if (!store.has(key) || !data) {
             return false;
         }
-        if (data.expiry < Date.now()) {
+        if (this.hasExpired(data.expiry)) {
             store.delete(key);
             return false;
         }
@@ -120,5 +120,16 @@ export class InMemoryInterpreterSpecificCache<T> {
         const store = getCacheStore(this.resource, this.vscode);
         const key = getCacheKeyFromFunctionArgs(this.keyPrefix, this.args);
         store.delete(key);
+    }
+
+    /**
+     * Has this data expired?
+     * (protected class member to allow for reliable non-data-time-based testing)
+     *
+     * @param expiry The date to be tested for expiry.
+     * @returns true if the data expired, false otherwise.
+     */
+    protected hasExpired(expiry: number): boolean {
+        return expiry < Date.now();
     }
 }
