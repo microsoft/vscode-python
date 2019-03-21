@@ -110,7 +110,7 @@ steps:
       npx tsc -p ./
       npx tslint ./src/**/*.ts{,x}
       #npx gulp hygiene
-    displayName: 'gulp code hygiene'
+    displayName: 'code hygiene'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
 
   # Enable test coverage reporting for all subsequent tests (typescript-based)
