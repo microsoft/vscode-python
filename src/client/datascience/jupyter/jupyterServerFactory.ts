@@ -26,6 +26,7 @@ interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 
 }
 
+// tslint:disable:callable-types
 type JupyterServerClassType = {
     new(liveShare: ILiveShareApi,
         dataScience: IDataScience,
@@ -33,8 +34,10 @@ type JupyterServerClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager): IJupyterServerInterface ;
+        sessionManager: IJupyterSessionManager
+    ): IJupyterServerInterface;
 };
+// tslint:enable:callable-types
 
 @injectable()
 export class JupyterServerFactory implements INotebookServer {

@@ -714,27 +714,27 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 // Then go through all of the found ones and pick the closest python match
                 if (current && current.version) {
                     let bestScore = -1;
-                    for (let i = 0; i < foundList.length; i += 1) {
+                    for (const entry of foundList) {
                         let currentScore = 0;
-                        const entry = foundList[i];
-                        if (entry) {
-                            const interpreter = await entry.interpreter();
-                            const version = interpreter ? interpreter.version : undefined;
-                            if (version) {
-                                if (version.major === current.version.major) {
-                                    currentScore += 4;
-                                    if (version.minor === current.version.minor) {
-                                        currentScore += 2;
-                                        if (version.patch === current.version.patch) {
-                                            currentScore += 1;
-                                        }
+                        if (!entry) {
+                            continue;
+                        }
+                        const interpreter = await entry.interpreter();
+                        const version = interpreter ? interpreter.version : undefined;
+                        if (version) {
+                            if (version.major === current.version.major) {
+                                currentScore += 4;
+                                if (version.minor === current.version.minor) {
+                                    currentScore += 2;
+                                    if (version.patch === current.version.patch) {
+                                        currentScore += 1;
                                     }
                                 }
                             }
-                            if (currentScore > bestScore) {
-                                found = foundList[i];
-                                bestScore = currentScore;
-                            }
+                        }
+                        if (currentScore > bestScore) {
+                            found = entry;
+                            bestScore = currentScore;
                         }
                     }
                 } else {

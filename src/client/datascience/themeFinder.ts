@@ -116,16 +116,16 @@ export class ThemeFinder {
         // Should have a name entry and a contributes entry
         if (json.hasOwnProperty('name') && json.hasOwnProperty('contributes')) {
             // See if contributes has a theme
-            const contributes = json['contributes'];
+            const contributes = json.contributes;
             if (contributes.hasOwnProperty('themes')) {
-                const themes = contributes['themes'] as any[];
+                const themes = contributes.themes as any[];
                 // Go through each theme, seeing if the label matches our theme name
                 for (const t of themes) {
-                    if ((t.hasOwnProperty('label') && t['label'] === themeName) ||
-                        (t.hasOwnProperty('id') && t['id'] === themeName)) {
-                        const isDark = t.hasOwnProperty('uiTheme') && t['uiTheme'] === 'vs-dark';
+                    if ((t.hasOwnProperty('label') && t.label === themeName) ||
+                        (t.hasOwnProperty('id') && t.id === themeName)) {
+                        const isDark = t.hasOwnProperty('uiTheme') && t.uiTheme === 'vs-dark';
                         // Path is relative to the package.json file.
-                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t['path'].toString()) : '';
+                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
 
                         return {isDark, rootFile};
                     }
