@@ -10,7 +10,7 @@ import { TextDocument } from 'vscode';
 import { sendTelemetryEvent } from '.';
 import { noop } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
-import { debounce } from '../common/utils/decorators';
+import { isTestExecution } from '../common/constants';
 import { IHistoryProvider } from '../datascience/types';
 import { ICodeExecutionManager } from '../terminals/types';
 import { EventName } from './constants';
@@ -19,9 +19,14 @@ import { IImportTracker } from './types';
 const ImportRegEx = /^(?!['"#]).*from\s+([a-zA-Z0-9_\.]+)\s+import.*(?!['"])|^(?!['"#]).*import\s+([a-zA-Z0-9_\., ]+).*(?!['"])/;
 const MAX_DOCUMENT_LINES = 1000;
 
+// Capture isTestExecution on module load so that a test can turn it off and still
+// have this value set.
+const testExecution = isTestExecution();
+
 @injectable()
 export class ImportTracker implements IImportTracker {
 
+    private pendingDocs = new Set<string>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
@@ -45,8 +50,7 @@ export class ImportTracker implements IImportTracker {
     }
 
     public async activate(): Promise<void> {
-        // Act like all of our open documents just opened. Debounce will make sure this is delayed and only one of them 
-        // goes through. 
+        // Act like all of our open documents just opened. Our timeout will make sure this is delayed
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
@@ -64,9 +68,27 @@ export class ImportTracker implements IImportTracker {
         // Make sure this is a python file.
         if (path.extname(document.fileName) === '.py') {
             // Parse the contents of the document, looking for import matches on each line
-            const lines = this.getDocumentLines(document);
-            this.lookForImports(lines.slice(0, Math.min(lines.length, MAX_DOCUMENT_LINES)), EventName.KNOWN_IMPORT_FROM_FILE);
+            this.scheduleDocument(document);
         }
+    }
+
+    private scheduleDocument(document: TextDocument) {
+        if (!this.pendingDocs.has(document.fileName)) {
+            this.pendingDocs.add(document.fileName);
+            if (testExecution) {
+                // During a test, check right away. It needs to be synchronous.
+                this.checkDocument(document);
+            } else {
+                // Wait five seconds to make sure we don't already have this document pending.
+                setTimeout(() => this.checkDocument(document), 5000);
+            }
+        }
+    }
+
+    private checkDocument(document: TextDocument) {
+        this.pendingDocs.delete(document.fileName);
+        const lines = this.getDocumentLines(document);
+        this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_FILE);
     }
 
     private onExecutedCode(code: string) {
@@ -74,8 +96,6 @@ export class ImportTracker implements IImportTracker {
         this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_EXECUTION);
     }
 
-    // Debounce every 5 seconds. We don't need that much telemetry. 
-    @debounce(5000, true)
     private lookForImports(lines: string[], eventName: string) {
         try {
             // Use a regex to parse each line, looking for imports

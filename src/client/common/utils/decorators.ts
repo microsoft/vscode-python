@@ -17,17 +17,10 @@ type VoidFunction = (...any: any[]) => void;
  * @param {number} [wait] Wait time.
  * @returns void
  */
-export function debounce(wait?: number, skipDuringTests?: boolean) {
+export function debounce(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
         const originalMethod = descriptor.value!;
-
-        // If the caller specified to skip during tests, just call directly
-        if (skipDuringTests && isTestExecution()) {
-            // tslint:disable-next-line:no-invalid-this no-any
-            return originalMethod.apply(this, arguments as any);
-        }
-
         // If running tests, lets not debounce (so tests run fast).
         wait = wait && isTestExecution() ? undefined : wait;
         // tslint:disable-next-line:no-invalid-this no-any
