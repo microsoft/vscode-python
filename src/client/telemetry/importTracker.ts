@@ -50,11 +50,21 @@ export class ImportTracker implements IImportTracker {
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
+    private getDocumentLines(document: TextDocument) : string [] {
+        return Array.apply(null, {length: Math.min(document.lineCount, MAX_DOCUMENT_LINES)}).map((a, i) => {
+            const text = document.lineAt(i).text.trim();
+            if (text && text.length) {
+                return text;
+            }
+            return undefined;
+        }).filter(f => f);
+    }
+
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a python file.
         if (path.extname(document.fileName) === '.py') {
             // Parse the contents of the document, looking for import matches on each line
-            const lines = document.getText().splitLines({ trim: true, removeEmptyEntries: true });
+            const lines = this.getDocumentLines(document);
             this.lookForImports(lines.slice(0, Math.min(lines.length, MAX_DOCUMENT_LINES)), EventName.KNOWN_IMPORT_FROM_FILE);
         }
     }
