@@ -545,7 +545,7 @@
                     "group": "Python"
                 },
                 {
-                    "when": "resourceLangId == python",
+                    "when": "resourceLangId == python && python.datascience.featureenabled",
                     "command": "python.datascience.runFileInteractive",
                     "group": "Python2"
                 },
