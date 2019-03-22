@@ -61,6 +61,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         const properties: Record<string, {}> = {};
 
         const interpreterInfo = await this.interpreterService.getActiveInterpreter(this.resource);
+        if (!interpreterInfo) {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: How do we handle this?  It is pretty unlikely...
+            throw Error('did not find an active interpreter');
+        }
 
         // tslint:disable-next-line:no-string-literal
         properties['InterpreterPath'] = interpreterInfo.path;
@@ -87,8 +92,8 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        this.envPythonPath = vars.PYTHONPATH;
-        if (this.envPythonPath && this.envPythonPath.length > 0) {
+        this.envPythonPath = vars.PYTHONPATH || '';
+        if (this.envPythonPath !== '') {
             const paths = this.envPythonPath.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
             searchPaths.push(...paths);
         }

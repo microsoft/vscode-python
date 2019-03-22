@@ -131,18 +131,18 @@ suite('History output tests', () => {
     });
 
     teardown(async () => {
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                // tslint:disable-next-line:no-any
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
-                }
+        for (const disposable of disposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
             }
         }
         await ioc.dispose();
-        delete (global as any)['ascquireVsCodeApi'];
+        delete (global as any).ascquireVsCodeApi;
     });
 
     async function getOrCreateHistory(): Promise<IHistory> {
@@ -150,7 +150,7 @@ suite('History output tests', () => {
 
         // During testing the MainPanel sends the init message before our history is created.
         // Pretend like it's happening now
-        const listener = ((result as any)['messageListener']) as HistoryMessageListener;
+        const listener = ((result as any).messageListener) as HistoryMessageListener;
         listener.onMessage(HistoryMessages.Started, {});
 
         return result;

@@ -84,14 +84,14 @@ suite('LiveShare tests', () => {
     });
 
     teardown(async () => {
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                // tslint:disable-next-line:no-any
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
-                }
+        for (const disposable of disposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
             }
         }
         await hostContainer.dispose();
@@ -145,15 +145,14 @@ suite('LiveShare tests', () => {
         // The history provider create needs to be rewritten to make the history window think the mounted web panel is
         // ready.
         const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<IHistory> => {
-            const createResult = await origFunc();
+        (historyProvider as any).create = async (): Promise<void> => {
+            await origFunc();
+            const history = historyProvider.getActive();
 
             // During testing the MainPanel sends the init message before our history is created.
             // Pretend like it's happening now
-            const listener = ((createResult as any)['messageListener']) as HistoryMessageListener;
+            const listener = ((history as any).messageListener) as HistoryMessageListener;
             listener.onMessage(HistoryMessages.Started, {});
-
-            return createResult;
         };
 
         return result;
@@ -195,7 +194,7 @@ suite('LiveShare tests', () => {
         container.wrapper = mounted;
 
         // We can remove the global api and event listener now.
-        delete (global as any)['acquireVsCodeApi'];
+        delete (global as any).acquireVsCodeApi;
         window.addEventListener = oldListener;
     }
 

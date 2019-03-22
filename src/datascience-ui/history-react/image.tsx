@@ -97,7 +97,7 @@ export class Image extends React.Component<IImageProps> {
     public render() {
         const key = (ImageName[this.props.image]).toString();
         const image = images.hasOwnProperty(key) ?
-            images[key] : images['Cancel']; // Default is cancel.
+            images[key] : images.Cancel; // Default is cancel.
         const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;
         return (
             <InlineSVG className={this.props.class} src={source}/>

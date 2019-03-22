@@ -65,7 +65,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
         processService = mock(ProcessService);
         currentProcess = mock(CurrentProcess);
         envVarsService = mock(EnvironmentVariablesProvider);
-        workspace = mockedVSCodeNamespaces['workspace']!;
+        workspace = mockedVSCodeNamespaces.workspace!;
         when(envVarsService.onDidEnvironmentVariablesChange).thenReturn(noop as any);
         service = new EnvironmentActivationService(
             instance(helper), instance(platform),
@@ -84,7 +84,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
         verify(envVarsService.onDidEnvironmentVariablesChange).once();
     }
     teardown(() => {
-        mockedVSCodeNamespaces['workspace']!.reset();
+        mockedVSCodeNamespaces.workspace!.reset();
     });
 
     function title(resource?: Uri, interpreter?: PythonInterpreter) {

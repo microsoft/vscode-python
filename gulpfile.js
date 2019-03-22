@@ -82,7 +82,7 @@ gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
-gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
+gulp.task('hygiene', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
 gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
 
@@ -431,15 +431,12 @@ function buildDebugAdapterCoverage(done) {
 * @property {boolean=} skipLinter - Skip linter.
 */
 
-const tsProjectMap = {};
 /**
  *
  * @param {hygieneOptions} options
  */
 function getTsProject(options) {
-    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
-    const mode = tsOptions && tsOptions.mode ? tsOptions.mode : '';
-    return tsProjectMap[mode] ? tsProjectMap[mode] : tsProjectMap[mode] = ts.createProject('tsconfig.json', tsOptions);
+    return ts.createProject('tsconfig.json');
 }
 
 let configuration;

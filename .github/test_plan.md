@@ -359,7 +359,7 @@ def test_failure():
 - [ ] Start and connect to local Jupyter server
     1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
     1. At the top of the file it will list the things that you need installed in your Python environment
-    1. On the first cell click `Run Cell And All Below`
+    1. On the first cell click `Run Below`
     1. Interactive Window should open, show connection information, and execute cells
     1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
 - [ ] Verify basic outputs
@@ -403,7 +403,7 @@ def test_failure():
         1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
         1. Use the expand all input and collapse all input commands to collapse all cell inputs
 - [ ] Verify code lenses
-    1. Check that `Run Cell` `Run All Cells Above` and `Run Cell And All Below` all do the correct thing
+    1. Check that `Run Cell` `Run Above` and `Run Below` all do the correct thing
 - [ ] Verify context menu navigation commands
     1. Check the `Run Current Cell` and `Run Current Cell And Advance` context menu commands
     1. If run on the last cell of the file `Run Current Cell And Advance` should create a new empty cell and advance to it
