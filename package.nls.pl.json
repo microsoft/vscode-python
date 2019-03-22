@@ -25,7 +25,6 @@
     "python.command.python.setLinter.title": "Wybierz linter",
     "python.command.python.enableLinting.title": "Włącz linting",
     "python.command.python.runLinting.title": "Uruchom linting",
-    "python.command.python.datascience.runallcells.command.title": "Uruchom bieżący plik w oknie IPythona",
     "python.command.python.datascience.runallcells.title": "Uruchom wszystkie komórki",
     "python.command.python.datascience.runcurrentcell.title": "Uruchom bieżącą komórkę",
     "python.command.python.datascience.runcurrentcelladvance.title": "Uruchom bieżące komórki i pokaż",

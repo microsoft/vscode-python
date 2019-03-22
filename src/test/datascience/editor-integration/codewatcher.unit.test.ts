@@ -296,6 +296,33 @@ fourth line
         document.verifyAll();
     });
 
+    test('Test the RunFileInteractive command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2`; // Command tests override getText, so just need the ranges here
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(inputText),
+                                TypeMoq.It.isValue('test.py'),
+                                TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
+
+        await codeWatcher.runFileInteractive();
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
     test('Test the RunAllCells command', async () => {
         const fileName = 'test.py';
         const version = 1;

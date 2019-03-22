@@ -339,6 +339,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunCellAndAllBelow]: never | undefined;
     [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
     [Telemetry.RunToLine]: never | undefined;
+    [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;

@@ -26,7 +26,7 @@
     "python.command.python.setLinter.title": "Select Linter",
     "python.command.python.enableLinting.title": "Enable Linting",
     "python.command.python.runLinting.title": "Run Linting",
-    "python.command.python.datascience.runallcells.command.title": "Run Current File in Python Interactive window",
+    "python.command.python.datascience.runFileInteractive.title": "Run Current File in Python Interactive Window",
     "python.command.python.datascience.runallcells.title": "Run All Cells",
     "python.command.python.datascience.runallcellsabove.title": "Run All Cells Above",
     "python.command.python.datascience.runcellandallbelow.title": "Run Cell And All Below",
