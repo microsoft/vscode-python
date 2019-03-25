@@ -63,7 +63,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
         if (typeof debugConfiguration.envFile !== 'string' && workspaceFolder) {
-            const envFile = path.join(workspaceFolder.fsPath, '.env');
+            const settings = this.configurationService.getSettings(workspaceFolder);
+            const envFile = settings.envFile ? settings.envFile : path.join(workspaceFolder.fsPath, '.env');
             debugConfiguration.envFile = envFile;
         }
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
