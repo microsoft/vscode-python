@@ -34,6 +34,11 @@
    ([#4718](https://github.com/Microsoft/vscode-python/issues/4718))
 1. Update status of test suite when all tests pass
    ([#4727](https://github.com/Microsoft/vscode-python/issues/4727))
+1. Add button to ignore the message warning about the use of the macOS system install of Python.
+   (thanks [Alina Lobastova](https://github.com/alina7091))
+   ([#4448](https://github.com/Microsoft/vscode-python/issues/4448))
+1. Add "Run In Interactive" command to run the contents of a file not cell by cell. Group data science context commands in one group. Add run file command to explorer context menu.
+   ([#4855](https://github.com/Microsoft/vscode-python/issues/4855))
 
 ### Fixes
 
@@ -79,6 +84,15 @@
    ([#4743](https://github.com/Microsoft/vscode-python/issues/4743))
 1. Perform case insensitive comparison of Python Environment paths
    ([#4797](https://github.com/Microsoft/vscode-python/issues/4797))
+1. Ensure `Jedi` uses the currently selected intepreter.
+   (thanks [Selim Belhaouane](https://github.com/selimb))
+   ([#4687](https://github.com/Microsoft/vscode-python/issues/4687))
+1. Multiline comments with text on the first line break Python Interactive window execution.
+   ([#4791](https://github.com/Microsoft/vscode-python/issues/4791))
+1. Fix status bar when using Live Share or just starting the Python Interactive window.
+   ([#4853](https://github.com/Microsoft/vscode-python/issues/4853))
+1. Change the names of our "Run All Cells Above" and "Run Cell and All Below" commands to be more concise
+   ([#4876](https://github.com/Microsoft/vscode-python/issues/4876))
 
 ### Code Health
 
@@ -119,6 +133,8 @@
    ([#4757](https://github.com/Microsoft/vscode-python/issues/4757))
 1. Make cancel test and server cache test more robust
    ([#4818](https://github.com/Microsoft/vscode-python/issues/4818))
+1. Generalize code used to parse Test results service
+   ([#4796](https://github.com/Microsoft/vscode-python/issues/4796))
 
 ### Thanks
 
