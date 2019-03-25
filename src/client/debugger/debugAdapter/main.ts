@@ -66,7 +66,7 @@ export class PythonDebugger extends DebugSession {
         body.supportsConditionalBreakpoints = true;
         body.supportsSetVariable = true;
         body.supportsExceptionOptions = true;
-        body.supportsGotoTargetsRequest = false;
+        body.supportsGotoTargetsRequest = true;
         body.supportsEvaluateForHovers = true;
         body.supportsModulesRequest = true;
         body.supportsValueFormattingOptions = true;
