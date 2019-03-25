@@ -16,10 +16,7 @@ import {
     ITestManagerFactory, TestFile,
     TestFunction, Tests, TestsToRun
 } from '../../../client/unittests/common/types';
-import {
-    isPythonVersion,
-    rootWorkspaceUri, updateSetting
-} from '../../common';
+import { rootWorkspaceUri, updateSetting } from '../../common';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import {
     initialize, initializeTest,
@@ -124,7 +121,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(testRunResult.summary.skipped, 0, `Expected to have skipped 0 tests during this test-run. Instead, ${testRunResult.summary.skipped} where skipped.`);
     });
 
-    test('Ensure correct test count for running a set of tests multiple times', async function () {
+    test('Ensure correct test count for running a set of tests multiple times', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
@@ -148,7 +145,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(testRunResult.summary.passed, 2, 'This test was written assuming there was 2 tests run that would succeed. (iteration 2)');
     });
 
-    test('Re-run failed tests results in the correct number of tests counted', async function () {
+    test('Re-run failed tests results in the correct number of tests counted', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
