@@ -16,9 +16,6 @@ import {
 import { Product } from '../../client/common/installer/productInstaller';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
-import {
-    IPlatformService
-} from '../../client/common/platform/types';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -231,8 +228,7 @@ class TestFixture extends BaseTestFixture {
             ),
             TestFixture.newPythonExecFactory(
                 serviceContainer,
-                configService.object,
-                platformService
+                configService.object
             ),
             configService,
             serviceContainer,
@@ -257,8 +253,7 @@ class TestFixture extends BaseTestFixture {
 
     private static newPythonExecFactory(
         serviceContainer: TypeMoq.IMock<IServiceContainer>,
-        configService: IConfigurationService,
-        platformService: IPlatformService
+        configService: IConfigurationService
     ): IPythonExecutionFactory {
         const envVarsService = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>(undefined, TypeMoq.MockBehavior.Strict);
         envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))

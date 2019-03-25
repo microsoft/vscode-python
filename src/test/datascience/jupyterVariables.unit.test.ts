@@ -50,7 +50,7 @@ suite('JupyterVariables', () => {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result: typemoq.IMock<T> = typemoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }

@@ -154,7 +154,7 @@ suite('Installation - channel messages', () => {
         };
         interpreters
             .setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => new Promise<PythonInterpreter>((resolve, reject) => resolve(activeInterpreter)));
+            .returns(() => new Promise<PythonInterpreter>((resolve, _reject) => resolve(activeInterpreter)));
         const channels = new InstallationChannelManager(serviceContainer);
 
         let url: string = '';
@@ -166,7 +166,7 @@ suite('Installation - channel messages', () => {
                 message = m;
                 search = s;
             })
-            .returns(() => new Promise<string>((resolve, reject) => resolve(search)));
+            .returns(() => new Promise<string>((resolve, _reject) => resolve(search)));
         appShell.setup(x => x.openUrl(TypeMoq.It.isAnyString())).callback((s: string) => {
             url = s;
         });

@@ -29,7 +29,7 @@ typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-webpack.datascience-ui.config.js
+webpack.datascience-*.config.js
 
 .github/**
 .mocha-reporter/**

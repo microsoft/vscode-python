@@ -128,7 +128,7 @@ suite('Linter Availability Provider tests', () => {
         const linterInfo = new class extends LinterInfo {
             public testIsEnabled: boolean = promptReply ? promptReply.enabled : false;
 
-            public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
+            public async enableAsync(enabled: boolean, _resource?: Uri): Promise<void> {
                 this.testIsEnabled = enabled;
                 return Promise.resolve();
             }

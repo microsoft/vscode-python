@@ -46,8 +46,11 @@ const noop = function () { };
 */
 
 const all = [
-    'src/**/*',
-    'src/client/**/*',
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    'src/**/*.d.ts',
+    'src/**/*.js',
+    'src/**/*.jsx'
 ];
 
 const tsFilter = [
@@ -79,7 +82,7 @@ gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
-gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
+gulp.task('hygiene', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
 gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
 
@@ -332,36 +335,38 @@ async function checkDatascienceDependencies() {
     if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
         throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
     }
-    json.chunks[0].modules.forEach(m => {
-        const name = m.name;
-        if (!name.startsWith('./node_modules')) {
-            return;
-        }
-        const nameWithoutNodeModules = name.substring('./node_modules'.length);
-        let moduleName1 = nameWithoutNodeModules.split('/')[1];
-        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
-        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
-
-        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
-        switch (matchedModules.length) {
-            case 0:
-                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
-                break;
-            case 1:
-                break;
-            default: {
-                throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+    json.children.forEach(c => {
+        c.chunks[0].modules.forEach(m => {
+            const name = m.name;
+            if (!name.startsWith('./node_modules')) {
+                return;
             }
-        }
+            const nameWithoutNodeModules = name.substring('./node_modules'.length);
+            let moduleName1 = nameWithoutNodeModules.split('/')[1];
+            moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+            const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
 
-        const moduleName = matchedModules[0];
-        if (existingModulesCopy.has(moduleName)) {
-            existingModulesCopy.delete(moduleName);
-        }
-        if (existingModules.has(moduleName) || newModules.has(moduleName)) {
-            return;
-        }
-        newModules.add(moduleName);
+            const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
+            switch (matchedModules.length) {
+                case 0:
+                    throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                    break;
+                case 1:
+                    break;
+                default: {
+                    throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+                }
+            }
+
+            const moduleName = matchedModules[0];
+            if (existingModulesCopy.has(moduleName)) {
+                existingModulesCopy.delete(moduleName);
+            }
+            if (existingModules.has(moduleName) || newModules.has(moduleName)) {
+                return;
+            }
+            newModules.add(moduleName);
+        });
     });
 
     const errorMessages = [];
@@ -426,15 +431,12 @@ function buildDebugAdapterCoverage(done) {
 * @property {boolean=} skipLinter - Skip linter.
 */
 
-const tsProjectMap = {};
 /**
  *
  * @param {hygieneOptions} options
  */
 function getTsProject(options) {
-    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
-    const mode = tsOptions && tsOptions.mode ? tsOptions.mode : '';
-    return tsProjectMap[mode] ? tsProjectMap[mode] : tsProjectMap[mode] = ts.createProject('tsconfig.json', tsOptions);
+    return ts.createProject('tsconfig.json');
 }
 
 let configuration;
@@ -456,6 +458,7 @@ let reRunCompilation = false;
  * @returns {NodeJS.ReadWriteStream}
  */
 const hygiene = (options, done) => {
+    done = done || noop;
     if (compilationInProgress) {
         reRunCompilation = true;
         return done();

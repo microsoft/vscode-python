@@ -2,13 +2,19 @@
 
 import { injectable } from 'inversify';
 import { sendTelemetryEvent } from '../telemetry';
-import { skipIfTest } from './helpers';
 import { ILogger, LogLevel } from './types';
+import { isTestExecution } from './constants';
 
 const PREFIX = 'Python Extension: ';
 
 @injectable()
 export class Logger implements ILogger {
+    private skipLogging = false;
+    constructor() {
+        if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING) {
+            this.skipLogging = true;
+        }
+    }
     // tslint:disable-next-line:no-any
     public static error(title: string = '', message: any) {
         new Logger().logError(`${title}, ${message}`);
@@ -21,28 +27,31 @@ export class Logger implements ILogger {
     public static verbose(title: string = '') {
         new Logger().logInformation(title);
     }
-    @skipIfTest(false)
     public logError(message: string, ex?: Error) {
-        if (ex) {
-            console.error(`${PREFIX}${message}`, ex);
-        } else {
-            console.error(`${PREFIX}${message}`);
+        if (!this.skipLogging) {
+            if (ex) {
+                console.error(`${PREFIX}${message}`, ex);
+            } else {
+                console.error(`${PREFIX}${message}`);
+            }
         }
     }
-    @skipIfTest(false)
     public logWarning(message: string, ex?: Error) {
-        if (ex) {
-            console.warn(`${PREFIX}${message}`, ex);
-        } else {
-            console.warn(`${PREFIX}${message}`);
+        if (!this.skipLogging) {
+            if (ex) {
+                console.warn(`${PREFIX}${message}`, ex);
+            } else {
+                console.warn(`${PREFIX}${message}`);
+            }
         }
     }
-    @skipIfTest(false)
     public logInformation(message: string, ex?: Error) {
-        if (ex) {
-            console.info(`${PREFIX}${message}`, ex);
-        } else {
-            console.info(`${PREFIX}${message}`);
+        if (!this.skipLogging) {
+            if (ex) {
+                console.info(`${PREFIX}${message}`, ex);
+            } else {
+                console.info(`${PREFIX}${message}`);
+            }
         }
     }
 }
@@ -105,6 +114,10 @@ export function traceInfo(message: string) {
     new Logger().logInformation(message);
 }
 
+export function traceWarning(message: string) {
+    new Logger().logWarning(message);
+}
+
 export namespace traceDecorators {
     export function verbose(message: string, options: LogOptions = LogOptions.Arguments | LogOptions.ReturnValue) {
         return trace(message, options);
@@ -121,10 +134,10 @@ export namespace traceDecorators {
 }
 function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             const className = _ && _.constructor ? _.constructor.name : '';
             // tslint:disable-next-line:no-any
             function writeSuccess(returnValue?: any) {

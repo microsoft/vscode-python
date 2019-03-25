@@ -106,6 +106,7 @@ suite('Product Path', () => {
                         linterInfo.verifyAll();
                         linterManager.verifyAll();
                     });
+                    break;
                 }
                 case ProductType.RefactoringLibrary: {
                     test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {

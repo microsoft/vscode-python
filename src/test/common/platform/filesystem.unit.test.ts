@@ -107,7 +107,7 @@ suite('FileSystem', () => {
     test('Ensure chmod works against a temporary file', async () => {
         await fileSystem.createTemporaryFile('.tmp').then(async (fl: TemporaryFile) => {
             await fileSystem.chmod(fl.filePath, '7777').then(
-                (success: void) => {
+                (_success: void) => {
                     // cannot check for success other than we got here, chmod in Windows won't have any effect on the file itself.
                 },
                 (failReason) => {

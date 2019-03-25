@@ -121,7 +121,7 @@ suite('Unit Tests - Debug Launcher', () => {
 
         //debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
-            .returns((wspc: WorkspaceFolder, expectedParam: DebugConfiguration) => {
+            .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
                 return Promise.resolve(undefined as any);
             })
             .verifiable(TypeMoq.Times.once());

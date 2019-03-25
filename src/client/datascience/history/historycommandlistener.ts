@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { CancellationError } from '../common/cancellation';
-import { PYTHON_LANGUAGE } from '../common/constants';
-import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
-import * as localize from '../common/utils/localize';
-import { captureTelemetry } from '../telemetry';
-import { CommandSource } from '../unittests/common/constants';
-import { generateCellRanges, generateCellsFromDocument } from './cellFactory';
-import { Commands, Telemetry } from './constants';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
+import { CancellationError } from '../../common/cancellation';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
+import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import * as localize from '../../common/utils/localize';
+import { captureTelemetry } from '../../telemetry';
+import { CommandSource } from '../../unittests/common/constants';
+import { generateCellRanges, generateCellsFromDocument } from '../cellFactory';
+import { Commands, Telemetry } from '../constants';
 import {
     IDataScienceCommandListener,
     IHistoryProvider,
@@ -26,7 +26,7 @@ import {
     INotebookImporter,
     INotebookServer,
     IStatusProvider
-} from './types';
+} from '../types';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
@@ -76,7 +76,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             });
         });
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
             return this.listenForErrors(() => {
                 if (file && file.fsPath) {
                     return this.exportFileAndOutput(file.fsPath);

@@ -79,7 +79,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     private matchTokenColor(tokenColors: JSONArray, scope: string) : number {
         return tokenColors.findIndex((entry: any) => {
             if (entry) {
-                const scopes = entry['scope'] as JSONValue;
+                const scopes = entry.scope as JSONValue;
                 if (scopes) {
                     const scopeArray = Array.isArray(scope) ? scopes as JSONArray : scopes.toString().split(',');
                     if (scopeArray.find(v => v !== null && v !== undefined && v.toString().trim() === scope)) {
@@ -100,10 +100,10 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         }
         const found = match >= 0 ? tokenColors[match] as any : null;
         if (found !== null) {
-            const settings = found['settings'];
+            const settings = found.settings;
             if (settings && settings !== null) {
-                const fontStyle = settings['fontStyle'] ? settings['fontStyle'] : 'normal';
-                const foreground = settings['foreground'] ? settings['foreground'] : 'var(--vscode-editor-foreground)';
+                const fontStyle = settings.fontStyle ? settings.fontStyle : 'normal';
+                const foreground = settings.foreground ? settings.foreground : 'var(--vscode-editor-foreground)';
 
                 return { fontStyle, color: foreground };
             }
@@ -178,10 +178,10 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         const tokenContent = await fs.readFile(themeFile, 'utf8');
         const theme = JSON.parse(stripJsonComments(tokenContent)) as JSONObject;
-        const tokenColors = theme['tokenColors'] as JSONArray;
+        const tokenColors = theme.tokenColors as JSONArray;
         if (tokenColors && tokenColors.length > 0) {
             // This theme may include others. If so we need to combine the two together
-            const include = theme ? theme['include'] : undefined;
+            const include = theme ? theme.include : undefined;
             if (include && include !== null) {
                 const includePath = path.join(path.dirname(themeFile), include.toString());
                 const includedColors = await this.readTokenColors(includePath);
@@ -193,7 +193,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         }
 
         // Might also have a 'settings' object that equates to token colors
-        const settings = theme['settings'] as JSONArray;
+        const settings = theme.settings as JSONArray;
         if (settings && settings.length > 0) {
             return settings;
         }
@@ -216,30 +216,30 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 const json = JSON.parse(stripJsonComments(contents)) as JSONObject;
 
                 // There should be a theme colors section
-                const contributes = json['contributes'] as JSONObject;
+                const contributes = json.contributes as JSONObject;
 
                 // If no contributes section, see if we have a tokenColors section. This means
                 // this is a direct token colors file
                 if (!contributes) {
-                    const tokenColors = json['tokenColors'] as JSONObject;
+                    const tokenColors = json.tokenColors as JSONObject;
                     if (tokenColors) {
                         return await this.readTokenColors(themeRoot);
                     }
                 }
 
                 // This should have a themes section
-                const themes = contributes['themes'] as JSONArray;
+                const themes = contributes.themes as JSONArray;
 
                 // One of these (it's an array), should have our matching theme entry
                 const index = themes.findIndex((e: any) => {
-                    return e !== null && (e['id'] === theme || e['name'] === theme);
+                    return e !== null && (e.id === theme || e.name === theme);
                 });
 
                 const found = index >= 0 ? themes[index] as any : null;
                 if (found !== null) {
                     // Then the path entry should contain a relative path to the json file with
                     // the tokens in it
-                    const themeFile = path.join(path.dirname(themeRoot), found['path']);
+                    const themeFile = path.join(path.dirname(themeRoot), found.path);
                     this.logger.logInformation(`Reading colors from ${themeFile}`);
                     return await this.readTokenColors(themeFile);
                 }

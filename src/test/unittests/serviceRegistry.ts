@@ -5,8 +5,8 @@ import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { History } from '../../client/datascience/history';
-import { HistoryProvider } from '../../client/datascience/historyProvider';
+import { History } from '../../client/datascience/history/history';
+import { HistoryProvider } from '../../client/datascience/history/historyProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';

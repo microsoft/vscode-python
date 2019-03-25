@@ -69,7 +69,7 @@ export function parseEnvFile(
 ): EnvironmentVariables {
     const globalVars = baseVars ? baseVars : {};
     const vars : EnvironmentVariables = {};
-    lines.toString().split('\n').forEach((line, idx) => {
+    lines.toString().split('\n').forEach((line, _idx) => {
         const [name, value] = parseEnvLine(line);
         if (name === '') {
             return;

@@ -31,6 +31,7 @@ interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution
 
 }
 
+// tslint:disable:callable-types
 type JupyterExecutionClassType = {
     new(liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
@@ -45,8 +46,10 @@ type JupyterExecutionClassType = {
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         commandFactory : IJupyterCommandFactory,
-        serviceContainer: IServiceContainer): IJupyterExecutionInterface;
+        serviceContainer: IServiceContainer
+    ): IJupyterExecutionInterface;
 };
+// tslint:enable:callable-types
 
 @injectable()
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {

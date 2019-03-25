@@ -10,7 +10,7 @@ export function activateUpdateSparkLibraryProvider(): vscode.Disposable {
 }
 
 function updateSparkLibrary() {
-    const pythonConfig = vscode.workspace.getConfiguration('python');
+    const pythonConfig = vscode.workspace.getConfiguration('python', null);
     const extraLibPath = 'autoComplete.extraPaths';
     // tslint:disable-next-line:no-invalid-template-strings
     const sparkHomePath = '${env:SPARK_HOME}';

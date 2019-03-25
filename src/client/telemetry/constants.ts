@@ -74,35 +74,3 @@ export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToDetermineOS = 'FailedToDetermineOS'
 }
-
-export enum KnownImports {
-    // Don't change the order of these as they are the value returned in telemetry and changing
-    // the order will break old telemetry data.
-    //
-    // This list was generated from here: https://activewizards.com/blog/top-20-python-libraries-for-data-science-in-2018/
-    pandas,
-    numpy,
-    matlplotlib,
-    scipy,
-    sklearn,
-    statsmodels,
-    seaborn,
-    plotly,
-    bokeh,
-    pydot,
-    xgboost,
-    lightgbm,
-    catboost,
-    eli5,
-    tensorflow,
-    pytorch,
-    keras,
-    distkeras,
-    elephas,
-    pyspark,
-    nltk,
-    spacy,
-    gensim,
-    scrapy,
-    sparkdl
-}

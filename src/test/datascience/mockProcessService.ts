@@ -19,7 +19,7 @@ export class MockProcessService implements IProcessService {
     private execObservableResults: {file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
     private timeDelay: number | undefined;
 
-    public execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public execObservable(file: string, args: string[], _options: SpawnOptions): ObservableExecutionResult<string> {
         const match = this.execObservableResults.find(f => this.argsMatch(f.args, args) && f.file === file);
         if (match) {
             return match.result();
@@ -35,7 +35,7 @@ export class MockProcessService implements IProcessService {
             if (this.timeDelay) {
                 try {
                     const localTime = this.timeDelay;
-                    await Cancellation.race((t) => sleep(localTime), options.token);
+                    await Cancellation.race((_t) => sleep(localTime), options.token);
                 } catch (exc) {
                     if (exc instanceof CancellationError) {
                         return this.defaultExecutionResult([file, ...args]);
@@ -48,7 +48,7 @@ export class MockProcessService implements IProcessService {
         return this.defaultExecutionResult([file, ...args]);
     }
 
-    public shellExec(command: string, options: ShellOptions) : Promise<ExecutionResult<string>> {
+    public shellExec(command: string, _options: ShellOptions) : Promise<ExecutionResult<string>> {
         // Not supported
         return this.defaultExecutionResult([command]);
     }

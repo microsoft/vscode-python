@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import '../../common/extensions';
 
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
@@ -19,25 +19,24 @@ import {
     IWebPanel,
     IWebPanelProvider,
     IWorkspaceService
-} from '../common/application/types';
-import { CancellationError } from '../common/cancellation';
-import { EXTENSION_ROOT_DIR } from '../common/constants';
-import { ContextKey } from '../common/contextKey';
-import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { EditorContexts, Identifiers, Telemetry } from './constants';
-import { HistoryMessageListener } from './historyMessageListener';
-import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
-import { JupyterInstallError } from './jupyter/jupyterInstallError';
+} from '../../common/application/types';
+import { CancellationError } from '../../common/cancellation';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { ContextKey } from '../../common/contextKey';
+import { IFileSystem } from '../../common/platform/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     CellState,
     ICell,
     ICodeCssGenerator,
     IConnection,
+    IDataExplorerProvider,
     IDataScienceExtraSettings,
     IHistory,
     IHistoryInfo,
@@ -47,7 +46,9 @@ import {
     INotebookServer,
     InterruptResult,
     IStatusProvider
-} from './types';
+} from '../types';
+import { HistoryMessageListener } from './historyMessageListener';
+import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 
 export enum SysInfoReason {
     Start,
@@ -92,7 +93,8 @@ export class History implements IHistory {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider
+        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
+        @inject(IDataExplorerProvider) private dataExplorerProvider: IDataExplorerProvider
         ) {
 
         // Create our unique id. We use this to skip messages we send to other history windows
@@ -235,6 +237,11 @@ export class History implements IHistory {
                 this.dispatchMessage(message, payload, this.onRemoteAddedCode);
                 break;
 
+            case HistoryMessages.ShowDataExplorer:
+                this.showDataExplorer()
+                    .ignoreErrors();
+                break;
+
             default:
                 break;
         }
@@ -350,6 +357,14 @@ export class History implements IHistory {
         }
     }
 
+    private async showDataExplorer() {
+        try {
+            return this.dataExplorerProvider.create([]);
+        } catch (e) {
+            this.applicationShell.showErrorMessage(e);
+        }
+    }
+
     private onViewStateChanged = (webPanel: IWebPanel) => {
         const oldActive = this.viewState.active;
         this.viewState.active = webPanel.isActive();
@@ -380,7 +395,7 @@ export class History implements IHistory {
     }
 
     // tslint:disable-next-line:no-any
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -478,7 +493,7 @@ export class History implements IHistory {
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -749,7 +764,7 @@ export class History implements IHistory {
         }
     }
 
-    private async loadJupyterServer(restart?: boolean): Promise<void> {
+    private async loadJupyterServer(_restart?: boolean): Promise<void> {
         this.logger.logInformation('Getting jupyter server options ...');
 
         // Extract our options
@@ -881,7 +896,7 @@ export class History implements IHistory {
             this.logger.logInformation('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
+            this.webPanel = this.provider.create(ViewColumn.Two, this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
 
             this.logger.logInformation('Web view created.');
         }

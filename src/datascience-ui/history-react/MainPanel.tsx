@@ -8,7 +8,7 @@ import * as React from 'react';
 
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages, IHistoryMapping } from '../../client/datascience/historyTypes';
+import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -30,18 +30,20 @@ export interface IMainPanelProps {
     codeTheme: string;
 }
 
+class HistoryPostOffice extends PostOffice<IHistoryMapping> {}
+
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
     private bottom: HTMLDivElement | undefined;
     private updateCount = 0;
     private renderCount = 0;
     private sentStartup = false;
-    private postOffice: PostOffice | undefined;
+    private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
 
     // tslint:disable-next-line:max-func-body-length
-    constructor(props: IMainPanelProps, state: IMainPanelState) {
+    constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         // Default state should show a busy message
@@ -63,7 +65,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.scrollToBottom();
     }
 
-    public componentDidUpdate(prevProps: Readonly<IMainPanelProps>, prevState: Readonly<IMainPanelState>, snapshot?: {}) {
+    public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
         this.scrollToBottom();
 
         // If in test mode, update our outputs
@@ -84,7 +86,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div className='main-panel' ref={this.updateSelf}>
-                <PostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 <MenuBar baseTheme={baseTheme} stylePosition='top-fixed'>
                     {this.renderExtraButtons()}
                     <CellButton baseTheme={baseTheme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
@@ -361,7 +363,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Update our state
         this.setState({
-            cellVMs: this.state.cellVMs.filter((c : ICellViewModel, i: number) => {
+            cellVMs: this.state.cellVMs.filter((_c : ICellViewModel, i: number) => {
                 return i !== index;
             }),
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
@@ -446,7 +448,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private export = () => {
         // Send a message to the other side to export our current list
-        const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
+        const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
         this.sendMessage(HistoryMessages.Export, cellContents);
     }
 
@@ -472,7 +474,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.mainPanel = r;
     }
 
-    private updatePostOffice = (postOffice: PostOffice) => {
+    private updatePostOffice = (postOffice: HistoryPostOffice) => {
         if (this.postOffice !== postOffice) {
             this.postOffice = postOffice;
             if (!this.sentStartup) {

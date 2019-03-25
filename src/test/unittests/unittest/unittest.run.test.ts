@@ -92,7 +92,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     async function ignoreTestLauncher() {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         // When running the python test launcher, just return.
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (args.length > 1 && args[0].endsWith('visualstudio_py_testlauncher.py')) {
                 callback({ out: '', source: 'stdout' });
             }
@@ -100,7 +100,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
     async function injectTestDiscoveryOutput(output: string) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
                 callback({
                     // Ensure any spaces added during code formatting or the like are removed

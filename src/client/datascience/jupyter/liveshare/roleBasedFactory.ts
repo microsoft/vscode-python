@@ -72,7 +72,7 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         // If the session changes, tell the listener
         if (api && this.firstTime) {
             this.firstTime = false;
-            api.onDidChangeSession((a) => {
+            api.onDidChangeSession((_a) => {
                 // Dispose the object if the role changes
                 const newRole = api !== null && api.session && api.session.role === vsls.Role.Guest ?
                     vsls.Role.Guest : vsls.Role.Host;

@@ -16,10 +16,10 @@ import { UnitTestProduct } from '../../../../client/unittests/common/types';
 import { ITestConfigSettingsService } from '../../../../client/unittests/types';
 
 class MockTestConfigurationManager extends TestConfigurationManager {
-    public requiresUserToConfigure(wkspace: Uri): Promise<boolean> {
+    public requiresUserToConfigure(_wkspace: Uri): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
-    public configure(wkspace: any): Promise<any> {
+    public configure(_wkspace: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
 }

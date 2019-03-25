@@ -127,7 +127,7 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
     failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
@@ -339,11 +339,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunCellAndAllBelow]: never | undefined;
     [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
     [Telemetry.RunToLine]: never | undefined;
+    [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
+    [Telemetry.ShowDataExplorer]: never | undefined;
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
