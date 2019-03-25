@@ -71,7 +71,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 let out = fs.readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8');
                 // Value in the test files.

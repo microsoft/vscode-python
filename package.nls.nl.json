@@ -23,7 +23,6 @@
     "python.command.python.setLinter.title": "Linter selecteren",
     "python.command.python.enableLinting.title": "Linting activeren",
     "python.command.python.runLinting.title": "Linting uitvoeren",
-    "python.command.python.datascience.runallcells.command.title": "Huidige bestand in interactief Python-venster uitvoeren",
     "python.command.python.datascience.runallcells.title": "Alle cellen uitvoeren",
     "python.command.python.datascience.runcurrentcell.title": "Huidige cel uitvoeren",
     "python.command.python.datascience.runcurrentcelladvance.title": "Huidige cel uitvoeren en doorgaan",

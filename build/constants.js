@@ -2,13 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = require("fs");
-const path = require("path");
-exports.ExtensionRootDir = path.join(__dirname, '..');
-const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
-function getListOfExcludedFiles() {
-    const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString());
-    return files.map(file => path.join(exports.ExtensionRootDir, file.replace(/\//g, path.sep)));
-}
-exports.filesNotToCheck = getListOfExcludedFiles();
+const util = require("./util");
+exports.ExtensionRootDir = util.ExtensionRootDir;
+// This is a list of files that existed before MS got the extension.
+exports.existingFiles = util.getListOfFiles('existingFiles.json');
+exports.contributedFiles = util.getListOfFiles('contributedFiles.json');
 exports.isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;

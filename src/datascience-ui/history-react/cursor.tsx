@@ -52,7 +52,7 @@ export class Cursor extends React.Component<ICursorProps> {
 
     private renderInFocus = (style: React.CSSProperties) => {
         const cursorClass = `cursor-top cursor-${this.props.cursorType}-overlay`;
-        const textClass = this.props.cursorType !== 'block' || this.props.text.slice(0,1).trim().length === 0 ? 'cursor-measure' : 'cursor-text';
+        const textClass = this.props.cursorType !== 'block' || this.props.text.slice(0, 1).trim().length === 0 ? 'cursor-measure' : 'cursor-text';
         return <div className={cursorClass} style={style}><div className={textClass}>{this.getRenderText()}</div></div>;
     }
 

@@ -179,6 +179,7 @@ export interface ICodeWatcher {
     runFromLine(targetLine: number): Promise<void>;
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
+    runFileInteractive(): Promise<void>;
 }
 
 export enum CellState {

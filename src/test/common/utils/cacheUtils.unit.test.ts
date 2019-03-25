@@ -6,9 +6,6 @@
 import { expect } from 'chai';
 import { Uri } from 'vscode';
 import { clearCache, InMemoryInterpreterSpecificCache } from '../../../client/common/utils/cacheUtils';
-import { OSType } from '../../../client/common/utils/platform';
-import { isOs } from '../../common';
-import { sleep } from '../../core';
 
 type CacheUtilsTestScenario = {
     scenarioDesc: string;
@@ -30,6 +27,22 @@ const scenariosToTest: CacheUtilsTestScenario[] = [
         dataToStore: { date: new Date(), hello: 1234 }
     }
 ];
+
+class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCache<string | undefined | { date: number; hello: number }> {
+    public elapsed: number = 0;
+
+    public set simulatedElapsedMs(value: number) {
+        this.elapsed = value;
+    }
+
+    protected calculateExpiry(): number {
+        return this.expiryDurationMs;
+    }
+
+    protected hasExpired(expiry: number): boolean {
+        return expiry < this.elapsed;
+    }
+}
 
 // tslint:disable:no-any max-func-body-length
 suite('Common Utils - CacheUtils', () => {
@@ -104,34 +117,28 @@ suite('Common Utils - CacheUtils', () => {
             expect(cache.hasData).to.be.equal(false, 'Must not have data');
             expect(cache.data).to.be.deep.equal(undefined, 'Must not have data');
         });
-        test(`Data is stored in cache and expired data is not returned: ${scenario.scenarioDesc}`, async function () {
-            if (isOs(OSType.OSX)) {
-                // This test is failing on MacOS, for the simple string and undefined scenario.
-                // See GH #4776
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
+        test(`Data is stored in cache and expired data is not returned: ${scenario.scenarioDesc}`, async () => {
             const pythonPath = 'Some Python Path';
             const vsc = createMockVSC(pythonPath);
             const resource = Uri.parse('a');
-            const cache = new InMemoryInterpreterSpecificCache('Something', 100, [resource], vsc);
+            const cache = new TestInMemoryInterpreterSpecificCache('Something', 100, [resource], vsc);
 
             expect(cache.hasData).to.be.equal(false, 'Must not have any data before caching.');
             cache.data = scenario.dataToStore;
             expect(cache.hasData).to.be.equal(true, 'Must have data after setting the first time.');
             expect(cache.data).to.be.deep.equal(scenario.dataToStore);
 
-            await sleep(10);
+            cache.simulatedElapsedMs = 10;
             expect(cache.hasData).to.be.equal(true, 'Must have data after waiting for 10ms');
-            expect(cache.data).to.be.deep.equal(scenario.dataToStore);
+            expect(cache.data).to.be.deep.equal(scenario.dataToStore, 'Data should be intact and unchanged in cache after 10ms');
 
-            await sleep(50);
+            cache.simulatedElapsedMs = 50;
             expect(cache.hasData).to.be.equal(true, 'Must have data after waiting 50ms');
-            expect(cache.data).to.be.deep.equal(scenario.dataToStore);
+            expect(cache.data).to.be.deep.equal(scenario.dataToStore, 'Data should be intact and unchanged in cache after 50ms');
 
-            await sleep(110);
+            cache.simulatedElapsedMs = 110;
             expect(cache.hasData).to.be.equal(false, 'Must not have data after waiting 110ms');
-            expect(cache.data).to.be.deep.equal(undefined, 'Must not have data stored after waiting for the specified timeout.');
+            expect(cache.data).to.be.deep.equal(undefined, 'Must not have data stored after 100ms timeout expires.');
         });
         test(`Data is stored in cache (with workspaces): ${scenario.scenarioDesc}`, () => {
             const pythonPath = 'Some Python Path';

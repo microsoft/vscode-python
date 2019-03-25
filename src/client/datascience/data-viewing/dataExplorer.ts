@@ -93,7 +93,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     }
 
     // tslint:disable-next-line: no-any no-empty
-    private onMessage = (message: string, payload: any) => {
+    private onMessage = (message: string, _payload: any) => {
         switch (message) {
             case DataExplorerMessages.Started:
                 this.webPanelRendered();

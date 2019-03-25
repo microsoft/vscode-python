@@ -318,7 +318,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8').replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, PYTEST_RESULTS_PATH),
@@ -329,7 +329,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (failedOutput && args.indexOf('--last-failed') === -1) {
                 return;
             }

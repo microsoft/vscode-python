@@ -19,10 +19,10 @@ async function testConversion(fileName: string): Promise<void> {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Hover - RestTextConverter', () => {
-  test('scipy', async () => await testConversion('scipy'));
-  test('scipy.spatial', async () => await testConversion('scipy.spatial'));
-  test('scipy.spatial.distance', async () => await testConversion('scipy.spatial.distance'));
-  test('anydbm', async () => await testConversion('anydbm'));
-  test('aifc', async () => await testConversion('aifc'));
-  test('astroid', async () => await testConversion('astroid'));
+  test('scipy', async () => testConversion('scipy'));
+  test('scipy.spatial', async () => testConversion('scipy.spatial'));
+  test('scipy.spatial.distance', async () => testConversion('scipy.spatial.distance'));
+  test('anydbm', async () => testConversion('anydbm'));
+  test('aifc', async () => testConversion('aifc'));
+  test('astroid', async () => testConversion('astroid'));
 });

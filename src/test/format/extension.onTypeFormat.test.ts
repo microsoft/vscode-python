@@ -31,7 +31,7 @@ function testFormatting(fileToFormat: string, position: vscode.Position, expecte
     return vscode.workspace.openTextDocument(fileToFormat).then(document => {
         textDocument = document;
         return vscode.window.showTextDocument(textDocument);
-    }).then(editor => {
+    }).then(_editor => {
         return provider.provideOnTypeFormattingEdits(
             textDocument, position, ':', formatOptions, new vscode.CancellationTokenSource().token);
     }).then(edits => {

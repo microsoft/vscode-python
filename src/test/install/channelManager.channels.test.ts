@@ -96,10 +96,10 @@ suite('Installation - installation channels', () => {
         let items: any[] | undefined;
         appShell
             .setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((i: string[], o: QuickPickOptions) => {
+            .callback((i: string[], _o: QuickPickOptions) => {
                 items = i;
             })
-            .returns(() => new Promise<string | undefined>((resolve, reject) => resolve(undefined)));
+            .returns(() => new Promise<string | undefined>((resolve, _reject) => resolve(undefined)));
 
         installer1.setup(x => x.displayName).returns(() => 'Name 1');
         installer2.setup(x => x.displayName).returns(() => 'Name 2');

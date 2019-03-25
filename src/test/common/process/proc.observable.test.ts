@@ -179,36 +179,6 @@ suite('ProcessService', () => {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-
-        // tslint:disable-next-line:no-invalid-this
-        // this.timeout(7000);
-        // const procService = new ProcessService(new BufferDecoder());
-        // const pythonCode = ['import sys', 'import time',
-        //     'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-        //     'sys.stderr.write("a")', 'sys.stderr.flush()', 'time.sleep(1)',
-        //     'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-        //     'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
-        //     'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-        //     'sys.stderr.write("c")', 'sys.stderr.flush()', 'time.sleep(1)'];
-        // const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
-        // const outputs = [
-        //     { out: '1', source: 'stdout' }, { out: 'a', source: 'stderr' },
-        //     { out: '2', source: 'stdout' }, { out: 'b', source: 'stderr' },
-        //     { out: '3', source: 'stdout' }, { out: 'c', source: 'stderr' }];
-
-        // expect(result).not.to.be.an('undefined', 'result is undefined');
-
-        // result.out.subscribe(output => {
-        //     const value = output.out.trim();
-        //     // Ignore line breaks.
-        //     if (value.length === 0) {
-        //         return;
-        //     }
-        //     const expectedOutput = outputs.shift()!;
-
-        //     expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');
-        //     expect(output.source).to.be.equal(expectedOutput.source, 'Expected source is incorrect');
-        // }, done, done);
     });
 
     test('execObservable should throw an error with stderr output', (done) => {
@@ -217,7 +187,7 @@ suite('ProcessService', () => {
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { throwOnStdErr: true });
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
-        result.out.subscribe(output => {
+        result.out.subscribe(_output => {
             done('Output received, when we\'re expecting an error to be thrown.');
         }, (ex: Error) => {
             expect(ex).to.have.property('message', 'a', 'Invalid error thrown');
@@ -232,7 +202,7 @@ suite('ProcessService', () => {
         const result = procService.execObservable(Date.now().toString(), []);
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
-        result.out.subscribe(output => {
+        result.out.subscribe(_output => {
             done('Output received, when we\'re expecting an error to be thrown.');
         }, ex => {
             expect(ex).to.have.property('code', 'ENOENT', 'Invalid error code');

@@ -27,7 +27,7 @@ export class MockPythonService implements IPythonExecutionService  {
         return Promise.resolve(this.interpreter.path);
     }
 
-    public isModuleInstalled(moduleName: string): Promise<boolean> {
+    public isModuleInstalled(_moduleName: string): Promise<boolean> {
         return Promise.resolve(false);
     }
 

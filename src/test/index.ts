@@ -9,9 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 import {
-    IS_CI_SERVER_TEST_DEBUGGER,
-    MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
-    MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
+    IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
 import * as testRunner from './testRunner';
@@ -40,18 +38,18 @@ const options: testRunner.SetupOptions & { retries: number } = {
     testFilesSuffix
 };
 
-// CI can ask for a JUnit reporter if the environment variable
-// 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
-// by other 'MOCHA_CI_...' variables. See constants.ts for info.
+// If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
+// reporting to both the console (spec) and to a JUnit XML file. The xml file
+// written to is `test-report.xml` in the root folder by default, but can be
+// changed by setting env var `MOCHA_FILE` (we do this in our CI).
 if (MOCHA_REPORTER_JUNIT) {
-    options.reporter = MOCHA_CI_REPORTER_ID;
+    options.reporter = 'mocha-multi-reporters';
     options.reporterOptions = {
-        mochaFile: MOCHA_CI_REPORTFILE,
-        properties: MOCHA_CI_PROPERTIES
+        reporterEnabled: 'spec,mocha-junit-reporter'
     };
 }
 
-process.on('unhandledRejection', (ex: string | Error, a) => {
+process.on('unhandledRejection', (ex: string | Error, _a) => {
     const message = [`${ex}`];
     if (typeof ex !== 'string' && ex && ex.message) {
         message.push(ex.name);

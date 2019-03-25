@@ -42,10 +42,10 @@ export class MockRegistry implements IRegistry {
 export class MockInterpreterVersionProvider implements IInterpreterVersionService {
     constructor(private displayName: string, private useDefaultDisplayName: boolean = false,
         private pipVersionPromise?: Promise<string>) { }
-    public async getVersion(pythonPath: string, defaultDisplayName: string): Promise<string> {
+    public async getVersion(_pythonPath: string, defaultDisplayName: string): Promise<string> {
         return this.useDefaultDisplayName ? Promise.resolve(defaultDisplayName) : Promise.resolve(this.displayName);
     }
-    public async getPipVersion(pythonPath: string): Promise<string> {
+    public async getPipVersion(_pythonPath: string): Promise<string> {
         // tslint:disable-next-line:no-non-null-assertion
         return this.pipVersionPromise!;
     }

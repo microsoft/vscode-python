@@ -54,7 +54,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
         // We have at least one markdown. We might have to split it if there any lines that don't begin
         // with # or are inside a multiline comment
         let firstNonMarkdown = -1;
-        parseForComments(split, (s, i) => noop(), (s, i) => {
+        parseForComments(split, (_s, _i) => noop(), (s, i) => {
             // Make sure there's actually some code.
             if (s && s.length > 0) {
                 firstNonMarkdown = splitMarkdown ? i : -1;

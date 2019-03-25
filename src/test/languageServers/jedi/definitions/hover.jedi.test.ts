@@ -32,7 +32,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileOne).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(30, 5);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -53,7 +53,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileThree).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(1, 12);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -72,7 +72,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileEncoding).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(25, 6);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -93,7 +93,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileEncodingUsed).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(1, 11);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -116,7 +116,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileOne).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(5, 1);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -130,7 +130,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileHover).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(3, 1);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -144,7 +144,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileHover).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(11, 15);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -177,7 +177,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileHover).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(12, 10);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -199,7 +199,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileHover).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(8, 14);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -221,7 +221,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileHover).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(14, 14);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
@@ -245,7 +245,7 @@ suite('Hover Definition (Jedi)', () => {
         vscode.workspace.openTextDocument(fileHover).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(6, 2);
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);

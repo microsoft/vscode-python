@@ -449,7 +449,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         discoveryOutput: 'two.output',
         runOutput: 'two.xml',
         testsToRun: undefined as any,
-        testDetails: allTestDetails.filter(td => { return true; }),
+        testDetails: allTestDetails.filter(_td => { return true; }),
         shouldRunFailed: true,
         failedRunOutput: 'two.again.xml'
     }

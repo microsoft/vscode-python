@@ -34,7 +34,7 @@ class DisabledLinter implements ILinter {
     public get info() {
         return new LinterInfo(Product.pylint, 'pylint', this.configService);
     }
-    public async lint(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
+    public async lint(_document: TextDocument, _cancellation: CancellationToken): Promise<ILintMessage[]> {
         return [];
     }
 }
@@ -66,7 +66,7 @@ export class LinterManager implements ILinterManager {
     }
 
     public getLinterInfo(product: Product): ILinterInfo {
-        const x = this.linters.findIndex((value, index, obj) => value.product === product);
+        const x = this.linters.findIndex((value, _index, _obj) => value.product === product);
         if (x >= 0) {
             return this.linters[x];
         }
