@@ -2277,6 +2277,7 @@
         "rxjs": "^5.5.9",
         "semver": "^5.5.0",
         "stack-trace": "0.0.10",
+        "strip-ansi": "^5.2.0",
         "strip-json-comments": "^2.0.1",
         "sudo-prompt": "^8.2.0",
         "tmp": "^0.0.29",

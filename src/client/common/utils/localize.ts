@@ -145,6 +145,7 @@ export namespace DataScience {
     export const jupyterGetVariablesBadResults = localize('DataScience.jupyterGetVariablesBadResults', 'Failed to fetch variable info from the Jupyter server.');
     export const dataExplorerInvalidVariableFormat = localize('DataScience.dataExplorerInvalidVariableFormat', '\'{0}\' is not an active variable.');
     export const pythonInteractiveCreateFailed = localize('DataScience.pythonInteractiveCreateFailed', 'Failure to create a \'Python Interactive\' window. Try reinstalling the Python extension.');
+    export const jupyterGetVariablesExecutionError = localize('DataScience.jupyterGetVariablesExecutionError', 'Failure during variable extraction: \r\n{0}');
 }
 
 export namespace DebugConfigurationPrompts {

@@ -356,11 +356,11 @@ export class History implements IHistory {
         }
     }
 
-    private async showDataExplorer(variable: string) {
+    private async showDataExplorer(variable: string) : Promise<void> {
         try {
-            return this.dataExplorerProvider.create(variable);
+            await this.dataExplorerProvider.create(variable);
         } catch (e) {
-            this.applicationShell.showErrorMessage(e);
+            this.applicationShell.showErrorMessage(e.toString());
         }
     }
 

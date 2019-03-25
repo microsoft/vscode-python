@@ -14,7 +14,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ICodeCssGenerator, IDataExplorer, IDataScienceExtraSettings, IJupyterVariable } from '../types';
+import { ICodeCssGenerator, IDataExplorer, IDataScienceExtraSettings, IJupyterVariable, IJupyterVariables } from '../types';
 import { DataExplorerMessageListener } from './dataExplorerMessageListener';
 import { DataExplorerMessages, IDataExplorerMapping } from './types';
 
@@ -27,12 +27,14 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     private messageListener : DataExplorerMessageListener;
     private changeHandler: IDisposable | undefined;
     private viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
+    private variable : IJupyterVariable | undefined;
 
     constructor(
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IJupyterVariables) private variableManager: IJupyterVariables,
         @inject(ILogger) private logger: ILogger
         ) {
         this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
@@ -58,12 +60,18 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
             // Make sure we're loaded first
             await this.loadPromise;
 
+            // Fill in our variable's beginning data
+            this.variable = await this.prepVariable(variable);
+
             // Then show our web panel. Eventually we need to consume the data
             if (this.webPanel) {
                 await this.webPanel.show(true);
 
                 // Send telemetry when it works.
                 sendTelemetryEvent(Telemetry.ShowDataExplorer);
+
+                // Send a message with our data
+                this.postMessage(DataExplorerMessages.InitializeData, this.variable);
             }
         }
     }
@@ -80,6 +88,13 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
                 this.changeHandler = undefined;
             }
         }
+    }
+
+    private async prepVariable(variable: IJupyterVariable) : Promise<IJupyterVariable> {
+        const output = await this.variableManager.getDataFrameInfo(variable);
+        const first100Rows = await this.variableManager.getDataFrameRows(output, 0, 100);
+        output.rows = first100Rows;
+        return output;
     }
 
     private async postMessage<M extends IDataExplorerMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {

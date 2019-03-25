@@ -13,6 +13,8 @@ import { generateTestData } from './testData';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import './mainPanel.css';
+import { IJupyterVariable } from '../../client/datascience/types';
+import { BooleanColumnFormatter } from './booleanColumnFormatter';
 
 const selectors = Data.Selectors;
 
@@ -31,6 +33,7 @@ interface IMainPanelState {
     gridColumns: AdazzleReactDataGrid.Column<object>[];
     gridRows: IGridRow[];
     initialGridRows: IGridRow[];
+    rowCount: number;
     filters: {};
     gridHeight: number;
 }
@@ -56,6 +59,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 gridColumns: data.columns.map(c => { return { ...c, ...defaultColumnProperties }; }),
                 gridRows: data.rows,
                 initialGridRows: data.rows,
+                rowCount: data.rows.length,
                 filters: {},
                 gridHeight: 100
             };
@@ -64,6 +68,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 gridColumns: [],
                 gridRows: [],
                 initialGridRows: [],
+                rowCount: 0,
                 filters: {},
                 gridHeight: 100
             };
@@ -90,13 +95,60 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // tslint:disable-next-line:no-any
-    public handleMessage = (msg: string, _payload?: any) => {
+    public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
+            case DataExplorerMessages.InitializeData: 
+                this.initializeData(payload);
+                break;
             default:
                 break;
         }
 
         return false;
+    }
+
+    // tslint:disable-next-line:no-any
+    private initializeData(payload: any) {
+        // Payload should be an IJupyterVariable with the first 100 rows filled out
+        if (payload) {
+            const variable = payload as IJupyterVariable;
+            if (variable) {
+                const columns = this.generateColumns(variable);
+                const rows = this.generateRows(variable);
+                const totalRowCount = variable.rowCount ? variable.rowCount : 0;
+
+                this.setState(
+                    {
+                        gridColumns: columns,
+                        initialGridRows: rows,
+                        gridRows: rows,
+                        rowCount: totalRowCount
+                    }
+                );
+            }
+        }
+    }
+
+    private generateColumns(variable: IJupyterVariable): AdazzleReactDataGrid.Column<object>[]  {
+        if (variable.columns) {
+            return variable.columns.map(c => {
+                return {
+                    ...c,
+                    name: c.key,
+                    ...defaultColumnProperties,
+                    formatter: c.type === 'bool' ? BooleanColumnFormatter : undefined
+                }; 
+            });
+        }
+        return [];
+    }
+
+    // tslint:disable-next-line:no-any
+    private generateRows(variable: IJupyterVariable): any[] {
+        if (variable.rows) {
+            return variable.rows;
+        }
+        return [];
     }
 
     private updateDimensions = () => {

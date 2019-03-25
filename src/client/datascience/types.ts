@@ -266,17 +266,17 @@ export interface IJupyterVariable {
     count: number;
     truncated: boolean;
     expensive: boolean;
-    columns: string[] | undefined;
-    rows: { [row: number] : JSONObject } | undefined ;
-    rowCount: number | undefined;
+    columns?: { key: string, type: string }[];
+    rows?: JSONArray;
+    rowCount?: number;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
-    getDataFrameLikeData(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
-    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
+    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONArray>;
 }
 
 export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
