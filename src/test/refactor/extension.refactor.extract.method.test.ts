@@ -40,7 +40,7 @@ suite('Method Extraction', () => {
         refactorTargetFile = path.join(refactorTargetFileDir, `refactor${new Date().getTime()}.py`);
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initializeTest();
-        (commands as any).executeCommand = (cmd: any) => Promise.resolve();
+        (commands as any).executeCommand = (_cmd: any) => Promise.resolve();
     });
     teardown(async () => {
         commands.executeCommand = oldExecuteCommand;

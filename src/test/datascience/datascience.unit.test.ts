@@ -104,6 +104,10 @@ suite('Data Science Tests', () => {
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
+        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'Markdown cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
     });
 
 });

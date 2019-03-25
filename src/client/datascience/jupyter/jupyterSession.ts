@@ -151,7 +151,7 @@ export class JupyterSession implements IJupyterSession {
         throw new Error(errorMessage);
     }
 
-    private onStatusChanged(s: Session.ISession, a: Kernel.Status) {
+    private onStatusChanged(_s: Session.ISession, a: Kernel.Status) {
         if (a === 'starting' && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }

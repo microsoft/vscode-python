@@ -179,6 +179,7 @@ export interface ICodeWatcher {
     runFromLine(targetLine: number): Promise<void>;
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
+    runFileInteractive(): Promise<void>;
 }
 
 export enum CellState {
@@ -271,4 +272,18 @@ export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
+}
+
+export interface IDataExplorerRow {
+    [column: string] : string | number | {};
+}
+
+export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
+export interface IDataExplorerProvider {
+    create(rows: IDataExplorerRow[]) : Promise<IDataExplorer>;
+}
+export const IDataExplorer = Symbol('IDataExplorer');
+
+export interface IDataExplorer extends IAsyncDisposable {
+    show(rows: IDataExplorerRow[]) : Promise<void>;
 }

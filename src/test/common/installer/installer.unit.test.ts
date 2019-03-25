@@ -102,183 +102,184 @@ suite('Module Installer only', () => {
                         const response = await installer.install(product.value, resource);
                         expect(response).to.be.equal(InstallerResponse.Installed);
                     });
+                    break;
                 }
                 default: {
-                    test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                        const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                        const logger = TypeMoq.Mock.ofType<ILogger>();
-                        logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+                    test(`Ensure the prompt is displayed only once, until the prompt is closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                            .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
+                            .verifiable(TypeMoq.Times.exactly(resource ? 5 : 0));
+                        app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .returns(
+                                () => {
+                                    return promptDeferred.promise;
+                                })
+                            .verifiable(TypeMoq.Times.once());
+                        const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+                        persistVal.setup(p => p.value).returns(() => false);
+                        persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                        persistentStore.setup(ps =>
+                            ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                        ).returns(() => persistVal.object);
 
-                        moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource))).returns(() => Promise.reject(new Error('UnitTesting')));
+                        // Display first prompt.
+                        installer.promptToInstall(product.value, resource).ignoreErrors();
 
-                        try {
-                            await installer.install(product.value, resource);
-                        } catch (ex) {
-                            moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
-                        }
+                        // Display a few more prompts.
+                        installer.promptToInstall(product.value, resource).ignoreErrors();
+                        installer.promptToInstall(product.value, resource).ignoreErrors();
+                        installer.promptToInstall(product.value, resource).ignoreErrors();
+                        installer.promptToInstall(product.value, resource).ignoreErrors();
+
+                        app.verifyAll();
+                        workspaceService.verifyAll();
                     });
-                    test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                        const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                        const logger = TypeMoq.Mock.ofType<ILogger>();
-                        logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+                    test(`Ensure the prompt is displayed again when previous prompt has been closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                            .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
+                            .verifiable(TypeMoq.Times.exactly(resource ? 3 : 0));
+                        app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve(undefined))
+                            .verifiable(TypeMoq.Times.exactly(3));
+                        const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+                        persistVal.setup(p => p.value).returns(() => false);
+                        persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                        persistentStore.setup(ps =>
+                            ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                        ).returns(() => persistVal.object);
 
-                        moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource))).returns(() => Promise.reject(new Error('UnitTesting')));
+                        await installer.promptToInstall(product.value, resource);
+                        await installer.promptToInstall(product.value, resource);
+                        await installer.promptToInstall(product.value, resource);
 
-                        try {
-                            await installer.install(product.value, resource);
-                        } catch (ex) {
-                            moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
-                        }
+                        app.verifyAll();
+                        workspaceService.verifyAll();
                     });
-                    if (product.value !== Product.unittest) {
-                        test(`Ensure the prompt is displayed only once, until the prompt is closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+
+                    if (product.value === Product.pylint) {
+                        test(`Ensure the install prompt is not displayed when the user requests it not be shown again, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                             workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                 .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
-                                .verifiable(TypeMoq.Times.exactly(resource ? 5 : 0));
-                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .verifiable(TypeMoq.Times.exactly(resource ? 2 : 0));
+                            app.setup(a =>
+                                a.showErrorMessage(
+                                    TypeMoq.It.isAnyString(),
+                                    TypeMoq.It.isValue('Install'),
+                                    TypeMoq.It.isValue('Select Linter'),
+                                    TypeMoq.It.isValue('Do not show again')))
                                 .returns(
-                                    () => {
-                                        return promptDeferred.promise;
+                                    async () => {
+                                        return 'Do not show again';
                                     })
                                 .verifiable(TypeMoq.Times.once());
                             const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                            persistVal.setup(p => p.value).returns(() => false);
-                            persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                            let mockPersistVal = false;
+                            persistVal.setup(p => p.value).returns(() => {
+                                return mockPersistVal;
+                            });
+                            persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)))
+                                .returns(() => {
+                                    mockPersistVal = true;
+                                    return Promise.resolve();
+                                }).verifiable(TypeMoq.Times.once());
                             persistentStore.setup(ps =>
                                 ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
-                            ).returns(() => persistVal.object);
+                            ).returns(() => {
+                                return persistVal.object;
+                            }).verifiable(TypeMoq.Times.exactly(3));
 
                             // Display first prompt.
-                            installer.promptToInstall(product.value, resource).ignoreErrors();
+                            const initialResponse = await installer.promptToInstall(product.value, resource);
 
-                            // Display a few more prompts.
-                            installer.promptToInstall(product.value, resource).ignoreErrors();
-                            installer.promptToInstall(product.value, resource).ignoreErrors();
-                            installer.promptToInstall(product.value, resource).ignoreErrors();
-                            installer.promptToInstall(product.value, resource).ignoreErrors();
+                            // Display a second prompt.
+                            const secondResponse = await installer.promptToInstall(product.value, resource);
+
+                            expect(initialResponse).to.be.equal(InstallerResponse.Ignore);
+                            expect(secondResponse).to.be.equal(InstallerResponse.Ignore);
 
                             app.verifyAll();
                             workspaceService.verifyAll();
+                            persistentStore.verifyAll();
+                            persistVal.verifyAll();
                         });
-                        if (product.value === Product.pylint) {
-                            test(`Ensure the install prompt is not displayed when the user requests it not be shown again, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                                workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
-                                    .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
-                                    .verifiable(TypeMoq.Times.exactly(resource ? 2 : 0));
-                                app.setup(a =>
-                                    a.showErrorMessage(
-                                        TypeMoq.It.isAnyString(),
-                                        TypeMoq.It.isValue('Install'),
-                                        TypeMoq.It.isValue('Select Linter'),
-                                        TypeMoq.It.isValue('Do not show again')))
-                                    .returns(
-                                        async () => {
-                                            return 'Do not show again';
-                                        })
-                                    .verifiable(TypeMoq.Times.once());
-                                const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                                let mockPersistVal = false;
-                                persistVal.setup(p => p.value).returns(() => {
-                                    return mockPersistVal;
-                                });
-                                persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)))
-                                    .returns(() => {
-                                        mockPersistVal = true;
-                                        return Promise.resolve();
-                                    }).verifiable(TypeMoq.Times.once());
-                                persistentStore.setup(ps =>
-                                    ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
-                                ).returns(() => {
-                                    return persistVal.object;
-                                }).verifiable(TypeMoq.Times.exactly(3));
-
-                                // Display first prompt.
-                                const initialResponse = await installer.promptToInstall(product.value, resource);
-
-                                // Display a second prompt.
-                                const secondResponse = await installer.promptToInstall(product.value, resource);
-
-                                expect(initialResponse).to.be.equal(InstallerResponse.Ignore);
-                                expect(secondResponse).to.be.equal(InstallerResponse.Ignore);
-
-                                app.verifyAll();
-                                workspaceService.verifyAll();
-                                persistentStore.verifyAll();
-                                persistVal.verifyAll();
-                            });
-                        } else if (productService.getProductType(product.value) === ProductType.Linter) {
-                            test(`Ensure the 'do not show again' prompt isn't shown for non-pylint linters, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                                workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
-                                    .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object);
-                                app.setup(a =>
-                                    a.showErrorMessage(
-                                        TypeMoq.It.isAnyString(),
-                                        TypeMoq.It.isValue('Install'),
-                                        TypeMoq.It.isValue('Select Linter')))
-                                    .returns(
-                                        async () => {
-                                            return undefined;
-                                        })
-                                    .verifiable(TypeMoq.Times.once());
-                                app.setup(a =>
-                                    a.showErrorMessage(
-                                        TypeMoq.It.isAnyString(),
-                                        TypeMoq.It.isValue('Install'),
-                                        TypeMoq.It.isValue('Select Linter'),
-                                        TypeMoq.It.isValue('Do not show again')))
-                                    .returns(
-                                        async () => {
-                                            return undefined;
-                                        })
-                                    .verifiable(TypeMoq.Times.never());
-                                const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                                let mockPersistVal = false;
-                                persistVal.setup(p => p.value).returns(() => {
-                                    return mockPersistVal;
-                                });
-                                persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)))
-                                    .returns(() => {
-                                        mockPersistVal = true;
-                                        return Promise.resolve();
-                                    });
-                                persistentStore.setup(ps =>
-                                    ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
-                                ).returns(() => {
-                                    return persistVal.object;
-                                });
-
-                                // Display the prompt.
-                                await installer.promptToInstall(product.value, resource);
-
-                                // we're just ensuring the 'disable pylint' prompt never appears...
-                                app.verifyAll();
-                            });
-                        }
-                        test(`Ensure the prompt is displayed again when previous prompt has been closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    } else if (productService.getProductType(product.value) === ProductType.Linter) {
+                        test(`Ensure the 'do not show again' prompt isn't shown for non-pylint linters, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                             workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
-                                .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
-                                .verifiable(TypeMoq.Times.exactly(resource ? 3 : 0));
-                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                                .returns(() => Promise.resolve(undefined))
-                                .verifiable(TypeMoq.Times.exactly(3));
+                                .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object);
+                            app.setup(a =>
+                                a.showErrorMessage(
+                                    TypeMoq.It.isAnyString(),
+                                    TypeMoq.It.isValue('Install'),
+                                    TypeMoq.It.isValue('Select Linter')))
+                                .returns(
+                                    async () => {
+                                        return undefined;
+                                    })
+                                .verifiable(TypeMoq.Times.once());
+                            app.setup(a =>
+                                a.showErrorMessage(
+                                    TypeMoq.It.isAnyString(),
+                                    TypeMoq.It.isValue('Install'),
+                                    TypeMoq.It.isValue('Select Linter'),
+                                    TypeMoq.It.isValue('Do not show again')))
+                                .returns(
+                                    async () => {
+                                        return undefined;
+                                    })
+                                .verifiable(TypeMoq.Times.never());
                             const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                            persistVal.setup(p => p.value).returns(() => false);
-                            persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                            let mockPersistVal = false;
+                            persistVal.setup(p => p.value).returns(() => {
+                                return mockPersistVal;
+                            });
+                            persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)))
+                                .returns(() => {
+                                    mockPersistVal = true;
+                                    return Promise.resolve();
+                                });
                             persistentStore.setup(ps =>
                                 ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
-                            ).returns(() => persistVal.object);
+                            ).returns(() => {
+                                return persistVal.object;
+                            });
 
-                            await installer.promptToInstall(product.value, resource);
-                            await installer.promptToInstall(product.value, resource);
+                            // Display the prompt.
                             await installer.promptToInstall(product.value, resource);
 
+                            // we're just ensuring the 'disable pylint' prompt never appears...
                             app.verifyAll();
-                            workspaceService.verifyAll();
                         });
                     }
                 }
+
+                test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                    const logger = TypeMoq.Mock.ofType<ILogger>();
+                    logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+
+                    moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource))).returns(() => Promise.reject(new Error('UnitTesting')));
+
+                    try {
+                        await installer.install(product.value, resource);
+                    } catch (ex) {
+                        moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
+                    }
+                });
+                test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                    const logger = TypeMoq.Mock.ofType<ILogger>();
+                    logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+
+                    moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource))).returns(() => Promise.reject(new Error('UnitTesting')));
+
+                    try {
+                        await installer.install(product.value, resource);
+                    } catch (ex) {
+                        moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
+                    }
+                });
             }
         });
 

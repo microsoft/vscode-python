@@ -30,6 +30,7 @@ export namespace Commands {
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
+    export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
 }
 
 export namespace EditorContexts {
@@ -90,7 +91,9 @@ export enum Telemetry {
     ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
-    EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER'
+    EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
+    ShowDataExplorer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
+    RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE'
  }
 
 export namespace HelpLinks {

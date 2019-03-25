@@ -147,7 +147,7 @@ export class TestsHelper implements ITestsHelper {
         folders.sort();
         const resource = Uri.file(workspaceFolder);
         folders.forEach(dir => {
-            dir.split(path.sep).reduce((parentPath, currentName, index, values) => {
+            dir.split(path.sep).reduce((parentPath, currentName, _index, _values) => {
                 let newPath = currentName;
                 let parentFolder: TestFolder | undefined;
                 if (parentPath.length > 0) {
@@ -540,9 +540,11 @@ function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
 
 function copyValueTypes<T>(source: T, target: T): void {
     Object.keys(source).forEach(key => {
-        const value = source[key];
+        // tslint:disable-next-line:no-any
+        const value = (source as any)[key];
         if (['boolean', 'number', 'string', 'undefined'].indexOf(typeof value) >= 0) {
-            target[key] = value;
+            // tslint:disable-next-line:no-any
+            (target as any)[key] = value;
         }
     });
 }

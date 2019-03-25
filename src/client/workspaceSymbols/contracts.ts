@@ -1,6 +1,6 @@
 import { Position, SymbolKind } from 'vscode';
 
-export interface Tag {
+export interface ITag {
     fileName: string;
     symbolName: string;
     symbolKind: SymbolKind;

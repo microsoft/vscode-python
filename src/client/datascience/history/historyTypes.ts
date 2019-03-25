@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { ICell, IHistoryInfo } from './types';
+import { ICell, IHistoryInfo } from '../types';
 
 export namespace HistoryMessages {
     export const StartCell = 'start_cell';
@@ -29,6 +29,7 @@ export namespace HistoryMessages {
     export const AddedSysInfo = 'added_sys_info';
     export const RemoteAddCode = 'remote_add_code';
     export const Activate = 'activate';
+    export const ShowDataExplorer = 'show_data_explorer';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -91,4 +92,5 @@ export class IHistoryMapping {
     public [HistoryMessages.AddedSysInfo]: IAddedSysInfo;
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
     public [HistoryMessages.Activate] : never | undefined;
+    public [HistoryMessages.ShowDataExplorer] : never | undefined; // This is where we'd specify the data for viewing (or perhaps not, just an id?)
 }

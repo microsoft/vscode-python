@@ -1,5 +1,6 @@
-import { FormattingOptions, TextDocument, TextEdit } from 'vscode';
-import { Position, Range, TextLine } from 'vscode';
+import {
+    FormattingOptions, Position, Range, TextDocument, TextEdit, TextLine
+} from 'vscode';
 import { BlockRegEx } from './contracts';
 
 export class CodeBlockFormatProvider {
@@ -9,7 +10,7 @@ export class CodeBlockFormatProvider {
         return this.blockRegExp.test(line);
     }
 
-    public provideEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, line: TextLine): TextEdit[] {
+    public provideEdits(document: TextDocument, position: Position, _ch: string, options: FormattingOptions, line: TextLine): TextEdit[] {
         // We can have else for the following blocks:
         // if:
         // elif x:

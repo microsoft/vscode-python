@@ -31,8 +31,8 @@ export function setUpDomEnvironment() {
     // Special case. Transform needs createRange
     (global as any)['document'].createRange = () => ({
         createContextualFragment: (str: string) => JSDOM.fragment(str),
-        setEnd : (endNode: any, endOffset: any) => noop(),
-        setStart : (startNode: any, startOffset: any) => noop(),
+        setEnd : (_endNode: any, _endOffset: any) => noop(),
+        setStart : (_startNode: any, _startOffset: any) => noop(),
         getBoundingClientRect : () => null,
         getClientRects: () => []
     });
@@ -51,21 +51,21 @@ export function setUpDomEnvironment() {
         isCollapsed: false,
         rangeCount: 0,
         type: '',
-        addRange: (range: Range) => noop(),
+        addRange: (_range: Range) => noop(),
         createRange: () => null,
-        collapse: (parentNode: Node, offset: number) => noop(),
+        collapse: (_parentNode: Node, _offset: number) => noop(),
         collapseToEnd: noop,
         collapseToStart: noop,
-        containsNode: (node: Node, partlyContained: boolean) => false,
+        containsNode: (_node: Node, _partlyContained: boolean) => false,
         deleteFromDocument: noop,
         empty: noop,
-        extend: (newNode: Node, offset: number) => noop(),
-        getRangeAt: (index: number) => null,
+        extend: (_newNode: Node, _offset: number) => noop(),
+        getRangeAt: (_index: number) => null,
         removeAllRanges: noop,
-        removeRange: (range: Range) => noop(),
-        selectAllChildren: (parentNode: Node) => noop(),
-        setBaseAndExtent: (baseNode: Node, baseOffset: number, extentNode: Node, extentOffset: number) => noop(),
-        setPosition: (parentNode: Node, offset: number) => noop(),
+        removeRange: (_range: Range) => noop(),
+        selectAllChildren: (_parentNode: Node) => noop(),
+        setBaseAndExtent: (_baseNode: Node, _baseOffset: number, _extentNode: Node, _extentOffset: number) => noop(),
+        setPosition: (_parentNode: Node, _offset: number) => noop(),
         toString: () => '{Selection}'
     };
 

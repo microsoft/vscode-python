@@ -83,7 +83,7 @@ export class JupyterVariables implements IJupyterVariables {
             if (codeCell.outputs.length > 0) {
                 const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
                 if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.hasOwnProperty('text')) {
-                   const resultString = codeCellOutput['text'] as string;
+                   const resultString = codeCellOutput.text as string;
                    return JSON.parse(resultString) as T;
                 }
             }

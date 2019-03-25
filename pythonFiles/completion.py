@@ -562,7 +562,8 @@ class JediCompletion(object):
                 jedi.api.names(
                     source=request.get('source', None),
                     path=request.get('path', ''),
-                    all_scopes=True),
+                    all_scopes=True,
+                    environment=self.environment),
                 request['id'])
 
         script = jedi.Script(

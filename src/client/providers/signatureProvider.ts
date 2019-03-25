@@ -119,7 +119,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
             return Promise.resolve(new SignatureHelp());
         }
 
-        const cmd: proxy.ICommand<proxy.IArgumentsResult> = {
+        const cmd: proxy.ICommand = {
             command: proxy.CommandType.Arguments,
             fileName: document.fileName,
             columnIndex: position.character,

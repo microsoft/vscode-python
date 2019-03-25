@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { Disposable, TextDocument, TextEditor, ViewColumn } from 'vscode';
 
 import {
     IApplicationShell,
@@ -22,8 +22,8 @@ import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts } from '../../client/datascience/constants';
-import { HistoryMessageListener } from '../../client/datascience/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/historyTypes';
+import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
+import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
@@ -88,12 +88,13 @@ suite('History output tests', () => {
         ioc.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns((listener: IWebPanelMessageListener, title: string, script: string, css: string) => {
-            // Keep track of the current listener. It listens to messages through the vscode api
-            webPanelListener = listener;
+        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
+                // Keep track of the current listener. It listens to messages through the vscode api
+                webPanelListener = listener;
 
-            // Return our dummy web panel
-            return webPanel.object;
+                // Return our dummy web panel
+                return webPanel.object;
         });
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             window.postMessage(m, '*');
@@ -116,7 +117,7 @@ suite('History output tests', () => {
                     }
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (msg: any) => {
+                setState: (_msg: any) => {
 
                 },
                 // tslint:disable-next-line:no-any no-empty
@@ -130,18 +131,18 @@ suite('History output tests', () => {
     });
 
     teardown(async () => {
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                // tslint:disable-next-line:no-any
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
-                }
+        for (const disposable of disposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
             }
         }
         await ioc.dispose();
-        delete (global as any)['ascquireVsCodeApi'];
+        delete (global as any).ascquireVsCodeApi;
     });
 
     async function getOrCreateHistory(): Promise<IHistory> {
@@ -149,7 +150,7 @@ suite('History output tests', () => {
 
         // During testing the MainPanel sends the init message before our history is created.
         // Pretend like it's happening now
-        const listener = ((result as any)['messageListener']) as HistoryMessageListener;
+        const listener = ((result as any).messageListener) as HistoryMessageListener;
         listener.onMessage(HistoryMessages.Started, {});
 
         return result;
@@ -290,7 +291,7 @@ for _ in range(50):
         const cursors = ['|', '/', '-', '\\'];
         let cursorPos = 0;
         let loops = 3;
-        addContinuousMockData(ioc, spinningCursor, async (c) => {
+        addContinuousMockData(ioc, spinningCursor, async (_c) => {
             const result = `${cursors[cursorPos]}\r`;
             cursorPos += 1;
             if (cursorPos >= cursors.length) {
@@ -518,7 +519,7 @@ for _ in range(50):
         // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
         let count = 0;
         let deferred = createDeferred<boolean>();
-        const eventDispose = ioc.onContextSet(a => {
+        const eventDispose = ioc.onContextSet(_a => {
             count += 1;
             if (count >= 3) {
                 deferred.resolve();

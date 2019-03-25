@@ -341,8 +341,13 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.runFileInteractive",
+                "title": "%python.command.python.datascience.runFileInteractive.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runallcells",
-                "title": "%python.command.python.datascience.runallcells.command.title%",
+                "title": "%python.command.python.datascience.runallcells.title%",
                 "category": "Python"
             },
             {
@@ -474,48 +479,53 @@
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
+                    "command": "python.datascience.runallcells",
+                    "group": "Python2"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcell",
-                    "group": "Python"
+                    "group": "Python2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcelladvance",
-                    "group": "Python"
+                    "group": "Python2"
                 },
                 {
-                    "command": "python.datascience.runallcells",
-                    "group": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
+                    "command": "python.datascience.runFileInteractive",
+                    "group": "Python2",
+                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runfromline",
-                    "group": "Python",
+                    "group": "Python2",
                     "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runtoline",
-                    "group": "Python",
+                    "group": "Python2",
                     "when": "editorFocus && editorLangId == python && python.datascience.ownsSelection && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.execSelectionInteractive",
-                    "group": "Python",
+                    "group": "Python2",
                     "when": "editorFocus && editorLangId == python &&  python.datascience.featureenabled && python.datascience.ownsSelection"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && python.datascience.featureenabled",
                     "command": "python.datascience.importnotebook",
-                    "group": "Python"
+                    "group": "Python3@1"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileasnotebook",
-                    "group": "Python2"
+                    "group": "Python3@2"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileandoutputasnotebook",
-                    "group": "Python2@2"
+                    "group": "Python3@3"
                 }
             ],
             "explorer/context": [
@@ -533,6 +543,11 @@
                     "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
                     "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == python && python.datascience.featureenabled",
+                    "command": "python.datascience.runFileInteractive",
+                    "group": "Python2"
                 },
                 {
                     "when": "resourceLangId == jupyter",
@@ -594,13 +609,19 @@
                 },
                 {
                     "command": "python.datascience.runallcells",
-                    "title": "%python.command.python.datascience.runallcells.command.title%",
+                    "title": "%python.command.python.datascience.runallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runcell",
                     "title": "%python.command.python.datascience.runcell.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runFileInteractive",
+                    "title": "%python.command.python.datascience.runFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
@@ -2240,6 +2261,7 @@
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
         "glob": "^7.1.2",
+        "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
         "line-by-line": "^0.1.6",
@@ -2259,6 +2281,7 @@
         "sudo-prompt": "^8.2.0",
         "tmp": "^0.0.29",
         "tree-kill": "^1.2.0",
+        "tslint": "^5.14.0",
         "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
         "unicode": "^10.0.0",
@@ -2330,6 +2353,7 @@
         "babel-plugin-inline-json-import": "^0.3.1",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
+        "bootstrap": "^4.3.1",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -2356,6 +2380,7 @@
         "gulp-typescript": "^4.0.1",
         "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
+        "immutable": "^4.0.0-rc.12",
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
         "jsdom": "^12.2.0",
@@ -2363,11 +2388,14 @@
         "loader-utils": "^1.1.0",
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
+        "mocha-multi-reporters": "^1.1.7",
         "node-has-native-dependencies": "^1.0.2",
         "nyc": "^13.3.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-codemirror": "^1.0.0",
+        "react-data-grid": "^6.0.2-0",
+        "react-data-grid-addons": "^6.0.2-0",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
@@ -2383,7 +2411,6 @@
         "ts-loader": "^5.3.0",
         "ts-mockito": "^2.3.1",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
-        "tslint": "^5.9.1",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",

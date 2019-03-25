@@ -35,7 +35,9 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     public dispose() {
         this.changeEventEmitter.dispose();
         this.fileWatchers.forEach(watcher => {
-            watcher.dispose();
+            if (watcher) {
+                watcher.dispose();
+            }
         });
     }
     @cacheResourceSpecificInterpreterData('getEnvironmentVariables', cacheDuration)

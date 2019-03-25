@@ -108,12 +108,13 @@ export class CodeWatcher implements ICodeWatcher {
 
         // If there are no codelenses, just run all of the code as a single cell
         if (this.codeLenses.length === 0) {
-            if (this.document) {
-                const code = this.document.getText();
-                const activeHistory = await this.historyProvider.getOrCreateActive();
-                await activeHistory.addCode(code, this.getFileName(), 0);
-            }
+            return this.runFileInteractiveInternal();
         }
+    }
+
+    @captureTelemetry(Telemetry.RunFileInteractive)
+    public async runFileInteractive() {
+        return this.runFileInteractiveInternal();
     }
 
     // Run all cells up to the cell containing this start line and character
@@ -271,6 +272,14 @@ export class CodeWatcher implements ICodeWatcher {
 
             // Run the cell after moving the selection
             await this.runCell(currentRunCellLens.range);
+        }
+    }
+
+    private async runFileInteractiveInternal() {
+        if (this.document) {
+            const code = this.document.getText();
+            const activeHistory = await this.historyProvider.getOrCreateActive();
+            await activeHistory.addCode(code, this.getFileName(), 0);
         }
     }
 

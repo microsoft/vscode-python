@@ -15,7 +15,7 @@ import { LinterManager } from '../../client/linters/linterManager';
 class TestLinterManager extends LinterManager {
     public enableUnconfiguredLintersCallCount: number = 0;
 
-    protected async enableUnconfiguredLinters(resource?: Uri): Promise<void> {
+    protected async enableUnconfiguredLinters(_resource?: Uri): Promise<void> {
         this.enableUnconfiguredLintersCallCount += 1;
     }
 }

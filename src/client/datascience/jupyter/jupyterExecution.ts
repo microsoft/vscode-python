@@ -34,6 +34,7 @@ import {
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { traceInfo, traceWarning } from '../../common/logger';
 
 enum ModuleExistsResult {
     NotFound,
@@ -49,20 +50,22 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(liveShare: ILiveShareApi,
-                private executionFactory: IPythonExecutionFactory,
-                private interpreterService: IInterpreterService,
-                private processServiceFactory: IProcessServiceFactory,
-                private knownSearchPaths: IKnownSearchPathsForInterpreters,
-                private logger: ILogger,
-                private disposableRegistry: IDisposableRegistry,
-                private asyncRegistry: IAsyncDisposableRegistry,
-                private fileSystem: IFileSystem,
-                private sessionManager: IJupyterSessionManager,
-                workspace: IWorkspaceService,
-                private configuration: IConfigurationService,
-                private commandFactory : IJupyterCommandFactory,
-                private serviceContainer: IServiceContainer) {
+    constructor(
+        _liveShare: ILiveShareApi,
+        private executionFactory: IPythonExecutionFactory,
+        private interpreterService: IInterpreterService,
+        private processServiceFactory: IProcessServiceFactory,
+        private knownSearchPaths: IKnownSearchPathsForInterpreters,
+        private logger: ILogger,
+        private disposableRegistry: IDisposableRegistry,
+        private asyncRegistry: IAsyncDisposableRegistry,
+        private fileSystem: IFileSystem,
+        private sessionManager: IJupyterSessionManager,
+        workspace: IWorkspaceService,
+        private configuration: IConfigurationService,
+        private commandFactory : IJupyterCommandFactory,
+        private serviceContainer: IServiceContainer
+    ) {
         this.processServicePromise = this.processServiceFactory.create();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -216,7 +219,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return result.stdout;
     }
 
-    public getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public getServer(_options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
     }
@@ -269,7 +272,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,
             localProcExitCode: undefined,
-            disconnected: (l) => { return { dispose: noop }; },
+            disconnected: (_l) => { return { dispose: noop }; },
             dispose: noop
         };
     }
@@ -600,7 +603,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return undefined;
     }
 
-    private enumerateSpecs = async (cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.findBestCommand(JupyterCommands.KernelSpecCommand);
 
@@ -703,36 +706,44 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // First we look in the current interpreter
             const current = await this.interpreterService.getActiveInterpreter();
             let found = current ? await this.findInterpreterCommand(command, current, cancelToken) : undefined;
+            if (!found) {
+                traceInfo(`Active interpreter does not support ${command}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
+            }
             if (!found && this.supportsSearchingForCommands()) {
                 // Look through all of our interpreters (minus the active one at the same time)
                 const all = await this.interpreterService.getInterpreters();
+
+                if (!all || all.length === 0) {
+                    traceWarning(`No interpreters found. Jupyter cannot run.`);
+                }
+
                 const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
                 const foundList = await Promise.all(promises);
 
                 // Then go through all of the found ones and pick the closest python match
                 if (current && current.version) {
                     let bestScore = -1;
-                    for (let i = 0; i < foundList.length; i += 1) {
+                    for (const entry of foundList) {
                         let currentScore = 0;
-                        const entry = foundList[i];
-                        if (entry) {
-                            const interpreter = await entry.interpreter();
-                            const version = interpreter ? interpreter.version : undefined;
-                            if (version) {
-                                if (version.major === current.version.major) {
-                                    currentScore += 4;
-                                    if (version.minor === current.version.minor) {
-                                        currentScore += 2;
-                                        if (version.patch === current.version.patch) {
-                                            currentScore += 1;
-                                        }
+                        if (!entry) {
+                            continue;
+                        }
+                        const interpreter = await entry.interpreter();
+                        const version = interpreter ? interpreter.version : undefined;
+                        if (version) {
+                            if (version.major === current.version.major) {
+                                currentScore += 4;
+                                if (version.minor === current.version.minor) {
+                                    currentScore += 2;
+                                    if (version.patch === current.version.patch) {
+                                        currentScore += 1;
                                     }
                                 }
                             }
-                            if (currentScore > bestScore) {
-                                found = foundList[i];
-                                bestScore = currentScore;
-                            }
+                        }
+                        if (currentScore > bestScore) {
+                            found = entry;
+                            bestScore = currentScore;
                         }
                     }
                 } else {
@@ -790,6 +801,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 return ModuleExistsResult.NotFound;
             }
         } else {
+            this.logger.logWarning(`Interpreter not found. ${moduleName} cannot be loaded.`);
             return ModuleExistsResult.NotFound;
         }
     }

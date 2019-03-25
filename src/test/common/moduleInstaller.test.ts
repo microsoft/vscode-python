@@ -1,6 +1,7 @@
 // tslint:disable:max-func-body-length
 
-import { expect } from 'chai';
+import { expect, should as chai_should, use as chai_use } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { instance, mock } from 'ts-mockito';
@@ -33,6 +34,8 @@ import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initializeTest } from './../initialize';
 
+chai_use(chaiAsPromised);
+
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
@@ -56,6 +59,7 @@ suite('Module Installer', () => {
         const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
         suiteSetup(initializeTest);
         setup(async () => {
+            chai_should();
             initializeDI();
             await initializeTest();
             await resetSettings();
@@ -137,7 +141,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-            processService.onExec((file, args, options, callback) => {
+            processService.onExec((file, args, _options, callback) => {
                 if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                     callback({ stdout: '' });
                 }
@@ -173,7 +177,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-            processService.onExec((file, args, options, callback) => {
+            processService.onExec((file, args, _options, callback) => {
                 if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                     callback({ stdout: '' });
                 }
@@ -246,7 +250,7 @@ suite('Module Installer', () => {
             let argsSent: string[] = [];
             mockTerminalService
                 .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+                .returns((_cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
             // tslint:disable-next-line:no-any
             interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve({ type: InterpreterType.Unknown } as any));
 
@@ -273,7 +277,7 @@ suite('Module Installer', () => {
             let argsSent: string[] = [];
             mockTerminalService
                 .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+                .returns((_cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
 
             await pipInstaller.installModule(moduleName, resource);
 

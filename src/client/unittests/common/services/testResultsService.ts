@@ -20,13 +20,16 @@ export class TestResultsService implements ITestResultsService {
 
         while (testQueue.length > 0) {
             const item = testQueue.shift();
+            if (!item) {
+                continue;
+            }
             testStack.push(item);
             const children = getChildren(item);
             children.forEach(child => testQueue.push(child));
         }
         while (testStack.length > 0) {
             const item = testStack.pop();
-            this.updateTestItem(item);
+            this.updateTestItem(item!);
         }
     }
     private updateTestItem(test: TestDataItem): void {
@@ -39,7 +42,9 @@ export class TestResultsService implements ITestResultsService {
 
         const children = getChildren(test);
         children.forEach(child => {
-            test.time += child.time;
+            if (child.time) {
+                test.time! += child.time;
+            }
             if (getTestType(child) === TestType.testFunction) {
                 if (typeof child.passed === 'boolean') {
                     noChildrenRan = false;

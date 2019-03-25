@@ -18,6 +18,8 @@ variables:
   PythonVersion: '3.7'
   NodeVersion: '8.11.2'
   NpmVersion: 'latest'
+  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
+  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
 
 jobs:
 
@@ -40,27 +42,47 @@ jobs:
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
       'Win-Py3.7 Unit':
         VMImageName: 'vs2017-win2016'
-        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests'
+        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools'
         NeedsPythonTestReqs: true
       'Win-Py2.7 Unit':
         PythonVersion: '2.7'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'pythonUnitTests'
         NeedsPythonTestReqs: true
-      'Mac-Py3.7 Unit+Single':
+      'Mac-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Single Workspace':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
       'Mac-Py2.7 Unit+Single':
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
         NeedsPythonTestReqs: true
-      'Linux-Py3.7 Unit+Single':
+      'Linux-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace, testSmoke'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Single Workspace':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSingleWorkspace'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
       'Linux-Py2.7 Unit+Single':
         PythonVersion: '2.7'

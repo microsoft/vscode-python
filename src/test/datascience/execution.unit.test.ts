@@ -69,22 +69,22 @@ class MockJupyterServer implements INotebookServer {
     public getCurrentState(): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
-    public executeObservable(code: string, f: string, line: number): Observable<ICell[]> {
+    public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
     }
-    public execute(code: string, f: string, line: number): Promise<ICell[]> {
+    public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
     public restartKernel(): Promise<void> {
         throw new Error('Method not implemented');
     }
-    public translateToNotebook(cells: ICell[]): Promise<JSONObject> {
+    public translateToNotebook(_cells: ICell[]): Promise<JSONObject> {
         throw new Error('Method not implemented');
     }
     public waitForIdle(): Promise<void> {
         throw new Error('Method not implemented');
     }
-    public setInitialDirectory(directory: string): Promise<void> {
+    public setInitialDirectory(_directory: string): Promise<void> {
         throw new Error('Method not implemented');
     }
     public getConnectionInfo(): IConnection | undefined {
@@ -101,7 +101,7 @@ class MockJupyterServer implements INotebookServer {
         return Promise.resolve(undefined);
     }
 
-    public interruptKernel(timeout: number) : Promise<InterruptResult> {
+    public interruptKernel(_timeout: number) : Promise<InterruptResult> {
         throw new Error('Method not implemented');
     }
 
@@ -130,14 +130,14 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
     }
 
     public dispose = async () : Promise<void> => {
-        for (let i = 0; i < this.disposables.length; i += 1) {
-            const disposable = this.disposables[i];
-            if (disposable) {
-                const val = disposable.dispose();
-                if (val instanceof Promise) {
-                    const promise = val as Promise<void>;
-                    await promise;
-                }
+        for (const disposable of this.disposables) {
+            if (!disposable) {
+                continue;
+            }
+            const val = disposable.dispose();
+            if (val instanceof Promise) {
+                const promise = val as Promise<void>;
+                await promise;
             }
         }
         this.disposables = [];
@@ -265,7 +265,7 @@ suite('Jupyter Execution', async () => {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result: TypeMoq.IMock<T> = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }
@@ -414,7 +414,7 @@ suite('Jupyter Execution', async () => {
 
     function setupMissingNotebookPythonService(service: TypeMoq.IMock<IPythonExecutionService>) {
         service.setup(x => x.execModule(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((v) => {
+            .returns((_v) => {
                 return Promise.reject('cant exec');
             });
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(missingNotebookPython));
@@ -644,7 +644,7 @@ suite('Jupyter Execution', async () => {
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
         const evt = {
-            affectsConfiguration(m: string) : boolean {
+            affectsConfiguration(_m: string) : boolean {
                 return true;
             }
         };
