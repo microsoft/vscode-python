@@ -12,12 +12,12 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IAsyncDisposable, IConfigurationService, IDisposable, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ICodeCssGenerator, IDataExplorer, IDataScienceExtraSettings, IJupyterVariable, IJupyterVariables } from '../types';
 import { DataExplorerMessageListener } from './dataExplorerMessageListener';
-import { DataExplorerMessages, IDataExplorerMapping } from './types';
-import { noop } from '../../common/utils/misc';
+import { DataExplorerMessages, IDataExplorerMapping, IGetRowsRequest } from './types';
 
 @injectable()
 export class DataExplorer implements IDataExplorer, IAsyncDisposable {
@@ -69,7 +69,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
                 await this.webPanel.show(true);
 
                 // Send a message with our data
-                this.postMessage(DataExplorerMessages.InitializeData, this.variable);
+                this.postMessage(DataExplorerMessages.InitializeData, this.variable).ignoreErrors();
             }
         }
     }
@@ -90,8 +90,6 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
 
     private async prepVariable(variable: IJupyterVariable) : Promise<IJupyterVariable> {
         const output = await this.variableManager.getDataFrameInfo(variable);
-        const first100Rows = await this.variableManager.getDataFrameRows(output, 0, 100);
-        output.rows = first100Rows;
 
         // Log telemetry about number of rows
         try {
@@ -113,10 +111,19 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         }
     }
 
-    private onMessage = (message: string, _payload: any) => {
+    //tslint:disable-next-line:no-any
+    private onMessage = (message: string, payload: any) => {
         switch (message) {
             case DataExplorerMessages.Started:
                 this.webPanelRendered();
+                break;
+
+            case DataExplorerMessages.GetAllRowsRequest:
+                this.getAllRows().ignoreErrors();
+                break;
+
+            case DataExplorerMessages.GetRowsRequest:
+                this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
                 break;
 
             default:
@@ -152,6 +159,20 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
                 terminalCursor: terminalCursor
             }
         };
+    }
+
+    private async getAllRows() {
+        if (this.variable && this.variable.rowCount) {
+            const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
+            return this.postMessage(DataExplorerMessages.GetAllRowsResponse, allRows);
+        }
+    }
+
+    private async getRowChunk(request: IGetRowsRequest) {
+        if (this.variable && this.variable.rowCount) {
+            const rows = await this.variableManager.getDataFrameRows(this.variable, request.start, Math.min(request.end, this.variable.rowCount));
+            return this.postMessage(DataExplorerMessages.GetRowsResponse, { rows, start: request.start, end: request.end});
+        }
     }
 
     private loadWebPanel = async (): Promise<void> => {

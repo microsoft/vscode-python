@@ -3,7 +3,7 @@
 'use strict';
 
 export interface ITestData {
-    columns: {key: string; name: string, type:string }[];
+    columns: {key: string; name: string; type: string }[];
     primaryKeys: string[];
     rows: {}[];
 }

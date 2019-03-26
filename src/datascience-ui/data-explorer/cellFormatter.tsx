@@ -6,6 +6,7 @@ import './cellFormatter.css';
 import { JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
 import { DataExplorerRowStates } from '../../client/datascience/data-viewing/types';
+import { getLocString } from '../react-common/locReactSide';
 
 interface IProps {
     value: string | number | object | boolean;
@@ -14,13 +15,20 @@ interface IProps {
 }
 
 export class CellFormatter extends React.Component<IProps> {
+    private loadingMessage = getLocString('DataScience.loadingMessage', 'loading ...');
+
     constructor(props: IProps) {
         super(props);
     }
 
     public render() {
+        // If this is our special not set value, render a 'loading ...' value.
+        if (this.props.row === DataExplorerRowStates.Skipped || this.props.row === DataExplorerRowStates.Fetching) {
+            return (<span>{this.loadingMessage}</span>);
+        }
+
         // Render based on type
-        if (this.props.dependentValues && this.props.value !== null && this.props.row !== 'not-set') {
+        if (this.props.dependentValues && this.props.value !== null) {
             switch (this.props.dependentValues) {
                 case 'bool':
                     return this.renderBool(this.props.value as boolean);
@@ -30,17 +38,13 @@ export class CellFormatter extends React.Component<IProps> {
                 case 'float':
                 case 'int64':
                 case 'float64':
+                case 'number':
                     return this.renderNumber(this.props.value as number);
                     break;
 
                 default:
                     break;
             }
-        }
-
-        // If this is our special not set value, render a 'loading ...' value.
-        if (this.props.row === DataExplorerRowStates.Skipped || this.props.row === DataExplorerRowStates.Fetching) {
-            return (<span>loading ...</span>);
         }
 
         // Otherwise an unknown type

@@ -5,7 +5,7 @@ import { JSONArray } from '@phosphor/coreutils';
 
 import { IJupyterVariable } from '../types';
 
-export const RowFetchPreAmount = 50;
+export const RowFetchAllLimit = 500;
 export const RowFetchSize = 500;
 
 export namespace DataExplorerRowStates {
@@ -42,5 +42,5 @@ export class IDataExplorerMapping {
     public [DataExplorerMessages.GetAllRowsRequest]: never | undefined;
     public [DataExplorerMessages.GetAllRowsResponse]: JSONArray;
     public [DataExplorerMessages.GetRowsRequest]: IGetRowsRequest;
-    public [DataExplorerMessages.GetRowsResponse]: JSONArray;
+    public [DataExplorerMessages.GetRowsResponse]: IGetRowsResponse;
 }

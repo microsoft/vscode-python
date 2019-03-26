@@ -146,6 +146,8 @@ export namespace DataScience {
     export const dataExplorerInvalidVariableFormat = localize('DataScience.dataExplorerInvalidVariableFormat', '\'{0}\' is not an active variable.');
     export const pythonInteractiveCreateFailed = localize('DataScience.pythonInteractiveCreateFailed', 'Failure to create a \'Python Interactive\' window. Try reinstalling the Python extension.');
     export const jupyterGetVariablesExecutionError = localize('DataScience.jupyterGetVariablesExecutionError', 'Failure during variable extraction: \r\n{0}');
+    export const loadingMessage = localize('DataScience.loadingMessage', 'loading ...');
+    export const noRowsInDataExplorer = localize('DataScience.noRowsInDataExplorer', 'Fetching data ...');
 }
 
 export namespace DebugConfigurationPrompts {

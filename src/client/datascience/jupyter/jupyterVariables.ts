@@ -1,20 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import { nbformat } from '@jupyterlab/coreutils';
+import { JSONArray } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 import stripAnsi from 'strip-ansi';
+import * as uuid from 'uuid/v4';
 
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers } from '../constants';
 import { ICell, IHistoryProvider, IJupyterExecution, IJupyterVariable, IJupyterVariables } from '../types';
-import { JSONArray } from '@phosphor/coreutils';
-import { traceError } from '../../common/logger';
 
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
@@ -28,23 +27,23 @@ export class JupyterVariables implements IJupyterVariables {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider
-        ) {
+    ) {
     }
 
     // IJupyterVariables implementation
     public async getVariables(): Promise<IJupyterVariable[]> {
         // Run the fetch variables script.
         return this.runScript<IJupyterVariable[]>(
-            undefined,  
-            [],         
+            undefined,
+            [],
             (_v: IJupyterVariable | undefined) => this.fetchVariablesScript!);
     }
 
     public async getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
         // Run the get value script
         return this.runScript<IJupyterVariable>(
-            targetVariable,  
-            targetVariable,         
+            targetVariable,
+            targetVariable,
             (_v: IJupyterVariable | undefined) => {
                 // Prep our targetVariable to send over
                 const variableString = JSON.stringify(targetVariable);
@@ -57,8 +56,8 @@ export class JupyterVariables implements IJupyterVariables {
     public async getDataFrameInfo(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
         // Run the get dataframe info script
         return this.runScript<IJupyterVariable>(
-            targetVariable,  
-            targetVariable,         
+            targetVariable,
+            targetVariable,
             (_v: IJupyterVariable | undefined) => {
                 // Prep our targetVariable to send over
                 const variableString = JSON.stringify(targetVariable);
@@ -71,8 +70,8 @@ export class JupyterVariables implements IJupyterVariables {
     public async getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number): Promise<JSONArray> {
         // Run the get dataframe rows script
         return this.runScript<JSONArray>(
-            targetVariable,  
-            [],         
+            targetVariable,
+            [],
             (_v: IJupyterVariable | undefined) => {
                 // Prep our targetVariable to send over
                 const variableString = JSON.stringify(targetVariable);
@@ -111,9 +110,9 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private async runScript<T>(
-        targetVariable: IJupyterVariable | undefined, 
+        targetVariable: IJupyterVariable | undefined,
         defaultValue: T,
-        fetchScriptText: (v: IJupyterVariable | undefined) => string) : Promise<T> {
+        fetchScriptText: (v: IJupyterVariable | undefined) => string): Promise<T> {
         if (!this.filesLoaded) {
             await this.loadVariableFiles();
         }
@@ -142,17 +141,17 @@ export class JupyterVariables implements IJupyterVariables {
             if (codeCell.outputs.length > 0) {
                 const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
                 if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.hasOwnProperty('text')) {
-                   const resultString = codeCellOutput.text as string;
-                   return JSON.parse(resultString) as T;
+                    const resultString = codeCellOutput.text as string;
+                    return JSON.parse(resultString) as T;
                 }
                 if (codeCellOutput && codeCellOutput.output_type === 'error' && codeCellOutput.hasOwnProperty('traceback')) {
-                    const traceback : string[] = codeCellOutput.traceback as string[];
-                    const stripped = traceback.map(c => stripAnsi(c)).join('\r\n');
+                    const traceback: string[] = codeCellOutput.traceback as string[];
+                    const stripped = traceback.map(stripAnsi).join('\r\n');
                     const error = localize.DataScience.jupyterGetVariablesExecutionError().format(stripped);
                     traceError(error);
                     throw new Error(error);
-                 }
-             }
+                }
+            }
         }
 
         throw new Error(localize.DataScience.jupyterGetVariablesBadResults());

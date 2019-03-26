@@ -221,8 +221,8 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string, _silent: boolean = false): Observable<ICell[]> {
-        return this.executeObservableImpl(code, file, line, id, false);
+    public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
+        return this.executeObservableImpl(code, file, line, id, silent);
     }
 
     public async getSysInfo(): Promise<ICell> {

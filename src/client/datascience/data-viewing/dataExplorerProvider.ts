@@ -17,7 +17,7 @@ export class DataExplorerProvider implements IDataExplorerProvider, IAsyncDispos
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
-        @inject(IJupyterVariables) private variables: IJupyterVariables,
+        @inject(IJupyterVariables) private variables: IJupyterVariables
         ) {
         asyncRegistry.push(this);
     }

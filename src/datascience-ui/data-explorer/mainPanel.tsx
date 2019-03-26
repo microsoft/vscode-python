@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import './mainPanel.css';
-import 'bootstrap/dist/css/bootstrap.css';
 
+import { JSONArray } from '@phosphor/coreutils';
 import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Data, Toolbar } from 'react-data-grid-addons';
@@ -12,13 +12,17 @@ import {
     DataExplorerMessages,
     DataExplorerRowStates,
     IDataExplorerMapping,
-    RowFetchPreAmount,
+    IGetRowsResponse,
+    RowFetchAllLimit,
     RowFetchSize
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { CellFormatter } from './cellFormatter';
+import { EmptyRowsView } from './emptyRowsView';
 import { generateTestData } from './testData';
+
+import 'bootstrap/dist/css/bootstrap.css';
 
 const selectors = Data.Selectors;
 
@@ -42,6 +46,8 @@ interface IMainPanelState {
     actualRowCount: number;
     filters: {};
     gridHeight: number;
+    sortDirection: string;
+    sortColumn: string | number;
 }
 
 class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> { }
@@ -56,14 +62,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
+            const rows = this.padRows(data.rows, data.rows.length + 100);
             this.state = {
                 gridColumns: data.columns.map(c => { return { ...c, ...defaultColumnProperties, formatter: CellFormatter, getRowMetaData: this.getRowMetaData.bind(this) }; }),
-                currentGridRows: data.rows,
-                actualGridRows: data.rows,
-                actualRowCount: data.rows.length,
+                currentGridRows: rows,
+                actualGridRows: rows,
+                actualRowCount: data.rows.length + 100,
                 fetchedRowCount: data.rows.length,
                 filters: {},
-                gridHeight: 100
+                gridHeight: 100,
+                sortColumn: 'index',
+                sortDirection: 'NONE'
             };
         } else {
             this.state = {
@@ -73,7 +82,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 actualRowCount: 0,
                 fetchedRowCount: 0,
                 filters: {},
-                gridHeight: 100
+                gridHeight: 100,
+                sortColumn: 'index',
+                sortDirection: 'NONE'
             };
         }
     }
@@ -100,9 +111,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case DataExplorerMessages.InitializeData: 
+            case DataExplorerMessages.InitializeData:
                 this.initializeData(payload);
                 break;
+
+            case DataExplorerMessages.GetAllRowsResponse:
+                this.handleGetAllRowsResponse(payload as JSONArray);
+                break;
+
+            case DataExplorerMessages.GetRowsResponse:
+                this.handleGetRowChunkResponse(payload as IGetRowsResponse);
+                break;
+
             default:
                 break;
         }
@@ -118,7 +138,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
-                const initialRows = this.generateRows(variable);
+                const initialRows: JSONArray = [];
                 const paddedRows = this.padRows(initialRows, totalRowCount);
 
                 this.setState(
@@ -130,28 +150,96 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         fetchedRowCount: initialRows.length
                     }
                 );
+
+                // Request the rest of the data if necessary
+                if (initialRows.length !== totalRowCount) {
+                    // Get all at once if less than 1000
+                    if (totalRowCount < RowFetchAllLimit) {
+                        this.getAllRows();
+                    } else {
+                        this.getRowsInChunks(RowFetchSize, initialRows.length, totalRowCount);
+                    }
+                }
             }
+        }
+    }
+
+    private getAllRows() {
+        this.sendMessage(DataExplorerMessages.GetAllRowsRequest);
+    }
+
+    private getRowsInChunks(chunkSize: number, startIndex: number, endIndex: number) {
+        // Ask for all of our rows one chunk at a time
+        let chunkEnd = startIndex + Math.min(chunkSize, endIndex);
+        let chunkStart = startIndex;
+        while (chunkStart < endIndex) {
+            this.sendMessage(DataExplorerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+            chunkStart = chunkEnd;
+            chunkEnd = Math.min(chunkEnd + chunkSize, endIndex);
+        }
+    }
+
+    private handleGetAllRowsResponse(rows: JSONArray) {
+        // Update our fetched count and actual rows
+        this.setState(
+            {
+                actualGridRows: rows,
+                currentGridRows: this.getSortedAndFilteredRows(rows, this.state.sortDirection, this.state.sortColumn, this.state.filters),
+                fetchedRowCount: this.state.actualRowCount
+            });
+    }
+
+    private handleGetRowChunkResponse(response: IGetRowsResponse) {
+        // We have a new fetched row count
+        const newFetched = this.state.fetchedRowCount + (response.end - response.start);
+
+        // Actual should have our entire list. We need to replace our part with our new results
+        const before = this.state.actualGridRows.slice(0, response.start);
+        const after = response.end < this.state.actualGridRows.length ? this.state.actualGridRows.slice(response.end) : [];
+        const newActual = before.concat(response.rows.concat(after));
+
+        // If we're done, sort and filter
+        if (newFetched === this.state.actualRowCount) {
+            this.setState({
+                fetchedRowCount: newFetched,
+                currentGridRows: this.getSortedAndFilteredRows(newActual, this.state.sortDirection, this.state.sortColumn, this.state.filters),
+                actualGridRows: newActual
+            });
+        } else if (this.state.currentGridRows.length > 0) {
+            // If we're not sorting or filtering, then we can just set to the default
+            this.setState({
+                fetchedRowCount: newFetched,
+                currentGridRows: newActual,
+                actualGridRows: newActual
+            });
+        } else {
+            // Just update our actual
+            this.setState({
+                fetchedRowCount: newFetched,
+                actualGridRows: newActual
+            });
         }
     }
 
     private padRows(initialRows: any[], wantedCount: number) : any[] {
         if (wantedCount > initialRows.length) {
-            const skipped : string[] = Array<string>(wantedCount - initialRows.length);
-            return [...initialRows, ...skipped];
+            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataExplorerRowStates.Fetching);
+            return [...initialRows, ...fetching];
         }
         return initialRows;
     }
 
     private generateColumns(variable: IJupyterVariable): AdazzleReactDataGrid.Column<object>[]  {
         if (variable.columns) {
-            return variable.columns.map(c => {
+            return variable.columns.map((c: {key: string; type: string}, i: number) => {
                 return {
                     ...c,
+                    index: i,
                     name: c.key,
                     ...defaultColumnProperties,
                     formatter: CellFormatter,
                     getRowMetaData: this.getRowMetaData.bind(this)
-                }; 
+                };
             });
         }
         return [];
@@ -165,14 +253,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
         return '';
-    }
-
-    // tslint:disable-next-line:no-any
-    private generateRows(variable: IJupyterVariable): any[] {
-        if (variable.rows) {
-            return variable.rows;
-        }
-        return [];
     }
 
     private updateDimensions = () => {
@@ -198,66 +278,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 toolbar={<Toolbar enableFilter={true} />}
                 onAddFilter={this.handleFilterChange}
                 onClearFilters={this.clearFilters}
+                emptyRowsView={EmptyRowsView}
                 onGridSort={this.sortRows}
             />
         );
     }
 
     private getRowCount = () => {
-        // If we have all of our data, then it's the filtered rows count
-        if (this.state.actualRowCount === this.state.fetchedRowCount) {
-            return this.state.currentGridRows.length;
-        }
-
-        // Otherwise it's the number fetched
-        return this.state.fetchedRowCount;
+        // Current grid rows always specifies what we show.
+        return this.state.currentGridRows.length;
     }
 
     private getRow = (index: number) => {
-        // This might be outside of our array of data
-        if (index >= this.state.fetchedRowCount && this.state.currentGridRows[index] === DataExplorerRowStates.Skipped) {
-
-            // Figure out start point for the fetch
-            const start = Math.max(index - RowFetchPreAmount, 0);
-            this.fetchRows(start);
-        }
-
         return this.state.currentGridRows[index];
     }
 
-    private fetchRows(start: number) {
-        // First compute the end point for this. Should be
-        // maxed out the total length
-        const end = Math.min(this.state.actualRowCount, start + RowFetchSize);
-
-        // Change all of our current grid rows in this range to fetching
-        const newGridRows = this.state.actualGridRows.map((c: any, i: number) => {
-            if (i < end && i >= start && c === DataExplorerRowStates.Skipped) {
-                return DataExplorerRowStates.Fetching;
-            }
-            return c;
-        });
-        this.setState({
-            actualGridRows: newGridRows,
-            currentGridRows: newGridRows,
-            fetchedRowCount: this.state.fetchedRowCount + (end - start)
-        });
-
-        // Actually perform the fetch (we'll get back a GetRowsResponse when it's done)
-        this.sendMessage(DataExplorerMessages.GetRowsRequest, {start, end});
-    }
-
-    private getAllRows() {
-        // This will get called when we sort or filter if we don't have all of our data
-        if (this.state.fetchedRowCount !== this.state.actualRowCount) {
-            // First set our message to our fetching data message by removing all rows
-            this.setState({
-                fetchedRowCount: 0
-            });
-
-            // Then ask for all of the rows
-            this.sendMessage(DataExplorerMessages.GetAllRowsRequest);
-        }
+    private haveAllRows(): boolean {
+        return (this.state.fetchedRowCount === this.state.actualRowCount);
     }
 
     private updatePostOffice = (postOffice: DataExplorerPostOffice) => {
@@ -273,32 +310,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    // tslint:disable:no-any
-    private handleFilterChange = (filter: any) => {
-        // Make sure we have all rows
-        this.getAllRows();
-
-        // Then apply the filters
-        const newFilters: { [key: string]: any } = { ...this.state.filters };
-        if (filter.column.key) {
-            if (filter.filterTerm) {
-                newFilters[filter.column.key] = filter;
-            } else {
-                delete newFilters[filter.column.key];
-            }
-        }
-        this.setState({ filters: newFilters, currentGridRows: selectors.getRows({rows: this.state.actualGridRows, filters: newFilters})});
-    }
-
-    private clearFilters = () => {
-        this.setState({ filters: {} });
-    }
-
-    private sortRows = (sortColumn: string | number, sortDirection: string) => {
-        // Make sure we have all rows
-        this.getAllRows();
-
-        // Then apply the sort
+    private getSortedAndFilteredRows(rows: JSONArray, sortDirection: string, sortColumn: string | number, filters: {}) : any[] {
+        // First apply sort
         if (sortDirection === 'NONE') {
             sortColumn = 'index';
             sortDirection = 'ASC';
@@ -313,8 +326,67 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
             return -1;
         };
-        const sorted = this.state.actualGridRows.sort(comparer);
-        this.setState({ currentGridRows: selectors.getRows({rows: sorted, filters: this.state.filters}) });
+        const sorted = rows.sort(comparer);
+
+        // Then apply the filters.
+        return selectors.getRows({rows: sorted, filters});
+    }
+
+    // tslint:disable:no-any
+    private handleFilterChange = (filter: any) => {
+        // Generate new filters.
+        const newFilters: { [key: string]: any } = { ...this.state.filters };
+        if (filter.column.key) {
+            if (filter.filterTerm) {
+                newFilters[filter.column.key] = filter;
+            } else {
+                delete newFilters[filter.column.key];
+            }
+        }
+
+        // Make sure we have all rows. If not, clear our current list
+        if (!this.haveAllRows()) {
+            // Just save the filters.
+            this.setState({ filters: newFilters, currentGridRows: [] });
+        } else {
+            // We have all rows, filter them.
+            this.setState({
+                filters: newFilters,
+                currentGridRows: this.getSortedAndFilteredRows(
+                    this.state.actualGridRows, this.state.sortDirection, this.state.sortColumn, newFilters)
+            });
+        }
+    }
+
+    private clearFilters = () => {
+        // Make sure we have all rows. If not, clear our current list
+        if (!this.haveAllRows()) {
+            // Just save the filters.
+            this.setState({ filters: {}, currentGridRows: [] });
+        } else {
+            // We have all rows, filter them.
+            this.setState({
+                filters: {},
+                currentGridRows: this.getSortedAndFilteredRows(
+                    this.state.actualGridRows, this.state.sortDirection, this.state.sortColumn, {})
+            });
+        }
+    }
+
+    private sortRows = (sortColumn: string | number, sortDirection: string) => {
+        // Make sure we have all rows. If not, clear our current list
+        if (!this.haveAllRows()) {
+            // Just save the sort direction/column
+            this.setState({ sortColumn, sortDirection, currentGridRows: [] });
+        } else {
+            // We have all rows, sort them.
+            this.setState({
+                sortColumn,
+                sortDirection,
+                currentGridRows: this.getSortedAndFilteredRows(
+                    this.state.actualGridRows, sortDirection, sortColumn, this.state.filters)
+            });
+        }
     }
 
 }

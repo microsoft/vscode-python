@@ -3,7 +3,7 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import { JSONObject, JSONArray } from '@phosphor/coreutils';
+import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
@@ -266,8 +266,7 @@ export interface IJupyterVariable {
     count: number;
     truncated: boolean;
     expensive: boolean;
-    columns?: { key: string, type: string }[];
-    rows?: JSONArray;
+    columns?: { key: string; type: string }[];
     rowCount?: number;
 }
 
