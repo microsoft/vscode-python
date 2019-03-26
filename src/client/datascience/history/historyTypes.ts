@@ -31,7 +31,9 @@ export namespace HistoryMessages {
     export const Activate = 'activate';
     export const ShowDataExplorer = 'show_data_explorer';
     export const GetVariablesRequest = 'get_variables_request';
-    export const GetVariablesResponse = 'get_variables_response'
+    export const GetVariablesResponse = 'get_variables_response';
+    export const GetVariableValueRequest = 'get_variable_value_request';
+    export const GetVariableValueResponse = 'get_variable_value_response';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -97,4 +99,6 @@ export class IHistoryMapping {
     public [HistoryMessages.ShowDataExplorer] : never | undefined; // This is where we'd specify the data for viewing (or perhaps not, just an id?)
     public [HistoryMessages.GetVariablesRequest]: never | undefined;
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariable[];
+    public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
+    public [HistoryMessages.GetVariableValueResponse]: IJupyterVariable;
 }

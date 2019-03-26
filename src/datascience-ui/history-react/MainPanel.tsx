@@ -194,6 +194,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             case HistoryMessages.GetVariablesResponse:
                 this.getVariablesResponse(payload);
                 break;
+             
+            case HistoryMessages.GetVariableValueResponse:
+                this.getVariableValueResponse(payload);
+                break;
 
             default:
                 break;
@@ -764,6 +768,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.GetVariablesRequest);
     }
 
+    private refreshVariable = (targetVar: IJupyterVariable) => {
+        this.sendMessage(HistoryMessages.GetVariableValueRequest, targetVar);
+    }
+
+    private getVariableValueResponse = (payload?: any) => {
+        if (payload) {
+            const variable = payload as IJupyterVariable;
+
+            if (this.varExpRef.current) {
+                this.varExpRef.current.newVariableData(variable);
+            }
+        }
+    }
+
     private getVariablesResponse = (payload?: any) => {
         if (payload) {
             const variables = payload as IJupyterVariable[];
@@ -772,56 +790,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.varExpRef.current.newVariablesData(variables);
             }
 
-//export interface IJupyterVariable {
-    //name: string;
-    //value: string | undefined;
-    //type: string;
-    //size: number;
-    //shape: string;
-    //count: number;
-    //truncated: boolean;
-    //expensive: boolean;
-//}
-            setTimeout( () => {
-                if (this.varExpRef.current) {
-                    this.varExpRef.current.newVariableData({name: 'json', type: 'module', value: 'new data', size: 10, shape: '', count: 0, truncated: false, expensive: false});
-                }
-            }, 4000);
-
-            //this.setState({
-                //variableInfo: variables
-            //});
-
+            // Now put out a request for all of the sub values for the variables
+            variables.forEach(this.refreshVariable);            
 
             //setTimeout( () => {
-                //if (this.state.variableInfo && this.state.variableInfo.length > 0) {
-                    //let newRows = this.state.variableInfo.slice();
-                    //newRows[0] = {...newRows[0], value: 'testing testing'};
-                    //this.setState({
-                        //variableInfo: newRows
-                    //});
+                //if (this.varExpRef.current) {
+                    //this.varExpRef.current.newVariableData({name: 'json', type: 'module', value: 'new data', size: 10, shape: '', count: 0, truncated: false, expensive: false});
                 //}
             //}, 4000);
-
-            //setTimeout( () => {
-                //if (this.state.variableInfo && this.state.variableInfo.length > 0)
-                    //let newRows = this.state.variableInfo.slice();
-
-                    //newRows[0] = {...newRows[0], value: 'testing testing'};
-                    
-                
-                    //this.setState({
-                        //variableInfo: newRows
-                    //});
-                //}
-            //}, 4000);
-
-            //// After we set the initial variable info we need to request the individual variable values
-            //// IANHU: Eventually request them all, but just do one for testing now
-            //if (variables.length > 0) {
-                //const myVar = variables[0];
-                //myVar.value = 'Computed Value Here';
-            //}
         }
     }
 }

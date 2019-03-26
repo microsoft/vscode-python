@@ -248,6 +248,10 @@ export class History implements IHistory {
             case HistoryMessages.GetVariablesRequest:
                 this.requestVariables();
                 break;
+            
+            case HistoryMessages.GetVariableValueRequest:
+                this.requestVariableValue(payload);
+                break;
 
             default:
                 break;
@@ -974,5 +978,14 @@ export class History implements IHistory {
         // Request our new list of variables
         const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
         this.postMessage(HistoryMessages.GetVariablesResponse, vars).ignoreErrors();
+    }
+
+    private requestVariableValue = async (payload?: any): Promise<void> => {
+        if (payload) {
+            const targetVar = payload as IJupyterVariable;
+            // Request our variable value
+            const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar);
+            this.postMessage(HistoryMessages.GetVariableValueResponse, varValue).ignoreErrors();
+        }
     }
 }
