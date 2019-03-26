@@ -17,6 +17,7 @@ import { Telemetry } from '../constants';
 import { ICodeCssGenerator, IDataExplorer, IDataScienceExtraSettings, IJupyterVariable, IJupyterVariables } from '../types';
 import { DataExplorerMessageListener } from './dataExplorerMessageListener';
 import { DataExplorerMessages, IDataExplorerMapping } from './types';
+import { noop } from '../../common/utils/misc';
 
 @injectable()
 export class DataExplorer implements IDataExplorer, IAsyncDisposable {
@@ -67,9 +68,6 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
             if (this.webPanel) {
                 await this.webPanel.show(true);
 
-                // Send telemetry when it works.
-                sendTelemetryEvent(Telemetry.ShowDataExplorer);
-
                 // Send a message with our data
                 this.postMessage(DataExplorerMessages.InitializeData, this.variable);
             }
@@ -94,6 +92,14 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         const output = await this.variableManager.getDataFrameInfo(variable);
         const first100Rows = await this.variableManager.getDataFrameRows(output, 0, 100);
         output.rows = first100Rows;
+
+        // Log telemetry about number of rows
+        try {
+            sendTelemetryEvent(Telemetry.ShowDataExplorer, {rows: output.rowCount ? output.rowCount : 0 });
+        } catch {
+            noop();
+        }
+
         return output;
     }
 
@@ -107,7 +113,6 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         }
     }
 
-    // tslint:disable-next-line: no-any no-empty
     private onMessage = (message: string, _payload: any) => {
         switch (message) {
             case DataExplorerMessages.Started:

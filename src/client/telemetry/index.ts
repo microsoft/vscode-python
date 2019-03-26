@@ -345,7 +345,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
-    [Telemetry.ShowDataExplorer]: never | undefined;
+    [Telemetry.ShowDataExplorer]: {rows: number | undefined};
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
