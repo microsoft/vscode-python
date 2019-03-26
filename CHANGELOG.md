@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 2019.3.0-rc (19 March 2019)
+## 2019.3.0 (26 March 2019)
 
 ### Enhancements
 
@@ -95,6 +95,14 @@
    ([#4876](https://github.com/Microsoft/vscode-python/issues/4876))
 1. Ensure the `Python` output panel does not steal focus when there errors in the `Language Server`.
    ([#4868](https://github.com/Microsoft/vscode-python/issues/4868))
+1. Update ptvsd to [4.2.5](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.5).
+   ([#4932](https://github.com/Microsoft/vscode-python/issues/4932))
+    * Fix issues with django and jinja2 exceptions.
+    * Detaching sometimes throws ValueError.
+    * StackTrace request respecting just-my-code.
+    * Don't give error redirecting output with pythonw.
+    * Fix for stop on entry issue.
+1. Update the Python language server to 0.2.31.
 
 ### Code Health
 
