@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 2019.3.0-rc (19 March 2019)
+## 2019.3.0 (26 March 2019)
 
 ### Enhancements
 
