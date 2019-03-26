@@ -10,7 +10,13 @@ import { InMemoryInterpreterSpecificCache } from './cacheUtils';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
-type VoidFunction = (...any: any[]) => void;
+export type VoidFunction = (...any: any[]) => void;
+
+function makeNoopDecorator() {
+    return function (_target: any, _propertyName: string, _descriptor: TypedPropertyDescriptor<VoidFunction>) {
+        // Do nothing.
+    };
+}
 
 /**
  * Combine multiple sequential calls to the decorated function into one.
@@ -29,14 +35,12 @@ type VoidFunction = (...any: any[]) => void;
 export function debounce(wait?: number) {
     if (isTestExecution()) {
         // If running tests, lets not debounce (so tests run fast).
-        return function (_target: any, _propertyName: string, _descriptor: TypedPropertyDescriptor<VoidFunction>) {
-            // Do nothing.
-        };
+        return makeNoopDecorator();
     }
     return makeDebounceDecorator(wait);
 }
 
-export function makeDebounceDecorator(wait?: number) {
+export function makeDebounceDecorator(wait?: number, options?: any) {
     // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
         const originalMethod = descriptor.value!;
@@ -45,7 +49,8 @@ export function makeDebounceDecorator(wait?: number) {
             function (this: any) {
                 return originalMethod.apply(this, arguments as any);
             },
-            wait
+            wait,
+            options
         );
         (descriptor as any).value = debounced;
     };
