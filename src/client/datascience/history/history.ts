@@ -42,12 +42,12 @@ import {
     IHistoryInfo,
     IHistoryProvider,
     IJupyterExecution,
+    IJupyterVariable,
+    IJupyterVariables,
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider,
-    IJupyterVariable,
-    IJupyterVariables
+    IStatusProvider
 } from '../types';
 import { HistoryMessageListener } from './historyMessageListener';
 import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
@@ -248,7 +248,7 @@ export class History implements IHistory {
             case HistoryMessages.GetVariablesRequest:
                 this.requestVariables();
                 break;
-            
+
             case HistoryMessages.GetVariableValueRequest:
                 this.requestVariableValue(payload);
                 break;
@@ -980,6 +980,7 @@ export class History implements IHistory {
         this.postMessage(HistoryMessages.GetVariablesResponse, vars).ignoreErrors();
     }
 
+    // tslint:disable-next-line: no-any
     private requestVariableValue = async (payload?: any): Promise<void> => {
         if (payload) {
             const targetVar = payload as IJupyterVariable;

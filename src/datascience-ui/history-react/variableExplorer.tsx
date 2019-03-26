@@ -20,7 +20,7 @@ interface IVariableExplorerProps {
 
 interface IVariableExplorerState {
     open: boolean;
-    gridColumns: {key: string, name: string}[];
+    gridColumns: {key: string; name: string}[];
     gridRows: IGridRow[];
     gridHeight: number;
 }
@@ -28,10 +28,11 @@ interface IVariableExplorerState {
 const defaultColumnProperties = {
     filterable: false,
     sortable: false,
-    resizable: false,
-}
+    resizable: false
+};
 
 interface IGridRow {
+    // tslint:disable-next-line:no-any
     [name: string]: any;
 }
 
@@ -80,7 +81,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
         const newGridRows = newVariables.map(newVar => {
-            return {'name': newVar.name, 'type': newVar.type, 'value': getLocString('DataScience.variableLoadingValue', 'Loading...')}
+            return {name: newVar.name, type: newVar.type, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
         });
 
         this.setState({ gridRows: newGridRows});
@@ -90,9 +91,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     public newVariableData(newVariable: IJupyterVariable) {
         // IANHU: This will eventually have to add in something like the execution count, can't just use the name
         // to match on
-        let newGridRows = this.state.gridRows.slice();
-        for (let i = 0; i < newGridRows.length; i++) {
-            if (newGridRows[i]['name'] === newVariable.name) {
+        const newGridRows = this.state.gridRows.slice();
+        for (let i = 0; i < newGridRows.length; i = i + 1) {
+            if (newGridRows[i].name === newVariable.name) {
                 const newGridRow = {...newGridRows[i], value: newVariable.value};
                 newGridRows[i] = newGridRow;
             }
@@ -105,14 +106,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (index >= 0 && index < this.state.gridRows.length) {
             return this.state.gridRows[index];
         }
-        return {'name': '', 'type': '', 'value': ''};
+        return {name: '', type: '', value: ''};
     }
 
     private toggleInputBlock = () => {
         this.setState({open: !this.state.open});
 
         // If we toggle open request a data refresh
-        if(!this.state.open) {
+        if (!this.state.open) {
             this.props.refreshVariables();
         }
     }

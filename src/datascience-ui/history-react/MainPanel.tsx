@@ -193,7 +193,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             case HistoryMessages.GetVariablesResponse:
                 this.getVariablesResponse(payload);
                 break;
-             
+
             case HistoryMessages.GetVariableValueResponse:
                 this.getVariableValueResponse(payload);
                 break;
@@ -775,6 +775,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // When we get a variable value back use the ref to pass to the variable explorer
+    // tslint:disable-next-line:no-any
     private getVariableValueResponse = (payload?: any) => {
         if (payload) {
             const variable = payload as IJupyterVariable;
@@ -786,6 +787,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // When we get our new set of variables back use the ref to pass to the variable explorer
+    // tslint:disable-next-line:no-any
     private getVariablesResponse = (payload?: any) => {
         if (payload) {
             const variables = payload as IJupyterVariable[];
@@ -795,7 +797,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
 
             // Now put out a request for all of the sub values for the variables
-            variables.forEach(this.refreshVariable);            
+            variables.forEach(this.refreshVariable);
         }
     }
 }
