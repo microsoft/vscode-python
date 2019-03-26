@@ -11,11 +11,20 @@ import { InMemoryInterpreterSpecificCache } from './cacheUtils';
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 type VoidFunction = (...any: any[]) => void;
+
 /**
- * Debounces a function execution. Function must return either a void or a promise that resolves to a void.
+ * Combine multiple sequential calls to the decorated function into one.
  * @export
- * @param {number} [wait] Wait time.
+ * @param {number} [wait] Wait time (milliseconds).
  * @returns void
+ *
+ * The point is to ensure that successive calls to the function result
+ * only in a single actual call.  Following the most recent call to
+ * the debounced function, debouncing resets after the "wait" interval
+ * has elapsed.
+ *
+ * The decorated function must return either a void or a promise that
+ * resolves to a void.
  */
 export function debounce(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
