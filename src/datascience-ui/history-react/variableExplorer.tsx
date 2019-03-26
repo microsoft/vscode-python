@@ -44,7 +44,6 @@ const defaultColumnProperties = {
     filterable: false,
     sortable: false,
     resizable: false,
-    width: 120
 }
 
 interface IGridRow {
@@ -55,9 +54,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     constructor(prop: IVariableExplorerProps) {
         super(prop);
         const columns = [
-            {key: 'name', name: 'Name', type: 'string'},
-            {key: 'type', name: 'Type', type: 'string'},
-            {key: 'value', name: 'Value', type: 'string'}
+            {key: 'name', name: 'Name', type: 'string', width: 120},
+            {key: 'type', name: 'Type', type: 'string', width: 120},
+            {key: 'value', name: 'Value', type: 'string', width: 300}
         ];
         this.state = { open: false,
                         gridColumns: columns,
