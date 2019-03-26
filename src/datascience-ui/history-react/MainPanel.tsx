@@ -42,6 +42,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
+    private varExpRef: React.RefObject<VariableExplorer>;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -60,6 +61,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.state.cellVMs.push(createEditableCellVM(1));
         }
 
+
+        // REFREF:
+        this.varExpRef = React.createRef<VariableExplorer>();
     }
 
     public componentDidMount() {
@@ -115,7 +119,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
-                <VariableExplorer baseTheme={baseTheme} variables={this.state.variableInfo} refreshVariables={this.refreshVariables} />
+                <VariableExplorer baseTheme={baseTheme} refreshVariables={this.refreshVariables} ref={this.varExpRef} />
                 <div className='top-spacing'/>
                 {progressBar}
                 <div className='cell-table'>
@@ -764,20 +768,40 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variables = payload as IJupyterVariable[];
 
-            this.setState({
-                variableInfo: variables
-            });
+            if (this.varExpRef.current) {
+                this.varExpRef.current.newVariablesData(variables);
+            }
 
-
+//export interface IJupyterVariable {
+    //name: string;
+    //value: string | undefined;
+    //type: string;
+    //size: number;
+    //shape: string;
+    //count: number;
+    //truncated: boolean;
+    //expensive: boolean;
+//}
             setTimeout( () => {
-                if (this.state.variableInfo && this.state.variableInfo.length > 0) {
-                    let newRows = this.state.variableInfo.slice();
-                    newRows[0] = {...newRows[0], value: 'testing testing'};
-                    this.setState({
-                        variableInfo: newRows
-                    });
+                if (this.varExpRef.current) {
+                    this.varExpRef.current.newVariableData({name: 'json', type: 'module', value: 'new data', size: 10, shape: '', count: 0, truncated: false, expensive: false});
                 }
             }, 4000);
+
+            //this.setState({
+                //variableInfo: variables
+            //});
+
+
+            //setTimeout( () => {
+                //if (this.state.variableInfo && this.state.variableInfo.length > 0) {
+                    //let newRows = this.state.variableInfo.slice();
+                    //newRows[0] = {...newRows[0], value: 'testing testing'};
+                    //this.setState({
+                        //variableInfo: newRows
+                    //});
+                //}
+            //}, 4000);
 
             //setTimeout( () => {
                 //if (this.state.variableInfo && this.state.variableInfo.length > 0)
