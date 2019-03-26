@@ -14,7 +14,8 @@ import {
     IDataExplorerMapping,
     IGetRowsResponse,
     RowFetchAllLimit,
-    RowFetchSize
+    RowFetchSizeFirst,
+    RowFetchSizeSubsequent
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -55,6 +56,8 @@ class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> { }
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private postOffice: DataExplorerPostOffice | undefined;
     private container: HTMLDivElement | null = null;
+    private emptyRows: (() => JSX.Element) | undefined;
+    private getEmptyRows: ((props: any) => JSX.Element) | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -98,6 +101,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         window.removeEventListener('resize', this.updateDimensions);
     }
 
+    public componentDidUpdate() {
+        // Rebind our empty rows view to our new state.
+        this.emptyRows = EmptyRowsView.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount});
+        this.getEmptyRows = (_props: any) => {
+            return this.emptyRows ? this.emptyRows() : <div/>;
+        };
+    }
     public render = () => {
 
         return (
@@ -130,6 +140,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return false;
     }
 
+    private renderGrid() {
+        const rowCount = this.getRowCount();
+        return (
+            <AdazzleReactDataGrid
+                columns={this.state.gridColumns}
+                rowGetter={this.getRow}
+                rowsCount={rowCount}
+                minHeight={this.state.gridHeight}
+                toolbar={<Toolbar enableFilter={true} />}
+                onAddFilter={this.handleFilterChange}
+                onClearFilters={this.clearFilters}
+                emptyRowsView={this.getEmptyRows}
+                onGridSort={this.sortRows}
+            />
+        );
+    }
+
     // tslint:disable-next-line:no-any
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
@@ -157,7 +184,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     if (totalRowCount < RowFetchAllLimit) {
                         this.getAllRows();
                     } else {
-                        this.getRowsInChunks(RowFetchSize, initialRows.length, totalRowCount);
+                        this.getRowsInChunks(initialRows.length, totalRowCount);
                     }
                 }
             }
@@ -168,14 +195,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataExplorerMessages.GetAllRowsRequest);
     }
 
-    private getRowsInChunks(chunkSize: number, startIndex: number, endIndex: number) {
+    private getRowsInChunks(startIndex: number, endIndex: number) {
         // Ask for all of our rows one chunk at a time
-        let chunkEnd = startIndex + Math.min(chunkSize, endIndex);
+        let chunkEnd = startIndex + Math.min(RowFetchSizeFirst, endIndex);
         let chunkStart = startIndex;
         while (chunkStart < endIndex) {
             this.sendMessage(DataExplorerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
             chunkStart = chunkEnd;
-            chunkEnd = Math.min(chunkEnd + chunkSize, endIndex);
+            chunkEnd = Math.min(chunkEnd + RowFetchSizeSubsequent, endIndex);
         }
     }
 
@@ -264,24 +291,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private updateContainer = (el: HTMLDivElement) => {
         this.container = el;
-    }
-
-    private renderGrid() {
-        const rowCount = this.getRowCount();
-
-        return (
-            <AdazzleReactDataGrid
-                columns={this.state.gridColumns}
-                rowGetter={this.getRow}
-                rowsCount={rowCount}
-                minHeight={this.state.gridHeight}
-                toolbar={<Toolbar enableFilter={true} />}
-                onAddFilter={this.handleFilterChange}
-                onClearFilters={this.clearFilters}
-                emptyRowsView={EmptyRowsView}
-                onGridSort={this.sortRows}
-            />
-        );
     }
 
     private getRowCount = () => {

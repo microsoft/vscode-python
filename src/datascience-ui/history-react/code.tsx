@@ -246,7 +246,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         const cursor = doc.getCursor();
         const lastLine = doc.lastLine();
         if (cursor.line === lastLine) {
-
             // Check for any text
             const line = doc.getLine(lastLine);
             if (line.length === 0) {
@@ -257,10 +256,12 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         }
 
         // Otherwise add a line and indent the appropriate amount
+        const cursorLine = doc.getLine(cursor.line);
+        const afterCursor = cursorLine.slice(cursor.ch).trim();
         const expectedIndents = this.expectedIndent(instance, cursor.line);
         const indentString = Array(expectedIndents + 1).join(' ');
-        doc.replaceRange(`\n${indentString}`, { line: cursor.line, ch: doc.getLine(cursor.line).length });
-        doc.setCursor({line: cursor.line + 1, ch: indentString.length});
+        doc.replaceRange(`\n${indentString}`, { line: cursor.line, ch: afterCursor.length === 0 ? doc.getLine(cursor.line).length : cursor.ch });
+        doc.setCursor({line: cursor.line + 1, ch: indentString.length });
 
         // Tell our listener we added a new line
         this.props.onChangeLineCount(doc.lineCount());

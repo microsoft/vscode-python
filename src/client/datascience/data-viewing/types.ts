@@ -5,8 +5,9 @@ import { JSONArray } from '@phosphor/coreutils';
 
 import { IJupyterVariable } from '../types';
 
-export const RowFetchAllLimit = 500;
-export const RowFetchSize = 500;
+export const RowFetchAllLimit = 200;
+export const RowFetchSizeFirst = 100;
+export const RowFetchSizeSubsequent = 500;
 
 export namespace DataExplorerRowStates {
     export const Fetching = 'fetching';

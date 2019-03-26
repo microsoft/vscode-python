@@ -123,7 +123,7 @@ export class HostJupyterServer
             ev.removed.filter(e => e.role === vsls.Role.Guest).length;
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
         try {
             // See if this has already been asked for not
             if (this.requestLog.has(id)) {
@@ -132,7 +132,7 @@ export class HostJupyterServer
             } else {
                 // Otherwise save this request
                 this.requestLog.set(id, Date.now());
-                const inner = super.executeObservable(code, file, line, id);
+                const inner = super.executeObservable(code, file, line, id, silent);
 
                 // Cleanup old requests
                 const now = Date.now();

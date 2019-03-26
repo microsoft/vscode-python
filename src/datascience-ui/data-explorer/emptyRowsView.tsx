@@ -6,16 +6,23 @@ import './emptyRowsView.css';
 import * as React from 'react';
 import { getLocString } from '../react-common/locReactSide';
 
-interface IProps {
+export interface IEmptyRowsProps {
+    total: number;
+    current: number;
 }
 
-export class EmptyRowsView extends React.Component<IProps> {
-    private noDataMessage = getLocString('DataScience.noRowsInDataExplorer', 'Fetching Data ...');
-    constructor(props: IProps) {
-        super(props);
-    }
+export const EmptyRowsView = (props: IEmptyRowsProps) => {
+    const percent = props.current / props.total * 100;
+    const percentText = `${Math.round(percent)}%`;
+    const style: React.CSSProperties = {
+        width: percentText
+    };
+    const message = getLocString('DataScience.noRowsInDataExplorer', 'Fetching data ...');
 
-    public render() {
-        return (<div className='empty-rows'>{this.noDataMessage}</div>);
-    }
-}
+    return (
+        <div className='progress-container'>
+            {message}
+            <div className='progress-bar' style={style}>{percentText}</div>
+        </div>
+    );
+};
