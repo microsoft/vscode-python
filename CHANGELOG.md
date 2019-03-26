@@ -93,6 +93,8 @@
    ([#4853](https://github.com/Microsoft/vscode-python/issues/4853))
 1. Change the names of our "Run All Cells Above" and "Run Cell and All Below" commands to be more concise
    ([#4876](https://github.com/Microsoft/vscode-python/issues/4876))
+1. Ensure the `Python` output panel does not steal focus when there errors in the `Language Server`.
+   ([#4868](https://github.com/Microsoft/vscode-python/issues/4868))
 
 ### Code Health
 
