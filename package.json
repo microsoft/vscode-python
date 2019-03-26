@@ -1373,6 +1373,12 @@
                     "description": "Determines if selected code in a python file will go to the terminal or the Python Interactive window when hitting shift+enter",
                     "scope": "resource"
                 },
+                "python.dataScience.showJupyterVariableExplorer": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show the variable explorer in the Python Interactive window. (experimental)",
+                    "scope": "resource"
+                },
                 "python.dataScience.codeRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",

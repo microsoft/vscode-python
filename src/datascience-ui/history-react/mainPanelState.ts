@@ -9,7 +9,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
+import { CellState, ICell, IJupyterVariable, ISysInfo } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
@@ -22,6 +22,7 @@ export interface IMainPanelState {
     redoStack : ICellViewModel[][];
     submittedText: boolean;
     history: InputHistory;
+    variableInfo?: IJupyterVariable[];
 }
 
 // This function generates test state when running under a browser instead of inside of

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { ICell, IHistoryInfo } from '../types';
+import { ICell, IHistoryInfo, IJupyterVariable } from '../types';
 
 export namespace HistoryMessages {
     export const StartCell = 'start_cell';
@@ -30,6 +30,8 @@ export namespace HistoryMessages {
     export const RemoteAddCode = 'remote_add_code';
     export const Activate = 'activate';
     export const ShowDataExplorer = 'show_data_explorer';
+    export const GetVariablesRequest = 'get_variables_request';
+    export const GetVariablesResponse = 'get_variables_response'
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -93,4 +95,6 @@ export class IHistoryMapping {
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
     public [HistoryMessages.Activate] : never | undefined;
     public [HistoryMessages.ShowDataExplorer] : never | undefined; // This is where we'd specify the data for viewing (or perhaps not, just an id?)
+    public [HistoryMessages.GetVariablesRequest]: never | undefined;
+    public [HistoryMessages.GetVariablesResponse]: IJupyterVariable[];
 }

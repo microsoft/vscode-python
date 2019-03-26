@@ -1,0 +1,13 @@
+.variable-explorer {
+    margin: 5px;
+    width: 100%;
+    position: fixed;
+    z-index: 10;
+    top: 24px;
+    left: 0;
+    right: 0;
+    background-color: var(--vscode-editor-background);
+}
+.hide {
+    display: none;
+}

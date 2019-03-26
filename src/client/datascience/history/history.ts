@@ -45,7 +45,9 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider
+    IStatusProvider,
+    IJupyterVariable,
+    IJupyterVariables
 } from '../types';
 import { HistoryMessageListener } from './historyMessageListener';
 import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
@@ -94,7 +96,8 @@ export class History implements IHistory {
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
-        @inject(IDataExplorerProvider) private dataExplorerProvider: IDataExplorerProvider
+        @inject(IDataExplorerProvider) private dataExplorerProvider: IDataExplorerProvider,
+        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
         ) {
 
         // Create our unique id. We use this to skip messages we send to other history windows
@@ -240,6 +243,10 @@ export class History implements IHistory {
             case HistoryMessages.ShowDataExplorer:
                 this.showDataExplorer()
                     .ignoreErrors();
+                break;
+
+            case HistoryMessages.GetVariablesRequest:
+                this.requestVariables();
                 break;
 
             default:
@@ -961,5 +968,11 @@ export class History implements IHistory {
         } finally {
             status.dispose();
         }
+    }
+
+    private requestVariables = async (): Promise<void> => {
+        // Request our new list of variables
+        const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+        this.postMessage(HistoryMessages.GetVariablesResponse, vars).ignoreErrors();
     }
 }

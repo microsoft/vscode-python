@@ -9,7 +9,7 @@ import * as React from 'react';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -22,6 +22,7 @@ import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
+import { VariableExplorer } from './variableExplorer';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -114,6 +115,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
+                <VariableExplorer baseTheme={baseTheme} variables={this.state.variableInfo} refreshVariables={this.refreshVariables} />
                 <div className='top-spacing'/>
                 {progressBar}
                 <div className='cell-table'>
@@ -183,6 +185,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case HistoryMessages.Activate:
                 this.activate();
+                break;
+
+            case HistoryMessages.GetVariablesResponse:
+                this.getVariablesResponse(payload);
                 break;
 
             default:
@@ -672,6 +678,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.updateOrAdd(cell, true);
             }
         }
+
+        // IANHU: Only do this if we are active?
+        this.refreshVariables();
     }
 
     // tslint:disable-next-line:no-any
@@ -743,6 +752,52 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (editCell.cell.state !== CellState.finished) {
                 this.sendMessage(HistoryMessages.SubmitNewCell, { code, id: editCell.cell.id });
             }
+        }
+    }
+
+    // When the variable explorer wants to refresh state (say if it was expandeded)
+    private refreshVariables = () => {
+        this.sendMessage(HistoryMessages.GetVariablesRequest);
+    }
+
+    private getVariablesResponse = (payload?: any) => {
+        if (payload) {
+            const variables = payload as IJupyterVariable[];
+
+            this.setState({
+                variableInfo: variables
+            });
+
+
+            setTimeout( () => {
+                if (this.state.variableInfo && this.state.variableInfo.length > 0) {
+                    let newRows = this.state.variableInfo.slice();
+                    newRows[0] = {...newRows[0], value: 'testing testing'};
+                    this.setState({
+                        variableInfo: newRows
+                    });
+                }
+            }, 4000);
+
+            //setTimeout( () => {
+                //if (this.state.variableInfo && this.state.variableInfo.length > 0)
+                    //let newRows = this.state.variableInfo.slice();
+
+                    //newRows[0] = {...newRows[0], value: 'testing testing'};
+                    
+                
+                    //this.setState({
+                        //variableInfo: newRows
+                    //});
+                //}
+            //}, 4000);
+
+            //// After we set the initial variable info we need to request the individual variable values
+            //// IANHU: Eventually request them all, but just do one for testing now
+            //if (variables.length > 0) {
+                //const myVar = variables[0];
+                //myVar.value = 'Computed Value Here';
+            //}
         }
     }
 }
