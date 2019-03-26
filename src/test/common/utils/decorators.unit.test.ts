@@ -171,6 +171,26 @@ suite('Common Utils - Decorators', () => {
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
+    test('Debounce: one async call', async () => {
+        const wait = 100;
+        // tslint:disable-next-line:max-classes-per-file
+        class One extends Base {
+            @makeDebounceDecorator(wait)
+            public async run(): Promise<void> {
+                this._addCall('run');
+            }
+        }
+        const one = new One();
+
+        const start = Date.now();
+        await one.run();
+        await one._waitForCalls(1);
+        const delay = one.timestamps[0] - start;
+
+        expect(delay).to.be.at.least(wait);
+        expect(one.calls).to.deep.equal(['run']);
+        expect(one.timestamps).to.have.lengthOf(one.calls.length);
+    });
     test('Debounce: multiple calls grouped', async () => {
         const wait = 100;
         // tslint:disable-next-line:max-classes-per-file
