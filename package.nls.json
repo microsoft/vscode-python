@@ -96,6 +96,7 @@
     "DataScience.collapseInputTooltip": "Collapse input block",
     "DataScience.collapseVariableExplorerTooltip": "Collapse variable explorer",
     "DataScience.collapseVariableExplorerLabel": "Variable Explorer",
+    "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",
     "DataScience.notebookCheckForImportYes": "Import",

@@ -42,7 +42,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
-    private varExpRef: React.RefObject<VariableExplorer>;
+    private variableExplorerRef: React.RefObject<VariableExplorer>;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -61,9 +61,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.state.cellVMs.push(createEditableCellVM(1));
         }
 
-
-        // REFREF:
-        this.varExpRef = React.createRef<VariableExplorer>();
+        // Create the ref to hold our variable explorer
+        this.variableExplorerRef = React.createRef<VariableExplorer>();
     }
 
     public componentDidMount() {
@@ -119,7 +118,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
-                <VariableExplorer baseTheme={baseTheme} refreshVariables={this.refreshVariables} ref={this.varExpRef} />
+                <VariableExplorer baseTheme={baseTheme} refreshVariables={this.refreshVariables} ref={this.variableExplorerRef} />
                 <div className='top-spacing'/>
                 {progressBar}
                 <div className='cell-table'>
@@ -687,8 +686,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
 
-        // IANHU: Only do this if we are active?
-        this.refreshVariables();
+        // When a cell is finished refresh our variables
+        if (getSettings && getSettings().showJupyterVariableExplorer) {
+            this.refreshVariables();
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -763,41 +764,38 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    // When the variable explorer wants to refresh state (say if it was expandeded)
+    // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
         this.sendMessage(HistoryMessages.GetVariablesRequest);
     }
 
+    // Find the display value for one specific variable
     private refreshVariable = (targetVar: IJupyterVariable) => {
         this.sendMessage(HistoryMessages.GetVariableValueRequest, targetVar);
     }
 
+    // When we get a variable value back use the ref to pass to the variable explorer
     private getVariableValueResponse = (payload?: any) => {
         if (payload) {
             const variable = payload as IJupyterVariable;
 
-            if (this.varExpRef.current) {
-                this.varExpRef.current.newVariableData(variable);
+            if (this.variableExplorerRef.current) {
+                this.variableExplorerRef.current.newVariableData(variable);
             }
         }
     }
 
+    // When we get our new set of variables back use the ref to pass to the variable explorer
     private getVariablesResponse = (payload?: any) => {
         if (payload) {
             const variables = payload as IJupyterVariable[];
 
-            if (this.varExpRef.current) {
-                this.varExpRef.current.newVariablesData(variables);
+            if (this.variableExplorerRef.current) {
+                this.variableExplorerRef.current.newVariablesData(variables);
             }
 
             // Now put out a request for all of the sub values for the variables
             variables.forEach(this.refreshVariable);            
-
-            //setTimeout( () => {
-                //if (this.varExpRef.current) {
-                    //this.varExpRef.current.newVariableData({name: 'json', type: 'module', value: 'new data', size: 10, shape: '', count: 0, truncated: false, expensive: false});
-                //}
-            //}, 4000);
         }
     }
 }
