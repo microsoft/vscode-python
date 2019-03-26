@@ -27,13 +27,27 @@ type VoidFunction = (...any: any[]) => void;
  * resolves to a void.
  */
 export function debounce(wait?: number) {
+    if (isTestExecution()) {
+        // If running tests, lets not debounce (so tests run fast).
+        return function (_target: any, _propertyName: string, _descriptor: TypedPropertyDescriptor<VoidFunction>) {
+            // Do nothing.
+        };
+    }
+    return makeDebounceDecorator(wait);
+}
+
+export function makeDebounceDecorator(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
         const originalMethod = descriptor.value!;
-        // If running tests, lets not debounce (so tests run fast).
-        wait = wait && isTestExecution() ? undefined : wait;
         // tslint:disable-next-line:no-invalid-this no-any
-        (descriptor as any).value = _debounce(function (this: any) { return originalMethod.apply(this, arguments as any); }, wait);
+        const debounced = _debounce(
+            function (this: any) {
+                return originalMethod.apply(this, arguments as any);
+            },
+            wait
+        );
+        (descriptor as any).value = debounced;
     };
 }
 
