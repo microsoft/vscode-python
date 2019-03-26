@@ -78,7 +78,7 @@ suite('Debugging - Config Resolver Launch', () => {
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         if (workspaceFolder) {
-            settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env'));
+            settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
         }
         confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         setupOs(isWindows, isMac, isLinux);
@@ -126,7 +126,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -148,7 +148,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -171,7 +171,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -234,7 +234,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
