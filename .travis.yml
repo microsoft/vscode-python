@@ -74,7 +74,6 @@ install:
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
-        npx gulp hygiene-modified;
         npm run cover:enable;
         npm run test:unittests:cover;
     fi
