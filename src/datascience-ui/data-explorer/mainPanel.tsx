@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './mainPanel.css';
 
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
@@ -13,6 +12,7 @@ import {
     DataExplorerRowStates,
     IDataExplorerMapping,
     IGetRowsResponse,
+    MaxStringCompare,
     RowFetchAllLimit,
     RowFetchSizeFirst,
     RowFetchSizeSubsequent
@@ -24,6 +24,9 @@ import { EmptyRowsView } from './emptyRowsView';
 import { generateTestData } from './testData';
 
 import 'bootstrap/dist/css/bootstrap.css';
+
+// Our css has to come after in order to override body styles
+import './mainPanel.css';
 
 const selectors = Data.Selectors;
 
@@ -111,9 +114,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     public render = () => {
 
         return (
-            <div className='main-panel' ref={this.updateContainer}>
-                <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
-                {this.container && this.renderGrid()}
+            <div className='background'>
+                <div className='main-panel' ref={this.updateContainer}>
+                    <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                    {this.container && this.renderGrid()}
+                </div>
             </div>
         );
     }
@@ -322,26 +327,47 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private getColumnType(name: string | number) : string | undefined {
+        const column = this.state.gridColumns.find(c => c.name === name) as any;
+        if (column && column.type) {
+            return column.type;
+        }
+    }
+
     private getSortedAndFilteredRows(rows: JSONArray, sortDirection: string, sortColumn: string | number, filters: {}) : any[] {
-        // First apply sort
+        // Apply any filter first. This should eliminate a bunch of comparisons
+        const filtered = selectors.getRows({rows, filters});
+
+        // Default to the index column
         if (sortDirection === 'NONE') {
             sortColumn = 'index';
             sortDirection = 'ASC';
         }
-        const comparer = (a: any, b: any): number => {
-            if (typeof a !== 'string' && typeof b !== 'string') {
-                if (sortDirection === 'ASC') {
-                    return a[sortColumn] > b[sortColumn] ? 1 : -1;
-                } else if (sortDirection === 'DESC') {
-                    return a[sortColumn] < b[sortColumn] ? 1 : -1;
-                }
-            }
-            return -1;
-        };
-        const sorted = rows.sort(comparer);
 
-        // Then apply the filters.
-        return selectors.getRows({rows: sorted, filters});
+        const columnType = this.getColumnType(sortColumn);
+        const isStringColumn = columnType === 'string' || columnType === 'object';
+        const invert = sortDirection !== 'DESC';
+
+        // Use a special comparer for string columns as we can't compare too much of a string
+        // or it will take too long
+        const comparer = isStringColumn ?
+            (a: any, b: any): number => {
+                const aVal = a[sortColumn] as string;
+                const bVal = b[sortColumn] as string;
+                const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
+                const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
+                const result = aStr > bStr ? -1 : 1;
+                return invert ? -1 * result : result;
+            } :
+            (a: any, b: any): number => {
+                const aVal = a[sortColumn];
+                const bVal = b[sortColumn];
+                const result = aVal > bVal ? -1 : 1;
+                return invert ? -1 * result : result;
+            };
+
+        // Then apply our sorting.
+        return filtered.sort(comparer);
     }
 
     // tslint:disable:no-any

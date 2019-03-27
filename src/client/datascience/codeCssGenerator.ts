@@ -122,7 +122,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const numericStyle = this.getScopeStyle(tokenColors, 'constant.numeric');
         const stringStyle = this.getScopeStyle(tokenColors, 'string');
         const keywordStyle = this.getScopeStyle(tokenColors, 'keyword.control', 'keyword');
-        const operatorStyle = this.getScopeStyle(tokenColors, 'keyword.operator');
+        const operatorStyle = this.getScopeStyle(tokenColors, 'keyword.operator', 'keyword');
         const variableStyle = this.getScopeStyle(tokenColors, 'variable');
         // const atomic = this.getScopeColor(tokenColors, 'atomic');
         const builtinStyle = this.getScopeStyle(tokenColors, 'support.function');

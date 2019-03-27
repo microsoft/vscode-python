@@ -5,9 +5,10 @@ import { JSONObject } from '@phosphor/coreutils';
 
 import { IJupyterVariable } from '../types';
 
-export const RowFetchAllLimit = 200;
+export const RowFetchAllLimit = 1000;
 export const RowFetchSizeFirst = 100;
-export const RowFetchSizeSubsequent = 500;
+export const RowFetchSizeSubsequent = 1000;
+export const MaxStringCompare = 200;
 
 export namespace DataExplorerRowStates {
     export const Fetching = 'fetching';

@@ -47,8 +47,9 @@ export class CellFormatter extends React.Component<IProps> {
             }
         }
 
-        // Otherwise an unknown type
-        return (<div>{this.props.value}</div>);
+        // Otherwise an unknown type or a string
+        const val = this.props.value !== null ? this.props.value.toString() : '';
+        return (<div title={val}>{val}</div>);
     }
 
     private renderBool(value: boolean) {
@@ -56,7 +57,8 @@ export class CellFormatter extends React.Component<IProps> {
     }
 
     private renderNumber(value: number) {
-        return <div className='number-formatter'><span>{value.toString()}</span></div>;
+        const val = value.toString();
+        return <div className='number-formatter' title={val}><span>{val}</span></div>;
     }
 
 }
