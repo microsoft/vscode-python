@@ -154,6 +154,7 @@ export class JediProxy implements Disposable {
     private lastCmdIdProcessedForPidUsage?: number;
     private proposeNewLanguageServerPopup: IPythonExtensionBanner;
     private readonly disposables: Disposable[] = [];
+    private timer?: NodeJS.Timer;
 
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
@@ -182,6 +183,9 @@ export class JediProxy implements Disposable {
             if (disposable) {
                 disposable.dispose();
             }
+        }
+        if (this.timer) {
+            this.timer.unref();
         }
         this.killProcess();
     }
@@ -250,7 +254,10 @@ export class JediProxy implements Disposable {
         }
 
         await this.checkJediMemoryFootprintImpl();
-        setTimeout(() => this.checkJediMemoryFootprint(), 15 * 1000);
+        if (this.timer) {
+            this.timer.unref();
+        }
+        this.timer = setTimeout(() => this.checkJediMemoryFootprint(), 15 * 1000);
     }
     private async checkJediMemoryFootprintImpl(): Promise<void> {
         if (!this.proc || this.proc.killed) {

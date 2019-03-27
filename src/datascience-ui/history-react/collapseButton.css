@@ -22,3 +22,12 @@
     background-color:transparent;
     border:transparent;
 }
+
+.collapseInputLabel {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--vscode-editor-font-size);
+    margin: 3px;
+}

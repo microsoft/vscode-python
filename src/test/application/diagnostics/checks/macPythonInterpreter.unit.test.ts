@@ -78,7 +78,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     }
                 }
                 protected addPythonPathChangedHandler() { noop(); }
-            }(createContainer(), interpreterService.object, platformService.object, helper.object);
+            }(createContainer(), interpreterService.object, [], platformService.object, helper.object);
             (diagnosticService as any)._clear();
         });
 
@@ -348,7 +348,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             let invoked = false;
             diagnosticService = new class extends InvalidMacPythonInterpreterService {
                 protected addPythonPathChangedHandler() { invoked = true; }
-            }(createContainer(), interpreterService.object, platformService.object, helper.object);
+            }(createContainer(), interpreterService.object, [], platformService.object, helper.object);
 
             expect(invoked).to.be.equal(true, 'Not invoked');
         });
@@ -361,7 +361,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => workspaceService);
             diagnosticService = new class extends InvalidMacPythonInterpreterService {
                 protected async onDidChangeConfiguration(_event: ConfigurationChangeEvent) { invoked = true; }
-            }(serviceContainerObject, undefined as any, undefined as any, undefined as any);
+            }(serviceContainerObject, undefined as any, [], undefined as any, undefined as any);
 
             await callbackHandler({} as any);
             expect(invoked).to.be.equal(true, 'Not invoked');
@@ -374,7 +374,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => workspaceService);
             diagnosticService = new class extends InvalidMacPythonInterpreterService {
                 protected async onDidChangeConfiguration(_event: ConfigurationChangeEvent) { invoked = true; }
-            }(serviceContainerObject, undefined as any, undefined as any, undefined as any);
+            }(serviceContainerObject, undefined as any, [], undefined as any, undefined as any);
 
             expect(invoked).to.be.equal(false, 'Not invoked');
         });
@@ -395,7 +395,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => workspaceService.object);
             const diagnosticSvc = new class extends InvalidMacPythonInterpreterService {
                 constructor(arg1: IServiceContainer, arg2: IInterpreterService, arg3: IPlatformService, arg4: IInterpreterHelper) {
-                    super(arg1, arg2, arg3, arg4);
+                    super(arg1, arg2, [], arg3, arg4);
                     this.changeThrottleTimeout = 1;
                 }
                 public onDidChangeConfigurationEx = (e: ConfigurationChangeEvent) => super.onDidChangeConfiguration(e);
@@ -436,7 +436,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => workspaceService.object);
             const diagnosticSvc = new class extends InvalidMacPythonInterpreterService {
                 constructor(arg1: IServiceContainer, arg2: IInterpreterService, arg3: IPlatformService, arg4: IInterpreterHelper) {
-                    super(arg1, arg2, arg3, arg4);
+                    super(arg1, arg2, [], arg3, arg4);
                     this.changeThrottleTimeout = 100;
                 }
                 public onDidChangeConfigurationEx = (e: ConfigurationChangeEvent) => super.onDidChangeConfiguration(e);

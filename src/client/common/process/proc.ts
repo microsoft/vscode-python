@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { exec, spawn } from 'child_process';
+import { ChildProcess, exec, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import * as tk from 'tree-kill';
 import { IDisposable } from '../types';
@@ -19,7 +19,8 @@ import {
 } from './types';
 
 // tslint:disable:no-any
-export class ProcessService implements IProcessService {
+export class ProcessService implements IProcessService, IDisposable {
+    private processesToKill = new Set<ChildProcess>();
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
     public static isAlive(pid: number): boolean {
         try {
@@ -30,19 +31,30 @@ export class ProcessService implements IProcessService {
         }
     }
     public static kill(pid: number): void {
-        // tslint:disable-next-line:no-require-imports
-        const killProcessTree = require('tree-kill');
         try {
-            killProcessTree(pid);
+            tk(pid);
         } catch {
             // Ignore.
         }
+    }
+    public dispose() {
+        this.processesToKill.forEach(proc => {
+            if (proc.killed) {
+                return;
+            }
+            try {
+                proc.kill();
+            } catch {
+                // Ignore.
+            }
+        });
     }
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
+        this.processesToKill.add(proc);
         let procExited = false;
 
         const output = new Observable<Output<string>>(subscriber => {
@@ -100,12 +112,13 @@ export class ProcessService implements IProcessService {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
+        this.processesToKill.add(proc);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposables: IDisposable[] = [];
 
         const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
             ee.on(name, fn as any);
-            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any});
+            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
         };
 
         if (options.token) {
@@ -152,7 +165,7 @@ export class ProcessService implements IProcessService {
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
         return new Promise((resolve, reject) => {
-            exec(command, shellOptions, (e, stdout, stderr) => {
+            const proc = exec(command, shellOptions, (e, stdout, stderr) => {
                 if (e && e !== null) {
                     reject(e);
                 } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
@@ -163,6 +176,7 @@ export class ProcessService implements IProcessService {
                     resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
                 }
             });
+            this.processesToKill.add(proc);
         });
     }
 

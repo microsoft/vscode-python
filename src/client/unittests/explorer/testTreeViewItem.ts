@@ -79,6 +79,9 @@ export class TestTreeItem extends TreeItem {
             if (result.functionsPassed === undefined) {
                 return '';
             }
+            if (result.functionsDidNotRun) {
+                return `${result.functionsFailed} failed, ${result.functionsDidNotRun} not run and ${result.functionsPassed} passed in ${+result.time.toFixed(3)} seconds`;
+            }
             return `${result.functionsFailed} failed, ${result.functionsPassed} passed in ${+result.time.toFixed(3)} seconds`;
         }
         switch (this.data.status) {

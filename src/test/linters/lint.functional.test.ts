@@ -26,7 +26,7 @@ import {
     IPythonToolExecutionService
 } from '../../client/common/process/types';
 import {
-    IConfigurationService
+    IConfigurationService, IDisposableRegistry
 } from '../../client/common/types';
 import {
     IEnvironmentVariablesProvider
@@ -41,7 +41,7 @@ import {
     LinterId,
     LintMessageSeverity
 } from '../../client/linters/types';
-import { deleteFile } from '../common';
+import { deleteFile, PYTHON_PATH } from '../common';
 import {
     BaseTestFixture,
     getLinterID,
@@ -49,10 +49,6 @@ import {
     newMockDocument,
     throwUnknownProduct
 } from './common';
-
-// CI sets "python" to Python 3, but running locally it would be
-// Python 2.  The env var allos local test execution against Python 3.
-const PYTHON = process.env.PVSC_TEST_PYTHON_EXE ? process.env.PVSC_TEST_PYTHON_EXE : 'python';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -150,7 +146,7 @@ function getMessages(product: Product): ILintMessage[] {
         }
         case Product.pep8: {
             return pep8MessagesToBeReturned;
-    }
+        }
         case Product.pydocstyle: {
             return pydocstyleMessagesToBeReturned;
         }
@@ -187,31 +183,8 @@ async function getInfoForConfig(product: Product) {
     };
 }
 
-function resolveExecutable(filename: string): string {
-    if (fs.existsSync(filename)) {
-        return filename;
-    }
-    if (filename.indexOf(path.sep) > -1) {
-        throw Error(`could not find executable '${filename}'`);
-    }
-    const pathSep = process.platform === 'win32' ? ';' : ':';
-    if (process.platform === 'win32') {
-        if (!filename.endsWith('.exe')) {
-            filename += '.exe';
-        }
-    }
-    for (const entry of process.env.PATH!.split(pathSep)) {
-        const resolved = path.join(entry, filename);
-        if (fs.existsSync(resolved)) {
-            return resolved;
-        }
-    }
-    throw Error(`could not find executable '${filename}'`);
-}
-
 class TestFixture extends BaseTestFixture {
     constructor(
-        python: string,
         printLogs = false
     ) {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -238,7 +211,7 @@ class TestFixture extends BaseTestFixture {
         );
 
         this.pythonSettings.setup(s => s.pythonPath)
-            .returns(() => python);
+            .returns(() => PYTHON_PATH);
     }
 
     private static newPythonToolExecService(
@@ -260,6 +233,8 @@ class TestFixture extends BaseTestFixture {
             .returns(() => Promise.resolve({}));
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
             .returns(() => envVarsService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+            .returns(() => []);
 
         const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>(undefined, TypeMoq.MockBehavior.Strict);
 
@@ -298,16 +273,6 @@ class TestFixture extends BaseTestFixture {
 suite('Linting Functional Tests', () => {
     // These are integration tests that mock out everything except
     // the filesystem and process execution.
-
-    let pythonExecutable = '';
-
-    function getPython(): string {
-        if (pythonExecutable === '') {
-            pythonExecutable = resolveExecutable(PYTHON);
-        }
-        return pythonExecutable;
-    }
-
     // tslint:disable-next-line:no-any
     async function testLinterMessages(
         fixture: TestFixture,
@@ -339,34 +304,26 @@ suite('Linting Functional Tests', () => {
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
-        test(getProductName(product), async function() {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Add coverage for these linters.
+        test(getProductName(product), async function () {
             if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
-                this.skip();
+                return this.skip();
             }
 
-            const fixture = new TestFixture(
-                getPython()
-            );
+            const fixture = new TestFixture();
             const messagesToBeReturned = getMessages(product);
             await testLinterMessages(fixture, product, fileToLint, messagesToBeReturned);
         });
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
         // tslint:disable-next-line:max-func-body-length
-        test(`${getProductName(product)} with config in root`, async function() {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Add coverage for these linters.
+        test(`${getProductName(product)} with config in root`, async function () {
             if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
-                this.skip();
+                return this.skip();
             }
 
-            const fixture = new TestFixture(
-                getPython()
-            );
+            const fixture = new TestFixture();
             if (product === Product.pydocstyle) {
                 fixture.lintingSettings.pylintUseMinimalCheckers = false;
             }
@@ -411,13 +368,11 @@ suite('Linting Functional Tests', () => {
         );
 
         assert.equal(messages.length, messageCountToBeReceived,
-                     'Expected number of lint errors does not match lint error count');
+            'Expected number of lint errors does not match lint error count');
     }
     test('Three line output counted as one message', async () => {
         const maxErrors = 5;
-        const fixture = new TestFixture(
-            getPython()
-        );
+        const fixture = new TestFixture();
         fixture.lintingSettings.maxNumberOfProblems = maxErrors;
         await testLinterMessageCount(
             fixture,

@@ -78,13 +78,22 @@ const tslintFilter = [
     '!**/*.d.ts'
 ];
 
+gulp.task('compile', (done) => {
+    let failed = false;
+    const tsProject = ts.createProject("tsconfig.json");
+    tsProject.src()
+        .pipe(tsProject())
+        .on("error", ()=> failed = true)
+        .js
+        .pipe(gulp.dest("out"))
+        .on("finish",  ()=> failed ? done(new Error('TypeScript compilation errors')) : done());
+});
+
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
 gulp.task('hygiene', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true }, done));
-
-gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
 
 gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
 
@@ -147,15 +156,6 @@ gulp.task('inlinesource', () => {
 });
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
-
-
-gulp.task("compile", () => {
-    const tsProject = ts.createProject("tsconfig.json");
-    return tsProject.src()
-        .pipe(tsProject())
-        .js.pipe(gulp.dest("out"));
-});
-
 
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 

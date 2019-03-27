@@ -25,9 +25,6 @@ jobs:
 
 - job: 'PR'
 
-  timeoutInMinutes: 30
-  cancelTimeoutInMinutes: 3
-
   strategy:
     matrix:
       # Each member of this list must contain these values:

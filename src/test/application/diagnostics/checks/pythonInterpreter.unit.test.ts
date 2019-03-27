@@ -66,7 +66,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     }
                 }
                 protected addPythonPathChangedHandler() { noop(); }
-            }(createContainer());
+            }(createContainer(), []);
             (diagnosticService as any)._clear();
         });
 

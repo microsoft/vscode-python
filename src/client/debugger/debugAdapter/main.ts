@@ -21,7 +21,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import '../../common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
-import { ICurrentProcess } from '../../common/types';
+import { ICurrentProcess, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -251,11 +251,20 @@ class DebugManager implements Disposable {
         this.attachRequestDeferred = createDeferred<DebugProtocol.AttachRequest>();
     }
     public dispose() {
+        try {
+            const disposables = this.serviceContainer.get<IDisposable[]>(IDisposableRegistry);
+            disposables.forEach(d => {
+                try { d.dispose(); } catch { noop(); }
+            });
+        } catch {
+            noop();
+        }
         logger.verbose('main dispose');
         this.shutdown().ignoreErrors();
     }
     public async start() {
         const debugStreamProvider = this.serviceContainer.get<IDebugStreamProvider>(IDebugStreamProvider);
+        this.disposables.push(debugStreamProvider);
         const { input, output } = await debugStreamProvider.getInputAndOutputStreams();
         this.isServerMode = debugStreamProvider.useDebugSocketStream;
         this.inputStream = input;

@@ -6,7 +6,7 @@
 import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { ILanguageServerCompatibilityService } from '../../../activation/types';
-import { Resource } from '../../../common/types';
+import { IDisposableRegistry, Resource } from '../../../common/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -36,9 +36,10 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         private readonly lsCompatibility: ILanguageServerCompatibilityService,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
-        protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
+        protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
-        super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer, false);
+        super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer, disposableRegistry, false);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.lsCompatibility.isSupported()) {

@@ -52,7 +52,8 @@ export class LinterProvider implements Disposable {
         // On workspace reopen we don't get `onDocumentOpened` since it is first opened
         // and then the extension is activated. So schedule linting pass now.
         if (!isTestExecution()) {
-            setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 1200);
+            const timer = setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 1200);
+            this.disposables.push({ dispose: () => timer.unref() });
         }
     }
 

@@ -195,6 +195,14 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         return Promise.resolve();
     }
 
+    public async stop(): Promise<void> {
+        this._visibleRole = vsls.Role.None;
+
+        await this.changeSessionEmitter.fire({ session: this });
+
+        return Promise.resolve();
+    }
+
     public getContacts(_emails: string[]): Promise<vsls.ContactsCollection> {
         throw new Error('Method not implemented.');
     }
@@ -332,6 +340,15 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
         if (this.currentApi) {
             await this.currentApi.start();
             this.sessionStarted = true;
+        } else {
+            throw Error('Cannot start session without a role.');
+        }
+    }
+
+    public async stopSession(): Promise<void> {
+        if (this.currentApi) {
+            await this.currentApi.stop();
+            this.sessionStarted = false;
         } else {
             throw Error('Cannot start session without a role.');
         }

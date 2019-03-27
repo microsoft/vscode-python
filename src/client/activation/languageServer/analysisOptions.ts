@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument } from 'vscode';
-import { LanguageClientOptions, ProvideCompletionItemsSignature } from 'vscode-languageclient';
+import { LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
@@ -120,6 +120,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 configurationSection: PYTHON_LANGUAGE
             },
             outputChannel: this.output,
+            revealOutputChannelOn: RevealOutputChannelOn.Never,
             initializationOptions: {
                 interpreter: {
                     properties

@@ -84,6 +84,7 @@ import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporte
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
+import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
@@ -98,6 +99,7 @@ import {
     IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
+    IJupyterVariables,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -234,6 +236,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
+        this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

@@ -11,20 +11,56 @@ import { InMemoryInterpreterSpecificCache } from './cacheUtils';
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 type VoidFunction = (...any: any[]) => void;
+type AsyncVoidFunction = (...any: any[]) => Promise<void>;
+
 /**
- * Debounces a function execution. Function must return either a void or a promise that resolves to a void.
+ * Combine multiple sequential calls to the decorated function into one.
  * @export
- * @param {number} [wait] Wait time.
+ * @param {number} [wait] Wait time (milliseconds).
  * @returns void
+ *
+ * The point is to ensure that successive calls to the function result
+ * only in a single actual call.  Following the most recent call to
+ * the debounced function, debouncing resets after the "wait" interval
+ * has elapsed.
+ *
+ * The decorated function must return either a void or a promise that
+ * resolves to a void.
  */
 export function debounce(wait?: number) {
-    // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
-        const originalMethod = descriptor.value!;
+    if (isTestExecution()) {
         // If running tests, lets not debounce (so tests run fast).
-        wait = wait && isTestExecution() ? undefined : wait;
-        // tslint:disable-next-line:no-invalid-this no-any
-        (descriptor as any).value = _debounce(function (this: any) { return originalMethod.apply(this, arguments as any); }, wait);
+        wait = undefined;
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: We should be able to return a noop decorator instead...
+    }
+    return makeDebounceDecorator(wait);
+}
+
+export function makeDebounceDecorator(wait?: number) {
+    // tslint:disable-next-line:no-any no-function-expression
+    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction> | TypedPropertyDescriptor<AsyncVoidFunction>) {
+        // We could also make use of _debounce() options.  For instance,
+        // the following causes the original method to be called
+        // immediately:
+        //
+        //   {leading: true, trailing: false}
+        //
+        // The default is:
+        //
+        //   {leading: false, trailing: true}
+        //
+        // See https://lodash.com/docs/#debounce.
+        const options = {};
+        const originalMethod = descriptor.value!;
+        const debounced = _debounce(
+            function (this: any) {
+                return originalMethod.apply(this, arguments as any);
+            },
+            wait,
+            options
+        );
+        (descriptor as any).value = debounced;
     };
 }
 

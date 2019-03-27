@@ -892,4 +892,5 @@ export interface ILiveShareTestingApi extends ILiveShareApi {
     isSessionStarted: boolean;
     forceRole(role: vsls.Role): void;
     startSession(): Promise<void>;
+    stopSession(): Promise<void>;
 }

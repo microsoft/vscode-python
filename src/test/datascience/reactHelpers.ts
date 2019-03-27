@@ -15,6 +15,8 @@ export function setUpDomEnvironment() {
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost'});
     const { window } = dom;
 
+    // tslist:disable-next-line:no-string-literal no-any
+    (global as any)['Element'] = window.Element;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['window'] = window;
     // tslint:disable-next-line:no-string-literal no-any

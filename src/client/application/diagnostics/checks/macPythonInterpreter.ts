@@ -39,6 +39,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper
     ) {
@@ -48,9 +49,16 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
             ],
             serviceContainer,
+            disposableRegistry,
             true
         );
         this.addPythonPathChangedHandler();
+    }
+    public dispose() {
+        if (this.timeOut) {
+            this.timeOut.unref();
+            this.timeOut = undefined;
+        }
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!this.platform.isMac) {

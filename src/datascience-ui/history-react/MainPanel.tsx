@@ -9,7 +9,7 @@ import * as React from 'react';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -22,6 +22,7 @@ import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
+import { VariableExplorer } from './variableExplorer';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -41,6 +42,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
+    private variableExplorerRef: React.RefObject<VariableExplorer>;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -59,6 +61,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.state.cellVMs.push(createEditableCellVM(1));
         }
 
+        // Create the ref to hold our variable explorer
+        this.variableExplorerRef = React.createRef<VariableExplorer>();
     }
 
     public componentDidMount() {
@@ -117,6 +121,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         D
                     </CellButton>
                 </MenuBar>
+                <VariableExplorer baseTheme={baseTheme} refreshVariables={this.refreshVariables} ref={this.variableExplorerRef} />
                 <div className='top-spacing'/>
                 {progressBar}
                 <div className='cell-table'>
@@ -186,6 +191,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case HistoryMessages.Activate:
                 this.activate();
+                break;
+
+            case HistoryMessages.GetVariablesResponse:
+                this.getVariablesResponse(payload);
+                break;
+
+            case HistoryMessages.GetVariableValueResponse:
+                this.getVariableValueResponse(payload);
                 break;
 
             default:
@@ -679,6 +692,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.updateOrAdd(cell, true);
             }
         }
+
+        // When a cell is finished refresh our variables
+        if (getSettings && getSettings().showJupyterVariableExplorer) {
+            this.refreshVariables();
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -750,6 +768,43 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (editCell.cell.state !== CellState.finished) {
                 this.sendMessage(HistoryMessages.SubmitNewCell, { code, id: editCell.cell.id });
             }
+        }
+    }
+
+    // When the variable explorer wants to refresh state (say if it was expanded)
+    private refreshVariables = () => {
+        this.sendMessage(HistoryMessages.GetVariablesRequest);
+    }
+
+    // Find the display value for one specific variable
+    private refreshVariable = (targetVar: IJupyterVariable) => {
+        this.sendMessage(HistoryMessages.GetVariableValueRequest, targetVar);
+    }
+
+    // When we get a variable value back use the ref to pass to the variable explorer
+    // tslint:disable-next-line:no-any
+    private getVariableValueResponse = (payload?: any) => {
+        if (payload) {
+            const variable = payload as IJupyterVariable;
+
+            if (this.variableExplorerRef.current) {
+                this.variableExplorerRef.current.newVariableData(variable);
+            }
+        }
+    }
+
+    // When we get our new set of variables back use the ref to pass to the variable explorer
+    // tslint:disable-next-line:no-any
+    private getVariablesResponse = (payload?: any) => {
+        if (payload) {
+            const variables = payload as IJupyterVariable[];
+
+            if (this.variableExplorerRef.current) {
+                this.variableExplorerRef.current.newVariablesData(variables);
+            }
+
+            // Now put out a request for all of the sub values for the variables
+            variables.forEach(this.refreshVariable);
         }
     }
 }
