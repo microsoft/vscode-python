@@ -53,7 +53,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     public render() {
         if (getSettings && getSettings().showJupyterVariableExplorer) {
             const contentClassName = `variable-explorer-content ${this.state.open ? '' : ' hide'}`;
-
             return(
                 <div className='variable-explorer'>
                     <CollapseButton theme={this.props.baseTheme}
