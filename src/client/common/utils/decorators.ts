@@ -13,12 +13,6 @@ const _debounce = require('lodash/debounce') as typeof import('lodash/debounce')
 type VoidFunction = (...any: any[]) => void;
 type AsyncVoidFunction = (...any: any[]) => Promise<void>;
 
-function makeNoopDecorator() {
-    return function (_target: any, _propertyName: string, _descriptor: TypedPropertyDescriptor<VoidFunction> | TypedPropertyDescriptor<AsyncVoidFunction>) {
-        // Do nothing.
-    };
-}
-
 /**
  * Combine multiple sequential calls to the decorated function into one.
  * @export
@@ -36,7 +30,9 @@ function makeNoopDecorator() {
 export function debounce(wait?: number) {
     if (isTestExecution()) {
         // If running tests, lets not debounce (so tests run fast).
-        return makeNoopDecorator();
+        wait = undefined;
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: We should be able to return a noop decorator instead...
     }
     return makeDebounceDecorator(wait);
 }
@@ -57,7 +53,6 @@ export function makeDebounceDecorator(wait?: number) {
         // See https://lodash.com/docs/#debounce.
         const options = {};
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-invalid-this no-any
         const debounced = _debounce(
             function (this: any) {
                 return originalMethod.apply(this, arguments as any);
