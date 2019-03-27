@@ -131,26 +131,6 @@ suite('Common Utils - Decorators', () => {
             throw Error(`timed out after ${timeout}ms`);
         }
     }
-    test('Debounce: execute early', async () => {
-        const wait = 1000;
-        // tslint:disable-next-line:max-classes-per-file
-        class One extends Base {
-            @makeDebounceDecorator(wait, {leading: true})
-            public run(): void {
-                this._addCall('run');
-            }
-        }
-        const one = new One();
-
-        const start = Date.now();
-        one.run();
-        await waitForCalls(one.timestamps, 1);
-        const delay = one.timestamps[0] - start;
-
-        expect(delay).to.be.below(wait);
-        expect(one.calls).to.deep.equal(['run']);
-        expect(one.timestamps).to.have.lengthOf(one.calls.length);
-    });
     test('Debounce: one sync call', async () => {
         const wait = 100;
         // tslint:disable-next-line:max-classes-per-file

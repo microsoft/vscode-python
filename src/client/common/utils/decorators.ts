@@ -41,9 +41,21 @@ export function debounce(wait?: number) {
     return makeDebounceDecorator(wait);
 }
 
-export function makeDebounceDecorator(wait?: number, options?: any) {
+export function makeDebounceDecorator(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction> | TypedPropertyDescriptor<AsyncVoidFunction>) {
+        // We could also make use of _debounce() options.  For instance,
+        // the following causes the original method to be called
+        // immediately:
+        //
+        //   {leading: true, trailing: false}
+        //
+        // The default is:
+        //
+        //   {leading: false, trailing: true}
+        //
+        // See https://lodash.com/docs/#debounce.
+        const options = {};
         const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-invalid-this no-any
         const debounced = _debounce(
