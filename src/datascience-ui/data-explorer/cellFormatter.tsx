@@ -8,16 +8,16 @@ import * as React from 'react';
 import { DataExplorerRowStates } from '../../client/datascience/data-viewing/types';
 import { getLocString } from '../react-common/locReactSide';
 
-interface IProps {
+interface ICellFormatterProps {
     value: string | number | object | boolean;
     row: JSONObject | string;
     dependentValues: string | undefined;
 }
 
-export class CellFormatter extends React.Component<IProps> {
+export class CellFormatter extends React.Component<ICellFormatterProps> {
     private loadingMessage = getLocString('DataScience.loadingMessage', 'loading ...');
 
-    constructor(props: IProps) {
+    constructor(props: ICellFormatterProps) {
         super(props);
     }
 
