@@ -84,18 +84,3 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
         .catch(deferred.reject.bind(deferred));
     return deferred;
 }
-export function callWithTimeout<T>(func: () => T, timeoutMS: number): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            reject(new Error('Timed out'));
-        }, timeoutMS);
-        try {
-            const result = func();
-            resolve(result);
-            timeout.unref();
-        } catch (e) {
-            reject(e);
-            timeout.unref();
-        }
-    });
-}

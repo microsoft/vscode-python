@@ -16,11 +16,10 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
-import { callWithTimeout, sleep } from '../../common/utils/async';
+import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
-import { isTestExecution } from '../../common/constants';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -187,14 +186,12 @@ export class JupyterSession implements IJupyterSession {
                     } catch {
                         noop();
                     }
-                    // Dispose may not return. Wrap in a promise instead. Kernel futures can die if
-                    // process is already dead.
-                    if (this.session && !isTestExecution()) {
-                        await callWithTimeout(this.session.dispose.bind(this.session), 100);
+                    if (this.session) {
+                        this.session.dispose();
                     }
                 }
-                if (this.sessionManager && !isTestExecution()) {
-                    await callWithTimeout(this.sessionManager.dispose.bind(this.sessionManager), 100);
+                if (this.sessionManager) {
+                    this.sessionManager.dispose();
                 }
             } catch {
                 noop();

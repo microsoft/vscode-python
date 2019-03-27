@@ -15,6 +15,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
+import { traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -161,7 +162,7 @@ export class JupyterServerBase implements INotebookServer {
             await this.session.waitForIdle();
 
             // Run our initial setup and plot magics
-            this.initialNotebookSetup(cancelToken);
+            await this.initialNotebookSetup(cancelToken);
         }
     }
 
@@ -184,9 +185,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -271,7 +269,7 @@ export class JupyterServerBase implements INotebookServer {
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
-            this.initialNotebookSetup();
+            await this.initialNotebookSetup();
 
             return;
         }
@@ -386,9 +384,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -438,9 +433,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeObservableImpl(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
@@ -488,21 +480,25 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     // Set up our initial plotting and imports
-    private initialNotebookSetup = (cancelToken?: CancellationToken) => {
+    private async initialNotebookSetup(cancelToken?: CancellationToken) : Promise<void> {
         if (this.ranInitialSetup) {
             return;
         }
         this.ranInitialSetup = true;
 
-        // When we start our notebook initial, change to our workspace or user specified root directory
-        if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
-            this.changeDirectoryIfPossible(this.launchInfo.workingDir).ignoreErrors();
-        }
+        try {
+            // When we start our notebook initial, change to our workspace or user specified root directory
+            if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
+                await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
+            }
 
-        this.executeSilently(
-            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
-            cancelToken
-        ).ignoreErrors();
+            await this.executeSilently(
+                `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+                cancelToken
+            );
+        } catch (e) {
+            traceWarning(e);
+        }
     }
 
     private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
