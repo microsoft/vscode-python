@@ -328,6 +328,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.PandasNotInstalled]: never | undefined;
+    [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;

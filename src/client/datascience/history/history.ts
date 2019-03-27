@@ -358,7 +358,19 @@ export class History implements IHistory {
 
     private async showDataExplorer(variable: string) : Promise<void> {
         try {
-            await this.dataExplorerProvider.create(variable);
+            const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
+            if (!pandasVersion) {
+                sendTelemetryEvent(Telemetry.PandasNotInstalled);
+                // Warn user that there is no pandas.
+                this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
+            } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
+                sendTelemetryEvent(Telemetry.PandasTooOld);
+                // Warn user that we cannot start because pandas is too old.
+                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+                this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
+            } else {
+                await this.dataExplorerProvider.create(variable);
+            }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());
         }

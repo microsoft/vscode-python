@@ -281,6 +281,7 @@ export interface IJupyterVariables {
 export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
 export interface IDataExplorerProvider {
     create(variable: string) : Promise<IDataExplorer>;
+    getPandasVersion() : Promise<{major: number; minor: number; build: number} | undefined>;
 }
 export const IDataExplorer = Symbol('IDataExplorer');
 
