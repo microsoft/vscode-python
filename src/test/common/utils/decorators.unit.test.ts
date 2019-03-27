@@ -111,24 +111,24 @@ suite('Common Utils - Decorators', () => {
             this.calls = [];
             this.timestamps = [];
         }
-        public async _waitForCalls(count: number, delay = 10, timeout = 1000) {
-            const steps = timeout / delay;
-            for (let i = 0; i < steps; i += 1) {
-                if (this.timestamps.length >= count) {
-                    return;
-                }
-                await sleep(delay);
-            }
-            if (this.timestamps.length < count) {
-                throw Error(`timed out after ${timeout}ms`);
-            }
-        }
         protected _addCall(funcname: string, timestamp?: number): void {
             if (!timestamp) {
                 timestamp = Date.now();
             }
             this.calls.push(funcname);
             this.timestamps.push(timestamp);
+        }
+    }
+    async function waitForCalls(timestamps: number[], count: number, delay = 10, timeout = 1000) {
+        const steps = timeout / delay;
+        for (let i = 0; i < steps; i += 1) {
+            if (timestamps.length >= count) {
+                return;
+            }
+            await sleep(delay);
+        }
+        if (timestamps.length < count) {
+            throw Error(`timed out after ${timeout}ms`);
         }
     }
     test('Debounce: execute early', async () => {
@@ -144,7 +144,7 @@ suite('Common Utils - Decorators', () => {
 
         const start = Date.now();
         one.run();
-        await one._waitForCalls(1);
+        await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
         expect(delay).to.be.below(wait);
@@ -164,7 +164,7 @@ suite('Common Utils - Decorators', () => {
 
         const start = Date.now();
         one.run();
-        await one._waitForCalls(1);
+        await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
         expect(delay).to.be.at.least(wait);
@@ -184,7 +184,7 @@ suite('Common Utils - Decorators', () => {
 
         const start = Date.now();
         await one.run();
-        await one._waitForCalls(1);
+        await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
         expect(delay).to.be.at.least(wait);
@@ -206,7 +206,7 @@ suite('Common Utils - Decorators', () => {
         one.run();
         one.run();
         one.run();
-        await one._waitForCalls(1);
+        await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
         expect(delay).to.be.at.least(wait);
@@ -227,7 +227,7 @@ suite('Common Utils - Decorators', () => {
         one.run();
         await sleep(wait);
         one.run();
-        await one._waitForCalls(2);
+        await waitForCalls(one.timestamps, 2);
 
         expect(one.calls).to.deep.equal(['run', 'run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
