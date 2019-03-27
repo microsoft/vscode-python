@@ -11,6 +11,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
@@ -34,7 +35,6 @@ import {
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { traceInfo, traceWarning } from '../../common/logger';
 
 enum ModuleExistsResult {
     NotFound,
@@ -698,6 +698,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // - Look for module in current interpreter, if found create something with python path and -m module
     // - Look in other interpreters, if found create something with python path and -m module
     // - Look on path for jupyter, if found create something with jupyter path and args
+    // tslint:disable:cyclomatic-complexity
     private findBestCommand = async (command: string, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> => {
         // See if we already have this command in list
         if (!this.commands.hasOwnProperty(command)) {
@@ -714,7 +715,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 const all = await this.interpreterService.getInterpreters();
 
                 if (!all || all.length === 0) {
-                    traceWarning(`No interpreters found. Jupyter cannot run.`);
+                    traceWarning('No interpreters found. Jupyter cannot run.');
                 }
 
                 const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));

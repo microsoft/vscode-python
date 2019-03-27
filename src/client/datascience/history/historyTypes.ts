@@ -35,7 +35,6 @@ export namespace HistoryMessages {
 // These are the messages that will mirror'd to guest/hosts in
 // a live share session
 export const HistoryRemoteMessages : string[] = [
-    HistoryMessages.SubmitNewCell,
     HistoryMessages.AddedSysInfo,
     HistoryMessages.RemoteAddCode
 ];

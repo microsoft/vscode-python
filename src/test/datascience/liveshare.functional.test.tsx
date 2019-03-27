@@ -259,6 +259,12 @@ suite('LiveShare tests', () => {
         return api.startSession();
     }
 
+    function stopSession(role: vsls.Role): Promise<void> {
+        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        const api = container.ioc!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        return api.stopSession();
+    }
+
     test('Host alone', async () => {
         // Should only need mock data in host
         addMockData(hostContainer.ioc!, 'a=1\na', 1);
@@ -288,6 +294,26 @@ suite('LiveShare tests', () => {
         // Verify it ended up on the guest too
         assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
         verifyHtmlOnCell(guestContainer.wrapper!, '<span>1</span>', CellPosition.Last);
+    });
+
+    test('Host Shutdown and Run', async () => {
+        // Should only need mock data in host
+        addMockData(hostContainer.ioc!, 'a=1\na', 1);
+
+        // Create the host history and then the guest history
+        await getOrCreateHistory(vsls.Role.Host);
+        await startSession(vsls.Role.Host);
+
+        // Send code through the host
+        let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Stop the session
+        await stopSession(vsls.Role.Host);
+
+        // Send code again. It should still work.
+        wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
 
     test('Host startup and guest restart', async () => {

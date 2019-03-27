@@ -109,8 +109,12 @@ export class HostJupyterExecution
     public async onDetach(api: vsls.LiveShare | null): Promise<void> {
         await super.onDetach(api);
 
-        // clear our cached servers. We need to reconnect
-        await this.serverCache.dispose();
+        // clear our cached servers if our role is no longer host or none
+        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ?
+            vsls.Role.Host : vsls.Role.Guest;
+        if (newRole !== vsls.Role.Host) {
+            await this.serverCache.dispose();
+        }
     }
 
     public getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {

@@ -489,7 +489,13 @@ export class History implements IHistory {
     private submitNewCell(info: ISubmitNewCell) {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
+            // Send to ourselves.
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
+
+            // Activate the other side, and send as if came from a file
+            this.historyProvider.getOrCreateActive().then(_v => {
+                this.shareMessage(HistoryMessages.RemoteAddCode, {code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id});
+            }).ignoreErrors();
         }
     }
 
@@ -667,7 +673,7 @@ export class History implements IHistory {
                 if (this.jupyterServer) {
                     const server = this.jupyterServer;
                     this.jupyterServer = undefined;
-                    server.dispose().ignoreErrors(); // Don't care what happens as we're disconnected.
+                    server.shutdown().ignoreErrors(); // Don't care what happens as we're disconnected.
                 }
             }
         } catch {
@@ -839,6 +845,7 @@ export class History implements IHistory {
     }
 
     private shareMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        // Send our remote message.
         this.messageListener.onMessage(type.toString(), payload);
     }
 
