@@ -245,11 +245,11 @@ export class History implements IHistory {
                 break;
 
             case HistoryMessages.GetVariablesRequest:
-                this.requestVariables();
+                this.requestVariables().ignoreErrors();
                 break;
 
             case HistoryMessages.GetVariableValueRequest:
-                this.requestVariableValue(payload);
+                this.requestVariableValue(payload).ignoreErrors();
                 break;
 
             default:
