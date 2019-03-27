@@ -165,6 +165,35 @@ def test_cleanup(directory, monkeypatch):
     assert rm_path == entries[0].path
 
 
+TITLE = "# Our most excellent changelog"
+OLD_NEWS = f"""{title}
+
+## 2018.12.0 (31 Dec 2018)
+
+We did things!
+
+## 2017.11.16 (16 Nov 2017)
+
+We started going stuff.
+"""
+NEW_NEWS = """We fixed all the things!
+
+### Code Health
+
+We deleted all the code to fix all the things. ;)
+"""
+
+
+def test_complete_news():
+    version = "2019.3.0"
+    news = ann.complete_news(version, )
+    # XXX Title isn't lost
+    # XXX Newlines aren't weird
+    # XXX Version is correct
+    # XXX new entry insserted appropriately
+    # XXX Older entries preserved
+
+
 def test_cli():
     for option in ("--" + opt for opt in ["dry_run", "interim", "final"]):
         args = docopt.docopt(ann.__doc__, [option])
@@ -174,3 +203,5 @@ def test_cli():
     args = docopt.docopt(ann.__doc__, ["--dry_run", "./news"])
     assert args["--dry_run"]
     assert args["<directory>"] == "./news"
+
+# XXX --update
