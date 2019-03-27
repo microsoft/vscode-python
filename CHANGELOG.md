@@ -1,7 +1,14 @@
 # Changelog
 
 
-## 2019.3.0 (26 March 2019)
+## 2019.3.1 (27 March 2019)
+
+### Enhancements
+
+1. Use the download same logic for `stable` channel of the `Language Server` as that in `beta`.
+   ([#4960](https://github.com/Microsoft/vscode-python/issues/4960))
+
+## 2019.3.6139 (26 March 2019)
 
 ### Enhancements
 
