@@ -20,6 +20,7 @@ import { callWithTimeout, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { isTestExecution } from '../../common/constants';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -182,17 +183,17 @@ export class JupyterSession implements IJupyterSession {
                 if (this.session) {
                     try {
                         // Shutdown may fail if the process has been killed
-                        await Promise.race([this.session.shutdown(), sleep(100)]);
+                        await Promise.race([this.session.shutdown(), sleep(1000)]);
                     } catch {
                         noop();
                     }
                     // Dispose may not return. Wrap in a promise instead. Kernel futures can die if
                     // process is already dead.
-                    if (this.session) {
+                    if (this.session && !isTestExecution()) {
                         await callWithTimeout(this.session.dispose.bind(this.session), 100);
                     }
                 }
-                if (this.sessionManager) {
+                if (this.sessionManager && !isTestExecution()) {
                     await callWithTimeout(this.sessionManager.dispose.bind(this.sessionManager), 100);
                 }
             } catch {
