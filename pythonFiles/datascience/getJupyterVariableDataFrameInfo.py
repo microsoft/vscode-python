@@ -1,4 +1,4 @@
-# Query Jupyter server for the value of a variable
+# Query Jupyter server for the info about a dataframe
 import json as _VSCODE_json
 
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable

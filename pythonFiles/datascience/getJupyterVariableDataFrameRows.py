@@ -1,4 +1,4 @@
-# Query Jupyter server for the value of a variable
+# Query Jupyter server for the rows of a data frame
 import json as _VSCODE_json
 import pandas.io.json as _VSCODE_pd_json
 
