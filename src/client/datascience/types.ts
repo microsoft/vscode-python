@@ -3,7 +3,7 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import { JSONArray, JSONObject } from '@phosphor/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
@@ -275,7 +275,7 @@ export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
     getDataFrameInfo(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
-    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONArray>;
+    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
 }
 
 export const IDataExplorerProvider = Symbol('IDataExplorerProvider');

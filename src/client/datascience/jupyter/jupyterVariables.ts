@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { JSONArray } from '@phosphor/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import stripAnsi from 'strip-ansi';
@@ -67,11 +67,11 @@ export class JupyterVariables implements IJupyterVariables {
             });
     }
 
-    public async getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number): Promise<JSONArray> {
+    public async getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number): Promise<JSONObject> {
         // Run the get dataframe rows script
-        return this.runScript<JSONArray>(
+        return this.runScript<JSONObject>(
             targetVariable,
-            [],
+            {},
             (_v: IJupyterVariable | undefined) => {
                 // Prep our targetVariable to send over
                 const variableString = JSON.stringify(targetVariable);

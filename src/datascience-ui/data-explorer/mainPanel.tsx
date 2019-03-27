@@ -3,7 +3,7 @@
 'use strict';
 import './mainPanel.css';
 
-import { JSONArray } from '@phosphor/coreutils';
+import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Data, Toolbar } from 'react-data-grid-addons';
@@ -126,7 +126,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 break;
 
             case DataExplorerMessages.GetAllRowsResponse:
-                this.handleGetAllRowsResponse(payload as JSONArray);
+                this.handleGetAllRowsResponse(payload as JSONObject);
                 break;
 
             case DataExplorerMessages.GetRowsResponse:
@@ -206,7 +206,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private handleGetAllRowsResponse(rows: JSONArray) {
+    private handleGetAllRowsResponse(response: JSONObject) {
+        const rows = response.data ? response.data as JSONArray : [];
+
         // Update our fetched count and actual rows
         this.setState(
             {
@@ -218,12 +220,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
+        const rows = response.rows.data ? response.rows.data as JSONArray : [];
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
         // Actual should have our entire list. We need to replace our part with our new results
         const before = this.state.actualGridRows.slice(0, response.start);
         const after = response.end < this.state.actualGridRows.length ? this.state.actualGridRows.slice(response.end) : [];
-        const newActual = before.concat(response.rows.concat(after));
+        const newActual = before.concat(rows.concat(after));
 
         // If we're done, sort and filter
         if (newFetched === this.state.actualRowCount) {

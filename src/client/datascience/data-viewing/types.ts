@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { JSONArray } from '@phosphor/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 
 import { IJupyterVariable } from '../types';
 
@@ -30,7 +30,7 @@ export interface IGetRowsRequest {
 }
 
 export interface IGetRowsResponse {
-    rows: JSONArray;
+    rows: JSONObject;
     start: number;
     end: number;
 }
@@ -41,7 +41,7 @@ export class IDataExplorerMapping {
     public [DataExplorerMessages.UpdateSettings]: string;
     public [DataExplorerMessages.InitializeData]: IJupyterVariable;
     public [DataExplorerMessages.GetAllRowsRequest]: never | undefined;
-    public [DataExplorerMessages.GetAllRowsResponse]: JSONArray;
+    public [DataExplorerMessages.GetAllRowsResponse]: JSONObject;
     public [DataExplorerMessages.GetRowsRequest]: IGetRowsRequest;
     public [DataExplorerMessages.GetRowsResponse]: IGetRowsResponse;
 }
