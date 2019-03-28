@@ -21,7 +21,7 @@ export class CollapseButton extends React.Component<ICollapseButtonProps> {
 
     public render() {
         const collapseInputPolygonClassNames = `collapse-input-svg ${this.props.open ? ' collapse-input-svg-rotate' : ''} collapse-input-svg-${this.props.theme}`;
-        const collapseInputClassNames = `collapse-input remove-style ${this.props.visible ? '' : ' hide'}`;
+        const collapseInputClassNames = `collapse-input remove-style ${this.props.visible ? '' : ' invisible'}`;
         // https://reactjs.org/docs/conditional-rendering.html#inline-if-with-logical--operator
         // Comment here just because the (boolean && statement) was new to me
         return (

@@ -25,6 +25,7 @@
     grid-template-columns: auto 1fr;
     grid-column-gap: 3px;
     width: 100%;
+    margin-top:16px;
 }
 
 .content-div {
@@ -36,10 +37,6 @@
     grid-column: 1;
     grid-template-columns: auto;
     display: grid;
-}
-
-.hide {
-    visibility: hidden;
 }
 
 .cell-result-container {

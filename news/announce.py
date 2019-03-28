@@ -3,11 +3,13 @@
 
 """Generate the changelog.
 
-Usage: announce [--dry_run | --interim | --final] [<directory>]
+Usage: announce [--dry_run | --interim | --final] [--update=<news_file>] [<directory>]
 
 """
 import dataclasses
+import datetime
 import enum
+import json
 import operator
 import os
 import pathlib
@@ -102,9 +104,6 @@ def entry_markdown(entry):
     formatted_lines.extend(f"{indent}{line}" for line in entry_lines[1:])
     formatted_lines.append(f"{indent}{issue_md}")
     return "\n".join(formatted_lines)
-    return ENTRY_TEMPLATE.format(
-        entry=entry.description.strip(), issue=entry.issue_number, issue_url=issue_url
-    )
 
 
 def changelog_markdown(data):
@@ -148,12 +147,30 @@ class RunType(enum.Enum):
     final = 2
 
 
-def main(run_type, directory):
+def complete_news(version, entry, previous_news):
+    """Prepend a news entry to the previous news file."""
+    title, _, previous_news = previous_news.partition("\n")
+    title = title.strip()
+    previous_news = previous_news.strip()
+    section_title = f"## {version} ({datetime.date.today().strftime('%d %b %Y')})"
+    return f"{title}\n\n\n{section_title}\n\n{entry.strip()}\n\n\n{previous_news}"
+
+
+def main(run_type, directory, news_file=None):
     directory = pathlib.Path(directory)
     data = gather(directory)
     markdown = changelog_markdown(data)
     if run_type != RunType.dry_run:
-        print(markdown)
+        if news_file:
+            with open(news_file, "r", encoding="utf-8") as file:
+                previous_news = file.read()
+            package_config_path = pathlib.Path(news_file).parent / "package.json"
+            config = json.loads(package_config_path.read_text())
+            new_news = complete_news(config["version"], markdown, previous_news)
+            with open(news_file, "w", encoding="utf-8") as file:
+                file.write(new_news)
+        else:
+            print(markdown)
     if run_type == RunType.final:
         cleanup(data)
 
@@ -167,4 +184,4 @@ if __name__ == "__main__":
     else:
         run_type = RunType.interim
     directory = arguments["<directory>"] or pathlib.Path(__file__).parent
-    main(run_type, directory)
+    main(run_type, directory, arguments["--update"])

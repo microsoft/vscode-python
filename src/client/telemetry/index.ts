@@ -308,6 +308,7 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
+    [EventName.UNITTEST_DISABLE]: never | undefined;
     [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
     [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
