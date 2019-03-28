@@ -43,7 +43,7 @@ export class JupyterSession implements IJupyterSession {
         return this.shutdown();
     }
 
-    public shutdown = async () : Promise<void> => {
+    public async shutdown(): Promise<void> {
         await this.destroyKernelSpec();
 
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
@@ -59,7 +59,7 @@ export class JupyterSession implements IJupyterSession {
                 noop();
             }
         }
-        await this.shutdownSessionAndConnection();
+        return this.shutdownSessionAndConnection();
     }
 
     public get onRestarted() : Event<void> {
@@ -168,7 +168,7 @@ export class JupyterSession implements IJupyterSession {
         this.kernelSpec = undefined;
     }
 
-    private shutdownSessionAndConnection = async () => {
+    private async shutdownSessionAndConnection(): Promise<void> {
         if (this.contentsManager) {
             this.contentsManager.dispose();
             this.contentsManager = undefined;
@@ -186,11 +186,11 @@ export class JupyterSession implements IJupyterSession {
                     } catch {
                         noop();
                     }
-                    if (this.session) {
+                    if (this.session && !this.session.isDisposed) {
                         this.session.dispose();
                     }
                 }
-                if (this.sessionManager) {
+                if (this.sessionManager && !this.sessionManager.isDisposed) {
                     this.sessionManager.dispose();
                 }
             } catch {

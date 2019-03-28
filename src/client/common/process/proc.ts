@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ChildProcess, exec, spawn } from 'child_process';
+import { ChildProcess, exec, execSync, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
-import * as tk from 'tree-kill';
+
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
@@ -32,7 +32,12 @@ export class ProcessService implements IProcessService, IDisposable {
     }
     public static kill(pid: number): void {
         try {
-            tk(pid);
+            if (process.platform === 'win32') {
+                // Windows doesn't support SIGTERM, so execute taskkill to kill the process
+                execSync(`taskkill /pid ${pid} /T /F`);
+            } else {
+                process.kill(pid);
+            }
         } catch {
             // Ignore.
         }
@@ -103,7 +108,10 @@ export class ProcessService implements IProcessService, IDisposable {
             out: output,
             dispose: () => {
                 if (proc && !proc.killed) {
-                    tk(proc.pid);
+                    ProcessService.kill(proc.pid);
+                }
+                if (proc) {
+                    proc.unref();
                 }
             }
         };

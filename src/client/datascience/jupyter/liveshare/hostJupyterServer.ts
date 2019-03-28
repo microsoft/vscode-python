@@ -81,11 +81,11 @@ export class HostJupyterServer
                 service.onRequest(LiveShareCommands.getSysInfo, (_args:  any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
                 service.onRequest(LiveShareCommands.restart, (_args:  any[], cancellation: CancellationToken) => this.onRestartRequest(cancellation));
                 service.onRequest(LiveShareCommands.interrupt, (args:  any[], cancellation: CancellationToken) => this.onInterruptRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
+                service.onRequest(LiveShareCommands.disposeServer, (_args:  any[], _cancellation: CancellationToken) => this.dispose());
 
                 // Notifications are always objects.
                 service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(args));
                 service.onNotify(LiveShareCommands.executeObservable, (args: object) => this.onExecuteObservableRequest(args));
-                service.onNotify(LiveShareCommands.disposeServer, (_args: object) => this.dispose().ignoreErrors());
 
                 // See if we need to forward the port
                 await this.attemptToForwardPort(api, this.portToForward);
