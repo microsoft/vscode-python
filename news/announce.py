@@ -166,8 +166,9 @@ def main(run_type, directory, news_file=None):
                 previous_news = file.read()
             package_config_path = pathlib.Path(news_file).parent / "package.json"
             config = json.loads(package_config_path.read_text())
+            new_news = complete_news(config["version"], markdown, previous_news)
             with open(news_file, "w", encoding="utf-8") as file:
-                file.write(complete_news(config["version"], markdown, previous_news))
+                file.write(new_news)
         else:
             print(markdown)
     if run_type == RunType.final:

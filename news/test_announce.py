@@ -167,7 +167,8 @@ def test_cleanup(directory, monkeypatch):
 
 
 TITLE = "# Our most excellent changelog"
-OLD_NEWS = f"""## 2018.12.0 (31 Dec 2018)
+OLD_NEWS = f"""\
+## 2018.12.0 (31 Dec 2018)
 
 We did things!
 
@@ -175,7 +176,8 @@ We did things!
 
 We started going stuff.
 """
-NEW_NEWS = """We fixed all the things!
+NEW_NEWS = """\
+We fixed all the things!
 
 ### Code Health
 
@@ -188,7 +190,6 @@ def test_complete_news():
     date = datetime.date.today().strftime("%d %b %Y")
     news = ann.complete_news(version, NEW_NEWS, f"{TITLE}\n\n\n{OLD_NEWS}")
     expected = f"{TITLE}\n\n\n## {version} ({date})\n\n{NEW_NEWS.strip()}\n\n\n{OLD_NEWS.strip()}"
-    print(news)
     assert news == expected
 
 
