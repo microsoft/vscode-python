@@ -5,6 +5,5 @@
 --recursive
 --colors
 --timeout=120000
---exit
 --reporter mocha-multi-reporters
 --reporter-options configFile=build/.mocha-multi-reporters.config
