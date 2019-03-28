@@ -10,6 +10,7 @@ import pytest
 
 TEST_ROOT = os.path.dirname(__file__)
 SRC_ROOT = os.path.dirname(TEST_ROOT)
+PROJECT_ROOT = os.path.dirname(SRC_ROOT)
 DATASCIENCE_ROOT = os.path.join(SRC_ROOT, 'datascience')
 TESTING_TOOLS_ROOT = os.path.join(SRC_ROOT, 'testing_tools')
 
