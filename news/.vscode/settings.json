@@ -1,0 +1,10 @@
+{
+    "python.jediEnabled": false,
+    "python.formatting.provider": "black",
+    "python.unitTest.pyTestArgs": [
+        "."
+    ],
+    "python.unitTest.unittestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false,
+    "python.unitTest.pyTestEnabled": true
+}
