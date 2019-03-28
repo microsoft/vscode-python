@@ -1,6 +1,7 @@
 {
     "python.jediEnabled": false,
     "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
     "python.unitTest.pyTestArgs": [
         "."
     ],
