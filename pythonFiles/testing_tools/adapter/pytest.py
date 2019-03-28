@@ -244,7 +244,8 @@ def _parse_item(item, _normcase, _pathsep):
             srcfile = fileid
     else:
         srcfile = relfile
-    location = '{}:{}'.format(srcfile, lineno)
+    # from pytest, line numbers are 0-based
+    location = '{}:{}'.format(srcfile, int(lineno) + 1)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
             print(fullname, testfunc)
