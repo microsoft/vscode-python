@@ -3,7 +3,7 @@
 
 """Generate the changelog.
 
-Usage: announce [--dry_run | --interim | --final] [--update <news_file>] [<directory>]
+Usage: announce [--dry_run | --interim | --final] [--update=<news_file>] [<directory>]
 
 """
 import dataclasses
@@ -104,9 +104,6 @@ def entry_markdown(entry):
     formatted_lines.extend(f"{indent}{line}" for line in entry_lines[1:])
     formatted_lines.append(f"{indent}{issue_md}")
     return "\n".join(formatted_lines)
-    return ENTRY_TEMPLATE.format(
-        entry=entry.description.strip(), issue=entry.issue_number, issue_url=issue_url
-    )
 
 
 def changelog_markdown(data):
@@ -155,8 +152,8 @@ def complete_news(version, entry, previous_news):
     title, _, previous_news = previous_news.partition("\n")
     title = title.strip()
     previous_news = previous_news.strip()
-    section_title = f"### {version} ({datetime.Date.today().strftime('%d %b %Y')})"
-    return f"{title}\n\n{section_title}\n{entry}\n\n{previous_news}"
+    section_title = f"## {version} ({datetime.date.today().strftime('%d %b %Y')})"
+    return f"{title}\n\n\n{section_title}\n\n{entry.strip()}\n\n\n{previous_news}"
 
 
 def main(run_type, directory, news_file=None):
@@ -168,7 +165,7 @@ def main(run_type, directory, news_file=None):
             with open(news_file, "r", encoding="utf-8") as file:
                 previous_news = file.read()
             package_config_path = pathlib.Path(news_file).parent / "package.json"
-            config = json.load(package_config_path)
+            config = json.loads(package_config_path.read_text())
             with open(news_file, "w", encoding="utf-8") as file:
                 file.write(complete_news(config["version"], markdown, previous_news))
         else:

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import codecs
+import datetime
 import pathlib
 
 import docopt
@@ -166,9 +167,7 @@ def test_cleanup(directory, monkeypatch):
 
 
 TITLE = "# Our most excellent changelog"
-OLD_NEWS = f"""{title}
-
-## 2018.12.0 (31 Dec 2018)
+OLD_NEWS = f"""## 2018.12.0 (31 Dec 2018)
 
 We did things!
 
@@ -186,12 +185,11 @@ We deleted all the code to fix all the things. ;)
 
 def test_complete_news():
     version = "2019.3.0"
-    news = ann.complete_news(version, )
-    # XXX Title isn't lost
-    # XXX Newlines aren't weird
-    # XXX Version is correct
-    # XXX new entry insserted appropriately
-    # XXX Older entries preserved
+    date = datetime.date.today().strftime("%d %b %Y")
+    news = ann.complete_news(version, NEW_NEWS, f"{TITLE}\n\n\n{OLD_NEWS}")
+    expected = f"{TITLE}\n\n\n## {version} ({date})\n\n{NEW_NEWS.strip()}\n\n\n{OLD_NEWS.strip()}"
+    print(news)
+    assert news == expected
 
 
 def test_cli():
@@ -203,5 +201,6 @@ def test_cli():
     args = docopt.docopt(ann.__doc__, ["--dry_run", "./news"])
     assert args["--dry_run"]
     assert args["<directory>"] == "./news"
-
-# XXX --update
+    args = docopt.docopt(ann.__doc__, ["--update", "CHANGELOG.md", "./news"])
+    assert args["--update"] == "CHANGELOG.md"
+    assert args["<directory>"] == "./news"
