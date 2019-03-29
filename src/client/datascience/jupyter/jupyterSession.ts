@@ -17,11 +17,11 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
-import { traceInfo } from '../../common/logger';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
