@@ -213,6 +213,7 @@ jobs:
         NeedsPythonFunctionalReqs: true
         # This tells the functional tests to not mock out Jupyter...
         VSCODE_PYTHON_ROLLING: true
+        VSC_PYTHON_FORCE_LOGGING: true
       'Linux-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
@@ -220,6 +221,7 @@ jobs:
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
         VSCODE_PYTHON_ROLLING: true
+        VSC_PYTHON_FORCE_LOGGING: true
       'Mac-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'macos-10.13'
@@ -227,6 +229,7 @@ jobs:
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
         VSCODE_PYTHON_ROLLING: true
+        VSC_PYTHON_FORCE_LOGGING: true
       'Windows-Py3.6 Functional':
         PythonVersion: '3.6'
         VMImageName: 'vs2017-win2016'
@@ -234,6 +237,7 @@ jobs:
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
         VSCODE_PYTHON_ROLLING: true
+        VSC_PYTHON_FORCE_LOGGING: true
       'Linux-Py3.6 Functional':
         PythonVersion: '3.6'
         VMImageName: 'ubuntu-16.04'
@@ -241,6 +245,7 @@ jobs:
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
         VSCODE_PYTHON_ROLLING: true
+        VSC_PYTHON_FORCE_LOGGING: true
       'Mac-Py3.6 Functional':
         PythonVersion: '3.6'
         VMImageName: 'macos-10.13'
@@ -248,6 +253,7 @@ jobs:
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
         VSCODE_PYTHON_ROLLING: true
+        VSC_PYTHON_FORCE_LOGGING: true
 
   pool:
     vmImage: $(VMImageName)
