@@ -289,7 +289,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         // If still not found, log an error (this seems possible for some people, so use the default)
-        if (!kernelSpec) {
+        if (!kernelSpec && connection.localLaunch) {
             this.logger.logError(localize.DataScience.jupyterKernelSpecNotFound());
         }
 
