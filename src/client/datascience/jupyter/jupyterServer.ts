@@ -15,7 +15,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { traceWarning } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -134,7 +134,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        this.logger.logInformation(`Connecting server ${this.id}`);
+        traceInfo(`Connecting server ${this.id}`);
 
         // Save our launch info
         this.launchInfo = launchInfo;
@@ -154,15 +154,21 @@ export class JupyterServerBase implements INotebookServer {
         // Start our session
         this.session = await this.sessionManager.startNew(launchInfo.connectionInfo, launchInfo.kernelSpec, cancelToken);
 
+        traceInfo(`Started session ${this.id}`);
+
         if (this.session) {
             // Setup our start time. We reject anything that comes in before this time during execute
             this.sessionStartTime = Date.now();
 
             // Wait for it to be ready
+            traceInfo(`Waiting for idle ${this.id}`);
             await this.session.waitForIdle();
 
+            traceInfo(`Performing initial setup ${this.id}`);
             // Run our initial setup and plot magics
             await this.initialNotebookSetup(cancelToken);
+
+            traceInfo(`Finished connecting ${this.id}`);
         }
     }
 

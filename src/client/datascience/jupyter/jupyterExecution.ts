@@ -124,14 +124,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.isNotebookSupported(cancelToken);
     }
 
+    //tslint:disable:cyclomatic-complexity
     public connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let connection: IConnection;
             let kernelSpec: IJupyterKernelSpec | undefined;
+            traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
 
             // If our uri is undefined or if it's set to local launch we need to launch a server locally
             if (!options || !options.uri) {
+                traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
                 const launchResults = await this.startNotebookServer(options && options.useDefaultConfig ? true : false, cancelToken);
                 if (launchResults) {
                     connection = launchResults.connection;
@@ -150,6 +153,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
 
             try {
+                traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
+
                 // If we don't have a kernel spec yet, check using our current connection
                 if (!kernelSpec) {
                     kernelSpec = await this.getMatchingKernelSpec(connection, cancelToken);
@@ -173,7 +178,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     uri: options ? options.uri : undefined,
                     purpose: options ? options.purpose : uuid()
                 };
+
+                traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
                 await result.connect(launchInfo, cancelToken);
+
+                traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
                 sendTelemetryEvent(launchInfo.uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
                 return result;
             } catch (err) {
