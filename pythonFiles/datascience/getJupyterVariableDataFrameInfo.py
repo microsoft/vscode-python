@@ -7,8 +7,14 @@ _VSCODE_targetVariable = _VSCODE_json.loads('_VSCode_JupyterTestValue')
 _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
 
 # First list out the columns of the data frame (assuming it is one for now)
-_VSCODE_columnTypes = list(_VSCODE_evalResult.dtypes)
-_VSCODE_columnNames = list(_VSCODE_evalResult)
+_VSCODE_columnTypes = []
+_VSCODE_columnNames = []
+if (hasattr(_VSCODE_evalResult, 'dtypes')):
+    _VSCODE_columnTypes = list(_VSCODE_evalResult.dtypes)
+    _VSCODE_columnNames = list(_VSCODE_evalResult)
+elif _VSCODE_targetVariable['type'] == 'list':
+    _VSCODE_columnTypes = ['string'] # Might be able to be more specific here?
+    _VSCODE_columnNames = ['_VSCode_JupyterValuesColumn']
 
 # Make sure we have an index column (see code in getJupyterVariableDataFrameRows.py)
 if 'index' not in _VSCODE_columnNames:
@@ -33,20 +39,13 @@ del _VSCODE_columnTypes
 _VSCODE_targetVariable['columns'] = _VSCODE_columns
 del _VSCODE_columns
 
-# Figure out shape if not already there
-if 'shape' not in _VSCODE_targetVariable:
-    _VSCODE_targetVariable['shape'] = str(_VSCODE_evalResult.shape)
-
-# Row count is actually embedded in shape. Should be the second number
-import re as _VSCODE_re
-_VSCODE_regex = r"\(\s*(\d+),\s*(\d+)\s*\)"
-_VSCODE_matches = _VSCODE_re.search(_VSCODE_regex, _VSCODE_targetVariable['shape'])
-if (_VSCODE_matches):
-    _VSCODE_targetVariable['rowCount'] = int(_VSCODE_matches[1])
-    del _VSCODE_matches
+# Figure out shape if not already there. Use the shape to compute the row count
+if (hasattr(_VSCODE_evalResult, "shape")):
+    _VSCODE_targetVariable['rowCount'] = _VSCODE_evalResult.shape[0]
+elif _VSCODE_targetVariable['type'] == 'list':
+    _VSCODE_targetVariable['rowCount'] = len(_VSCODE_evalResult)
 else:
     _VSCODE_targetVariable['rowCount'] = 0
-del _VSCODE_regex
 
 # Transform this back into a string
 print(_VSCODE_json.dumps(_VSCODE_targetVariable))
