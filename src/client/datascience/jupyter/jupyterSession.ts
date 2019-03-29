@@ -77,9 +77,9 @@ export class JupyterSession implements IJupyterSession {
             while (this.session &&
                 this.session.kernel &&
                 this.session.kernel.status !== 'idle' &&
-                (Date.now() - startTime > 5000)) {
-                await sleep(10);
+                (Date.now() - startTime < 10000)) {
                 traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
+                await sleep(10);
             }
         }
     }
