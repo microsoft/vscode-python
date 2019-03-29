@@ -48,7 +48,7 @@ export namespace RegExpValues {
     export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
     export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/;
     export const HttpPattern = /https?:\/\//;
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
@@ -96,7 +96,7 @@ export enum Telemetry {
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
     PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD'
- }
+}
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
