@@ -88,7 +88,7 @@ export class JupyterSession implements IJupyterSession {
 
             // If we didn't make it out in ten seconds, indicate an error
             if (!this.session || !this.session.kernel || this.session.kernel.status !== 'idle') {
-                throw new JupyterWaitForIdleError('Kernel never connected');
+                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
             }
         }
     }
