@@ -33,8 +33,8 @@ export class ContentPanel extends React.Component<IContentPanelProps, IContentPa
 
     public render() {
         return(
-            <div className='cell-table'>
-                <div className='cell-table-body'>
+            <div id='cell-table'>
+                <div id='cell-table-body'>
                     {this.renderCells()}
                 </div>
             </div>
@@ -66,5 +66,4 @@ export class ContentPanel extends React.Component<IContentPanelProps, IContentPa
             </ErrorBoundary>
         );
     }
-
 }

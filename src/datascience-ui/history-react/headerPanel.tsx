@@ -6,17 +6,25 @@ import './headerPanel.css';
 import * as React from 'react';
 
 import { getLocString } from '../react-common/locReactSide';
+import { Progress } from '../react-common/progress';
+import { getSettings } from '../react-common/settingsReactSide';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
+import { VariableExplorer } from './variableExplorer';
 
 export interface IHeaderPanelProps {
     baseTheme: string;
+    busy: boolean;
     canCollapseAll: boolean;
     canExpandAll: boolean;
     canExport: boolean;
     canUndo: boolean;
     canRedo: boolean;
+    skipDefault?: boolean;
+    testMode?: boolean;
+    variableExplorerRef: React.RefObject<VariableExplorer>;
+    addMarkdown(): void;
     collapseAll(): void;
     expandAll(): void;
     export(): void;
@@ -25,6 +33,8 @@ export interface IHeaderPanelProps {
     undo(): void;
     redo(): void;
     clearAll(): void;
+    showDataExplorer(): void;
+    refreshVariables(): void;
 }
 
 interface IHeaderPanelState {
@@ -33,25 +43,14 @@ interface IHeaderPanelState {
 export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanelState> {
     constructor(prop: IHeaderPanelProps) {
         super(prop);
-        //this.state = { open: false,
-                        //gridColumns: columns,
-                        //gridRows: [],
-                        //gridHeight: 200};
     }
 
-    //private renderExtraButtons = () => {
-        //if (!this.props.skipDefault) {
-            //const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-            //return <CellButton baseTheme={baseTheme} onClick={this.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
-        //}
-
-        //return null;
-    //}
-
     public render() {
+        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
             <div className='header-panel-div'>
                 <MenuBar baseTheme={this.props.baseTheme} stylePosition='top-fixed'>
+                    {this.renderExtraButtons()}
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={!this.props.canCollapseAll} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.CollapseAll}/>
                     </CellButton>
@@ -76,8 +75,32 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanel
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
+                    {this.renderDataFrameTestButton()}
                 </MenuBar>
+                <div id='top-spacing' />
+                {progressBar}
+                <VariableExplorer baseTheme={this.props.baseTheme} refreshVariables={this.props.refreshVariables} ref={this.props.variableExplorerRef} />
             </div>
         );
+    }
+
+    private renderExtraButtons = () => {
+        if (!this.props.skipDefault) {
+            const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
+            return <CellButton baseTheme={baseTheme} onClick={this.props.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
+        }
+
+        return null;
+    }
+
+    private renderDataFrameTestButton() {
+        if (getSettings && getSettings().showJupyterVariableExplorer) {
+            return (
+                <CellButton baseTheme={'vscode-light'} onClick={this.props.showDataExplorer} tooltip={'Show data explorer for \'df\' variable'}>
+                    D
+                </CellButton>
+            );
+        }
+        return null;
     }
 }

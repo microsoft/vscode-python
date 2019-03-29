@@ -10,18 +10,11 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
-import { noop } from '../../test/core';
-import { ErrorBoundary } from '../react-common/errorBoundary';
-//import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-//import { Progress } from '../react-common/progress';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
-//import { CellButton } from './cellButton';
-//import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
-//import { MenuBar } from './menuBar';
 import { VariableExplorer } from './variableExplorer';
 
 import { ContentPanel, IContentPanelProps } from './contentPanel';
@@ -91,61 +84,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        //const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         const headerProps = this.getHeaderProps(baseTheme);
         const contentProps = this.getContentProps(baseTheme);
 
         return (
-            <div className='main-panel' ref={this.updateSelf}>
+            <div id='main-panel' ref={this.updateSelf}>
                 <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
                 <div ref={this.updateBottom}/>
             </div>
         );
-        //return (
-            //<div className='main-panel' ref={this.updateSelf}>
-                //<HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
-                //<MenuBar baseTheme={baseTheme} stylePosition='top-fixed'>
-                    //{this.renderExtraButtons()}
-                    //<CellButton baseTheme={baseTheme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.CollapseAll}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.expandAll} disabled={!this.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.ExpandAll}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.SaveAs}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Restart}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Interrupt}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Undo}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Redo}/>
-                    //</CellButton>
-                    //<CellButton baseTheme={baseTheme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
-                        //<Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
-                    //</CellButton>
-                    //{this.renderDataFrameTestButton()}
-                //</MenuBar>
-                //<VariableExplorer baseTheme={baseTheme} refreshVariables={this.refreshVariables} ref={this.variableExplorerRef} />
-                //<div className='top-spacing'/>
-                //{progressBar}
-                //<div className='cell-table'>
-                    //<div className='cell-table-body'>
-                        //{this.renderCells()}
-                    //</div>
-                //</div>
-                //<div ref={this.updateBottom}/>
-            //</div>
-        //);
     }
 
     // tslint:disable-next-line:no-any
@@ -243,18 +193,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
-    //private renderDataFrameTestButton() {
-        //if (getSettings && getSettings().showJupyterVariableExplorer) {
-            //return (
-                //<CellButton baseTheme={'vscode-light'} onClick={this.showDataExplorer} tooltip={'Show data explorer for \'df\' variable'}>
-                    //D
-                //</CellButton>
-            //);
-        //}
-
-        //return null;
-    //}
-
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
@@ -271,8 +209,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
-        // IANHU: Pass functions here or pass booleans?
        return {
+        addMarkdown: this.addMarkdown,
+        busy: this.state.busy,
         collapseAll: this.collapseAll,
         expandAll: this.expandAll,
         export: this.export,
@@ -281,11 +220,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         undo: this.undo,
         redo: this.redo,
         clearAll: this.clearAll,
+        skipDefault: this.props.skipDefault,
+        showDataExplorer: this.showDataExplorer,
+        testMode: this.props.testMode,
+        variableExplorerRef: this.variableExplorerRef,
         canCollapseAll: this.canCollapseAll(),
         canExpandAll: this.canExpandAll(),
         canExport: this.canExport(),
         canUndo: this.canUndo(),
         canRedo: this.canRedo(),
+        refreshVariables: this.refreshVariables,
         baseTheme: baseTheme
        };
     }
@@ -322,9 +266,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    //private showDataExplorer = () => {
-        //this.sendMessage(HistoryMessages.ShowDataExplorer, 'df');
-    //}
+    private showDataExplorer = () => {
+        this.sendMessage(HistoryMessages.ShowDataExplorer, 'df');
+    }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
         if (this.postOffice) {
@@ -345,24 +289,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.editCellRef = ref;
     }
 
-    //private addMarkdown = () => {
-        //this.addCell({
-            //data :         {
-                //cell_type: 'markdown',
-                //metadata: {},
-                //source: [
-                    //'## Cell 3\n',
-                    //'Here\'s some markdown\n',
-                    //'- A List\n',
-                    //'- Of Items'
-                //]
-            //},
-            //id : '1111',
-            //file : 'foo.py',
-            //line : 0,
-            //state : CellState.finished
-        //});
-    //}
+    private addMarkdown = () => {
+        this.addCell({
+            data :         {
+                cell_type: 'markdown',
+                metadata: {},
+                source: [
+                    '## Cell 3\n',
+                    'Here\'s some markdown\n',
+                    '- A List\n',
+                    '- Of Items'
+                ]
+            },
+            id : '1111',
+            file : 'foo.py',
+            line : 0,
+            state : CellState.finished
+        });
+    }
 
     private getNonEditCellVMs() : ICellViewModel [] {
         return this.state.cellVMs.filter(c => !c.editable);

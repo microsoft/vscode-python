@@ -1,17 +1,4 @@
-.top-spacing {
-    margin-top : 24px;
-}
-
-.cell-table {
-    display: table;
-    width: 100%;
-}
-
-.cell-table-body {
-    display: table-row-group;
-}
-
-.main-panel {
+#main-panel {
     background: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
 }
