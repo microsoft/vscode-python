@@ -20,6 +20,7 @@ import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { isTestExecution } from '../../common/constants';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -181,6 +182,26 @@ export class JupyterSession implements IJupyterSession {
                 }
                 if (this.session) {
                     try {
+                        // When running under a test, mark all futures as done so we
+                        // don't hit this problem:
+                        // https://github.com/jupyterlab/jupyterlab/issues/4252
+                        // tslint:disable:no-any
+                        if (isTestExecution()) {
+                            if (this.session && this.session.kernel) {
+                                const defaultKernel = this.session.kernel as any;
+                                if (defaultKernel && defaultKernel._futures) {
+                                    const futures = defaultKernel._futures as Map<any, any>;
+                                    if (futures) {
+                                        futures.forEach(f => {
+                                            if (f._status !== undefined) {
+                                                f._status |= 4;
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
                         // Shutdown may fail if the process has been killed
                         await Promise.race([this.session.shutdown(), sleep(1000)]);
                     } catch {
