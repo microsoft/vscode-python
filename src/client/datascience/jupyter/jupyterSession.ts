@@ -30,7 +30,7 @@ export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;
     private contentsManager: ContentsManager | undefined;
     private notebookFile: Contents.IModel | undefined;
-    private onRestartedEvent : EventEmitter<void> = new EventEmitter<void>();
+    private onRestartedEvent : EventEmitter<void> | undefined;
     private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
 
@@ -65,7 +65,10 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public get onRestarted() : Event<void> {
-        return this.onRestartedEvent.event.bind(this.onRestartedEvent);
+        if (!this.onRestartedEvent) {
+            this.onRestartedEvent = new EventEmitter<void>();
+        }
+        return this.onRestartedEvent.event;
     }
 
     public async waitForIdle() : Promise<void> {
@@ -162,6 +165,7 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private onStatusChanged(_s: Session.ISession, a: Kernel.Status) {
+        traceInfo(`Status changed to ${a} from OnStatusChangedEvent`);
         if (a === 'starting' && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }
