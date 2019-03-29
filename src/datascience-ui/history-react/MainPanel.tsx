@@ -24,6 +24,7 @@ import { createCellVM, createEditableCellVM, extractInputText, generateTestState
 //import { MenuBar } from './menuBar';
 import { VariableExplorer } from './variableExplorer';
 
+import { ContentPanel, IContentPanelProps } from './contentPanel';
 import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 
 export interface IMainPanelProps {
@@ -93,16 +94,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         //const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         const headerProps = this.getHeaderProps(baseTheme);
+        const contentProps = this.getContentProps(baseTheme);
 
         return (
             <div className='main-panel' ref={this.updateSelf}>
                 <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 <HeaderPanel {...headerProps} />
-                <div className='cell-table'>
-                    <div className='cell-table-body'>
-                        {this.renderCells()}
-                    </div>
-                </div>
+                <ContentPanel {...contentProps} />
                 <div ref={this.updateBottom}/>
             </div>
         );
@@ -257,7 +255,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         //return null;
     //}
 
+    private getContentProps = (baseTheme: string): IContentPanelProps => {
+        return {
+            baseTheme: baseTheme,
+            cellVMs: this.state.cellVMs,
+            history: this.state.history,
+            testMode: this.props.testMode,
+            codeTheme: this.props.codeTheme,
+            submittedText: this.state.submittedText,
+            saveEditCellRef: this.saveEditCellRef,
+            gotoCellCode: this.gotoCellCode,
+            deleteCell: this.deleteCell,
+            submitInput: this.submitInput
+        };
+    }
+
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
+        // IANHU: Pass functions here or pass booleans?
        return {
         collapseAll: this.collapseAll,
         expandAll: this.expandAll,
@@ -327,33 +341,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.ReturnAllCells, cells);
     }
 
-    private renderCells = () => {
-        const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-        const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
-            <ErrorBoundary key={index}>
-                <Cell
-                    history={cellVM.editable ? this.state.history : undefined}
-                    maxTextSize={maxTextSize}
-                    autoFocus={document.hasFocus()}
-                    testMode={this.props.testMode}
-                    cellVM={cellVM}
-                    submitNewCode={this.submitInput}
-                    baseTheme={baseTheme}
-                    codeTheme={this.props.codeTheme}
-                    showWatermark={!this.state.submittedText}
-                    errorBackgroundColor={actualErrorBackgroundColor}
-                    ref={(r) => cellVM.editable ? this.saveEditCellRef(r) : noop()}
-                    gotoCode={() => this.gotoCellCode(index)}
-                    delete={() => this.deleteCell(index)}/>
-            </ErrorBoundary>
-        );
-    }
-
-    private saveEditCellRef(ref: Cell | null) {
+    private saveEditCellRef = (ref: Cell | null) => {
         this.editCellRef = ref;
     }
 
