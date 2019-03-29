@@ -278,13 +278,13 @@ export interface IJupyterVariables {
     getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
 }
 
-export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
-export interface IDataExplorerProvider {
-    create(variable: string) : Promise<IDataExplorer>;
+export const IDataViewerProvider = Symbol('IDataViewerProvider');
+export interface IDataViewerProvider {
+    create(variable: string) : Promise<IDataViewer>;
     getPandasVersion() : Promise<{major: number; minor: number; build: number} | undefined>;
 }
-export const IDataExplorer = Symbol('IDataExplorer');
+export const IDataViewer = Symbol('IDataViewer');
 
-export interface IDataExplorer extends IAsyncDisposable {
+export interface IDataViewer extends IAsyncDisposable {
     show(variable: IJupyterVariable) : Promise<void>;
 }

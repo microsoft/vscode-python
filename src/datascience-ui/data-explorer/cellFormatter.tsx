@@ -5,7 +5,7 @@ import './cellFormatter.css';
 
 import { JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
-import { DataExplorerRowStates } from '../../client/datascience/data-viewing/types';
+import { DataViewerRowStates } from '../../client/datascience/data-viewing/types';
 import { getLocString } from '../react-common/locReactSide';
 
 interface ICellFormatterProps {
@@ -23,7 +23,7 @@ export class CellFormatter extends React.Component<ICellFormatterProps> {
 
     public render() {
         // If this is our special not set value, render a 'loading ...' value.
-        if (this.props.row === DataExplorerRowStates.Skipped || this.props.row === DataExplorerRowStates.Fetching) {
+        if (this.props.row === DataViewerRowStates.Skipped || this.props.row === DataViewerRowStates.Fetching) {
             return (<span>{this.loadingMessage}</span>);
         }
 

@@ -17,7 +17,7 @@ export const EmptyRowsView = (props: IEmptyRowsProps) => {
     const style: React.CSSProperties = {
         width: percentText
     };
-    const message = getLocString('DataScience.noRowsInDataExplorer', 'Fetching data ...');
+    const message = getLocString('DataScience.noRowsInDataViewer', 'Fetching data ...');
 
     return (
         <div className='progress-container'>

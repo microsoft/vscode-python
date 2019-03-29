@@ -10,12 +10,12 @@ export const RowFetchSizeFirst = 100;
 export const RowFetchSizeSubsequent = 1000;
 export const MaxStringCompare = 200;
 
-export namespace DataExplorerRowStates {
+export namespace DataViewerRowStates {
     export const Fetching = 'fetching';
     export const Skipped = 'skipped';
 }
 
-export namespace DataExplorerMessages {
+export namespace DataViewerMessages {
     export const Started = 'started';
     export const UpdateSettings = 'update_settings';
     export const InitializeData = 'init';
@@ -37,12 +37,12 @@ export interface IGetRowsResponse {
 }
 
 // Map all messages to specific payloads
-export class IDataExplorerMapping {
-    public [DataExplorerMessages.Started]: never | undefined;
-    public [DataExplorerMessages.UpdateSettings]: string;
-    public [DataExplorerMessages.InitializeData]: IJupyterVariable;
-    public [DataExplorerMessages.GetAllRowsRequest]: never | undefined;
-    public [DataExplorerMessages.GetAllRowsResponse]: JSONObject;
-    public [DataExplorerMessages.GetRowsRequest]: IGetRowsRequest;
-    public [DataExplorerMessages.GetRowsResponse]: IGetRowsResponse;
+export class IDataViewerMapping {
+    public [DataViewerMessages.Started]: never | undefined;
+    public [DataViewerMessages.UpdateSettings]: string;
+    public [DataViewerMessages.InitializeData]: IJupyterVariable;
+    public [DataViewerMessages.GetAllRowsRequest]: never | undefined;
+    public [DataViewerMessages.GetAllRowsResponse]: JSONObject;
+    public [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
+    public [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
 }

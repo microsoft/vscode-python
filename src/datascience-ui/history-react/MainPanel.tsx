@@ -230,7 +230,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderDataFrameTestButton() {
         if (getSettings && getSettings().showJupyterVariableExplorer) {
             return (
-                <CellButton baseTheme={'vscode-light'} onClick={this.showDataExplorer} tooltip={'Show data explorer for \'df\' variable'}>
+                <CellButton baseTheme={'vscode-light'} onClick={this.showDataViewer} tooltip={'Show data explorer for \'df\' variable'}>
                     D
                 </CellButton>
             );
@@ -271,8 +271,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataExplorer = () => {
-        this.sendMessage(HistoryMessages.ShowDataExplorer, 'df');
+    private showDataViewer = () => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, 'df');
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {

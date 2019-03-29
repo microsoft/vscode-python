@@ -29,7 +29,7 @@ export namespace HistoryMessages {
     export const AddedSysInfo = 'added_sys_info';
     export const RemoteAddCode = 'remote_add_code';
     export const Activate = 'activate';
-    export const ShowDataExplorer = 'show_data_explorer';
+    export const ShowDataViewer = 'show_data_explorer';
     export const GetVariablesRequest = 'get_variables_request';
     export const GetVariablesResponse = 'get_variables_response';
     export const GetVariableValueRequest = 'get_variable_value_request';
@@ -95,7 +95,7 @@ export class IHistoryMapping {
     public [HistoryMessages.AddedSysInfo]: IAddedSysInfo;
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
     public [HistoryMessages.Activate] : never | undefined;
-    public [HistoryMessages.ShowDataExplorer]: string;
+    public [HistoryMessages.ShowDataViewer]: string;
     public [HistoryMessages.GetVariablesRequest]: never | undefined;
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariable[];
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;

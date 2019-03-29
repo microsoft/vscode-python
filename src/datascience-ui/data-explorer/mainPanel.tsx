@@ -8,9 +8,9 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Data, Toolbar } from 'react-data-grid-addons';
 
 import {
-    DataExplorerMessages,
-    DataExplorerRowStates,
-    IDataExplorerMapping,
+    DataViewerMessages,
+    DataViewerRowStates,
+    IDataViewerMapping,
     IGetRowsResponse,
     MaxStringCompare,
     RowFetchAllLimit,
@@ -54,10 +54,10 @@ interface IMainPanelState {
     sortColumn: string | number;
 }
 
-class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> { }
+class DataViewerPostOffice extends PostOffice<IDataViewerMapping> { }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
-    private postOffice: DataExplorerPostOffice | undefined;
+    private postOffice: DataViewerPostOffice | undefined;
     private container: HTMLDivElement | null = null;
     private emptyRows: (() => JSX.Element) | undefined;
     private getEmptyRows: ((props: any) => JSX.Element) | undefined;
@@ -116,7 +116,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (
             <div className='background'>
                 <div className='main-panel' ref={this.updateContainer}>
-                    <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                    <DataViewerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                     {this.container && this.renderGrid()}
                 </div>
             </div>
@@ -126,15 +126,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case DataExplorerMessages.InitializeData:
+            case DataViewerMessages.InitializeData:
                 this.initializeData(payload);
                 break;
 
-            case DataExplorerMessages.GetAllRowsResponse:
+            case DataViewerMessages.GetAllRowsResponse:
                 this.handleGetAllRowsResponse(payload as JSONObject);
                 break;
 
-            case DataExplorerMessages.GetRowsResponse:
+            case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
@@ -197,7 +197,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getAllRows() {
-        this.sendMessage(DataExplorerMessages.GetAllRowsRequest);
+        this.sendMessage(DataViewerMessages.GetAllRowsRequest);
     }
 
     private getRowsInChunks(startIndex: number, endIndex: number) {
@@ -205,7 +205,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         let chunkEnd = startIndex + Math.min(RowFetchSizeFirst, endIndex);
         let chunkStart = startIndex;
         while (chunkStart < endIndex) {
-            this.sendMessage(DataExplorerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
             chunkStart = chunkEnd;
             chunkEnd = Math.min(chunkEnd + RowFetchSizeSubsequent, endIndex);
         }
@@ -258,7 +258,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private padRows(initialRows: any[], wantedCount: number) : any[] {
         if (wantedCount > initialRows.length) {
-            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataExplorerRowStates.Fetching);
+            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataViewerRowStates.Fetching);
             return [...initialRows, ...fetching];
         }
         return initialRows;
@@ -315,14 +315,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (this.state.fetchedRowCount === this.state.actualRowCount);
     }
 
-    private updatePostOffice = (postOffice: DataExplorerPostOffice) => {
+    private updatePostOffice = (postOffice: DataViewerPostOffice) => {
         if (this.postOffice !== postOffice) {
             this.postOffice = postOffice;
-            this.sendMessage(DataExplorerMessages.Started);
+            this.sendMessage(DataViewerMessages.Started);
         }
     }
 
-    private sendMessage<M extends IDataExplorerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         if (this.postOffice) {
             this.postOffice.sendMessage(type, payload);
         }
