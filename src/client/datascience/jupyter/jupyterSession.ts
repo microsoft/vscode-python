@@ -22,6 +22,7 @@ import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -83,6 +84,11 @@ export class JupyterSession implements IJupyterSession {
                 (Date.now() - startTime < 10000)) {
                 traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
                 await sleep(10);
+            }
+
+            // If we didn't make it out in ten seconds, indicate an error
+            if (!this.session || !this.session.kernel || this.session.kernel.status !== 'idle') {
+                throw new JupyterWaitForIdleError('Kernel never connected');
             }
         }
     }
