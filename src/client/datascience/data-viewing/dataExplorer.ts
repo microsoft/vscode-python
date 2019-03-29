@@ -7,8 +7,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
-import { IWebPanel, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebPanel, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IAsyncDisposable, IConfigurationService, IDisposable, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -36,7 +37,8 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IJupyterVariables) private variableManager: IJupyterVariables,
-        @inject(ILogger) private logger: ILogger
+        @inject(ILogger) private logger: ILogger,
+        @inject(IApplicationShell) private applicationShell: IApplicationShell
         ) {
         this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
 
@@ -162,16 +164,26 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     }
 
     private async getAllRows() {
-        if (this.variable && this.variable.rowCount) {
-            const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
-            return this.postMessage(DataExplorerMessages.GetAllRowsResponse, allRows);
+        try {
+            if (this.variable && this.variable.rowCount) {
+                const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
+                return this.postMessage(DataExplorerMessages.GetAllRowsResponse, allRows);
+            }
+        } catch (e) {
+            traceError(e);
+            this.applicationShell.showErrorMessage(e);
         }
     }
 
     private async getRowChunk(request: IGetRowsRequest) {
-        if (this.variable && this.variable.rowCount) {
-            const rows = await this.variableManager.getDataFrameRows(this.variable, request.start, Math.min(request.end, this.variable.rowCount));
-            return this.postMessage(DataExplorerMessages.GetRowsResponse, { rows, start: request.start, end: request.end});
+        try {
+            if (this.variable && this.variable.rowCount) {
+                const rows = await this.variableManager.getDataFrameRows(this.variable, request.start, Math.min(request.end, this.variable.rowCount));
+                return this.postMessage(DataExplorerMessages.GetRowsResponse, { rows, start: request.start, end: request.end });
+            }
+        } catch (e) {
+            traceError(e);
+            this.applicationShell.showErrorMessage(e);
         }
     }
 

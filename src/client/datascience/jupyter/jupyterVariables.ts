@@ -14,7 +14,6 @@ import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers } from '../constants';
 import { ICell, IHistoryProvider, IJupyterExecution, IJupyterVariable, IJupyterVariables } from '../types';
-import { replace } from 'event-stream';
 
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
@@ -124,7 +123,6 @@ export class JupyterVariables implements IJupyterVariables {
 
             return match;
         });
-
 
         // Execute this on the jupyter server.
         const results = await activeServer.execute(scriptText, Identifiers.EmptyFileName, 0, uuid(), undefined, true);

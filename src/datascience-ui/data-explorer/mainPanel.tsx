@@ -268,9 +268,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (variable.columns) {
             return variable.columns.map((c: {key: string; type: string}, i: number) => {
                 return {
-                    ...c,
+                    type: c.type,
+                    key: c.key.toString(),
                     index: i,
-                    name: c.key,
+                    name: c.key.toString(),
                     ...defaultColumnProperties,
                     formatter: CellFormatter,
                     getRowMetaData: this.getRowMetaData.bind(this)

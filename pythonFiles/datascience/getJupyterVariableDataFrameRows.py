@@ -17,6 +17,14 @@ _VSCODE_endRow = min(_VSCode_JupyterEndRow, _VSCODE_targetVariable['rowCount'])
 _VSCODE_df = _VSCODE_evalResult
 if (_VSCODE_targetVariable['type'] == 'list'):
     _VSCODE_df = _VSCODE_pd.DataFrame({'_VSCode_JupyterValuesColumn':_VSCODE_evalResult})
+elif (_VSCODE_targetVariable['type'] == 'Series'):
+    _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
+elif _VSCODE_targetVariable['type'] == 'dict':
+    _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
+    _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
+elif _VSCODE_targetVariable['type'] == 'ndarray':
+    _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
+    _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
 # If not a known type, then just let pandas handle it.
 elif not (hasattr(_VSCODE_df, 'iloc')):
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
@@ -24,6 +32,7 @@ elif not (hasattr(_VSCODE_df, 'iloc')):
 # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
 _VSCODE_rows = _VSCODE_df.iloc[_VSCODE_startRow:_VSCODE_endRow]
 _VSCODE_result = _VSCODE_pd_json.to_json(None, _VSCODE_rows, orient='table', date_format='iso')
+print(_VSCODE_result)
 
 # Cleanup our variables
 del _VSCODE_df
