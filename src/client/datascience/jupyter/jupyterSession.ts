@@ -16,11 +16,11 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
+import { isTestExecution } from '../../common/constants';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
-import { isTestExecution } from '../../common/constants';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
