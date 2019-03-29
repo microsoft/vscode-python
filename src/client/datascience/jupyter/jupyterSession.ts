@@ -21,6 +21,7 @@ import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { traceInfo } from '../../common/logger';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -71,15 +72,14 @@ export class JupyterSession implements IJupyterSession {
         if (this.session && this.session.kernel) {
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
-            // in the past, waiting on the ready promise doesn't work either. Check status and isReady
-            // together, with a maximum of 5 seconds
+            // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
             const startTime = Date.now();
             while (this.session &&
                 this.session.kernel &&
-                !this.session.kernel.isReady &&
                 this.session.kernel.status !== 'idle' &&
                 (Date.now() - startTime > 5000)) {
                 await sleep(10);
+                traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
             }
         }
     }
