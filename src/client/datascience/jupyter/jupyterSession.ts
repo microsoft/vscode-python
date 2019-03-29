@@ -182,6 +182,7 @@ export class JupyterSession implements IJupyterSession {
         this.kernelSpec = undefined;
     }
 
+    //tslint:disable:cyclomatic-complexity
     private async shutdownSessionAndConnection(): Promise<void> {
         if (this.contentsManager) {
             this.contentsManager.dispose();
@@ -233,7 +234,9 @@ export class JupyterSession implements IJupyterSession {
             this.session = undefined;
             this.sessionManager = undefined;
         }
-        this.onRestartedEvent.dispose();
+        if (this.onRestartedEvent) {
+            this.onRestartedEvent.dispose();
+        }
         if (this.connInfo) {
             this.connInfo.dispose(); // This should kill the process that's running
             this.connInfo = undefined;
