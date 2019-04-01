@@ -4,6 +4,7 @@
 import './headerPanel.css';
 
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
@@ -35,6 +36,7 @@ export interface IHeaderPanelProps {
     clearAll(): void;
     showDataExplorer(): void;
     refreshVariables(): void;
+    onHeightChange(newHeight: number): void;
 }
 
 interface IHeaderPanelState {
@@ -78,9 +80,18 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanel
                     {this.renderDataFrameTestButton()}
                 </MenuBar>
                 {progressBar}
-                <VariableExplorer baseTheme={this.props.baseTheme} refreshVariables={this.props.refreshVariables} ref={this.props.variableExplorerRef} />
+                <VariableExplorer baseTheme={this.props.baseTheme} refreshVariables={this.props.refreshVariables} onHeightChange={this.onVariableHeightChange} ref={this.props.variableExplorerRef} />
             </div>
         );
+    }
+
+    private onVariableHeightChange = (newHeight: number) => {
+        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
+
+        if (divElement) {
+            const computeHeight = divElement.offsetHeight;
+            this.props.onHeightChange(computeHeight);
+        }
     }
 
     private renderExtraButtons = () => {

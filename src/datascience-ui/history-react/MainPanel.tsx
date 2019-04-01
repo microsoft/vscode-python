@@ -47,7 +47,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory()};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 0};
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -193,9 +193,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
+    // Called by the header control when size changes (such as expanding variables)
+    private onHeaderHeightChange = (newHeight: number) => {
+        this.setState({contentTop: newHeight});
+    }
+
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
+            contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
             testMode: this.props.testMode,
@@ -230,6 +236,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         canUndo: this.canUndo(),
         canRedo: this.canRedo(),
         refreshVariables: this.refreshVariables,
+        onHeightChange: this.onHeaderHeightChange,
         baseTheme: baseTheme
        };
     }

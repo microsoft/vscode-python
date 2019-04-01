@@ -17,7 +17,6 @@ body, html {
     height: 100%;
     overflow: auto;
     box-sizing: border-box;
-    border-top: 24px solid transparent;
 }
 
 #cell-table {

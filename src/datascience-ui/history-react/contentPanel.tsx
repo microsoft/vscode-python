@@ -12,6 +12,7 @@ import { InputHistory } from './inputHistory';
 
 export interface IContentPanelProps {
     baseTheme: string;
+    contentTop: number;
     cellVMs: ICellViewModel[];
     history: InputHistory;
     testMode?: boolean;
@@ -32,8 +33,14 @@ export class ContentPanel extends React.Component<IContentPanelProps, IContentPa
     }
 
     public render() {
+        const newContentTop = `${this.props.contentTop.toString()}px solid transparent`;
+
+        const newBorderStyle: React.CSSProperties = {
+            borderTop: newContentTop
+        };
+
         return(
-            <div id='content-panel-div'>
+            <div id='content-panel-div' style={newBorderStyle}>
                 <div id='cell-table'>
                     <div id='cell-table-body'>
                         {this.renderCells()}
