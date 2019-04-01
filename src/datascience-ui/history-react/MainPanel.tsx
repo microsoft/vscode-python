@@ -29,8 +29,6 @@ export interface IMainPanelProps {
 
 class HistoryPostOffice extends PostOffice<IHistoryMapping> {}
 
-//const ThemeContext = React.createContext();
-
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
     private bottom: HTMLDivElement | undefined;

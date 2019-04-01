@@ -24,10 +24,7 @@ export interface IContentPanelProps {
     submitInput(code: string): void;
 }
 
-interface IContentPanelState {
-}
-
-export class ContentPanel extends React.Component<IContentPanelProps, IContentPanelState> {
+export class ContentPanel extends React.Component<IContentPanelProps> {
     constructor(prop: IContentPanelProps) {
         super(prop);
     }

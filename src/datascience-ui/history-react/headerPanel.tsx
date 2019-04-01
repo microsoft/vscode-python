@@ -39,10 +39,7 @@ export interface IHeaderPanelProps {
     onHeightChange(newHeight: number): void;
 }
 
-interface IHeaderPanelState {
-}
-
-export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanelState> {
+export class HeaderPanel extends React.Component<IHeaderPanelProps> {
     constructor(prop: IHeaderPanelProps) {
         super(prop);
     }
@@ -51,7 +48,7 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanel
         const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
             <div id='header-panel-div'>
-                <MenuBar baseTheme={this.props.baseTheme} stylePosition='clean'>
+                <MenuBar baseTheme={this.props.baseTheme}>
                     {this.renderExtraButtons()}
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={!this.props.canCollapseAll} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.CollapseAll}/>
