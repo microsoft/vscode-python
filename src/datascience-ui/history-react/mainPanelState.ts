@@ -35,7 +35,7 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         redoStack : [],
         submittedText: false,
         history: new InputHistory(),
-        contentTop: 0
+        contentTop: 24
     };
 }
 
