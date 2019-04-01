@@ -80,7 +80,7 @@ export class MockJupyterSession implements IJupyterSession {
             return this.dict[withoutLines] as ICell;
         }
         // tslint:disable-next-line:no-console
-        console.log(`Cell ${code.splitLines()[0]} not found in mock`);
-        throw new Error(`Cell ${code.splitLines()[0]} not found in mock`);
+        console.log(`Cell ${code.splitLines()[1]} not found in mock`);
+        throw new Error(`Cell ${code.splitLines()[1]} not found in mock`);
     }
 }

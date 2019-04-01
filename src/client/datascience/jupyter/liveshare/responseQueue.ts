@@ -14,7 +14,7 @@ export class ResponseQueue {
     private responseQueue : IServerResponse [] = [];
     private waitingQueue : { deferred: Deferred<IServerResponse>; predicate(r: IServerResponse) : boolean }[] = [];
 
-    public waitForObservable(code: string, file: string, line: number, id: string) : Observable<ICell[]> {
+    public waitForObservable(code: string, file: string, line: number, id: string, translator: (cells: ICell[]) => ICell[]) : Observable<ICell[]> {
         // Create a wrapper observable around the actual server
         return new Observable<ICell[]>(subscriber => {
             // Wait for the observable responses to come in
@@ -39,26 +39,29 @@ export class ResponseQueue {
         this.responseQueue = [];
     }
 
-    private async waitForResponses(subscriber: Subscriber<ICell[]>, code: string, file: string, line: number, id: string) : Promise<void> {
+    private async waitForResponses(subscriber: Subscriber<ICell[]>, code: string, id: string, translator: (cells: ICell[]) => ICell[]) : Promise<void> {
         let pos = 0;
-        let foundId = id;
         let cells: ICell[] | undefined = [];
         while (cells !== undefined) {
             // Find all matches in order
             const response = await this.waitForSpecificResponse<IExecuteObservableResponse>(r => {
                 return (r.pos === pos) &&
-                    (foundId === r.id || !foundId) &&
-                    (code === r.code) &&
-                    (!r.cells || (r.cells && r.cells[0].file === file && r.cells[0].line === line));
+                    (id === r.id) &&
+                    (code === r.code);
             });
             if (response.cells) {
-                subscriber.next(response.cells);
+                subscriber.next(translator(response.cells));
                 pos += 1;
-                foundId = response.id;
             }
             cells = response.cells;
         }
         subscriber.complete();
+
+        // Clear responses after we respond to the subscriber.
+        this.responseQueue = this.responseQueue.filter(r => {
+            const er = r as IExecuteObservableResponse;
+            return er.id !== id;
+        });
     }
 
     private waitForSpecificResponse<T extends IServerResponse>(predicate: (response: T) => boolean) : Promise<T> {
@@ -67,10 +70,6 @@ export class ResponseQueue {
         if (index >= 0) {
             // Pull off the match
             const match = this.responseQueue[index];
-
-            // Remove from the response queue every response before this one as we're not going
-            // to be asking for them anymore. (they should be old requests)
-            this.responseQueue = this.responseQueue.length > index + 1 ? this.responseQueue.slice(index + 1) : [];
 
             // Return this single item
             return Promise.resolve(match as T);

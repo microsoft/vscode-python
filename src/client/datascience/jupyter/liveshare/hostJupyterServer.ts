@@ -127,7 +127,7 @@ export class HostJupyterServer
         try {
             // See if this has already been asked for not
             if (this.requestLog.has(id)) {
-                // Create a dummy observable out of the responses as they come in.
+                // Create a dummy observable out of the responses as they come in
                 return this.responseQueue.waitForObservable(code, file, line, id);
             } else {
                 // Otherwise save this request
@@ -227,9 +227,9 @@ export class HostJupyterServer
             const obj = args as IExecuteInfo;
             if (!this.requestLog.has(obj.id)) {
                 try {
-                    // Convert the file name
+                    // Convert the file name if necessary
                     const uri = vscode.Uri.parse(`vsls:${obj.file}`);
-                    const file = this.finishedApi ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
+                    const file = this.finishedApi && obj.file !== Identifiers.EmptyFileName ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
 
                     // Just call the execute. Locally we won't listen, but if an actual call comes in for the same
                     // request, it will use the saved responses.

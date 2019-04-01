@@ -7,6 +7,7 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposable } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { LiveShare } from '../constants';
 
 // tslint:disable:no-any
@@ -19,7 +20,7 @@ interface IMessageArgs {
 export class PostOffice implements IAsyncDisposable {
 
     private name: string;
-    private started: Promise<vsls.LiveShare | null>;
+    private startedPromise: Deferred<vsls.LiveShare | null> | undefined;
     private hostServer: vsls.SharedService | null = null;
     private guestServer: vsls.SharedServiceProxy | null = null;
     private currentRole: vsls.Role = vsls.Role.None;
@@ -32,7 +33,6 @@ export class PostOffice implements IAsyncDisposable {
         private liveShareApi: ILiveShareApi,
         private hostArgsTranslator?: (api: vsls.LiveShare | null, command: string, role: vsls.Role, args: any[]) => void) {
         this.name = name;
-        this.started = this.startCommandServer();
 
         // Note to self, could the callbacks be keeping things alive that we don't want to be alive?
     }
@@ -53,7 +53,7 @@ export class PostOffice implements IAsyncDisposable {
         this.peerCountChangedEmitter.fire();
         this.peerCountChangedEmitter.dispose();
         if (this.hostServer) {
-            const s = await this.started;
+            const s = await this.getApi();
             if (s !== null) {
                 await s.unshareService(this.name);
             }
@@ -64,7 +64,7 @@ export class PostOffice implements IAsyncDisposable {
 
     public async postCommand(command: string, ...args: any[]): Promise<void> {
         // Make sure startup finished
-        const api = await this.started;
+        const api = await this.getApi();
         let skipDefault = false;
 
         if (api && api.session) {
@@ -94,7 +94,7 @@ export class PostOffice implements IAsyncDisposable {
     }
 
     public async registerCallback(command: string, callback: (...args: any[]) => void, thisArg?: any): Promise<void> {
-        const api = await this.started;
+        const api = await this.getApi();
 
         // For a guest, make sure to register the notification
         if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer) {
@@ -169,6 +169,18 @@ export class PostOffice implements IAsyncDisposable {
         }
 
         return callback;
+    }
+
+    private getApi() : Promise<vsls.LiveShare | null> {
+
+        if (!this.startedPromise) {
+            this.startedPromise = createDeferred<vsls.LiveShare | null>();
+            this.startCommandServer()
+                .then(v => this.startedPromise!.resolve(v))
+                .catch(e => this.startedPromise!.reject(e));
+        }
+
+        return this.startedPromise.promise;
     }
 
     private async startCommandServer(): Promise<vsls.LiveShare | null> {

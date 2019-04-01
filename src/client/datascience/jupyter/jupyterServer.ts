@@ -21,7 +21,7 @@ import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
-import { concatMultilineString, stripComments } from '../common';
+import { concatMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import {
     CellState,
@@ -563,7 +563,7 @@ export class JupyterServerBase implements INotebookServer {
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), silent);
+                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent);
 
                 // tslint:disable-next-line:no-require-imports
                 const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
