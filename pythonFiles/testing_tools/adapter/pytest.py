@@ -214,9 +214,8 @@ def _parse_item(item, _normcase, _pathsep):
      ) = _parse_node_id(item.nodeid, kind)
     if kind == 'function':
         funcname = basename
-        if funcid and item.function.__name__ != funcname:
-            # TODO: What to do?
-            raise NotImplementedError
+        # Note: funcname does not necessarily match item.function.__name__.
+        # This can result from importing a test function from another module.
         if suites:
             testfunc = '.'.join(suites) + '.' + funcname
         else:

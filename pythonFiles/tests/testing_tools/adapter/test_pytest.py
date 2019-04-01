@@ -776,6 +776,14 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
+            StubPytestItem(
+                stub,
+                nodeid=relfile + '::test_ham',
+                name='test_ham',
+                location=(srcfile, 3, 'test_ham'),
+                fspath=os.path.join(testroot, relfile),
+                function=FakeFunc('test_spam'),
+                ),
             ]
         collector = TestCollector(tests=discovered)
 
@@ -798,6 +806,22 @@ class CollectorTests(unittest.TestCase):
                     source='{}:{}'.format(srcfile, 13),
                     markers=None,
                     parentid=relfile + '::SpamTests',
+                    ),
+                )),
+            ('discovered.add_test', None, dict(
+                suiteids=[],
+                test=TestInfo(
+                    id=relfile + '::test_ham',
+                    name='test_ham',
+                    path=TestPath(
+                        root=testroot,
+                        relfile=relfile,
+                        func='test_ham',
+                        sub=None,
+                        ),
+                    source='{}:{}'.format(srcfile, 4),
+                    markers=None,
+                    parentid=relfile,
                     ),
                 )),
             ])
