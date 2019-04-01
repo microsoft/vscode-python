@@ -12,6 +12,7 @@ import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, Product } from '../common/types';
 import { Linters } from '../common/utils/localize';
+import { PYLINT_CONFIG } from './constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
 @injectable()
@@ -100,7 +101,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
             return false;
         }
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource)! : this.workspaceService.workspaceFolders![0];
-        const filePath = path.join(workspaceFolder.uri.fsPath, '.pylintrc');
+        const filePath = path.join(workspaceFolder.uri.fsPath, PYLINT_CONFIG);
         return this.fs.fileExists(filePath)
             .catch((reason) => {
                 // report and continue, assume the linter is unavailable.
