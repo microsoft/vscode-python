@@ -82,32 +82,38 @@ export function parseForComments(
     foundCommentLine: (s: string, i: number) => void,
     foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
-    let insideMultilineComment = false;
-    let insideMultilineQuote = false;
+    let insideMultilineComment: string | undefined ;
+    let insideMultilineQuote: string | undefined;
     let pos = 0;
     for (const l of lines) {
         const trim = l.trim();
         // Multiline is triple quotes of either kind
-        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) || trim.startsWith(DoubleQuoteMultiline);
-        const isMultilineQuote = trim.includes(SingleQuoteMultiline) || trim.includes(DoubleQuoteMultiline);
+        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) ?
+            SingleQuoteMultiline : trim.startsWith(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+        const isMultilineQuote = trim.includes(SingleQuoteMultiline) ?
+            SingleQuoteMultiline : trim.includes(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
 
         // Check for ending quotes of multiline string
         if (insideMultilineQuote) {
-            insideMultilineQuote = !isMultilineQuote;
+            if (insideMultilineQuote === isMultilineQuote) {
+                insideMultilineQuote = undefined;
+            }
             foundNonCommentLine(l, pos);
         // Not inside quote, see if inside a comment
         } else if (insideMultilineComment) {
-            insideMultilineComment = !isMultilineComment;
+            if (insideMultilineComment === isMultilineComment) {
+                insideMultilineComment = undefined;
+            }
             if (insideMultilineComment) {
                 foundCommentLine(l, pos);
             }
         // Not inside either, see if starting a quote
         } else if (isMultilineQuote && !isMultilineComment) {
-            insideMultilineQuote = true;
+            insideMultilineQuote = isMultilineQuote;
             foundNonCommentLine(l, pos);
         // Not starting a quote, might be starting a comment
         } else if (isMultilineComment) {
-            insideMultilineComment = true;
+            insideMultilineComment = isMultilineComment;
 
             // Might end with text too
             if (trim.length > 3) {

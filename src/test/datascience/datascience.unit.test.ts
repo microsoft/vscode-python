@@ -97,15 +97,15 @@ suite('Data Science Tests', () => {
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\"\"\"', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
@@ -170,7 +170,20 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
         assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
-        });
 
+// tslint:disable-next-line: no-multiline-string
+const multilineQuoteWithOtherDelimiter = `#%% [markdown]
+'''
+### Take a look
+  2. Item 2
+""" Not a comment delimiter
+'''
+`;
+        cells = generateCells(undefined, multilineQuoteWithOtherDelimiter, 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'markdown cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
+        assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
+        });
 
 });
