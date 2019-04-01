@@ -1,6 +1,6 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: 2.7, >=3.4), including features such as linting, debugging, IntelliSense, code navigation, code formatting, refactoring, unit tests, snippets, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: 2.7, >=3.5), including features such as linting, debugging, IntelliSense, code navigation, code formatting, refactoring, unit tests, snippets, and more!
 
 ## Quick start
 
@@ -76,6 +76,12 @@ contributors (if you would like to contribute a translation, see the
   + Use either [yapf](https://pypi.org/project/yapf/), [autopep8](https://pypi.org/project/autopep8/), or [Black](https://pypi.org/project/black/) for code formatting (defaults to autopep8)
 * Linting
   + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Prospector](https://pypi.org/project/prospector/), [Flake8](https://pypi.org/project/flake8/), [pylama](https://pypi.org/project/pylama/), [pydocstyle](https://pypi.org/project/pydocstyle/), and [mypy](https://pypi.org/project/mypy/) are also supported)
+* Python Interactive (Jupyter support)
+    + Bring the power of Jupyter Notebooks into VS Code
+    + Import / export Jupyter Notebooks
+    + Connect to local / remote Jupyter servers for code execution
+    + Visualize data frames and plots
+    + Integrated IPython console - Python Interactive window
 * Debugging
   + Watch window
   + Evaluate expressions
@@ -105,6 +111,8 @@ contributors (if you would like to contribute a translation, see the
   + Sort imports
 
 ![General Features](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/general.gif)
+
+![Python Interactive (Jupyter support)](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/interactive.gif)
 
 ![Debugging](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/debugDemo.gif)
 

@@ -23,7 +23,7 @@ import {
     IUnitTestSettings,
     IWorkspaceSymbolSettings
 } from './types';
-import { debounce } from './utils/decorators';
+import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable:no-require-imports no-var-requires
@@ -409,7 +409,7 @@ export class PythonSettings implements IPythonSettings {
             this.update(initialConfig);
         }
     }
-    @debounce(1)
+    @debounceSync(1)
     protected debounceChangeNotification() {
         this.changed.fire();
     }

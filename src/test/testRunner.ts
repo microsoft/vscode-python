@@ -10,6 +10,7 @@ import * as glob from 'glob';
 import * as istanbul from 'istanbul';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import * as process from 'process';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
 import { IS_SMOKE_TEST } from './constants';
@@ -104,8 +105,13 @@ export function run(testsRoot: string, callback: TestCallback): void {
      */
     function initializationScript() {
         const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
-        const failed = new Promise((_, reject) => setTimeout(() => reject(ex), 120_000));
-        return Promise.race([initialize(), failed]);
+        let timer: NodeJS.Timer | undefined;
+        const failed = new Promise((_, reject) => {
+            timer = setTimeout(() => reject(ex), 120_000);
+        });
+        const promise = Promise.race([initialize(), failed]);
+        promise.then(() => timer!.unref()).catch(() => timer!.unref());
+        return promise;
     }
     // Run the tests.
     glob(

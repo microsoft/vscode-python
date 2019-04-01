@@ -3,12 +3,14 @@
 'use strict';
 import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
+import { DataExplorer } from './data-viewing/dataExplorer';
+import { DataExplorerProvider } from './data-viewing/dataExplorerProvider';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
-import { History } from './history';
-import { HistoryCommandListener } from './historycommandlistener';
-import { HistoryProvider } from './historyProvider';
+import { History } from './history/history';
+import { HistoryCommandListener } from './history/historycommandlistener';
+import { HistoryProvider } from './history/historyProvider';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
@@ -21,6 +23,8 @@ import { ThemeFinder } from './themeFinder';
 import {
     ICodeCssGenerator,
     ICodeWatcher,
+    IDataExplorer,
+    IDataExplorerProvider,
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
@@ -54,4 +58,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
+    serviceManager.addSingleton<IDataExplorerProvider>(IDataExplorerProvider, DataExplorerProvider);
+    serviceManager.add<IDataExplorer>(IDataExplorer, DataExplorer);
 }

@@ -68,7 +68,7 @@ suite('Source Map Support', () => {
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true);
         const instance = new class extends SourceMapSupport {
-            protected async enableSourceMaps(enable: boolean) {
+            protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
         }(stub.vscode as any);
@@ -80,7 +80,7 @@ suite('Source Map Support', () => {
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true, true);
         const instance = new class extends SourceMapSupport {
-            protected async enableSourceMaps(enable: boolean) {
+            protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
         }(stub.vscode as any);

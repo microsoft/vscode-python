@@ -122,6 +122,7 @@ export interface INotebookExporter extends Disposable {
 
 export const IHistoryProvider = Symbol('IHistoryProvider');
 export interface IHistoryProvider {
+    onExecutedCode: Event<string>;
     getActive() : IHistory | undefined;
     getOrCreateActive(): Promise<IHistory>;
     getNotebookOptions() : Promise<INotebookServerOptions>;
@@ -131,6 +132,7 @@ export const IHistory = Symbol('IHistory');
 export interface IHistory extends Disposable {
     closed: Event<IHistory>;
     ready: Promise<void>;
+    onExecutedCode: Event<string>;
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
@@ -177,6 +179,7 @@ export interface ICodeWatcher {
     runFromLine(targetLine: number): Promise<void>;
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
+    runFileInteractive(): Promise<void>;
 }
 
 export enum CellState {
@@ -263,10 +266,25 @@ export interface IJupyterVariable {
     count: number;
     truncated: boolean;
     expensive: boolean;
+    columns?: { key: string; type: string }[];
+    rowCount?: number;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
+    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
+}
+
+export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
+export interface IDataExplorerProvider {
+    create(variable: string) : Promise<IDataExplorer>;
+    getPandasVersion() : Promise<{major: number; minor: number; build: number} | undefined>;
+}
+export const IDataExplorer = Symbol('IDataExplorer');
+
+export interface IDataExplorer extends IAsyncDisposable {
+    show(variable: IJupyterVariable) : Promise<void>;
 }

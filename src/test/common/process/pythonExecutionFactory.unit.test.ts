@@ -20,7 +20,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -42,10 +42,10 @@ function title(resource?: Uri, interpreter?: PythonInterpreter) {
     return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
 }
 
-async function verifyCreateActivated(factory: PythonExecutionFactory, activationHelper: IEnvironmentActivationService, resource?: Uri, interpreter?: PythonInterpreter) : Promise<IPythonExecutionService> {
+async function verifyCreateActivated(factory: PythonExecutionFactory, activationHelper: IEnvironmentActivationService, resource?: Uri, interpreter?: PythonInterpreter): Promise<IPythonExecutionService> {
     when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve();
 
-    const service = await factory.createActivatedEnvironment({resource, interpreter});
+    const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
     verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
 
@@ -53,83 +53,90 @@ async function verifyCreateActivated(factory: PythonExecutionFactory, activation
 }
 
 suite('Process - PythonExecutionFactory', () => {
-    [undefined, Uri.parse('x')].forEach(resource => {
-        [undefined, pythonInterpreter].forEach(interpreter => {
-            suite(title(resource, interpreter), () => {
-                let factory: PythonExecutionFactory;
-                let activationHelper: IEnvironmentActivationService;
-                let bufferDecoder: IBufferDecoder;
-                let procecssFactory: IProcessServiceFactory;
-                let configService: IConfigurationService;
+    [
+        { resource: undefined, interpreter: undefined },
+        { resource: undefined, interpreter: pythonInterpreter },
+        { resource: Uri.parse('x'), interpreter: undefined },
+        { resource: Uri.parse('x'), interpreter: pythonInterpreter }
+    ].forEach(item => {
+        const resource = item.resource;
+        const interpreter = item.interpreter;
+        suite(title(resource, interpreter), () => {
+            let factory: PythonExecutionFactory;
+            let activationHelper: IEnvironmentActivationService;
+            let bufferDecoder: IBufferDecoder;
+            let procecssFactory: IProcessServiceFactory;
+            let configService: IConfigurationService;
 
-                setup(() => {
-                    bufferDecoder = mock(BufferDecoder);
-                    activationHelper = mock(EnvironmentActivationService);
-                    procecssFactory = mock(ProcessServiceFactory);
-                    configService = mock(ConfigurationService);
-                    factory = new PythonExecutionFactory(instance(mock(ServiceContainer)),
-                        instance(activationHelper), instance(procecssFactory),
-                        instance(configService), instance(bufferDecoder));
-                });
+            setup(() => {
+                bufferDecoder = mock(BufferDecoder);
+                activationHelper = mock(EnvironmentActivationService);
+                procecssFactory = mock(ProcessServiceFactory);
+                configService = mock(ConfigurationService);
+                const serviceContainer = mock(ServiceContainer);
+                when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
+                factory = new PythonExecutionFactory(instance(serviceContainer),
+                    instance(activationHelper), instance(procecssFactory),
+                    instance(configService), instance(bufferDecoder));
+            });
 
-                test('Ensure PythonExecutionService is created', async () => {
-                    const pythonSettings = mock(PythonSettings);
-                    when(procecssFactory.create(resource)).thenResolve(instance(mock(ProcessService)));
-                    when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
-                    when(pythonSettings.pythonPath).thenReturn('HELLO');
-                    when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+            test('Ensure PythonExecutionService is created', async () => {
+                const pythonSettings = mock(PythonSettings);
+                when(procecssFactory.create(resource)).thenResolve(instance(mock(ProcessService)));
+                when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
+                when(pythonSettings.pythonPath).thenReturn('HELLO');
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
 
-                    const service = await factory.create({ resource });
+                const service = await factory.create({ resource });
 
-                    verify(procecssFactory.create(resource)).once();
+                verify(procecssFactory.create(resource)).once();
+                verify(pythonSettings.pythonPath).once();
+                expect(service).instanceOf(PythonExecutionService);
+            });
+            test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
+                let createInvoked = false;
+                const mockExecService = 'something';
+                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                    createInvoked = true;
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                };
+
+                const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
+                assert.deepEqual(service, mockExecService);
+                assert.equal(createInvoked, true);
+            });
+            test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
+                let createInvoked = false;
+                const mockExecService = 'something';
+                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                    createInvoked = true;
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                };
+
+                const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
+                assert.deepEqual(service, mockExecService);
+                assert.equal(createInvoked, true);
+            });
+            test('PythonExecutionService is created', async () => {
+                let createInvoked = false;
+                const mockExecService = 'something';
+                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
+                    createInvoked = true;
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                };
+
+                const pythonSettings = mock(PythonSettings);
+                when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
+                when(pythonSettings.pythonPath).thenReturn('HELLO');
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+                const service = await factory.createActivatedEnvironment({ resource, interpreter });
+
+                verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
+                if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
-                    expect(service).instanceOf(PythonExecutionService);
-                });
-                test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
-                    let createInvoked = false;
-                    const mockExecService = 'something';
-                    factory.create = async (_options: ExecutionFactoryCreationOptions) => {
-                        createInvoked = true;
-                        return Promise.resolve(mockExecService as any as IPythonExecutionService);
-                    };
-
-                    const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
-                    assert.deepEqual(service, mockExecService);
-                    assert.equal(createInvoked, true);
-                });
-                test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
-                    let createInvoked = false;
-                    const mockExecService = 'something';
-                    factory.create = async (_options: ExecutionFactoryCreationOptions) => {
-                        createInvoked = true;
-                        return Promise.resolve(mockExecService as any as IPythonExecutionService);
-                    };
-
-                    const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
-                    assert.deepEqual(service, mockExecService);
-                    assert.equal(createInvoked, true);
-                });
-                test('PythonExecutionService is created', async () => {
-                    let createInvoked = false;
-                    const mockExecService = 'something';
-                    factory.create = async (_options: ExecutionFactoryCreationOptions) => {
-                        createInvoked = true;
-                        return Promise.resolve(mockExecService as any as IPythonExecutionService);
-                    };
-
-                    const pythonSettings = mock(PythonSettings);
-                    when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
-                    when(pythonSettings.pythonPath).thenReturn('HELLO');
-                    when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                    const service = await factory.createActivatedEnvironment({resource, interpreter});
-
-                    verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
-                    if (!interpreter) {
-                        verify(pythonSettings.pythonPath).once();
-                    }
-                    expect(service).instanceOf(PythonExecutionService);
-                    assert.equal(createInvoked, false);
-                });
+                }
+                expect(service).instanceOf(PythonExecutionService);
+                assert.equal(createInvoked, false);
             });
         });
     });

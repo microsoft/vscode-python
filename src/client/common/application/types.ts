@@ -37,6 +37,8 @@ import {
     TextEditorOptionsChangeEvent,
     TextEditorSelectionChangeEvent,
     TextEditorViewColumnChangeEvent,
+    TreeView,
+    TreeViewOptions,
     Uri,
     ViewColumn,
     WorkspaceConfiguration,
@@ -48,6 +50,7 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
+import { ICommandNameArgumentTypeMapping } from './commands';
 
 // tslint:disable:no-any unified-signatures
 
@@ -330,6 +333,14 @@ export interface IApplicationShell {
      * @return The thenable the task-callback returned.
      */
     withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R>;
+
+    /**
+     * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
+     * @param viewId Id of the view contributed using the extension point `views`.
+     * @param options Options for creating the [TreeView](#TreeView)
+     * @returns a [TreeView](#TreeView).
+     */
+    createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -348,7 +359,7 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable;
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, callback: (...args: U) => any, thisArg?: any): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -380,7 +391,7 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined>;
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are
@@ -819,6 +830,10 @@ export interface IWebPanelMessageListener extends IAsyncDisposable {
      * @return A IWebPanel that can be used to show html pages.
      */
     onMessage(message: string, payload: any): void;
+    /**
+     * Listens to web panel state changes
+     */
+    onChangeViewState(panel: IWebPanel): void;
 }
 
 export type WebPanelMessage = {
@@ -840,7 +855,7 @@ export interface IWebPanel {
      * Makes the webpanel show up.
      * @return A Promise that can be waited on
      */
-    show(): Promise<void>;
+    show(preserveFocus: boolean): Promise<void>;
 
     /**
      * Indicates if this web panel is visible or not.
@@ -856,6 +871,10 @@ export interface IWebPanel {
      * Attempts to close the panel if it's visible
      */
     close(): void;
+    /**
+     * Indicates if the webview has the focus or not.
+     */
+    isActive(): boolean;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -868,7 +887,7 @@ export interface IWebPanelProvider {
      * @param: mainScriptPath: full path in the output folder to the script
      * @return A IWebPanel that can be used to show html pages.
      */
-    create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
 }
 
 // Wraps the vsls liveshare API
@@ -883,4 +902,5 @@ export interface ILiveShareTestingApi extends ILiveShareApi {
     isSessionStarted: boolean;
     forceRole(role: vsls.Role): void;
     startSession(): Promise<void>;
+    stopSession(): Promise<void>;
 }

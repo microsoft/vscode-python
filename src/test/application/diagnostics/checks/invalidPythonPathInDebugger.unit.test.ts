@@ -23,6 +23,7 @@ import {
     IDiagnosticHandlerService,
     IInvalidPythonPathInDebuggerService
 } from '../../../../client/application/diagnostics/types';
+import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { PythonPathSource } from '../../../../client/debugger/extension/types';
@@ -77,6 +78,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             helper.object,
             docMgr.object,
             configService.object,
+            [],
             messageHandler.object
         );
         (diagnosticService as any)._clear();
@@ -124,7 +126,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup(f =>
                 f.createCommand(
                     typemoq.It.isAny(),
-                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })
+                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({ type: 'executeVSCCommand' })
                 )
             )
             .returns(() => interpreterSelectionCommand.object)
@@ -152,7 +154,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup(f =>
                 f.createCommand(
                     typemoq.It.isAny(),
-                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })
+                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({ type: 'executeVSCCommand' })
                 )
             )
             .returns(() => interpreterSelectionCommand.object)
@@ -183,7 +185,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             .setup(f =>
                 f.createCommand(
                     typemoq.It.isAny(),
-                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })
+                    typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({ type: 'executeVSCCommand' })
                 )
             )
             .returns(() => interpreterSelectionCommand.object)

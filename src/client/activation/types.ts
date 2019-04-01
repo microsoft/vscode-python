@@ -76,7 +76,7 @@ export enum LanguageClientFactory {
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
-    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions): Promise<LanguageClient>;
+    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient>;
 }
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
@@ -105,18 +105,6 @@ export interface ILanguageServer extends IDisposable {
      * @memberof ILanguageServer
      */
     loadExtension(args?: {}): void;
-}
-export type InterpreterData = {
-    readonly dataVersion: number;
-    readonly path: string;
-    readonly version: string;
-    readonly searchPaths: string;
-    readonly hash: string;
-};
-
-export const IInterpreterDataService = Symbol('InterpreterDataService');
-export interface IInterpreterDataService {
-    getInterpreterData(resource: Resource): Promise<InterpreterData | undefined>;
 }
 
 export enum PlatformName {

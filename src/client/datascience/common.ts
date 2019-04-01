@@ -5,6 +5,8 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 
 import { noop } from '../../test/core';
 
+const SingleQuoteMultiline = '\'\'\'';
+const DoubleQuoteMultiline = '\"\"\"';
 export function concatMultilineString(str: nbformat.MultilineString): string {
     if (Array.isArray(str)) {
         let result = '';
@@ -80,27 +82,49 @@ export function parseForComments(
     foundCommentLine: (s: string, i: number) => void,
     foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
-    let insideMultiline = false;
+    let insideMultilineComment: string | undefined ;
+    let insideMultilineQuote: string | undefined;
     let pos = 0;
     for (const l of lines) {
         const trim = l.trim();
         // Multiline is triple quotes of either kind
-        const isMultiline = trim === '\'\'\'' || trim === '\"\"\"';
-        if (insideMultiline) {
-            if (!isMultiline) {
+        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) ?
+            SingleQuoteMultiline : trim.startsWith(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+        const isMultilineQuote = trim.includes(SingleQuoteMultiline) ?
+            SingleQuoteMultiline : trim.includes(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+
+        // Check for ending quotes of multiline string
+        if (insideMultilineQuote) {
+            if (insideMultilineQuote === isMultilineQuote) {
+                insideMultilineQuote = undefined;
+            }
+            foundNonCommentLine(l, pos);
+        // Not inside quote, see if inside a comment
+        } else if (insideMultilineComment) {
+            if (insideMultilineComment === isMultilineComment) {
+                insideMultilineComment = undefined;
+            }
+            if (insideMultilineComment) {
                 foundCommentLine(l, pos);
-            } else {
-                insideMultiline = false;
+            }
+        // Not inside either, see if starting a quote
+        } else if (isMultilineQuote && !isMultilineComment) {
+            insideMultilineQuote = isMultilineQuote;
+            foundNonCommentLine(l, pos);
+        // Not starting a quote, might be starting a comment
+        } else if (isMultilineComment) {
+            insideMultilineComment = isMultilineComment;
+
+            // Might end with text too
+            if (trim.length > 3) {
+                foundCommentLine(trim.slice(3), pos);
             }
         } else {
-            if (!isMultiline) {
-                if (trim.startsWith('#')) {
-                    foundCommentLine(trim.slice(1), pos);
-                } else {
-                    foundNonCommentLine(l, pos);
-                }
+            // Normal line
+            if (trim.startsWith('#')) {
+                foundCommentLine(trim.slice(1), pos);
             } else {
-                insideMultiline = true;
+                foundNonCommentLine(l, pos);
             }
         }
         pos += 1;
@@ -109,12 +133,12 @@ export function parseForComments(
 
 function extractComments(lines: string[]): string[] {
     const result: string[] = [];
-    parseForComments(lines, (s) => result.push(s), (s) => noop());
+    parseForComments(lines, (s) => result.push(s), (_s) => noop());
     return result;
 }
 
 function extractNonComments(lines: string[]): string[] {
     const result: string[] = [];
-    parseForComments(lines, (s) => noop, (s) => result.push(s));
+    parseForComments(lines, (_s) => noop, (s) => result.push(s));
     return result;
 }

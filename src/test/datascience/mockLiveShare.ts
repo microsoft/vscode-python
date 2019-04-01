@@ -20,7 +20,7 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     private notifyHandlers: Map<string, vsls.NotifyHandler> = new Map<string, vsls.NotifyHandler>();
     private defaultCancellationSource = new CancellationTokenSource();
 
-    constructor(name: string) {
+    constructor(_name: string) {
         noop();
     }
 
@@ -126,7 +126,10 @@ class Emitter<T> {
                         if (typeof item.listener === 'function') {
                             result = item.listener.call(undefined, item.event);
                         } else {
-                            result = item.listener[0].call(item.listener[1], item.event);
+                            const func = item.listener[0];
+                            if (func) {
+                                result = func.call(item.listener[1], item.event);
+                            }
                         }
                     }
                 } catch (e) {
@@ -195,7 +198,15 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         return Promise.resolve();
     }
 
-    public getContacts(emails: string[]): Promise<vsls.ContactsCollection> {
+    public async stop(): Promise<void> {
+        this._visibleRole = vsls.Role.None;
+
+        await this.changeSessionEmitter.fire({ session: this });
+
+        return Promise.resolve();
+    }
+
+    public getContacts(_emails: string[]): Promise<vsls.ContactsCollection> {
         throw new Error('Method not implemented.');
     }
 
@@ -229,10 +240,10 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
     public get onDidChangePeers(): Event<vsls.PeersChangeEvent> {
         return this.changePeersEmitter.event;
     }
-    public share(options?: vsls.ShareOptions): Promise<Uri> {
+    public share(_options?: vsls.ShareOptions): Promise<Uri> {
         throw new Error('Method not implemented.');
     }
-    public join(link: Uri, options?: vsls.JoinOptions): Promise<void> {
+    public join(_link: Uri, _options?: vsls.JoinOptions): Promise<void> {
         throw new Error('Method not implemented.');
     }
     public end(): Promise<void> {
@@ -294,16 +305,16 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
 
         return Uri.file(sharedUri.fsPath);
     }
-    public registerCommand(command: string, isEnabled?: () => boolean, thisArg?: any): Disposable {
+    public registerCommand(_command: string, _isEnabled?: () => boolean, _thisArg?: any): Disposable {
         throw new Error('Method not implemented.');
     }
-    public registerTreeDataProvider<T>(viewId: vsls.View, treeDataProvider: TreeDataProvider<T>): Disposable {
+    public registerTreeDataProvider<T>(_viewId: vsls.View, _treeDataProvider: TreeDataProvider<T>): Disposable {
         throw new Error('Method not implemented.');
     }
-    public registerContactServiceProvider(name: string, contactServiceProvider: vsls.ContactServiceProvider): Disposable {
+    public registerContactServiceProvider(_name: string, _contactServiceProvider: vsls.ContactServiceProvider): Disposable {
         throw new Error('Method not implemented.');
     }
-    public shareServer(server: vsls.Server): Promise<Disposable> {
+    public shareServer(_server: vsls.Server): Promise<Disposable> {
         // Ignore for now. We don't need to port forward during a test
         return Promise.resolve({ dispose: noop });
     }
@@ -332,6 +343,15 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
         if (this.currentApi) {
             await this.currentApi.start();
             this.sessionStarted = true;
+        } else {
+            throw Error('Cannot start session without a role.');
+        }
+    }
+
+    public async stopSession(): Promise<void> {
+        if (this.currentApi) {
+            await this.currentApi.stop();
+            this.sessionStarted = false;
         } else {
             throw Error('Cannot start session without a role.');
         }

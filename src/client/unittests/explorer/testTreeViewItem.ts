@@ -10,9 +10,13 @@ import { Commands } from '../../common/constants';
 import { getIcon } from '../../common/utils/icons';
 import { noop } from '../../common/utils/misc';
 import { Icons } from '../common/constants';
-import { getTestType } from '../common/testUtils';
-import { TestResult, TestStatus, TestType } from '../common/types';
+import { getTestType, isSubtestsParent } from '../common/testUtils';
+import { TestResult, TestStatus, TestSuite, TestType } from '../common/types';
 import { TestDataItem } from '../types';
+
+function getDefaultCollapsibleState(data: TestDataItem): TreeItemCollapsibleState {
+    return getTestType(data) === TestType.testFunction ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed;
+}
 
 /**
  * Class that represents a visual node on the
@@ -24,14 +28,12 @@ export class TestTreeItem extends TreeItem {
 
     constructor(
         public readonly resource: Uri,
-        public readonly data: Readonly<TestDataItem>
+        public readonly data: Readonly<TestDataItem>,
+        collapsibleStatue: TreeItemCollapsibleState = getDefaultCollapsibleState(data)
     ) {
-        super(data.name, TestTreeItem.getCollapsibleState(data));
+        super(data.name, collapsibleStatue);
         this.testType = getTestType(this.data);
         this.setCommand();
-    }
-    private static getCollapsibleState(data: TestDataItem): TreeItemCollapsibleState {
-        return getTestType(data) === TestType.testFunction ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed;
     }
     public get contextValue(): string {
         return this.testType;
@@ -72,16 +74,25 @@ export class TestTreeItem extends TreeItem {
             return '';
         }
         const result = this.data as TestResult;
+        if (!result.status || result.status === TestStatus.Idle || result.status === TestStatus.Unknown || result.status === TestStatus.Skipped) {
+            return '';
+        }
         if (this.testType !== TestType.testFunction) {
-            return `${result.functionsFailed} failed, ${result.functionsPassed} passed in ${result.time} seconds`;
+            if (result.functionsPassed === undefined) {
+                return '';
+            }
+            if (result.functionsDidNotRun) {
+                return `${result.functionsFailed} failed, ${result.functionsDidNotRun} not run and ${result.functionsPassed} passed in ${+result.time.toFixed(3)} seconds`;
+            }
+            return `${result.functionsFailed} failed, ${result.functionsPassed} passed in ${+result.time.toFixed(3)} seconds`;
         }
         switch (this.data.status) {
             case TestStatus.Error:
             case TestStatus.Fail: {
-                return `Failed in ${result.time} seconds`;
+                return `Failed in ${+result.time.toFixed(3)} seconds`;
             }
             case TestStatus.Pass: {
-                return `Passed in ${result.time} seconds`;
+                return `Passed in ${+result.time.toFixed(3)} seconds`;
             }
             case TestStatus.Discovering:
             case TestStatus.Running: {
@@ -111,6 +122,10 @@ export class TestTreeItem extends TreeItem {
                 break;
             }
             case TestType.testSuite: {
+                if (isSubtestsParent(this.data as TestSuite)) {
+                    this.command = { command: Commands.navigateToTestFunction, title: 'Open', arguments: [this.resource, this.data, false] };
+                    break;
+                }
                 this.command = { command: Commands.navigateToTestSuite, title: 'Open', arguments: [this.resource, this.data, false] };
                 break;
             }

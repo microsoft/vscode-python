@@ -39,6 +39,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper
     ) {
@@ -48,9 +49,16 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
             ],
             serviceContainer,
+            disposableRegistry,
             true
         );
         this.addPythonPathChangedHandler();
+    }
+    public dispose() {
+        if (this.timeOut) {
+            this.timeOut.unref();
+            this.timeOut = undefined;
+        }
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!this.platform.isMac) {
@@ -106,7 +114,9 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         );
         await Promise.all(
             diagnostics.map(async diagnostic => {
-                if (!this.canHandle(diagnostic)) {
+                const canHandle = await this.canHandle(diagnostic);
+                const shouldIgnore = await this.filterService.shouldIgnoreDiagnostic(diagnostic.code);
+                if (!canHandle || shouldIgnore) {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
@@ -151,6 +161,13 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                             type: 'executeVSCCommand',
                             options: 'python.setInterpreter'
                         })
+                    },
+                    {
+                        prompt: 'Do not show again',
+                        command: commandFactory.createCommand(diagnostic, {
+                            type: 'ignore',
+                            options: DiagnosticScope.Global
+                        })
                     }
                 ];
             }
@@ -168,6 +185,13 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'launch',
                             options: 'https://www.python.org/downloads'
+                        })
+                    },
+                    {
+                        prompt: 'Do not show again',
+                        command: commandFactory.createCommand(diagnostic, {
+                            type: 'ignore',
+                            options: DiagnosticScope.Global
                         })
                     }
                 ];

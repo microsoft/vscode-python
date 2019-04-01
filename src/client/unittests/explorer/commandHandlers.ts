@@ -18,11 +18,11 @@ import {
 import { ITestExplorerCommandHandler } from '../navigation/types';
 import { ITestDataItemResource, TestDataItem } from '../types';
 
-const testNavigationCommandMapping = {
+type NavigationCommands = typeof Commands.navigateToTestFile | typeof Commands.navigateToTestFunction | typeof Commands.navigateToTestSuite;
+const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
     [TestType.testFile]: Commands.navigateToTestFile,
     [TestType.testFunction]: Commands.navigateToTestFunction,
-    [TestType.testSuite]: Commands.navigateToTestSuite,
-    [TestType.testFolder]: undefined
+    [TestType.testSuite]: Commands.navigateToTestSuite
 };
 
 @injectable()
@@ -54,6 +54,9 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
     @traceDecorators.error('Open test node in editor failed')
     protected async onOpenTestNodeInEditor(item: TestDataItem): Promise<void> {
         const testType = getTestType(item);
+        if (testType === TestType.testFolder) {
+            throw new Error('Unknown Test Type');
+        }
         const command = testNavigationCommandMapping[testType];
         const testUri = this.testResource.getResource(item);
         if (!command) {
@@ -86,8 +89,7 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
                 throw new Error('Unknown Test Type');
         }
         const testUri = this.testResource.getResource(item);
-        const args = [undefined, CommandSource.testExplorer, testUri, testToRun];
         const cmd = runType === 'run' ? Commands.Tests_Run : Commands.Tests_Debug;
-        this.cmdManager.executeCommand(cmd, ...args);
+        this.cmdManager.executeCommand(cmd, undefined, CommandSource.testExplorer, testUri, testToRun);
     }
 }

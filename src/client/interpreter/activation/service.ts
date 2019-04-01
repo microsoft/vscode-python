@@ -84,7 +84,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // See the discussion from hidesoon in this issue: https://github.com/Microsoft/vscode-python/issues/4424
             // His issue is conda never finishing during activate. This is a conda issue, but we
             // should at least tell the user.
-            const result = await processService.shellExec(command, { env, shell, timeout: getEnvironmentTimeout });
+            const result = await processService.shellExec(command, { env, shell, timeout: getEnvironmentTimeout, maxBuffer: 1000 * 1000 });
             if (result.stderr && result.stderr.length > 0) {
                 throw new Error(`StdErr from ShellExec, ${result.stderr}`);
             }

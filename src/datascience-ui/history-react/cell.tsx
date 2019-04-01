@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-import '../../client/common/extensions';
-import './cell.css';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
@@ -11,12 +10,14 @@ import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
+import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
+import './cell.css';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
@@ -67,6 +68,12 @@ export class Cell extends React.Component<ICellProps> {
             return <SysInfo theme={this.props.baseTheme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
         } else {
             return this.renderNormalCell();
+        }
+    }
+
+    public giveFocus() {
+        if (this.code) {
+            this.code.giveFocus();
         }
     }
 
@@ -320,12 +327,12 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private convertToLinearRgb(color: number) : number {
-        let c = color / 255.0
+        let c = color / 255;
         if (c <= 0.03928) {
-            c = c/12.92;
+            c = c / 12.92;
         } else {
-            c = Math.pow((c+0.055)/1.055, 2.4);
-        } 
+            c = Math.pow((c + 0.055) / 1.055, 2.4);
+        }
         return c;
     }
 
@@ -343,7 +350,7 @@ export class Cell extends React.Component<ICellProps> {
             const g = this.convertToLinearRgb(parseInt(color.slice(2, 4), 16));
             const b = this.convertToLinearRgb(parseInt(color.slice(4, 6), 16));
 
-            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
 
             return (L > 0.179)
                 ? '#000000'
@@ -438,7 +445,7 @@ export class Cell extends React.Component<ICellProps> {
         return <div key={index}>{str}</div>;
     }
 
-    private onChangeLineCount = (lineCount: number) => {
+    private onChangeLineCount = (_lineCount: number) => {
         // Ignored for now. Might use this to update the . next to the code lines
     }
 }

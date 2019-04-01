@@ -18,8 +18,8 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable, ILogger } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
-import { HistoryCommandListener } from '../../client/datascience/historycommandlistener';
-import { HistoryProvider } from '../../client/datascience/historyProvider';
+import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
+import { HistoryProvider } from '../../client/datascience/history/historyProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
@@ -39,19 +39,19 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
     const result = TypeMoq.Mock.ofType<T>();
-    (result as any)['tag'] = tag;
+    (result as any).tag = tag;
     result.setup((x: any) => x.then).returns(() => undefined);
     return result;
 }
 
 class MockStatusProvider implements IStatusProvider {
-    public set(message: string, timeout?: number): Disposable {
+    public set(_message: string, _timeout?: number): Disposable {
         return {
             dispose: noop
         };
     }
 
-    public waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T> {
+    public waitWithStatus<T>(promise: () => Promise<T>, _message: string, _timeout?: number, _canceled?: () => void): Promise<T> {
         return promise();
     }
 
@@ -216,12 +216,12 @@ suite('History command listener', async () => {
     test('Import', async () => {
         createCommandListener(undefined);
         when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(Promise.resolve([Uri.file('foo')]));
-        await commandManager.executeCommand(Commands.ImportNotebook);
+        await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Import File', async () => {
         createCommandListener(undefined);
-        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'));
+        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Export File', async () => {
@@ -230,7 +230,7 @@ suite('History command listener', async () => {
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
 
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'));
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });
     test('Export File and output', async () => {
@@ -259,7 +259,7 @@ suite('History command listener', async () => {
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook);
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook, undefined, undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });
 

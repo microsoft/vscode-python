@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import * as React from 'react';
+
 import { WebPanelMessage } from '../../client/common/application/types';
-import { IHistoryMapping } from '../../client/datascience/historyTypes';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
@@ -28,7 +26,7 @@ interface IPostOfficeProps {
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
-export class PostOffice extends React.Component<IPostOfficeProps> {
+export class PostOffice<Mapping> extends React.Component<IPostOfficeProps> {
 
     private vscodeApi : IVsCodeApi | undefined;
     private registered: boolean = false;
@@ -37,7 +35,7 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
         super(props);
     }
 
-    public sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    public sendMessage<M extends Mapping, T extends keyof M>(type: T, payload?: M[T]) {
         const api = this.acquireApi();
         if (api) {
             api.postMessage({ type: type.toString(), payload });

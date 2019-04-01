@@ -77,7 +77,7 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
                     BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
                 }
             }
-        }(serviceContainer.object);
+        }(serviceContainer.object, []);
         (diagnosticService as any)._clear();
     });
 

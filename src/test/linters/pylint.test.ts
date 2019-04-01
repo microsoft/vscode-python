@@ -182,7 +182,7 @@ suite('Linting - Pylint', () => {
         let execInfo: ExecutionInfo | undefined;
         execService
             .setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((e: ExecutionInfo, b, c) => {
+            .callback((e: ExecutionInfo, _b, _c) => {
                 execInfo = e;
             })
             .returns(() => Promise.resolve({ stdout: '', stderr: '' }));

@@ -56,7 +56,7 @@ suite('Linting - Arguments', () => {
                     outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                     const fs = TypeMoq.Mock.ofType<IFileSystem>();
-                    fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, reject) => resolve(true)));
+                    fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, _reject) => resolve(true)));
                     fs.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
                     serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
 
@@ -150,7 +150,7 @@ suite('Linting - Arguments', () => {
                     document.setup(d => d.uri).returns(() => fileUri);
 
                     let invoked = false;
-                    (linter as any).run = (args: any[], doc: any, token: any) => {
+                    (linter as any).run = (args: any[], _doc: any, _token: any) => {
                         expect(args[args.length - 1]).to.equal(fileUri.fsPath);
                         invoked = true;
                         return Promise.resolve([]);

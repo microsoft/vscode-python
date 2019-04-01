@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 // tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
 import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
+
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
@@ -53,7 +53,7 @@ function isTelemetrySupported(): boolean {
         return false;
     }
 }
-let telemetryReporter: TelemetryReporter;
+let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
         return telemetryReporter;
@@ -71,6 +71,10 @@ function getTelemetryReporter() {
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
     return (telemetryReporter = new reporter(extensionId, extensionVersion, aiKey));
+}
+
+export function clearTelemetryReporter() {
+    telemetryReporter = undefined;
 }
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -106,6 +110,13 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         reporter.sendTelemetryEvent('ERROR', customProperties, measures);
     }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
+
+    // Enable this to debug telemetry. To be discussed whether or not we want this all of the time.
+    // try {
+    //     traceInfo(`Telemetry: ${eventName} : ${JSON.stringify(customProperties)}`);
+    // } catch {
+    //     noop();
+    // }
 }
 
 // tslint:disable-next-line:no-any function-name
@@ -116,7 +127,7 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
     failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
@@ -243,13 +254,12 @@ function getCallsite(frame: stackTrace.StackFrame) {
 }
 
 // Map all events to their properties
-interface IEventNamePropertyMapping {
+export interface IEventNamePropertyMapping {
     [EventName.COMPLETION]: never | undefined;
     [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
     [EventName.DEBUGGER]: DebuggerTelemetry;
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
-    [EventName.DEBUGGER_PERFORMANCE]: any;
     [EventName.DEFINITION]: never | undefined;
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
@@ -262,6 +272,8 @@ interface IEventNamePropertyMapping {
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
+    [EventName.KNOWN_IMPORT_FROM_FILE]: { import: string };
+    [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: string };
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;
@@ -296,6 +308,7 @@ interface IEventNamePropertyMapping {
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
+    [EventName.UNITTEST_DISABLE]: never | undefined;
     [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
     [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
@@ -316,6 +329,8 @@ interface IEventNamePropertyMapping {
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.PandasNotInstalled]: never | undefined;
+    [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
@@ -327,17 +342,19 @@ interface IEventNamePropertyMapping {
     [Telemetry.RunCellAndAllBelow]: never | undefined;
     [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
     [Telemetry.RunToLine]: never | undefined;
+    [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
+    [Telemetry.ShowDataExplorer]: {rows: number | undefined};
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus: boolean };
-    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus: boolean };
+    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
+    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
     [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
 }

@@ -49,7 +49,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: '', allowWatermark: true};
     }
 
-    public componentDidUpdate(prevProps: Readonly<ICodeProps>, prevState: Readonly<ICodeState>, snapshot?: {}) {
+    public componentDidUpdate(prevProps: Readonly<ICodeProps>, _prevState: Readonly<ICodeState>, _snapshot?: {}) {
         // Force our new value. the RCM control doesn't do this correctly
         if (this.codeMirror && this.props.readOnly && this.codeMirror.getValue() !== this.props.code) {
             this.codeMirror.setValue(this.props.code);
@@ -118,6 +118,13 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         const readOnly = this.props.testMode || this.props.readOnly;
         if (this.codeMirror && !readOnly) {
             ev.stopPropagation();
+            this.codeMirror.focus();
+        }
+    }
+
+    public giveFocus() {
+        const readOnly = this.props.testMode || this.props.readOnly;
+        if (this.codeMirror && !readOnly) {
             this.codeMirror.focus();
         }
     }
@@ -239,7 +246,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         const cursor = doc.getCursor();
         const lastLine = doc.lastLine();
         if (cursor.line === lastLine) {
-
             // Check for any text
             const line = doc.getLine(lastLine);
             if (line.length === 0) {
@@ -250,10 +256,12 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         }
 
         // Otherwise add a line and indent the appropriate amount
+        const cursorLine = doc.getLine(cursor.line);
+        const afterCursor = cursorLine.slice(cursor.ch).trim();
         const expectedIndents = this.expectedIndent(instance, cursor.line);
         const indentString = Array(expectedIndents + 1).join(' ');
-        doc.replaceRange(`\n${indentString}`, { line: cursor.line, ch: doc.getLine(cursor.line).length });
-        doc.setCursor({line: cursor.line + 1, ch: indentString.length});
+        doc.replaceRange(`\n${indentString}`, { line: cursor.line, ch: afterCursor.length === 0 ? doc.getLine(cursor.line).length : cursor.ch });
+        doc.setCursor({line: cursor.line + 1, ch: indentString.length });
 
         // Tell our listener we added a new line
         this.props.onChangeLineCount(doc.lineCount());
@@ -291,7 +299,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return CodeMirror.Pass;
     }
 
-    private onChange = (newValue: string, change: CodeMirror.EditorChange) => {
+    private onChange = (_newValue: string, _change: CodeMirror.EditorChange) => {
         this.setState({allowWatermark: false});
     }
 }

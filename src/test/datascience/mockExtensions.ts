@@ -11,7 +11,7 @@ import { IExtensions } from '../../client/common/types';
 @injectable()
 export class MockExtensions implements IExtensions {
     public all: Extension<any>[] = [];
-    public getExtension<T>(extensionId: string) : Extension<T> | undefined {
+    public getExtension<T>(_extensionId: string) : Extension<T> | undefined {
         return undefined;
     }
 }

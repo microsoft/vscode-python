@@ -1,7 +1,7 @@
 # Release candidate (Tuesday, XXX XX)
 
 - [ ] Ensure all new features are tracked via telemetry
-- [ ] Announce the code freeze
+- [ ] Announce the code freeze (not just to team but also to ptvsd and language server)
 - [ ] Create a branch against `master` for a pull request
 - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
 - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date
@@ -21,7 +21,7 @@
   - [ ] `package.json`
   - [ ] `package-lock.json`
 - [ ] Announce the code freeze is over
-- [ ] Update [Component Governance](https://vscode-python.visualstudio.com/VSCode-Python/)
+- [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/)
   - [ ] Provide details for any automatically detected npm dependencies
   - [ ] Manually add any repository dependencies
 - [ ] GDPR bookkeeping
@@ -63,6 +63,5 @@
 - [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 
 ## Clean up after _this_ release
-- [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22)
-- [ ] Go through [`needs more info` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc) and close any that have no activity for over a month
+- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc) and close any that have no activity for over a month
 - [ ] GDPR bookkeeping

@@ -539,13 +539,13 @@ export namespace vscMockExtHostedTypes {
         // 	return this._resourceEdits.map(({ from, to }) => (<[vscode.Uri, vscode.Uri]>[from, to]));
         // }
 
-        createFile(uri: vscode.Uri, options?: { overwrite?: boolean; ignoreIfExists?: boolean; }): void {
+        createFile(_uri: vscode.Uri, _options?: { overwrite?: boolean; ignoreIfExists?: boolean; }): void {
             throw new Error("Method not implemented.");
         }
-        deleteFile(uri: vscode.Uri, options?: { recursive?: boolean; ignoreIfNotExists?: boolean; }): void {
+        deleteFile(_uri: vscode.Uri, _options?: { recursive?: boolean; ignoreIfNotExists?: boolean; }): void {
             throw new Error("Method not implemented.");
         }
-        renameFile(oldUri: vscode.Uri, newUri: vscode.Uri, options?: { overwrite?: boolean; ignoreIfExists?: boolean; }): void {
+        renameFile(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options?: { overwrite?: boolean; ignoreIfExists?: boolean; }): void {
             throw new Error("Method not implemented.");
         }
 

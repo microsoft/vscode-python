@@ -97,7 +97,7 @@ import { ISortImportsEditingProvider } from './providers/types';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
-import { EditorLoadTelemetry } from './telemetry/types';
+import { EditorLoadTelemetry, IImportTracker } from './telemetry/types';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
@@ -161,6 +161,10 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
     dataScience.activate().ignoreErrors();
+
+    // Activate import tracking
+    const importTracker = serviceManager.get<IImportTracker>(IImportTracker);
+    importTracker.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
     const linterProvider = new LinterProvider(context, serviceManager);

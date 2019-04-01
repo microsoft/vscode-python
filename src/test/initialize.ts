@@ -57,13 +57,18 @@ export async function initializeTest(): Promise<any> {
 }
 export async function closeActiveWindows(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        vscode.commands.executeCommand('workbench.action.closeAllEditors')
-            // tslint:disable-next-line:no-unnecessary-callback-wrapper
-            .then(() => resolve(), reject);
         // Attempt to fix #1301.
         // Lets not waste too much time.
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             reject(new Error('Command \'workbench.action.closeAllEditors\' timed out'));
         }, 15000);
+        vscode.commands.executeCommand('workbench.action.closeAllEditors')
+            .then(() => {
+                timer.unref();
+                resolve();
+            }, ex => {
+                timer.unref();
+                reject(ex);
+            });
     });
 }

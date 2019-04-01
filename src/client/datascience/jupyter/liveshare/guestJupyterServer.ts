@@ -34,25 +34,26 @@ export class GuestJupyterServer
     constructor(
         liveShare: ILiveShareApi,
         private dataScience: IDataScience,
-        logger: ILogger,
+        _logger: ILogger,
         private disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
+        _asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager) {
+        _sessionManager: IJupyterSessionManager
+    ) {
         super(liveShare);
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
+    public async connect(launchInfo: INotebookServerLaunchInfo, _cancelToken?: CancellationToken): Promise<void> {
         this.launchInfo = launchInfo;
         this.connectPromise.resolve(launchInfo);
         return Promise.resolve();
     }
 
     public async shutdown(): Promise<void> {
-        // Send this across to the other side. Otherwise the host server will remain running.
+        // Send this across to the other side. Otherwise the host server will remain running (like during an export)
         const service = await this.waitForService();
         if (service) {
-            service.notify(LiveShareCommands.disposeServer, {});
+            await service.request(LiveShareCommands.disposeServer, []);
         }
     }
 
@@ -91,7 +92,7 @@ export class GuestJupyterServer
         return deferred.promise;
     }
 
-    public setInitialDirectory(directory: string): Promise<void> {
+    public setInitialDirectory(_directory: string): Promise<void> {
         // Ignore this command on this side
         return Promise.resolve();
     }
@@ -111,7 +112,7 @@ export class GuestJupyterServer
         return this.sendRequest(LiveShareCommands.restart, []);
     }
 
-    public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
+    public async interruptKernel(_timeoutMs: number): Promise<InterruptResult> {
         const settings = this.configService.getSettings();
         const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
@@ -137,7 +138,12 @@ export class GuestJupyterServer
         const launchInfo = await this.waitForConnect();
 
         // Use our base name plus our purpose. This means one unique server per purpose
-        return LiveShare.JupyterServerSharedService + (launchInfo ? launchInfo.purpose : '');
+        if (!launchInfo) {
+            return LiveShare.JupyterServerSharedService;
+        }
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Should there be some separator in the name?
+        return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
     public async getSysInfo() : Promise<ICell | undefined> {

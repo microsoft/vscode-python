@@ -8,6 +8,8 @@ import { IConfigurationService } from '../../common/types';
 import { UnitTests } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { CANCELLATION_REASON } from '../common/constants';
 import { ITestsHelper, Tests } from '../common/types';
 import { ITestResultDisplay } from '../types';
@@ -144,6 +146,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.discoverCounter = 0;
     }
 
+    @captureTelemetry(EventName.UNITTEST_DISABLE)
     // tslint:disable-next-line:no-any
     private async disableTests(): Promise<any> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -173,7 +176,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                     this.disableTests()
                         .catch(ex => console.error('Python Extension: disableTests', ex));
                 } else if (item === UnitTests.configureTests()) {
-                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure).then(noop);
+                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
                 }
             });
         }

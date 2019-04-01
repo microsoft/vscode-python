@@ -10,7 +10,7 @@ import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
-import { HistoryMessages } from '../../client/datascience/historyTypes';
+import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
@@ -201,7 +201,7 @@ async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Compon
     return renderPromise;
 }
 
-function enterKey(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
+function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
     // Simulate a key press
     simulateKey(textArea, key);
 }

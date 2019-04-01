@@ -6,7 +6,7 @@ import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Uri, ViewColumn } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import {
@@ -23,8 +23,8 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { Commands } from '../../client/datascience/constants';
-import { HistoryMessageListener } from '../../client/datascience/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/historyTypes';
+import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
+import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import {
     ICodeWatcher,
     IDataScienceCommandListener,
@@ -84,14 +84,14 @@ suite('LiveShare tests', () => {
     });
 
     teardown(async () => {
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                // tslint:disable-next-line:no-any
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
-                }
+        for (const disposable of disposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
             }
         }
         await hostContainer.dispose();
@@ -117,7 +117,8 @@ suite('LiveShare tests', () => {
         result.ioc.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns((listener: IWebPanelMessageListener, title: string, script: string, css: string) => {
+        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
             // Keep track of the current listener. It listens to messages through the vscode api
             result.webPanelListener = listener;
 
@@ -132,7 +133,7 @@ suite('LiveShare tests', () => {
                 throw new Error('postMessage callback not defined');
             }
         });
-        webPanel.setup(p => p.show());
+        webPanel.setup(p => p.show(true));
 
         // We need to mount the react control before we even create a history object. Otherwise the mount will miss rendering some parts
         mountReactControl(result);
@@ -144,15 +145,14 @@ suite('LiveShare tests', () => {
         // The history provider create needs to be rewritten to make the history window think the mounted web panel is
         // ready.
         const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<IHistory> => {
-            const createResult = await origFunc();
+        (historyProvider as any).create = async (): Promise<void> => {
+            await origFunc();
+            const history = historyProvider.getActive();
 
             // During testing the MainPanel sends the init message before our history is created.
             // Pretend like it's happening now
-            const listener = ((createResult as any)['messageListener']) as HistoryMessageListener;
+            const listener = ((history as any).messageListener) as HistoryMessageListener;
             listener.onMessage(HistoryMessages.Started, {});
-
-            return createResult;
         };
 
         return result;
@@ -169,7 +169,7 @@ suite('LiveShare tests', () => {
                     }
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (msg: any) => {
+                setState: (_msg: any) => {
 
                 },
                 // tslint:disable-next-line:no-any no-empty
@@ -194,7 +194,7 @@ suite('LiveShare tests', () => {
         container.wrapper = mounted;
 
         // We can remove the global api and event listener now.
-        delete (global as any)['acquireVsCodeApi'];
+        delete (global as any).acquireVsCodeApi;
         window.addEventListener = oldListener;
     }
 
@@ -259,6 +259,12 @@ suite('LiveShare tests', () => {
         return api.startSession();
     }
 
+    function stopSession(role: vsls.Role): Promise<void> {
+        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        const api = container.ioc!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        return api.stopSession();
+    }
+
     test('Host alone', async () => {
         // Should only need mock data in host
         addMockData(hostContainer.ioc!, 'a=1\na', 1);
@@ -288,6 +294,26 @@ suite('LiveShare tests', () => {
         // Verify it ended up on the guest too
         assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
         verifyHtmlOnCell(guestContainer.wrapper!, '<span>1</span>', CellPosition.Last);
+    });
+
+    test('Host Shutdown and Run', async () => {
+        // Should only need mock data in host
+        addMockData(hostContainer.ioc!, 'a=1\na', 1);
+
+        // Create the host history and then the guest history
+        await getOrCreateHistory(vsls.Role.Host);
+        await startSession(vsls.Role.Host);
+
+        // Send code through the host
+        let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Stop the session
+        await stopSession(vsls.Role.Host);
+
+        // Send code again. It should still work.
+        wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
 
     test('Host startup and guest restart', async () => {
@@ -352,12 +378,13 @@ suite('LiveShare tests', () => {
         let outputContents: string | undefined;
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         guestContainer.ioc!.serviceManager.rebindInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((f, c) => {
+        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_f, c) => {
             outputContents = c.toString();
             return Promise.resolve();
         });
         fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => true);
+        fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
         const listener = guestContainer.ioc!.get<IDataScienceCommandListener>(IDataScienceCommandListener);

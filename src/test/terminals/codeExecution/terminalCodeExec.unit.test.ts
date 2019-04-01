@@ -122,7 +122,7 @@ suite('Terminal - Code Execution', () => {
                 terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => terminalService.object);
             });
 
-            async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(isWindows: boolean): Promise<void> {
+            async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(_isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);

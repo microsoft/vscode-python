@@ -11,7 +11,7 @@ import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { CurrentProcess } from '../../common/process/currentProcess';
 import { BufferDecoder } from '../../common/process/decoder';
 import { IBufferDecoder, IProcessServiceFactory } from '../../common/process/types';
-import { ICurrentProcess, ISocketServer } from '../../common/types';
+import { ICurrentProcess, IDisposableRegistry, ISocketServer } from '../../common/types';
 import { ServiceContainer } from '../../ioc/container';
 import { ServiceManager } from '../../ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../../ioc/types';
@@ -33,6 +33,7 @@ export function initializeIoc(): IServiceContainer {
 
 function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
+    serviceManager.addSingletonInstance<IDisposableRegistry>(IDisposableRegistry, []);
     serviceManager.addSingleton<IDebugStreamProvider>(IDebugStreamProvider, DebugStreamProvider);
     serviceManager.addSingleton<IProtocolLogger>(IProtocolLogger, ProtocolLogger);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);

@@ -160,6 +160,11 @@ export type TestDataItem = TestWorkspaceFolder | TestFolder | TestFile | TestSui
 
 export class TestWorkspaceFolder {
     public status?: TestStatus;
+    public time?: number;
+    public functionsPassed?: number;
+    public functionsFailed?: number;
+    public functionsDidNotRun?: number;
+    public passed?: boolean;
     constructor(public readonly workspaceFolder: WorkspaceFolder) { }
     public get resource(): Uri {
         return this.workspaceFolder.uri;

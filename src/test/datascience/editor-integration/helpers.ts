@@ -29,21 +29,27 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
         const testRange = new Range(index, 0, index, line.length);
         textLine.setup(l => l.text).returns(() => line);
         textLine.setup(l => l.range).returns(() => testRange);
+        textLine.setup(l => l.isEmptyOrWhitespace).returns(() => line.trim().length === 0);
         return textLine;
     });
     document.setup(d => d.lineAt(TypeMoq.It.isAnyNumber())).returns((index: number) => textLines[index].object);
 
     // Get text is a bit trickier
     if (implementGetText) {
+        document.setup(d => d.getText()).returns(() => inputText);
         document.setup(d => d.getText(TypeMoq.It.isAny())).returns((r: Range) => {
             let results = '';
-            for (let line = r.start.line; line <= r.end.line; line += 1) {
-                const startIndex = line === r.start.line ? r.start.character : 0;
-                const endIndex = line === r.end.line ? r.end.character : inputLines[line].length - 1;
-                results += inputLines[line].slice(startIndex, endIndex + 1);
-                if (line !== r.end.line) {
-                    results += '\n';
+            if (r) {
+                for (let line = r.start.line; line <= r.end.line; line += 1) {
+                    const startIndex = line === r.start.line ? r.start.character : 0;
+                    const endIndex = line === r.end.line ? r.end.character : inputLines[line].length - 1;
+                    results += inputLines[line].slice(startIndex, endIndex + 1);
+                    if (line !== r.end.line) {
+                        results += '\n';
+                    }
                 }
+            } else {
+                results = inputText;
             }
             return results;
         });

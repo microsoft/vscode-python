@@ -149,11 +149,15 @@ suite('Jupyter notebook tests', () => {
                 assert.ok(false, `${index}: Unexpected error: ${error}`);
             }
             const data = cell.outputs[0].data;
-            assert.ok(data, `${index}: No data object on the cell`);
+            const text = cell.outputs[0].text;
+            assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
+            }
+            if (text) {
+                verifyValue(text);
             }
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -303,25 +307,25 @@ suite('Jupyter notebook tests', () => {
             public onDidChangeInterpreterInformation(_listener: (e: PythonInterpreter) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+            public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
                 return Promise.resolve([]);
             }
             public autoSetInterpreter(): Promise<void> {
                 throw new Error('Method not implemented');
             }
-            public getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+            public getActiveInterpreter(_resource?: Uri): Promise<PythonInterpreter | undefined> {
                 return Promise.resolve(undefined);
             }
-            public getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<PythonInterpreter> {
+            public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonInterpreter> {
                 throw new Error('Method not implemented');
             }
-            public refresh(resource: Uri): Promise<void> {
+            public refresh(_resource: Uri): Promise<void> {
                 throw new Error('Method not implemented');
             }
             public initialize(): void {
                 throw new Error('Method not implemented');
             }
-            public getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string> {
+            public getDisplayName(_interpreter: Partial<PythonInterpreter>): Promise<string> {
                 throw new Error('Method not implemented');
             }
             public shouldAutoSetInterpreter(): Promise<boolean> {
@@ -342,8 +346,8 @@ suite('Jupyter notebook tests', () => {
     runTest('Export/Import', async () => {
         // Get a bunch of test cells (use our test cells from the react controls)
         const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-        const testState = generateTestState(id => { return; }, testFolderPath);
-        const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
+        const testState = generateTestState(_id => { return; }, testFolderPath);
+        const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
@@ -423,7 +427,9 @@ suite('Jupyter notebook tests', () => {
 
     async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
-        const disp = setTimeout((s) => {
+        let canceled = false;
+        const disp = setTimeout((_s) => {
+            canceled = true;
             tokenSource.cancel();
         }, timeout, tokenSource.tag);
 
@@ -431,7 +437,8 @@ suite('Jupyter notebook tests', () => {
             // tslint:disable-next-line:no-string-literal
             (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
-            assert.ok(false, messageFormat.format(timeout.toString()));
+            // We might get here before the cancel finishes
+            assert.ok(!canceled, messageFormat.format(timeout.toString()));
         } catch (exc) {
             // This should happen. This means it was canceled.
             assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);
@@ -560,13 +567,13 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((t) => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
             return { result: '.', haveMore: haveMore };
         });
-        addInterruptableMockData(fourSecondSleep, async (cancelToken: CancellationToken) => {
+        addInterruptableMockData(fourSecondSleep, async (_cancelToken: CancellationToken) => {
             // This one sleeps for four seconds and then it's done.
             await sleep(4000);
             return { result: 'foo', haveMore: false };
@@ -575,7 +582,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((t) => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -679,7 +686,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.equal(d, 'hello', 'Multiline cell magic incorrect')
+                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
             },
             {
                 // Test shell command should work on PC / Mac / Linux
@@ -689,7 +696,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'world',
-                verifyValue: (d) => assert.equal(d, 'world', 'Cell command incorrect')
+                verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
             },
             {
                 // Plotly
@@ -705,7 +712,7 @@ plt.show()`,
                 result: `00000`,
                 mimeType: 'image/png',
                 cellType: 'code',
-                verifyValue: (d) => { return; }
+                verifyValue: (_d) => { return; }
             }
         ]
     );
@@ -773,10 +780,10 @@ plt.show()`,
         if (server) {
             // This is kinda fragile. It reliese on impl details to get to the session. Might
             // just expose it?
-            const innerServerFactory = (server as any)['serverFactory'] as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
+            const innerServerFactory = (server as any).serverFactory as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
             const innerServer = await innerServerFactory.get();
             assert.ok(innerServer, 'Cannot find the inner server');
-            return (innerServer as any)['session'] as MockJupyterSession;
+            return (innerServer as any).session as MockJupyterSession;
         }
     }
 
@@ -803,7 +810,7 @@ plt.show()`,
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
             class FailedKernelSpec extends JupyterExecutionFactory {
-                protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+                protected async getMatchingKernelSpec(_connection?: IConnection, _cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);
                 }
             }
@@ -819,32 +826,44 @@ plt.show()`,
     });
 
     runTest('Server cache working', async () => {
+        console.log('Staring server cache test');
         const s1 = await createNotebookServer(true, false, false, 'same');
+        console.log('Creating s2');
         const s2 = await createNotebookServer(true, false, false, 'same');
+        console.log('Testing s1 and s2, creating s3');
         assert.ok(s1 === s2, 'Two servers not the same when they should be');
         const s3 = await createNotebookServer(false, false, false, 'same');
+        console.log('Testing s1 and s3, creating s4');
         assert.ok(s1 !== s3, 'Different config should create different server');
         const s4 = await createNotebookServer(true, false, false, 'different');
+        console.log('Testing s1 and s4, creating s5');
         assert.ok(s1 !== s4, 'Different purpose should create different server');
         const s5 = await createNotebookServer(true, false, true, 'different');
         assert.ok(s4 === s5, 'Dark theme should be same server');
+        console.log('Disposing of all');
+        await s1!.dispose();
+        await s3!.dispose();
+        await s4!.dispose();
     });
 
     class DyingProcess implements ChildProcess {
-        public stdin: Writable = null;
-        public stdout: Readable = null;
-        public stderr: Readable = null;
-        public stdio: [Writable, Readable, Readable] = [null, null, null];
+        public stdin: Writable;
+        public stdout: Readable;
+        public stderr: Readable;
+        public stdio: [Writable, Readable, Readable];
         public killed: boolean = false;
         public pid: number = 1;
         public connected: boolean = true;
         constructor(private timeout: number) {
             noop();
+            this.stderr = this.stdout = new Readable();
+            this.stdin = new Writable();
+            this.stdio = [this.stdin, this.stdout, this.stderr];
         }
-        public kill(signal?: string): void {
+        public kill(_signal?: string): void {
             throw new Error('Method not implemented.');
         }
-        public send(message: any, sendHandle?: any, options?: any, callback?: any) : any {
+        public send(_message: any, _sendHandle?: any, _options?: any, _callback?: any): any {
             throw new Error('Method not implemented.');
         }
         public disconnect(): void {
@@ -856,49 +875,49 @@ plt.show()`,
         public ref(): void {
             throw new Error('Method not implemented.');
         }
-        public addListener(event: any, listener: any) : this {
+        public addListener(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public emit(event: any, message?: any, sendHandle?: any, ...rest: any[]) : any {
+        public emit(_event: any, _message?: any, _sendHandle?: any, ..._rest: any[]): any {
             throw new Error('Method not implemented.');
         }
-        public on(event: any, listener: any) : this {
+        public on(event: any, listener: any): this {
             if (event === 'exit') {
                 setTimeout(() => listener(2), this.timeout);
             }
             return this;
         }
-        public once(event: any, listener: any) : this {
+        public once(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependListener(event: any, listener: any) : this {
+        public prependListener(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public prependOnceListener(event: any, listener: any) : this {
+        public prependOnceListener(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
-        public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+        public removeListener(_event: string | symbol, _listener: (...args: any[]) => void): this {
             return this;
         }
-        public removeAllListeners(event?: string | symbol): this {
+        public removeAllListeners(_event?: string | symbol): this {
             throw new Error('Method not implemented.');
         }
-        public setMaxListeners(n: number): this {
+        public setMaxListeners(_n: number): this {
             throw new Error('Method not implemented.');
         }
         public getMaxListeners(): number {
             throw new Error('Method not implemented.');
         }
-        public listeners(event: string | symbol): Function[] {
+        public listeners(_event: string | symbol): Function[] {
             throw new Error('Method not implemented.');
         }
-        public rawListeners(event: string | symbol): Function[] {
+        public rawListeners(_event: string | symbol): Function[] {
             throw new Error('Method not implemented.');
         }
         public eventNames(): (string | symbol)[] {
             throw new Error('Method not implemented.');
         }
-        public listenerCount(type: string | symbol): number {
+        public listenerCount(_type: string | symbol): number {
             throw new Error('Method not implemented.');
         }
     }

@@ -154,6 +154,7 @@ export class JediProxy implements Disposable {
     private lastCmdIdProcessedForPidUsage?: number;
     private proposeNewLanguageServerPopup: IPythonExtensionBanner;
     private readonly disposables: Disposable[] = [];
+    private timer?: NodeJS.Timer;
 
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
@@ -183,6 +184,9 @@ export class JediProxy implements Disposable {
                 disposable.dispose();
             }
         }
+        if (this.timer) {
+            this.timer.unref();
+        }
         this.killProcess();
     }
 
@@ -192,7 +196,7 @@ export class JediProxy implements Disposable {
         return result;
     }
 
-    public async sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
+    public async sendCommand<T extends ICommandResult>(cmd: ICommand): Promise<T> {
         await this.initialized.promise;
         await this.languageServerStarted.promise;
         if (!this.proc) {
@@ -250,7 +254,10 @@ export class JediProxy implements Disposable {
         }
 
         await this.checkJediMemoryFootprintImpl();
-        setTimeout(() => this.checkJediMemoryFootprint(), 15 * 1000);
+        if (this.timer) {
+            this.timer.unref();
+        }
+        this.timer = setTimeout(() => this.checkJediMemoryFootprint(), 15 * 1000);
     }
     private async checkJediMemoryFootprintImpl(): Promise<void> {
         if (!this.proc || this.proc.killed) {
@@ -721,7 +728,7 @@ export class JediProxy implements Disposable {
 }
 
 // tslint:disable-next-line:no-unused-variable
-export interface ICommand<T extends ICommandResult> {
+export interface ICommand {
     telemetryEvent?: string;
     command: CommandType;
     source?: string;
@@ -730,7 +737,7 @@ export interface ICommand<T extends ICommandResult> {
     columnIndex: number;
 }
 
-interface IExecutionCommand<T extends ICommandResult> extends ICommand<T> {
+interface IExecutionCommand<T extends ICommandResult> extends ICommand {
     id: number;
     deferred?: Deferred<T>;
     token: CancellationToken;
@@ -835,7 +842,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         }
     }
 
-    public sendCommand(cmd: ICommand<R>, token?: CancellationToken): Promise<R | undefined> {
+    public sendCommand(cmd: ICommand, _token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
 
@@ -857,7 +864,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
             });
     }
 
-    public sendCommandNonCancellableCommand(cmd: ICommand<R>, token?: CancellationToken): Promise<R | undefined> {
+    public sendCommandNonCancellableCommand(cmd: ICommand, token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
         if (token) {

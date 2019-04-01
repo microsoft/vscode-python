@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from __future__ import absolute_import
 
 import argparse
@@ -6,10 +9,6 @@ import sys
 from . import pytest, report
 from .errors import UnsupportedToolError, UnsupportedCommandError
 
-
-# Set this to True to pretty-print the output.
-DEBUG=False
-#DEBUG=True
 
 TOOLS = {
     'pytest': {
@@ -20,6 +19,7 @@ TOOLS = {
 REPORTERS = {
     'discover': report.report_discovered,
     }
+
 
 
 def parse_args(
@@ -46,15 +46,27 @@ def parse_args(
                 add_subparser = TOOLS[toolname]['_add_subparser']
             except KeyError:
                 continue
-            add_subparser(cmdname, toolname, subsubs)
+            subsub = add_subparser(cmdname, toolname, subsubs)
+            if cmdname == 'discover':
+                subsub.add_argument('--simple', action='store_true')
+                subsub.add_argument('--no-hide-stdio', dest='hidestdio',
+                                    action='store_false')
+                subsub.add_argument('--pretty', action='store_true')
 
     # Parse the args!
-    args, toolargs = parser.parse_known_args(argv)
+    if '--' in argv:
+        seppos = argv.index('--')
+        toolargs = argv[seppos + 1:]
+        argv = argv[:seppos]
+    else:
+        toolargs = []
+    args = parser.parse_args(argv)
     ns = vars(args)
 
     cmd = ns.pop('cmd')
     if not cmd:
         parser.error('missing command')
+
     tool = ns.pop('tool')
     if not tool:
         parser.error('missing tool')
@@ -75,8 +87,10 @@ def main(toolname, cmdname, subargs, toolargs,
     except KeyError:
         raise UnsupportedCommandError(cmdname)
 
-    result = run(toolargs, **subargs)
-    report_result(result, debug=DEBUG)
+    parents, result = run(toolargs, **subargs)
+    report_result(result, parents,
+                  **subargs
+                  )
 
 
 if __name__ == '__main__':

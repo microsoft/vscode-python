@@ -34,7 +34,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             return;
         }
         const columnIndex = range.isEmpty ? position.character : range.end.character;
-        const cmd: proxy.ICommand<proxy.IDefinitionResult> = {
+        const cmd: proxy.ICommand = {
             command: proxy.CommandType.Definitions,
             fileName: filename,
             columnIndex: columnIndex,

@@ -24,7 +24,7 @@ export class TestSuiteCodeNavigator implements ITestCodeNavigator {
     @swallowExceptions('Navigate to test suite')
     @captureTelemetry(EventName.UNITTEST_NAVIGATE_TEST_SUITE, undefined, true)
     public async navigateTo(resource: Uri, suite: TestSuite, focus: boolean = true): Promise<void> {
-        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE_TEST_SUITE, undefined, { focus });
+        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE_TEST_SUITE, undefined, { focus_code: focus });
         if (this.cancellationToken) {
             this.cancellationToken.cancel();
         }

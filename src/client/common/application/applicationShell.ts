@@ -5,7 +5,7 @@
 // tslint:disable:no-var-requires no-any unified-signatures
 
 import { injectable } from 'inversify';
-import { CancellationToken, Disposable, env, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { CancellationToken, Disposable, env, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, TreeView, TreeViewOptions, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { IApplicationShell } from './types';
 
 @injectable()
@@ -75,4 +75,8 @@ export class ApplicationShell implements IApplicationShell {
     public createInputBox(): InputBox {
         return window.createInputBox();
     }
+    public createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T> {
+        return window.createTreeView<T>(viewId, options);
+    }
+
 }

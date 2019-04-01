@@ -7,7 +7,10 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import '../../../common/extensions';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
-import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
+import {
+    ITestsHelper, ITestsParser, ParserOptions, SubtestParent,
+    TestFile, TestFunction, Tests, TestSuite
+} from '../../common/types';
 
 @injectable()
 export class TestsParser implements ITestsParser {
@@ -105,7 +108,7 @@ export class TestsParser implements ITestsParser {
         const testFile = {
             resource: Uri.file(rootDirectory),
             functions: [], suites: [], name: fileName, fullPath: fullyQualifiedName,
-            nameToRun: fileName, xmlName: currentPackage, time: 0, errorsWhenDiscovering: lines.join('\n')
+            nameToRun: fileName, xmlName: currentPackage, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0, errorsWhenDiscovering: lines.join('\n')
         };
         testFiles.push(testFile);
         parentNodes.push({ indent: 0, item: testFile });
@@ -138,6 +141,7 @@ export class TestsParser implements ITestsParser {
         return packageName;
     }
 
+    // tslint:disable-next-line:max-func-body-length
     private parsePyTestModuleCollectionResult(
         rootDirectory: string,
         lines: string[],
@@ -148,6 +152,8 @@ export class TestsParser implements ITestsParser {
 
         let currentPackage: string = '';
         const resource = Uri.file(rootDirectory);
+
+        // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
         lines.forEach(line => {
             const trimmedLine = line.trim();
             let name: string = '';
@@ -161,9 +167,17 @@ export class TestsParser implements ITestsParser {
                 currentPackage = convertFileToPackage(name);
                 const fullyQualifiedName = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
                 const testFile = {
-                    resource,
-                    functions: [], suites: [], name: name, fullPath: fullyQualifiedName,
-                    nameToRun: name, xmlName: currentPackage, time: 0
+                    resource: resource,
+                    functions: [],
+                    suites: [],
+                    name: name,
+                    fullPath: fullyQualifiedName,
+                    nameToRun: name,
+                    xmlName: currentPackage,
+                    time: 0,
+                    functionsPassed: 0,
+                    functionsFailed: 0,
+                    functionsDidNotRun: 0
                 };
                 testFiles.push(testFile);
                 parentNodes.push({ indent: indent, item: testFile });
@@ -183,7 +197,20 @@ export class TestsParser implements ITestsParser {
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
                 const xmlName = `${parentNode!.item.xmlName}.${name}`;
-                const testSuite: TestSuite = { resource, name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
+                const testSuite: TestSuite = {
+                    resource: resource,
+                    name: name,
+                    nameToRun: rawName,
+                    functions: [],
+                    suites: [],
+                    isUnitTest: isUnitTest,
+                    isInstance: false,
+                    xmlName: xmlName,
+                    time: 0,
+                    functionsPassed: 0,
+                    functionsFailed: 0,
+                    functionsDidNotRun: 0
+                };
                 parentNode!.item.suites.push(testSuite);
                 parentNodes.push({ indent: indent, item: testSuite });
                 return;
@@ -192,8 +219,6 @@ export class TestsParser implements ITestsParser {
                 name = extractBetweenDelimiters(trimmedLine, '<Instance ', '>').trimQuotes();
                 // tslint:disable-next-line:prefer-type-cast
                 const suite = (parentNode!.item as TestSuite);
-                // suite.rawName = suite.rawName + '::()';
-                // suite.xmlName = suite.xmlName + '.()';
                 suite.isInstance = true;
                 return;
             }
@@ -206,7 +231,47 @@ export class TestsParser implements ITestsParser {
                 name = name.trimQuotes();
 
                 const rawName = `${parentNode!.item.nameToRun}::${name}`;
-                const fn: TestFunction = { resource, name: name, nameToRun: rawName, time: 0 };
+                const fn: TestFunction = {
+                    resource: resource,
+                    name: name,
+                    nameToRun: rawName,
+                    time: 0
+                };
+                const pos = name.indexOf('[');
+                if (pos > 0 && name.endsWith(']')) {
+                    const funcName = name.substring(0, pos);
+                    const subtest = name.substring(pos);
+
+                    let subtestParent: SubtestParent | undefined;
+                    const last = parentNode!.item.functions.pop();
+                    if (last) {
+                        parentNode!.item.functions.push(last);
+                        if (last.subtestParent && last.subtestParent.name === funcName) {
+                            subtestParent = last.subtestParent;
+                        }
+                    }
+                    if (!subtestParent) {
+                        const subtestsSuite: TestSuite = {
+                            resource: resource,
+                            name: funcName,
+                            nameToRun: rawName.substring(0, rawName.length - subtest.length),
+                            functions: [],
+                            suites: [],
+                            isUnitTest: false,
+                            isInstance: false,
+                            xmlName: '',
+                            time: 0
+                        };
+                        subtestParent = {
+                            name: subtestsSuite.name,
+                            nameToRun: subtestsSuite.nameToRun,
+                            asSuite: subtestsSuite,
+                            time: 0
+                        };
+                    }
+                    fn.subtestParent = subtestParent!;
+                    subtestParent.asSuite.functions.push(fn);
+                }
                 parentNode!.item.functions.push(fn);
                 return;
             }
