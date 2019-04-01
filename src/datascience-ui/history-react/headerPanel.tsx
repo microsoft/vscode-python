@@ -85,7 +85,7 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanel
         );
     }
 
-    private onVariableHeightChange = (newHeight: number) => {
+    private onVariableHeightChange = () => {
         const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
 
         if (divElement) {

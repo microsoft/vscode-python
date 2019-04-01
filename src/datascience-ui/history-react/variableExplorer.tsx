@@ -18,7 +18,7 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
-    onHeightChange(newHeight: number): void;
+    onHeightChange(): void;
 }
 
 interface IVariableExplorerState {
@@ -123,7 +123,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
             if (this.state.height !== newHeight) {
                 this.setState({height: newHeight});
-                this.props.onHeightChange(newHeight);
+                this.props.onHeightChange();
             }
         }
     }
