@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2019.3.2 (1 April 2019)
+
+### Fixes
+
+1. Unable to expand variables in the watch window and the debug console.
+   ([#5035](https://github.com/Microsoft/vscode-python/issues/5035))
+
 ## 2019.3.1 (28 March 2019)
 
 ### Enhancements
