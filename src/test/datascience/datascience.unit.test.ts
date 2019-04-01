@@ -7,6 +7,7 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText } from '../../client/datascience/common';
 import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
 
+// tslint:disable-next-line: max-func-body-length
 suite('Data Science Tests', () => {
 
     test('formatting stream text', async () => {
@@ -96,18 +97,93 @@ suite('Data Science Tests', () => {
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\"\"\"', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
-    });
+
+// tslint:disable-next-line: no-multiline-string
+const multilineCode = `#%%
+myvar = """ # Lorem Ipsum
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+"""`;
+// tslint:disable-next-line: no-multiline-string
+const multilineTwo = `#%%
+""" # Lorem Ipsum
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+""" print('bob')`;
+
+        cells = generateCells(undefined, multilineCode, 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'code cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
+        assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
+        cells = generateCells(undefined, multilineTwo, 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'code cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
+        assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
+// tslint:disable-next-line: no-multiline-string
+        assert.equal(cells[0].data.source[9], `""" print('bob')`, 'Lines for cell not emitted');
+// tslint:disable-next-line: no-multiline-string
+        const multilineMarkdown = `#%% [markdown]
+# ## Block of Interest
+#
+# ### Take a look
+#
+#
+#   1. Item 1
+#
+#     - Item 1-a
+#       1. Item 1-a-1
+#          - Item 1-a-1-a
+#          - Item 1-a-1-b
+#       2. Item 1-a-2
+#          - Item 1-a-2-a
+#          - Item 1-a-2-b
+#       3. Item 1-a-3
+#          - Item 1-a-3-a
+#          - Item 1-a-3-b
+#          - Item 1-a-3-c
+#
+#   2. Item 2`;
+        cells = generateCells(undefined, multilineMarkdown, 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'markdown cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
+        assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
+
+// tslint:disable-next-line: no-multiline-string
+const multilineQuoteWithOtherDelimiter = `#%% [markdown]
+'''
+### Take a look
+  2. Item 2
+""" Not a comment delimiter
+'''
+`;
+        cells = generateCells(undefined, multilineQuoteWithOtherDelimiter, 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'markdown cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
+        assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
+        });
 
 });

@@ -4,7 +4,7 @@
 --ui=tdd
 --recursive
 --colors
---timeout=120000
 --exit
+--timeout=120000
 --reporter mocha-multi-reporters
 --reporter-options configFile=build/.mocha-multi-reporters.config

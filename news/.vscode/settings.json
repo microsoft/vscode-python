@@ -1,0 +1,11 @@
+{
+    "python.jediEnabled": false,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "python.unitTest.pyTestArgs": [
+        "."
+    ],
+    "python.unitTest.unittestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false,
+    "python.unitTest.pyTestEnabled": true
+}

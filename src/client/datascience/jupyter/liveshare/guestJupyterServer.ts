@@ -50,10 +50,10 @@ export class GuestJupyterServer
     }
 
     public async shutdown(): Promise<void> {
-        // Send this across to the other side. Otherwise the host server will remain running.
+        // Send this across to the other side. Otherwise the host server will remain running (like during an export)
         const service = await this.waitForService();
         if (service) {
-            service.notify(LiveShareCommands.disposeServer, {});
+            await service.request(LiveShareCommands.disposeServer, []);
         }
     }
 
