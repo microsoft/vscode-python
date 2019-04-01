@@ -238,9 +238,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         await this.asyncRegistry.dispose();
         await super.dispose();
 
-        if (this.wrapper) {
-            // Blur window focus so we don't have editors polling
-            blurWindow();
+        // Blur window focus so we don't have editors polling
+        blurWindow();
+
+        if (this.wrapper && this.wrapper.length) {
             this.wrapper.unmount();
             this.wrapper = undefined;
         }

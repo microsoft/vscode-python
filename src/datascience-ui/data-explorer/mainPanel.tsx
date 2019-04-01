@@ -61,6 +61,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private container: HTMLDivElement | null = null;
     private emptyRows: (() => JSX.Element) | undefined;
     private getEmptyRows: ((props: any) => JSX.Element) | undefined;
+    private sentDone = false;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -112,6 +113,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         };
     }
     public render = () => {
+        // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
+        // can guarantee our render will run before somebody checks our rendered output.
+        if (this.state.actualRowCount === this.state.fetchedRowCount && !this.sentDone) {
+            this.sentDone = true;
+            this.sendMessage(DataViewerMessages.CompletedData);
+        }
 
         return (
             <div className='background'>

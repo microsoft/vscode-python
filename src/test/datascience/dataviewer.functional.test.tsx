@@ -8,6 +8,7 @@ import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
 
+import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessageListener } from '../../client/datascience/data-viewing/dataViewerMessageListener';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
@@ -16,11 +17,13 @@ import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { CellPosition, verifyHtmlOnCell } from './historyTestHelpers';
 import { blurWindow } from './reactHelpers';
+import { nbformat } from '@jupyterlab/coreutils';
 
 suite('DataViewer tests', () => {
     const disposables: Disposable[] = [];
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
+    let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     suiteSetup(function () {
         // DataViewer tests require jupyter to run. Othewrise can't
@@ -58,6 +61,15 @@ suite('DataViewer tests', () => {
             const listener = ((dataViewer as any).messageListener) as DataViewerMessageListener;
             listener.onMessage(DataViewerMessages.Started, {});
 
+            // Rewrite the onMessage function to also call the local messageWrapper if it's defined
+            const orig = listener.onMessage.bind(listener);
+            listener.onMessage = (m: string, payload: any) => {
+                if (messageWrapper) {
+                    messageWrapper(m, payload);
+                }
+                return orig(m, payload);
+            };
+
             return dataViewer;
         };
 
@@ -87,30 +99,54 @@ suite('DataViewer tests', () => {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
         const server = await exec.connectToNotebookServer();
         if (server) {
-            await server.execute(code, Identifiers.EmptyFileName, 0, uuid());
+            const cells = await server.execute(code, Identifiers.EmptyFileName, 0, uuid());
+            assert.equal(cells.length, 1, `Wrong number of cells returned`);
+            assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
+            const cell = cells[0].data as nbformat.ICodeCell;
+            assert.ok(cell.outputs.length > 0, `Cell length not correct`);
+            const error = cell.outputs[0].evalue;
+            if (error) {
+                assert.fail(`Unexpected error: ${error}`);
+            }
         }
+    }
+
+    function waitForMessage(message: string) : Promise<void> {
+        // Wait for the mounted web panel to send a message back to the data explorer
+        const promise = createDeferred<void>();
+        messageWrapper = (m: string, _p: any) => {
+            if (m === message) {
+                promise.resolve();
+            }
+        };
+        return promise.promise;
+    }
+
+    function getCompletedPromise() : Promise<void> {
+        return waitForMessage(DataViewerMessages.CompletedData);
     }
 
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
-        test(name, async (_done: MochaDone) => {
+        test(name, async () => {
             const wrapper = mountWebView();
             try {
                 await testFunc(wrapper);
             } finally {
-                // Blur window focus so we don't have editors polling
-                blurWindow();
-
                 // Make sure to unmount the wrapper or it will interfere with other tests
-                wrapper.unmount();
+                if (wrapper && wrapper.length) {
+                    wrapper.unmount();
+                }
             }
         });
     }
 
     runMountedTest('Data Frame', async (wrapper) => {
         await injectCode('import pandas as pd\r\ndf = pd.DataFrame([0, 1, 2, 3])');
+        const gotAllRows = getCompletedPromise();
         const dv = await createDataViewer('df');
         assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });

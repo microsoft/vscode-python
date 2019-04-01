@@ -23,6 +23,7 @@ export namespace DataViewerMessages {
     export const GetAllRowsResponse = 'get_all_rows_response';
     export const GetRowsRequest = 'get_rows_request';
     export const GetRowsResponse = 'get_rows_response';
+    export const CompletedData = 'complete';
 }
 
 export interface IGetRowsRequest {
@@ -45,4 +46,5 @@ export class IDataViewerMapping {
     public [DataViewerMessages.GetAllRowsResponse]: JSONObject;
     public [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
     public [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
+    public [DataViewerMessages.CompletedData]: never | undefined;
 }
