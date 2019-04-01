@@ -811,6 +811,7 @@ function getFilesToProcess(fileList) {
 * @param {hygieneOptions} options
 */
 function getFileListToProcess(options) {
+    return [];
     const mode = options ? options.mode : 'all';
     const gulpSrcOptions = { base: '.' };
 

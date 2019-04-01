@@ -1,7 +1,19 @@
 # Changelog
 
 
-## 2019.3.0-rc (19 March 2019)
+## 2019.3.1 (28 March 2019)
+
+### Enhancements
+
+1. Use the download same logic for `stable` channel of the `Language Server` as that in `beta`.
+   ([#4960](https://github.com/Microsoft/vscode-python/issues/4960))
+
+### Code Health
+
+1. Capture telemetry when tests are disabled..
+   ([#4801](https://github.com/Microsoft/vscode-python/issues/4801))
+
+## 2019.3.6139 (26 March 2019)
 
 ### Enhancements
 
@@ -34,6 +46,11 @@
    ([#4718](https://github.com/Microsoft/vscode-python/issues/4718))
 1. Update status of test suite when all tests pass
    ([#4727](https://github.com/Microsoft/vscode-python/issues/4727))
+1. Add button to ignore the message warning about the use of the macOS system install of Python.
+   (thanks [Alina Lobastova](https://github.com/alina7091))
+   ([#4448](https://github.com/Microsoft/vscode-python/issues/4448))
+1. Add "Run In Interactive" command to run the contents of a file not cell by cell. Group data science context commands in one group. Add run file command to explorer context menu.
+   ([#4855](https://github.com/Microsoft/vscode-python/issues/4855))
 
 ### Fixes
 
@@ -79,6 +96,25 @@
    ([#4743](https://github.com/Microsoft/vscode-python/issues/4743))
 1. Perform case insensitive comparison of Python Environment paths
    ([#4797](https://github.com/Microsoft/vscode-python/issues/4797))
+1. Ensure `Jedi` uses the currently selected intepreter.
+   (thanks [Selim Belhaouane](https://github.com/selimb))
+   ([#4687](https://github.com/Microsoft/vscode-python/issues/4687))
+1. Multiline comments with text on the first line break Python Interactive window execution.
+   ([#4791](https://github.com/Microsoft/vscode-python/issues/4791))
+1. Fix status bar when using Live Share or just starting the Python Interactive window.
+   ([#4853](https://github.com/Microsoft/vscode-python/issues/4853))
+1. Change the names of our "Run All Cells Above" and "Run Cell and All Below" commands to be more concise
+   ([#4876](https://github.com/Microsoft/vscode-python/issues/4876))
+1. Ensure the `Python` output panel does not steal focus when there errors in the `Language Server`.
+   ([#4868](https://github.com/Microsoft/vscode-python/issues/4868))
+1. Update ptvsd to [4.2.5](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.5).
+   ([#4932](https://github.com/Microsoft/vscode-python/issues/4932))
+    * Fix issues with django and jinja2 exceptions.
+    * Detaching sometimes throws ValueError.
+    * StackTrace request respecting just-my-code.
+    * Don't give error redirecting output with pythonw.
+    * Fix for stop on entry issue.
+1. Update the Python language server to 0.2.31.
 
 ### Code Health
 
@@ -119,6 +155,8 @@
    ([#4757](https://github.com/Microsoft/vscode-python/issues/4757))
 1. Make cancel test and server cache test more robust
    ([#4818](https://github.com/Microsoft/vscode-python/issues/4818))
+1. Generalize code used to parse Test results service
+   ([#4796](https://github.com/Microsoft/vscode-python/issues/4796))
 
 ### Thanks
 

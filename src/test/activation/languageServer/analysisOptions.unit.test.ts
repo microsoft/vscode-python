@@ -24,7 +24,7 @@ import { sleep } from '../../core';
 
 // tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
 
-suite('Language Server - Analysis Options', () => {
+suite('xLanguage Server - Analysis Options', () => {
     class TestClass extends LanguageServerAnalysisOptions {
         public getExcludedFiles(): string[] {
             return super.getExcludedFiles();
@@ -95,29 +95,31 @@ suite('Language Server - Analysis Options', () => {
         disposable2.verifyAll();
         disposable3.verifyAll();
     });
-    // test('Changes to settings or interpreter will be debounced', async () => {
-    //     const disposable1 = typemoq.Mock.ofType<IDisposable>();
-    //     const disposable2 = typemoq.Mock.ofType<IDisposable>();
-    //     let configChangedHandler!: Function;
-    //     let interpreterChangedHandler!: Function;
-    //     when(workspace.onDidChangeConfiguration).thenReturn(cb => { configChangedHandler = cb; return disposable1.object; });
-    //     when(interpreterService.onDidChangeInterpreter).thenReturn(cb => { interpreterChangedHandler = cb; return disposable2.object; });
-    //     let settingsChangedInvokedCount = 0;
-    //     analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
+    test('Changes to settings or interpreter will be debounced', async () => {
+        const disposable1 = typemoq.Mock.ofType<IDisposable>();
+        const disposable2 = typemoq.Mock.ofType<IDisposable>();
+        const disposable3 = typemoq.Mock.ofType<IDisposable>();
+        let configChangedHandler!: Function;
+        let interpreterChangedHandler!: Function;
+        when(workspace.onDidChangeConfiguration).thenReturn(cb => { configChangedHandler = cb; return disposable1.object; });
+        when(interpreterService.onDidChangeInterpreter).thenReturn(cb => { interpreterChangedHandler = cb; return disposable2.object; });
+        when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(() => disposable3.object);
+        let settingsChangedInvokedCount = 0;
+        analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
 
-    //     await analysisOptions.initialize(undefined);
-    //     expect(configChangedHandler).to.not.be.undefined;
-    //     expect(interpreterChangedHandler).to.not.be.undefined;
+        await analysisOptions.initialize(undefined);
+        expect(configChangedHandler).to.not.be.undefined;
+        expect(interpreterChangedHandler).to.not.be.undefined;
 
-    //     for (let i = 0; i < 100; i += 1) {
-    //         configChangedHandler.call(analysisOptions);
-    //     }
-    //     expect(settingsChangedInvokedCount).to.be.equal(0);
+        for (let i = 0; i < 100; i += 1) {
+            configChangedHandler.call(analysisOptions);
+        }
+        expect(settingsChangedInvokedCount).to.be.equal(0);
 
-    //     await sleep(10);
+        await sleep(10);
 
-    //     expect(settingsChangedInvokedCount).to.be.equal(1);
-    // });
+        expect(settingsChangedInvokedCount).to.be.equal(1);
+    });
     test('If there are no changes then no events will be fired', async () => {
         analysisOptions.getExcludedFiles = () => [];
         analysisOptions.getTypeshedPaths = () => [];
@@ -154,17 +156,15 @@ suite('Language Server - Analysis Options', () => {
 
         expect(eventFired).to.be.equal(true);
     });
-    // test('Event must be fired if interpreter info is different', async () => {
-    //     // fire onDidChangeInterpreter
+    test('Event must be fired if interpreter info is different', async () => {
+        let eventFired = false;
+        analysisOptions.onDidChange(() => eventFired = true);
 
-    //     let eventFired = false;
-    //     analysisOptions.onDidChange(() => eventFired = true);
+        analysisOptions.onSettingsChanged();
+        await sleep(10);
 
-    //     analysisOptions.onSettingsChanged();
-    //     await sleep(10);
-
-    //     expect(eventFired).to.be.equal(true);
-    // });
+        expect(eventFired).to.be.equal(true);
+    });
     test('Changes to settings will be filtered to current resource', async () => {
         const uri = Uri.file(__filename);
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
