@@ -39,6 +39,11 @@ basic:
 
 * `./test_foo.py::test_simple`
 * `./test_pytest.py::test_simple`
+* `./test_mixed.py::test_top_level`
+* `./test_mixed.py::MyTests::test_simple`
+* `./test_mixed.py::TestMySuite::test_simple`
+* `./test_unittest.py::MyTests::test_simple`
+* `./test_unittest.py::OtherTests::test_simple`
 * `./x/y/z/test_ham.py::test_simple`
 * `./x/y/z/a/test_spam.py::test_simple`
 * `./x/y/z/b/test_spam.py::test_simple`
@@ -64,6 +69,26 @@ imports discovered:
 * `./v/test_spam.py::test_simple`
 * `./v/test_spam.py::test_simpler`
 
+subtests:
+
+* (`./test_unittest.py::MyTests::test_with_subtests`)
+* (`./test_unittest.py::MyTests::test_with_nested_subtests`)
+* (`./test_unittest.py::MyTests::test_dynamic_*`)
+
+other markers:
+
+* `./test_mixed.py::test_skipped`
+* `./test_mixed.py::MyTests::test_skipped`
+* `./test_unittest.py::MyTests::test_skipped`
+* (`./test_unittest.py::MyTests::test_maybe_skipped`)
+* (`./test_unittest.py::MyTests::test_maybe_not_skipped`)
+* (`./test_unittest.py::MyTests::test_known_failure`)
+
+others not discovered:
+
+* (`./test_unittest.py::MyTests::TestSub1`)
+* (`./test_unittest.py::MyTests::TestSub2`)
+* (`./test_unittest.py::NoTests`)
 
 missing:
 
@@ -71,8 +96,6 @@ missing:
 doctests:
 
 * `./test_doctest.txt` - ???
-
-
 
 
 * `test_pytest.py` - 
@@ -107,32 +130,4 @@ doctests:
         + a simple test method
     * an empty suite
     * suite using a fixture
-
-
-test_unittest.py
-    * test suite inheriting from unittest.TestCase
-        + simple test function
-        + skipped test method (decorator)
-        + skip-if'ed test method (decorator)
-        + test method with expected failure decorator
-        + test method that raises unittest.Skip
-        + test method that calls unittest.skip()
-        + test method that raises Exception
-        + test method that uses one "with self.subtest():"
-        + test method that uses multiple "with self.subtest():" (nested)
-        + for loop that generates test methods dynamically
-        + nested class (no base class)
-        + nested class inheriting from unittest.TestCase
-    * another suite
-        + a simple test method
-    * an empty suite
-
-
-test_mixed.py
-     * module-level test function (a la pytest)
-     * marked ("skip") test function
-     * class with no base class (a la pytest)
-         + a simple test method
-     * class inheriting from unittest.TestCase
-         + simple test method
 ```
