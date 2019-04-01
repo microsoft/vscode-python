@@ -39,6 +39,9 @@ basic:
 
 * `./test_foo.py::test_simple`
 * `./test_pytest.py::test_simple`
+* `./test_pytest.py::TestSpam::test_simple`
+* `./test_pytest.py::TestSpam::TestHam::TestEggs::test_simple`
+* `./test_pytest.py::TestEggs::test_simple`
 * `./test_mixed.py::test_top_level`
 * `./test_mixed.py::MyTests::test_simple`
 * `./test_mixed.py::TestMySuite::test_simple`
@@ -47,6 +50,24 @@ basic:
 * `./x/y/z/test_ham.py::test_simple`
 * `./x/y/z/a/test_spam.py::test_simple`
 * `./x/y/z/b/test_spam.py::test_simple`
+
+failures:
+
+* `./test_pytest.py::test_failure`
+* `./test_pytest.py::test_runtime_failed`
+* `./test_pytest.py::test_raises`
+
+skipped:
+
+* `./test_mixed.py::test_skipped`
+* `./test_mixed.py::MyTests::test_skipped`
+* `./test_pytest.py::test_runtime_skipped`
+* `./test_pytest.py::test_skipped`
+* `./test_pytest.py::test_maybe_skipped`
+* `./test_pytest.py::SpamTests::test_skipped`
+* `./test_unittest.py::MyTests::test_skipped`
+* (`./test_unittest.py::MyTests::test_maybe_skipped`)
+* (`./test_unittest.py::MyTests::test_maybe_not_skipped`)
 
 in namespace package:
 
@@ -77,15 +98,18 @@ subtests:
 
 other markers:
 
-* `./test_mixed.py::test_skipped`
-* `./test_mixed.py::MyTests::test_skipped`
-* `./test_unittest.py::MyTests::test_skipped`
-* (`./test_unittest.py::MyTests::test_maybe_skipped`)
-* (`./test_unittest.py::MyTests::test_maybe_not_skipped`)
+* `./test_pytest.py::test_known_failure`
+* `./test_pytest.py::test_warned`
+* `./test_pytest.py::test_custom_marker`
+* `./test_pytest.py::test_multiple_markers`
 * (`./test_unittest.py::MyTests::test_known_failure`)
 
 others not discovered:
 
+* (`./test_pytest.py::TestSpam::TestHam::TestEggs::TestNoop1`)
+* (`./test_pytest.py::TestSpam::TestNoop2`)
+* (`./test_pytest.py::TestNoop3`)
+* (`./test_pytest.py::MyTests::test_simple`)
 * (`./test_unittest.py::MyTests::TestSub1`)
 * (`./test_unittest.py::MyTests::TestSub2`)
 * (`./test_unittest.py::NoTests`)
@@ -96,14 +120,12 @@ missing:
 doctests:
 
 * `./test_doctest.txt` - ???
+* `test_pytest.py` - 
+    * module-level doctests
+    + suite-level doctests
 
 
 * `test_pytest.py` - 
-    * module-level doctests
-    * marked test functions
-        + skip, skipif, xfail, filterwarnings, custom  # see https://docs.pytest.org/en/latest/reference.html#marks
-        + one function for each
-        + at least one function with multiple marks
     * parameterized test functions
         + no parameters, single case
         + one parameter, single case
@@ -112,22 +134,9 @@ doctests:
         + with *args & **kwargs parameters, multiple cases
         + 4 parameters, 3 decorators
         + decorator with "marks" arg (skip/xfail/etc)
-    * test function that calls pytest.skip()
-    * test function that calls pytest.fail()
-    * test function that raises Exception
+        + one parameter, also skipped
     * for loop that generates test functions dynamically
     * suite (a test class)
-        + simple test method
-        + suite-level doctests
-        + marked ("skip") test method
         + parameterized test method
-        + nested suite
-            + nested suite
-                 + simple test method
-                 + nested suite (no methods)
-        + nested suite (no methods)
-    * another suite
-        + a simple test method
-    * an empty suite
     * suite using a fixture
 ```
