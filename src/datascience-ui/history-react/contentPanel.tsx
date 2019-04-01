@@ -33,9 +33,11 @@ export class ContentPanel extends React.Component<IContentPanelProps, IContentPa
 
     public render() {
         return(
-            <div id='cell-table'>
-                <div id='cell-table-body'>
-                    {this.renderCells()}
+            <div id='content-panel-div'>
+                <div id='cell-table'>
+                    <div id='cell-table-body'>
+                        {this.renderCells()}
+                    </div>
                 </div>
             </div>
         );

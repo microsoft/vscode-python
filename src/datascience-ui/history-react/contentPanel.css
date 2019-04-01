@@ -1,3 +1,25 @@
+body, html {
+    height: 100%;
+    overflow: hidden;
+}
+
+#app {
+    height: 100%;
+    overflow: hidden;
+}
+
+#root {
+    height: 100%;
+    overflow: hidden;
+}
+
+#content-panel-div {
+    height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+    border-top: 24px solid transparent;
+}
+
 #cell-table {
     display: table;
     width: 100%;

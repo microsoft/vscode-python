@@ -1,4 +1,11 @@
 
+.menuBar-clean {
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: right;
+}
+
 .menuBar{
 	position: relative;
     margin-bottom: 2px;

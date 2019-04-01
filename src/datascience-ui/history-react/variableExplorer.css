@@ -1,4 +1,8 @@
-.variable-explorer {
+.variable-explorer-old {
+    background-color: var(--vscode-editor-background);
+}
+
+.variable-explorer-old {
     margin: 5px;
     width: 100%;
     position: fixed;

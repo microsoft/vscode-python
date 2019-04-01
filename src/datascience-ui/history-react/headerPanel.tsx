@@ -48,8 +48,8 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanel
     public render() {
         const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
-            <div className='header-panel-div'>
-                <MenuBar baseTheme={this.props.baseTheme} stylePosition='top-fixed'>
+            <div id='header-panel-div'>
+                <MenuBar baseTheme={this.props.baseTheme} stylePosition='clean'>
                     {this.renderExtraButtons()}
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={!this.props.canCollapseAll} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.CollapseAll}/>
@@ -77,7 +77,6 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps, IHeaderPanel
                     </CellButton>
                     {this.renderDataFrameTestButton()}
                 </MenuBar>
-                <div id='top-spacing' />
                 {progressBar}
                 <VariableExplorer baseTheme={this.props.baseTheme} refreshVariables={this.props.refreshVariables} ref={this.props.variableExplorerRef} />
             </div>
