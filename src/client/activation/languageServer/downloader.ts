@@ -38,12 +38,13 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     }
 
     public async getDownloadInfo() {
-        return this.lsFolderService.getLatestLanguageServerVersion().then(item => item!);
+        const info = await this.lsFolderService.getLatestLanguageServerVersion()
+            .then(item => item!);
+        const uri = info.uri;
+        return [uri, info.version.raw];
     }
     public async downloadLanguageServer(destinationFolder: string): Promise<void> {
-        const downloadInfo = await this.getDownloadInfo();
-        const downloadUri = downloadInfo.uri;
-        const lsVersion = downloadInfo.version.raw;
+        const [downloadUri, lsVersion] = await this.getDownloadInfo();
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;
         let localTempFilePath = '';

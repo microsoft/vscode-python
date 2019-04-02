@@ -28,16 +28,17 @@ suite('Activation - Downloader', () => {
     });
 
     test('Get download uri', async () => {
-        const pkg = { uri: 'xyz' } as any;
+        const pkg = { uri: 'xyz', version: { raw: '1.2.3' } } as any;
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const info = await languageServerDownloader.getDownloadInfo();
+        const [uri, version] = await languageServerDownloader.getDownloadInfo();
 
         folderService.verifyAll();
-        expect(info).to.deep.equal(pkg);
+        expect(uri).to.deep.equal(pkg.uri);
+        expect(version).to.deep.equal(pkg.version.raw);
     });
     suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
         class LanguageServerDownloaderTest extends LanguageServerDownloader {
