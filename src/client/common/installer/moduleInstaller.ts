@@ -11,11 +11,15 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { noop } from '../utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 @injectable()
 export abstract class ModuleInstaller {
+    public abstract get displayName(): string
     constructor(protected serviceContainer: IServiceContainer) { }
     public async installModule(name: string, resource?: vscode.Uri): Promise<void> {
+        sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const executionInfo = await this.getExecutionInfo(name, resource);
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
 

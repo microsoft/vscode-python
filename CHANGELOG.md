@@ -14,6 +14,12 @@
     * Fix issue with expanding variables in watch window and hover.
     * Fix issue with launching a sub-module.
 
+### Code Health
+
+1. Capture telemetry to track installer used when installing packages.
+   ([#5063](https://github.com/Microsoft/vscode-python/issues/5063))
+
+
 ## 2019.3.1 (28 March 2019)
 
 ### Enhancements
