@@ -67,11 +67,11 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             this.workspaceTestManagerService.dispose();
         }
         if (this.configChangedTimer) {
-            this.configChangedTimer.unref();
+            clearTimeout(this.configChangedTimer);
             this.configChangedTimer = undefined;
         }
         if (this.autoDiscoverTimer) {
-            this.autoDiscoverTimer.unref();
+            clearTimeout(this.autoDiscoverTimer);
             this.autoDiscoverTimer = undefined;
         }
     }

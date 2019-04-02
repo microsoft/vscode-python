@@ -13,6 +13,8 @@ import { CollapseButton } from './collapseButton';
 
 import * as AdazzleReactDataGrid from 'react-data-grid';
 
+import './variableExplorerGrid.scss';
+
 //import 'bootstrap/dist/css/bootstrap.css'
 
 interface IVariableExplorerProps {
@@ -67,12 +69,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         tooltip={getLocString('DataScience.collapseVariableExplorerTooltip', 'Collapse variable explorer')}
                         label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variable Explorer')} />
                     <div className={contentClassName}>
-                        <AdazzleReactDataGrid
-                            columns = {this.state.gridColumns.map(c => { return {...c, ...defaultColumnProperties}; })}
-                            rowGetter = {this.getRow}
-                            rowsCount = {this.state.gridRows.length}
-                            minHeight = {this.state.gridHeight}
-                        />
+                        <div id='variable-explorer-data-grid'>
+                            <AdazzleReactDataGrid
+                                columns = {this.state.gridColumns.map(c => { return {...c, ...defaultColumnProperties}; })}
+                                rowGetter = {this.getRow}
+                                rowsCount = {this.state.gridRows.length}
+                                minHeight = {this.state.gridHeight}
+                            />
+                        </div>
                     </div>
                 </div>
             );

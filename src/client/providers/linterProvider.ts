@@ -53,7 +53,7 @@ export class LinterProvider implements Disposable {
         // and then the extension is activated. So schedule linting pass now.
         if (!isTestExecution()) {
             const timer = setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 1200);
-            this.disposables.push({ dispose: () => timer.unref() });
+            this.disposables.push({ dispose: () => clearTimeout(timer) });
         }
     }
 

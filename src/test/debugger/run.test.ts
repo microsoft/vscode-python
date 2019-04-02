@@ -24,7 +24,7 @@ suite('Run without Debugging', () => {
             this.skip();
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage_nodebug${this.currentTest.title}`);
+        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage_nodebug${this.currentTest!.title}`);
         debugClient = await createDebugAdapter(coverageDirectory);
     });
     teardown(async () => {

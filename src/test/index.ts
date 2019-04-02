@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+// tslint:disable:no-require-imports no-var-requires no-any
+// Always place at the top, to ensure other modules are imported first.
+require('./common/exitCIAfterTestReporter');
 
-// tslint:disable-next-line:no-any
 if ((Reflect as any).metadata === undefined) {
-    // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
 
+import * as path from 'path';
 import {
     IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
@@ -44,8 +46,9 @@ const options: testRunner.SetupOptions & { retries: number } = {
 // changed by setting env var `MOCHA_FILE` (we do this in our CI).
 if (MOCHA_REPORTER_JUNIT) {
     options.reporter = 'mocha-multi-reporters';
+    const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
     options.reporterOptions = {
-        reporterEnabled: 'spec,mocha-junit-reporter'
+        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`
     };
 }
 
