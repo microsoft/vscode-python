@@ -10,7 +10,7 @@ import { LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputCha
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
 import { debounce } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -29,7 +29,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_PROPOSE_LS) private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterDataService) private readonly interpreterDataService: IInterpreterDataService,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: OutputChannel,
