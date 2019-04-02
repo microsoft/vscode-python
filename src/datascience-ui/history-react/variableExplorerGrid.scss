@@ -1,5 +1,74 @@
 #variable-explorer-data-grid {
-    div {
-        background-color: pink;
-    }
+    @import "~bootstrap/dist/css/bootstrap";
+}
+
+#variable-explorer-data-grid .form-control {
+    height: auto;
+    padding: 0px;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    border-radius: 0px;
+}
+
+#variable-explorer-data-grid .react-grid-Toolbar {
+    background-color: var(--vscode-editor-background);
+    border: none;
+}
+
+#variable-explorer-data-grid .react-grid-Toolbar .btn {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-color: var(--vscode-badge-background);
+}
+
+#variable-explorer-data-grid .react-grid-Main {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    outline: none;
+}
+
+#variable-explorer-data-grid .react-grid-Grid {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-color: var(--vscode-badge-background);
+}
+
+#variable-explorer-data-grid .react-grid-Canvas {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+}
+
+#variable-explorer-data-grid .react-grid-Header {
+    background-color: var(--vscode-notifications-background);
+}
+
+#variable-explorer-data-grid .react-grid-HeaderCell {
+    background-color: var(--vscode-notifications-background);
+    color: var(--vscode-editor-foreground);
+    border-right-color: var(--vscode-badge-background);
+    border-bottom-color: var(--vscode-badge-background);
+}
+
+#variable-explorer-data-grid .react-grid-Cell {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-right-color: var(--vscode-badge-background);
+    border-bottom-color: var(--vscode-badge-background);
+}
+
+#variable-explorer-data-grid .react-grid-Cell:hover {
+    background-color: var(--vscode-editor-selectionBackground);
+}
+
+#variable-explorer-data-grid .react-grid-Row:hover {
+    background-color: var(--vscode-editor-selectionBackground);
+}
+
+#variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
+    background-color: var(--vscode-editor-selectionBackground);
+}
+
+#variable-explorer-data-grid .rdg-selected {
+    visibility: hidden;
 }
