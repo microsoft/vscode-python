@@ -28,7 +28,7 @@ export class ResponseQueue {
 
     public push(response: IServerResponse) {
         this.responseQueue.push(response);
-        this.dispatchResponses();
+        this.dispatchResponse(response);
     }
 
     public send(service: vsls.SharedService, translator: (r: IServerResponse) => IServerResponse) {
@@ -81,18 +81,13 @@ export class ResponseQueue {
         }
     }
 
-    private dispatchResponses() {
+    private dispatchResponse(response: IServerResponse) {
         // Look through all of our responses that are queued up and see if they make a
         // waiting promise resolve
-        for (let i = 0; i < this.responseQueue.length; i += 1) {
-            const response = this.responseQueue[i];
-            const matchIndex = this.waitingQueue.findIndex(w => w.predicate(response));
-            if (matchIndex >= 0) {
-                this.waitingQueue[matchIndex].deferred.resolve(response);
-                this.waitingQueue.splice(matchIndex, 1);
-                this.responseQueue.splice(i, 1);
-                i -= 1; // Offset the addition as we removed this item
-            }
+        const matchIndex = this.waitingQueue.findIndex(w => w.predicate(response));
+        if (matchIndex >= 0) {
+            this.waitingQueue[matchIndex].deferred.resolve(response);
+            this.waitingQueue.splice(matchIndex, 1);
         }
     }
 }

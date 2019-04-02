@@ -341,14 +341,16 @@ export class HostJupyterServer
         responseQueues: ResponseQueue[]) : void {
         const typedResult = ((result as any) as IServerResponse);
         if (typedResult) {
+            // Make a deep copy before we send. Don't want local copies being modified
+            const deepCopy = JSON.parse(JSON.stringify(typedResult));
             this.waitForService().then(s => {
                 if (s) {
-                    s.notify(LiveShareCommands.serverResponse, guestTranslator(typedResult));
+                    s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
                 }
             }).ignoreErrors();
 
             // Need to also save in memory for those guests that are in the middle of starting up
-            responseQueues.forEach(r => r.push(typedResult));
+            responseQueues.forEach(r => r.push(deepCopy));
         }
     }
 }
