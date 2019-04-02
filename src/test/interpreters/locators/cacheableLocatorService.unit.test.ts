@@ -84,7 +84,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
         test('Ensure onDidCreate event handler is attached', async () => {
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
-                public onDidCreate(_listener: (e: void) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                     return { dispose: noop };
                 }
             }
@@ -105,8 +105,8 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const expectedInterpreters = [1, 2] as any;
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
-                private listner?: (e: void) => any;
-                public onDidCreate(listener: (e: void) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                private listner?: (e: Uri | undefined) => any;
+                public onDidCreate(listener: (e: Uri | undefined) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                     this.listner = listener;
                     return { dispose: noop };
                 }

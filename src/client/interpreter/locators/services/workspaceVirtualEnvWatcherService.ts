@@ -19,17 +19,18 @@ const timeToPollForEnvCreation = 2_000;
 
 @injectable()
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
-    private readonly didCreate: EventEmitter<void>;
+    private readonly didCreate: EventEmitter<Uri | undefined>;
     private timers = new Map<string, { timer: NodeJS.Timer; counter: number }>();
     private fsWatchers: FileSystemWatcher[] = [];
+    private resource: Uri | undefined;
     constructor(@inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory) {
-        this.didCreate = new EventEmitter<void>();
+        this.didCreate = new EventEmitter<Uri | undefined>();
         disposableRegistry.push(this);
     }
-    public get onDidCreate(): Event<void> {
+    public get onDidCreate(): Event<Uri | undefined> {
         return this.didCreate.event;
     }
     public dispose() {
@@ -40,7 +41,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         if (this.fsWatchers.length > 0) {
             return;
         }
-
+        this.resource = resource;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const executable = this.platformService.isWindows ? 'python.exe' : 'python';
         const patterns = [path.join('*', executable), path.join('*', '*', executable)];
@@ -58,7 +59,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     }
     @traceDecorators.verbose('Intepreter Watcher change handler')
     public async createHandler(e: Uri) {
-        this.didCreate.fire();
+        this.didCreate.fire(this.resource);
         // On Windows, creation of environments are very slow, hence lets notify again after
         // the python executable is accessible (i.e. when we can launch the process).
         this.notifyCreationWhenReady(e.fsPath).ignoreErrors();
@@ -68,13 +69,13 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         const isValid = await this.isValidExecutable(pythonPath);
         if (isValid) {
             if (counter > 0) {
-                this.didCreate.fire();
+                this.didCreate.fire(this.resource);
             }
             return this.timers.delete(pythonPath);
         }
         if (counter > (maxTimeToWaitForEnvCreation / timeToPollForEnvCreation)) {
             // Send notification before we give up trying.
-            this.didCreate.fire();
+            this.didCreate.fire(this.resource);
             this.timers.delete(pythonPath);
             return;
         }

@@ -125,7 +125,7 @@ export interface IInterpreterLocatorHelper {
 
 export const IInterpreterWatcher = Symbol('IInterpreterWatcher');
 export interface IInterpreterWatcher {
-    onDidCreate: Event<void>;
+    onDidCreate: Event<Uri | undefined>;
 }
 
 export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');

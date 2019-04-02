@@ -80,6 +80,7 @@ import {
     PythonInterpreter
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
+import { IVirtualEnvironmentPrompt } from './interpreter/virtualEnvs/types';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -305,6 +306,7 @@ async function initializeServices(context: ExtensionContext, serviceManager: Ser
     serviceContainer.get<ITestExplorerCommandHandler>(ITestExplorerCommandHandler).register();
     serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
     serviceContainer.get<ITestContextService>(ITestContextService).register();
+    serviceContainer.get<IVirtualEnvironmentPrompt>(IVirtualEnvironmentPrompt).register();
 }
 
 // tslint:disable-next-line:no-any
