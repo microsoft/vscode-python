@@ -34,8 +34,11 @@ suite('Activation - Downloader', () => {
         );
     });
 
-    test('Get download uri', async () => {
-        const pkg = { uri: 'xyz', version: { raw: '1.2.3' } } as any;
+    test('Get download info - HTTPS', async () => {
+        const pkg = {
+            uri: 'https://a.b.com/x/y/z.nupkg',
+            version: { raw: '1.2.3' }
+        } as any;
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
             .returns(() => Promise.resolve(pkg))
@@ -44,9 +47,48 @@ suite('Activation - Downloader', () => {
         const [uri, version] = await languageServerDownloader.getDownloadInfo();
 
         folderService.verifyAll();
+        workspaceService.verifyAll();
         expect(uri).to.deep.equal(pkg.uri);
         expect(version).to.deep.equal(pkg.version.raw);
     });
+
+    test('Get download info - HTTP', async () => {
+        const pkg = {
+            // tslint:disable-next-line:no-http-string
+            uri: 'http://a.b.com/x/y/z.nupkg',
+            version: { raw: '1.2.3' }
+        } as any;
+        folderService
+            .setup(f => f.getLatestLanguageServerVersion())
+            .returns(() => Promise.resolve(pkg))
+            .verifiable(TypeMoq.Times.once());
+
+        const [uri, version] = await languageServerDownloader.getDownloadInfo();
+
+        folderService.verifyAll();
+        workspaceService.verifyAll();
+        expect(uri).to.deep.equal(pkg.uri);
+        expect(version).to.deep.equal(pkg.version.raw);
+    });
+
+    test('Get download info - bogus URL', async () => {
+        const pkg = {
+            uri: 'xyz',
+            version: { raw: '1.2.3' }
+        } as any;
+        folderService
+            .setup(f => f.getLatestLanguageServerVersion())
+            .returns(() => Promise.resolve(pkg))
+            .verifiable(TypeMoq.Times.once());
+
+        const [uri, version] = await languageServerDownloader.getDownloadInfo();
+
+        folderService.verifyAll();
+        workspaceService.verifyAll();
+        expect(uri).to.deep.equal(pkg.uri);
+        expect(version).to.deep.equal(pkg.version.raw);
+    });
+
     // tslint:disable-next-line:max-func-body-length
     suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
         const failure = new Error('kaboom');
