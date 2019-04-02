@@ -104,7 +104,7 @@ export class GuestJupyterServer
                 s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
             }
         }).ignoreErrors();
-        return this.responseQueue.waitForObservable(code, file, line, id);
+        return this.responseQueue.waitForObservable(code, id);
     }
 
     public async restartKernel(): Promise<void> {

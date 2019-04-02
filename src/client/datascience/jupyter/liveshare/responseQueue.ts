@@ -14,11 +14,11 @@ export class ResponseQueue {
     private responseQueue : IServerResponse [] = [];
     private waitingQueue : { deferred: Deferred<IServerResponse>; predicate(r: IServerResponse) : boolean }[] = [];
 
-    public waitForObservable(code: string, file: string, line: number, id: string, translator: (cells: ICell[]) => ICell[]) : Observable<ICell[]> {
+    public waitForObservable(code: string, id: string) : Observable<ICell[]> {
         // Create a wrapper observable around the actual server
         return new Observable<ICell[]>(subscriber => {
             // Wait for the observable responses to come in
-            this.waitForResponses(subscriber, code, file, line, id)
+            this.waitForResponses(subscriber, code, id)
                 .catch(e => {
                     subscriber.error(e);
                     subscriber.complete();
@@ -31,15 +31,15 @@ export class ResponseQueue {
         this.dispatchResponses();
     }
 
-    public send(service: vsls.SharedService) {
-        this.responseQueue.forEach(r => service.notify(LiveShareCommands.serverResponse, r));
+    public send(service: vsls.SharedService, translator: (r: IServerResponse) => IServerResponse) {
+        this.responseQueue.forEach(r => service.notify(LiveShareCommands.serverResponse, translator(r)));
     }
 
     public clear() {
         this.responseQueue = [];
     }
 
-    private async waitForResponses(subscriber: Subscriber<ICell[]>, code: string, id: string, translator: (cells: ICell[]) => ICell[]) : Promise<void> {
+    private async waitForResponses(subscriber: Subscriber<ICell[]>, code: string, id: string) : Promise<void> {
         let pos = 0;
         let cells: ICell[] | undefined = [];
         while (cells !== undefined) {
@@ -50,7 +50,7 @@ export class ResponseQueue {
                     (code === r.code);
             });
             if (response.cells) {
-                subscriber.next(translator(response.cells));
+                subscriber.next(response.cells);
                 pos += 1;
             }
             cells = response.cells;
