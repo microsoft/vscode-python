@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
@@ -12,13 +13,12 @@ import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessageListener } from '../../client/datascience/data-viewing/dataViewerMessageListener';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { CellPosition, verifyHtmlOnCell } from './historyTestHelpers';
-import { blurWindow } from './reactHelpers';
-import { nbformat } from '@jupyterlab/coreutils';
 
+// import { asyncDump } from '../common/asyncDump';
 suite('DataViewer tests', () => {
     const disposables: Disposable[] = [];
     let dataProvider: IDataViewerProvider;
@@ -91,22 +91,28 @@ suite('DataViewer tests', () => {
         delete (global as any).ascquireVsCodeApi;
     });
 
+    suiteTeardown(() => {
+        // asyncDump();
+    });
+
     async function createDataViewer(variable: string): Promise<IDataViewer> {
         return dataProvider.create(variable);
     }
 
     async function injectCode(code: string) : Promise<void> {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-        const server = await exec.connectToNotebookServer();
+        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
+        const server = await exec.connectToNotebookServer(await historyProvider.getNotebookOptions());
         if (server) {
             const cells = await server.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);
             assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
             const cell = cells[0].data as nbformat.ICodeCell;
-            assert.ok(cell.outputs.length > 0, `Cell length not correct`);
-            const error = cell.outputs[0].evalue;
-            if (error) {
-                assert.fail(`Unexpected error: ${error}`);
+            if (cell.outputs.length > 0) {
+                const error = cell.outputs[0].evalue;
+                if (error) {
+                    assert.fail(`Unexpected error: ${error}`);
+                }
             }
         }
     }

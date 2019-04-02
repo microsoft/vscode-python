@@ -36,7 +36,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable[]>(
             undefined,
             [],
-            this.fetchVariablesScript);
+            () => this.fetchVariablesScript);
     }
 
     public async getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
@@ -44,7 +44,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable>(
             targetVariable,
             targetVariable,
-            this.fetchVariableValueScript);
+            () => this.fetchVariableValueScript);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
@@ -52,7 +52,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable>(
             targetVariable,
             targetVariable,
-            this.fetchDataFrameInfoScript,
+            () => this.fetchDataFrameInfoScript,
             [{key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn()}]);
     }
 
@@ -61,7 +61,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<JSONObject>(
             targetVariable,
             {},
-            this.fetchDataFrameRowsScript,
+            () => this.fetchDataFrameRowsScript,
             [
                 {key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn()},
                 {key: '_VSCode_JupyterStartRow', value: start.toString()},
@@ -90,12 +90,13 @@ export class JupyterVariables implements IJupyterVariables {
     private async runScript<T>(
         targetVariable: IJupyterVariable | undefined,
         defaultValue: T,
-        scriptBaseText: string | undefined,
+        scriptBaseTextFetcher: () => string | undefined,
         extraReplacements: { key: string; value: string }[] = []): Promise<T> {
         if (!this.filesLoaded) {
             await this.loadVariableFiles();
         }
 
+        const scriptBaseText = scriptBaseTextFetcher();
         const activeServer = await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions());
         if (!activeServer || !scriptBaseText) {
             // No active server just return the unchanged target variable
