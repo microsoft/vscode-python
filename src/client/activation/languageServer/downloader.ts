@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IOutputChannel } from '../../common/types';
+import { IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -38,16 +38,28 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     ) {
     }
 
-    public async getDownloadInfo() {
+    public async getDownloadInfo(resource?: Resource) {
         const info = await this.lsFolderService.getLatestLanguageServerVersion()
             .then(item => item!);
-        const uri = info.uri;
-        // tslint:disable-next-line:no-unused-expression
-        this.workspace;
+
+        let uri = info.uri;
+        if (uri.startsWith('https:')) {
+            if (!resource) {
+                resource = this.workspace.hasWorkspaceFolders
+                    ? this.workspace.workspaceFolders![0].uri
+                    : undefined;
+            }
+            const cfg = this.workspace.getConfiguration('http', resource);
+            if (!cfg.get<boolean>('proxyStrictSSL', true)) {
+                // tslint:disable-next-line:no-http-string
+                uri = uri.replace(/^https:/, 'http:');
+            }
+        }
+
         return [uri, info.version.raw];
     }
-    public async downloadLanguageServer(destinationFolder: string): Promise<void> {
-        const [downloadUri, lsVersion] = await this.getDownloadInfo();
+    public async downloadLanguageServer(destinationFolder: string, resource?: Resource): Promise<void> {
+        const [downloadUri, lsVersion] = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;
         let localTempFilePath = '';

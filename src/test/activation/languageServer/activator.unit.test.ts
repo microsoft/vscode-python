@@ -112,13 +112,14 @@ suite('Language Server - Activator', () => {
         when(settings.downloadLanguageServer).thenReturn(true);
         when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(false);
-        when(lsDownloader.downloadLanguageServer(languageServerFolderPath)).thenReturn(deferred.promise);
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined))
+            .thenReturn(deferred.promise);
 
         const promise = activator.activate(undefined);
         await sleep(1);
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName()).once();
-        verify(lsDownloader.downloadLanguageServer(anything())).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
 
         verify(manager.start(undefined)).never();
 

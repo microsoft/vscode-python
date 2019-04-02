@@ -26,13 +26,13 @@ import {
  */
 @injectable()
 export class LanguageServerExtensionActivator implements ILanguageServerActivator {
+    private resource?: Resource;
     constructor(
         @inject(ILanguageServerManager) private readonly manager: ILanguageServerManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService)
-        private readonly languageServerFolderService: ILanguageServerFolderService,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) { }
     @traceDecorators.error('Failed to activate language server')
@@ -42,6 +42,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
                 ? this.workspace.workspaceFolders![0].uri
                 : undefined;
         }
+        this.resource = resource;
         await this.ensureLanguageServerIsAvailable(resource);
         await this.manager.start(resource);
     }
@@ -58,7 +59,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
         if (!(await this.fs.fileExists(mscorlib))) {
-            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath);
+            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, this.resource);
         }
     }
 }

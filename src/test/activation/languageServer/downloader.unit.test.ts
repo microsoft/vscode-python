@@ -8,11 +8,12 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
+import { Uri, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
 import { ILanguageServerFolderService, IPlatformData } from '../../../client/activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IOutputChannel } from '../../../client/common/types';
+import { IOutputChannel, Resource } from '../../../client/common/types';
 import { Common, LanguageService } from '../../../client/common/utils/localize';
 
 // tslint:disable-next-line:max-func-body-length
@@ -20,9 +21,11 @@ suite('Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let resource: Resource;
     setup(() => {
         folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
+        resource = Uri.file(__dirname);
         languageServerDownloader = new LanguageServerDownloader(
             undefined as any,
             undefined as any,
@@ -34,7 +37,50 @@ suite('Activation - Downloader', () => {
         );
     });
 
-    test('Get download info - HTTPS', async () => {
+    test('Get download info - HTTPS with resource', async () => {
+        const cfg = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
+        cfg
+            .setup(c => c.get('proxyStrictSSL', true))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService
+            .setup(w => w.getConfiguration(TypeMoq.It.isValue('http'), TypeMoq.It.isValue(resource)))
+            .returns(() => cfg.object)
+            .verifiable(TypeMoq.Times.once());
+
+        const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
+        folderService
+            .setup(f => f.getLatestLanguageServerVersion())
+            .returns(() => Promise.resolve(pkg))
+            .verifiable(TypeMoq.Times.once());
+
+        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
+
+        folderService.verifyAll();
+        workspaceService.verifyAll();
+        expect(uri).to.equal(pkg.uri);
+        expect(version).to.equal(pkg.version.raw);
+    });
+
+    test('Get download info - HTTPS without resource', async () => {
+        const cfg = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
+        cfg
+            .setup(c => c.get('proxyStrictSSL', true))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService
+            .setup(w => w.workspaceFolders)
+            .returns(() => [{ uri: resource }] as any)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService
+            .setup(w => w.getConfiguration(TypeMoq.It.isValue('http'), TypeMoq.It.isValue(resource)))
+            .returns(() => cfg.object)
+            .verifiable(TypeMoq.Times.once());
+
         const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
@@ -45,8 +91,34 @@ suite('Activation - Downloader', () => {
 
         folderService.verifyAll();
         workspaceService.verifyAll();
-        expect(uri).to.deep.equal(pkg.uri);
-        expect(version).to.deep.equal(pkg.version.raw);
+        expect(uri).to.equal(pkg.uri);
+        expect(version).to.equal(pkg.version.raw);
+    });
+
+    test('Get download info - HTTPS disabled', async () => {
+        const cfg = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
+        cfg
+            .setup(c => c.get('proxyStrictSSL', true))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService
+            .setup(w => w.getConfiguration(TypeMoq.It.isValue('http'), TypeMoq.It.isValue(resource)))
+            .returns(() => cfg.object)
+            .verifiable(TypeMoq.Times.once());
+
+        const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
+        folderService
+            .setup(f => f.getLatestLanguageServerVersion())
+            .returns(() => Promise.resolve(pkg))
+            .verifiable(TypeMoq.Times.once());
+
+        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
+
+        folderService.verifyAll();
+        workspaceService.verifyAll();
+        // tslint:disable-next-line:no-http-string
+        expect(uri).to.deep.equal('http://a.b.com/x/y/z/ls.nupkg');
+        expect(version).to.equal(pkg.version.raw);
     });
 
     test('Get download info - HTTP', async () => {
@@ -57,12 +129,12 @@ suite('Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo();
+        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
-        expect(uri).to.deep.equal(pkg.uri);
-        expect(version).to.deep.equal(pkg.version.raw);
+        expect(uri).to.equal(pkg.uri);
+        expect(version).to.equal(pkg.version.raw);
     });
 
     test('Get download info - bogus URL', async () => {
@@ -72,12 +144,12 @@ suite('Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo();
+        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
-        expect(uri).to.deep.equal(pkg.uri);
-        expect(version).to.deep.equal(pkg.version.raw);
+        expect(uri).to.equal(pkg.uri);
+        expect(version).to.equal(pkg.version.raw);
     });
 
     // tslint:disable-next-line:max-func-body-length
@@ -86,8 +158,8 @@ suite('Activation - Downloader', () => {
 
         class LanguageServerDownloaderTest extends LanguageServerDownloader {
             // tslint:disable-next-line:no-unnecessary-override
-            public async downloadLanguageServer(destinationFolder: string): Promise<void> {
-                return super.downloadLanguageServer(destinationFolder);
+            public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
+                return super.downloadLanguageServer(destinationFolder, res);
             }
             protected async downloadFile(_uri: string, _title: string): Promise<string> {
                 throw failure;
@@ -95,12 +167,12 @@ suite('Activation - Downloader', () => {
         }
         class LanguageServerExtractorTest extends LanguageServerDownloader {
             // tslint:disable-next-line:no-unnecessary-override
-            public async downloadLanguageServer(destinationFolder: string): Promise<void> {
-                return super.downloadLanguageServer(destinationFolder);
+            public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
+                return super.downloadLanguageServer(destinationFolder, res);
             }
             // tslint:disable-next-line:no-unnecessary-override
-            public async getDownloadInfo() {
-                return super.getDownloadInfo();
+            public async getDownloadInfo(res?: Resource) {
+                return super.getDownloadInfo(res);
             }
             protected async downloadFile() {
                 return 'random';
@@ -155,7 +227,7 @@ suite('Activation - Downloader', () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             try {
-                await languageServerDownloaderTest.downloadLanguageServer('');
+                await languageServerDownloaderTest.downloadLanguageServer('', resource);
             } catch (err) {
                 output.verifyAll();
                 appShell.verifyAll();
@@ -178,7 +250,7 @@ suite('Activation - Downloader', () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             try {
-                await languageServerExtractorTest.downloadLanguageServer('');
+                await languageServerExtractorTest.downloadLanguageServer('', resource);
             } catch (err) {
                 appShell.verifyAll();
             }
