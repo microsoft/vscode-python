@@ -75,10 +75,11 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' }, err);
             throw new Error(err);
         } finally {
+            const usedSSL = downloadUri.startsWith('https:');
             sendTelemetryEvent(
                 EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED,
                 timer.elapsedTime,
-                { success, lsVersion }
+                { success, lsVersion, usedSSL }
             );
         }
 

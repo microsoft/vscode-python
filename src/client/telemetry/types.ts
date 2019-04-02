@@ -30,6 +30,7 @@ export type FormatTelemetry = {
 export type LanguageServerVersionTelemetry = {
     success: boolean;
     lsVersion?: string;
+    usedSSL?: boolean;
 };
 
 export type LanguageServerErrorTelemetry = {
