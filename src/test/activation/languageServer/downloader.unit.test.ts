@@ -10,7 +10,7 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
 import { ILanguageServerFolderService, IPlatformData } from '../../../client/activation/types';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IOutputChannel } from '../../../client/common/types';
 import { Common, LanguageService } from '../../../client/common/utils/localize';
@@ -19,15 +19,18 @@ import { Common, LanguageService } from '../../../client/common/utils/localize';
 suite('Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(() => {
         folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         languageServerDownloader = new LanguageServerDownloader(
             undefined as any,
             undefined as any,
             undefined as any,
             folderService.object,
             undefined as any,
-            undefined as any
+            undefined as any,
+            workspaceService.object
         );
     });
 
@@ -92,7 +95,8 @@ suite('Activation - Downloader', () => {
                 undefined as any,
                 folderService.object,
                 appShell.object,
-                fs.object
+                fs.object,
+                workspaceService.object
             );
             languageServerExtractorTest = new LanguageServerExtractorTest(
                 platformData.object,
@@ -100,7 +104,8 @@ suite('Activation - Downloader', () => {
                 undefined as any,
                 folderService.object,
                 appShell.object,
-                fs.object
+                fs.object,
+                workspaceService.object
             );
         });
         test('Display error message if LS downloading fails', async () => {

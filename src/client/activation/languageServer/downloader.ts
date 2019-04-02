@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -33,7 +33,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ILanguageServerFolderService) private readonly lsFolderService: ILanguageServerFolderService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
     }
 
@@ -41,6 +42,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const info = await this.lsFolderService.getLatestLanguageServerVersion()
             .then(item => item!);
         const uri = info.uri;
+        // tslint:disable-next-line:no-unused-expression
+        this.workspace;
         return [uri, info.version.raw];
     }
     public async downloadLanguageServer(destinationFolder: string): Promise<void> {
