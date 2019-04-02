@@ -5,7 +5,7 @@
 
 ### Fixes
 
-1. Unable to expand variables in the watch window and the debug console.
+1. Fix regression preventing the expansion of variables in the watch window and the debug console.
    ([#5035](https://github.com/Microsoft/vscode-python/issues/5035))
 1. Display survey banner for Language Server when using current Lanaguage Server.
    ([#5064](https://github.com/Microsoft/vscode-python/issues/5064))
