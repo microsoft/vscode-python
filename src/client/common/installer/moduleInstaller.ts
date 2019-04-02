@@ -7,12 +7,12 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { noop } from '../utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
 
 @injectable()
 export abstract class ModuleInstaller {
