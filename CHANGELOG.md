@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 2019.3.2 (1 April 2019)
+## 2019.3.2 (2 April 2019)
 
 ### Fixes
 
@@ -9,6 +9,10 @@
    ([#5035](https://github.com/Microsoft/vscode-python/issues/5035))
 1. Display survey banner for Language Server when using current Lanaguage Server.
    ([#5064](https://github.com/Microsoft/vscode-python/issues/5064))
+1. Update ptvsd to [4.2.6](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.6).
+   ([#5083](https://github.com/Microsoft/vscode-python/issues/5083))
+    * Fix issue with expanding variables in watch window and hover.
+    * Fix issue with launching a sub-module.
 
 ## 2019.3.1 (28 March 2019)
 
