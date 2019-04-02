@@ -35,10 +35,7 @@ suite('Activation - Downloader', () => {
     });
 
     test('Get download info - HTTPS', async () => {
-        const pkg = {
-            uri: 'https://a.b.com/x/y/z.nupkg',
-            version: { raw: '1.2.3' }
-        } as any;
+        const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
             .returns(() => Promise.resolve(pkg))
@@ -53,11 +50,8 @@ suite('Activation - Downloader', () => {
     });
 
     test('Get download info - HTTP', async () => {
-        const pkg = {
-            // tslint:disable-next-line:no-http-string
-            uri: 'http://a.b.com/x/y/z.nupkg',
-            version: { raw: '1.2.3' }
-        } as any;
+        // tslint:disable-next-line:no-http-string
+        const pkg = makePkgInfo('ls', 'http://a.b.com/x/y/z/ls.nupkg');
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
             .returns(() => Promise.resolve(pkg))
@@ -72,10 +66,7 @@ suite('Activation - Downloader', () => {
     });
 
     test('Get download info - bogus URL', async () => {
-        const pkg = {
-            uri: 'xyz',
-            version: { raw: '1.2.3' }
-        } as any;
+        const pkg = makePkgInfo('ls', 'xyz');
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
             .returns(() => Promise.resolve(pkg))
@@ -151,7 +142,7 @@ suite('Activation - Downloader', () => {
             );
         });
         test('Display error message if LS downloading fails', async () => {
-            const pkg = { uri: 'xyz', package: 'abc', version: new SemVer('0.0.0') } as any;
+            const pkg = makePkgInfo('ls', 'xyz');
             folderService
                 .setup(f => f.getLatestLanguageServerVersion())
                 .returns(() => Promise.resolve(pkg))
@@ -174,7 +165,7 @@ suite('Activation - Downloader', () => {
             platformData.verifyAll();
         });
         test('Display error message if LS extraction fails', async () => {
-            const pkg = { uri: 'xyz', package: 'abc', version: new SemVer('0.0.0') } as any;
+            const pkg = makePkgInfo('ls', 'xyz');
             folderService
                 .setup(f => f.getLatestLanguageServerVersion())
                 .returns(() => Promise.resolve(pkg))
@@ -197,3 +188,11 @@ suite('Activation - Downloader', () => {
         });
     });
 });
+
+function makePkgInfo(name: string, uri: string, version: string = '0.0.0') {
+    return {
+        package: name,
+        uri: uri,
+        version: new SemVer(version)
+    } as any;
+}
