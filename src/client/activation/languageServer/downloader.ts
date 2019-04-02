@@ -55,7 +55,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(LanguageService.downloadFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
-            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload()).ignoreErrors();
+            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload())
+                .ignoreErrors();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' }, err);
             throw new Error(err);
         } finally {
@@ -73,7 +74,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(LanguageService.extractionFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
-            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract()).ignoreErrors();
+            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract())
+                .ignoreErrors();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' }, err);
             throw new Error(err);
         } finally {

@@ -20,11 +20,15 @@ suite('Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     setup(() => {
-        folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
-        languageServerDownloader = new LanguageServerDownloader(undefined as any,
-            undefined as any, undefined as any,
-            folderService.object, undefined as any,
-            undefined as any);
+        folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
+        languageServerDownloader = new LanguageServerDownloader(
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            folderService.object,
+            undefined as any,
+            undefined as any
+        );
     });
 
     test('Get download uri', async () => {
@@ -40,14 +44,17 @@ suite('Activation - Downloader', () => {
         expect(uri).to.deep.equal(pkg.uri);
         expect(version).to.deep.equal(pkg.version.raw);
     });
+    // tslint:disable-next-line:max-func-body-length
     suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
+        const failure = new Error('kaboom');
+
         class LanguageServerDownloaderTest extends LanguageServerDownloader {
             // tslint:disable-next-line:no-unnecessary-override
             public async downloadLanguageServer(destinationFolder: string): Promise<void> {
                 return super.downloadLanguageServer(destinationFolder);
             }
             protected async downloadFile(_uri: string, _title: string): Promise<string> {
-                throw new Error('kaboom');
+                throw failure;
             }
         }
         class LanguageServerExtractorTest extends LanguageServerDownloader {
@@ -63,21 +70,38 @@ suite('Activation - Downloader', () => {
                 return 'random';
             }
             protected async unpackArchive(_extensionPath: string, _tempFilePath: string): Promise<void> {
-                throw new Error('kaboom');
+                throw failure;
             }
         }
+        let output: TypeMoq.IMock<IOutputChannel>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
+        let fs: TypeMoq.IMock<IFileSystem>;
+        let platformData: TypeMoq.IMock<IPlatformData>;
         let languageServerDownloaderTest: LanguageServerDownloaderTest;
         let languageServerExtractorTest: LanguageServerExtractorTest;
         setup(() => {
-            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
-            const fs = TypeMoq.Mock.ofType<IFileSystem>();
-            const output = TypeMoq.Mock.ofType<IOutputChannel>();
-            const platformData = TypeMoq.Mock.ofType<IPlatformData>();
+            appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
+            folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
+            output = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
+            fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+            platformData = TypeMoq.Mock.ofType<IPlatformData>(undefined, TypeMoq.MockBehavior.Strict);
 
-            languageServerDownloaderTest = new LanguageServerDownloaderTest(platformData.object,  output.object, undefined as any, folderService.object, appShell.object, fs.object);
-            languageServerExtractorTest = new LanguageServerExtractorTest(platformData.object,  output.object, undefined as any, folderService.object, appShell.object, fs.object);
+            languageServerDownloaderTest = new LanguageServerDownloaderTest(
+                platformData.object,
+                output.object,
+                undefined as any,
+                folderService.object,
+                appShell.object,
+                fs.object
+            );
+            languageServerExtractorTest = new LanguageServerExtractorTest(
+                platformData.object,
+                output.object,
+                undefined as any,
+                folderService.object,
+                appShell.object,
+                fs.object
+            );
         });
         test('Display error message if LS downloading fails', async () => {
             const pkg = { uri: 'xyz', package: 'abc', version: new SemVer('0.0.0') } as any;
@@ -85,21 +109,32 @@ suite('Activation - Downloader', () => {
                 .setup(f => f.getLatestLanguageServerVersion())
                 .returns(() => Promise.resolve(pkg))
                 .verifiable(TypeMoq.Times.once());
+            output.setup(o => o.appendLine(LanguageService.downloadFailedOutputMessage()))
+                .verifiable(TypeMoq.Times.once());
+            output.setup(o => o.appendLine((failure as unknown) as string))
+                .verifiable(TypeMoq.Times.once());
             appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToDownload(), Common.openOutputPanel()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             try {
                 await languageServerDownloaderTest.downloadLanguageServer('');
             } catch (err) {
+                output.verifyAll();
                 appShell.verifyAll();
             }
             folderService.verifyAll();
+            fs.verifyAll();
+            platformData.verifyAll();
         });
         test('Display error message if LS extraction fails', async () => {
             const pkg = { uri: 'xyz', package: 'abc', version: new SemVer('0.0.0') } as any;
             folderService
                 .setup(f => f.getLatestLanguageServerVersion())
                 .returns(() => Promise.resolve(pkg))
+                .verifiable(TypeMoq.Times.once());
+            output.setup(o => o.appendLine(LanguageService.extractionFailedOutputMessage()))
+                .verifiable(TypeMoq.Times.once());
+            output.setup(o => o.appendLine((failure as unknown) as string))
                 .verifiable(TypeMoq.Times.once());
             appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToExtract(), Common.openOutputPanel()))
                 .returns(() => Promise.resolve(undefined))
@@ -110,6 +145,8 @@ suite('Activation - Downloader', () => {
                 appShell.verifyAll();
             }
             folderService.verifyAll();
+            fs.verifyAll();
+            platformData.verifyAll();
         });
     });
 });
