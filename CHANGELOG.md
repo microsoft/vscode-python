@@ -7,7 +7,7 @@
 
 1. Fix regression preventing the expansion of variables in the watch window and the debug console.
    ([#5035](https://github.com/Microsoft/vscode-python/issues/5035))
-1. Display survey banner for Language Server when using current Lanaguage Server.
+1. Display survey banner (again) for Language Server when using current Lanaguage Server.
    ([#5064](https://github.com/Microsoft/vscode-python/issues/5064))
 1. Update ptvsd to [4.2.6](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.6).
    ([#5083](https://github.com/Microsoft/vscode-python/issues/5083))
