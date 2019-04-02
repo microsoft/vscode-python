@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IPersistentStateFactory } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterHelper, IInterpreterLocatorService, IInterpreterWatcher, InterpreterType, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager, IVirtualEnvironmentPrompt } from './types';
 
@@ -14,22 +13,22 @@ const doNotDisplayPromptStateKey = 'DEPRECATED_MESSAGE_KEY_FOR_VIRTUAL_ENV';
 @injectable()
 export class VirtualEnvironmentPrompt implements IVirtualEnvironmentPrompt {
     constructor(
-        @inject(IInterpreterWatcher) private readonly watcher: IInterpreterWatcher,
+        @inject(IInterpreterWatcher) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private watcher: IInterpreterWatcher,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IVirtualEnvironmentManager) private readonly manager: IVirtualEnvironmentManager,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell) {
-    }
-    public async register(): Promise<void> {
+        @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly locator: IInterpreterLocatorService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell) { }
+
+    public register(): void {
         this.watcher.onDidCreate((e) => {
             this.handleNewEnvironment(e).ignoreErrors();
         });
     }
     public async handleNewEnvironment(resource?: Uri): Promise<void> {
-        const interpreters = await this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE).getInterpreters(resource);
-        const interpreter = await this.helper.getBestInterpreter(interpreters);
+        const interpreters = await this.locator.getInterpreters(resource);
+        const interpreter = this.helper.getBestInterpreter(interpreters);
         if (!interpreter) {
             return;
         }

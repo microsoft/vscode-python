@@ -13,6 +13,6 @@ export interface IVirtualEnvironmentManager {
 
 export const IVirtualEnvironmentPrompt = Symbol('VirtualEnvironmentPrompt');
 export interface IVirtualEnvironmentPrompt {
-    register(): Promise<void>;
+    register(): void;
     handleNewEnvironment(resource?: Uri): Promise<void>;
 }
