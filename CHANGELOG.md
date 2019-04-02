@@ -16,7 +16,7 @@
 
 ### Code Health
 
-1. Capture telemetry to track installer used when installing packages.
+1. Capture telemetry to track which installer was used when installing packages via the extension.
    ([#5063](https://github.com/Microsoft/vscode-python/issues/5063))
 
 
