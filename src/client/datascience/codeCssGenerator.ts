@@ -124,6 +124,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const keywordStyle = this.getScopeStyle(tokenColors, 'keyword.control', 'keyword');
         const operatorStyle = this.getScopeStyle(tokenColors, 'keyword.operator', 'keyword');
         const variableStyle = this.getScopeStyle(tokenColors, 'variable');
+        const entityTypeStyle = this.getScopeStyle(tokenColors, 'entity.name.type');
         // const atomic = this.getScopeColor(tokenColors, 'atomic');
         const builtinStyle = this.getScopeStyle(tokenColors, 'support.function');
         const punctuationStyle = this.getScopeStyle(tokenColors, 'punctuation');
@@ -141,6 +142,10 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         return `
         :root {
             --code-comment-color: ${commentStyle.color};
+            --code-numeric-color: ${numericStyle.color};
+            --code-string-color: ${stringStyle.color};
+            --code-variable-color: ${variableStyle.color};
+            --code-type-color: ${entityTypeStyle.color};
             --code-font-family: ${fontFamily};
             --code-font-size: ${fontSize}px;
         }

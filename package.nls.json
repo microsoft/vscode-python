@@ -95,7 +95,7 @@
     "DataScience.exportOpenQuestion": "Open in browser",
     "DataScience.collapseInputTooltip": "Collapse input block",
     "DataScience.collapseVariableExplorerTooltip": "Collapse variable explorer",
-    "DataScience.collapseVariableExplorerLabel": "Variable Explorer",
+    "DataScience.collapseVariableExplorerLabel": "Variables",
     "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",

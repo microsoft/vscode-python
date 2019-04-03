@@ -11,17 +11,6 @@
     border-radius: 0px;
 }
 
-#variable-explorer-data-grid .react-grid-Toolbar {
-    background-color: var(--vscode-editor-background);
-    border: none;
-}
-
-#variable-explorer-data-grid .react-grid-Toolbar .btn {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    border-color: var(--vscode-badge-background);
-}
-
 #variable-explorer-data-grid .react-grid-Main {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
@@ -31,7 +20,7 @@
 #variable-explorer-data-grid .react-grid-Grid {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    border-color: var(--vscode-badge-background);
+    border-style: none;
 }
 
 #variable-explorer-data-grid .react-grid-Canvas {
@@ -44,17 +33,32 @@
 }
 
 #variable-explorer-data-grid .react-grid-HeaderCell {
-    background-color: var(--vscode-notifications-background);
+    background-color: var(--vscode-editor-lineHighlightBorder);
+    color: var(--vscode-editor-foreground);
+    border-style: none none solid none;
+    border-bottom-color: var(--vscode-badge-background);
+    padding: 4px;
+}
+
+
+#variable-explorer-data-grid .react-grid-Row--even {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-right-color: var(--vscode-badge-background);
+    border-bottom-color: var(--vscode-badge-background);
+}
+
+#variable-explorer-data-grid .react-grid-Row--odd {
+    background-color: var(--vscode-editor-lineHighlightBorder);
     color: var(--vscode-editor-foreground);
     border-right-color: var(--vscode-badge-background);
     border-bottom-color: var(--vscode-badge-background);
 }
 
 #variable-explorer-data-grid .react-grid-Cell {
-    background-color: var(--vscode-editor-background);
+    background-color: transparent;
     color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-badge-background);
-    border-bottom-color: var(--vscode-badge-background);
+    border-style: none;
 }
 
 #variable-explorer-data-grid .react-grid-Cell:hover {
