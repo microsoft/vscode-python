@@ -79,8 +79,9 @@ class PytestTests(unittest.TestCase):
                 ],
             }])
 
-    def test_discover_complex(self):
+    def test_discover_complex_default(self):
         projroot, testroot = resolve_testroot('complex')
+        expected = self.complex(projroot)
 
         out = run_adapter('discover', 'pytest',
                           '--rootdir', projroot,
@@ -88,36 +89,104 @@ class PytestTests(unittest.TestCase):
         result = json.loads(out)
 
         self.maxDiff = None
-        self.assertEqual(result, [{
-            'root': projroot,
+        self.assertEqual(result, expected)
+
+    def test_discover_complex_doctest(self):
+        projroot, _ = resolve_testroot('complex')
+        expected = self.complex(projroot)
+        # add in doctests from test suite
+        expected[0]['parents'].insert(3, {
+            'id': fix_path('./tests/test_doctest.py'),
+            'kind': 'file',
+            'name': 'test_doctest.py',
+            'parentid': fix_path('./tests'),
+            })
+        expected[0]['tests'].insert(2, {
+            'id': fix_path('./tests/test_doctest.py::tests.test_doctest'),
+            'name': 'tests.test_doctest',
+            'source': fix_path('tests/test_doctest.py:1'),
+            'markers': [],
+            'parentid': fix_path('./tests/test_doctest.py'),
+            })
+        # add in doctests from non-test module
+        expected[0]['parents'].insert(0, {
+            'id': fix_path('./mod.py'),
+            'kind': 'file',
+            'name': 'mod.py',
+            'parentid': '.',
+            })
+        expected[0]['tests'] = [
+            {'id': fix_path('./mod.py::mod'),
+             'name': 'mod',
+             'source': fix_path('./mod.py:1'),
+             'markers': [],
+             'parentid': fix_path('./mod.py'),
+             },
+            {'id': fix_path('./mod.py::mod.Spam'),
+             'name': 'mod.Spam',
+             'source': fix_path('./mod.py:33'),
+             'markers': [],
+             'parentid': fix_path('./mod.py'),
+             },
+            {'id': fix_path('./mod.py::mod.Spam.eggs'),
+             'name': 'mod.Spam.eggs',
+             'source': fix_path('./mod.py:43'),
+             'markers': [],
+             'parentid': fix_path('./mod.py'),
+             },
+            {'id': fix_path('./mod.py::mod.square'),
+             'name': 'mod.square',
+             'source': fix_path('./mod.py:18'),
+             'markers': [],
+             'parentid': fix_path('./mod.py'),
+             },
+            ] + expected[0]['tests']
+
+        out = run_adapter('discover', 'pytest',
+                          '--rootdir', projroot,
+                          '--doctest-modules',
+                          projroot)
+        result = json.loads(out)
+
+        self.maxDiff = None
+        self.assertEqual(result, expected)
+
+    def complex(self, testroot):
+        return [{
+            'root': testroot,
             'rootid': '.',
             'parents': [
+                #
                 {'id': fix_path('./tests'),
                  'kind': 'folder',
                  'name': 'tests',
                  'parentid': '.',
                  },
-
+                # +++
                 {'id': fix_path('./tests/test_42-43.py'),
                  'kind': 'file',
                  'name': 'test_42-43.py',
                  'parentid': fix_path('./tests'),
                  },
+                # +++
                 {'id': fix_path('./tests/test_42.py'),
                  'kind': 'file',
                  'name': 'test_42.py',
                  'parentid': fix_path('./tests'),
                  },
-#                {'id': fix_path('./tests/test_doctest.txt'),
-#                 'kind': 'file',
-#                 'name': 'test_doctest.txt',
-#                 'parentid': fix_path('./tests'),
-#                 },
+                # +++
+                {'id': fix_path('./tests/test_doctest.txt'),
+                 'kind': 'file',
+                 'name': 'test_doctest.txt',
+                 'parentid': fix_path('./tests'),
+                 },
+                # +++
                 {'id': fix_path('./tests/test_foo.py'),
                  'kind': 'file',
                  'name': 'test_foo.py',
                  'parentid': fix_path('./tests'),
                  },
+                # +++
                 {'id': fix_path('./tests/test_mixed.py'),
                  'kind': 'file',
                  'name': 'test_mixed.py',
@@ -133,6 +202,7 @@ class PytestTests(unittest.TestCase):
                  'name': 'TestMySuite',
                  'parentid': fix_path('./tests/test_mixed.py'),
                  },
+                # +++
                 {'id': fix_path('./tests/test_pytest.py'),
                  'kind': 'file',
                  'name': 'test_pytest.py',
@@ -248,6 +318,7 @@ class PytestTests(unittest.TestCase):
                  'name': 'test_param_mark_fixture',
                  'parentid': fix_path('./tests/test_pytest.py'),
                  },
+                # +++
                 {'id': fix_path('./tests/test_pytest_param.py'),
                  'kind': 'file',
                  'name': 'test_pytest_param.py',
@@ -273,6 +344,7 @@ class PytestTests(unittest.TestCase):
                  'name': 'test_param_13',
                  'parentid': fix_path('./tests/test_pytest_param.py'),
                  },
+                # +++
                 {'id': fix_path('./tests/test_unittest.py'),
                  'kind': 'file',
                  'name': 'test_unittest.py',
@@ -288,12 +360,13 @@ class PytestTests(unittest.TestCase):
                  'name': 'OtherTests',
                  'parentid': fix_path('./tests/test_unittest.py'),
                  },
-
+                ##
                 {'id': fix_path('./tests/v'),
                  'kind': 'folder',
                  'name': 'v',
                  'parentid': fix_path('./tests'),
                  },
+                ## +++
                 {'id': fix_path('./tests/v/test_eggs.py'),
                  'kind': 'file',
                  'name': 'test_eggs.py',
@@ -304,68 +377,79 @@ class PytestTests(unittest.TestCase):
                  'name': 'TestSimple',
                  'parentid': fix_path('./tests/v/test_eggs.py'),
                  },
+                ## +++
                 {'id': fix_path('./tests/v/test_ham.py'),
                  'kind': 'file',
                  'name': 'test_ham.py',
                  'parentid': fix_path('./tests/v'),
                  },
+                ## +++
                 {'id': fix_path('./tests/v/test_spam.py'),
                  'kind': 'file',
                  'name': 'test_spam.py',
                  'parentid': fix_path('./tests/v'),
                  },
-
+                ##
                 {'id': fix_path('./tests/w'),
                  'kind': 'folder',
                  'name': 'w',
                  'parentid': fix_path('./tests'),
                  },
+                ## +++
                 {'id': fix_path('./tests/w/test_spam.py'),
                  'kind': 'file',
                  'name': 'test_spam.py',
                  'parentid': fix_path('./tests/w'),
                  },
+                ## +++
                 {'id': fix_path('./tests/w/test_spam_ex.py'),
                  'kind': 'file',
                  'name': 'test_spam_ex.py',
                  'parentid': fix_path('./tests/w'),
                  },
-
+                ##
                 {'id': fix_path('./tests/x'),
                  'kind': 'folder',
                  'name': 'x',
                  'parentid': fix_path('./tests'),
                  },
+                ###
                 {'id': fix_path('./tests/x/y'),
                  'kind': 'folder',
                  'name': 'y',
                  'parentid': fix_path('./tests/x'),
                  },
+                ####
                 {'id': fix_path('./tests/x/y/z'),
                  'kind': 'folder',
                  'name': 'z',
                  'parentid': fix_path('./tests/x/y'),
                  },
+                #####
                 {'id': fix_path('./tests/x/y/z/a'),
                  'kind': 'folder',
                  'name': 'a',
                  'parentid': fix_path('./tests/x/y/z'),
                  },
+                ##### +++
                 {'id': fix_path('./tests/x/y/z/a/test_spam.py'),
                  'kind': 'file',
                  'name': 'test_spam.py',
                  'parentid': fix_path('./tests/x/y/z/a'),
                  },
+                #####
                 {'id': fix_path('./tests/x/y/z/b'),
                  'kind': 'folder',
                  'name': 'b',
                  'parentid': fix_path('./tests/x/y/z'),
                  },
+                ##### +++
                 {'id': fix_path('./tests/x/y/z/b/test_spam.py'),
                  'kind': 'file',
                  'name': 'test_spam.py',
                  'parentid': fix_path('./tests/x/y/z/b'),
                  },
+                #### +++
                 {'id': fix_path('./tests/x/y/z/test_ham.py'),
                  'kind': 'file',
                  'name': 'test_ham.py',
@@ -386,6 +470,13 @@ class PytestTests(unittest.TestCase):
                  'source': fix_path('tests/test_42.py:2'),
                  'markers': [],
                  'parentid': fix_path('./tests/test_42.py'),
+                 },
+                #####
+                {'id': fix_path('./tests/test_doctest.txt::test_doctest.txt'),
+                 'name': 'test_doctest.txt',
+                 'source': fix_path('tests/test_doctest.txt:1'),
+                 'markers': [],
+                 'parentid': fix_path('./tests/test_doctest.txt'),
                  },
                 #####
                 {'id': fix_path('./tests/test_foo.py::test_simple'),
@@ -1044,4 +1135,4 @@ class PytestTests(unittest.TestCase):
                  'parentid': fix_path('./tests/x/y/z/b/test_spam.py'),
                  },
                 ],
-            }])
+            }]

@@ -147,13 +147,11 @@ others not discovered:
 * (`./test_unittest.py::MyTests::TestSub2`)
 * (`./test_unittest.py::NoTests`)
 
-missing:
-
-```
 doctests:
 
-* `./test_doctest.txt` - ???
-* `test_pytest.py` - 
-    * module-level doctests
-    + suite-level doctests
-```
+* `./test_doctest.txt::test_doctest.txt`
+* (`./test_doctest.py::test_doctest.py`)
+* (`../mod.py::mod`)
+* (`../mod.py::mod.square`)
+* (`../mod.py::mod.Spam`)
+* (`../mod.py::mod.spam.eggs`)
