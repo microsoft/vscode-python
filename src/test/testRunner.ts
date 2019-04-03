@@ -110,7 +110,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
             timer = setTimeout(() => reject(ex), 120_000);
         });
         const promise = Promise.race([initialize(), failed]);
-        promise.then(() => timer!.unref()).catch(() => timer!.unref());
+        promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
         return promise;
     }
     // Run the tests.

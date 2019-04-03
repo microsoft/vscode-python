@@ -14,6 +14,10 @@ import { getTestType, isSubtestsParent } from '../common/testUtils';
 import { TestResult, TestStatus, TestSuite, TestType } from '../common/types';
 import { TestDataItem } from '../types';
 
+function getDefaultCollapsibleState(data: TestDataItem): TreeItemCollapsibleState {
+    return getTestType(data) === TestType.testFunction ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed;
+}
+
 /**
  * Class that represents a visual node on the
  * Test Explorer tree view. Is essentially a wrapper for the underlying
@@ -24,14 +28,12 @@ export class TestTreeItem extends TreeItem {
 
     constructor(
         public readonly resource: Uri,
-        public readonly data: Readonly<TestDataItem>
+        public readonly data: Readonly<TestDataItem>,
+        collapsibleStatue: TreeItemCollapsibleState = getDefaultCollapsibleState(data)
     ) {
-        super(data.name, TestTreeItem.getCollapsibleState(data));
+        super(data.name, collapsibleStatue);
         this.testType = getTestType(this.data);
         this.setCommand();
-    }
-    private static getCollapsibleState(data: TestDataItem): TreeItemCollapsibleState {
-        return getTestType(data) === TestType.testFunction ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed;
     }
     public get contextValue(): string {
         return this.testType;

@@ -122,7 +122,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix', 'c
 
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
-        throw new Error('Native dependencies deteced');
+        done(new Error('Native dependencies deteced'));
     }
     done();
 });
@@ -209,7 +209,7 @@ async function buildWebPack(webpackConfigName, args) {
         .filter(item => item.startsWith('WARNING in '))
         .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
     const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
-    if (errors){
+    if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
@@ -811,6 +811,7 @@ function getFilesToProcess(fileList) {
 * @param {hygieneOptions} options
 */
 function getFileListToProcess(options) {
+    return [];
     const mode = options ? options.mode : 'all';
     const gulpSrcOptions = { base: '.' };
 

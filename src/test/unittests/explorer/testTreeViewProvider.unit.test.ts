@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { Uri } from 'vscode';
+import { TreeItemCollapsibleState, Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Commands } from '../../../client/common/constants';
@@ -15,7 +15,7 @@ import { CommandSource } from '../../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../../client/unittests/common/services/storageService';
 import { getTestType } from '../../../client/unittests/common/testUtils';
 import {
-    ITestCollectionStorageService, TestStatus, TestType
+    ITestCollectionStorageService, TestFile, TestFolder, TestStatus, TestType
 } from '../../../client/unittests/common/types';
 import { TestTreeItem } from '../../../client/unittests/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/unittests/explorer/testTreeViewProvider';
@@ -610,5 +610,94 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
             expect(tests).to.be.lengthOf(0);
             verify(commandManager.executeCommand(Commands.Tests_Discover, testWorkspaceFolder, CommandSource.testExplorer, undefined)).once();
         });
+    });
+    test('Expand tree item if it does not have any parent', async () => {
+        const commandManager = mock(CommandManager);
+        const testStore = mock(TestCollectionStorageService);
+        const testWorkspaceFolder = new TestWorkspaceFolder({ uri: Uri.file(__filename), name: '', index: 0 });
+        when(testStore.getTests(testWorkspaceFolder.workspaceFolder.uri)).thenReturn();
+        when(testStore.onDidChange).thenReturn(noop as any);
+        const testTreeProvider = createMockTestTreeProvider(instance(testStore), undefined, undefined, undefined, instance(commandManager));
+
+        // No parent
+        testTreeProvider.getParent = () => Promise.resolve(undefined);
+
+        const element: TestFile = {
+            fullPath: __filename,
+            functions: [],
+            suites: [],
+            name: 'name',
+            time: 0,
+            resource: Uri.file(__filename),
+            xmlName: '',
+            nameToRun: ''
+        };
+
+        const node = await testTreeProvider.getTreeItem(element);
+
+        expect(node.collapsibleState).to.equal(TreeItemCollapsibleState.Expanded);
+    });
+    test('Expand tree item if the parent is the Workspace Folder in a multiroot scenario', async () => {
+        const commandManager = mock(CommandManager);
+        const testStore = mock(TestCollectionStorageService);
+        const testWorkspaceFolder = new TestWorkspaceFolder({ uri: Uri.file(__filename), name: '', index: 0 });
+        when(testStore.getTests(testWorkspaceFolder.workspaceFolder.uri)).thenReturn();
+        when(testStore.onDidChange).thenReturn(noop as any);
+        const testTreeProvider = createMockTestTreeProvider(instance(testStore), undefined, undefined, undefined, instance(commandManager));
+
+        // Has a workspace folder as parent.
+        const parentFolder = new TestWorkspaceFolder({ name: '', index: 0, uri: Uri.file(__filename) });
+
+        testTreeProvider.getParent = () => Promise.resolve(parentFolder);
+
+        const element: TestFile = {
+            fullPath: __filename,
+            functions: [],
+            suites: [],
+            name: 'name',
+            time: 0,
+            resource: Uri.file(__filename),
+            xmlName: '',
+            nameToRun: ''
+        };
+
+        const node = await testTreeProvider.getTreeItem(element);
+
+        expect(node.collapsibleState).to.equal(TreeItemCollapsibleState.Expanded);
+    });
+    test('Do not expand tree item if it does not have any parent', async () => {
+        const commandManager = mock(CommandManager);
+        const testStore = mock(TestCollectionStorageService);
+        const testWorkspaceFolder = new TestWorkspaceFolder({ uri: Uri.file(__filename), name: '', index: 0 });
+        when(testStore.getTests(testWorkspaceFolder.workspaceFolder.uri)).thenReturn();
+        when(testStore.onDidChange).thenReturn(noop as any);
+        const testTreeProvider = createMockTestTreeProvider(instance(testStore), undefined, undefined, undefined, instance(commandManager));
+
+        // Has a parent folder
+        const parentFolder: TestFolder = {
+            name: '',
+            nameToRun: '',
+            resource: Uri.file(__filename),
+            time: 0,
+            testFiles: [],
+            folders: []
+        };
+
+        testTreeProvider.getParent = () => Promise.resolve(parentFolder);
+
+        const element: TestFile = {
+            fullPath: __filename,
+            functions: [],
+            suites: [],
+            name: 'name',
+            time: 0,
+            resource: Uri.file(__filename),
+            xmlName: '',
+            nameToRun: ''
+        };
+
+        const node = await testTreeProvider.getTreeItem(element);
+
+        expect(node.collapsibleState).to.not.equal(TreeItemCollapsibleState.Expanded);
     });
 });

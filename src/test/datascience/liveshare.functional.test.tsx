@@ -230,7 +230,7 @@ suite('LiveShare tests', () => {
 
     test('Going through codewatcher', async () => {
         // Should only need mock data in host
-        addMockData(hostContainer!, 'a=1\na', 1);
+        addMockData(hostContainer!, '#%%\na=1\na', 1);
 
         // Start both the host and the guest
         await startSession(vsls.Role.Host);
@@ -259,7 +259,7 @@ suite('LiveShare tests', () => {
 
     test('Export from guest', async () => {
         // Should only need mock data in host
-        addMockData(hostContainer!, 'a=1\na', 1);
+        addMockData(hostContainer!, '#%%\na=1\na', 1);
 
         // Remap the fileSystem so we control the write for the notebook. Have to do this
         // before the listener is created so that it uses this file system.

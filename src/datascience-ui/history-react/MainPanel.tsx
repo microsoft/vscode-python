@@ -10,19 +10,15 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
-import { noop } from '../../test/core';
-import { ErrorBoundary } from '../react-common/errorBoundary';
-import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { Progress } from '../react-common/progress';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
-import { CellButton } from './cellButton';
-import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
-import { MenuBar } from './menuBar';
 import { VariableExplorer } from './variableExplorer';
+
+import { ContentPanel, IContentPanelProps } from './contentPanel';
+import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -49,7 +45,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory()};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24};
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -86,47 +82,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
+
+        const headerProps = this.getHeaderProps(baseTheme);
+        const contentProps = this.getContentProps(baseTheme);
 
         return (
-            <div className='main-panel' ref={this.updateSelf}>
+            <div id='main-panel' ref={this.updateSelf}>
                 <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
-                <MenuBar baseTheme={baseTheme} stylePosition='top-fixed'>
-                    {this.renderExtraButtons()}
-                    <CellButton baseTheme={baseTheme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.CollapseAll}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.expandAll} disabled={!this.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.ExpandAll}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.SaveAs}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Restart}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Interrupt}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Undo}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Redo}/>
-                    </CellButton>
-                    <CellButton baseTheme={baseTheme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
-                        <Image baseTheme={baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
-                    </CellButton>
-                    {this.renderDataFrameTestButton()}
-                </MenuBar>
-                <VariableExplorer baseTheme={baseTheme} refreshVariables={this.refreshVariables} ref={this.variableExplorerRef} />
-                <div className='top-spacing'/>
-                {progressBar}
-                <div className='cell-table'>
-                    <div className='cell-table-body'>
-                        {this.renderCells()}
-                    </div>
-                </div>
+                <HeaderPanel {...headerProps} />
+                <ContentPanel {...contentProps} />
                 <div ref={this.updateBottom}/>
             </div>
         );
@@ -227,6 +191,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
+    // Called by the header control when size changes (such as expanding variables)
+    private onHeaderHeightChange = (newHeight: number) => {
+        this.setState({contentTop: newHeight});
+    }
+
+    private getContentProps = (baseTheme: string): IContentPanelProps => {
+        return {
+            baseTheme: baseTheme,
+            contentTop: this.state.contentTop,
+            cellVMs: this.state.cellVMs,
+            history: this.state.history,
+            testMode: this.props.testMode,
+            codeTheme: this.props.codeTheme,
+            submittedText: this.state.submittedText,
+            saveEditCellRef: this.saveEditCellRef,
+            gotoCellCode: this.gotoCellCode,
+            deleteCell: this.deleteCell,
+            submitInput: this.submitInput
+        };
+    }
     private renderDataFrameTestButton() {
         if (getSettings && getSettings().showJupyterVariableExplorer) {
             return (
@@ -236,7 +220,31 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             );
         }
 
-        return null;
+    private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
+       return {
+        addMarkdown: this.addMarkdown,
+        busy: this.state.busy,
+        collapseAll: this.collapseAll,
+        expandAll: this.expandAll,
+        export: this.export,
+        restartKernel: this.restartKernel,
+        interruptKernel: this.interruptKernel,
+        undo: this.undo,
+        redo: this.redo,
+        clearAll: this.clearAll,
+        skipDefault: this.props.skipDefault,
+        showDataExplorer: this.showDataExplorer,
+        testMode: this.props.testMode,
+        variableExplorerRef: this.variableExplorerRef,
+        canCollapseAll: this.canCollapseAll(),
+        canExpandAll: this.canExpandAll(),
+        canExport: this.canExport(),
+        canUndo: this.canUndo(),
+        canRedo: this.canRedo(),
+        refreshVariables: this.refreshVariables,
+        onHeightChange: this.onHeaderHeightChange,
+        baseTheme: baseTheme
+       };
     }
 
     private activate() {
@@ -290,42 +298,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.ReturnAllCells, cells);
     }
 
-    private renderExtraButtons = () => {
-        if (!this.props.skipDefault) {
-            const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-            return <CellButton baseTheme={baseTheme} onClick={this.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
-        }
-
-        return null;
-    }
-
-    private renderCells = () => {
-        const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-        const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
-            <ErrorBoundary key={index}>
-                <Cell
-                    history={cellVM.editable ? this.state.history : undefined}
-                    maxTextSize={maxTextSize}
-                    autoFocus={document.hasFocus()}
-                    testMode={this.props.testMode}
-                    cellVM={cellVM}
-                    submitNewCode={this.submitInput}
-                    baseTheme={baseTheme}
-                    codeTheme={this.props.codeTheme}
-                    showWatermark={!this.state.submittedText}
-                    errorBackgroundColor={actualErrorBackgroundColor}
-                    ref={(r) => cellVM.editable ? this.saveEditCellRef(r) : noop()}
-                    gotoCode={() => this.gotoCellCode(index)}
-                    delete={() => this.deleteCell(index)}/>
-            </ErrorBoundary>
-        );
-    }
-
-    private saveEditCellRef(ref: Cell | null) {
+    private saveEditCellRef = (ref: Cell | null) => {
         this.editCellRef = ref;
     }
 

@@ -5,13 +5,14 @@ import '../../common/extensions';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { Resource } from '../types';
+import { createDeferred, Deferred } from './async';
 import { InMemoryInterpreterSpecificCache } from './cacheUtils';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
-type VoidFunction = (...any: any[]) => void;
-type AsyncVoidFunction = (...any: any[]) => Promise<void>;
+type VoidFunction = () => any;
+type AsyncVoidFunction = () => Promise<any>;
 
 /**
  * Combine multiple sequential calls to the decorated function into one.
@@ -23,23 +24,39 @@ type AsyncVoidFunction = (...any: any[]) => Promise<void>;
  * only in a single actual call.  Following the most recent call to
  * the debounced function, debouncing resets after the "wait" interval
  * has elapsed.
- *
- * The decorated function must return either a void or a promise that
- * resolves to a void.
  */
-export function debounce(wait?: number) {
+export function debounceSync(wait?: number) {
     if (isTestExecution()) {
-        // If running tests, lets not debounce (so tests run fast).
+        // If running tests, lets debounce until the next cycle in the event loop.
+        // Same as `setTimeout(()=> {}, 0);` with a value of `0`.
         wait = undefined;
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: We should be able to return a noop decorator instead...
     }
     return makeDebounceDecorator(wait);
 }
 
+/**
+ * Combine multiple sequential calls to the decorated async function into one.
+ * @export
+ * @param {number} [wait] Wait time (milliseconds).
+ * @returns void
+ *
+ * The point is to ensure that successive calls to the function result
+ * only in a single actual call.  Following the most recent call to
+ * the debounced function, debouncing resets after the "wait" interval
+ * has elapsed.
+ */
+export function debounceAsync(wait?: number) {
+    if (isTestExecution()) {
+        // If running tests, lets debounce until the next cycle in the event loop.
+        // Same as `setTimeout(()=> {}, 0);` with a value of `0`.
+        wait = undefined;
+    }
+    return makeDebounceAsyncDecorator(wait);
+}
+
 export function makeDebounceDecorator(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction> | TypedPropertyDescriptor<AsyncVoidFunction>) {
+    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
         // We could also make use of _debounce() options.  For instance,
         // the following causes the original method to be called
         // immediately:
@@ -61,6 +78,44 @@ export function makeDebounceDecorator(wait?: number) {
             options
         );
         (descriptor as any).value = debounced;
+    };
+}
+
+export function makeDebounceAsyncDecorator(wait?: number) {
+    // tslint:disable-next-line:no-any no-function-expression
+    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<AsyncVoidFunction>) {
+        type StateInformation = { started: boolean; deferred: Deferred<any> | undefined; timer: number | undefined };
+        const originalMethod = descriptor.value!;
+        const state: StateInformation = { started: false, deferred: undefined, timer: undefined };
+
+        // Lets defer execution using a setTimeout for the given time.
+        (descriptor as any).value = function (this: any) {
+            const existingDeferred: Deferred<any> | undefined = state.deferred;
+            if (existingDeferred && state.started) {
+                return existingDeferred.promise;
+            }
+
+            // Clear previous timer.
+            const existingDeferredCompleted = (existingDeferred && existingDeferred.completed);
+            const deferred = state.deferred = (!existingDeferred || existingDeferredCompleted) ? createDeferred<any>() : existingDeferred;
+            if (state.timer) {
+                clearTimeout(state.timer);
+            }
+
+            state.timer = setTimeout(async () => {
+                state.started = true;
+                originalMethod.apply(this)
+                    .then(r => {
+                        state.started = false;
+                        deferred.resolve(r);
+                    })
+                    .catch(ex => {
+                        state.started = false;
+                        deferred.reject(ex);
+                    });
+            }, wait);
+            return deferred.promise;
+        };
     };
 }
 

@@ -1,19 +1,18 @@
-.top-spacing {
-    margin-top : 24px;
+body, html {
+    height: 100%;
+    overflow: hidden;
 }
 
-.cell-table {
-    display: table;
-    width: 100%;
+#root {
+    height: 100%;
+    overflow: hidden;
 }
 
-.cell-table-body {
-    display: table-row-group;
-}
-
-.main-panel {
+#main-panel {
     background: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
+    height: 100%;
+    overflow: hidden;
 }
 
 .hide {

@@ -4,6 +4,8 @@
 import './variableExplorer.css';
 
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+
 import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -16,6 +18,7 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
+    onHeightChange(): void;
 }
 
 interface IVariableExplorerState {
@@ -23,6 +26,7 @@ interface IVariableExplorerState {
     gridColumns: {key: string; name: string}[];
     gridRows: IGridRow[];
     gridHeight: number;
+    height: number;
 }
 
 const defaultColumnProperties = {
@@ -47,7 +51,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         this.state = { open: false,
                         gridColumns: columns,
                         gridRows: [],
-                        gridHeight: 200};
+                        gridHeight: 200,
+                        height: 0};
     }
 
     public render() {
@@ -76,6 +81,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         return null;
     }
 
+    public componentDidMount = () => {
+        this.updateHeight();
+    }
+
+    public componentDidUpdate = () => {
+        this.updateHeight();
+    }
+
     // New variable data passed in via a ref
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
@@ -99,6 +112,20 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         this.setState({ gridRows: newGridRows });
+    }
+
+    private updateHeight = () => {
+        // Make sure we check for a new height so we don't get into an update loop
+        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
+
+        if (divElement) {
+            const newHeight = divElement.offsetHeight;
+
+            if (this.state.height !== newHeight) {
+                this.setState({height: newHeight});
+                this.props.onHeightChange();
+            }
+        }
     }
 
     private getRow = (index: number) => {

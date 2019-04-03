@@ -7,7 +7,7 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText } from '../../client/datascience/common';
 import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
 
-// tslint:disable-next-line: max-func-body-length
+// tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {
 
     test('formatting stream text', async () => {
@@ -184,6 +184,21 @@ const multilineQuoteWithOtherDelimiter = `#%% [markdown]
         assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
         assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
-        });
 
+        // tslint:disable-next-line: no-multiline-string
+const multilineQuoteInFunc = `#%%
+import requests
+def download(url, filename):
+    """ utility function to download a file """
+    response = requests.get(url, stream=True)
+    with open(filename, "wb") as handle:
+        for data in response.iter_content():
+            handle.write(data)
+`;
+        cells = generateCells(undefined, multilineQuoteInFunc, 'foo', 0, true, '1');
+        assert.equal(cells.length, 1, 'cell multline failed');
+        assert.equal(cells[0].data.cell_type, 'code', 'code cell not generated');
+        assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
+        assert.equal(cells[0].data.source[3], '    """ utility function to download a file """\n', 'Lines for cell not emitted');
+        });
 });

@@ -11,7 +11,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
 import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
-import { debounce } from '../../common/utils/decorators';
+import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { ILanguageServerAnalysisOptions, ILanguageServerFolderService } from '../types';
@@ -186,7 +186,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         }
         this.onSettingsChanged();
     }
-    @debounce(1000)
+    @debounceSync(1000)
     protected onSettingsChanged(): void {
         this.notifyIfSettingsChanged().ignoreErrors();
     }
@@ -213,7 +213,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         }
     }
 
-    @debounce(1000)
+    @debounceSync(1000)
     protected onEnvVarChange(): void {
         this.notifyifEnvPythonPathChanged().ignoreErrors();
     }

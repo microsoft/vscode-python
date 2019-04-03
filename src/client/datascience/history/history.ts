@@ -23,6 +23,7 @@ import {
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -594,6 +595,7 @@ export class History implements IHistory {
 
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
+                traceInfo(`Finished execution for ${id}`);
             }
         } catch (err) {
             status.dispose();

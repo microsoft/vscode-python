@@ -70,6 +70,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
     [Commands.Tests_Stop]: [undefined, Uri];
+    [Commands.Test_Reveal_Test_Item]: [TestDataItem];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Run]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
     // When command is invoked from a tree node, first argument is the node data.

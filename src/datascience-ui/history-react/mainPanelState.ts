@@ -22,6 +22,7 @@ export interface IMainPanelState {
     redoStack : ICellViewModel[][];
     submittedText: boolean;
     history: InputHistory;
+    contentTop: number;
 }
 
 // This function generates test state when running under a browser instead of inside of
@@ -33,7 +34,8 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         undoStack : [],
         redoStack : [],
         submittedText: false,
-        history: new InputHistory()
+        history: new InputHistory(),
+        contentTop: 24
     };
 }
 

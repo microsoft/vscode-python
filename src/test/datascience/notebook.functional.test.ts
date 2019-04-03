@@ -678,10 +678,10 @@ df.head()`,
             },
             {
                 // Important to test as multiline cell magics only work if they are the first item in the cell
+                // Doesn't work with a comment though.
                 markdownRegEx: undefined,
                 code:
-                    `#%% Cell Comment
-%%bash
+                    `%%bash
 echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',

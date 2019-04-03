@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import {
     ConfigurationChangeEvent, Disposable,
     DocumentSymbolProvider, Event,
-    EventEmitter, OutputChannel, TextDocument, Uri, window
+    EventEmitter, OutputChannel, TextDocument, Uri
 } from 'vscode';
 import {
     IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService
@@ -32,7 +32,7 @@ import {
     TestFunction, TestStatus, TestsToRun
 } from './common/types';
 import {
-    ITestDisplay, ITestResultDisplay, ITestTreeViewProvider,
+    ITestDisplay, ITestResultDisplay,
     IUnitTestConfigurationService, IUnitTestManagementService,
     TestWorkspaceFolder,
     WorkspaceTestStatus
@@ -67,11 +67,11 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             this.workspaceTestManagerService.dispose();
         }
         if (this.configChangedTimer) {
-            this.configChangedTimer.unref();
+            clearTimeout(this.configChangedTimer);
             this.configChangedTimer = undefined;
         }
         if (this.autoDiscoverTimer) {
-            this.autoDiscoverTimer.unref();
+            clearTimeout(this.autoDiscoverTimer);
             this.autoDiscoverTimer = undefined;
         }
     }
@@ -84,14 +84,9 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         }
         this.activatedOnce = true;
         this.workspaceTestManagerService = this.serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
-        const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
         this.registerHandlers();
         this.registerCommands();
-
-        const testViewProvider = this.serviceContainer.get<ITestTreeViewProvider>(ITestTreeViewProvider);
-        const disposable = window.registerTreeDataProvider('python_tests', testViewProvider);
-        disposablesRegistry.push(disposable);
 
         this.autoDiscoverTests(undefined)
             .catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));

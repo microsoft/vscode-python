@@ -37,6 +37,8 @@ import {
     TextEditorOptionsChangeEvent,
     TextEditorSelectionChangeEvent,
     TextEditorViewColumnChangeEvent,
+    TreeView,
+    TreeViewOptions,
     Uri,
     ViewColumn,
     WorkspaceConfiguration,
@@ -331,6 +333,14 @@ export interface IApplicationShell {
      * @return The thenable the task-callback returned.
      */
     withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R>;
+
+    /**
+     * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
+     * @param viewId Id of the view contributed using the extension point `views`.
+     * @param options Options for creating the [TreeView](#TreeView)
+     * @returns a [TreeView](#TreeView).
+     */
+    createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
 }
 
 export const ICommandManager = Symbol('ICommandManager');

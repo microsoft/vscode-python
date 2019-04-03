@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { IExtensionActivationService } from '../activation/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
@@ -31,7 +32,9 @@ import { TestConfigurationManagerFactory } from './configurationFactory';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
 import { TestExplorerCommandHandler } from './explorer/commandHandlers';
+import { FailedTestHandler } from './explorer/failedTestHandler';
 import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
+import { TreeViewService } from './explorer/treeView';
 import { UnitTestManagementService } from './main';
 import { registerTypes as registerNavigationTypes } from './navigation/serviceRegistry';
 import { ITestExplorerCommandHandler } from './navigation/types';
@@ -50,8 +53,8 @@ import {
     IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
     ITestConfigurationManagerFactory, ITestDataItemResource, ITestDisplay,
     ITestManagerRunner, ITestResultDisplay, ITestTreeViewProvider,
-    IUnitTestConfigurationService, IUnitTestDiagnosticService,
-    IUnitTestHelper, IUnitTestManagementService
+    IUnitTestConfigurationService,
+    IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -109,6 +112,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
     serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, TreeViewService);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, FailedTestHandler);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {

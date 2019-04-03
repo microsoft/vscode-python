@@ -3,7 +3,7 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2019.4.0-alpha",
-    "languageServerVersion": "0.1.80",
+    "languageServerVersion": "0.2.31",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -2333,7 +2333,7 @@
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
-        "@types/mocha": "^2.2.48",
+        "@types/mocha": "^5.2.6",
         "@types/node": "9.4.7",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
@@ -2436,6 +2436,7 @@
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
         "why-is-node-running": "^2.0.3",
+        "wtfnode": "^0.8.0",
         "yargs": "^12.0.2"
     },
     "__metadata": {

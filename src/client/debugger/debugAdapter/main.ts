@@ -62,9 +62,11 @@ export class PythonDebugger extends DebugSession {
 
         body.supportsExceptionInfoRequest = true;
         body.supportsConfigurationDoneRequest = true;
+        body.supportsDelayedStackTraceLoading = true;
         body.supportsConditionalBreakpoints = true;
         body.supportsSetVariable = true;
         body.supportsExceptionOptions = true;
+        body.supportsGotoTargetsRequest = true;
         body.supportsEvaluateForHovers = true;
         body.supportsModulesRequest = true;
         body.supportsValueFormattingOptions = true;
@@ -134,7 +136,7 @@ export class PythonDebugger extends DebugSession {
 
             try {
                 await this.debugServer!.client;
-                timeout.unref();
+                clearTimeout(timeout);
                 if (!rejected) {
                     resolve();
                 }
