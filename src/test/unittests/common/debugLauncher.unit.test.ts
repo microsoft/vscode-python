@@ -197,6 +197,9 @@ suite('Unit Tests - Debug Launcher', () => {
         if (!expected) {
             expected = getDefaultDebugConfig();
         }
+        expected.rules = [
+            { path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'), include: false }
+        ];
         expected.program = testLaunchScript;
         expected.args = options.args;
         if (!expected.cwd) {
