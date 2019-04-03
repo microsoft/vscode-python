@@ -42,6 +42,7 @@ basic:
 * `./test_pytest.py::TestSpam::test_simple`
 * `./test_pytest.py::TestSpam::TestHam::TestEggs::test_simple`
 * `./test_pytest.py::TestEggs::test_simple`
+* `./test_pytest.py::TestParam::test_simple`
 * `./test_mixed.py::test_top_level`
 * `./test_mixed.py::MyTests::test_simple`
 * `./test_mixed.py::TestMySuite::test_simple`
@@ -65,6 +66,8 @@ skipped:
 * `./test_pytest.py::test_skipped`
 * `./test_pytest.py::test_maybe_skipped`
 * `./test_pytest.py::SpamTests::test_skipped`
+* `./test_pytest.py::test_param_13_markers[???]`
+* `./test_pytest.py::test_param_13_skipped[*]`
 * `./test_unittest.py::MyTests::test_skipped`
 * (`./test_unittest.py::MyTests::test_maybe_skipped`)
 * (`./test_unittest.py::MyTests::test_maybe_not_skipped`)
@@ -92,14 +95,34 @@ imports discovered:
 
 subtests:
 
-* (`./test_pytest.py::test_dynamic_*`)
+* `./test_pytest.py::test_dynamic_*`
+* `./test_pytest.py::test_param_01[]`
+* `./test_pytest.py::test_param_11[1]`
+* `./test_pytest.py::test_param_13[*]`
+* `./test_pytest.py::test_param_13_markers[*]`
+* `./test_pytest.py::test_param_13_repeat[*]`
+* `./test_pytest.py::test_param_13_skipped[*]`
+* `./test_pytest.py::test_param_23_13[*]`
+* `./test_pytest.py::test_param_23_raises[*]`
+* `./test_pytest.py::test_param_33[*]`
+* `./test_pytest.py::test_param_33_ids[*]`
+* `./test_pytest.py::TestParam::test_param_13[*]`
+* `./test_pytest.py::TestParamAll::test_param_13[*]`
+* `./test_pytest.py::TestParamAll::test_spam_13[*]`
+* `./test_pytest_param.py::test_param_13[*]`
+* `./test_pytest_param.py::TestParamAll::test_param_13[*]`
+* `./test_pytest_param.py::TestParamAll::test_spam_13[*]`
 * (`./test_unittest.py::MyTests::test_with_subtests`)
 * (`./test_unittest.py::MyTests::test_with_nested_subtests`)
 * (`./test_unittest.py::MyTests::test_dynamic_*`)
 
+For more options for pytests's parametrize(), see
+https://docs.pytest.org/en/latest/example/parametrize.html#paramexamples.
+
 other markers:
 
 * `./test_pytest.py::test_known_failure`
+* `./test_pytest.py::test_param_markers[2]`
 * `./test_pytest.py::test_warned`
 * `./test_pytest.py::test_custom_marker`
 * `./test_pytest.py::test_multiple_markers`
@@ -125,18 +148,15 @@ doctests:
     * module-level doctests
     + suite-level doctests
 
+using fixtures:
 
-* `test_pytest.py` - 
-    * parameterized test functions
-        + no parameters, single case
-        + one parameter, single case
-        + one parameter, multiple cases
-        + multiple parameters, multiple cases
-        + with *args & **kwargs parameters, multiple cases
-        + 4 parameters, 3 decorators
-        + decorator with "marks" arg (skip/xfail/etc)
-        + one parameter, also skipped
+* `./test_pytest.py::test_fixture`
+* `./test_pytest.py::test_fixture_param`
+* `./test_pytest.py::test_param_fixture[*]`
+
+
+* `test_pytest_param.py`
+    * simple test function
     * suite (a test class)
-        + parameterized test method
-    * suite using a fixture
+        + simple test method
 ```

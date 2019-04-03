@@ -94,6 +94,91 @@ class TestEggs(object):
         assert True
 
 
+# legend for parameterized test names:
+#  "test_param_XY[_XY]*"
+#  X      - # params
+#  Y      - # cases
+#  [_XY]* - extra decorators
+
+@pytest.mark.parametrize('', [()])
+def test_param_01():
+    assert True
+
+
+@pytest.mark.parametrize('x', [(1,)])
+def test_param_11(x):
+    assert x == 1
+
+
+@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+def test_param_13(x):
+    assert x == 1
+
+
+@pytest.mark.parametrize('x', [(1,), (1,), (1,)])
+def test_param_13_repeat(x):
+    assert x == 1
+
+
+@pytest.mark.parametrize('x,y,z', [(1, 1, 1), (3, 4, 5), (0, 0, 0)])
+def test_param_33(x, y, z):
+    assert x*x + y*y == z*z
+
+
+@pytest.mark.parametrize('x,y,z', [(1, 1, 1), (3, 4, 5), (0, 0, 0)],
+                         ids=['v1', 'v2', 'v3'])
+def test_param_33_ids(x, y, z):
+    assert x*x + y*y == z*z
+
+
+@pytest.mark.parametrize('z', [(1,), (5,), (0,)])
+@pytest.mark.parametrize('x,y', [(1, 1), (3, 4), (0, 0)])
+def test_param_23_13(x, y, z):
+    assert x*x + y*y == z*z
+
+
+@pytest.mark.parametrize('x', [
+    (1,),
+    pytest.param(1.0, marks=[pytest.mark.skip, pytest.mark.spam], id='???'),
+    pytest.param(2, marks=[pytest.mark.xfail]),
+    ])
+def test_param_13_markers(x):
+    assert x == 1
+
+
+@pytest.mark.skip
+@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+def test_param_13_skipped(x):
+    assert x == 1
+
+
+@pytest.mark.parametrize('x,catch', [(1, None), (1.0, None), (2, pytest.raises(Exception))])
+def test_param_23_raises(x, catch):
+    if x != 1:
+        with catch:
+            raise Exception
+
+
+class TestParam(object):
+
+    def test_simple():
+        assert True
+
+    @pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+    def test_param_13(self, x):
+        assert x == 1
+
+
+@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+class TestParamAll(object):
+
+    def test_param_13(self, x):
+        assert x == 1
+
+    def test_spam_13(self, x):
+        assert x == 1
+
+
 class TestNoop3(object):
     pass
 
