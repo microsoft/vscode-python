@@ -13,8 +13,8 @@ const doNotDisplayPromptStateKey = 'DEPRECATED_MESSAGE_KEY_FOR_VIRTUAL_ENV';
 @injectable()
 export class VirtualEnvironmentPrompt implements IVirtualEnvironmentPrompt {
     constructor(
-        @inject(IInterpreterWatcher) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private watcher: IInterpreterWatcher,
-        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
+        @inject(IInterpreterWatcher) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly watcher: IInterpreterWatcher,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IVirtualEnvironmentManager) private readonly manager: IVirtualEnvironmentManager,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
@@ -35,7 +35,7 @@ export class VirtualEnvironmentPrompt implements IVirtualEnvironmentPrompt {
         if (await this.manager.getEnvironmentType(interpreter.path, resource) === InterpreterType.Unknown) {
             return;
         }
-        if (!this.hasUserDefinedPythonPath(resource)) {
+        if (this.hasUserDefinedPythonPath(resource)) {
             return;
         }
         await this.notifyDeprecation(interpreter, resource);

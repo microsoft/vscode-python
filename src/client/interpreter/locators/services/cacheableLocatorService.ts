@@ -15,6 +15,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
+import { IVirtualEnvironmentPrompt } from '../../virtualEnvs/types';
 
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
@@ -76,11 +77,13 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         this.handlersAddedToResource.add(cacheKey);
         const watchers = await this.getInterpreterWatchers(resource);
         const disposableRegisry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
+        const environmentPrompt = this.serviceContainer.get<IVirtualEnvironmentPrompt>(IVirtualEnvironmentPrompt);
         watchers.forEach(watcher => {
-            watcher.onDidCreate(() => {
+            watcher.onDidCreate((e) => {
                 Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
                 this.promisesPerResource.delete(cacheKey);
                 this.getInterpreters(resource).ignoreErrors();
+                environmentPrompt.handleNewEnvironment(e).ignoreErrors();
             }, this, disposableRegisry);
         });
     }
