@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+import '../../client/common/extensions';
+
 import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
+import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
@@ -15,8 +18,8 @@ import { DataViewerMessageListener } from '../../client/datascience/data-viewing
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
 import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
+import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { CellPosition, verifyHtmlOnCell } from './historyTestHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataViewer tests', () => {
@@ -40,12 +43,21 @@ suite('DataViewer tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+
+        // Add a listener for our ioc that lets the test
+        // forward messages on
+        ioc.addMessageListener((m, p) => {
+            if (messageWrapper) {
+                messageWrapper(m, p);
+            }
+        });
+
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
 
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true}/>));
+        ioc.createWebView(() => mount(<MainPanel skipDefault={true} forceHeight={200}/>));
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataProvider = ioc.get<IDataViewerProvider>(IDataViewerProvider);
@@ -60,15 +72,6 @@ suite('DataViewer tests', () => {
             // Pretend like it's happening now
             const listener = ((dataViewer as any).messageListener) as DataViewerMessageListener;
             listener.onMessage(DataViewerMessages.Started, {});
-
-            // Rewrite the onMessage function to also call the local messageWrapper if it's defined
-            const orig = listener.onMessage.bind(listener);
-            listener.onMessage = (m: string, payload: any) => {
-                if (messageWrapper) {
-                    messageWrapper(m, payload);
-                }
-                return orig(m, payload);
-            };
 
             return dataViewer;
         };
@@ -147,6 +150,26 @@ suite('DataViewer tests', () => {
         });
     }
 
+    function verifyRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, rows: (string | number)[]) {
+        const canvas = wrapper.find('div.react-grid-Canvas');
+        assert.ok(canvas.length >= 1, 'Didn\'t find any cells being rendered');
+
+        // Force the canvas to actually render.
+        const html = canvas.html();
+        const root = parse(html) as any;
+        const cells = root.querySelectorAll('.react-grid-Cell') as HTMLElement[];
+        assert.ok(cells, 'No cells found');
+        assert.ok(cells.length >= rows.length, 'Not enough cells found');
+        // Cells should be an array that matches up to the values we expect.
+        for (let i = 0; i < rows.length; i += 1) {
+            // Span should have our value (based on the CellFormatter's output)
+            const span = cells[i].querySelector('div.cell-formatter span') as HTMLSpanElement;
+            assert.ok(span, `Span ${i} not found`);
+            const val = rows[i].toString();
+            assert.equal(val, span.innerHTML, `Row ${i} not matching. ${span.innerHTML} !== ${val}`);
+        }
+    }
+
     runMountedTest('Data Frame', async (wrapper) => {
         await injectCode('import pandas as pd\r\ndf = pd.DataFrame([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
@@ -154,7 +177,46 @@ suite('DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
+    runMountedTest('List', async (wrapper) => {
+        await injectCode('ls = [0, 1, 2, 3]');
+        const gotAllRows = getCompletedPromise();
+        const dv = await createDataViewer('ls');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+    });
+
+    runMountedTest('Series', async (wrapper) => {
+        await injectCode('import pandas as pd\r\ns = pd.Series([0, 1, 2, 3])');
+        const gotAllRows = getCompletedPromise();
+        const dv = await createDataViewer('s');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+    });
+
+    runMountedTest('np.array', async (wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        const gotAllRows = getCompletedPromise();
+        const dv = await createDataViewer('x');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+    });
+
+    runMountedTest('Failure', async (_wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        try {
+            await createDataViewer('unknown variable');
+            assert.fail('Exception should have been thrown');
+        } catch {
+            noop();
+        }
+    });
 });

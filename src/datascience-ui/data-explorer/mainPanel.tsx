@@ -39,6 +39,7 @@ const defaultColumnProperties = {
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
+    forceHeight?: number;
 }
 
 //tslint:disable:no-any
@@ -77,7 +78,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 actualRowCount: data.rows.length + 100,
                 fetchedRowCount: data.rows.length,
                 filters: {},
-                gridHeight: 100,
+                gridHeight:  100,
                 sortColumn: 'index',
                 sortDirection: 'NONE'
             };
@@ -115,7 +116,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     public render = () => {
         // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
         // can guarantee our render will run before somebody checks our rendered output.
-        if (this.state.actualRowCount === this.state.fetchedRowCount && !this.sentDone) {
+        if (this.state.actualRowCount && this.state.actualRowCount === this.state.fetchedRowCount && !this.sentDone) {
             this.sentDone = true;
             this.sendMessage(DataViewerMessages.CompletedData);
         }
@@ -301,7 +302,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateDimensions = () => {
         if (this.container) {
             const height = this.container.offsetHeight;
-            this.setState({ gridHeight: height - 100 });
+            this.setState({ gridHeight: this.props.forceHeight ? this.props.forceHeight : height - 100 });
         }
     }
 

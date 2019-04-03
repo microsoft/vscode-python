@@ -222,7 +222,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
     };
-
+    private extraListeners: ((m: string, p: any) => void)[] = [];
     constructor() {
         super();
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
@@ -546,6 +546,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.documentManager.addDocument(code, file);
     }
 
+    public addMessageListener(callback: (m: string, p: any) => void) {
+        this.extraListeners.push(callback);
+    }
+
     private findPythonPath(): string {
         try {
             const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
@@ -555,15 +559,22 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
+    private postMessageToWebPanel(msg: any) {
+        if (this.webPanelListener) {
+            this.webPanelListener.onMessage(msg.type, msg.payload);
+        }
+        if (this.extraListeners.length) {
+            this.extraListeners.forEach(e => e(msg.type, msg.payload));
+        }
+    }
+
     private mountReactControl(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>) {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {
                 // tslint:disable-next-line:no-any
                 postMessage: (msg: any) => {
-                    if (this.webPanelListener) {
-                        this.webPanelListener.onMessage(msg.type, msg.payload);
-                    }
+                    this.postMessageToWebPanel(msg);
                 },
                 // tslint:disable-next-line:no-any no-empty
                 setState: (_msg: any) => {
