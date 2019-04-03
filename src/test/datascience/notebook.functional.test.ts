@@ -7,7 +7,6 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { SemVer } from 'semver';
 import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
@@ -19,7 +18,6 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
@@ -36,7 +34,6 @@ import {
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { ClassType } from '../../client/ioc/types';
@@ -183,7 +180,7 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
+    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess) {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
