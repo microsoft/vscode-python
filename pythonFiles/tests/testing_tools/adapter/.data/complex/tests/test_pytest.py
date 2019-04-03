@@ -179,6 +179,44 @@ class TestParamAll(object):
         assert x == 1
 
 
+@pytest.fixture
+def spamfix(request):
+    yield 'spam'
+
+
+@pytest.fixture(params=['spam', 'eggs'])
+def paramfix(request):
+    return request.param
+
+
+def test_fixture(spamfix):
+    assert spamfix == 'spam'
+
+
+@pytest.mark.usefixtures('spamfix')
+def test_mark_fixture():
+    assert True
+
+
+@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+def test_param_fixture(spamfix, x):
+    assert spamfix == 'spam'
+    assert x == 1
+
+
+@pytest.mark.parametrize('x', [
+    (1,),
+    (1.0,),
+    pytest.param(1+0j, marks=[pytest.mark.usefixtures('spamfix')]),
+    ])
+def test_param_mark_fixture(x):
+    assert x == 1
+
+
+def test_fixture_param(paramfix):
+    assert paramfix == 'spam'
+
+
 class TestNoop3(object):
     pass
 

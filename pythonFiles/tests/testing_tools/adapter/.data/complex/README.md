@@ -109,6 +109,8 @@ subtests:
 * `./test_pytest.py::TestParam::test_param_13[*]`
 * `./test_pytest.py::TestParamAll::test_param_13[*]`
 * `./test_pytest.py::TestParamAll::test_spam_13[*]`
+* `./test_pytest.py::test_fixture_param[*]`
+* `./test_pytest.py::test_param_fixture[*]`
 * `./test_pytest_param.py::test_param_13[*]`
 * `./test_pytest_param.py::TestParamAll::test_param_13[*]`
 * `./test_pytest_param.py::TestParamAll::test_spam_13[*]`
@@ -118,6 +120,13 @@ subtests:
 
 For more options for pytests's parametrize(), see
 https://docs.pytest.org/en/latest/example/parametrize.html#paramexamples.
+
+using fixtures:
+
+* `./test_pytest.py::test_fixture`
+* `./test_pytest.py::test_fixture_param[*]`
+* `./test_pytest.py::test_param_fixture[*]`
+* `./test_pytest.py::test_param_mark_fixture[*]`
 
 other markers:
 
@@ -147,16 +156,4 @@ doctests:
 * `test_pytest.py` - 
     * module-level doctests
     + suite-level doctests
-
-using fixtures:
-
-* `./test_pytest.py::test_fixture`
-* `./test_pytest.py::test_fixture_param`
-* `./test_pytest.py::test_param_fixture[*]`
-
-
-* `test_pytest_param.py`
-    * simple test function
-    * suite (a test class)
-        + simple test method
 ```
