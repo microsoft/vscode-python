@@ -44,7 +44,6 @@ import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { SupportedCommands } from './mockJupyterManager';
 import { MockJupyterSession } from './mockJupyterSession';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
@@ -58,15 +57,6 @@ suite('Jupyter notebook tests', () => {
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
-
-    const workingPython: PythonInterpreter = {
-        path: '/foo/bar/python.exe',
-        version: new SemVer('3.6.6-final'),
-        sysVersion: '1.0.0.0',
-        sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-    };
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -196,9 +186,6 @@ suite('Jupyter notebook tests', () => {
     function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
-            if (ioc.mockJupyter) {
-                ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all, undefined, notebookProc);
-            }
             if (await jupyterExecution.isNotebookSupported()) {
                 return func();
             } else {
