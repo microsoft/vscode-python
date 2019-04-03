@@ -18,6 +18,7 @@ interface IVariableExplorerCellFormatterProps {
     value?: string | number | object | boolean;
 }
 
+// Our formatter for cells in the variable explorer. Allow for different styles per column type
 export class VariableExplorerCellFormatter extends React.Component<IVariableExplorerCellFormatterProps> {
     public shouldComponentUpdate(nextProps: IVariableExplorerCellFormatterProps) {
         return nextProps.value !== this.props.value;

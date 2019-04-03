@@ -44,7 +44,6 @@ interface IGridRow {
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
     constructor(prop: IVariableExplorerProps) {
         super(prop);
-        // IANHU: Localize
         const columns = [
             {key: 'name', name: getLocString('DataScience.variableExplorerNameColumn', 'Name'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />},
             {key: 'type', name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.type} />},
