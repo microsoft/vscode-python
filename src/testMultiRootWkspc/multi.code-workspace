@@ -45,6 +45,7 @@
         ],
         "python.linting.lintOnSave": false,
         "python.linting.enabled": true,
+        "python.jediEnabled": true,
         "python.pythonPath": "python"
     }
 }
