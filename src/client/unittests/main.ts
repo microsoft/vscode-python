@@ -405,7 +405,13 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             commandManager.registerCommand(constants.Commands.Tests_Select_And_Debug_Method, (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) => this.selectAndRunTestMethod(cmdSource, resource, true)),
             commandManager.registerCommand(constants.Commands.Tests_Select_And_Run_File, (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.selectAndRunTestFile(cmdSource)),
             commandManager.registerCommand(constants.Commands.Tests_Run_Current_File, (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.runCurrentTestFile(cmdSource)),
-            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop)
+            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop),
+
+            // We register the following commands for backward-compatibility
+            // (where users may have set up key bindings, etc.).
+            commandManager.registerCommand('python.stopUnitTests', (_, resource: Uri) => this.stopTests(resource)),
+            commandManager.registerCommand('python.askToStopUnitTestDiscovery', () => this.displayStopUI('Stop discovering tests')),
+            commandManager.registerCommand('python.askToStopUnitTests', () => this.displayStopUI('Stop running tests'))
         ];
 
         disposablesRegistry.push(...disposables);

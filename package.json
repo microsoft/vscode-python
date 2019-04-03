@@ -277,8 +277,17 @@
                 }
             },
             {
+                "command": "python.stopTests",
+                "title": "%python.command.python.stopTests.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/stop.svg",
+                    "dark": "resources/dark/stop.svg"
+                }
+            },
+            {
                 "command": "python.stopUnitTests",
-                "title": "%python.command.python.stopUnitTests.title%",
+                "title": "%python.command.python.stopTests.title% (deprecated)",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/stop.svg",
@@ -573,7 +582,7 @@
                     "when": "config.noExists"
                 },
                 {
-                    "command": "python.stopUnitTests",
+                    "command": "python.stopTests",
                     "category": "Python",
                     "when": "config.noExists"
                 },
@@ -703,7 +712,7 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "python.stopUnitTests",
+                    "command": "python.stopTests",
                     "when": "view == python_tests && busyTests",
                     "group": "navigation@1"
                 },
