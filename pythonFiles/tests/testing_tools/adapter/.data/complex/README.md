@@ -92,6 +92,7 @@ imports discovered:
 
 subtests:
 
+* (`./test_pytest.py::test_dynamic_*`)
 * (`./test_unittest.py::MyTests::test_with_subtests`)
 * (`./test_unittest.py::MyTests::test_with_nested_subtests`)
 * (`./test_unittest.py::MyTests::test_dynamic_*`)
@@ -135,7 +136,6 @@ doctests:
         + 4 parameters, 3 decorators
         + decorator with "marks" arg (skip/xfail/etc)
         + one parameter, also skipped
-    * for loop that generates test functions dynamically
     * suite (a test class)
         + parameterized test method
     * suite using a fixture

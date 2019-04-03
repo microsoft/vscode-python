@@ -58,6 +58,13 @@ def test_multiple_markers():
     assert False
 
 
+for i in range(3):
+    def func():
+        assert True
+    globals()['test_dynamic_{}'.format(i + 1)] = func
+del func
+
+
 class TestSpam(object):
 
     def test_simple():
