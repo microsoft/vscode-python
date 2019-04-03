@@ -24,7 +24,7 @@ suite('UnitTestDiagnosticService: unittest', () => {
         suiteSetup(() => {
             actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Error)!;
             actualSeverity = diagnosticService.getSeverity(PythonUnitTestMessageSeverity.Error)!;
-            expectedPrefix = localize.UnitTests.testErrorDiagnosticMessage();
+            expectedPrefix = localize.Testing.testErrorDiagnosticMessage();
             expectedSeverity = DiagnosticSeverity.Error;
         });
         test('Message Prefix', () => {
@@ -42,7 +42,7 @@ suite('UnitTestDiagnosticService: unittest', () => {
         suiteSetup(() => {
             actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Fail)!;
             actualSeverity = diagnosticService.getSeverity(PythonUnitTestMessageSeverity.Failure)!;
-            expectedPrefix = localize.UnitTests.testFailDiagnosticMessage();
+            expectedPrefix = localize.Testing.testFailDiagnosticMessage();
             expectedSeverity = DiagnosticSeverity.Error;
         });
         test('Message Prefix', () => {
@@ -60,7 +60,7 @@ suite('UnitTestDiagnosticService: unittest', () => {
         suiteSetup(() => {
             actualPrefix = diagnosticService.getMessagePrefix(TestStatus.Skipped)!;
             actualSeverity = diagnosticService.getSeverity(PythonUnitTestMessageSeverity.Skip)!;
-            expectedPrefix = localize.UnitTests.testSkippedDiagnosticMessage();
+            expectedPrefix = localize.Testing.testSkippedDiagnosticMessage();
             expectedSeverity = DiagnosticSeverity.Information;
         });
         test('Message Prefix', () => {
