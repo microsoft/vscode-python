@@ -458,14 +458,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
-    }
-
-    // tslint:disable:any
-    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, role: vsls.Role = vsls.Role.None) {
 
         if (this.mockJupyter) {
             this.mockJupyter.addInterpreter(this.workingPython, SupportedCommands.all);
         }
+    }
+
+    // tslint:disable:any
+    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, role: vsls.Role = vsls.Role.None) {
 
         // Force the container to mock actual live share if necessary
         if (role !== vsls.Role.None) {
@@ -491,11 +491,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             const message = createMessageEvent(m);
             if (this.postMessage) {
                 this.postMessage(message);
-
-                if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
-                    this.wrapperCreatedPromise.resolve();
-                }
-
             } else {
                 throw new Error('postMessage callback not defined');
             }
@@ -565,6 +560,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         if (this.extraListeners.length) {
             this.extraListeners.forEach(e => e(msg.type, msg.payload));
+        }
+        if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
+            this.wrapperCreatedPromise.resolve();
         }
     }
 

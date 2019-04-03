@@ -211,15 +211,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             submitInput: this.submitInput
         };
     }
-    private renderDataFrameTestButton() {
-        if (getSettings && getSettings().showJupyterVariableExplorer) {
-            return (
-                <CellButton baseTheme={'vscode-light'} onClick={this.showDataViewer} tooltip={'Show data explorer for \'df\' variable'}>
-                    D
-                </CellButton>
-            );
-        }
-
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
        return {
         addMarkdown: this.addMarkdown,
@@ -233,7 +224,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         redo: this.redo,
         clearAll: this.clearAll,
         skipDefault: this.props.skipDefault,
-        showDataExplorer: this.showDataExplorer,
+        showDataExplorer: this.showDataViewer,
         testMode: this.props.testMode,
         variableExplorerRef: this.variableExplorerRef,
         canCollapseAll: this.canCollapseAll(),

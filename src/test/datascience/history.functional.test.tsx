@@ -51,6 +51,7 @@ suite('History output tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -60,7 +61,6 @@ suite('History output tests', () => {
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-        jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
 
         // The history provider create needs to be rewritten to make the history window think the mounted web panel is
         // ready.
@@ -421,22 +421,17 @@ for _ in range(50):
 
     });
 
-    test('Dispose test', async () => {
+    runMountedTest('Dispose test', async () => {
         // tslint:disable-next-line:no-any
-        if (await jupyterExecution.isNotebookSupported()) {
-            const history = await getOrCreateHistory();
-            await history.show(); // Have to wait for the load to finish
-            await history.dispose();
-            // tslint:disable-next-line:no-any
-            const h2 = await getOrCreateHistory();
-            // Check equal and then dispose so the test goes away
-            const equal = Object.is(history, h2);
-            await h2.show();
-            assert.ok(!equal, 'Disposing is not removing the active history');
-        } else {
-            // tslint:disable-next-line:no-console
-            console.log('History test skipped, no Jupyter installed');
-        }
+        const history = await getOrCreateHistory();
+        await history.show(); // Have to wait for the load to finish
+        await history.dispose();
+        // tslint:disable-next-line:no-any
+        const h2 = await getOrCreateHistory();
+        // Check equal and then dispose so the test goes away
+        const equal = Object.is(history, h2);
+        await h2.show();
+        assert.ok(!equal, 'Disposing is not removing the active history');
     });
 
     runMountedTest('Editor Context', async (wrapper) => {
