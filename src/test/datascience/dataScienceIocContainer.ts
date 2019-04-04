@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-//tslint:disable:trailing-comma
+//tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
+import { ReactWrapper } from 'enzyme';
 import { interfaces } from 'inversify';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import {
     ConfigurationChangeEvent,
@@ -13,9 +15,11 @@ import {
     EventEmitter,
     FileSystemWatcher,
     Uri,
+    ViewColumn,
     WorkspaceConfiguration,
     WorkspaceFolder
 } from 'vscode';
+import * as vsls from 'vsls/vscode';
 
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -23,8 +27,13 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    ILiveShareTestingApi,
     ITerminalManager,
-    IWorkspaceService
+    IWebPanel,
+    IWebPanelMessageListener,
+    IWebPanelProvider,
+    IWorkspaceService,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -67,13 +76,15 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from '../../client/common/types';
+import { Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { Architecture } from '../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { DataExplorer } from '../../client/datascience/data-viewing/dataExplorer';
-import { DataExplorerProvider } from '../../client/datascience/data-viewing/dataExplorerProvider';
+import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
+import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { History } from '../../client/datascience/history/history';
 import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
@@ -90,10 +101,10 @@ import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICodeCssGenerator,
     ICodeWatcher,
-    IDataExplorer,
-    IDataExplorerProvider,
     IDataScience,
     IDataScienceCommandListener,
+    IDataViewer,
+    IDataViewerProvider,
     IHistory,
     IHistoryProvider,
     IJupyterCommandFactory,
@@ -132,10 +143,12 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
+    InterpreterType,
     IPipEnvService,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
+    PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
@@ -172,16 +185,22 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
-import { MockJupyterManager } from './mockJupyterManager';
+import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockLiveShareApi } from './mockLiveShare';
+import { blurWindow, createMessageEvent } from './reactHelpers';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
+    public webPanelListener: IWebPanelMessageListener | undefined;
+    public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
+    public wrapperCreatedPromise: Deferred<boolean> | undefined;
+    public postMessage: ((ev: MessageEvent) => void) | undefined;
     private pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -195,7 +214,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
     private documentManager = new MockDocumentManager();
-
+    private workingPython: PythonInterpreter = {
+        path: '/foo/bar/python.exe',
+        version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        type: InterpreterType.Unknown,
+        architecture: Architecture.x64,
+    };
+    private extraListeners: ((m: string, p: any) => void)[] = [];
     constructor() {
         super();
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
@@ -210,6 +237,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public async dispose(): Promise<void> {
         await this.asyncRegistry.dispose();
         await super.dispose();
+
+        // Blur window focus so we don't have editors polling
+        blurWindow();
+
+        if (this.wrapper && this.wrapper.length) {
+            this.wrapper.unmount();
+            this.wrapper = undefined;
+        }
     }
 
     //tslint:disable:max-func-body-length
@@ -217,10 +252,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
-        this.serviceManager.addSingleton<IDataExplorerProvider>(IDataExplorerProvider, DataExplorerProvider);
+        this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
         this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         this.serviceManager.add<IHistory>(IHistory, History);
-        this.serviceManager.add<IDataExplorer>(IDataExplorer, DataExplorer);
+        this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
@@ -423,6 +458,47 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
+
+        if (this.mockJupyter) {
+            this.mockJupyter.addInterpreter(this.workingPython, SupportedCommands.all);
+        }
+    }
+
+    // tslint:disable:any
+    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, role: vsls.Role = vsls.Role.None) {
+
+        // Force the container to mock actual live share if necessary
+        if (role !== vsls.Role.None) {
+            const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+            liveShareTest.forceRole(role);
+        }
+
+        const webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
+        const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
+
+        this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
+
+        // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
+        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
+            // Keep track of the current listener. It listens to messages through the vscode api
+            this.webPanelListener = listener;
+
+            // Return our dummy web panel
+            return webPanel.object;
+        });
+        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
+            const message = createMessageEvent(m);
+            if (this.postMessage) {
+                this.postMessage(message);
+            } else {
+                throw new Error('postMessage callback not defined');
+            }
+        });
+        webPanel.setup(p => p.show(true));
+
+        // We need to mount the react control before we even create a history object. Otherwise the mount will miss rendering some parts
+        this.mountReactControl(mount);
     }
 
     public createMoqWorkspaceFolder(folderPath: string) {
@@ -465,6 +541,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.documentManager.addDocument(code, file);
     }
 
+    public addMessageListener(callback: (m: string, p: any) => void) {
+        this.extraListeners.push(callback);
+    }
+
     private findPythonPath(): string {
         try {
             const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
@@ -472,5 +552,54 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         } catch (ex) {
             return 'python';
         }
+    }
+
+    private postMessageToWebPanel(msg: any) {
+        if (this.webPanelListener) {
+            this.webPanelListener.onMessage(msg.type, msg.payload);
+        }
+        if (this.extraListeners.length) {
+            this.extraListeners.forEach(e => e(msg.type, msg.payload));
+        }
+        if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
+            this.wrapperCreatedPromise.resolve();
+        }
+    }
+
+    private mountReactControl(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>) {
+        // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
+        const globalAcquireVsCodeApi = (): IVsCodeApi => {
+            return {
+                // tslint:disable-next-line:no-any
+                postMessage: (msg: any) => {
+                    this.postMessageToWebPanel(msg);
+                },
+                // tslint:disable-next-line:no-any no-empty
+                setState: (_msg: any) => {
+
+                },
+                // tslint:disable-next-line:no-any no-empty
+                getState: () => {
+                    return {};
+                }
+            };
+        };
+        // tslint:disable-next-line:no-string-literal
+        (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
+
+        // Remap event handlers to point to the container.
+        const oldListener = window.addEventListener;
+        window.addEventListener = (event: string, cb: any) => {
+            if (event === 'message') {
+                this.postMessage = cb;
+            }
+        };
+
+        // Mount our main panel. This will make the global api be cached and have the event handler registered
+        this.wrapper = mount();
+
+        // We can remove the global api and event listener now.
+        delete (global as any).acquireVsCodeApi;
+        window.addEventListener = oldListener;
     }
 }

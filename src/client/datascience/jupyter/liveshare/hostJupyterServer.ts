@@ -11,6 +11,7 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import { IExecuteInfo } from '../../history/historyTypes';
@@ -26,14 +27,15 @@ import { JupyterServerBase } from '../jupyterServer';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IRoleBasedObject } from './roleBasedFactory';
-import { IResponseMapping, IServerResponse, ServerResponseType } from './types';
+import { IExecuteObservableResponse, IResponseMapping, IServerResponse, ServerResponseType } from './types';
 
 // tslint:disable:no-any
 
 export class HostJupyterServer
     extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
     implements IRoleBasedObject, INotebookServer {
-    private responseQueue : ResponseQueue = new ResponseQueue();
+    private catchupResponses : ResponseQueue = new ResponseQueue();
+    private localResponses: ResponseQueue = new ResponseQueue();
     private requestLog : Map<string, number> = new Map<string, number>();
     private catchupPendingCount : number = 0;
     private disposed = false;
@@ -124,39 +126,24 @@ export class HostJupyterServer
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
-        try {
-            // See if this has already been asked for not
-            if (this.requestLog.has(id)) {
-                // Create a dummy observable out of the responses as they come in.
-                return this.responseQueue.waitForObservable(code, file, line, id);
-            } else {
-                // Otherwise save this request
-                this.requestLog.set(id, Date.now());
-                const inner = super.executeObservable(code, file, line, id, silent);
-
-                // Cleanup old requests
-                const now = Date.now();
-                for (const [k, val] of this.requestLog) {
-                    if (now - val > LiveShare.ResponseLifetime) {
-                        this.requestLog.delete(k);
-                    }
-                }
-
-                // Wrap the observable returned so we can listen to it too
-                return this.wrapObservableResult(code, inner, id);
-            }
-        } catch (exc) {
-            this.postException(exc);
-            throw exc;
+        // See if this has already been asked for not
+        if (this.requestLog.has(id)) {
+            // This must be a local call that occurred after a guest call. Just
+            // use the local responses to return the results.
+            return this.localResponses.waitForObservable(code, id);
+        } else {
+            // Otherwise make a new request and save response in the catchup list. THis is a
+            // a request that came directly from the host so the host will be listening to the observable returned
+            // and we don't need to save the response in the local queue.
+            return this.makeObservableRequest(code, file, line, id, silent, [this.catchupResponses]);
         }
-
     }
 
     public async restartKernel(): Promise<void> {
         try {
             await super.restartKernel();
         } catch (exc) {
-            this.postException(exc);
+            this.postException(exc, []);
             throw exc;
         }
     }
@@ -165,9 +152,54 @@ export class HostJupyterServer
         try {
             return super.interruptKernel(timeoutMs);
         } catch (exc) {
-            this.postException(exc);
+            this.postException(exc, []);
             throw exc;
         }
+    }
+
+    private makeRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]) : Promise<ICell[]> {
+        // Create a deferred that we'll fire when we're done
+        const deferred = createDeferred<ICell[]>();
+
+        // Attempt to evaluate this cell in the jupyter notebook
+        const observable = this.makeObservableRequest(code, file, line, id, silent, responseQueues);
+        let output: ICell[];
+
+        observable.subscribe(
+            (cells: ICell[]) => {
+                output = cells;
+            },
+            (error) => {
+                deferred.reject(error);
+            },
+            () => {
+                deferred.resolve(output);
+            });
+
+        // Wait for the execution to finish
+        return deferred.promise;
+    }
+
+    private makeObservableRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]) : Observable<ICell[]> {
+        try {
+            this.requestLog.set(id, Date.now());
+            const inner = super.executeObservable(code, file, line, id, silent);
+
+            // Cleanup old requests
+            const now = Date.now();
+            for (const [k, val] of this.requestLog) {
+                if (now - val > LiveShare.ResponseLifetime) {
+                    this.requestLog.delete(k);
+                }
+            }
+
+            // Wrap the observable returned to send the responses to the guest(s) too.
+            return this.postObservableResult(code, inner, id, responseQueues);
+        } catch (exc) {
+            this.postException(exc, responseQueues);
+            throw exc;
+        }
+
     }
 
     private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number) : Promise<void> {
@@ -210,12 +242,12 @@ export class HostJupyterServer
             const service = await this.waitForService();
             if (service) {
                 // Send results for all responses that are left.
-                this.responseQueue.send(service);
+                this.catchupResponses.send(service, this.translateForGuest.bind(this));
 
                 // Eliminate old responses if possible.
                 this.catchupPendingCount -= 1;
                 if (this.catchupPendingCount <= 0) {
-                    this.responseQueue.clear();
+                    this.catchupResponses.clear();
                 }
             }
         }
@@ -227,13 +259,12 @@ export class HostJupyterServer
             const obj = args as IExecuteInfo;
             if (!this.requestLog.has(obj.id)) {
                 try {
-                    // Convert the file name
+                    // Convert the file name if necessary
                     const uri = vscode.Uri.parse(`vsls:${obj.file}`);
-                    const file = this.finishedApi ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
+                    const file = this.finishedApi && obj.file !== Identifiers.EmptyFileName ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
 
-                    // Just call the execute. Locally we won't listen, but if an actual call comes in for the same
-                    // request, it will use the saved responses.
-                    this.execute(obj.code, file, obj.line, obj.id).ignoreErrors();
+                    // We need the results of this execute to end up in both the guest responses and the local responses
+                    this.makeRequest(obj.code, file, obj.line, obj.id, false, [this.localResponses, this.catchupResponses]).ignoreErrors();
                 } catch (e) {
                     this.logger.logError(e);
                 }
@@ -241,7 +272,7 @@ export class HostJupyterServer
         }
     }
 
-    private wrapObservableResult(code: string, observable: Observable<ICell[]>, id: string) : Observable<ICell[]> {
+    private postObservableResult(code: string, observable: Observable<ICell[]>, id: string, responseQueues: ResponseQueue[]) : Observable<ICell[]> {
         return new Observable(subscriber => {
             let pos = 0;
 
@@ -252,48 +283,74 @@ export class HostJupyterServer
 
                 // Send across to the guest side
                 try {
-                    const translated = cells.map(c => this.translateCellForGuest(c));
-                    this.postObservableNext(code, pos, translated, id);
+                    this.postObservableNext(code, pos, cells, id, responseQueues);
                     pos += 1;
                 } catch (e) {
                     subscriber.error(e);
-                    this.postException(e);
+                    this.postException(e, responseQueues);
                 }
             },
             e => {
                 subscriber.error(e);
-                this.postException(e);
+                this.postException(e, responseQueues);
             },
             () => {
                 subscriber.complete();
-                this.postObservableComplete(code, pos, id);
+                this.postObservableComplete(code, pos, id, responseQueues);
             });
         });
     }
 
-    private postObservableNext(code: string, pos: number, cells: ICell[], id: string) {
-        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells, id, time: Date.now() });
+    private translateForGuest = (r: IServerResponse) : IServerResponse => {
+        // Remap the cell paths
+        const er = r as IExecuteObservableResponse;
+        if (er && er.cells) {
+            return { cells: er.cells.map(this.translateCellForGuest, this), ...er };
+        }
+        return r;
     }
 
-    private postObservableComplete(code: string, pos: number, id: string) {
-        this.postResult(ServerResponseType.ExecuteObservable, { code, pos, type: ServerResponseType.ExecuteObservable, cells: undefined, id, time: Date.now() });
+    private postObservableNext(code: string, pos: number, cells: ICell[], id: string, responseQueues: ResponseQueue[]) {
+        this.postResult(
+            ServerResponseType.ExecuteObservable,
+            { code, pos, type: ServerResponseType.ExecuteObservable, cells, id, time: Date.now() },
+            this.translateForGuest,
+            responseQueues);
     }
 
-    private postException(exc: any) {
-        this.postResult(ServerResponseType.Exception, {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()});
+    private postObservableComplete(code: string, pos: number, id: string, responseQueues: ResponseQueue[]) {
+        this.postResult(
+            ServerResponseType.ExecuteObservable,
+            { code, pos, type: ServerResponseType.ExecuteObservable, cells: undefined, id, time: Date.now() },
+            this.translateForGuest,
+            responseQueues);
     }
 
-    private postResult<R extends IResponseMapping, T extends keyof R>(_type: T, result: R[T]) : void {
-            const typedResult = ((result as any) as IServerResponse);
-            if (typedResult) {
-                this.waitForService().then(s => {
-                    if (s) {
-                        s.notify(LiveShareCommands.serverResponse, typedResult);
-                    }
-                }).ignoreErrors();
+    private postException(exc: any, responseQueues: ResponseQueue[]) {
+        this.postResult(
+            ServerResponseType.Exception,
+            {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()},
+            r => r,
+            responseQueues);
+    }
 
-                // Need to also save in memory for those guests that are in the middle of starting up
-                this.responseQueue.push(typedResult);
-            }
+    private postResult<R extends IResponseMapping, T extends keyof R>(
+        _type: T,
+        result: R[T],
+        guestTranslator: (r: IServerResponse) => IServerResponse,
+        responseQueues: ResponseQueue[]) : void {
+        const typedResult = ((result as any) as IServerResponse);
+        if (typedResult) {
+            // Make a deep copy before we send. Don't want local copies being modified
+            const deepCopy = JSON.parse(JSON.stringify(typedResult));
+            this.waitForService().then(s => {
+                if (s) {
+                    s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
+                }
+            }).ignoreErrors();
+
+            // Need to also save in memory for those guests that are in the middle of starting up
+            responseQueues.forEach(r => r.push(deepCopy));
+        }
     }
 }

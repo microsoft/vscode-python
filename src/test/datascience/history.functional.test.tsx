@@ -6,29 +6,18 @@ import { mount, ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as React from 'react';
-import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, ViewColumn } from 'vscode';
+import { Disposable, TextDocument, TextEditor } from 'vscode';
 
-import {
-    IApplicationShell,
-    IDocumentManager,
-    IWebPanel,
-    IWebPanelMessageListener,
-    IWebPanelProvider,
-    WebPanelMessage
-} from '../../client/common/application/types';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
@@ -43,7 +32,6 @@ import {
     findButton,
     getCellResults,
     getLastOutputCell,
-    getMainPanel,
     initialDataScienceSettings,
     srcDirectory,
     toggleCellExpansion,
@@ -51,84 +39,44 @@ import {
     verifyHtmlOnCell,
     verifyLastCellInputState
 } from './historyTestHelpers';
-import { SupportedCommands } from './mockJupyterManager';
 import { blurWindow, waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('History output tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
-    let webPanelProvider: TypeMoq.IMock<IWebPanelProvider>;
-    let webPanel: TypeMoq.IMock<IWebPanel>;
     let historyProvider: IHistoryProvider;
-    let webPanelListener: IWebPanelMessageListener;
-    let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
-    let webPanelMessagePromise: Deferred<void> | undefined;
 
-    const workingPython: PythonInterpreter = {
-        path: '/foo/bar/python.exe',
-        version: new SemVer('3.6.6-final'),
-        sysVersion: '1.0.0.0',
-        sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-    };
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-
-        if (ioc.mockJupyter) {
-            ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all);
-        }
-
-        webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
-        webPanel = TypeMoq.Mock.ofType<IWebPanel>();
-
-        ioc.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
-
-        // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
-            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
-                // Keep track of the current listener. It listens to messages through the vscode api
-                webPanelListener = listener;
-
-                // Return our dummy web panel
-                return webPanel.object;
-        });
-        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
-            window.postMessage(m, '*');
-        }); // See JSDOM valid target origins
-        webPanel.setup(p => p.show(true));
-
-        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        historyProvider = ioc.serviceManager.get<IHistoryProvider>(IHistoryProvider);
-
-        // Setup a global for the acquireVsCodeApi so that the React PostOffice can find it
-        globalAcquireVsCodeApi = (): IVsCodeApi => {
-            return {
-                // tslint:disable-next-line:no-any
-                postMessage: (msg: any) => {
-                    if (webPanelListener) {
-                        webPanelListener.onMessage(msg.type, msg.payload);
-                    }
-                    if (webPanelMessagePromise) {
-                        webPanelMessagePromise.resolve();
-                    }
-                },
-                // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {
-
-                },
-                // tslint:disable-next-line:no-any no-empty
-                getState: () => {
-                    return {};
-                }
-            };
-        };
-        // tslint:disable-next-line:no-string-literal
-        (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
+        jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     });
+
+    function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
+
+        // Setup our webview panel
+        ioc.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />));
+
+        // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
+        historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
+
+        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
+        // ready.
+        const origFunc = (historyProvider as any).create.bind(historyProvider);
+        (historyProvider as any).create = async (): Promise<void> => {
+            await origFunc();
+            const history = historyProvider.getActive();
+
+            // During testing the MainPanel sends the init message before our history is created.
+            // Pretend like it's happening now
+            const listener = ((history as any).messageListener) as HistoryMessageListener;
+            listener.onMessage(HistoryMessages.Started, {});
+        };
+
+        return ioc.wrapper!;
+    }
 
     teardown(async () => {
         for (const disposable of disposables) {
@@ -159,11 +107,9 @@ suite('History output tests', () => {
     // tslint:disable-next-line:no-any
     function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
         test(name, async () => {
-            addMockData(ioc, 'a=1\na', 1);
             if (await jupyterExecution.isNotebookSupported()) {
-                // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
-                const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
-                getMainPanel(wrapper);
+                addMockData(ioc, 'a=1\na', 1);
+                const wrapper = mountWebView();
                 try {
                     await testFunc(wrapper);
                 } finally {
@@ -181,10 +127,10 @@ suite('History output tests', () => {
     }
 
     async function waitForMessageResponse(action: () => void): Promise<void> {
-        webPanelMessagePromise = createDeferred();
+        ioc.wrapperCreatedPromise  = createDeferred<boolean>();
         action();
-        await webPanelMessagePromise.promise;
-        webPanelMessagePromise = undefined;
+        await ioc.wrapperCreatedPromise.promise;
+        ioc.wrapperCreatedPromise = undefined;
     }
 
     runMountedTest('Simple text', async (wrapper) => {
@@ -475,22 +421,17 @@ for _ in range(50):
 
     });
 
-    test('Dispose test', async () => {
+    runMountedTest('Dispose test', async () => {
         // tslint:disable-next-line:no-any
-        if (await jupyterExecution.isNotebookSupported()) {
-            const history = await getOrCreateHistory();
-            await history.show(); // Have to wait for the load to finish
-            await history.dispose();
-            // tslint:disable-next-line:no-any
-            const h2 = await getOrCreateHistory();
-            // Check equal and then dispose so the test goes away
-            const equal = Object.is(history, h2);
-            await h2.show();
-            assert.ok(!equal, 'Disposing is not removing the active history');
-        } else {
-            // tslint:disable-next-line:no-console
-            console.log('History test skipped, no Jupyter installed');
-        }
+        const history = await getOrCreateHistory();
+        await history.show(); // Have to wait for the load to finish
+        await history.dispose();
+        // tslint:disable-next-line:no-any
+        const h2 = await getOrCreateHistory();
+        // Check equal and then dispose so the test goes away
+        const equal = Object.is(history, h2);
+        await h2.show();
+        assert.ok(!equal, 'Disposing is not removing the active history');
     });
 
     runMountedTest('Editor Context', async (wrapper) => {

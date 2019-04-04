@@ -7,25 +7,26 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
-import { IWebPanel, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebPanel, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IAsyncDisposable, IConfigurationService, IDisposable, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ICodeCssGenerator, IDataExplorer, IDataScienceExtraSettings, IJupyterVariable, IJupyterVariables } from '../types';
-import { DataExplorerMessageListener } from './dataExplorerMessageListener';
-import { DataExplorerMessages, IDataExplorerMapping, IGetRowsRequest } from './types';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IDataViewer, IJupyterVariable, IJupyterVariables } from '../types';
+import { DataViewerMessageListener } from './dataViewerMessageListener';
+import { DataViewerMessages, IDataViewerMapping, IGetRowsRequest } from './types';
 
 @injectable()
-export class DataExplorer implements IDataExplorer, IAsyncDisposable {
+export class DataViewer implements IDataViewer, IAsyncDisposable {
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
     private webPanelInit: Deferred<void>;
     private loadPromise: Promise<void>;
-    private messageListener : DataExplorerMessageListener;
+    private messageListener : DataViewerMessageListener;
     private changeHandler: IDisposable | undefined;
     private viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
     private variable : IJupyterVariable | undefined;
@@ -36,12 +37,13 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IJupyterVariables) private variableManager: IJupyterVariables,
-        @inject(ILogger) private logger: ILogger
+        @inject(ILogger) private logger: ILogger,
+        @inject(IApplicationShell) private applicationShell: IApplicationShell
         ) {
         this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
 
         // Create a message listener to listen to messages from our webpanel (or remote session)
-        this.messageListener = new DataExplorerMessageListener(this.onMessage, this.onViewStateChanged, this.dispose);
+        this.messageListener = new DataViewerMessageListener(this.onMessage, this.onViewStateChanged, this.dispose);
 
         // Setup our init promise for the web panel. We use this to make sure we're in sync with our
         // react control.
@@ -69,7 +71,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
                 await this.webPanel.show(true);
 
                 // Send a message with our data
-                this.postMessage(DataExplorerMessages.InitializeData, this.variable).ignoreErrors();
+                this.postMessage(DataViewerMessages.InitializeData, this.variable).ignoreErrors();
             }
         }
     }
@@ -93,7 +95,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
 
         // Log telemetry about number of rows
         try {
-            sendTelemetryEvent(Telemetry.ShowDataExplorer, {rows: output.rowCount ? output.rowCount : 0 });
+            sendTelemetryEvent(Telemetry.ShowDataViewer, {rows: output.rowCount ? output.rowCount : 0 });
         } catch {
             noop();
         }
@@ -101,7 +103,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
         return output;
     }
 
-    private async postMessage<M extends IDataExplorerMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
+    private async postMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
         if (this.webPanel) {
             // Make sure the webpanel is up before we send it anything.
             await this.webPanelInit.promise;
@@ -114,15 +116,15 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     //tslint:disable-next-line:no-any
     private onMessage = (message: string, payload: any) => {
         switch (message) {
-            case DataExplorerMessages.Started:
+            case DataViewerMessages.Started:
                 this.webPanelRendered();
                 break;
 
-            case DataExplorerMessages.GetAllRowsRequest:
+            case DataViewerMessages.GetAllRowsRequest:
                 this.getAllRows().ignoreErrors();
                 break;
 
-            case DataExplorerMessages.GetRowsRequest:
+            case DataViewerMessages.GetRowsRequest:
                 this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
                 break;
 
@@ -147,7 +149,7 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     private onSettingsChanged = () => {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
-        this.postMessage(DataExplorerMessages.UpdateSettings, dsSettings).ignoreErrors();
+        this.postMessage(DataViewerMessages.UpdateSettings, dsSettings).ignoreErrors();
     }
 
     private generateDataScienceExtraSettings() : IDataScienceExtraSettings {
@@ -162,16 +164,26 @@ export class DataExplorer implements IDataExplorer, IAsyncDisposable {
     }
 
     private async getAllRows() {
-        if (this.variable && this.variable.rowCount) {
-            const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
-            return this.postMessage(DataExplorerMessages.GetAllRowsResponse, allRows);
+        try {
+            if (this.variable && this.variable.rowCount) {
+                const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
+                return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
+            }
+        } catch (e) {
+            traceError(e);
+            this.applicationShell.showErrorMessage(e);
         }
     }
 
     private async getRowChunk(request: IGetRowsRequest) {
-        if (this.variable && this.variable.rowCount) {
-            const rows = await this.variableManager.getDataFrameRows(this.variable, request.start, Math.min(request.end, this.variable.rowCount));
-            return this.postMessage(DataExplorerMessages.GetRowsResponse, { rows, start: request.start, end: request.end});
+        try {
+            if (this.variable && this.variable.rowCount) {
+                const rows = await this.variableManager.getDataFrameRows(this.variable, request.start, Math.min(request.end, this.variable.rowCount));
+                return this.postMessage(DataViewerMessages.GetRowsResponse, { rows, start: request.start, end: request.end });
+            }
+        } catch (e) {
+            traceError(e);
+            this.applicationShell.showErrorMessage(e);
         }
     }
 

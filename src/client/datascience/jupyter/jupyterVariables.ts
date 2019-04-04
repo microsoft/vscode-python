@@ -36,7 +36,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable[]>(
             undefined,
             [],
-            (_v: IJupyterVariable | undefined) => this.fetchVariablesScript!);
+            () => this.fetchVariablesScript);
     }
 
     public async getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
@@ -44,13 +44,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable>(
             targetVariable,
             targetVariable,
-            (_v: IJupyterVariable | undefined) => {
-                // Prep our targetVariable to send over
-                const variableString = JSON.stringify(targetVariable);
-
-                // Use just the name of the target variable to fetch the value
-                return this.fetchVariableValueScript!.replace(/_VSCode_JupyterTestValue/g, variableString);
-            });
+            () => this.fetchVariableValueScript);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
@@ -58,13 +52,8 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable>(
             targetVariable,
             targetVariable,
-            (_v: IJupyterVariable | undefined) => {
-                // Prep our targetVariable to send over
-                const variableString = JSON.stringify(targetVariable);
-
-                // Use just the name of the target variable to fetch the data
-                return this.fetchDataFrameInfoScript!.replace(/(_VSCode_JupyterTestValue)/g, variableString);
-            });
+            () => this.fetchDataFrameInfoScript,
+            [{key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn()}]);
     }
 
     public async getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number): Promise<JSONObject> {
@@ -72,23 +61,12 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<JSONObject>(
             targetVariable,
             {},
-            (_v: IJupyterVariable | undefined) => {
-                // Prep our targetVariable to send over
-                const variableString = JSON.stringify(targetVariable);
-
-                // Replace the test value with our current value. Replace start and end as well
-                return this.fetchDataFrameRowsScript!.replace(/_VSCode_JupyterTestValue|_VSCode_JupyterStartRow|_VSCode_JupyterEndRow/g, (match: string) => {
-                    if (match === '_VSCode_JupyterTestValue') {
-                        return variableString;
-                    } else if (match === '_VSCode_JupyterStartRow') {
-                        return start.toString();
-                    } else if (match === '_VSCode_JupyterEndRow') {
-                        return end.toString();
-                    }
-
-                    return match;
-                });
-            });
+            () => this.fetchDataFrameRowsScript,
+            [
+                {key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn()},
+                {key: '_VSCode_JupyterStartRow', value: start.toString()},
+                {key: '_VSCode_JupyterEndRow', value: end.toString()}
+            ]);
     }
 
     // Private methods
@@ -112,19 +90,40 @@ export class JupyterVariables implements IJupyterVariables {
     private async runScript<T>(
         targetVariable: IJupyterVariable | undefined,
         defaultValue: T,
-        fetchScriptText: (v: IJupyterVariable | undefined) => string): Promise<T> {
+        scriptBaseTextFetcher: () => string | undefined,
+        extraReplacements: { key: string; value: string }[] = []): Promise<T> {
         if (!this.filesLoaded) {
             await this.loadVariableFiles();
         }
 
+        const scriptBaseText = scriptBaseTextFetcher();
         const activeServer = await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions());
-        if (!activeServer) {
+        if (!activeServer || !scriptBaseText) {
             // No active server just return the unchanged target variable
             return defaultValue;
         }
 
-        // Generate the new script text
-        const scriptText = fetchScriptText(targetVariable);
+        // Prep our targetVariable to send over
+        const variableString = JSON.stringify(targetVariable);
+
+        // Setup a regex
+        const regexPattern = extraReplacements.length === 0 ? '_VSCode_JupyterTestValue' :
+            ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
+        const replaceRegex = new RegExp(regexPattern, 'g');
+
+        // Replace the test value with our current value. Replace start and end as well
+        const scriptText = scriptBaseText.replace(replaceRegex, (match: string) => {
+            if (match === '_VSCode_JupyterTestValue') {
+                return variableString;
+            } else {
+                const index = extraReplacements.findIndex(v => v.key === match);
+                if (index >= 0) {
+                    return extraReplacements[index].value;
+                }
+            }
+
+            return match;
+        });
 
         // Execute this on the jupyter server.
         const results = await activeServer.execute(scriptText, Identifiers.EmptyFileName, 0, uuid(), undefined, true);

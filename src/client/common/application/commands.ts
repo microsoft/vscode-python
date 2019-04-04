@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { CommandSource } from '../../unittests/common/constants';
 import { TestFunction, TestsToRun } from '../../unittests/common/types';
@@ -63,6 +63,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['setContext']: [string, boolean];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
+    ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];

@@ -171,7 +171,6 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private onStatusChanged(_s: Session.ISession, a: Kernel.Status) {
-        traceInfo(`Status changed to ${a} from OnStatusChangedEvent`);
         if (a === 'starting' && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }

@@ -25,6 +25,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 
 // tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
@@ -100,7 +101,9 @@ suite('Debugging - Attach Debugger', () => {
         const attachResolver = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
         const fs = mock(FileSystem);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(fs));
+        const multistepFactory = mock(MultiStepInputFactory);
+        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory,
+            instance(multistepFactory), instance(fs));
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);

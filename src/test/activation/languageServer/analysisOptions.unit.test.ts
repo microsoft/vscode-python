@@ -24,7 +24,7 @@ import { sleep } from '../../core';
 
 // tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
 
-suite('xLanguage Server - Analysis Options', () => {
+suite('Language Server - Analysis Options', () => {
     class TestClass extends LanguageServerAnalysisOptions {
         public getExcludedFiles(): string[] {
             return super.getExcludedFiles();

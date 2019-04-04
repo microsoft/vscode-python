@@ -211,7 +211,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             submitInput: this.submitInput
         };
     }
-
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
        return {
         addMarkdown: this.addMarkdown,
@@ -225,7 +224,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         redo: this.redo,
         clearAll: this.clearAll,
         skipDefault: this.props.skipDefault,
-        showDataExplorer: this.showDataExplorer,
+        showDataExplorer: this.showDataViewer,
         testMode: this.props.testMode,
         variableExplorerRef: this.variableExplorerRef,
         canCollapseAll: this.canCollapseAll(),
@@ -271,8 +270,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataExplorer = () => {
-        this.sendMessage(HistoryMessages.ShowDataExplorer, 'df');
+    private showDataViewer = () => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, 'df');
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {

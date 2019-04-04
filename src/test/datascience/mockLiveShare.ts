@@ -264,9 +264,13 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         return Promise.resolve();
     }
     public getSharedService(name: string): Promise<vsls.SharedServiceProxy> {
+        if (!MockLiveShare.services.has(name)) {
+            // Don't wait for the host to start. It shouldn't be necessary anyway.
+            MockLiveShare.services.set(name, new MockLiveService(name));
+        }
         const service = MockLiveShare.services.get(name);
         if (!service) {
-            throw new Error(`${name} service was not started on the host`);
+            throw new Error(`${name} failure to add service to map`);
         }
         return Promise.resolve(service);
     }

@@ -8,9 +8,9 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Data, Toolbar } from 'react-data-grid-addons';
 
 import {
-    DataExplorerMessages,
-    DataExplorerRowStates,
-    IDataExplorerMapping,
+    DataViewerMessages,
+    DataViewerRowStates,
+    IDataViewerMapping,
     IGetRowsResponse,
     MaxStringCompare,
     RowFetchAllLimit,
@@ -39,6 +39,7 @@ const defaultColumnProperties = {
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
+    forceHeight?: number;
 }
 
 //tslint:disable:no-any
@@ -54,13 +55,14 @@ interface IMainPanelState {
     sortColumn: string | number;
 }
 
-class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> { }
+class DataViewerPostOffice extends PostOffice<IDataViewerMapping> { }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
-    private postOffice: DataExplorerPostOffice | undefined;
+    private postOffice: DataViewerPostOffice | undefined;
     private container: HTMLDivElement | null = null;
     private emptyRows: (() => JSX.Element) | undefined;
     private getEmptyRows: ((props: any) => JSX.Element) | undefined;
+    private sentDone = false;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -76,7 +78,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 actualRowCount: data.rows.length + 100,
                 fetchedRowCount: data.rows.length,
                 filters: {},
-                gridHeight: 100,
+                gridHeight:  100,
                 sortColumn: 'index',
                 sortDirection: 'NONE'
             };
@@ -112,11 +114,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         };
     }
     public render = () => {
+        // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
+        // can guarantee our render will run before somebody checks our rendered output.
+        if (this.state.actualRowCount && this.state.actualRowCount === this.state.fetchedRowCount && !this.sentDone) {
+            this.sentDone = true;
+            this.sendMessage(DataViewerMessages.CompletedData);
+        }
 
         return (
             <div className='background'>
                 <div className='main-panel' ref={this.updateContainer}>
-                    <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                    <DataViewerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                     {this.container && this.renderGrid()}
                 </div>
             </div>
@@ -126,15 +134,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case DataExplorerMessages.InitializeData:
+            case DataViewerMessages.InitializeData:
                 this.initializeData(payload);
                 break;
 
-            case DataExplorerMessages.GetAllRowsResponse:
+            case DataViewerMessages.GetAllRowsResponse:
                 this.handleGetAllRowsResponse(payload as JSONObject);
                 break;
 
-            case DataExplorerMessages.GetRowsResponse:
+            case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
@@ -197,7 +205,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getAllRows() {
-        this.sendMessage(DataExplorerMessages.GetAllRowsRequest);
+        this.sendMessage(DataViewerMessages.GetAllRowsRequest);
     }
 
     private getRowsInChunks(startIndex: number, endIndex: number) {
@@ -205,7 +213,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         let chunkEnd = startIndex + Math.min(RowFetchSizeFirst, endIndex);
         let chunkStart = startIndex;
         while (chunkStart < endIndex) {
-            this.sendMessage(DataExplorerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
             chunkStart = chunkEnd;
             chunkEnd = Math.min(chunkEnd + RowFetchSizeSubsequent, endIndex);
         }
@@ -258,7 +266,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private padRows(initialRows: any[], wantedCount: number) : any[] {
         if (wantedCount > initialRows.length) {
-            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataExplorerRowStates.Fetching);
+            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataViewerRowStates.Fetching);
             return [...initialRows, ...fetching];
         }
         return initialRows;
@@ -268,9 +276,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (variable.columns) {
             return variable.columns.map((c: {key: string; type: string}, i: number) => {
                 return {
-                    ...c,
+                    type: c.type,
+                    key: c.key.toString(),
                     index: i,
-                    name: c.key,
+                    name: c.key.toString(),
                     ...defaultColumnProperties,
                     formatter: CellFormatter,
                     getRowMetaData: this.getRowMetaData.bind(this)
@@ -293,7 +302,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateDimensions = () => {
         if (this.container) {
             const height = this.container.offsetHeight;
-            this.setState({ gridHeight: height - 100 });
+            this.setState({ gridHeight: this.props.forceHeight ? this.props.forceHeight : height - 100 });
         }
     }
 
@@ -314,14 +323,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (this.state.fetchedRowCount === this.state.actualRowCount);
     }
 
-    private updatePostOffice = (postOffice: DataExplorerPostOffice) => {
+    private updatePostOffice = (postOffice: DataViewerPostOffice) => {
         if (this.postOffice !== postOffice) {
             this.postOffice = postOffice;
-            this.sendMessage(DataExplorerMessages.Started);
+            this.sendMessage(DataViewerMessages.Started);
         }
     }
 
-    private sendMessage<M extends IDataExplorerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         if (this.postOffice) {
             this.postOffice.sendMessage(type, payload);
         }
