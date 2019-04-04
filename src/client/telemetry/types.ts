@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { Uri } from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -183,6 +184,11 @@ export type InterpreterActivationEnvironmentVariables = {
     failed?: boolean;
 };
 
+export type InterpreterActivationEnvironmentPrompt = {
+    selection: string;
+    uri?: Uri;
+};
+
 export type InterpreterActivation = {
     hasCommands?: boolean;
     failed?: boolean;
@@ -193,5 +199,5 @@ export type InterpreterActivation = {
 
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {
-    activate() : Promise<void>;
+    activate(): Promise<void>;
 }

@@ -3,65 +3,70 @@
 
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
+import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { traceDecorators } from '../../common/logger';
 import { IPersistentStateFactory } from '../../common/types';
-import { Interpreters } from '../../common/utils/localize';
-import { IInterpreterHelper, IInterpreterLocatorService, IInterpreterWatcher, InterpreterType, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../contracts';
-import { IVirtualEnvironmentManager, IVirtualEnvironmentPrompt } from './types';
+import { InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
+import { IPythonPathUpdaterServiceManager } from '../configuration/types';
+import { IInterpreterHelper, IInterpreterLocatorService, IInterpreterWatcherBuilder, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../contracts';
 
-const doNotDisplayPromptStateKey = 'DEPRECATED_MESSAGE_KEY_FOR_VIRTUAL_ENV';
+const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_VIRTUAL_ENV';
 @injectable()
-export class VirtualEnvironmentPrompt implements IVirtualEnvironmentPrompt {
+export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     constructor(
-        @inject(IInterpreterWatcher) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly watcher: IInterpreterWatcher,
+        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IVirtualEnvironmentManager) private readonly manager: IVirtualEnvironmentManager,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
+        @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly locator: IInterpreterLocatorService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell) { }
 
-    public register(): void {
-        this.watcher.onDidCreate((e) => {
-            this.handleNewEnvironment(e).ignoreErrors();
+    public async activate(resource: Uri): Promise<void> {
+        const watcher = await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
+        watcher.onDidCreate(() => {
+            this.handleNewEnvironment(resource).ignoreErrors();
         });
     }
-    public async handleNewEnvironment(resource?: Uri): Promise<void> {
+
+    @traceDecorators.error('Error in event handler for detection of new environment')
+    private async handleNewEnvironment(resource?: Uri): Promise<void> {
         const interpreters = await this.locator.getInterpreters(resource);
         const interpreter = this.helper.getBestInterpreter(interpreters);
         if (!interpreter) {
             return;
         }
-        if (await this.manager.getEnvironmentType(interpreter.path, resource) === InterpreterType.Unknown) {
-            return;
-        }
         if (this.hasUserDefinedPythonPath(resource)) {
             return;
         }
-        await this.notifyDeprecation(interpreter, resource);
+        await this.notifyUser(interpreter, resource);
     }
-    private async notifyDeprecation(interpreter: PythonInterpreter, resource?: Uri): Promise<void> {
+    private async notifyUser(interpreter: PythonInterpreter, resource?: Uri): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayPromptStateKey, true);
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = ['Yes', 'No', 'Do not show again'];
+        const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Interpreters.doNotShowAgain()];
         const selection = await this.appShell.showInformationMessage(Interpreters.environmentPromptMessage(), ...prompts);
         if (!selection) {
             return;
         }
         switch (selection) {
-            case 'Yes': {
-                const pythonSettings = this.workspaceService.getConfiguration('python', resource);
-                await pythonSettings.update('pythonPath', interpreter.path, ConfigurationTarget.WorkspaceFolder);
+            case prompts[0]: {
+                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: prompts[0], uri: resource });
+                await this.pythonPathUpdaterService.updatePythonPath(interpreter.path, ConfigurationTarget.WorkspaceFolder, 'ui', resource);
                 break;
             }
-            case 'Do not show again': {
+            case prompts[2]: {
+                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: prompts[2], uri: resource });
                 await notificationPromptEnabled.updateValue(false);
                 break;
             }
             default: {
-                return;
+                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: prompts[1], uri: resource });
             }
         }
     }

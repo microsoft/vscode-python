@@ -10,9 +10,3 @@ export interface IVirtualEnvironmentManager {
     getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType>;
     getPyEnvRoot(resource?: Uri): Promise<string | undefined>;
 }
-
-export const IVirtualEnvironmentPrompt = Symbol('VirtualEnvironmentPrompt');
-export interface IVirtualEnvironmentPrompt {
-    register(): void;
-    handleNewEnvironment(resource?: Uri): Promise<void>;
-}
