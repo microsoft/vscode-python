@@ -26,7 +26,7 @@ export class VariableExplorerCellFormatter extends React.Component<IVariableExpl
 
     public render() {
         const className = `react-grid-variable-explorer-cell-${this.props.cellStyle.toString()}`;
-        if (this.props.value) {
+        if (this.props.value !== null && this.props.value !== undefined) {
             return(<div className={className} title={this.props.value.toString()}>{this.props.value}</div>);
         }
         return [];
