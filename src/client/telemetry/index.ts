@@ -276,6 +276,7 @@ export interface IEventNamePropertyMapping {
     [EventName.KNOWN_IMPORT_FROM_FILE]: { import: string };
     [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: string };
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
+    [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;
     [EventName.PYTHON_INTERPRETER]: PythonInterpreterTelemetry;
