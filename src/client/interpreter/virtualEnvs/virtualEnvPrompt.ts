@@ -33,18 +33,15 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     }
 
     @traceDecorators.error('Error in event handler for detection of new environment')
-    private async handleNewEnvironment(resource?: Uri): Promise<void> {
+    private async handleNewEnvironment(resource: Uri): Promise<void> {
         const interpreters = await this.locator.getInterpreters(resource);
         const interpreter = this.helper.getBestInterpreter(interpreters);
-        if (!interpreter) {
-            return;
-        }
-        if (this.hasUserDefinedPythonPath(resource)) {
+        if (!interpreter || this.hasUserDefinedPythonPath(resource)) {
             return;
         }
         await this.notifyUser(interpreter, resource);
     }
-    private async notifyUser(interpreter: PythonInterpreter, resource?: Uri): Promise<void> {
+    private async notifyUser(interpreter: PythonInterpreter, resource: Uri): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayPromptStateKey, true);
         if (!notificationPromptEnabled.value) {
             return;
