@@ -21,6 +21,7 @@
 .remove-style {
     background-color:transparent;
     border:transparent;
+    font:inherit;
 }
 
 .collapseInputLabel {
@@ -28,6 +29,5 @@
     color: var(--vscode-editor-foreground);
     font-family: var(--vscode-editor-font-family);
     font-weight: var(--vscode-editor-font-weight);
-    font-size: var(--vscode-editor-font-size);
     margin: 3px;
 }

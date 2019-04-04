@@ -28,6 +28,7 @@ interface IVariableExplorerState {
     gridRows: IGridRow[];
     gridHeight: number;
     height: number;
+    fontSize: number;
 }
 
 const defaultColumnProperties = {
@@ -42,6 +43,8 @@ interface IGridRow {
 }
 
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
+    private divRef: React.RefObject<HTMLDivElement>;
+
     constructor(prop: IVariableExplorerProps) {
         super(prop);
         const columns = [
@@ -54,14 +57,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         gridColumns: columns,
                         gridRows: [],
                         gridHeight: 200,
-                        height: 0};
+                        height: 0,
+                        fontSize: 14};
+
+        this.divRef = React.createRef<HTMLDivElement>();
     }
 
     public render() {
         if (getSettings && getSettings().showJupyterVariableExplorer) {
             const contentClassName = `variable-explorer-content ${this.state.open ? '' : ' hide'}`;
+
+            const fontSizeStyle: React.CSSProperties = {
+                fontSize: `${this.state.fontSize.toString()}px`
+            };
+
             return(
-                <div className='variable-explorer'>
+                <div className='variable-explorer' ref={this.divRef} style={fontSizeStyle}>
                     <CollapseButton theme={this.props.baseTheme}
                         visible={true}
                         open={this.state.open}
@@ -75,8 +86,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                                 rowGetter = {this.getRow}
                                 rowsCount = {this.state.gridRows.length}
                                 minHeight = {this.state.gridHeight}
-                                headerRowHeight = {23}
-                                rowHeight = {23}
+                                headerRowHeight = {this.state.fontSize + 9}
+                                rowHeight = {this.state.fontSize + 9}
                             />
                         </div>
                     </div>
@@ -88,6 +99,16 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public componentDidMount = () => {
+        // After mounting, check our computed style to see if the font size is changed
+        if (this.divRef.current) {
+            const newFontSize = parseInt(getComputedStyle(this.divRef.current).getPropertyValue('--code-font-size'), 10);
+
+            // Make sure to check for update here so we don't update loop
+            if (this.state.fontSize !== newFontSize) {
+                this.setState({fontSize: newFontSize});
+            }
+        }
+
         this.updateHeight();
     }
 
