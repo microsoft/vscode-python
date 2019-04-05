@@ -31,7 +31,6 @@ class HistoryPostOffice extends PostOffice<IHistoryMapping> {}
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
-    private bottom: HTMLDivElement | undefined;
     private updateCount = 0;
     private renderCount = 0;
     private sentStartup = false;
@@ -61,13 +60,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.variableExplorerRef = React.createRef<VariableExplorer>();
     }
 
-    public componentDidMount() {
-        this.scrollToBottom();
-    }
-
     public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
-        this.scrollToBottom();
-
         // If in test mode, update our outputs
         if (this.props.testMode) {
             this.updateCount = this.updateCount + 1;
@@ -91,7 +84,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
-                <div ref={this.updateBottom}/>
             </div>
         );
     }
@@ -208,7 +200,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             saveEditCellRef: this.saveEditCellRef,
             gotoCellCode: this.gotoCellCode,
             deleteCell: this.deleteCell,
-            submitInput: this.submitInput
+            submitInput: this.submitInput,
+            skipNextScroll: this.state.skipNextScroll ? true : false
         };
     }
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
@@ -444,24 +437,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Send a message to the other side to export our current list
         const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
         this.sendMessage(HistoryMessages.Export, cellContents);
-    }
-
-    private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll && !this.props.testMode) {
-            // Delay this until we are about to render. React hasn't setup the size of the bottom element
-            // yet so we need to delay. 10ms looks good from a user point of view
-            setTimeout(() => {
-                if (this.bottom) {
-                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
-                }
-            }, 100);
-        }
-    }
-
-    private updateBottom = (newBottom: HTMLDivElement) => {
-        if (newBottom !== this.bottom) {
-            this.bottom = newBottom;
-        }
     }
 
     private updateSelf = (r: HTMLDivElement) => {
