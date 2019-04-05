@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { Uri } from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -182,11 +181,6 @@ export type InterpreterDiscovery = {
 export type InterpreterActivationEnvironmentVariables = {
     hasEnvVars?: boolean;
     failed?: boolean;
-};
-
-export type InterpreterActivationEnvironmentPrompt = {
-    selection: string;
-    uri?: Uri;
 };
 
 export type InterpreterActivation = {

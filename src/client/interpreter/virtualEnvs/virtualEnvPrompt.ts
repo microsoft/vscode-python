@@ -48,27 +48,20 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
             return;
         }
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Interpreters.doNotShowAgain()];
+        const telemetrySelections = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(Interpreters.environmentPromptMessage(), ...prompts);
+        // tslint:disable-next-line:no-any
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] as any : undefined });
         if (!selection) {
             return;
         }
-        switch (selection) {
-            case prompts[0]: {
-                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: prompts[0], uri: resource });
-                await this.pythonPathUpdaterService.updatePythonPath(interpreter.path, ConfigurationTarget.WorkspaceFolder, 'ui', resource);
-                break;
-            }
-            case prompts[2]: {
-                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: prompts[2], uri: resource });
-                await notificationPromptEnabled.updateValue(false);
-                break;
-            }
-            default: {
-                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: prompts[1], uri: resource });
-            }
+        if (selection === prompts[0]) {
+            await this.pythonPathUpdaterService.updatePythonPath(interpreter.path, ConfigurationTarget.WorkspaceFolder, 'ui', resource);
+        } else if (selection === prompts[2]) {
+            await notificationPromptEnabled.updateValue(false);
         }
     }
-    private hasUserDefinedPythonPath(resource?: Uri) {
+    protected hasUserDefinedPythonPath(resource?: Uri) {
         const settings = this.workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
         return ((settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
             (settings.workspaceValue && settings.workspaceValue !== 'python') ||

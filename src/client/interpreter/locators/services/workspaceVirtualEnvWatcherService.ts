@@ -11,7 +11,7 @@ import '../../../common/extensions';
 import { Logger, traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IDisposableRegistry } from '../../../common/types';
+import { IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterWatcher } from '../../contracts';
 
 const maxTimeToWaitForEnvCreation = 60_000;
@@ -19,25 +19,25 @@ const timeToPollForEnvCreation = 2_000;
 
 @injectable()
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
-    private readonly didCreate: EventEmitter<Uri | undefined>;
+    private readonly didCreate: EventEmitter<Resource>;
     private timers = new Map<string, { timer: NodeJS.Timer; counter: number }>();
     private fsWatchers: FileSystemWatcher[] = [];
-    private resource: Uri | undefined;
+    private resource: Resource;
     constructor(@inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory) {
-        this.didCreate = new EventEmitter<Uri | undefined>();
+        this.didCreate = new EventEmitter<Resource>();
         disposableRegistry.push(this);
     }
-    public get onDidCreate(): Event<Uri | undefined> {
+    public get onDidCreate(): Event<Resource> {
         return this.didCreate.event;
     }
     public dispose() {
         this.clearTimers();
     }
     @traceDecorators.verbose('Register Intepreter Watcher')
-    public async register(resource: Uri | undefined): Promise<void> {
+    public async register(resource: Resource): Promise<void> {
         if (this.fsWatchers.length > 0) {
             return;
         }

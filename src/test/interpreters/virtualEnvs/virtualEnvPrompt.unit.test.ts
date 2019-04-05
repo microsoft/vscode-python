@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, Uri, WorkspaceConfiguration } from 'vscode';
@@ -30,6 +31,10 @@ suite('Virtual Environment Prompt', () => {
         // tslint:disable-next-line:no-unnecessary-override
         public async notifyUser(interpreter: PythonInterpreter, resource: Uri): Promise<void> {
             await super.notifyUser(interpreter, resource);
+        }
+        // tslint:disable-next-line:no-unnecessary-override
+        public hasUserDefinedPythonPath(resource: Uri) {
+            return super.hasUserDefinedPythonPath(resource);
         }
     }
     let builder: IInterpreterWatcherBuilder;
@@ -178,5 +183,62 @@ suite('Virtual Environment Prompt', () => {
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
         verify(appShell.showInformationMessage(anything(), ...prompts)).never();
+    });
+
+    const testsForHasUserDefinedPath =
+        [
+            {
+                testName: 'Returns false when workspace folder setting equals \'python\'',
+                settings: { workspaceFolderValue: 'python' },
+                expectedResult: false
+            },
+            {
+                testName: 'Returns true when interpreter is provided in workspace folder setting',
+                settings: { workspaceFolderValue: 'path/to/interpreter' },
+                expectedResult: true
+            },
+            {
+                testName: 'Returns false when workspace setting equals \'python\'',
+                settings: { workspaceValue: 'python' },
+                expectedResult: false
+            },
+            {
+                testName: 'Returns true when interpreter is provided in workspace setting',
+                settings: { workspaceValue: 'path/to/interpreter' },
+                expectedResult: true
+            },
+            {
+                testName: 'Returns false when global setting equals \'python\'',
+                settings: { globalValue: 'python' },
+                expectedResult: false
+            },
+            {
+                testName: 'Returns true when interpreter is provided in global setting',
+                settings: { globalValue: 'path/to/interpreter' },
+                expectedResult: true
+            },
+            {
+                testName: 'Returns false when no python setting is provided',
+                settings: {},
+                expectedResult: false
+            }
+        ];
+
+    suite('Function hasUserDefinedPythonPath()', () => {
+        testsForHasUserDefinedPath.forEach(testParams => {
+            test(testParams.testName, async () => {
+                const resource = Uri.parse('a');
+                const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+                when(workspaceService.getConfiguration('python', resource)).thenReturn(workspaceConfig.object);
+                workspaceConfig.setup(c => c.inspect<string>('pythonPath'))
+                    .returns(() => testParams.settings as any)
+                    .verifiable(TypeMoq.Times.once());
+
+                expect(environmentPrompt.hasUserDefinedPythonPath(resource)).to.equal(testParams.expectedResult);
+
+                verify(workspaceService.getConfiguration('python', resource)).once();
+                workspaceConfig.verifyAll();
+            });
+        });
     });
 });
