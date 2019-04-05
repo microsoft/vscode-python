@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
-import { IPersistentStateFactory } from '../../common/types';
+import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -23,17 +23,18 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly locator: IInterpreterLocatorService,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IApplicationShell) private readonly appShell: IApplicationShell) { }
 
     public async activate(resource: Uri): Promise<void> {
         const watcher = await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
         watcher.onDidCreate(() => {
             this.handleNewEnvironment(resource).ignoreErrors();
-        });
+        }, this, this.disposableRegistry);
     }
 
     @traceDecorators.error('Error in event handler for detection of new environment')
-    private async handleNewEnvironment(resource: Uri): Promise<void> {
+    protected async handleNewEnvironment(resource: Uri): Promise<void> {
         const interpreters = await this.locator.getInterpreters(resource);
         const interpreter = this.helper.getBestInterpreter(interpreters);
         if (!interpreter || this.hasUserDefinedPythonPath(resource)) {
@@ -41,7 +42,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         }
         await this.notifyUser(interpreter, resource);
     }
-    private async notifyUser(interpreter: PythonInterpreter, resource: Uri): Promise<void> {
+    protected async notifyUser(interpreter: PythonInterpreter, resource: Uri): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayPromptStateKey, true);
         if (!notificationPromptEnabled.value) {
             return;
