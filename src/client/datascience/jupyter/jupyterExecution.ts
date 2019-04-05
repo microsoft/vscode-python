@@ -354,16 +354,18 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
             // Check for a docker situation.
             try {
-                const cgroup = await this.fileSystem.readFile('/proc/self/cgroup');
-                if (cgroup.includes('docker')) {
-                    // We definitely need an ip address.
-                    extraArgs.push('--ip');
-                    extraArgs.push('127.0.0.1');
-
-                    // Now see if we need --allow-root.
-                    const idResults = execSync('id', {encoding: 'utf-8'});
-                    if (idResults.includes('(root)')) {
-                        extraArgs.push('--allow-root');
+                if (await this.fileSystem.fileExists('/proc/self/cgroup')) {
+                    const cgroup = await this.fileSystem.readFile('/proc/self/cgroup');
+                    if (cgroup.includes('docker')) {
+                        // We definitely need an ip address.
+                        extraArgs.push('--ip');
+                        extraArgs.push('127.0.0.1');
+    
+                        // Now see if we need --allow-root.
+                        const idResults = execSync('id', {encoding: 'utf-8'});
+                        if (idResults.includes('(root)')) {
+                            extraArgs.push('--allow-root');
+                        }
                     }
                 }
             } catch {
