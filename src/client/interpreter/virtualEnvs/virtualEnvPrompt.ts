@@ -51,7 +51,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(Interpreters.environmentPromptMessage(), ...prompts);
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] as any : undefined });
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
         if (!selection) {
             return;
         }
