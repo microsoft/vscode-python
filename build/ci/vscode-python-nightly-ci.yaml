@@ -22,9 +22,6 @@ jobs:
 
 - job: 'Nightly'
 
-  timeoutInMinutes: 30
-  cancelTimeoutInMinutes: 3
-
   strategy:
     matrix:
       # Each member of this list must contain these values:
@@ -436,4 +433,3 @@ jobs:
 
   steps:
     - template: templates/test_phases.yml
-

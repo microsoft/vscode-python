@@ -94,6 +94,9 @@
     "DataScience.exportDialogFailed": "Failed to export notebook. {0}",
     "DataScience.exportOpenQuestion": "Open in browser",
     "DataScience.collapseInputTooltip": "Collapse input block",
+    "DataScience.collapseVariableExplorerTooltip": "Collapse variable explorer",
+    "DataScience.collapseVariableExplorerLabel": "Variables",
+    "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",
     "DataScience.notebookCheckForImportYes": "Import",
@@ -179,6 +182,8 @@
     "Common.loadingPythonExtension": "Python extension loading...",
     "debug.selectConfigurationTitle": "Select a debug configuration",
     "debug.selectConfigurationPlaceholder": "Debug Configuration",
+    "debug.launchJsonConfigurationsCompletionLabel": "Python",
+    "debug.launchJsonConfigurationsCompletionDescription": "Select Python Launch Configuration",
     "debug.debugFileConfigurationLabel": "Python File",
     "debug.debugFileConfigurationDescription": "Debug Python file",
     "debug.debugModuleConfigurationLabel": "Module",
@@ -219,5 +224,12 @@
     "LanguageService.extractionFailedOutputMessage": "extraction failed",
     "LanguageService.extractionCompletedOutputMessage": "complete",
     "LanguageService.extractionDoneOutputMessage": "done",
-    "LanguageService.reloadVSCodeIfSeachPathHasChanged": "Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly"
+    "LanguageService.reloadVSCodeIfSeachPathHasChanged": "Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly",
+    "DataScience.dataExplorerInvalidVariableFormat" : "'{0}' is not an active variable.",
+    "DataScience.jupyterGetVariablesExecutionError" : "Failure during variable extraction:\r\n{0}",
+    "DataScience.loadingMessage" : "loading ...",
+    "DataScience.noRowsInDataViewer" : "Fetching data ...",
+    "DataScience.pandasTooOldForViewingFormat" : "Python package 'pandas' is version {0}. Version 0.20 or greater is required for viewing data.",
+    "DataScience.pandasRequiredForViewing" : "Python package 'pandas' is required for viewing data.",
+    "DataScience.valuesColumn": "values"
 }

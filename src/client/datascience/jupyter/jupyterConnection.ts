@@ -18,6 +18,10 @@ import { RegExpValues } from '../constants';
 import { IConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
 
+// tslint:disable-next-line:no-require-imports no-var-requires no-any
+const namedRegexp = require('named-js-regexp');
+const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
+
 export type JupyterServerInfo = {
     base_url: string;
     notebook_dir: string;
@@ -130,14 +134,19 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private getJupyterURLFromString(data: any) {
-        const urlMatch = RegExpValues.UrlPatternRegEx.exec(data);
-        if (urlMatch && !this.startPromise.completed) {
+        const urlMatch = urlMatcher.exec(data) as any;
+        const groups = urlMatch.groups() as RegExpValues.IUrlPatternGroupType;
+        if (urlMatch && !this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
+            // Rebuild the URI from our group hits
+            const host = groups.LOCAL ? groups.LOCAL : groups.IP;
+            const uriString = `${groups.PREFIX}${host}${groups.REST}`;
+
             // URL is not being found for some reason. Pull it in forcefully
             // tslint:disable-next-line:no-require-imports
             const URL = require('url').URL;
             let url: URL;
             try {
-                url = new URL(urlMatch[0]);
+                url = new URL(uriString);
             } catch (err) {
                 // Failed to parse the url either via server infos or the string
                 this.rejectStartPromise(localize.DataScience.jupyterLaunchNoURL());

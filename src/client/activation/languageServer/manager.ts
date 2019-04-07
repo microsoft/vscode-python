@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import '../../common/extensions';
 import { traceDecorators } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
-import { debounce } from '../../common/utils/decorators';
+import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -49,7 +49,7 @@ export class LanguageServerManager implements ILanguageServerManager {
             this.languageServer.loadExtension(this.lsExtension.loadExtensionArgs);
         }
     }
-    @debounce(1000)
+    @debounceSync(1000)
     protected restartLanguageServerDebounced(): void {
         this.restartLanguageServer().ignoreErrors();
     }

@@ -55,8 +55,8 @@ export class ImportTracker implements IImportTracker {
     }
 
     private getDocumentLines(document: TextDocument) : (string | undefined)[] {
-        const array = new Array(null, Math.min(document.lineCount, MAX_DOCUMENT_LINES));
-        return array.map((_a: any, i: number) => {
+        const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
+        return array.map((_a: string, i: number) => {
             const line = document.lineAt(i);
             if (line && !line.isEmptyOrWhitespace) {
                 return line.text;

@@ -266,24 +266,25 @@ export interface IJupyterVariable {
     count: number;
     truncated: boolean;
     expensive: boolean;
+    columns?: { key: string; type: string }[];
+    rowCount?: number;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(): Promise<IJupyterVariable[]>;
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
+    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
 }
 
-export interface IDataExplorerRow {
-    [column: string] : string | number | {};
+export const IDataViewerProvider = Symbol('IDataViewerProvider');
+export interface IDataViewerProvider {
+    create(variable: string) : Promise<IDataViewer>;
+    getPandasVersion() : Promise<{major: number; minor: number; build: number} | undefined>;
 }
+export const IDataViewer = Symbol('IDataViewer');
 
-export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
-export interface IDataExplorerProvider {
-    create(rows: IDataExplorerRow[]) : Promise<IDataExplorer>;
-}
-export const IDataExplorer = Symbol('IDataExplorer');
-
-export interface IDataExplorer extends IAsyncDisposable {
-    show(rows: IDataExplorerRow[]) : Promise<void>;
+export interface IDataViewer extends IAsyncDisposable {
+    show(variable: IJupyterVariable) : Promise<void>;
 }

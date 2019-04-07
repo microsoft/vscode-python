@@ -41,8 +41,8 @@ suite('Debugging - Configuration Service', () => {
         multiStepFactory = typemoq.Mock.ofType<IMultiStepInputFactory>();
         providerFactory = mock(DebugConfigurationProviderFactory);
         fs = mock(FileSystem);
-        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory),
-            instance(fs));
+        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object,
+            instance(providerFactory), multiStepFactory.object, instance(fs));
     });
     test('Should use attach resolver when passing attach config', async () => {
         const config = {
@@ -114,12 +114,7 @@ suite('Debugging - Configuration Service', () => {
         multiStepInput.verifyAll();
         expect(Object.keys(state.config)).to.be.lengthOf(0);
     });
-    test('Ensure generated config is returned', async function () {
-        // Disable this test until this is resolved:
-        // Issue #4007: Disable debugging configuration provider temporarily
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
-
+    test('Ensure generated config is returned', async () => {
         const expectedConfig = { yes: 'Updated' };
         const multiStepInput = {
             run: (_: any, state: any) => {
@@ -153,9 +148,7 @@ suite('Debugging - Configuration Service', () => {
         when(fs.readFile(jsFile)).thenResolve(JSON.stringify([expectedConfig]));
         const config = await configService.provideDebugConfigurations!({} as any);
 
-        // Disable this check until this is resolved:
-        // Issue #4007: Disable debugging configuration provider temporarily
-        // multiStepFactory.verifyAll();
+        multiStepFactory.verifyAll();
 
         expect(config).to.deep.equal([expectedConfig]);
     });

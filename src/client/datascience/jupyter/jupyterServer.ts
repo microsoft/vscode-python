@@ -15,12 +15,13 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
-import { concatMultilineString, stripComments } from '../common';
+import { concatMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import {
     CellState,
@@ -133,7 +134,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        this.logger.logInformation(`Connecting server ${this.id}`);
+        traceInfo(`Connecting server ${this.id}`);
 
         // Save our launch info
         this.launchInfo = launchInfo;
@@ -153,15 +154,21 @@ export class JupyterServerBase implements INotebookServer {
         // Start our session
         this.session = await this.sessionManager.startNew(launchInfo.connectionInfo, launchInfo.kernelSpec, cancelToken);
 
+        traceInfo(`Started session ${this.id}`);
+
         if (this.session) {
             // Setup our start time. We reject anything that comes in before this time during execute
             this.sessionStartTime = Date.now();
 
             // Wait for it to be ready
+            traceInfo(`Waiting for idle ${this.id}`);
             await this.session.waitForIdle();
 
+            traceInfo(`Performing initial setup ${this.id}`);
             // Run our initial setup and plot magics
-            this.initialNotebookSetup(cancelToken);
+            await this.initialNotebookSetup(cancelToken);
+
+            traceInfo(`Finished connecting ${this.id}`);
         }
     }
 
@@ -184,9 +191,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -221,8 +225,8 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string, _silent: boolean = false): Observable<ICell[]> {
-        return this.executeObservableImpl(code, file, line, id, false);
+    public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
+        return this.executeObservableImpl(code, file, line, id, silent);
     }
 
     public async getSysInfo(): Promise<ICell> {
@@ -271,7 +275,7 @@ export class JupyterServerBase implements INotebookServer {
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
-            this.initialNotebookSetup();
+            await this.initialNotebookSetup();
 
             return;
         }
@@ -386,9 +390,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -438,9 +439,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeObservableImpl(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
-        // Do initial setup if necessary
-        this.initialNotebookSetup();
-
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
@@ -488,21 +486,25 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     // Set up our initial plotting and imports
-    private initialNotebookSetup = (cancelToken?: CancellationToken) => {
+    private async initialNotebookSetup(cancelToken?: CancellationToken) : Promise<void> {
         if (this.ranInitialSetup) {
             return;
         }
         this.ranInitialSetup = true;
 
-        // When we start our notebook initial, change to our workspace or user specified root directory
-        if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
-            this.changeDirectoryIfPossible(this.launchInfo.workingDir).ignoreErrors();
-        }
+        try {
+            // When we start our notebook initial, change to our workspace or user specified root directory
+            if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
+                await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
+            }
 
-        this.executeSilently(
-            `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
-            cancelToken
-        ).ignoreErrors();
+            await this.executeSilently(
+                `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+                cancelToken
+            );
+        } catch (e) {
+            traceWarning(e);
+        }
     }
 
     private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
@@ -561,7 +563,7 @@ export class JupyterServerBase implements INotebookServer {
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineString(stripComments(subscriber.cell.data.source)), silent);
+                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent);
 
                 // tslint:disable-next-line:no-require-imports
                 const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -574,7 +576,8 @@ export class JupyterServerBase implements INotebookServer {
                 if (this.launchInfo && this.launchInfo.connectionInfo) {
                     // If the server crashes, cancel the current observable
                     exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected((c) => {
-                        subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(c.toString())));
+                        const str = c ? c.toString() : '';
+                        subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(str)));
                         subscriber.complete(this.sessionStartTime);
                     });
                 }

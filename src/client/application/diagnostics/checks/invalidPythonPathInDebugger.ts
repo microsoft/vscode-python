@@ -9,7 +9,7 @@ import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from '
 import { IDocumentManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
-import { IConfigurationService, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
 import { PythonPathSource } from '../../../debugger/extension/types';
@@ -59,6 +59,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
@@ -69,6 +70,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                 DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
             ],
             serviceContainer,
+            disposableRegistry,
             true
         );
     }

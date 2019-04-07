@@ -5,6 +5,7 @@ import {
     Breakpoint,
     BreakpointsChangeEvent,
     CancellationToken,
+    CompletionItemProvider,
     ConfigurationChangeEvent,
     DebugConfiguration,
     DebugConfigurationProvider,
@@ -12,6 +13,7 @@ import {
     DebugSession,
     DebugSessionCustomEvent,
     Disposable,
+    DocumentSelector,
     Event,
     FileSystemWatcher,
     GlobPattern,
@@ -37,6 +39,8 @@ import {
     TextEditorOptionsChangeEvent,
     TextEditorSelectionChangeEvent,
     TextEditorViewColumnChangeEvent,
+    TreeView,
+    TreeViewOptions,
     Uri,
     ViewColumn,
     WorkspaceConfiguration,
@@ -331,6 +335,14 @@ export interface IApplicationShell {
      * @return The thenable the task-callback returned.
      */
     withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R>;
+
+    /**
+     * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
+     * @param viewId Id of the view contributed using the extension point `views`.
+     * @param options Options for creating the [TreeView](#TreeView)
+     * @returns a [TreeView](#TreeView).
+     */
+    createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -892,4 +904,24 @@ export interface ILiveShareTestingApi extends ILiveShareApi {
     isSessionStarted: boolean;
     forceRole(role: vsls.Role): void;
     startSession(): Promise<void>;
+    stopSession(): Promise<void>;
+}
+
+export const ILanguageService = Symbol('ILanguageService');
+export interface ILanguageService {
+    /**
+     * Register a completion provider.
+     *
+     * Multiple providers can be registered for a language. In that case providers are sorted
+     * by their [score](#languages.match) and groups of equal score are sequentially asked for
+     * completion items. The process stops when one or many providers of a group return a
+     * result. A failing provider (rejected promise or exception) will not fail the whole
+     * operation.
+     *
+     * @param selector A selector that defines the documents this provider is applicable to.
+     * @param provider A completion provider.
+     * @param triggerCharacters Trigger completion when the user types one of the characters, like `.` or `:`.
+     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
+     */
+    registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
 }

@@ -8,7 +8,7 @@ import { IWebPanel, IWebPanelMessageListener } from '../../common/application/ty
 // tslint:disable:no-any
 
 // This class listens to messages that come from the local Data Explorer window
-export class DataExplorerMessageListener implements IWebPanelMessageListener {
+export class DataViewerMessageListener implements IWebPanelMessageListener {
     private disposedCallback : () => void;
     private callback :  (message: string, payload: any) => void;
     private viewChanged: (panel: IWebPanel) => void;

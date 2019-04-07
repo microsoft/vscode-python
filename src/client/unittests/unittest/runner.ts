@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { ILogger } from '../../common/types';
+import { IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -49,6 +49,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.server = this.serviceContainer.get<IUnitTestSocketServer>(IUnitTestSocketServer);
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.helper = this.serviceContainer.get<IUnitTestHelper>(IUnitTestHelper);
+        this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(this.server);
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -73,7 +74,7 @@ export class TestManagerRunner implements ITestManagerRunner {
             const statusDetails = outcomeMapping.get(data.outcome)!;
             if (test) {
                 test.testFunction.status = statusDetails.status;
-                switch (test.testFunction.status){
+                switch (test.testFunction.status) {
                     case TestStatus.Error:
                     case TestStatus.Fail: {
                         test.testFunction.passed = false;

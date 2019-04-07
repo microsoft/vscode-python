@@ -41,7 +41,7 @@ suite('Debugging - Config Resolver Launch', () => {
         folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
         return folder.object;
     }
-    function setupIoc(pythonPath: string, isWindows: boolean = false, isMac: boolean = false, isLinux: boolean = false) {
+    function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder, isWindows: boolean = false, isMac: boolean = false, isLinux: boolean = false) {
         const confgService = TypeMoq.Mock.ofType<IConfigurationService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
@@ -77,6 +77,9 @@ suite('Debugging - Config Resolver Launch', () => {
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
+        if (workspaceFolder) {
+            settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
+        }
         confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         setupOs(isWindows, isMac, isLinux);
 
@@ -109,7 +112,7 @@ suite('Debugging - Config Resolver Launch', () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
         const pythonFile = 'xyz.py';
-        setupIoc(pythonPath);
+        setupIoc(pythonPath, workspaceFolder);
 
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
@@ -123,7 +126,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -132,7 +135,7 @@ suite('Debugging - Config Resolver Launch', () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
         const pythonFile = 'xyz.py';
-        setupIoc(pythonPath);
+        setupIoc(pythonPath, workspaceFolder);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { noDebug: true } as any as DebugConfiguration);
@@ -145,7 +148,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -153,7 +156,7 @@ suite('Debugging - Config Resolver Launch', () => {
     test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and active file', async () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const pythonFile = 'xyz.py';
-        setupIoc(pythonPath);
+        setupIoc(pythonPath, createMoqWorkspaceFolder(path.dirname(pythonFile)));
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
         setupWorkspaces([]);
 
@@ -168,7 +171,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -215,9 +218,9 @@ suite('Debugging - Config Resolver Launch', () => {
     test('Defaults should be returned when an empty object is passed without Workspace Folder, with a workspace and an active python file', async () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const activeFile = 'xyz.py';
-        setupIoc(pythonPath);
-        setupActiveEditor(activeFile, PYTHON_LANGUAGE);
         const defaultWorkspace = path.join('usr', 'desktop');
+        setupIoc(pythonPath, createMoqWorkspaceFolder(defaultWorkspace));
+        setupActiveEditor(activeFile, PYTHON_LANGUAGE);
         setupWorkspaces([defaultWorkspace]);
 
         const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
@@ -231,7 +234,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('cwd');
         expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
         expect(debugConfig).to.have.property('envFile');
-        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env').toLowerCase());
+        expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
         expect(debugConfig).to.have.property('env');
         // tslint:disable-next-line:no-any
         expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -314,7 +317,7 @@ suite('Debugging - Config Resolver Launch', () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
         const pythonFile = 'xyz.py';
-        setupIoc(pythonPath, isWindows, isMac, isLinux);
+        setupIoc(pythonPath, undefined, isWindows, isMac, isLinux);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
@@ -342,7 +345,7 @@ suite('Debugging - Config Resolver Launch', () => {
         const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
         const pythonFile = 'xyz.py';
 
-        setupIoc(pythonPath, isWindows, isMac, isLinux);
+        setupIoc(pythonPath, undefined, isWindows, isMac, isLinux);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
         if (pyramidExists) {

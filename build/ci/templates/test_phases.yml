@@ -102,14 +102,6 @@ steps:
     inputs:
       targets: 'prePublishNonBundle'
 
-  # Make sure the project compiles (with strict checks enabled).
-  # Example command line (windows pwsh):
-  # > npx tsc -p ./
-  - bash: |
-      npx tsc -p ./
-    displayName: 'make sure project compiles'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
-
   # Run tslint on the project source to ensure that the added code adheres
   # to the # code standards we are trying to maintain.
   # Example command line (windows pwsh):

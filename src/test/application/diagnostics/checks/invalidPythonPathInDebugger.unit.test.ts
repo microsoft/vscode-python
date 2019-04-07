@@ -78,6 +78,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             helper.object,
             docMgr.object,
             configService.object,
+            [],
             messageHandler.object
         );
         (diagnosticService as any)._clear();

@@ -4,20 +4,23 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IInstaller, Product } from '../common/types';
+import { IFileSystem } from '../common/platform/types';
+import { IConfigurationService, Product } from '../common/types';
 import { Linters } from '../common/utils/localize';
+import { PYLINT_CONFIG } from './constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
 @injectable()
 export class AvailableLinterActivator implements IAvailableLinterActivator {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IInstaller) private installer: IInstaller,
-        @inject(IWorkspaceService) private workspaceConfig: IWorkspaceService,
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) { }
 
@@ -94,7 +97,12 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @param resource Context information for workspace.
      */
     public async isLinterAvailable(linterProduct: Product, resource?: Uri): Promise<boolean | undefined> {
-        return this.installer.isInstalled(linterProduct, resource)
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return false;
+        }
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource)! : this.workspaceService.workspaceFolders![0];
+        const filePath = path.join(workspaceFolder.uri.fsPath, PYLINT_CONFIG);
+        return this.fs.fileExists(filePath)
             .catch((reason) => {
                 // report and continue, assume the linter is unavailable.
                 traceError(`[WARNING]: Failed to discover if linter ${linterProduct} is installed.`, reason);
@@ -111,7 +119,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if the linter has not been configured at the user, workspace, or workspace-folder scope. false otherwise.
      */
     public isLinterUsingDefaultConfiguration(linterInfo: ILinterInfo, resource?: Uri): boolean {
-        const ws = this.workspaceConfig.getConfiguration('python.linting', resource);
+        const ws = this.workspaceService.getConfiguration('python.linting', resource);
         const pe = ws!.inspect(linterInfo.enabledSettingName);
         return (pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined);
     }

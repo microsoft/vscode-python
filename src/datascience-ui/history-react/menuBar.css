@@ -1,55 +1,7 @@
-
-.menuBar{
-	position: relative;
+.menuBar {
+    margin-top: 2px;
     margin-bottom: 2px;
-    display:flex;
+    display: flex;
     flex-direction: row-reverse;
     justify-content: right;
-}
-
-.menuBar:after{
-    content: "";
-    clear: both;
-    display: block;
-}
-
-.menuBar-top{
-	position: top;
-    display:flex;
-    flex-direction: row-reverse;
-    justify-content: right;
-}
-
-.menuBar-top:after{
-    content: "";
-    clear: both;
-    display: block;
-}
-
-.menuBar-top-fixed{
-    z-index: 10;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    display:flex;
-    flex-direction: row-reverse;
-    justify-content: right;
-    padding-bottom: 2px;
-    padding-top: 2px;
-    padding-right: 5px;
-    border-bottom-width: 1px;
-    border-top-width: 0px;
-    border-right-width: 0px;
-    border-left-width: 0px;
-    margin-bottom: 1px;
-    border-style:solid;
-    background-color: var(--override-background, var(--vscode-editor-background));
-    border-color: var(--override-tabs-background, var(--vscode-editorGroupHeader-tabsBackground));
-}
-
-.menuBar-top-fixed:after{
-    content: "";
-    clear: both;
-    display: block;
 }

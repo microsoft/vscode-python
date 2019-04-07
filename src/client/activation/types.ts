@@ -17,6 +17,14 @@ export interface IExtensionActivationManager extends IDisposable {
 }
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
+/**
+ * Classes implementing this interface will have their `activate` methods
+ * invoked during the actiavtion of the extension.
+ * This is a great hook for extension activation code, i.e. you don't need to modify
+ * the `extension.ts` file to invoke some code when extension gets activated.
+ * @export
+ * @interface IExtensionActivationService
+ */
 export interface IExtensionActivationService {
     activate(resource: Resource): Promise<void>;
 }

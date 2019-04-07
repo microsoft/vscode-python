@@ -6,7 +6,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IConfigurationService } from '../types';
+import { IConfigurationService, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
@@ -40,6 +40,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService = new ProcessService(this.decoder, { ...envVars });
+        this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
 }

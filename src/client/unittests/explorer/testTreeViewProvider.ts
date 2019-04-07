@@ -4,15 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, TreeItem, Uri } from 'vscode';
+import { Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CommandSource } from '../common/constants';
-import { getChildren, getParent } from '../common/testUtils';
-import { ITestCollectionStorageService, TestStatus } from '../common/types';
+import { getChildren, getParent, getTestType } from '../common/testUtils';
+import { ITestCollectionStorageService, TestStatus, TestType } from '../common/types';
 import { ITestDataItemResource, ITestTreeViewProvider, IUnitTestManagementService, TestDataItem, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
@@ -73,7 +73,8 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * @return [TreeItem](#TreeItem) representation of the element
      */
     public async getTreeItem(element: TestDataItem): Promise<TreeItem> {
-        return new TestTreeItem(element.resource, element);
+        const defaultCollapsibleState = await this.shouldElementBeExpandedByDefault(element) ? TreeItemCollapsibleState.Expanded : undefined;
+        return new TestTreeItem(element.resource, element, defaultCollapsibleState);
     }
 
     /**
@@ -163,5 +164,13 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         }
         this.testsAreBeingDiscovered.set(e.workspace.fsPath, false);
         this.refresh(e.workspace);
+    }
+
+    private async shouldElementBeExpandedByDefault(element: TestDataItem) {
+        const parent = await this.getParent(element);
+        if (!parent || getTestType(parent) === TestType.testWorkspaceFolder) {
+            return true;
+        }
+        return false;
     }
 }

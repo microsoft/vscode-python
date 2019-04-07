@@ -126,7 +126,10 @@ class Emitter<T> {
                         if (typeof item.listener === 'function') {
                             result = item.listener.call(undefined, item.event);
                         } else {
-                            result = item.listener[0].call(item.listener[1], item.event);
+                            const func = item.listener[0];
+                            if (func) {
+                                result = func.call(item.listener[1], item.event);
+                            }
                         }
                     }
                 } catch (e) {
@@ -195,6 +198,14 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         return Promise.resolve();
     }
 
+    public async stop(): Promise<void> {
+        this._visibleRole = vsls.Role.None;
+
+        await this.changeSessionEmitter.fire({ session: this });
+
+        return Promise.resolve();
+    }
+
     public getContacts(_emails: string[]): Promise<vsls.ContactsCollection> {
         throw new Error('Method not implemented.');
     }
@@ -253,9 +264,13 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         return Promise.resolve();
     }
     public getSharedService(name: string): Promise<vsls.SharedServiceProxy> {
+        if (!MockLiveShare.services.has(name)) {
+            // Don't wait for the host to start. It shouldn't be necessary anyway.
+            MockLiveShare.services.set(name, new MockLiveService(name));
+        }
         const service = MockLiveShare.services.get(name);
         if (!service) {
-            throw new Error(`${name} service was not started on the host`);
+            throw new Error(`${name} failure to add service to map`);
         }
         return Promise.resolve(service);
     }
@@ -332,6 +347,15 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
         if (this.currentApi) {
             await this.currentApi.start();
             this.sessionStarted = true;
+        } else {
+            throw Error('Cannot start session without a role.');
+        }
+    }
+
+    public async stopSession(): Promise<void> {
+        if (this.currentApi) {
+            await this.currentApi.stop();
+            this.sessionStarted = false;
         } else {
             throw Error('Cannot start session without a role.');
         }

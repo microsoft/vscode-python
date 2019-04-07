@@ -48,7 +48,15 @@ export namespace RegExpValues {
     export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
     export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
+    // instead.
+    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)' ;
+    export interface IUrlPatternGroupType {
+        LOCAL: string | undefined;
+        PREFIX: string | undefined;
+        REST: string | undefined;
+        IP: string | undefined;
+    }
     export const HttpPattern = /https?:\/\//;
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
@@ -92,8 +100,10 @@ export enum Telemetry {
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
-    ShowDataExplorer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
-    RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE'
+    ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
+    RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
+    PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
+    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD'
  }
 
 export namespace HelpLinks {

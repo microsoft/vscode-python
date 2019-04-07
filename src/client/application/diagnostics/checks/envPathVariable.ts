@@ -8,7 +8,7 @@ import { DiagnosticSeverity } from 'vscode';
 import { IApplicationEnvironment } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IPlatformService } from '../../../common/platform/types';
-import { ICurrentProcess, IPathUtils, Resource } from '../../../common/types';
+import { ICurrentProcess, IDisposableRegistry, IPathUtils, Resource } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
@@ -38,8 +38,9 @@ export const EnvironmentPathVariableDiagnosticsServiceId = 'EnvironmentPathVaria
 export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     private readonly platform: IPlatformService;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, true);
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
+        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,

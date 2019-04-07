@@ -143,8 +143,14 @@ export namespace DataScience {
     export const liveShareServiceFailure = localize('DataScience.liveShareServiceFailure', 'Failure starting \'{0}\' service during live share connection.');
     export const documentMismatch = localize('DataScience.documentMismatch', 'Cannot run cells, duplicate documents for {0} found.');
     export const jupyterGetVariablesBadResults = localize('DataScience.jupyterGetVariablesBadResults', 'Failed to fetch variable info from the Jupyter server.');
+    export const dataExplorerInvalidVariableFormat = localize('DataScience.dataExplorerInvalidVariableFormat', '\'{0}\' is not an active variable.');
     export const pythonInteractiveCreateFailed = localize('DataScience.pythonInteractiveCreateFailed', 'Failure to create a \'Python Interactive\' window. Try reinstalling the Python extension.');
-
+    export const jupyterGetVariablesExecutionError = localize('DataScience.jupyterGetVariablesExecutionError', 'Failure during variable extraction: \r\n{0}');
+    export const loadingMessage = localize('DataScience.loadingMessage', 'loading ...');
+    export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'Fetching data ...');
+    export const pandasTooOldForViewingFormat = localize('DataScience.pandasTooOldForViewingFormat', 'Python package \'pandas\' is version {0}. Version 0.20 or greater is required for viewing data.');
+    export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');
+    export const valuesColumn = localize('DataScience.valuesColumn', 'values');
 }
 
 export namespace DebugConfigurationPrompts {
@@ -183,6 +189,8 @@ export namespace DebugConfigurationPrompts {
     export const attachRemoteHostTitle = localize('debug.attachRemoteHostTitle', 'Remote Debugging');
     export const attachRemoteHostPrompt = localize('debug.attachRemoteHostPrompt', 'Enter host name');
     export const attachRemoteHostValidationError = localize('debug.attachRemoteHostValidationError', 'Enter a host name or IP address');
+    export const launchJsonConfigurationsCompletionLabel = localize('debug.launchJsonConfigurationsCompletionLabel', 'Python');
+    export const launchJsonConfigurationsCompletionDescription = localize('debug.launchJsonConfigurationsCompletionDescription', 'Select a debug configuration');
 }
 
 export namespace UnitTests {

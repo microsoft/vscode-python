@@ -3,7 +3,7 @@
 'use strict';
 
 export interface ITestData {
-    columns: {key: string; name: string }[];
+    columns: {key: string; name: string; type: string }[];
     primaryKeys: string[];
     rows: {}[];
 }
@@ -19,7 +19,7 @@ export function generateTestData(_numberOfRows: number) : ITestData {
         { key: 'Age', name: 'Age', type: 'integer'},
         { key: 'Fare', name: 'Fare', type: 'number'},
         { key: 'Name', name: 'Name', type: 'string'},
-        { key: 'Survived', name: 'Survived', type: 'integer'},
+        { key: 'Survived', name: 'Survived', type: 'bool'},
         { key: 'Pclass', name: 'Pclass', type: 'integer'},
         { key: 'Embarked', name: 'Embarked', type: 'string'},
         { key: 'Sex', name: 'Sex', type: 'string'}
@@ -47,7 +47,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.25,
       "Name": "Braund, Mr. Owen Harris",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -61,7 +61,7 @@ const titanicData =
       "Age": 38,
       "Fare": 71.2833,
       "Name": "Cumings, Mrs. John Bradley (Florence Briggs Thayer)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -75,7 +75,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.925,
       "Name": "Heikkinen, Miss. Laina",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -89,7 +89,7 @@ const titanicData =
       "Age": 35,
       "Fare": 53.1,
       "Name": "Futrelle, Mrs. Jacques Heath (Lily May Peel)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -103,7 +103,7 @@ const titanicData =
       "Age": 35,
       "Fare": 8.05,
       "Name": "Allen, Mr. William Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -117,7 +117,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.4583,
       "Name": "Moran, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -131,7 +131,7 @@ const titanicData =
       "Age": 54,
       "Fare": 51.8625,
       "Name": "McCarthy, Mr. Timothy J",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -145,7 +145,7 @@ const titanicData =
       "Age": 2,
       "Fare": 21.075,
       "Name": "Palsson, Master. Gosta Leonard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -159,7 +159,7 @@ const titanicData =
       "Age": 27,
       "Fare": 11.1333,
       "Name": "Johnson, Mrs. Oscar W (Elisabeth Vilhelmina Berg)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -173,7 +173,7 @@ const titanicData =
       "Age": 14,
       "Fare": 30.0708,
       "Name": "Nasser, Mrs. Nicholas (Adele Achem)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -187,7 +187,7 @@ const titanicData =
       "Age": 4,
       "Fare": 16.7,
       "Name": "Sandstrom, Miss. Marguerite Rut",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -201,7 +201,7 @@ const titanicData =
       "Age": 58,
       "Fare": 26.55,
       "Name": "Bonnell, Miss. Elizabeth",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -215,7 +215,7 @@ const titanicData =
       "Age": 20,
       "Fare": 8.05,
       "Name": "Saundercock, Mr. William Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -229,7 +229,7 @@ const titanicData =
       "Age": 39,
       "Fare": 31.275,
       "Name": "Andersson, Mr. Anders Johan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -243,7 +243,7 @@ const titanicData =
       "Age": 14,
       "Fare": 7.8542,
       "Name": "Vestrom, Miss. Hulda Amanda Adolfina",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -257,7 +257,7 @@ const titanicData =
       "Age": 55,
       "Fare": 16,
       "Name": "Hewlett, Mrs. (Mary D Kingcome) ",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -271,7 +271,7 @@ const titanicData =
       "Age": 2,
       "Fare": 29.125,
       "Name": "Rice, Master. Eugene",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -285,7 +285,7 @@ const titanicData =
       "Age": null,
       "Fare": 13,
       "Name": "Williams, Mr. Charles Eugene",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -299,7 +299,7 @@ const titanicData =
       "Age": 31,
       "Fare": 18,
       "Name": "Vander Planke, Mrs. Julius (Emelia Maria Vandemoortele)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -313,7 +313,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.225,
       "Name": "Masselmani, Mrs. Fatima",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -327,7 +327,7 @@ const titanicData =
       "Age": 35,
       "Fare": 26,
       "Name": "Fynney, Mr. Joseph J",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -341,7 +341,7 @@ const titanicData =
       "Age": 34,
       "Fare": 13,
       "Name": "Beesley, Mr. Lawrence",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -355,7 +355,7 @@ const titanicData =
       "Age": 15,
       "Fare": 8.0292,
       "Name": "McGowan, Miss. Anna \"Annie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -369,7 +369,7 @@ const titanicData =
       "Age": 28,
       "Fare": 35.5,
       "Name": "Sloper, Mr. William Thompson",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -383,7 +383,7 @@ const titanicData =
       "Age": 8,
       "Fare": 21.075,
       "Name": "Palsson, Miss. Torborg Danira",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -397,7 +397,7 @@ const titanicData =
       "Age": 38,
       "Fare": 31.3875,
       "Name": "Asplund, Mrs. Carl Oscar (Selma Augusta Emilia Johansson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -411,7 +411,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.225,
       "Name": "Emir, Mr. Farred Chehab",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -425,7 +425,7 @@ const titanicData =
       "Age": 19,
       "Fare": 263,
       "Name": "Fortune, Mr. Charles Alexander",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -439,7 +439,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8792,
       "Name": "O'Dwyer, Miss. Ellen \"Nellie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -453,7 +453,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Todoroff, Mr. Lalio",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -467,7 +467,7 @@ const titanicData =
       "Age": 40,
       "Fare": 27.7208,
       "Name": "Uruchurtu, Don. Manuel E",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -481,7 +481,7 @@ const titanicData =
       "Age": null,
       "Fare": 146.5208,
       "Name": "Spencer, Mrs. William Augustus (Marie Eugenie)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -495,7 +495,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Glynn, Miss. Mary Agatha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -509,7 +509,7 @@ const titanicData =
       "Age": 66,
       "Fare": 10.5,
       "Name": "Wheadon, Mr. Edward H",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -523,7 +523,7 @@ const titanicData =
       "Age": 28,
       "Fare": 82.1708,
       "Name": "Meyer, Mr. Edgar Joseph",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -537,7 +537,7 @@ const titanicData =
       "Age": 42,
       "Fare": 52,
       "Name": "Holverson, Mr. Alexander Oskar",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -551,7 +551,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Mamee, Mr. Hanna",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -565,7 +565,7 @@ const titanicData =
       "Age": 21,
       "Fare": 8.05,
       "Name": "Cann, Mr. Ernest Charles",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -579,7 +579,7 @@ const titanicData =
       "Age": 18,
       "Fare": 18,
       "Name": "Vander Planke, Miss. Augusta Maria",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -593,7 +593,7 @@ const titanicData =
       "Age": 14,
       "Fare": 11.2417,
       "Name": "Nicola-Yarred, Miss. Jamila",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -607,7 +607,7 @@ const titanicData =
       "Age": 40,
       "Fare": 9.475,
       "Name": "Ahlin, Mrs. Johan (Johanna Persdotter Larsson)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -621,7 +621,7 @@ const titanicData =
       "Age": 27,
       "Fare": 21,
       "Name": "Turpin, Mrs. William John Robert (Dorothy Ann Wonnacott)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -635,7 +635,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Kraeff, Mr. Theodor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -649,7 +649,7 @@ const titanicData =
       "Age": 3,
       "Fare": 41.5792,
       "Name": "Laroche, Miss. Simonne Marie Anne Andree",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -663,7 +663,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.8792,
       "Name": "Devaney, Miss. Margaret Delia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -677,7 +677,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Rogers, Mr. William John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -691,7 +691,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.5,
       "Name": "Lennon, Mr. Denis",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -705,7 +705,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "O'Driscoll, Miss. Bridget",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -719,7 +719,7 @@ const titanicData =
       "Age": null,
       "Fare": 21.6792,
       "Name": "Samaan, Mr. Youssef",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -733,7 +733,7 @@ const titanicData =
       "Age": 18,
       "Fare": 17.8,
       "Name": "Arnold-Franchi, Mrs. Josef (Josefine Franchi)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -747,7 +747,7 @@ const titanicData =
       "Age": 7,
       "Fare": 39.6875,
       "Name": "Panula, Master. Juha Niilo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -761,7 +761,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.8,
       "Name": "Nosworthy, Mr. Richard Cater",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -775,7 +775,7 @@ const titanicData =
       "Age": 49,
       "Fare": 76.7292,
       "Name": "Harper, Mrs. Henry Sleeper (Myna Haxtun)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -789,7 +789,7 @@ const titanicData =
       "Age": 29,
       "Fare": 26,
       "Name": "Faunthorpe, Mrs. Lizzie (Elizabeth Anne Wilkinson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -803,7 +803,7 @@ const titanicData =
       "Age": 65,
       "Fare": 61.9792,
       "Name": "Ostby, Mr. Engelhart Cornelius",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -817,7 +817,7 @@ const titanicData =
       "Age": null,
       "Fare": 35.5,
       "Name": "Woolner, Mr. Hugh",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -831,7 +831,7 @@ const titanicData =
       "Age": 21,
       "Fare": 10.5,
       "Name": "Rugg, Miss. Emily",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -845,7 +845,7 @@ const titanicData =
       "Age": 28.5,
       "Fare": 7.2292,
       "Name": "Novel, Mr. Mansouer",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -859,7 +859,7 @@ const titanicData =
       "Age": 5,
       "Fare": 27.75,
       "Name": "West, Miss. Constance Mirium",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -873,7 +873,7 @@ const titanicData =
       "Age": 11,
       "Fare": 46.9,
       "Name": "Goodwin, Master. William Frederick",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -887,7 +887,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.2292,
       "Name": "Sirayanian, Mr. Orsen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -901,7 +901,7 @@ const titanicData =
       "Age": 38,
       "Fare": 80,
       "Name": "Icard, Miss. Amelie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": null,
       "Sex": "female"
@@ -915,7 +915,7 @@ const titanicData =
       "Age": 45,
       "Fare": 83.475,
       "Name": "Harris, Mr. Henry Birkhardt",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -929,7 +929,7 @@ const titanicData =
       "Age": 4,
       "Fare": 27.9,
       "Name": "Skoog, Master. Harald",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -943,7 +943,7 @@ const titanicData =
       "Age": null,
       "Fare": 27.7208,
       "Name": "Stewart, Mr. Albert A",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -957,7 +957,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.2458,
       "Name": "Moubarek, Master. Gerios",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -971,7 +971,7 @@ const titanicData =
       "Age": 29,
       "Fare": 10.5,
       "Name": "Nye, Mrs. (Elizabeth Ramell)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -985,7 +985,7 @@ const titanicData =
       "Age": 19,
       "Fare": 8.1583,
       "Name": "Crease, Mr. Ernest James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -999,7 +999,7 @@ const titanicData =
       "Age": 17,
       "Fare": 7.925,
       "Name": "Andersson, Miss. Erna Alexandra",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1013,7 +1013,7 @@ const titanicData =
       "Age": 26,
       "Fare": 8.6625,
       "Name": "Kink, Mr. Vincenz",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1027,7 +1027,7 @@ const titanicData =
       "Age": 32,
       "Fare": 10.5,
       "Name": "Jenkin, Mr. Stephen Curnow",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1041,7 +1041,7 @@ const titanicData =
       "Age": 16,
       "Fare": 46.9,
       "Name": "Goodwin, Miss. Lillian Amy",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1055,7 +1055,7 @@ const titanicData =
       "Age": 21,
       "Fare": 73.5,
       "Name": "Hood, Mr. Ambrose Jr",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1069,7 +1069,7 @@ const titanicData =
       "Age": 26,
       "Fare": 14.4542,
       "Name": "Chronopoulos, Mr. Apostolos",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -1083,7 +1083,7 @@ const titanicData =
       "Age": 32,
       "Fare": 56.4958,
       "Name": "Bing, Mr. Lee",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1097,7 +1097,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.65,
       "Name": "Moen, Mr. Sigurd Hansen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1111,7 +1111,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Staneff, Mr. Ivan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1125,7 +1125,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Moutal, Mr. Rahamin Haim",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1139,7 +1139,7 @@ const titanicData =
       "Age": 0.83,
       "Fare": 29,
       "Name": "Caldwell, Master. Alden Gates",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1153,7 +1153,7 @@ const titanicData =
       "Age": 30,
       "Fare": 12.475,
       "Name": "Dowdell, Miss. Elizabeth",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1167,7 +1167,7 @@ const titanicData =
       "Age": 22,
       "Fare": 9,
       "Name": "Waelens, Mr. Achille",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1181,7 +1181,7 @@ const titanicData =
       "Age": 29,
       "Fare": 9.5,
       "Name": "Sheerlinck, Mr. Jan Baptist",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1195,7 +1195,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.7875,
       "Name": "McDermott, Miss. Brigdet Delia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -1209,7 +1209,7 @@ const titanicData =
       "Age": 28,
       "Fare": 47.1,
       "Name": "Carrau, Mr. Francisco M",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -1223,7 +1223,7 @@ const titanicData =
       "Age": 17,
       "Fare": 10.5,
       "Name": "Ilett, Miss. Bertha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -1237,7 +1237,7 @@ const titanicData =
       "Age": 33,
       "Fare": 15.85,
       "Name": "Backstrom, Mrs. Karl Alfred (Maria Mathilda Gustafsson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1251,7 +1251,7 @@ const titanicData =
       "Age": 16,
       "Fare": 34.375,
       "Name": "Ford, Mr. William Neal",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1265,7 +1265,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Slocovski, Mr. Selman Francis",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1279,7 +1279,7 @@ const titanicData =
       "Age": 23,
       "Fare": 263,
       "Name": "Fortune, Miss. Mabel Helen",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -1293,7 +1293,7 @@ const titanicData =
       "Age": 24,
       "Fare": 8.05,
       "Name": "Celotti, Mr. Francesco",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1307,7 +1307,7 @@ const titanicData =
       "Age": 29,
       "Fare": 8.05,
       "Name": "Christmann, Mr. Emil",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1321,7 +1321,7 @@ const titanicData =
       "Age": 20,
       "Fare": 7.8542,
       "Name": "Andreasson, Mr. Paul Edvin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1335,7 +1335,7 @@ const titanicData =
       "Age": 46,
       "Fare": 61.175,
       "Name": "Chaffee, Mr. Herbert Fuller",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -1349,7 +1349,7 @@ const titanicData =
       "Age": 26,
       "Fare": 20.575,
       "Name": "Dean, Mr. Bertram Frank",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1363,7 +1363,7 @@ const titanicData =
       "Age": 59,
       "Fare": 7.25,
       "Name": "Coxon, Mr. Daniel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1377,7 +1377,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Shorney, Mr. Charles Joseph",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1391,7 +1391,7 @@ const titanicData =
       "Age": 71,
       "Fare": 34.6542,
       "Name": "Goldschmidt, Mr. George B",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -1405,7 +1405,7 @@ const titanicData =
       "Age": 23,
       "Fare": 63.3583,
       "Name": "Greenfield, Mr. William Bertram",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -1419,7 +1419,7 @@ const titanicData =
       "Age": 34,
       "Fare": 23,
       "Name": "Doling, Mrs. John T (Ada Julia Bone)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -1433,7 +1433,7 @@ const titanicData =
       "Age": 34,
       "Fare": 26,
       "Name": "Kantor, Mr. Sinai",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1447,7 +1447,7 @@ const titanicData =
       "Age": 28,
       "Fare": 7.8958,
       "Name": "Petranec, Miss. Matilda",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1461,7 +1461,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Petroff, Mr. Pastcho (\"Pentcho\")",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1475,7 +1475,7 @@ const titanicData =
       "Age": 21,
       "Fare": 77.2875,
       "Name": "White, Mr. Richard Frasar",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -1489,7 +1489,7 @@ const titanicData =
       "Age": 33,
       "Fare": 8.6542,
       "Name": "Johansson, Mr. Gustaf Joel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1503,7 +1503,7 @@ const titanicData =
       "Age": 37,
       "Fare": 7.925,
       "Name": "Gustafsson, Mr. Anders Vilhelm",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1517,7 +1517,7 @@ const titanicData =
       "Age": 28,
       "Fare": 7.8958,
       "Name": "Mionoff, Mr. Stoytcho",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1531,7 +1531,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.65,
       "Name": "Salkjelsvik, Miss. Anna Kristine",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1545,7 +1545,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.775,
       "Name": "Moss, Mr. Albert Johan",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1559,7 +1559,7 @@ const titanicData =
       "Age": 38,
       "Fare": 7.8958,
       "Name": "Rekic, Mr. Tido",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1573,7 +1573,7 @@ const titanicData =
       "Age": null,
       "Fare": 24.15,
       "Name": "Moran, Miss. Bertha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -1587,7 +1587,7 @@ const titanicData =
       "Age": 47,
       "Fare": 52,
       "Name": "Porter, Mr. Walter Chamberlain",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -1601,7 +1601,7 @@ const titanicData =
       "Age": 14.5,
       "Fare": 14.4542,
       "Name": "Zabour, Miss. Hileni",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -1615,7 +1615,7 @@ const titanicData =
       "Age": 22,
       "Fare": 8.05,
       "Name": "Barton, Mr. David John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1629,7 +1629,7 @@ const titanicData =
       "Age": 20,
       "Fare": 9.825,
       "Name": "Jussila, Miss. Katriina",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1643,7 +1643,7 @@ const titanicData =
       "Age": 17,
       "Fare": 14.4583,
       "Name": "Attalah, Miss. Malake",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -1657,7 +1657,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.925,
       "Name": "Pekoniemi, Mr. Edvard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1671,7 +1671,7 @@ const titanicData =
       "Age": 70.5,
       "Fare": 7.75,
       "Name": "Connors, Mr. Patrick",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -1685,7 +1685,7 @@ const titanicData =
       "Age": 29,
       "Fare": 21,
       "Name": "Turpin, Mr. William John Robert",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1699,7 +1699,7 @@ const titanicData =
       "Age": 24,
       "Fare": 247.5208,
       "Name": "Baxter, Mr. Quigg Edmond",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -1713,7 +1713,7 @@ const titanicData =
       "Age": 2,
       "Fare": 31.275,
       "Name": "Andersson, Miss. Ellis Anna Maria",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1727,7 +1727,7 @@ const titanicData =
       "Age": 21,
       "Fare": 73.5,
       "Name": "Hickman, Mr. Stanley George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1741,7 +1741,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Moore, Mr. Leonard Charles",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1755,7 +1755,7 @@ const titanicData =
       "Age": 32.5,
       "Fare": 30.0708,
       "Name": "Nasser, Mr. Nicholas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -1769,7 +1769,7 @@ const titanicData =
       "Age": 32.5,
       "Fare": 13,
       "Name": "Webber, Miss. Susan",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -1783,7 +1783,7 @@ const titanicData =
       "Age": 54,
       "Fare": 77.2875,
       "Name": "White, Mr. Percival Wayland",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -1797,7 +1797,7 @@ const titanicData =
       "Age": 12,
       "Fare": 11.2417,
       "Name": "Nicola-Yarred, Master. Elias",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -1811,7 +1811,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "McMahon, Mr. Martin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -1825,7 +1825,7 @@ const titanicData =
       "Age": 24,
       "Fare": 7.1417,
       "Name": "Madsen, Mr. Fridtjof Arne",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1839,7 +1839,7 @@ const titanicData =
       "Age": null,
       "Fare": 22.3583,
       "Name": "Peter, Miss. Anna",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -1853,7 +1853,7 @@ const titanicData =
       "Age": 45,
       "Fare": 6.975,
       "Name": "Ekstrom, Mr. Johan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1867,7 +1867,7 @@ const titanicData =
       "Age": 33,
       "Fare": 7.8958,
       "Name": "Drazenoic, Mr. Jozef",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -1881,7 +1881,7 @@ const titanicData =
       "Age": 20,
       "Fare": 7.05,
       "Name": "Coelho, Mr. Domingos Fernandeo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1895,7 +1895,7 @@ const titanicData =
       "Age": 47,
       "Fare": 14.5,
       "Name": "Robins, Mrs. Alexander A (Grace Charity Laury)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -1909,7 +1909,7 @@ const titanicData =
       "Age": 29,
       "Fare": 26,
       "Name": "Weisz, Mrs. Leopold (Mathilde Francoise Pede)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -1923,7 +1923,7 @@ const titanicData =
       "Age": 25,
       "Fare": 13,
       "Name": "Sobey, Mr. Samuel James Hayden",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -1937,7 +1937,7 @@ const titanicData =
       "Age": 23,
       "Fare": 15.0458,
       "Name": "Richard, Mr. Emile",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -1951,7 +1951,7 @@ const titanicData =
       "Age": 19,
       "Fare": 26.2833,
       "Name": "Newsom, Miss. Helen Monypeny",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -1965,7 +1965,7 @@ const titanicData =
       "Age": 37,
       "Fare": 53.1,
       "Name": "Futrelle, Mr. Jacques Heath",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -1979,7 +1979,7 @@ const titanicData =
       "Age": 16,
       "Fare": 9.2167,
       "Name": "Osen, Mr. Olaf Elon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -1993,7 +1993,7 @@ const titanicData =
       "Age": 24,
       "Fare": 79.2,
       "Name": "Giglio, Mr. Victor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -2007,7 +2007,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.2458,
       "Name": "Boulos, Mrs. Joseph (Sultana)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -2021,7 +2021,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.75,
       "Name": "Nysten, Miss. Anna Sofia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2035,7 +2035,7 @@ const titanicData =
       "Age": 24,
       "Fare": 15.85,
       "Name": "Hakkarainen, Mrs. Pekka Pietari (Elin Matilda Dolck)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2049,7 +2049,7 @@ const titanicData =
       "Age": 19,
       "Fare": 6.75,
       "Name": "Burke, Mr. Jeremiah",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -2063,7 +2063,7 @@ const titanicData =
       "Age": 18,
       "Fare": 11.5,
       "Name": "Andrew, Mr. Edgardo Samuel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2077,7 +2077,7 @@ const titanicData =
       "Age": 19,
       "Fare": 36.75,
       "Name": "Nicholls, Mr. Joseph Charles",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2091,7 +2091,7 @@ const titanicData =
       "Age": 27,
       "Fare": 7.7958,
       "Name": "Andersson, Mr. August Edvard (\"Wennerstrom\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2105,7 +2105,7 @@ const titanicData =
       "Age": 9,
       "Fare": 34.375,
       "Name": "Ford, Miss. Robina Maggie \"Ruby\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2119,7 +2119,7 @@ const titanicData =
       "Age": 36.5,
       "Fare": 26,
       "Name": "Navratil, Mr. Michel (\"Louis M Hoffman\")",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2133,7 +2133,7 @@ const titanicData =
       "Age": 42,
       "Fare": 13,
       "Name": "Byles, Rev. Thomas Roussel Davids",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2147,7 +2147,7 @@ const titanicData =
       "Age": 51,
       "Fare": 12.525,
       "Name": "Bateman, Rev. Robert James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2161,7 +2161,7 @@ const titanicData =
       "Age": 22,
       "Fare": 66.6,
       "Name": "Pears, Mrs. Thomas (Edith Wearne)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -2175,7 +2175,7 @@ const titanicData =
       "Age": 55.5,
       "Fare": 8.05,
       "Name": "Meo, Mr. Alfonzo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2189,7 +2189,7 @@ const titanicData =
       "Age": 40.5,
       "Fare": 14.5,
       "Name": "van Billiard, Mr. Austin Blyler",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2203,7 +2203,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.3125,
       "Name": "Olsen, Mr. Ole Martin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2217,7 +2217,7 @@ const titanicData =
       "Age": 51,
       "Fare": 61.3792,
       "Name": "Williams, Mr. Charles Duane",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -2231,7 +2231,7 @@ const titanicData =
       "Age": 16,
       "Fare": 7.7333,
       "Name": "Gilnagh, Miss. Katherine \"Katie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -2245,7 +2245,7 @@ const titanicData =
       "Age": 30,
       "Fare": 8.05,
       "Name": "Corn, Mr. Harry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2259,7 +2259,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.6625,
       "Name": "Smiljanic, Mr. Mile",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2273,7 +2273,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Master. Thomas Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2287,7 +2287,7 @@ const titanicData =
       "Age": 44,
       "Fare": 16.1,
       "Name": "Cribb, Mr. John Hatfield",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2301,7 +2301,7 @@ const titanicData =
       "Age": 40,
       "Fare": 15.75,
       "Name": "Watt, Mrs. James (Elizabeth \"Bessie\" Inglis Milne)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -2315,7 +2315,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.775,
       "Name": "Bengtsson, Mr. John Viktor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2329,7 +2329,7 @@ const titanicData =
       "Age": 17,
       "Fare": 8.6625,
       "Name": "Calic, Mr. Jovo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2343,7 +2343,7 @@ const titanicData =
       "Age": 1,
       "Fare": 39.6875,
       "Name": "Panula, Master. Eino Viljami",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2357,7 +2357,7 @@ const titanicData =
       "Age": 9,
       "Fare": 20.525,
       "Name": "Goldsmith, Master. Frank John William \"Frankie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2371,7 +2371,7 @@ const titanicData =
       "Age": null,
       "Fare": 55,
       "Name": "Chibnall, Mrs. (Edith Martha Bowerman)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -2385,7 +2385,7 @@ const titanicData =
       "Age": 45,
       "Fare": 27.9,
       "Name": "Skoog, Mrs. William (Anna Bernhardina Karlsson)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2399,7 +2399,7 @@ const titanicData =
       "Age": null,
       "Fare": 25.925,
       "Name": "Baumann, Mr. John D",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -2413,7 +2413,7 @@ const titanicData =
       "Age": 28,
       "Fare": 56.4958,
       "Name": "Ling, Mr. Lee",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2427,7 +2427,7 @@ const titanicData =
       "Age": 61,
       "Fare": 33.5,
       "Name": "Van der hoef, Mr. Wyckoff",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -2441,7 +2441,7 @@ const titanicData =
       "Age": 4,
       "Fare": 29.125,
       "Name": "Rice, Master. Arthur",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -2455,7 +2455,7 @@ const titanicData =
       "Age": 1,
       "Fare": 11.1333,
       "Name": "Johnson, Miss. Eleanor Ileen",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2469,7 +2469,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.925,
       "Name": "Sivola, Mr. Antti Wilhelm",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2483,7 +2483,7 @@ const titanicData =
       "Age": 56,
       "Fare": 30.6958,
       "Name": "Smith, Mr. James Clinch",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -2497,7 +2497,7 @@ const titanicData =
       "Age": 18,
       "Fare": 7.8542,
       "Name": "Klasen, Mr. Klas Albin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2511,7 +2511,7 @@ const titanicData =
       "Age": null,
       "Fare": 25.4667,
       "Name": "Lefebre, Master. Henry Forbes",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2525,7 +2525,7 @@ const titanicData =
       "Age": 50,
       "Fare": 28.7125,
       "Name": "Isham, Miss. Ann Elizabeth",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -2539,7 +2539,7 @@ const titanicData =
       "Age": 30,
       "Fare": 13,
       "Name": "Hale, Mr. Reginald",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2553,7 +2553,7 @@ const titanicData =
       "Age": 36,
       "Fare": 0,
       "Name": "Leonard, Mr. Lionel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2567,7 +2567,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Miss. Constance Gladys",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2581,7 +2581,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.05,
       "Name": "Pernot, Mr. Rene",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -2595,7 +2595,7 @@ const titanicData =
       "Age": 9,
       "Fare": 31.3875,
       "Name": "Asplund, Master. Clarence Gustaf Hugo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2609,7 +2609,7 @@ const titanicData =
       "Age": 1,
       "Fare": 39,
       "Name": "Becker, Master. Richard F",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2623,7 +2623,7 @@ const titanicData =
       "Age": 4,
       "Fare": 22.025,
       "Name": "Kink-Heilmann, Miss. Luise Gretchen",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2637,7 +2637,7 @@ const titanicData =
       "Age": null,
       "Fare": 50,
       "Name": "Rood, Mr. Hugh Roscoe",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -2651,7 +2651,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.5,
       "Name": "O'Brien, Mrs. Thomas (Johanna \"Hannah\" Godfrey)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -2665,7 +2665,7 @@ const titanicData =
       "Age": 45,
       "Fare": 26.55,
       "Name": "Romaine, Mr. Charles Hallace (\"Mr C Rolmane\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -2679,7 +2679,7 @@ const titanicData =
       "Age": 40,
       "Fare": 15.5,
       "Name": "Bourke, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -2693,7 +2693,7 @@ const titanicData =
       "Age": 36,
       "Fare": 7.8958,
       "Name": "Turcin, Mr. Stjepan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2707,7 +2707,7 @@ const titanicData =
       "Age": 32,
       "Fare": 13,
       "Name": "Pinsky, Mrs. (Rosa)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -2721,7 +2721,7 @@ const titanicData =
       "Age": 19,
       "Fare": 13,
       "Name": "Carbines, Mr. William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2735,7 +2735,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.8542,
       "Name": "Andersen-Jensen, Miss. Carla Christine Nielsine",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2749,7 +2749,7 @@ const titanicData =
       "Age": 3,
       "Fare": 26,
       "Name": "Navratil, Master. Michel M",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -2763,7 +2763,7 @@ const titanicData =
       "Age": 44,
       "Fare": 27.7208,
       "Name": "Brown, Mrs. James Joseph (Margaret Tobin)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -2777,7 +2777,7 @@ const titanicData =
       "Age": 58,
       "Fare": 146.5208,
       "Name": "Lurette, Miss. Elise",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -2791,7 +2791,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Mernagh, Mr. Robert",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -2805,7 +2805,7 @@ const titanicData =
       "Age": 42,
       "Fare": 8.4042,
       "Name": "Olsen, Mr. Karl Siegwart Andreas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2819,7 +2819,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Madigan, Miss. Margaret \"Maggie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -2833,7 +2833,7 @@ const titanicData =
       "Age": 24,
       "Fare": 13,
       "Name": "Yrois, Miss. Henriette (\"Mrs Harbeck\")",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -2847,7 +2847,7 @@ const titanicData =
       "Age": 28,
       "Fare": 9.5,
       "Name": "Vande Walle, Mr. Nestor Cyriel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2861,7 +2861,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Mr. Frederick",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2875,7 +2875,7 @@ const titanicData =
       "Age": 34,
       "Fare": 6.4958,
       "Name": "Johanson, Mr. Jakob Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2889,7 +2889,7 @@ const titanicData =
       "Age": 45.5,
       "Fare": 7.225,
       "Name": "Youseff, Mr. Gerious",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -2903,7 +2903,7 @@ const titanicData =
       "Age": 18,
       "Fare": 8.05,
       "Name": "Cohen, Mr. Gurshon \"Gus\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2917,7 +2917,7 @@ const titanicData =
       "Age": 2,
       "Fare": 10.4625,
       "Name": "Strom, Miss. Telma Matilda",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -2931,7 +2931,7 @@ const titanicData =
       "Age": 32,
       "Fare": 15.85,
       "Name": "Backstrom, Mr. Karl Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -2945,7 +2945,7 @@ const titanicData =
       "Age": 26,
       "Fare": 18.7875,
       "Name": "Albimona, Mr. Nassef Cassem",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -2959,7 +2959,7 @@ const titanicData =
       "Age": 16,
       "Fare": 7.75,
       "Name": "Carr, Miss. Helen \"Ellen\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -2973,7 +2973,7 @@ const titanicData =
       "Age": 40,
       "Fare": 31,
       "Name": "Blank, Mr. Henry",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -2987,7 +2987,7 @@ const titanicData =
       "Age": 24,
       "Fare": 7.05,
       "Name": "Ali, Mr. Ahmed",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3001,7 +3001,7 @@ const titanicData =
       "Age": 35,
       "Fare": 21,
       "Name": "Cameron, Miss. Clear Annie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -3015,7 +3015,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.25,
       "Name": "Perkin, Mr. John Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3029,7 +3029,7 @@ const titanicData =
       "Age": 30,
       "Fare": 13,
       "Name": "Givard, Mr. Hans Kristensen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3043,7 +3043,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Kiernan, Mr. Philip",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -3057,7 +3057,7 @@ const titanicData =
       "Age": 31,
       "Fare": 113.275,
       "Name": "Newell, Miss. Madeleine",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -3071,7 +3071,7 @@ const titanicData =
       "Age": 27,
       "Fare": 7.925,
       "Name": "Honkanen, Miss. Eliina",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3085,7 +3085,7 @@ const titanicData =
       "Age": 42,
       "Fare": 27,
       "Name": "Jacobsohn, Mr. Sidney Samuel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3099,7 +3099,7 @@ const titanicData =
       "Age": 32,
       "Fare": 76.2917,
       "Name": "Bazzani, Miss. Albina",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -3113,7 +3113,7 @@ const titanicData =
       "Age": 30,
       "Fare": 10.5,
       "Name": "Harris, Mr. Walter",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3127,7 +3127,7 @@ const titanicData =
       "Age": 16,
       "Fare": 8.05,
       "Name": "Sunderland, Mr. Victor Francis",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3141,7 +3141,7 @@ const titanicData =
       "Age": 27,
       "Fare": 13,
       "Name": "Bracken, Mr. James H",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3155,7 +3155,7 @@ const titanicData =
       "Age": 51,
       "Fare": 8.05,
       "Name": "Green, Mr. George Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3169,7 +3169,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Nenkoff, Mr. Christo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3183,7 +3183,7 @@ const titanicData =
       "Age": 38,
       "Fare": 90,
       "Name": "Hoyt, Mr. Frederick Maxfield",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -3197,7 +3197,7 @@ const titanicData =
       "Age": 22,
       "Fare": 9.35,
       "Name": "Berglund, Mr. Karl Ivar Sven",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3211,7 +3211,7 @@ const titanicData =
       "Age": 19,
       "Fare": 10.5,
       "Name": "Mellors, Mr. William John",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3225,7 +3225,7 @@ const titanicData =
       "Age": 20.5,
       "Fare": 7.25,
       "Name": "Lovell, Mr. John Hall (\"Henry\")",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3239,7 +3239,7 @@ const titanicData =
       "Age": 18,
       "Fare": 13,
       "Name": "Fahlstrom, Mr. Arne Jonas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3253,7 +3253,7 @@ const titanicData =
       "Age": null,
       "Fare": 25.4667,
       "Name": "Lefebre, Miss. Mathilde",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3267,7 +3267,7 @@ const titanicData =
       "Age": 35,
       "Fare": 83.475,
       "Name": "Harris, Mrs. Henry Birkhardt (Irene Wallach)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -3281,7 +3281,7 @@ const titanicData =
       "Age": 29,
       "Fare": 7.775,
       "Name": "Larsson, Mr. Bengt Edvin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3295,7 +3295,7 @@ const titanicData =
       "Age": 59,
       "Fare": 13.5,
       "Name": "Sjostedt, Mr. Ernst Adolf",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3309,7 +3309,7 @@ const titanicData =
       "Age": 5,
       "Fare": 31.3875,
       "Name": "Asplund, Miss. Lillian Gertrud",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3323,7 +3323,7 @@ const titanicData =
       "Age": 24,
       "Fare": 10.5,
       "Name": "Leyson, Mr. Robert William Norman",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3337,7 +3337,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.55,
       "Name": "Harknett, Miss. Alice Phoebe",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3351,7 +3351,7 @@ const titanicData =
       "Age": 44,
       "Fare": 26,
       "Name": "Hold, Mr. Stephen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3365,7 +3365,7 @@ const titanicData =
       "Age": 8,
       "Fare": 26.25,
       "Name": "Collyer, Miss. Marjorie \"Lottie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -3379,7 +3379,7 @@ const titanicData =
       "Age": 19,
       "Fare": 10.5,
       "Name": "Pengelly, Mr. Frederick William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3393,7 +3393,7 @@ const titanicData =
       "Age": 33,
       "Fare": 12.275,
       "Name": "Hunt, Mr. George Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3407,7 +3407,7 @@ const titanicData =
       "Age": null,
       "Fare": 14.4542,
       "Name": "Zabour, Miss. Thamine",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -3421,7 +3421,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.5,
       "Name": "Murphy, Miss. Katherine \"Kate\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -3435,7 +3435,7 @@ const titanicData =
       "Age": 29,
       "Fare": 10.5,
       "Name": "Coleridge, Mr. Reginald Charles",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3449,7 +3449,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.125,
       "Name": "Maenpaa, Mr. Matti Alexanteri",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3463,7 +3463,7 @@ const titanicData =
       "Age": 30,
       "Fare": 7.225,
       "Name": "Attalah, Mr. Sleiman",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -3477,7 +3477,7 @@ const titanicData =
       "Age": 44,
       "Fare": 90,
       "Name": "Minahan, Dr. William Edward",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "Q",
       "Sex": "male"
@@ -3491,7 +3491,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.775,
       "Name": "Lindahl, Miss. Agda Thorilda Viktoria",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3505,7 +3505,7 @@ const titanicData =
       "Age": 24,
       "Fare": 14.5,
       "Name": "Hamalainen, Mrs. William (Anna)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -3519,7 +3519,7 @@ const titanicData =
       "Age": 37,
       "Fare": 52.5542,
       "Name": "Beckwith, Mr. Richard Leonard",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -3533,7 +3533,7 @@ const titanicData =
       "Age": 54,
       "Fare": 26,
       "Name": "Carter, Rev. Ernest Courtenay",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3547,7 +3547,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.25,
       "Name": "Reed, Mr. James George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3561,7 +3561,7 @@ const titanicData =
       "Age": 29,
       "Fare": 10.4625,
       "Name": "Strom, Mrs. Wilhelm (Elna Matilda Persson)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3575,7 +3575,7 @@ const titanicData =
       "Age": 62,
       "Fare": 26.55,
       "Name": "Stead, Mr. William Thomas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -3589,7 +3589,7 @@ const titanicData =
       "Age": 30,
       "Fare": 16.1,
       "Name": "Lobb, Mr. William Arthur",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3603,7 +3603,7 @@ const titanicData =
       "Age": 41,
       "Fare": 20.2125,
       "Name": "Rosblom, Mrs. Viktor (Helena Wilhelmina)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3617,7 +3617,7 @@ const titanicData =
       "Age": 29,
       "Fare": 15.2458,
       "Name": "Touma, Mrs. Darwis (Hanne Youssef Razi)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -3631,7 +3631,7 @@ const titanicData =
       "Age": null,
       "Fare": 79.2,
       "Name": "Thorne, Mrs. Gertrude Maybelle",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -3645,7 +3645,7 @@ const titanicData =
       "Age": 30,
       "Fare": 86.5,
       "Name": "Cherry, Miss. Gladys",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -3659,7 +3659,7 @@ const titanicData =
       "Age": 35,
       "Fare": 512.3292,
       "Name": "Ward, Miss. Anna",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -3673,7 +3673,7 @@ const titanicData =
       "Age": 50,
       "Fare": 26,
       "Name": "Parrish, Mrs. (Lutie Davis)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -3687,7 +3687,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Smith, Mr. Thomas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -3701,7 +3701,7 @@ const titanicData =
       "Age": 3,
       "Fare": 31.3875,
       "Name": "Asplund, Master. Edvin Rojj Felix",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3715,7 +3715,7 @@ const titanicData =
       "Age": 52,
       "Fare": 79.65,
       "Name": "Taussig, Mr. Emil",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -3729,7 +3729,7 @@ const titanicData =
       "Age": 40,
       "Fare": 0,
       "Name": "Harrison, Mr. William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -3743,7 +3743,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Henry, Miss. Delia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -3757,7 +3757,7 @@ const titanicData =
       "Age": 36,
       "Fare": 10.5,
       "Name": "Reeves, Mr. David",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3771,7 +3771,7 @@ const titanicData =
       "Age": 16,
       "Fare": 39.6875,
       "Name": "Panula, Mr. Ernesti Arvid",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3785,7 +3785,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.775,
       "Name": "Persson, Mr. Ernst Ulrik",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3799,7 +3799,7 @@ const titanicData =
       "Age": 58,
       "Fare": 153.4625,
       "Name": "Graham, Mrs. William Thompson (Edith Junkins)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -3813,7 +3813,7 @@ const titanicData =
       "Age": 35,
       "Fare": 135.6333,
       "Name": "Bissette, Miss. Amelia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -3827,7 +3827,7 @@ const titanicData =
       "Age": null,
       "Fare": 31,
       "Name": "Cairns, Mr. Alexander",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -3841,7 +3841,7 @@ const titanicData =
       "Age": 25,
       "Fare": 0,
       "Name": "Tornquist, Mr. William Henry",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3855,7 +3855,7 @@ const titanicData =
       "Age": 41,
       "Fare": 19.5,
       "Name": "Mellinger, Mrs. (Elizabeth Anne Maidment)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -3869,7 +3869,7 @@ const titanicData =
       "Age": 37,
       "Fare": 29.7,
       "Name": "Natsch, Mr. Charles H",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -3883,7 +3883,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Healy, Miss. Hanora \"Nora\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -3897,7 +3897,7 @@ const titanicData =
       "Age": 63,
       "Fare": 77.9583,
       "Name": "Andrews, Miss. Kornelia Theodosia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -3911,7 +3911,7 @@ const titanicData =
       "Age": 45,
       "Fare": 7.75,
       "Name": "Lindblom, Miss. Augusta Charlotta",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3925,7 +3925,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Parkes, Mr. Francis \"Frank\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -3939,7 +3939,7 @@ const titanicData =
       "Age": 7,
       "Fare": 29.125,
       "Name": "Rice, Master. Eric",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -3953,7 +3953,7 @@ const titanicData =
       "Age": 35,
       "Fare": 20.25,
       "Name": "Abbott, Mrs. Stanton (Rosa Hunt)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -3967,7 +3967,7 @@ const titanicData =
       "Age": 65,
       "Fare": 7.75,
       "Name": "Duane, Mr. Frank",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -3981,7 +3981,7 @@ const titanicData =
       "Age": 28,
       "Fare": 7.8542,
       "Name": "Olsson, Mr. Nils Johan Goransson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -3995,7 +3995,7 @@ const titanicData =
       "Age": 16,
       "Fare": 9.5,
       "Name": "de Pelsmaeker, Mr. Alfons",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4009,7 +4009,7 @@ const titanicData =
       "Age": 19,
       "Fare": 8.05,
       "Name": "Dorking, Mr. Edward Arthur",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4023,7 +4023,7 @@ const titanicData =
       "Age": null,
       "Fare": 26,
       "Name": "Smith, Mr. Richard William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4037,7 +4037,7 @@ const titanicData =
       "Age": 33,
       "Fare": 8.6625,
       "Name": "Stankovic, Mr. Ivan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -4051,7 +4051,7 @@ const titanicData =
       "Age": 30,
       "Fare": 9.5,
       "Name": "de Mulder, Mr. Theodore",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4065,7 +4065,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.8958,
       "Name": "Naidenoff, Mr. Penko",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4079,7 +4079,7 @@ const titanicData =
       "Age": 42,
       "Fare": 13,
       "Name": "Hosono, Mr. Masabumi",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4093,7 +4093,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.75,
       "Name": "Connolly, Miss. Kate",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -4107,7 +4107,7 @@ const titanicData =
       "Age": 26,
       "Fare": 78.85,
       "Name": "Barber, Miss. Ellen \"Nellie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -4121,7 +4121,7 @@ const titanicData =
       "Age": 19,
       "Fare": 91.0792,
       "Name": "Bishop, Mrs. Dickinson H (Helen Walton)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4135,7 +4135,7 @@ const titanicData =
       "Age": 36,
       "Fare": 12.875,
       "Name": "Levy, Mr. Rene Jacques",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -4149,7 +4149,7 @@ const titanicData =
       "Age": 24,
       "Fare": 8.85,
       "Name": "Haas, Miss. Aloisia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -4163,7 +4163,7 @@ const titanicData =
       "Age": 24,
       "Fare": 7.8958,
       "Name": "Mineff, Mr. Ivan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4177,7 +4177,7 @@ const titanicData =
       "Age": null,
       "Fare": 27.7208,
       "Name": "Lewy, Mr. Ervin G",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -4191,7 +4191,7 @@ const titanicData =
       "Age": 23.5,
       "Fare": 7.2292,
       "Name": "Hanna, Mr. Mansour",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -4205,7 +4205,7 @@ const titanicData =
       "Age": 2,
       "Fare": 151.55,
       "Name": "Allison, Miss. Helen Loraine",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -4219,7 +4219,7 @@ const titanicData =
       "Age": null,
       "Fare": 30.5,
       "Name": "Saalfeld, Mr. Adolphe",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4233,7 +4233,7 @@ const titanicData =
       "Age": 50,
       "Fare": 247.5208,
       "Name": "Baxter, Mrs. James (Helene DeLaudeniere Chaput)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4247,7 +4247,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Kelly, Miss. Anna Katherine \"Annie Kate\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -4261,7 +4261,7 @@ const titanicData =
       "Age": null,
       "Fare": 23.25,
       "Name": "McCoy, Mr. Bernard",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -4275,7 +4275,7 @@ const titanicData =
       "Age": 19,
       "Fare": 0,
       "Name": "Johnson, Mr. William Cahoone Jr",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4289,7 +4289,7 @@ const titanicData =
       "Age": null,
       "Fare": 12.35,
       "Name": "Keane, Miss. Nora A",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "Q",
       "Sex": "female"
@@ -4303,7 +4303,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Williams, Mr. Howard Hugh \"Harry\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4317,7 +4317,7 @@ const titanicData =
       "Age": 0.92,
       "Fare": 151.55,
       "Name": "Allison, Master. Hudson Trevor",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4331,7 +4331,7 @@ const titanicData =
       "Age": null,
       "Fare": 110.8833,
       "Name": "Fleming, Miss. Margaret",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4345,7 +4345,7 @@ const titanicData =
       "Age": 17,
       "Fare": 108.9,
       "Name": "Penasco y Castellana, Mrs. Victor de Satode (Maria Josefa Perez de Soto y Vallejo)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4359,7 +4359,7 @@ const titanicData =
       "Age": 30,
       "Fare": 24,
       "Name": "Abelson, Mr. Samuel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -4373,7 +4373,7 @@ const titanicData =
       "Age": 30,
       "Fare": 56.9292,
       "Name": "Francatelli, Miss. Laura Mabel",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4387,7 +4387,7 @@ const titanicData =
       "Age": 24,
       "Fare": 83.1583,
       "Name": "Hays, Miss. Margaret Bechstein",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4401,7 +4401,7 @@ const titanicData =
       "Age": 18,
       "Fare": 262.375,
       "Name": "Ryerson, Miss. Emily Borie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4415,7 +4415,7 @@ const titanicData =
       "Age": 26,
       "Fare": 26,
       "Name": "Lahtinen, Mrs. William (Anna Sylfven)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -4429,7 +4429,7 @@ const titanicData =
       "Age": 28,
       "Fare": 7.8958,
       "Name": "Hendekovic, Mr. Ignjac",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4443,7 +4443,7 @@ const titanicData =
       "Age": 43,
       "Fare": 26.25,
       "Name": "Hart, Mr. Benjamin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4457,7 +4457,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.8542,
       "Name": "Nilsson, Miss. Helmina Josefina",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -4471,7 +4471,7 @@ const titanicData =
       "Age": 24,
       "Fare": 26,
       "Name": "Kantor, Mrs. Sinai (Miriam Sternin)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -4485,7 +4485,7 @@ const titanicData =
       "Age": 54,
       "Fare": 14,
       "Name": "Moraweck, Dr. Ernest",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4499,7 +4499,7 @@ const titanicData =
       "Age": 31,
       "Fare": 164.8667,
       "Name": "Wick, Miss. Mary Natalie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -4513,7 +4513,7 @@ const titanicData =
       "Age": 40,
       "Fare": 134.5,
       "Name": "Spedden, Mrs. Frederic Oakley (Margaretta Corning Stone)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4527,7 +4527,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.25,
       "Name": "Dennis, Mr. Samuel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4541,7 +4541,7 @@ const titanicData =
       "Age": 27,
       "Fare": 7.8958,
       "Name": "Danoff, Mr. Yoto",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4555,7 +4555,7 @@ const titanicData =
       "Age": 30,
       "Fare": 12.35,
       "Name": "Slayter, Miss. Hilda Mary",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "Q",
       "Sex": "female"
@@ -4569,7 +4569,7 @@ const titanicData =
       "Age": 22,
       "Fare": 29,
       "Name": "Caldwell, Mrs. Albert Francis (Sylvia Mae Harbaugh)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -4583,7 +4583,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Mr. George John Jr",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4597,7 +4597,7 @@ const titanicData =
       "Age": 36,
       "Fare": 135.6333,
       "Name": "Young, Miss. Marie Grice",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4611,7 +4611,7 @@ const titanicData =
       "Age": 61,
       "Fare": 6.2375,
       "Name": "Nysveen, Mr. Johan Hansen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4625,7 +4625,7 @@ const titanicData =
       "Age": 36,
       "Fare": 13,
       "Name": "Ball, Mrs. (Ada E Hall)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -4639,7 +4639,7 @@ const titanicData =
       "Age": 31,
       "Fare": 20.525,
       "Name": "Goldsmith, Mrs. Frank John (Emily Alice Brown)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -4653,7 +4653,7 @@ const titanicData =
       "Age": 16,
       "Fare": 57.9792,
       "Name": "Hippach, Miss. Jean Gertrude",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4667,7 +4667,7 @@ const titanicData =
       "Age": null,
       "Fare": 23.25,
       "Name": "McCoy, Miss. Agnes",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -4681,7 +4681,7 @@ const titanicData =
       "Age": 45.5,
       "Fare": 28.5,
       "Name": "Partner, Mr. Austen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4695,7 +4695,7 @@ const titanicData =
       "Age": 38,
       "Fare": 153.4625,
       "Name": "Graham, Mr. George Edward",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4709,7 +4709,7 @@ const titanicData =
       "Age": 16,
       "Fare": 18,
       "Name": "Vander Planke, Mr. Leo Edmondus",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4723,7 +4723,7 @@ const titanicData =
       "Age": null,
       "Fare": 133.65,
       "Name": "Frauenthal, Mrs. Henry William (Clara Heinsheimer)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -4737,7 +4737,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Denkoff, Mr. Mitto",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4751,7 +4751,7 @@ const titanicData =
       "Age": 29,
       "Fare": 66.6,
       "Name": "Pears, Mr. Thomas Clinton",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4765,7 +4765,7 @@ const titanicData =
       "Age": 41,
       "Fare": 134.5,
       "Name": "Burns, Miss. Elizabeth Margaret",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -4779,7 +4779,7 @@ const titanicData =
       "Age": 45,
       "Fare": 8.05,
       "Name": "Dahl, Mr. Karl Edwart",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4793,7 +4793,7 @@ const titanicData =
       "Age": 45,
       "Fare": 35.5,
       "Name": "Blackwell, Mr. Stephen Weart",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4807,7 +4807,7 @@ const titanicData =
       "Age": 2,
       "Fare": 26,
       "Name": "Navratil, Master. Edmond Roger",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4821,7 +4821,7 @@ const titanicData =
       "Age": 24,
       "Fare": 263,
       "Name": "Fortune, Miss. Alice Elizabeth",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -4835,7 +4835,7 @@ const titanicData =
       "Age": 28,
       "Fare": 13,
       "Name": "Collander, Mr. Erik Gustaf",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4849,7 +4849,7 @@ const titanicData =
       "Age": 25,
       "Fare": 13,
       "Name": "Sedgwick, Mr. Charles Frederick Waddington",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4863,7 +4863,7 @@ const titanicData =
       "Age": 36,
       "Fare": 13,
       "Name": "Fox, Mr. Stanley Hubert",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -4877,7 +4877,7 @@ const titanicData =
       "Age": 24,
       "Fare": 13,
       "Name": "Brown, Miss. Amelia \"Mildred\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -4891,7 +4891,7 @@ const titanicData =
       "Age": 40,
       "Fare": 13,
       "Name": "Smith, Miss. Marion Elsie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -4905,7 +4905,7 @@ const titanicData =
       "Age": null,
       "Fare": 16.1,
       "Name": "Davison, Mrs. Thomas Henry (Mary E Finck)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -4919,7 +4919,7 @@ const titanicData =
       "Age": 3,
       "Fare": 15.9,
       "Name": "Coutts, Master. William Loch \"William\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4933,7 +4933,7 @@ const titanicData =
       "Age": 42,
       "Fare": 8.6625,
       "Name": "Dimic, Mr. Jovan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4947,7 +4947,7 @@ const titanicData =
       "Age": 23,
       "Fare": 9.225,
       "Name": "Odahl, Mr. Nils Martin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -4961,7 +4961,7 @@ const titanicData =
       "Age": null,
       "Fare": 35,
       "Name": "Williams-Lambert, Mr. Fletcher Fellows",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -4975,7 +4975,7 @@ const titanicData =
       "Age": 15,
       "Fare": 7.2292,
       "Name": "Elias, Mr. Tannous",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -4989,7 +4989,7 @@ const titanicData =
       "Age": 25,
       "Fare": 17.8,
       "Name": "Arnold-Franchi, Mr. Josef",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5003,7 +5003,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.225,
       "Name": "Yousif, Mr. Wazli",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -5017,7 +5017,7 @@ const titanicData =
       "Age": 28,
       "Fare": 9.5,
       "Name": "Vanden Steen, Mr. Leo Peter",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5031,7 +5031,7 @@ const titanicData =
       "Age": 22,
       "Fare": 55,
       "Name": "Bowerman, Miss. Elsie Edith",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -5045,7 +5045,7 @@ const titanicData =
       "Age": 38,
       "Fare": 13,
       "Name": "Funk, Miss. Annie Clemmer",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -5059,7 +5059,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8792,
       "Name": "McGovern, Miss. Mary",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -5073,7 +5073,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8792,
       "Name": "Mockler, Miss. Helen Mary \"Ellie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -5087,7 +5087,7 @@ const titanicData =
       "Age": 40,
       "Fare": 27.9,
       "Name": "Skoog, Mr. Wilhelm",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5101,7 +5101,7 @@ const titanicData =
       "Age": 29,
       "Fare": 27.7208,
       "Name": "del Carlo, Mr. Sebastiano",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -5115,7 +5115,7 @@ const titanicData =
       "Age": 45,
       "Fare": 14.4542,
       "Name": "Barbara, Mrs. (Catherine David)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -5129,7 +5129,7 @@ const titanicData =
       "Age": 35,
       "Fare": 7.05,
       "Name": "Asim, Mr. Adola",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5143,7 +5143,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.5,
       "Name": "O'Brien, Mr. Thomas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -5157,7 +5157,7 @@ const titanicData =
       "Age": 30,
       "Fare": 7.25,
       "Name": "Adahl, Mr. Mauritz Nils Martin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5171,7 +5171,7 @@ const titanicData =
       "Age": 60,
       "Fare": 75.25,
       "Name": "Warren, Mrs. Frank Manley (Anna Sophia Atkinson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -5185,7 +5185,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Moussa, Mrs. (Mantoura Boulos)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -5199,7 +5199,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Jermyn, Miss. Annie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -5213,7 +5213,7 @@ const titanicData =
       "Age": 24,
       "Fare": 69.3,
       "Name": "Aubart, Mme. Leontine Pauline",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -5227,7 +5227,7 @@ const titanicData =
       "Age": 25,
       "Fare": 55.4417,
       "Name": "Harder, Mr. George Achilles",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -5241,7 +5241,7 @@ const titanicData =
       "Age": 18,
       "Fare": 6.4958,
       "Name": "Wiklund, Mr. Jakob Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5255,7 +5255,7 @@ const titanicData =
       "Age": 19,
       "Fare": 8.05,
       "Name": "Beavan, Mr. William Thomas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5269,7 +5269,7 @@ const titanicData =
       "Age": 22,
       "Fare": 135.6333,
       "Name": "Ringhini, Mr. Sante",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -5283,7 +5283,7 @@ const titanicData =
       "Age": 3,
       "Fare": 21.075,
       "Name": "Palsson, Miss. Stina Viola",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5297,7 +5297,7 @@ const titanicData =
       "Age": null,
       "Fare": 82.1708,
       "Name": "Meyer, Mrs. Edgar Joseph (Leila Saks)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -5311,7 +5311,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.25,
       "Name": "Landergren, Miss. Aurora Adelia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5325,7 +5325,7 @@ const titanicData =
       "Age": 27,
       "Fare": 211.5,
       "Name": "Widener, Mr. Harry Elkins",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -5339,7 +5339,7 @@ const titanicData =
       "Age": 20,
       "Fare": 4.0125,
       "Name": "Betros, Mr. Tannous",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -5353,7 +5353,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.775,
       "Name": "Gustafsson, Mr. Karl Gideon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5367,7 +5367,7 @@ const titanicData =
       "Age": 42,
       "Fare": 227.525,
       "Name": "Bidois, Miss. Rosalie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -5381,7 +5381,7 @@ const titanicData =
       "Age": 1,
       "Fare": 15.7417,
       "Name": "Nakid, Miss. Maria (\"Mary\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -5395,7 +5395,7 @@ const titanicData =
       "Age": 32,
       "Fare": 7.925,
       "Name": "Tikkanen, Mr. Juho",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5409,7 +5409,7 @@ const titanicData =
       "Age": 35,
       "Fare": 52,
       "Name": "Holverson, Mrs. Alexander Oskar (Mary Aline Towner)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -5423,7 +5423,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Plotcharsky, Mr. Vasil",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5437,7 +5437,7 @@ const titanicData =
       "Age": 18,
       "Fare": 73.5,
       "Name": "Davies, Mr. Charles Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5451,7 +5451,7 @@ const titanicData =
       "Age": 1,
       "Fare": 46.9,
       "Name": "Goodwin, Master. Sidney Leonard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5465,7 +5465,7 @@ const titanicData =
       "Age": 36,
       "Fare": 13,
       "Name": "Buss, Miss. Kate",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -5479,7 +5479,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.7292,
       "Name": "Sadlier, Mr. Matthew",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -5493,7 +5493,7 @@ const titanicData =
       "Age": 17,
       "Fare": 12,
       "Name": "Lehmann, Miss. Bertha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -5507,7 +5507,7 @@ const titanicData =
       "Age": 36,
       "Fare": 120,
       "Name": "Carter, Mr. William Ernest",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -5521,7 +5521,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.7958,
       "Name": "Jansson, Mr. Carl Olof",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5535,7 +5535,7 @@ const titanicData =
       "Age": 28,
       "Fare": 7.925,
       "Name": "Gustafsson, Mr. Johan Birger",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5549,7 +5549,7 @@ const titanicData =
       "Age": 23,
       "Fare": 113.275,
       "Name": "Newell, Miss. Marjorie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -5563,7 +5563,7 @@ const titanicData =
       "Age": 24,
       "Fare": 16.7,
       "Name": "Sandstrom, Mrs. Hjalmar (Agnes Charlotta Bengtsson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5577,7 +5577,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.7958,
       "Name": "Johansson, Mr. Erik",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5591,7 +5591,7 @@ const titanicData =
       "Age": 31,
       "Fare": 7.8542,
       "Name": "Olsson, Miss. Elina",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5605,7 +5605,7 @@ const titanicData =
       "Age": 46,
       "Fare": 26,
       "Name": "McKane, Mr. Peter David",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5619,7 +5619,7 @@ const titanicData =
       "Age": 23,
       "Fare": 10.5,
       "Name": "Pain, Dr. Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5633,7 +5633,7 @@ const titanicData =
       "Age": 28,
       "Fare": 12.65,
       "Name": "Trout, Mrs. William H (Jessie L)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -5647,7 +5647,7 @@ const titanicData =
       "Age": 39,
       "Fare": 7.925,
       "Name": "Niskanen, Mr. Juha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5661,7 +5661,7 @@ const titanicData =
       "Age": 26,
       "Fare": 8.05,
       "Name": "Adams, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5675,7 +5675,7 @@ const titanicData =
       "Age": 21,
       "Fare": 9.825,
       "Name": "Jussila, Miss. Mari Aina",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5689,7 +5689,7 @@ const titanicData =
       "Age": 28,
       "Fare": 15.85,
       "Name": "Hakkarainen, Mr. Pekka Pietari",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5703,7 +5703,7 @@ const titanicData =
       "Age": 20,
       "Fare": 8.6625,
       "Name": "Oreskovic, Miss. Marija",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5717,7 +5717,7 @@ const titanicData =
       "Age": 34,
       "Fare": 21,
       "Name": "Gale, Mr. Shadrach",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5731,7 +5731,7 @@ const titanicData =
       "Age": 51,
       "Fare": 7.75,
       "Name": "Widegren, Mr. Carl/Charles Peter",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5745,7 +5745,7 @@ const titanicData =
       "Age": 3,
       "Fare": 18.75,
       "Name": "Richards, Master. William Rowe",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5759,7 +5759,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.775,
       "Name": "Birkeland, Mr. Hans Martin Monsen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5773,7 +5773,7 @@ const titanicData =
       "Age": null,
       "Fare": 25.4667,
       "Name": "Lefebre, Miss. Ida",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5787,7 +5787,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Sdycoff, Mr. Todor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5801,7 +5801,7 @@ const titanicData =
       "Age": null,
       "Fare": 6.8583,
       "Name": "Hart, Mr. Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -5815,7 +5815,7 @@ const titanicData =
       "Age": 33,
       "Fare": 90,
       "Name": "Minahan, Miss. Daisy E",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "Q",
       "Sex": "female"
@@ -5829,7 +5829,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Cunningham, Mr. Alfred Fleming",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5843,7 +5843,7 @@ const titanicData =
       "Age": 44,
       "Fare": 7.925,
       "Name": "Sundman, Mr. Johan Julian",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5857,7 +5857,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Meek, Mrs. Thomas (Annie Louise Rowley)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5871,7 +5871,7 @@ const titanicData =
       "Age": 34,
       "Fare": 32.5,
       "Name": "Drew, Mrs. James Vivian (Lulu Thorne Christian)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -5885,7 +5885,7 @@ const titanicData =
       "Age": 18,
       "Fare": 13,
       "Name": "Silven, Miss. Lyyli Karoliina",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -5899,7 +5899,7 @@ const titanicData =
       "Age": 30,
       "Fare": 13,
       "Name": "Matthews, Mr. William John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -5913,7 +5913,7 @@ const titanicData =
       "Age": 10,
       "Fare": 24.15,
       "Name": "Van Impe, Miss. Catharina",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5927,7 +5927,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Gheorgheff, Mr. Stanio",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -5941,7 +5941,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.7333,
       "Name": "Charters, Mr. David",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -5955,7 +5955,7 @@ const titanicData =
       "Age": 29,
       "Fare": 7.875,
       "Name": "Zimmerman, Mr. Leo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5969,7 +5969,7 @@ const titanicData =
       "Age": 28,
       "Fare": 14.4,
       "Name": "Danbom, Mrs. Ernst Gilbert (Anna Sigrid Maria Brogren)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -5983,7 +5983,7 @@ const titanicData =
       "Age": 18,
       "Fare": 20.2125,
       "Name": "Rosblom, Mr. Viktor Richard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -5997,7 +5997,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.25,
       "Name": "Wiseman, Mr. Phillippe",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6011,7 +6011,7 @@ const titanicData =
       "Age": 28,
       "Fare": 26,
       "Name": "Clarke, Mrs. Charles V (Ada Maria Winfield)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6025,7 +6025,7 @@ const titanicData =
       "Age": 19,
       "Fare": 26,
       "Name": "Phillips, Miss. Kate Florence (\"Mrs Kate Louise Phillips Marshall\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6039,7 +6039,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Flynn, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -6053,7 +6053,7 @@ const titanicData =
       "Age": 32,
       "Fare": 8.05,
       "Name": "Pickard, Mr. Berk (Berk Trembisky)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6067,7 +6067,7 @@ const titanicData =
       "Age": 28,
       "Fare": 26.55,
       "Name": "Bjornstrom-Steffansson, Mr. Mauritz Hakan",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6081,7 +6081,7 @@ const titanicData =
       "Age": null,
       "Fare": 16.1,
       "Name": "Thorneycroft, Mrs. Percival (Florence Kate White)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -6095,7 +6095,7 @@ const titanicData =
       "Age": 42,
       "Fare": 26,
       "Name": "Louch, Mrs. Charles Alexander (Alice Adelaide Slow)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6109,7 +6109,7 @@ const titanicData =
       "Age": 17,
       "Fare": 7.125,
       "Name": "Kallio, Mr. Nikolai Erland",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6123,7 +6123,7 @@ const titanicData =
       "Age": 50,
       "Fare": 55.9,
       "Name": "Silvey, Mr. William Baird",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6137,7 +6137,7 @@ const titanicData =
       "Age": 14,
       "Fare": 120,
       "Name": "Carter, Miss. Lucile Polk",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -6151,7 +6151,7 @@ const titanicData =
       "Age": 21,
       "Fare": 34.375,
       "Name": "Ford, Miss. Doolina Margaret \"Daisy\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -6165,7 +6165,7 @@ const titanicData =
       "Age": 24,
       "Fare": 18.75,
       "Name": "Richards, Mrs. Sidney (Emily Hocking)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6179,7 +6179,7 @@ const titanicData =
       "Age": 64,
       "Fare": 263,
       "Name": "Fortune, Mr. Mark",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6193,7 +6193,7 @@ const titanicData =
       "Age": 31,
       "Fare": 10.5,
       "Name": "Kvillner, Mr. Johan Henrik Johannesson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -6207,7 +6207,7 @@ const titanicData =
       "Age": 45,
       "Fare": 26.25,
       "Name": "Hart, Mrs. Benjamin (Esther Ada Bloomfield)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6221,7 +6221,7 @@ const titanicData =
       "Age": 20,
       "Fare": 9.5,
       "Name": "Hampe, Mr. Leon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6235,7 +6235,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.775,
       "Name": "Petterson, Mr. Johan Emil",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6249,7 +6249,7 @@ const titanicData =
       "Age": 28,
       "Fare": 13,
       "Name": "Reynaldo, Ms. Encarnacion",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6263,7 +6263,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.1125,
       "Name": "Johannesen-Bratthammer, Mr. Bernt",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6277,7 +6277,7 @@ const titanicData =
       "Age": 4,
       "Fare": 81.8583,
       "Name": "Dodge, Master. Washington",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6291,7 +6291,7 @@ const titanicData =
       "Age": 13,
       "Fare": 19.5,
       "Name": "Mellinger, Miss. Madeleine Violet",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6305,7 +6305,7 @@ const titanicData =
       "Age": 34,
       "Fare": 26.55,
       "Name": "Seward, Mr. Frederic Kimber",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6319,7 +6319,7 @@ const titanicData =
       "Age": 5,
       "Fare": 19.2583,
       "Name": "Baclini, Miss. Marie Catherine",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -6333,7 +6333,7 @@ const titanicData =
       "Age": 52,
       "Fare": 30.5,
       "Name": "Peuchen, Major. Arthur Godfrey",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6347,7 +6347,7 @@ const titanicData =
       "Age": 36,
       "Fare": 27.75,
       "Name": "West, Mr. Edwy Arthur",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -6361,7 +6361,7 @@ const titanicData =
       "Age": null,
       "Fare": 19.9667,
       "Name": "Hagland, Mr. Ingvald Olai Olsen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6375,7 +6375,7 @@ const titanicData =
       "Age": 30,
       "Fare": 27.75,
       "Name": "Foreman, Mr. Benjamin Laventall",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -6389,7 +6389,7 @@ const titanicData =
       "Age": 49,
       "Fare": 89.1042,
       "Name": "Goldenberg, Mr. Samuel L",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -6403,7 +6403,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Peduzzi, Mr. Joseph",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6417,7 +6417,7 @@ const titanicData =
       "Age": 29,
       "Fare": 7.8958,
       "Name": "Jalsevac, Mr. Ivan",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -6431,7 +6431,7 @@ const titanicData =
       "Age": 65,
       "Fare": 26.55,
       "Name": "Millet, Mr. Francis Davis",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6445,7 +6445,7 @@ const titanicData =
       "Age": null,
       "Fare": 51.8625,
       "Name": "Kenyon, Mrs. Frederick R (Marion)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -6459,7 +6459,7 @@ const titanicData =
       "Age": 50,
       "Fare": 10.5,
       "Name": "Toomey, Miss. Ellen",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6473,7 +6473,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "O'Connor, Mr. Maurice",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -6487,7 +6487,7 @@ const titanicData =
       "Age": 48,
       "Fare": 26.55,
       "Name": "Anderson, Mr. Harry",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6501,7 +6501,7 @@ const titanicData =
       "Age": 34,
       "Fare": 8.05,
       "Name": "Morley, Mr. William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6515,7 +6515,7 @@ const titanicData =
       "Age": 47,
       "Fare": 38.5,
       "Name": "Gee, Mr. Arthur H",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6529,7 +6529,7 @@ const titanicData =
       "Age": 48,
       "Fare": 13,
       "Name": "Milling, Mr. Jacob Christian",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -6543,7 +6543,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Maisner, Mr. Simon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6557,7 +6557,7 @@ const titanicData =
       "Age": 38,
       "Fare": 7.05,
       "Name": "Goncalves, Mr. Manuel Estanslas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6571,7 +6571,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Campbell, Mr. William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -6585,7 +6585,7 @@ const titanicData =
       "Age": 56,
       "Fare": 26.55,
       "Name": "Smart, Mr. John Montgomery",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6599,7 +6599,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.725,
       "Name": "Scanlan, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -6613,7 +6613,7 @@ const titanicData =
       "Age": 0.75,
       "Fare": 19.2583,
       "Name": "Baclini, Miss. Helene Barbara",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -6627,7 +6627,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.25,
       "Name": "Keefe, Mr. Arthur",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6641,7 +6641,7 @@ const titanicData =
       "Age": 38,
       "Fare": 8.6625,
       "Name": "Cacic, Mr. Luka",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6655,7 +6655,7 @@ const titanicData =
       "Age": 33,
       "Fare": 27.75,
       "Name": "West, Mrs. Edwy Arthur (Ada Mary Worth)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -6669,7 +6669,7 @@ const titanicData =
       "Age": 23,
       "Fare": 13.7917,
       "Name": "Jerwan, Mrs. Amin S (Marie Marthe Thuillard)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -6683,7 +6683,7 @@ const titanicData =
       "Age": 22,
       "Fare": 9.8375,
       "Name": "Strandberg, Miss. Ida Sofia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -6697,7 +6697,7 @@ const titanicData =
       "Age": null,
       "Fare": 52,
       "Name": "Clifford, Mr. George Quincy",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6711,7 +6711,7 @@ const titanicData =
       "Age": 34,
       "Fare": 21,
       "Name": "Renouf, Mr. Peter Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -6725,7 +6725,7 @@ const titanicData =
       "Age": 29,
       "Fare": 7.0458,
       "Name": "Braund, Mr. Lewis Richard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6739,7 +6739,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.5208,
       "Name": "Karlsson, Mr. Nils August",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6753,7 +6753,7 @@ const titanicData =
       "Age": 2,
       "Fare": 12.2875,
       "Name": "Hirvonen, Miss. Hildur E",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -6767,7 +6767,7 @@ const titanicData =
       "Age": 9,
       "Fare": 46.9,
       "Name": "Goodwin, Master. Harold Victor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6781,7 +6781,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Frost, Mr. Anthony Wood \"Archie\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -6795,7 +6795,7 @@ const titanicData =
       "Age": 50,
       "Fare": 8.05,
       "Name": "Rouse, Mr. Richard Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6809,7 +6809,7 @@ const titanicData =
       "Age": 63,
       "Fare": 9.5875,
       "Name": "Turkula, Mrs. (Hedwig)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -6823,7 +6823,7 @@ const titanicData =
       "Age": 25,
       "Fare": 91.0792,
       "Name": "Bishop, Mr. Dickinson H",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -6837,7 +6837,7 @@ const titanicData =
       "Age": null,
       "Fare": 25.4667,
       "Name": "Lefebre, Miss. Jeannie",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -6851,7 +6851,7 @@ const titanicData =
       "Age": 35,
       "Fare": 90,
       "Name": "Hoyt, Mrs. Frederick Maxfield (Jane Anne Forby)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -6865,7 +6865,7 @@ const titanicData =
       "Age": 58,
       "Fare": 29.7,
       "Name": "Kent, Mr. Edward Austin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -6879,7 +6879,7 @@ const titanicData =
       "Age": 30,
       "Fare": 8.05,
       "Name": "Somerton, Mr. Francis William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6893,7 +6893,7 @@ const titanicData =
       "Age": 9,
       "Fare": 15.9,
       "Name": "Coutts, Master. Eden Leslie \"Neville\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6907,7 +6907,7 @@ const titanicData =
       "Age": null,
       "Fare": 19.9667,
       "Name": "Hagland, Mr. Konrad Mathias Reiersen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6921,7 +6921,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.25,
       "Name": "Windelov, Mr. Einar",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6935,7 +6935,7 @@ const titanicData =
       "Age": 55,
       "Fare": 30.5,
       "Name": "Molson, Mr. Harry Markland",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -6949,7 +6949,7 @@ const titanicData =
       "Age": 71,
       "Fare": 49.5042,
       "Name": "Artagaveytia, Mr. Ramon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -6963,7 +6963,7 @@ const titanicData =
       "Age": 21,
       "Fare": 8.05,
       "Name": "Stanley, Mr. Edward Roland",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -6977,7 +6977,7 @@ const titanicData =
       "Age": null,
       "Fare": 14.4583,
       "Name": "Yousseff, Mr. Gerious",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -6991,7 +6991,7 @@ const titanicData =
       "Age": 54,
       "Fare": 78.2667,
       "Name": "Eustis, Miss. Elizabeth Mussey",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -7005,7 +7005,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.1,
       "Name": "Shellard, Mr. Frederick William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7019,7 +7019,7 @@ const titanicData =
       "Age": 25,
       "Fare": 151.55,
       "Name": "Allison, Mrs. Hudson J C (Bessie Waldo Daniels)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -7033,7 +7033,7 @@ const titanicData =
       "Age": 24,
       "Fare": 7.7958,
       "Name": "Svensson, Mr. Olof",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7047,7 +7047,7 @@ const titanicData =
       "Age": 17,
       "Fare": 8.6625,
       "Name": "Calic, Mr. Petar",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7061,7 +7061,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.75,
       "Name": "Canavan, Miss. Mary",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -7075,7 +7075,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.6292,
       "Name": "O'Sullivan, Miss. Bridget Mary",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -7089,7 +7089,7 @@ const titanicData =
       "Age": 37,
       "Fare": 9.5875,
       "Name": "Laitinen, Miss. Kristina Sofia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7103,7 +7103,7 @@ const titanicData =
       "Age": 16,
       "Fare": 86.5,
       "Name": "Maioni, Miss. Roberta",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -7117,7 +7117,7 @@ const titanicData =
       "Age": 18,
       "Fare": 108.9,
       "Name": "Penasco y Castellana, Mr. Victor de Satode",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -7131,7 +7131,7 @@ const titanicData =
       "Age": 33,
       "Fare": 26,
       "Name": "Quick, Mrs. Frederick Charles (Jane Richards)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7145,7 +7145,7 @@ const titanicData =
       "Age": null,
       "Fare": 26.55,
       "Name": "Bradley, Mr. George (\"George Arthur Brayton\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7159,7 +7159,7 @@ const titanicData =
       "Age": 28,
       "Fare": 22.525,
       "Name": "Olsen, Mr. Henry Margido",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7173,7 +7173,7 @@ const titanicData =
       "Age": 26,
       "Fare": 56.4958,
       "Name": "Lang, Mr. Fang",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7187,7 +7187,7 @@ const titanicData =
       "Age": 29,
       "Fare": 7.75,
       "Name": "Daly, Mr. Eugene Patrick",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -7201,7 +7201,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Webber, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7215,7 +7215,7 @@ const titanicData =
       "Age": 36,
       "Fare": 26.2875,
       "Name": "McGough, Mr. James Robert",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7229,7 +7229,7 @@ const titanicData =
       "Age": 54,
       "Fare": 59.4,
       "Name": "Rothschild, Mrs. Martin (Elizabeth L. Barrett)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -7243,7 +7243,7 @@ const titanicData =
       "Age": 24,
       "Fare": 7.4958,
       "Name": "Coleff, Mr. Satio",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7257,7 +7257,7 @@ const titanicData =
       "Age": 47,
       "Fare": 34.0208,
       "Name": "Walker, Mr. William Anderson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7271,7 +7271,7 @@ const titanicData =
       "Age": 34,
       "Fare": 10.5,
       "Name": "Lemore, Mrs. (Amelia Milley)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7285,7 +7285,7 @@ const titanicData =
       "Age": null,
       "Fare": 24.15,
       "Name": "Ryan, Mr. Patrick",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -7299,7 +7299,7 @@ const titanicData =
       "Age": 36,
       "Fare": 26,
       "Name": "Angle, Mrs. William A (Florence \"Mary\" Agnes Hughes)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7313,7 +7313,7 @@ const titanicData =
       "Age": 32,
       "Fare": 7.8958,
       "Name": "Pavlovic, Mr. Stefo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7327,7 +7327,7 @@ const titanicData =
       "Age": 30,
       "Fare": 93.5,
       "Name": "Perreault, Miss. Anne",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -7341,7 +7341,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.8958,
       "Name": "Vovk, Mr. Janko",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7355,7 +7355,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.225,
       "Name": "Lahoud, Mr. Sarkis",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -7369,7 +7369,7 @@ const titanicData =
       "Age": 44,
       "Fare": 57.9792,
       "Name": "Hippach, Mrs. Louis Albert (Ida Sophia Fischer)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -7383,7 +7383,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Kassem, Mr. Fared",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -7397,7 +7397,7 @@ const titanicData =
       "Age": 40.5,
       "Fare": 7.75,
       "Name": "Farrell, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -7411,7 +7411,7 @@ const titanicData =
       "Age": 50,
       "Fare": 10.5,
       "Name": "Ridsdale, Miss. Lucy",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7425,7 +7425,7 @@ const titanicData =
       "Age": null,
       "Fare": 221.7792,
       "Name": "Farthing, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7439,7 +7439,7 @@ const titanicData =
       "Age": 39,
       "Fare": 7.925,
       "Name": "Salonen, Mr. Johan Werner",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7453,7 +7453,7 @@ const titanicData =
       "Age": 23,
       "Fare": 11.5,
       "Name": "Hocking, Mr. Richard George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -7467,7 +7467,7 @@ const titanicData =
       "Age": 2,
       "Fare": 26,
       "Name": "Quick, Miss. Phyllis May",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7481,7 +7481,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Toufik, Mr. Nakli",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -7495,7 +7495,7 @@ const titanicData =
       "Age": 17,
       "Fare": 7.2292,
       "Name": "Elias, Mr. Joseph Jr",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -7509,7 +7509,7 @@ const titanicData =
       "Age": null,
       "Fare": 22.3583,
       "Name": "Peter, Mrs. Catherine (Catherine Rizk)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -7523,7 +7523,7 @@ const titanicData =
       "Age": 30,
       "Fare": 8.6625,
       "Name": "Cacic, Miss. Marija",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7537,7 +7537,7 @@ const titanicData =
       "Age": 7,
       "Fare": 26.25,
       "Name": "Hart, Miss. Eva Miriam",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7551,7 +7551,7 @@ const titanicData =
       "Age": 45,
       "Fare": 26.55,
       "Name": "Butt, Major. Archibald Willingham",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7565,7 +7565,7 @@ const titanicData =
       "Age": 30,
       "Fare": 106.425,
       "Name": "LeRoy, Miss. Bertha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -7579,7 +7579,7 @@ const titanicData =
       "Age": null,
       "Fare": 14.5,
       "Name": "Risien, Mr. Samuel Beard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7593,7 +7593,7 @@ const titanicData =
       "Age": 22,
       "Fare": 49.5,
       "Name": "Frolicher, Miss. Hedwig Margaritha",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -7607,7 +7607,7 @@ const titanicData =
       "Age": 36,
       "Fare": 71,
       "Name": "Crosby, Miss. Harriet R",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -7621,7 +7621,7 @@ const titanicData =
       "Age": 9,
       "Fare": 31.275,
       "Name": "Andersson, Miss. Ingeborg Constanzia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7635,7 +7635,7 @@ const titanicData =
       "Age": 11,
       "Fare": 31.275,
       "Name": "Andersson, Miss. Sigrid Elisabeth",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7649,7 +7649,7 @@ const titanicData =
       "Age": 32,
       "Fare": 26,
       "Name": "Beane, Mr. Edward",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -7663,7 +7663,7 @@ const titanicData =
       "Age": 50,
       "Fare": 106.425,
       "Name": "Douglas, Mr. Walter Donald",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -7677,7 +7677,7 @@ const titanicData =
       "Age": 64,
       "Fare": 26,
       "Name": "Nicholson, Mr. Arthur Ernest",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7691,7 +7691,7 @@ const titanicData =
       "Age": 19,
       "Fare": 26,
       "Name": "Beane, Mrs. Edward (Ethel Clarke)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -7705,7 +7705,7 @@ const titanicData =
       "Age": null,
       "Fare": 13.8625,
       "Name": "Padro y Manent, Mr. Julian",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -7719,7 +7719,7 @@ const titanicData =
       "Age": 33,
       "Fare": 20.525,
       "Name": "Goldsmith, Mr. Frank John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7733,7 +7733,7 @@ const titanicData =
       "Age": 8,
       "Fare": 36.75,
       "Name": "Davies, Master. John Morgan Jr",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -7747,7 +7747,7 @@ const titanicData =
       "Age": 17,
       "Fare": 110.8833,
       "Name": "Thayer, Mr. John Borland Jr",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -7761,7 +7761,7 @@ const titanicData =
       "Age": 27,
       "Fare": 26,
       "Name": "Sharp, Mr. Percival James R",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -7775,7 +7775,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8292,
       "Name": "O'Brien, Mr. Timothy",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -7789,7 +7789,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.225,
       "Name": "Leeni, Mr. Fahim (\"Philip Zenni\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -7803,7 +7803,7 @@ const titanicData =
       "Age": 22,
       "Fare": 7.775,
       "Name": "Ohman, Miss. Velin",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7817,7 +7817,7 @@ const titanicData =
       "Age": 62,
       "Fare": 26.55,
       "Name": "Wright, Mr. George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -7831,7 +7831,7 @@ const titanicData =
       "Age": 48,
       "Fare": 39.6,
       "Name": "Duff Gordon, Lady. (Lucille Christiana Sutherland) (\"Mrs Morgan\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -7845,7 +7845,7 @@ const titanicData =
       "Age": null,
       "Fare": 227.525,
       "Name": "Robbins, Mr. Victor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -7859,7 +7859,7 @@ const titanicData =
       "Age": 39,
       "Fare": 79.65,
       "Name": "Taussig, Mrs. Emil (Tillie Mandelbaum)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -7873,7 +7873,7 @@ const titanicData =
       "Age": 36,
       "Fare": 17.4,
       "Name": "de Messemaeker, Mrs. Guillaume Joseph (Emma)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7887,7 +7887,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Morrow, Mr. Thomas Rowan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -7901,7 +7901,7 @@ const titanicData =
       "Age": 40,
       "Fare": 7.8958,
       "Name": "Sivic, Mr. Husein",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7915,7 +7915,7 @@ const titanicData =
       "Age": 28,
       "Fare": 13.5,
       "Name": "Norman, Mr. Robert Douglas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -7929,7 +7929,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Simmons, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7943,7 +7943,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Meanwell, Miss. (Marion Ogden)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7957,7 +7957,7 @@ const titanicData =
       "Age": 24,
       "Fare": 24.15,
       "Name": "Davies, Mr. Alfred J",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7971,7 +7971,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.8958,
       "Name": "Stoytcheff, Mr. Ilia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -7985,7 +7985,7 @@ const titanicData =
       "Age": 29,
       "Fare": 21.075,
       "Name": "Palsson, Mrs. Nils (Alma Cornelia Berglund)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -7999,7 +7999,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Doharr, Mr. Tannous",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -8013,7 +8013,7 @@ const titanicData =
       "Age": 32,
       "Fare": 7.8542,
       "Name": "Jonsson, Mr. Carl",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8027,7 +8027,7 @@ const titanicData =
       "Age": 62,
       "Fare": 10.5,
       "Name": "Harris, Mr. George",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -8041,7 +8041,7 @@ const titanicData =
       "Age": 53,
       "Fare": 51.4792,
       "Name": "Appleton, Mrs. Edward Dale (Charlotte Lamson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -8055,7 +8055,7 @@ const titanicData =
       "Age": 36,
       "Fare": 26.3875,
       "Name": "Flynn, Mr. John Irwin (\"Irving\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8069,7 +8069,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Kelly, Miss. Mary",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -8083,7 +8083,7 @@ const titanicData =
       "Age": 16,
       "Fare": 8.05,
       "Name": "Rush, Mr. Alfred George John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8097,7 +8097,7 @@ const titanicData =
       "Age": 19,
       "Fare": 14.5,
       "Name": "Patchett, Mr. George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8111,7 +8111,7 @@ const titanicData =
       "Age": 34,
       "Fare": 13,
       "Name": "Garside, Miss. Ethel",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8125,7 +8125,7 @@ const titanicData =
       "Age": 39,
       "Fare": 55.9,
       "Name": "Silvey, Mrs. William Baird (Alice Munger)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -8139,7 +8139,7 @@ const titanicData =
       "Age": null,
       "Fare": 14.4583,
       "Name": "Caram, Mrs. Joseph (Maria Elias)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -8153,7 +8153,7 @@ const titanicData =
       "Age": 32,
       "Fare": 7.925,
       "Name": "Jussila, Mr. Eiriik",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8167,7 +8167,7 @@ const titanicData =
       "Age": 25,
       "Fare": 30,
       "Name": "Christy, Miss. Julie Rachel",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8181,7 +8181,7 @@ const titanicData =
       "Age": 39,
       "Fare": 110.8833,
       "Name": "Thayer, Mrs. John Borland (Marian Longstreth Morris)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -8195,7 +8195,7 @@ const titanicData =
       "Age": 54,
       "Fare": 26,
       "Name": "Downton, Mr. William James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -8209,7 +8209,7 @@ const titanicData =
       "Age": 36,
       "Fare": 40.125,
       "Name": "Ross, Mr. John Hugo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -8223,7 +8223,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.7125,
       "Name": "Paulner, Mr. Uscher",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -8237,7 +8237,7 @@ const titanicData =
       "Age": 18,
       "Fare": 79.65,
       "Name": "Taussig, Miss. Ruth",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -8251,7 +8251,7 @@ const titanicData =
       "Age": 47,
       "Fare": 15,
       "Name": "Jarvis, Mr. John Denzil",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -8265,7 +8265,7 @@ const titanicData =
       "Age": 60,
       "Fare": 79.2,
       "Name": "Frolicher-Stehli, Mr. Maxmillian",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -8279,7 +8279,7 @@ const titanicData =
       "Age": 22,
       "Fare": 8.05,
       "Name": "Gilinski, Mr. Eliezer",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8293,7 +8293,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Murdlin, Mr. Joseph",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8307,7 +8307,7 @@ const titanicData =
       "Age": 35,
       "Fare": 7.125,
       "Name": "Rintamaki, Mr. Matti",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8321,7 +8321,7 @@ const titanicData =
       "Age": 52,
       "Fare": 78.2667,
       "Name": "Stephenson, Mrs. Walter Bertram (Martha Eustis)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -8335,7 +8335,7 @@ const titanicData =
       "Age": 47,
       "Fare": 7.25,
       "Name": "Elsbury, Mr. William James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8349,7 +8349,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Bourke, Miss. Mary",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -8363,7 +8363,7 @@ const titanicData =
       "Age": 37,
       "Fare": 26,
       "Name": "Chapman, Mr. John Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -8377,7 +8377,7 @@ const titanicData =
       "Age": 36,
       "Fare": 24.15,
       "Name": "Van Impe, Mr. Jean Baptiste",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8391,7 +8391,7 @@ const titanicData =
       "Age": null,
       "Fare": 33,
       "Name": "Leitch, Miss. Jessie Wills",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8405,7 +8405,7 @@ const titanicData =
       "Age": 49,
       "Fare": 0,
       "Name": "Johnson, Mr. Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8419,7 +8419,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.225,
       "Name": "Boulos, Mr. Hanna",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -8433,7 +8433,7 @@ const titanicData =
       "Age": 49,
       "Fare": 56.9292,
       "Name": "Duff Gordon, Sir. Cosmo Edmund (\"Mr Morgan\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -8447,7 +8447,7 @@ const titanicData =
       "Age": 24,
       "Fare": 27,
       "Name": "Jacobsohn, Mrs. Sidney Samuel (Amy Frances Christy)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8461,7 +8461,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Slabenoff, Mr. Petco",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8475,7 +8475,7 @@ const titanicData =
       "Age": null,
       "Fare": 42.4,
       "Name": "Harrington, Mr. Charles H",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8489,7 +8489,7 @@ const titanicData =
       "Age": 44,
       "Fare": 8.05,
       "Name": "Torber, Mr. Ernst William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8503,7 +8503,7 @@ const titanicData =
       "Age": 35,
       "Fare": 26.55,
       "Name": "Homer, Mr. Harry (\"Mr E Haven\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -8517,7 +8517,7 @@ const titanicData =
       "Age": 36,
       "Fare": 15.55,
       "Name": "Lindell, Mr. Edvard Bengtsson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8531,7 +8531,7 @@ const titanicData =
       "Age": 30,
       "Fare": 7.8958,
       "Name": "Karaic, Mr. Milan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8545,7 +8545,7 @@ const titanicData =
       "Age": 27,
       "Fare": 30.5,
       "Name": "Daniel, Mr. Robert Williams",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8559,7 +8559,7 @@ const titanicData =
       "Age": 22,
       "Fare": 41.5792,
       "Name": "Laroche, Mrs. Joseph (Juliette Marie Louise Lafargue)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -8573,7 +8573,7 @@ const titanicData =
       "Age": 40,
       "Fare": 153.4625,
       "Name": "Shutes, Miss. Elizabeth W",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -8587,7 +8587,7 @@ const titanicData =
       "Age": 39,
       "Fare": 31.275,
       "Name": "Andersson, Mrs. Anders Johan (Alfrida Konstantia Brogren)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -8601,7 +8601,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.05,
       "Name": "Jardin, Mr. Jose Neto",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8615,7 +8615,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.5,
       "Name": "Murphy, Miss. Margaret Jane",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -8629,7 +8629,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Horgan, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -8643,7 +8643,7 @@ const titanicData =
       "Age": 35,
       "Fare": 8.05,
       "Name": "Brocklebank, Mr. William Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8657,7 +8657,7 @@ const titanicData =
       "Age": 24,
       "Fare": 65,
       "Name": "Herman, Miss. Alice",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8671,7 +8671,7 @@ const titanicData =
       "Age": 34,
       "Fare": 14.4,
       "Name": "Danbom, Mr. Ernst Gilbert",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8685,7 +8685,7 @@ const titanicData =
       "Age": 26,
       "Fare": 16.1,
       "Name": "Lobb, Mrs. William Arthur (Cordelia K Stanlick)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -8699,7 +8699,7 @@ const titanicData =
       "Age": 4,
       "Fare": 39,
       "Name": "Becker, Miss. Marion Louise",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8713,7 +8713,7 @@ const titanicData =
       "Age": 26,
       "Fare": 10.5,
       "Name": "Gavey, Mr. Lawrence",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -8727,7 +8727,7 @@ const titanicData =
       "Age": 27,
       "Fare": 14.4542,
       "Name": "Yasbeck, Mr. Antoni",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -8741,7 +8741,7 @@ const titanicData =
       "Age": 42,
       "Fare": 52.5542,
       "Name": "Kimball, Mr. Edwin Nelson Jr",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8755,7 +8755,7 @@ const titanicData =
       "Age": 20,
       "Fare": 15.7417,
       "Name": "Nakid, Mr. Sahid",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -8769,7 +8769,7 @@ const titanicData =
       "Age": 21,
       "Fare": 7.8542,
       "Name": "Hansen, Mr. Henry Damsgaard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8783,7 +8783,7 @@ const titanicData =
       "Age": 21,
       "Fare": 16.1,
       "Name": "Bowen, Mr. David John \"Dai\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8797,7 +8797,7 @@ const titanicData =
       "Age": 61,
       "Fare": 32.3208,
       "Name": "Sutton, Mr. Frederick",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8811,7 +8811,7 @@ const titanicData =
       "Age": 57,
       "Fare": 12.35,
       "Name": "Kirkland, Rev. Charles Leonard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "Q",
       "Sex": "male"
@@ -8825,7 +8825,7 @@ const titanicData =
       "Age": 21,
       "Fare": 77.9583,
       "Name": "Longley, Miss. Gretchen Fiske",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -8839,7 +8839,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.8958,
       "Name": "Bostandyeff, Mr. Guentcho",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8853,7 +8853,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.7333,
       "Name": "O'Connell, Mr. Patrick D",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -8867,7 +8867,7 @@ const titanicData =
       "Age": 80,
       "Fare": 30,
       "Name": "Barkworth, Mr. Algernon Henry Wilson",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8881,7 +8881,7 @@ const titanicData =
       "Age": 51,
       "Fare": 7.0542,
       "Name": "Lundahl, Mr. Johan Svensson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8895,7 +8895,7 @@ const titanicData =
       "Age": 32,
       "Fare": 30.5,
       "Name": "Stahelin-Maeglin, Dr. Max",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -8909,7 +8909,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Parr, Mr. William Henry Marsh",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -8923,7 +8923,7 @@ const titanicData =
       "Age": 9,
       "Fare": 27.9,
       "Name": "Skoog, Miss. Mabel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -8937,7 +8937,7 @@ const titanicData =
       "Age": 28,
       "Fare": 13,
       "Name": "Davis, Miss. Mary",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -8951,7 +8951,7 @@ const titanicData =
       "Age": 32,
       "Fare": 7.925,
       "Name": "Leinonen, Mr. Antti Gustaf",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -8965,7 +8965,7 @@ const titanicData =
       "Age": 31,
       "Fare": 26.25,
       "Name": "Collyer, Mr. Harvey",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -8979,7 +8979,7 @@ const titanicData =
       "Age": 41,
       "Fare": 39.6875,
       "Name": "Panula, Mrs. Juha (Maria Emilia Ojala)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -8993,7 +8993,7 @@ const titanicData =
       "Age": null,
       "Fare": 16.1,
       "Name": "Thorneycroft, Mr. Percival",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9007,7 +9007,7 @@ const titanicData =
       "Age": 20,
       "Fare": 7.8542,
       "Name": "Jensen, Mr. Hans Peder",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9021,7 +9021,7 @@ const titanicData =
       "Age": 24,
       "Fare": 69.3,
       "Name": "Sagesser, Mlle. Emma",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -9035,7 +9035,7 @@ const titanicData =
       "Age": 2,
       "Fare": 27.9,
       "Name": "Skoog, Miss. Margit Elizabeth",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -9049,7 +9049,7 @@ const titanicData =
       "Age": null,
       "Fare": 56.4958,
       "Name": "Foo, Mr. Choong",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9063,7 +9063,7 @@ const titanicData =
       "Age": 0.75,
       "Fare": 19.2583,
       "Name": "Baclini, Miss. Eugenie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -9077,7 +9077,7 @@ const titanicData =
       "Age": 48,
       "Fare": 76.7292,
       "Name": "Harper, Mr. Henry Sleeper",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -9091,7 +9091,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.8958,
       "Name": "Cor, Mr. Liudevit",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9105,7 +9105,7 @@ const titanicData =
       "Age": 56,
       "Fare": 35.5,
       "Name": "Simonius-Blumer, Col. Oberst Alfons",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -9119,7 +9119,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.55,
       "Name": "Willey, Mr. Edward",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9133,7 +9133,7 @@ const titanicData =
       "Age": 23,
       "Fare": 7.55,
       "Name": "Stanley, Miss. Amy Zillah Elsie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -9147,7 +9147,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Mitkoff, Mr. Mito",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9161,7 +9161,7 @@ const titanicData =
       "Age": 18,
       "Fare": 23,
       "Name": "Doling, Miss. Elsie",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -9175,7 +9175,7 @@ const titanicData =
       "Age": 21,
       "Fare": 8.4333,
       "Name": "Kalvik, Mr. Johannes Halvorsen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9189,7 +9189,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8292,
       "Name": "O'Leary, Miss. Hanora \"Norah\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -9203,7 +9203,7 @@ const titanicData =
       "Age": 18,
       "Fare": 6.75,
       "Name": "Hegarty, Miss. Hanora \"Nora\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -9217,7 +9217,7 @@ const titanicData =
       "Age": 24,
       "Fare": 73.5,
       "Name": "Hickman, Mr. Leonard Mark",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9231,7 +9231,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Radeff, Mr. Alexander",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9245,7 +9245,7 @@ const titanicData =
       "Age": 32,
       "Fare": 15.5,
       "Name": "Bourke, Mrs. John (Catherine)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -9259,7 +9259,7 @@ const titanicData =
       "Age": 23,
       "Fare": 13,
       "Name": "Eitemiller, Mr. George Floyd",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9273,7 +9273,7 @@ const titanicData =
       "Age": 58,
       "Fare": 113.275,
       "Name": "Newell, Mr. Arthur Webster",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -9287,7 +9287,7 @@ const titanicData =
       "Age": 50,
       "Fare": 133.65,
       "Name": "Frauenthal, Dr. Henry William",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9301,7 +9301,7 @@ const titanicData =
       "Age": 40,
       "Fare": 7.225,
       "Name": "Badt, Mr. Mohamed",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -9315,7 +9315,7 @@ const titanicData =
       "Age": 47,
       "Fare": 25.5875,
       "Name": "Colley, Mr. Edward Pomeroy",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9329,7 +9329,7 @@ const titanicData =
       "Age": 36,
       "Fare": 7.4958,
       "Name": "Coleff, Mr. Peju",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9343,7 +9343,7 @@ const titanicData =
       "Age": 20,
       "Fare": 7.925,
       "Name": "Lindqvist, Mr. Eino William",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9357,7 +9357,7 @@ const titanicData =
       "Age": 32,
       "Fare": 73.5,
       "Name": "Hickman, Mr. Lewis",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9371,7 +9371,7 @@ const titanicData =
       "Age": 25,
       "Fare": 13,
       "Name": "Butler, Mr. Reginald Fenton",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9385,7 +9385,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.775,
       "Name": "Rommetvedt, Mr. Knud Paust",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9399,7 +9399,7 @@ const titanicData =
       "Age": 43,
       "Fare": 8.05,
       "Name": "Cook, Mr. Jacob",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9413,7 +9413,7 @@ const titanicData =
       "Age": null,
       "Fare": 52,
       "Name": "Taylor, Mrs. Elmer Zebley (Juliet Cummins Wright)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -9427,7 +9427,7 @@ const titanicData =
       "Age": 40,
       "Fare": 39,
       "Name": "Brown, Mrs. Thomas William Solomon (Elizabeth Catherine Ford)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -9441,7 +9441,7 @@ const titanicData =
       "Age": 31,
       "Fare": 52,
       "Name": "Davidson, Mr. Thornton",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9455,7 +9455,7 @@ const titanicData =
       "Age": 70,
       "Fare": 10.5,
       "Name": "Mitchell, Mr. Henry Michael",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9469,7 +9469,7 @@ const titanicData =
       "Age": 31,
       "Fare": 13,
       "Name": "Wilhelms, Mr. Charles",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9483,7 +9483,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Watson, Mr. Ennis Hastings",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9497,7 +9497,7 @@ const titanicData =
       "Age": 18,
       "Fare": 7.775,
       "Name": "Edvardsson, Mr. Gustaf Hjalmar",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9511,7 +9511,7 @@ const titanicData =
       "Age": 24.5,
       "Fare": 8.05,
       "Name": "Sawyer, Mr. Frederick Charles",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9525,7 +9525,7 @@ const titanicData =
       "Age": 18,
       "Fare": 9.8417,
       "Name": "Turja, Miss. Anna Sofia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -9539,7 +9539,7 @@ const titanicData =
       "Age": 43,
       "Fare": 46.9,
       "Name": "Goodwin, Mrs. Frederick (Augusta Tyler)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -9553,7 +9553,7 @@ const titanicData =
       "Age": 36,
       "Fare": 512.3292,
       "Name": "Cardeza, Mr. Thomas Drake Martinez",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -9567,7 +9567,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.1375,
       "Name": "Peters, Miss. Katie",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -9581,7 +9581,7 @@ const titanicData =
       "Age": 27,
       "Fare": 76.7292,
       "Name": "Hassab, Mr. Hammad",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -9595,7 +9595,7 @@ const titanicData =
       "Age": 20,
       "Fare": 9.225,
       "Name": "Olsvigen, Mr. Thor Anderson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9609,7 +9609,7 @@ const titanicData =
       "Age": 14,
       "Fare": 46.9,
       "Name": "Goodwin, Mr. Charles Edward",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9623,7 +9623,7 @@ const titanicData =
       "Age": 60,
       "Fare": 39,
       "Name": "Brown, Mr. Thomas William Solomon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9637,7 +9637,7 @@ const titanicData =
       "Age": 25,
       "Fare": 41.5792,
       "Name": "Laroche, Mr. Joseph Philippe Lemercier",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -9651,7 +9651,7 @@ const titanicData =
       "Age": 14,
       "Fare": 39.6875,
       "Name": "Panula, Mr. Jaako Arnold",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9665,7 +9665,7 @@ const titanicData =
       "Age": 19,
       "Fare": 10.1708,
       "Name": "Dakic, Mr. Branko",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9679,7 +9679,7 @@ const titanicData =
       "Age": 18,
       "Fare": 7.7958,
       "Name": "Fischer, Mr. Eberhard Thelander",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9693,7 +9693,7 @@ const titanicData =
       "Age": 15,
       "Fare": 211.3375,
       "Name": "Madill, Miss. Georgette Alexandra",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -9707,7 +9707,7 @@ const titanicData =
       "Age": 31,
       "Fare": 57,
       "Name": "Dick, Mr. Albert Adrian",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9721,7 +9721,7 @@ const titanicData =
       "Age": 4,
       "Fare": 13.4167,
       "Name": "Karun, Miss. Manca",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -9735,7 +9735,7 @@ const titanicData =
       "Age": null,
       "Fare": 56.4958,
       "Name": "Lam, Mr. Ali",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9749,7 +9749,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.225,
       "Name": "Saad, Mr. Khalil",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -9763,7 +9763,7 @@ const titanicData =
       "Age": 60,
       "Fare": 26.55,
       "Name": "Weir, Col. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9777,7 +9777,7 @@ const titanicData =
       "Age": 52,
       "Fare": 13.5,
       "Name": "Chapman, Mr. Charles Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9791,7 +9791,7 @@ const titanicData =
       "Age": 44,
       "Fare": 8.05,
       "Name": "Kelly, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9805,7 +9805,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.7333,
       "Name": "Mullens, Miss. Katherine \"Katie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -9819,7 +9819,7 @@ const titanicData =
       "Age": 49,
       "Fare": 110.8833,
       "Name": "Thayer, Mr. John Borland",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -9833,7 +9833,7 @@ const titanicData =
       "Age": 42,
       "Fare": 7.65,
       "Name": "Humblen, Mr. Adolf Mathias Nicolai Olsen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9847,7 +9847,7 @@ const titanicData =
       "Age": 18,
       "Fare": 227.525,
       "Name": "Astor, Mrs. John Jacob (Madeleine Talmadge Force)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -9861,7 +9861,7 @@ const titanicData =
       "Age": 35,
       "Fare": 26.2875,
       "Name": "Silverthorne, Mr. Spencer Victor",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9875,7 +9875,7 @@ const titanicData =
       "Age": 18,
       "Fare": 14.4542,
       "Name": "Barbara, Miss. Saiide",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -9889,7 +9889,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.7417,
       "Name": "Gallagher, Mr. Martin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -9903,7 +9903,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.8542,
       "Name": "Hansen, Mr. Henrik Juul",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -9917,7 +9917,7 @@ const titanicData =
       "Age": 39,
       "Fare": 26,
       "Name": "Morley, Mr. Henry Samuel (\"Mr Henry Marshall\")",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -9931,7 +9931,7 @@ const titanicData =
       "Age": 45,
       "Fare": 13.5,
       "Name": "Kelly, Mrs. Florence \"Fannie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -9945,7 +9945,7 @@ const titanicData =
       "Age": 42,
       "Fare": 26.2875,
       "Name": "Calderhead, Mr. Edward Pennington",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -9959,7 +9959,7 @@ const titanicData =
       "Age": 22,
       "Fare": 151.55,
       "Name": "Cleaver, Miss. Alice",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -9973,7 +9973,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.2458,
       "Name": "Moubarek, Master. Halim Gonios (\"William George\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -9987,7 +9987,7 @@ const titanicData =
       "Age": 24,
       "Fare": 49.5042,
       "Name": "Mayne, Mlle. Berthe Antonine (\"Mrs de Villiers\")",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -10001,7 +10001,7 @@ const titanicData =
       "Age": null,
       "Fare": 26.55,
       "Name": "Klaber, Mr. Herman",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10015,7 +10015,7 @@ const titanicData =
       "Age": 48,
       "Fare": 52,
       "Name": "Taylor, Mr. Elmer Zebley",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10029,7 +10029,7 @@ const titanicData =
       "Age": 29,
       "Fare": 9.4833,
       "Name": "Larsson, Mr. August Viktor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10043,7 +10043,7 @@ const titanicData =
       "Age": 52,
       "Fare": 13,
       "Name": "Greenberg, Mr. Samuel",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10057,7 +10057,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.65,
       "Name": "Soholt, Mr. Peter Andreas Lauritz Andersen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10071,7 +10071,7 @@ const titanicData =
       "Age": 38,
       "Fare": 227.525,
       "Name": "Endres, Miss. Caroline Louise",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -10085,7 +10085,7 @@ const titanicData =
       "Age": 27,
       "Fare": 10.5,
       "Name": "Troutt, Miss. Edwina Celia \"Winnie\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10099,7 +10099,7 @@ const titanicData =
       "Age": null,
       "Fare": 15.5,
       "Name": "McEvoy, Mr. Michael",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -10113,7 +10113,7 @@ const titanicData =
       "Age": 33,
       "Fare": 7.775,
       "Name": "Johnson, Mr. Malkolm Joackim",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10127,7 +10127,7 @@ const titanicData =
       "Age": 6,
       "Fare": 33,
       "Name": "Harper, Miss. Annie Jessie \"Nina\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10141,7 +10141,7 @@ const titanicData =
       "Age": 17,
       "Fare": 7.0542,
       "Name": "Jensen, Mr. Svend Lauritz",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10155,7 +10155,7 @@ const titanicData =
       "Age": 34,
       "Fare": 13,
       "Name": "Gillespie, Mr. William Henry",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10169,7 +10169,7 @@ const titanicData =
       "Age": 50,
       "Fare": 13,
       "Name": "Hodges, Mr. Henry Price",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10183,7 +10183,7 @@ const titanicData =
       "Age": 27,
       "Fare": 53.1,
       "Name": "Chambers, Mr. Norman Campbell",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10197,7 +10197,7 @@ const titanicData =
       "Age": 20,
       "Fare": 8.6625,
       "Name": "Oreskovic, Mr. Luka",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10211,7 +10211,7 @@ const titanicData =
       "Age": 30,
       "Fare": 21,
       "Name": "Renouf, Mrs. Peter Henry (Lillian Jefferys)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10225,7 +10225,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.7375,
       "Name": "Mannion, Miss. Margareth",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -10239,7 +10239,7 @@ const titanicData =
       "Age": 25,
       "Fare": 26,
       "Name": "Bryhl, Mr. Kurt Arnold Gottfrid",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10253,7 +10253,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.925,
       "Name": "Ilmakangas, Miss. Pieta Sofia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -10267,7 +10267,7 @@ const titanicData =
       "Age": 29,
       "Fare": 211.3375,
       "Name": "Allen, Miss. Elisabeth Walton",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -10281,7 +10281,7 @@ const titanicData =
       "Age": 11,
       "Fare": 18.7875,
       "Name": "Hassan, Mr. Houssein G N",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -10295,7 +10295,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Knight, Mr. Robert J",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10309,7 +10309,7 @@ const titanicData =
       "Age": 23,
       "Fare": 13,
       "Name": "Berriman, Mr. William John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10323,7 +10323,7 @@ const titanicData =
       "Age": 23,
       "Fare": 13,
       "Name": "Troupiansky, Mr. Moses Aaron",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10337,7 +10337,7 @@ const titanicData =
       "Age": 28.5,
       "Fare": 16.1,
       "Name": "Williams, Mr. Leslie",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10351,7 +10351,7 @@ const titanicData =
       "Age": 48,
       "Fare": 34.375,
       "Name": "Ford, Mrs. Edward (Margaret Ann Watson)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -10365,7 +10365,7 @@ const titanicData =
       "Age": 35,
       "Fare": 512.3292,
       "Name": "Lesurer, Mr. Gustave J",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -10379,7 +10379,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Ivanoff, Mr. Kanio",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10393,7 +10393,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Nankoff, Mr. Minko",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10407,7 +10407,7 @@ const titanicData =
       "Age": null,
       "Fare": 30,
       "Name": "Hawksford, Mr. Walter James",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10421,7 +10421,7 @@ const titanicData =
       "Age": 36,
       "Fare": 78.85,
       "Name": "Cavendish, Mr. Tyrell William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10435,7 +10435,7 @@ const titanicData =
       "Age": 21,
       "Fare": 262.375,
       "Name": "Ryerson, Miss. Susan Parker \"Suzette\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -10449,7 +10449,7 @@ const titanicData =
       "Age": 24,
       "Fare": 16.1,
       "Name": "McNamee, Mr. Neal",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10463,7 +10463,7 @@ const titanicData =
       "Age": 31,
       "Fare": 7.925,
       "Name": "Stranden, Mr. Juho",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10477,7 +10477,7 @@ const titanicData =
       "Age": 70,
       "Fare": 71,
       "Name": "Crosby, Capt. Edward Gifford",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10491,7 +10491,7 @@ const titanicData =
       "Age": 16,
       "Fare": 20.25,
       "Name": "Abbott, Mr. Rossmore Edward",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10505,7 +10505,7 @@ const titanicData =
       "Age": 30,
       "Fare": 13,
       "Name": "Sinkkonen, Miss. Anna",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10519,7 +10519,7 @@ const titanicData =
       "Age": 19,
       "Fare": 53.1,
       "Name": "Marvin, Mr. Daniel Warner",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -10533,7 +10533,7 @@ const titanicData =
       "Age": 31,
       "Fare": 7.75,
       "Name": "Connaghton, Mr. Michael",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -10547,7 +10547,7 @@ const titanicData =
       "Age": 4,
       "Fare": 23,
       "Name": "Wells, Miss. Joan",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10561,7 +10561,7 @@ const titanicData =
       "Age": 6,
       "Fare": 12.475,
       "Name": "Moor, Master. Meier",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10575,7 +10575,7 @@ const titanicData =
       "Age": 33,
       "Fare": 9.5,
       "Name": "Vande Velde, Mr. Johannes Joseph",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10589,7 +10589,7 @@ const titanicData =
       "Age": 23,
       "Fare": 7.8958,
       "Name": "Jonkoff, Mr. Lalio",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10603,7 +10603,7 @@ const titanicData =
       "Age": 48,
       "Fare": 65,
       "Name": "Herman, Mrs. Samuel (Jane Laver)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10617,7 +10617,7 @@ const titanicData =
       "Age": 0.67,
       "Fare": 14.5,
       "Name": "Hamalainen, Master. Viljo",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10631,7 +10631,7 @@ const titanicData =
       "Age": 28,
       "Fare": 7.7958,
       "Name": "Carlsson, Mr. August Sigfrid",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10645,7 +10645,7 @@ const titanicData =
       "Age": 18,
       "Fare": 11.5,
       "Name": "Bailey, Mr. Percy Andrew",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -10659,7 +10659,7 @@ const titanicData =
       "Age": 34,
       "Fare": 8.05,
       "Name": "Theobald, Mr. Thomas Leonard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10673,7 +10673,7 @@ const titanicData =
       "Age": 33,
       "Fare": 86.5,
       "Name": "Rothes, the Countess. of (Lucy Noel Martha Dyer-Edwards)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -10687,7 +10687,7 @@ const titanicData =
       "Age": null,
       "Fare": 14.5,
       "Name": "Garfirth, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10701,7 +10701,7 @@ const titanicData =
       "Age": 41,
       "Fare": 7.125,
       "Name": "Nirva, Mr. Iisakki Antino Aijo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10715,7 +10715,7 @@ const titanicData =
       "Age": 20,
       "Fare": 7.2292,
       "Name": "Barah, Mr. Hanna Assi",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -10729,7 +10729,7 @@ const titanicData =
       "Age": 36,
       "Fare": 120,
       "Name": "Carter, Mrs. William Ernest (Lucile Polk)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -10743,7 +10743,7 @@ const titanicData =
       "Age": 16,
       "Fare": 7.775,
       "Name": "Eklund, Mr. Hans Linus",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10757,7 +10757,7 @@ const titanicData =
       "Age": 51,
       "Fare": 77.9583,
       "Name": "Hogeboom, Mrs. John C (Anna Andrews)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -10771,7 +10771,7 @@ const titanicData =
       "Age": null,
       "Fare": 39.6,
       "Name": "Brewe, Dr. Arthur Jackson",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -10785,7 +10785,7 @@ const titanicData =
       "Age": 30.5,
       "Fare": 7.75,
       "Name": "Mangan, Miss. Mary",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -10799,7 +10799,7 @@ const titanicData =
       "Age": null,
       "Fare": 24.15,
       "Name": "Moran, Mr. Daniel J",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -10813,7 +10813,7 @@ const titanicData =
       "Age": 32,
       "Fare": 8.3625,
       "Name": "Gronnestad, Mr. Daniel Danielsen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10827,7 +10827,7 @@ const titanicData =
       "Age": 24,
       "Fare": 9.5,
       "Name": "Lievens, Mr. Rene Aime",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10841,7 +10841,7 @@ const titanicData =
       "Age": 48,
       "Fare": 7.8542,
       "Name": "Jensen, Mr. Niels Peder",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10855,7 +10855,7 @@ const titanicData =
       "Age": 57,
       "Fare": 10.5,
       "Name": "Mack, Mrs. (Mary)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10869,7 +10869,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.225,
       "Name": "Elias, Mr. Dibo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -10883,7 +10883,7 @@ const titanicData =
       "Age": 54,
       "Fare": 23,
       "Name": "Hocking, Mrs. Elizabeth (Eliza Needs)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -10897,7 +10897,7 @@ const titanicData =
       "Age": 18,
       "Fare": 7.75,
       "Name": "Myhrman, Mr. Pehr Fabian Oliver Malkolm",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -10911,7 +10911,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Tobin, Mr. Roger",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -10925,7 +10925,7 @@ const titanicData =
       "Age": 5,
       "Fare": 12.475,
       "Name": "Emanuel, Miss. Virginia Ethel",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -10939,7 +10939,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.7375,
       "Name": "Kilgannon, Mr. Thomas J",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -10953,7 +10953,7 @@ const titanicData =
       "Age": 43,
       "Fare": 211.3375,
       "Name": "Robert, Mrs. Edward Scott (Elisabeth Walton McMillan)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -10967,7 +10967,7 @@ const titanicData =
       "Age": 13,
       "Fare": 7.2292,
       "Name": "Ayoub, Miss. Banoura",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -10981,7 +10981,7 @@ const titanicData =
       "Age": 17,
       "Fare": 57,
       "Name": "Dick, Mrs. Albert Adrian (Vera Gillespie)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -10995,7 +10995,7 @@ const titanicData =
       "Age": 29,
       "Fare": 30,
       "Name": "Long, Mr. Milton Clyde",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -11009,7 +11009,7 @@ const titanicData =
       "Age": null,
       "Fare": 23.45,
       "Name": "Johnston, Mr. Andrew G",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11023,7 +11023,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.05,
       "Name": "Ali, Mr. William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11037,7 +11037,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.25,
       "Name": "Harmer, Mr. Abraham (David Lishin)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11051,7 +11051,7 @@ const titanicData =
       "Age": 18,
       "Fare": 7.4958,
       "Name": "Sjoblom, Miss. Anna Sofia",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11065,7 +11065,7 @@ const titanicData =
       "Age": 8,
       "Fare": 29.125,
       "Name": "Rice, Master. George Hugh",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -11079,7 +11079,7 @@ const titanicData =
       "Age": 1,
       "Fare": 20.575,
       "Name": "Dean, Master. Bertram Vere",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11093,7 +11093,7 @@ const titanicData =
       "Age": 46,
       "Fare": 79.2,
       "Name": "Guggenheim, Mr. Benjamin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -11107,7 +11107,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "Keane, Mr. Andrew \"Andy\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -11121,7 +11121,7 @@ const titanicData =
       "Age": 16,
       "Fare": 26,
       "Name": "Gaskell, Mr. Alfred",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11135,7 +11135,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Miss. Stella Anna",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11149,7 +11149,7 @@ const titanicData =
       "Age": null,
       "Fare": 30.6958,
       "Name": "Hoyt, Mr. William Fisher",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -11163,7 +11163,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.8958,
       "Name": "Dantcheff, Mr. Ristiu",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11177,7 +11177,7 @@ const titanicData =
       "Age": 39,
       "Fare": 13,
       "Name": "Otter, Mr. Richard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11191,7 +11191,7 @@ const titanicData =
       "Age": 49,
       "Fare": 25.9292,
       "Name": "Leader, Dr. Alice (Farnham)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -11205,7 +11205,7 @@ const titanicData =
       "Age": 31,
       "Fare": 8.6833,
       "Name": "Osman, Mrs. Mara",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11219,7 +11219,7 @@ const titanicData =
       "Age": 30,
       "Fare": 7.2292,
       "Name": "Ibrahim Shawah, Mr. Yousseff",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -11233,7 +11233,7 @@ const titanicData =
       "Age": 30,
       "Fare": 24.15,
       "Name": "Van Impe, Mrs. Jean Baptiste (Rosalie Paula Govaert)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11247,7 +11247,7 @@ const titanicData =
       "Age": 34,
       "Fare": 13,
       "Name": "Ponesell, Mr. Martin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11261,7 +11261,7 @@ const titanicData =
       "Age": 31,
       "Fare": 26.25,
       "Name": "Collyer, Mrs. Harvey (Charlotte Annie Tate)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -11275,7 +11275,7 @@ const titanicData =
       "Age": 11,
       "Fare": 120,
       "Name": "Carter, Master. William Thornton II",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -11289,7 +11289,7 @@ const titanicData =
       "Age": 0.42,
       "Fare": 8.5167,
       "Name": "Thomas, Master. Assad Alexander",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -11303,7 +11303,7 @@ const titanicData =
       "Age": 27,
       "Fare": 6.975,
       "Name": "Hedman, Mr. Oskar Arvid",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11317,7 +11317,7 @@ const titanicData =
       "Age": 31,
       "Fare": 7.775,
       "Name": "Johansson, Mr. Karl Johan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11331,7 +11331,7 @@ const titanicData =
       "Age": 39,
       "Fare": 0,
       "Name": "Andrews, Mr. Thomas Jr",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -11345,7 +11345,7 @@ const titanicData =
       "Age": 18,
       "Fare": 7.775,
       "Name": "Pettersson, Miss. Ellen Natalia",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11359,7 +11359,7 @@ const titanicData =
       "Age": 39,
       "Fare": 13,
       "Name": "Meyer, Mr. August",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11373,7 +11373,7 @@ const titanicData =
       "Age": 33,
       "Fare": 53.1,
       "Name": "Chambers, Mrs. Norman Campbell (Bertha Griggs)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -11387,7 +11387,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.8875,
       "Name": "Alexander, Mr. William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11401,7 +11401,7 @@ const titanicData =
       "Age": 39,
       "Fare": 24.15,
       "Name": "Lester, Mr. James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11415,7 +11415,7 @@ const titanicData =
       "Age": 35,
       "Fare": 10.5,
       "Name": "Slemen, Mr. Richard James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11429,7 +11429,7 @@ const titanicData =
       "Age": 6,
       "Fare": 31.275,
       "Name": "Andersson, Miss. Ebba Iris Alfrida",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11443,7 +11443,7 @@ const titanicData =
       "Age": 30.5,
       "Fare": 8.05,
       "Name": "Tomlin, Mr. Ernest Portage",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11457,7 +11457,7 @@ const titanicData =
       "Age": null,
       "Fare": 0,
       "Name": "Fry, Mr. Richard",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -11471,7 +11471,7 @@ const titanicData =
       "Age": 23,
       "Fare": 7.925,
       "Name": "Heininen, Miss. Wendla Maria",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11485,7 +11485,7 @@ const titanicData =
       "Age": 31,
       "Fare": 37.0042,
       "Name": "Mallet, Mr. Albert",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -11499,7 +11499,7 @@ const titanicData =
       "Age": 43,
       "Fare": 6.45,
       "Name": "Holm, Mr. John Fredrik Alexander",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11513,7 +11513,7 @@ const titanicData =
       "Age": 10,
       "Fare": 27.9,
       "Name": "Skoog, Master. Karl Thorsten",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11527,7 +11527,7 @@ const titanicData =
       "Age": 52,
       "Fare": 93.5,
       "Name": "Hays, Mrs. Charles Melville (Clara Jennings Gregg)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -11541,7 +11541,7 @@ const titanicData =
       "Age": 27,
       "Fare": 8.6625,
       "Name": "Lulic, Mr. Nikola",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11555,7 +11555,7 @@ const titanicData =
       "Age": 38,
       "Fare": 0,
       "Name": "Reuchlin, Jonkheer. John George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -11569,7 +11569,7 @@ const titanicData =
       "Age": 27,
       "Fare": 12.475,
       "Name": "Moor, Mrs. (Beila)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -11583,7 +11583,7 @@ const titanicData =
       "Age": 2,
       "Fare": 39.6875,
       "Name": "Panula, Master. Urho Abraham",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11597,7 +11597,7 @@ const titanicData =
       "Age": null,
       "Fare": 6.95,
       "Name": "Flynn, Mr. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -11611,7 +11611,7 @@ const titanicData =
       "Age": null,
       "Fare": 56.4958,
       "Name": "Lam, Mr. Len",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11625,7 +11625,7 @@ const titanicData =
       "Age": 1,
       "Fare": 37.0042,
       "Name": "Mallet, Master. Andre",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "male"
@@ -11639,7 +11639,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.75,
       "Name": "McCormack, Mr. Thomas Joseph",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"
@@ -11653,7 +11653,7 @@ const titanicData =
       "Age": 62,
       "Fare": 80,
       "Name": "Stone, Mrs. George Nelson (Martha Evelyn)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": null,
       "Sex": "female"
@@ -11667,7 +11667,7 @@ const titanicData =
       "Age": 15,
       "Fare": 14.4542,
       "Name": "Yasbeck, Mrs. Antoni (Selini Alexander)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -11681,7 +11681,7 @@ const titanicData =
       "Age": 0.83,
       "Fare": 18.75,
       "Name": "Richards, Master. George Sibley",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11695,7 +11695,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Saad, Mr. Amin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -11709,7 +11709,7 @@ const titanicData =
       "Age": 23,
       "Fare": 7.8542,
       "Name": "Augustsson, Mr. Albert",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11723,7 +11723,7 @@ const titanicData =
       "Age": 18,
       "Fare": 8.3,
       "Name": "Allum, Mr. Owen George",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11737,7 +11737,7 @@ const titanicData =
       "Age": 39,
       "Fare": 83.1583,
       "Name": "Compton, Miss. Sara Rebecca",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -11751,7 +11751,7 @@ const titanicData =
       "Age": 21,
       "Fare": 8.6625,
       "Name": "Pasic, Mr. Jakob",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11765,7 +11765,7 @@ const titanicData =
       "Age": null,
       "Fare": 8.05,
       "Name": "Sirota, Mr. Maurice",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11779,7 +11779,7 @@ const titanicData =
       "Age": 32,
       "Fare": 56.4958,
       "Name": "Chip, Mr. Chang",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11793,7 +11793,7 @@ const titanicData =
       "Age": null,
       "Fare": 29.7,
       "Name": "Marechal, Mr. Pierre",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -11807,7 +11807,7 @@ const titanicData =
       "Age": 20,
       "Fare": 7.925,
       "Name": "Alhomaki, Mr. Ilmari Rudolf",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11821,7 +11821,7 @@ const titanicData =
       "Age": 16,
       "Fare": 10.5,
       "Name": "Mudd, Mr. Thomas Charles",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11835,7 +11835,7 @@ const titanicData =
       "Age": 30,
       "Fare": 31,
       "Name": "Serepeca, Miss. Augusta",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -11849,7 +11849,7 @@ const titanicData =
       "Age": 34.5,
       "Fare": 6.4375,
       "Name": "Lemberopolous, Mr. Peter L",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -11863,7 +11863,7 @@ const titanicData =
       "Age": 17,
       "Fare": 8.6625,
       "Name": "Culumovic, Mr. Jeso",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11877,7 +11877,7 @@ const titanicData =
       "Age": 42,
       "Fare": 7.55,
       "Name": "Abbing, Mr. Anthony",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11891,7 +11891,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Mr. Douglas Bullen",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11905,7 +11905,7 @@ const titanicData =
       "Age": 35,
       "Fare": 7.8958,
       "Name": "Markoff, Mr. Marin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -11919,7 +11919,7 @@ const titanicData =
       "Age": 28,
       "Fare": 33,
       "Name": "Harper, Rev. John",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -11933,7 +11933,7 @@ const titanicData =
       "Age": null,
       "Fare": 89.1042,
       "Name": "Goldenberg, Mrs. Samuel L (Edwiga Grabowska)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -11947,7 +11947,7 @@ const titanicData =
       "Age": 4,
       "Fare": 31.275,
       "Name": "Andersson, Master. Sigvard Harald Elias",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11961,7 +11961,7 @@ const titanicData =
       "Age": 74,
       "Fare": 7.775,
       "Name": "Svensson, Mr. Johan",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -11975,7 +11975,7 @@ const titanicData =
       "Age": 9,
       "Fare": 15.2458,
       "Name": "Boulos, Miss. Nourelain",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -11989,7 +11989,7 @@ const titanicData =
       "Age": 16,
       "Fare": 39.4,
       "Name": "Lines, Miss. Mary Conover",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -12003,7 +12003,7 @@ const titanicData =
       "Age": 44,
       "Fare": 26,
       "Name": "Carter, Mrs. Ernest Courtenay (Lilian Hughes)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -12017,7 +12017,7 @@ const titanicData =
       "Age": 18,
       "Fare": 9.35,
       "Name": "Aks, Mrs. Sam (Leah Rosen)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -12031,7 +12031,7 @@ const titanicData =
       "Age": 45,
       "Fare": 164.8667,
       "Name": "Wick, Mrs. George Dennick (Mary Hitchcock)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -12045,7 +12045,7 @@ const titanicData =
       "Age": 51,
       "Fare": 26.55,
       "Name": "Daly, Mr. Peter Denis ",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -12059,7 +12059,7 @@ const titanicData =
       "Age": 24,
       "Fare": 19.2583,
       "Name": "Baclini, Mrs. Solomon (Latifa Qurban)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -12073,7 +12073,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.2292,
       "Name": "Razi, Mr. Raihed",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "male"
@@ -12087,7 +12087,7 @@ const titanicData =
       "Age": 41,
       "Fare": 14.1083,
       "Name": "Hansen, Mr. Claus Peter",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12101,7 +12101,7 @@ const titanicData =
       "Age": 21,
       "Fare": 11.5,
       "Name": "Giles, Mr. Frederick Edward",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -12115,7 +12115,7 @@ const titanicData =
       "Age": 48,
       "Fare": 25.9292,
       "Name": "Swift, Mrs. Frederick Joel (Margaret Welles Barron)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -12129,7 +12129,7 @@ const titanicData =
       "Age": null,
       "Fare": 69.55,
       "Name": "Sage, Miss. Dorothy Edith \"Dolly\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -12143,7 +12143,7 @@ const titanicData =
       "Age": 24,
       "Fare": 13,
       "Name": "Gill, Mr. John William",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -12157,7 +12157,7 @@ const titanicData =
       "Age": 42,
       "Fare": 13,
       "Name": "Bystrom, Mrs. (Karolina)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -12171,7 +12171,7 @@ const titanicData =
       "Age": 27,
       "Fare": 13.8583,
       "Name": "Duran y More, Miss. Asuncion",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -12185,7 +12185,7 @@ const titanicData =
       "Age": 31,
       "Fare": 50.4958,
       "Name": "Roebling, Mr. Washington Augustus II",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -12199,7 +12199,7 @@ const titanicData =
       "Age": null,
       "Fare": 9.5,
       "Name": "van Melkebeke, Mr. Philemon",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12213,7 +12213,7 @@ const titanicData =
       "Age": 4,
       "Fare": 11.1333,
       "Name": "Johnson, Master. Harold Theodor",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12227,7 +12227,7 @@ const titanicData =
       "Age": 26,
       "Fare": 7.8958,
       "Name": "Balkic, Mr. Cerin",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12241,7 +12241,7 @@ const titanicData =
       "Age": 47,
       "Fare": 52.5542,
       "Name": "Beckwith, Mrs. Richard Leonard (Sallie Monypeny)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -12255,7 +12255,7 @@ const titanicData =
       "Age": 33,
       "Fare": 5,
       "Name": "Carlsson, Mr. Frans Olof",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "male"
@@ -12269,7 +12269,7 @@ const titanicData =
       "Age": 47,
       "Fare": 9,
       "Name": "Vander Cruyssen, Mr. Victor",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12283,7 +12283,7 @@ const titanicData =
       "Age": 28,
       "Fare": 24,
       "Name": "Abelson, Mrs. Samuel (Hannah Wizosky)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "C",
       "Sex": "female"
@@ -12297,7 +12297,7 @@ const titanicData =
       "Age": 15,
       "Fare": 7.225,
       "Name": "Najib, Miss. Adele Kiamie \"Jane\"",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 3,
       "Embarked": "C",
       "Sex": "female"
@@ -12311,7 +12311,7 @@ const titanicData =
       "Age": 20,
       "Fare": 9.8458,
       "Name": "Gustafsson, Mr. Alfred Ossian",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12325,7 +12325,7 @@ const titanicData =
       "Age": 19,
       "Fare": 7.8958,
       "Name": "Petroff, Mr. Nedelio",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12339,7 +12339,7 @@ const titanicData =
       "Age": null,
       "Fare": 7.8958,
       "Name": "Laleff, Mr. Kristo",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12353,7 +12353,7 @@ const titanicData =
       "Age": 56,
       "Fare": 83.1583,
       "Name": "Potter, Mrs. Thomas Jr (Lily Alexenia Wilson)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "female"
@@ -12367,7 +12367,7 @@ const titanicData =
       "Age": 25,
       "Fare": 26,
       "Name": "Shelley, Mrs. William (Imanita Parrish Hall)",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "female"
@@ -12381,7 +12381,7 @@ const titanicData =
       "Age": 33,
       "Fare": 7.8958,
       "Name": "Markun, Mr. Johann",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12395,7 +12395,7 @@ const titanicData =
       "Age": 22,
       "Fare": 10.5167,
       "Name": "Dahlberg, Miss. Gerda Ulrika",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -12409,7 +12409,7 @@ const titanicData =
       "Age": 28,
       "Fare": 10.5,
       "Name": "Banfield, Mr. Frederick James",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -12423,7 +12423,7 @@ const titanicData =
       "Age": 25,
       "Fare": 7.05,
       "Name": "Sutehall, Mr. Henry Jr",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "male"
@@ -12437,7 +12437,7 @@ const titanicData =
       "Age": 39,
       "Fare": 29.125,
       "Name": "Rice, Mrs. William (Margaret Norton)",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "female"
@@ -12451,7 +12451,7 @@ const titanicData =
       "Age": 27,
       "Fare": 13,
       "Name": "Montvila, Rev. Juozas",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 2,
       "Embarked": "S",
       "Sex": "male"
@@ -12465,7 +12465,7 @@ const titanicData =
       "Age": 19,
       "Fare": 30,
       "Name": "Graham, Miss. Margaret Edith",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "S",
       "Sex": "female"
@@ -12479,7 +12479,7 @@ const titanicData =
       "Age": null,
       "Fare": 23.45,
       "Name": "Johnston, Miss. Catherine Helen \"Carrie\"",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "S",
       "Sex": "female"
@@ -12493,7 +12493,7 @@ const titanicData =
       "Age": 26,
       "Fare": 30,
       "Name": "Behr, Mr. Karl Howell",
-      "Survived": 1,
+      "Survived": true,
       "Pclass": 1,
       "Embarked": "C",
       "Sex": "male"
@@ -12507,7 +12507,7 @@ const titanicData =
       "Age": 32,
       "Fare": 7.75,
       "Name": "Dooley, Mr. Patrick",
-      "Survived": 0,
+      "Survived": false,
       "Pclass": 3,
       "Embarked": "Q",
       "Sex": "male"

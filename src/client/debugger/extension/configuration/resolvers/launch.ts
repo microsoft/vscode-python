@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/diagnostics/checks/invalidPythonPathInDebugger';
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
@@ -63,8 +62,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
         if (typeof debugConfiguration.envFile !== 'string' && workspaceFolder) {
-            const envFile = path.join(workspaceFolder.fsPath, '.env');
-            debugConfiguration.envFile = envFile;
+            const settings = this.configurationService.getSettings(workspaceFolder);
+            debugConfiguration.envFile = settings.envFile;
         }
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;

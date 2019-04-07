@@ -23,6 +23,7 @@ import {
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -36,12 +37,14 @@ import {
     ICell,
     ICodeCssGenerator,
     IConnection,
-    IDataExplorerProvider,
     IDataScienceExtraSettings,
+    IDataViewerProvider,
     IHistory,
     IHistoryInfo,
     IHistoryProvider,
     IJupyterExecution,
+    IJupyterVariable,
+    IJupyterVariables,
     INotebookExporter,
     INotebookServer,
     InterruptResult,
@@ -94,7 +97,8 @@ export class History implements IHistory {
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
-        @inject(IDataExplorerProvider) private dataExplorerProvider: IDataExplorerProvider
+        @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
+        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
         ) {
 
         // Create our unique id. We use this to skip messages we send to other history windows
@@ -237,9 +241,16 @@ export class History implements IHistory {
                 this.dispatchMessage(message, payload, this.onRemoteAddedCode);
                 break;
 
-            case HistoryMessages.ShowDataExplorer:
-                this.showDataExplorer()
-                    .ignoreErrors();
+            case HistoryMessages.ShowDataViewer:
+                this.dispatchMessage(message, payload, this.showDataViewer);
+                break;
+
+            case HistoryMessages.GetVariablesRequest:
+                this.requestVariables().ignoreErrors();
+                break;
+
+            case HistoryMessages.GetVariableValueRequest:
+                this.requestVariableValue(payload).ignoreErrors();
                 break;
 
             default:
@@ -357,11 +368,23 @@ export class History implements IHistory {
         }
     }
 
-    private async showDataExplorer() {
+    private async showDataViewer(variable: string) : Promise<void> {
         try {
-            return this.dataExplorerProvider.create([]);
+            const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
+            if (!pandasVersion) {
+                sendTelemetryEvent(Telemetry.PandasNotInstalled);
+                // Warn user that there is no pandas.
+                this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
+            } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
+                sendTelemetryEvent(Telemetry.PandasTooOld);
+                // Warn user that we cannot start because pandas is too old.
+                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+                this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
+            } else {
+                await this.dataExplorerProvider.create(variable);
+            }
         } catch (e) {
-            this.applicationShell.showErrorMessage(e);
+            this.applicationShell.showErrorMessage(e.toString());
         }
     }
 
@@ -489,7 +512,13 @@ export class History implements IHistory {
     private submitNewCell(info: ISubmitNewCell) {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
+            // Send to ourselves.
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
+
+            // Activate the other side, and send as if came from a file
+            this.historyProvider.getOrCreateActive().then(_v => {
+                this.shareMessage(HistoryMessages.RemoteAddCode, {code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id});
+            }).ignoreErrors();
         }
     }
 
@@ -566,6 +595,7 @@ export class History implements IHistory {
 
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
+                traceInfo(`Finished execution for ${id}`);
             }
         } catch (err) {
             status.dispose();
@@ -667,7 +697,7 @@ export class History implements IHistory {
                 if (this.jupyterServer) {
                     const server = this.jupyterServer;
                     this.jupyterServer = undefined;
-                    server.dispose().ignoreErrors(); // Don't care what happens as we're disconnected.
+                    server.shutdown().ignoreErrors(); // Don't care what happens as we're disconnected.
                 }
             }
         } catch {
@@ -839,6 +869,7 @@ export class History implements IHistory {
     }
 
     private shareMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        // Send our remote message.
         this.messageListener.onMessage(type.toString(), payload);
     }
 
@@ -960,6 +991,22 @@ export class History implements IHistory {
 
         } finally {
             status.dispose();
+        }
+    }
+
+    private requestVariables = async (): Promise<void> => {
+        // Request our new list of variables
+        const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+        this.postMessage(HistoryMessages.GetVariablesResponse, vars).ignoreErrors();
+    }
+
+    // tslint:disable-next-line: no-any
+    private requestVariableValue = async (payload?: any): Promise<void> => {
+        if (payload) {
+            const targetVar = payload as IJupyterVariable;
+            // Request our variable value
+            const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar);
+            this.postMessage(HistoryMessages.GetVariableValueResponse, varValue).ignoreErrors();
         }
     }
 }

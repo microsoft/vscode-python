@@ -4,14 +4,29 @@
   
  */
 
-.main-panel {
-    font-size: var(--code-font-size);
-    font-family: var(--code-font-family);
+body {
+    background-color: var(--vscode-editor-background);
+}
+
+.background {
+    /* this is simply to eliminate the body style that bootstrap.css forces on us */
     position: absolute;
     bottom: 0;
     top: 0px;
     left: 0px;
     right: 0;
+    background-color: var(--vscode-editor-background);
+}
+
+.main-panel {
+    position: absolute;
+    bottom: 0;
+    top: 0px;
+    left: 0px;
+    right: 0;
+    font-size: var(--code-font-size);
+    font-family: var(--code-font-family);
+    margin: 10px;
     background-color: var(--vscode-editor-background);
 }
 

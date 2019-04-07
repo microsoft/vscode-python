@@ -260,6 +260,7 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER]: DebuggerTelemetry;
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
+    [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     [EventName.DEFINITION]: never | undefined;
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
@@ -275,6 +276,7 @@ export interface IEventNamePropertyMapping {
     [EventName.KNOWN_IMPORT_FROM_FILE]: { import: string };
     [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: string };
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
+    [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;
     [EventName.PYTHON_INTERPRETER]: PythonInterpreterTelemetry;
@@ -308,6 +310,7 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
+    [EventName.UNITTEST_DISABLE]: never | undefined;
     [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
     [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
@@ -328,6 +331,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.PandasNotInstalled]: never | undefined;
+    [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
@@ -345,7 +350,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
-    [Telemetry.ShowDataExplorer]: never | undefined;
+    [Telemetry.ShowDataViewer]: {rows: number | undefined};
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;

@@ -87,6 +87,14 @@ const config: webpack.Configuration = {
                         options: {}
                     }
                 ]
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    'style-loader',
+                    'css-loader',
+                    'sass-loader'
+                ]
             }
         ]
     }
