@@ -60,5 +60,12 @@
         "request": "launch",
         "program": "${file}",
         "console": "externalTerminal"
+    },
+    {
+        "name": "Python: Current File (Debug Console)",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "console": "none"
     }
 ]
