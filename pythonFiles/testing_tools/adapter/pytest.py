@@ -239,7 +239,7 @@ def _parse_item(item, _normcase, _pathsep):
                                        _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
-            print(fullname, testfunc)
+            print(fullname, suites, testfunc)
             # TODO: What to do?
             raise NotImplementedError
     elif kind == 'doctest':
