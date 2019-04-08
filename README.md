@@ -12,11 +12,11 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 <!-- use less words -->
 * Select your Python interpreter by clicking on the status bar
 
-   ![InterpreterSelection](https://microsoft.sharepoint.com/teams/python/Documents/Artifacts/Python%20VS%20Code/Blog%20GIFs/InterpreterSelectionZoomedIn2.gif)
+   ![InterpreterSelection](images\InterpreterSelectionGIF.gif)
 
 * Configure tests by running the ``Configure Tests`` command 
 
-    ![ConfigureTests](https://microsoft.sharepoint.com/teams/python/Documents/Artifacts/Python%20VS%20Code/Blog%20GIFs/ConfigureTestsGIF.gif)
+    ![ConfigureTests](images\ConfigureTestsGIF.gif)
 
 *  Run the ``Select Linter`` command  
 
