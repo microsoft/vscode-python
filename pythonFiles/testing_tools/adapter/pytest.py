@@ -353,9 +353,11 @@ def _parse_node_id(nodeid, kind='function'):
     suites = []
     suiteids = []
     while '::' in parentid:
-        suiteids.insert(0, parentid)
-        parentid, _, suitename = parentid.rpartition('::')
-        suites.insert(0, suitename)
+        fullid = parentid
+        parentid, _, suitename = fullid.rpartition('::')
+        if suitename != '()':
+            suiteids.insert(0, fullid)
+            suites.insert(0, suitename)
     fileid = parentid
 
     return fileid, suiteids, suites, funcid, name, parameterized
