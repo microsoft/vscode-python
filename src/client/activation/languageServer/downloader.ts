@@ -38,17 +38,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     ) {
     }
 
-    public async getDownloadInfo(resource?: Resource) {
+    public async getDownloadInfo(resource: Resource) {
         const info = await this.lsFolderService.getLatestLanguageServerVersion()
             .then(item => item!);
 
         let uri = info.uri;
         if (uri.startsWith('https:')) {
-            if (!resource) {
-                resource = this.workspace.hasWorkspaceFolders
-                    ? this.workspace.workspaceFolders![0].uri
-                    : undefined;
-            }
             const cfg = this.workspace.getConfiguration('http', resource);
             if (!cfg.get<boolean>('proxyStrictSSL', true)) {
                 // tslint:disable-next-line:no-http-string
@@ -58,7 +53,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
 
         return [uri, info.version.raw];
     }
-    public async downloadLanguageServer(destinationFolder: string, resource?: Resource): Promise<void> {
+    public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
         const [downloadUri, lsVersion] = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;

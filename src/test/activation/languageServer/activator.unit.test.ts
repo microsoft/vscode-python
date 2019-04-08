@@ -81,7 +81,7 @@ suite('Language Server - Activator', () => {
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName()).never();
-        verify(lsDownloader.downloadLanguageServer(anything())).never();
+        verify(lsDownloader.downloadLanguageServer(anything(), anything())).never();
     });
     test('Do not download LS if not required', async () => {
         const languageServerFolder = 'Some folder name';
@@ -99,7 +99,7 @@ suite('Language Server - Activator', () => {
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName()).once();
-        verify(lsDownloader.downloadLanguageServer(anything())).never();
+        verify(lsDownloader.downloadLanguageServer(anything(), anything())).never();
     });
     test('Start language server after downloading', async () => {
         const deferred = createDeferred<void>();

@@ -87,7 +87,7 @@ suite('Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo();
+        const [uri, version] = await languageServerDownloader.getDownloadInfo(undefined);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
