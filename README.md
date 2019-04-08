@@ -12,7 +12,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 <!-- use less words -->
 * Select your Python interpreter by clicking on the status bar
 
-   ![InterpreterSelection](images/InterpreterSelectionGIF.gif)
+   ![InterpreterSelection](images/InterpreterSelectionZoom.gif)
 
 * Configure tests by running the ``Configure Tests`` command 
 
