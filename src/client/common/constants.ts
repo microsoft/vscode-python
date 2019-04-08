@@ -38,7 +38,7 @@ export namespace Commands {
     export const Tests_Select_And_Run_File = 'python.selectAndRunTestFile';
     export const Tests_Run_Current_File = 'python.runCurrentTestFile';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
-    export const Refaactor_Extract_Method = 'python.refactorExtractMethod';
+    export const Refactor_Extract_Method = 'python.refactorExtractMethod';
     export const Update_SparkLibrary = 'python.updateSparkLibrary';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
