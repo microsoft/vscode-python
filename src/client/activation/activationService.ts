@@ -100,7 +100,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.currentActivator.activator.dispose();
         }
     }
-    @swallowExceptions('Swtich Language Server')
+    @swallowExceptions('Switch Language Server')
     public async trackLangaugeServerSwitch(jediEnabled: boolean): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<boolean | undefined>('SWITCH_LS', undefined);
         if (typeof state.value !== 'boolean') {
