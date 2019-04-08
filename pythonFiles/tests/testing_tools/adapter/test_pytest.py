@@ -784,7 +784,7 @@ class CollectorTests(unittest.TestCase):
             ('discovered.add_test', None, dict(
                 suiteids=[relfile + '::SpamTests'],
                 test=TestInfo(
-                    id=relfile + '::SpamTests::()::test_spam',
+                    id=relfile + '::SpamTests::test_spam',
                     name='test_spam',
                     path=TestPath(
                         root=testroot,

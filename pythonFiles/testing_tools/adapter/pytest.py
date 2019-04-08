@@ -211,7 +211,7 @@ def _parse_item(item, _normcase, _pathsep):
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
     # Figure out the func, suites, and subs.
-    (fileid, suiteids, suites, funcid, basename, parameterized
+    (nodeid, fileid, suiteids, suites, funcid, basename, parameterized
      ) = _parse_node_id(item.nodeid, kind)
     if kind == 'function':
         funcname = basename
@@ -274,7 +274,7 @@ def _parse_item(item, _normcase, _pathsep):
         # TODO: Support other markers?
 
     test = TestInfo(
-        id=item.nodeid,
+        id=nodeid,
         name=item.name,
         path=TestPath(
             root=testroot,
@@ -352,15 +352,19 @@ def _parse_node_id(nodeid, kind='function'):
 
     suites = []
     suiteids = []
+    parts = [name]
     while '::' in parentid:
         fullid = parentid
         parentid, _, suitename = fullid.rpartition('::')
         if suitename != '()':
             suiteids.insert(0, fullid)
             suites.insert(0, suitename)
+            parts.insert(0, suitename)
     fileid = parentid
 
-    return fileid, suiteids, suites, funcid, name, parameterized
+    parts.insert(0, fileid)
+    nodeid = '::'.join(parts) + parameterized
+    return nodeid, fileid, suiteids, suites, funcid, name, parameterized
 
 
 def _get_item_kind(item):
