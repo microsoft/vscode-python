@@ -59,9 +59,9 @@ Learn more about the rich features of the Python extension:
 
 * [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Support for code cells, plot visualization, variable explorer and more
 
-* [Environments](https://code.visualstudio.com/docs/python/environments)
+* [Environments](https://code.visualstudio.com/docs/python/environments): Support for auto-activation and interpreter selection 
 
-* [Snippets](https://code.visualstudio.com/docs/languages/python#_snippets)
+* [Code Snippets](https://code.visualstudio.com/docs/languages/python#_snippets)
 
 * [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
 
