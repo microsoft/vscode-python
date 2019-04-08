@@ -8,22 +8,26 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 * **Step 2.** Install the Python extension for Visual Studio Code.
 * **Step 3.** Open or create a Python file and start coding!
 
-## Get the best out of the Python extension
-* Select your preferred Python interpreter/version/environment using the `Select Interpreter` command on the Command Palette.
-  + By default we use the one that's on your path.
-  + If you have a workspace open you can also click in the status bar to change the interpreter.
+## Set up your environment 
+<!-- use less words -->
+* Select your Python interpreter by clicking on the status bar
 
-    [GIF HERE / or maybe right after quick start?] 
+   ![InterpreterSelection](https://microsoft.sharepoint.com/teams/python/Documents/Artifacts/Python%20VS%20Code/Blog%20GIFs/InterpreterSelectionZoomedIn2.gif)
 
-*  [Install a linter](https://code.visualstudio.com/docs/python/linting) to get errors and warnings -- you can further customize linting rules to fit your needs.
-* Install `ctags` for Workspace Symbols from [here](http://ctags.sourceforge.net/), or using `brew install ctags` on macOS, to improve performance of code navigation.
+* Configure tests by running the ``Configure Tests`` command 
+
+    ![ConfigureTests](https://microsoft.sharepoint.com/teams/python/Documents/Artifacts/Python%20VS%20Code/Blog%20GIFs/ConfigureTestsGIF.gif)
+
+*  Run the ``Select Linter`` command  
+
+    [GIF starting  with two lines: Ctrl shift p/ mac: cmd shift p]
+
 
 For more information you can:
 * [Follow our Python tutorial](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) with step-by-step instructions for building a simple app.
 * Check out the [Python documentation on the VS Code site](https://code.visualstudio.com/docs/languages/python) for general information about using the extension.
 
 ## Useful commands
-
 Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/Linux) and type in one of the following commands:
 
 Command | Description
@@ -33,97 +37,40 @@ Command | Description
 ```Python: Run Python File in Terminal``` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting ```Run Python File in Terminal```.
 ```Python: Select Linter``` | Switch from PyLint to flake8 or other supported linters.
 ```Format Document``` |Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/editing#_formatting) in the ``settings.json`` file. |
+```Python: Configure Tests``` |  Select a test framework and configure it to display the Test Explorer.|
+
 
 To see all available Python commands, open the Command Palette and type ```Python```.
 
 ## Feature details
 
+Learn more about the rich features of the Python extension:
 
-* IntelliSense
-  + Support for the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) and  [Jedi](https://pypi.org/project/jedi/)
-  + Code navigation ("Go to", "Find all" references)
-  + Code definition (Peek and hover definition, view signatures)
-  + Rename refactoring
+* [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense):  Support for the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) and  [Jedi](https://pypi.org/project/jedi/)
 
-    Learn more
-<!-- I'm not sure what we could add for "Learn more" here -->
 
-* Autocompletion (including PEP 484 and PEP 526 support)
-  + Ability to include custom module paths (e.g. include paths for libraries like Google App Engine, etc.; use the setting `python.autoComplete.extraPaths = []`)
-    
-    [Learn more](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense)
+* [Autocompletion](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense)
+* [Linting](https://code.visualstudio.com/docs/python/linting): Support for [Pylint](https://pypi.org/project/pylint/), [Flake8](https://pypi.org/project/flake8/) and more
+* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Support for [black](https://pypi.org/project/black/), [autopep](https://pypi.org/project/autopep8/) and [yapf](https://pypi.org/project/yapf/) 
 
-* Code formatting
-  + Auto formatting of code upon saving changes (default to 'Off')
-  + Use either [yapf](https://pypi.org/project/yapf/), [autopep8](https://pypi.org/project/autopep8/), or [Black](https://pypi.org/project/black/) for code formatting (defaults to autopep8)
-  
-    [Learn more](https://code.visualstudio.com/docs/python/editing#_formatting)
+* [Debugging](https://code.visualstudio.com/docs/python/debugging): Support for remote, web apps, multi-threaded applications and more 
 
-* Linting
-  + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Flake8](https://pypi.org/project/flake8/), [pep8](https://pypi.org/project/pep8/), [mypy](https://pypi.org/project/mypy/), [Bandit](https://pypi.org/project/bandit/), [pydocstyle](https://pypi.org/project/pydocstyle/), [pylama](https://pypi.org/project/pylama/) and [Prospector](https://pypi.org/project/prospector/) are also supported)
+* [Test Explorer](https://code.visualstudio.com/docs/python/unit-testing): Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.org/project/pytest/), and [nose](https://pypi.org/project/nose/)
 
-    [Learn more](https://code.visualstudio.com/docs/python/linting)
-* Debugging
-  + Watch window
-  + Evaluate expressions
-  + Step through code ("Step in", "Step out", "Continue")
-  + Add/remove breakpoints
-  + Local variables and arguments
-  + Multi-threaded applications
-  + Web applications (such as [Flask](http://flask.pocoo.org/) & [Django](https://www.djangoproject.com/), with template debugging)
-  + Expanding values (viewing children, properties, etc)
-  + Conditional breakpoints
-  + Remote debugging (over SSH)
-  + Google App Engine
-  + Debugging in the integrated or external terminal window
-  + Debugging as sudo
+* [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Support for code cells, plot visualization, variable explorer and more
 
-    [Learn more](https://code.visualstudio.com/docs/python/debugging)
+* [Environments](https://code.visualstudio.com/docs/python/environments)
 
-* Testing
-  + Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.org/project/pytest/), and [nose](https://pypi.org/project/nose/)
-  + Test Explorer
-  + Ability to run all failed tests, individual tests
-  + Debugging tests
+* [Snippets](https://code.visualstudio.com/docs/languages/python#_snippets)
 
-    [Learn more](https://code.visualstudio.com/docs/python/unit-testing)
-* Snippets
-
-    [Learn more](https://code.visualstudio.com/docs/languages/python#_snippets)
-
-* Refactoring
-  + Rename refactorings
-  + Extract variable refactorings
-  + Extract method refactorings
-  + Sort imports
-
-  [Learn more](https://code.visualstudio.com/docs/python/editing#_refactoring)
-
-* Miscellaneous
-  + Automatic indenting
-  + Sorting import statements (use the `Python: Sort Imports` command)
-  + Running a file or selected text in Python terminal
-  + Automatic activation of environments in the terminal
-  
+* [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
 
 
 ## Supported locales
 
 The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
-[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
-
-* `de`
-* `en`
-* `es`
-* `fr`
-* `it`
-* `ja`
-* `ko-kr`
-* `pt-br`
-* `ru`
-* `zh-cn`
-* `zh-tw`
+[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fr`, `it`, `ja`, `ko-kr`, `pt-br`, `ru`, `zh-cn`, `zh-tw`
 
 ## Questions, issues, feature requests, and contributions
 
