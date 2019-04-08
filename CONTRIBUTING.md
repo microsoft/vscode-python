@@ -129,6 +129,22 @@ const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
 
 And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
 
+### Testing Python Scripts
+
+The extension has a number of scripts in ./pythonFiles.  Tests for these
+scripts are found in ./pythonFiles/tests.  To run those tests:
+
+* `python2.7 pythonFiles/tests/run_all.py`
+* `python3 -m pythonFiles.tests`
+
+By default, functional tests are included.  To exclude them:
+
+`python3 -m pythonFiles.tests --no-functional`
+
+To run only the functional tests:
+
+`python3 -m pythonFiles.tests --functional`
+
 ### Standard Debugging
 
 Clone the repo into any directory, open that directory in VSCode, and use the `Launch Extension` launch option within VSCode.
