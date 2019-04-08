@@ -12,11 +12,11 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 <!-- use less words -->
 * Select your Python interpreter by clicking on the status bar
 
-   ![InterpreterSelection](images\InterpreterSelectionGIF.gif)
+   ![InterpreterSelection](images/InterpreterSelectionGIF.gif)
 
 * Configure tests by running the ``Configure Tests`` command 
 
-    ![ConfigureTests](images\ConfigureTestsGIF.gif)
+    ![ConfigureTests](images/ConfigureTestsGIF.gif)
 
 *  Run the ``Select Linter`` command  
 
