@@ -239,11 +239,13 @@ def _parse_item(item, _normcase, _pathsep):
                                        _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
+            print(item.nodeid)
             print(fullname, suites, testfunc)
             # TODO: What to do?
             raise NotImplementedError
     elif kind == 'doctest':
         if testfunc and fullname != testfunc + parameterized:
+            print(item.nodeid)
             print(fullname, testfunc)
             # TODO: What to do?
             raise NotImplementedError
