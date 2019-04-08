@@ -9,6 +9,12 @@
     * Fix issues related to debugging Django templagtes.
 1. Update the Python language server to 0.2.47.
 
+### Code Health
+
+1. Capture telemetry to track switching to and from the Language Server.
+   ([#5162](https://github.com/Microsoft/vscode-python/issues/5162))
+
+
 ## 2019.3.2 (2 April 2019)
 
 ### Fixes
