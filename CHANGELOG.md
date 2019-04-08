@@ -1,6 +1,14 @@
 # Changelog
 
 
+## 2019.3.3 (8 April 2019)
+
+### Fixes
+
+1. Fix issues related to debugging Django templagtes.
+   ([#4988](https://github.com/Microsoft/vscode-python/issues/4988))
+
+
 ## 2019.3.2 (2 April 2019)
 
 ### Fixes
