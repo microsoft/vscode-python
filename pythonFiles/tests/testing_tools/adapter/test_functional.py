@@ -28,19 +28,26 @@ def resolve_testroot(name):
 def run_adapter(cmd, tool, *cliargs):
     try:
         return _run_adapter(cmd, tool, *cliargs)
-    except subprocess.CalledProcessError as exc:
-        return _run_adapter(cmd, tool, *cliargs, hidestdio=False)
+    except subprocess.CalledProcessError:
+        try:
+            return _run_adapter(cmd, tool, *cliargs, hidestdio=False)
+        except subprocess.CalledProcessError as exc:
+            print(exc.output)
 
 
 def _run_adapter(cmd, tool, *cliargs, **kwargs):
     hidestdio = kwargs.pop('hidestdio', True)
     assert not kwargs
+    kwds = {}
     argv = [sys.executable, SCRIPT, cmd, tool, '--'] + list(cliargs)
     if not hidestdio:
         argv.insert(4, '--no-hide-stdio')
+        kwds['stderr'] = subprocess.STDOUT
     argv.append('--cache-clear')
     print('running {!r}'.format(' '.join(arg.rpartition(CWD + '/')[-1] for arg in argv)))
-    return subprocess.check_output(argv, universal_newlines=True)
+    return subprocess.check_output(argv,
+                                   universal_newlines=True,
+                                   **kwds)
 
 
 def fix_path(nodeid):
