@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 
 import os.path
+import sys
 
 import pytest
 
@@ -234,17 +235,8 @@ def _parse_item(item, _normcase, _pathsep):
         relfile = filename
     else:
         relfile = '.' + _pathsep + filename
-    srcfile, lineno, fullname = item.location
-    if srcfile != fileid:
-        # pytest supports discovery of tests imported from other
-        # modules.  This is reflected by a different filename
-        # in item.location.
-        if _normcase(fileid) == _normcase(srcfile):
-            srcfile = fileid
-    else:
-        srcfile = relfile
-    # from pytest, line numbers are 0-based
-    location = '{}:{}'.format(srcfile, int(lineno) + 1)
+    location, fullname = _get_location(item, fileid, relfile,
+                                       _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
             print(fullname, testfunc)
@@ -293,6 +285,42 @@ def _parse_item(item, _normcase, _pathsep):
         parentid=parentid,
         )
     return test, suiteids
+
+
+def _get_location(item, fileid, relfile, _normcase, _pathsep):
+    srcfile, lineno, fullname = item.location
+    if srcfile != fileid:
+        srcfile, lineno = _find_location(srcfile, lineno, fileid, item.function,
+                                         _normcase, _pathsep)
+    else:
+        srcfile = relfile
+    # from pytest, line numbers are 0-based
+    location = '{}:{}'.format(srcfile, int(lineno) + 1)
+    return location, fullname
+
+
+def _find_location(srcfile, lineno, fileid, func, _normcase, _pathsep):
+    # pytest supports discovery of tests imported from other
+    # modules.  This is reflected by a different filename
+    # in item.location.
+    if _normcase(fileid) == _normcase(srcfile):
+        srcfile = fileid
+    if sys.version_info > (3,):
+        return srcfile, lineno
+    if (_pathsep + 'unittest' + _pathsep + 'case.py') not in srcfile:
+        return srcfile, lineno
+
+    # Unwrap the decorator (e.g. unittest.skip).
+    srcfile = fileid
+    lineno = -1
+    try:
+        func = func.__closure__[0].cell_contents
+    except (IndexError, AttributeError):
+        return srcfile, lineno
+    else:
+        if callable(func) and func.__code__.co_filename.endswith(fileid):
+            lineno = func.__code__.co_firstlineno - 1
+    return srcfile, lineno
 
 
 def _parse_node_id(nodeid, kind='function'):

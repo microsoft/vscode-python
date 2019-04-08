@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from __future__ import unicode_literals
+
 import json
 import os
 import os.path
@@ -30,16 +32,47 @@ def run_adapter(cmd, tool, *cliargs):
         return _run_adapter(cmd, tool, *cliargs, hidestdio=False)
 
 
-def _run_adapter(cmd, tool, *cliargs, hidestdio=True):
+def _run_adapter(cmd, tool, *cliargs, **kwargs):
+    hidestdio = kwargs.pop('hidestdio', True)
+    assert not kwargs
     argv = [sys.executable, SCRIPT, cmd, tool, '--'] + list(cliargs)
     if not hidestdio:
         argv.insert(4, '--no-hide-stdio')
+    argv.append('--cache-clear')
     print('running {!r}'.format(' '.join(arg.rpartition(CWD + '/')[-1] for arg in argv)))
-    return subprocess.check_output(argv, text=True)
+    return subprocess.check_output(argv, universal_newlines=True)
 
 
 def fix_path(nodeid):
     return nodeid.replace('/', os.path.sep)
+
+
+def fix_test_order(tests):
+    if sys.version_info > (3,):
+        return tests
+    fixed = []
+    curfile = None
+    group = []
+    for test in tests:
+        if (curfile or '???') not in test['id']:
+            fixed.extend(sorted(group, key=lambda t: t['id']))
+            group = []
+            curfile = test['id'].partition('.py::')[0] + '.py'
+        group.append(test)
+    fixed.extend(sorted(group, key=lambda t: t['id']))
+    return fixed
+
+
+def fix_source(tests, testid, srcfile, lineno):
+    testid = fix_path(testid)
+    for test in tests:
+        if test['id'] == testid:
+            break
+    else:
+        raise KeyError('test {!r} not found'.format(testid))
+    if not srcfile:
+        srcfile = test['source'].rpartition(':')[0]
+    test['source'] = fix_path('{}:{}'.format(srcfile, lineno))
 
 
 @pytest.mark.functional
@@ -82,11 +115,21 @@ class PytestTests(unittest.TestCase):
     def test_discover_complex_default(self):
         projroot, testroot = resolve_testroot('complex')
         expected = self.complex(projroot)
+        expected[0]['tests'] = fix_test_order(expected[0]['tests'])
+        if sys.version_info < (3,):
+            decorated = [
+                    './tests/test_unittest.py::MyTests::test_skipped',
+                    './tests/test_unittest.py::MyTests::test_maybe_skipped',
+                    './tests/test_unittest.py::MyTests::test_maybe_not_skipped',
+                    ]
+            for testid in decorated:
+                fix_source(expected[0]['tests'], testid, None, 0)
 
         out = run_adapter('discover', 'pytest',
                           '--rootdir', projroot,
                           testroot)
         result = json.loads(out)
+        result[0]['tests'] = fix_test_order(result[0]['tests'])
 
         self.maxDiff = None
         self.assertEqual(result, expected)
@@ -141,12 +184,22 @@ class PytestTests(unittest.TestCase):
              'parentid': fix_path('./mod.py'),
              },
             ] + expected[0]['tests']
+        expected[0]['tests'] = fix_test_order(expected[0]['tests'])
+        if sys.version_info < (3,):
+            decorated = [
+                    './tests/test_unittest.py::MyTests::test_skipped',
+                    './tests/test_unittest.py::MyTests::test_maybe_skipped',
+                    './tests/test_unittest.py::MyTests::test_maybe_not_skipped',
+                    ]
+            for testid in decorated:
+                fix_source(expected[0]['tests'], testid, None, 0)
 
         out = run_adapter('discover', 'pytest',
                           '--rootdir', projroot,
                           '--doctest-modules',
                           projroot)
         result = json.loads(out)
+        result[0]['tests'] = fix_test_order(result[0]['tests'])
 
         self.maxDiff = None
         self.assertEqual(result, expected)
