@@ -7,7 +7,7 @@
 
 1. Fix issues related to debugging Django templagtes.
    ([#4988](https://github.com/Microsoft/vscode-python/issues/4988))
-
+1. Update the Python language server to 0.2.44.
 
 ## 2019.3.2 (2 April 2019)
 
