@@ -37,7 +37,6 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
 
     public componentDidMount() {
         if (!this.state.rootCss) {
-            window.console.log('Generating css');
             // Set to a temporary value.
             this.setState({rootCss: ' '});
             PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });

@@ -89,10 +89,10 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             const workbench = this.workspaceService.getConfiguration('workbench');
             const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
             theme = ignoreTheme ? DefaultTheme : theme;
-            const terminalCursor = workbench.get<string>('terminal.integrated.cursorStyle', 'block');
+            const terminalCursor = workbench ? workbench.get<string>('terminal.integrated.cursorStyle', 'block') : 'block';
             const editor = this.workspaceService.getConfiguration('editor', undefined);
-            const font = editor.get<string>('fontFamily');
-            const fontSize = editor.get<number>('fontSize');
+            const font = editor ? editor.get<string>('fontFamily') : 'Consolas, \'Courier New\', monospace';
+            const fontSize = editor ? editor.get<number>('fontSize') : 14;
 
             // Then we have to find where the theme resources are loaded from
             if (theme) {

@@ -31,7 +31,6 @@ export class PostOffice {
     public static sendMessage<M, T extends keyof M>(type: T, payload?: M[T]) {
         const api = PostOffice.acquireApi();
         if (api) {
-            PostOffice.register();
             api.postMessage({ type: type.toString(), payload });
         }
     }
@@ -40,17 +39,28 @@ export class PostOffice {
     public static sendUnsafeMessage(type: string, payload?: any) {
         const api = PostOffice.acquireApi();
         if (api) {
-            PostOffice.register();
             api.postMessage({ type: type, payload });
         }
     }
 
     public static addHandler(handler: IMessageHandler) {
+        // Acquire here too so that the message handlers are setup during tests.
+        PostOffice.acquireApi();
         PostOffice.handlers.push(handler);
     }
 
     public static removeHandler(handler: IMessageHandler) {
         PostOffice.handlers = PostOffice.handlers.filter(f => f !== handler);
+    }
+
+    public static resetApi() {
+        // This is necessary so that tests can reset the vscode api for the next test
+        // to find.
+        PostOffice.vscodeApi = undefined;
+        if (PostOffice.registered) {
+            PostOffice.registered = false;
+            window.removeEventListener('message', PostOffice.handleMessages);
+        }
     }
 
     private static acquireApi() : IVsCodeApi | undefined {
@@ -59,15 +69,12 @@ export class PostOffice {
         if (!PostOffice.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             PostOffice.vscodeApi = acquireVsCodeApi();
         }
-
-        return PostOffice.vscodeApi;
-    }
-
-    private static register() {
         if (!PostOffice.registered) {
             PostOffice.registered = true;
             window.addEventListener('message', PostOffice.handleMessages);
         }
+
+        return PostOffice.vscodeApi;
     }
 
     private static handleMessages = async (ev: MessageEvent) => {
