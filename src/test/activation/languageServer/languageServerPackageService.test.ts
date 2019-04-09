@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
-import { IApplicationEnvironment } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService } from '../../../client/common/nuget/types';
@@ -30,6 +30,10 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
+        const workspace = typeMoq.Mock.ofType<IWorkspaceService>();
+        workspace.setup(w => w.getConfiguration('http', undefined));
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspace.object);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
         const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);

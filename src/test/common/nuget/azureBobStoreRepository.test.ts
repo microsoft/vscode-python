@@ -9,7 +9,7 @@ import * as typeMoq from 'typemoq';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IHttpClient } from '../../../client/activation/types';
-import { IApplicationEnvironment } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -21,11 +21,16 @@ const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
 suite('Nuget Azure Storage Repository', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let httpClient: typeMoq.IMock<IHttpClient>;
+    let workspace: typeMoq.IMock<IWorkspaceService>;
     let repo: AzureBlobStoreNugetRepository;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         httpClient = typeMoq.Mock.ofType<IHttpClient>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
+        workspace = typeMoq.Mock.ofType<IWorkspaceService>();
+        workspace.setup(w => w.getConfiguration('http', undefined));
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspace.object);
 
         const nugetService = typeMoq.Mock.ofType<INugetService>();
         nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
