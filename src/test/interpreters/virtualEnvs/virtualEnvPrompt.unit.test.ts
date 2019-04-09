@@ -88,11 +88,11 @@ suite('Virtual Environment Prompt', () => {
         workspaceConfig.verifyAll();
     });
 
-    test('User is notified if interpreter exists and python path is not specified in settings.json', async () => {
+    test('User is notified if interpreter exists and only python path to global interpreter is specified in settings', async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const interpreter2 = { path: 'path/to/interpreter2' };
-        const settings = { workspaceFolderValue: 'python' };
+        const settings = { workspaceFolderValue: 'python', globalValue: 'path/to/globalInterpreter' };
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Interpreters.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -213,9 +213,9 @@ suite('Virtual Environment Prompt', () => {
                 expectedResult: false
             },
             {
-                testName: 'Returns true when interpreter is provided in global setting',
+                testName: 'Returns false when interpreter is provided in global setting',
                 settings: { globalValue: 'path/to/interpreter' },
-                expectedResult: true
+                expectedResult: false
             },
             {
                 testName: 'Returns false when no python setting is provided',

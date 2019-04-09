@@ -50,7 +50,6 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Interpreters.doNotShowAgain()];
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(Interpreters.environmentPromptMessage(), ...prompts);
-        // tslint:disable-next-line:no-any
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
         if (!selection) {
             return;
@@ -64,7 +63,6 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     protected hasUserDefinedPythonPath(resource?: Uri) {
         const settings = this.workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
         return ((settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
-            (settings.workspaceValue && settings.workspaceValue !== 'python') ||
-            (settings.globalValue && settings.globalValue !== 'python')) ? true : false;
+            (settings.workspaceValue && settings.workspaceValue !== 'python')) ? true : false;
     }
 }
