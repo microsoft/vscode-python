@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { ICell, IHistoryInfo, IJupyterVariable } from '../types';
 
 export namespace HistoryMessages {
@@ -23,9 +23,9 @@ export namespace HistoryMessages {
     export const StopProgress = 'stop_progress';
     export const Interrupt = 'interrupt';
     export const SubmitNewCell = 'submit_new_cell';
-    export const UpdateSettings = 'update_settings';
+    export const UpdateSettings = SharedMessages.UpdateSettings;
     export const SendInfo = 'send_info';
-    export const Started = 'started';
+    export const Started = SharedMessages.Started;
     export const AddedSysInfo = 'added_sys_info';
     export const RemoteAddCode = 'remote_add_code';
     export const Activate = 'activate';
@@ -100,4 +100,6 @@ export class IHistoryMapping {
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariable[];
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
     public [HistoryMessages.GetVariableValueResponse]: IJupyterVariable;
+    public [CssMessages.GetCssRequest] : IGetCssRequest;
+    public [CssMessages.GetCssResponse] : IGetCssResponse;
 }

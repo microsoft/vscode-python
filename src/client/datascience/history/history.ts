@@ -16,7 +16,6 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanel,
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -25,7 +24,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
@@ -37,7 +36,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IConnection,
-    IDataScienceExtraSettings,
     IDataViewerProvider,
     IHistory,
     IHistoryInfo,
@@ -50,6 +48,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
+import { WebViewHost } from '../webViewHost';
 import { HistoryMessageListener } from './historyMessageListener';
 import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 
@@ -61,10 +60,8 @@ export enum SysInfoReason {
 }
 
 @injectable()
-export class History implements IHistory {
+export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private disposed: boolean = false;
-    private webPanel: IWebPanel | undefined;
-    private webPanelInit: Deferred<void>;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
     private closedEvent: EventEmitter<IHistory>;
@@ -74,20 +71,17 @@ export class History implements IHistory {
     private addSysInfoPromise: Deferred<boolean> | undefined;
     private waitingForExportCells: boolean = false;
     private jupyterServer: INotebookServer | undefined;
-    private changeHandler: IDisposable | undefined;
-    private messageListener : HistoryMessageListener;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
-    private viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
 
     constructor(
         @inject(ILiveShareApi) private liveShare : ILiveShareApi,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IWebPanelProvider) private provider: IWebPanelProvider,
+        @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
+        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(ILogger) private logger: ILogger,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
@@ -95,33 +89,33 @@ export class History implements IHistory {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
         ) {
+        super(
+            configuration,
+            provider,
+            cssGenerator,
+            workspaceService,
+            (c, v, d) => new HistoryMessageListener(this.liveShare, c, v, d),
+            path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js'),
+            localize.DataScience.historyTitle());
 
         // Create our unique id. We use this to skip messages we send to other history windows
         this.id = uuid();
 
         // Sign up for configuration changes
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
-        this.changeHandler = this.configuration.getSettings().onDidChange(this.onSettingsChanged.bind(this));
 
         // Create our event emitter
         this.closedEvent = new EventEmitter<IHistory>();
         this.disposables.push(this.closedEvent);
 
         // Listen for active text editor changes. This is the only way we can tell that we might be needing to gain focus
-        const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activate().ignoreErrors());
+        const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activating().ignoreErrors());
         this.disposables.push(handler);
-
-        // Create a history message listener to listen to messages from our webpanel (or remote session)
-        this.messageListener = new HistoryMessageListener(this.liveShare, this.onMessage, this.onViewStateChanged, this.dispose);
-
-        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
-        // react control.
-        this.webPanelInit = createDeferred();
 
         // If our execution changes its liveshare session, we need to close our server
         this.jupyterExecution.sessionChanged(() => this.loadPromise = this.reloadAfterShutdown());
@@ -144,9 +138,7 @@ export class History implements IHistory {
             await this.addSysInfo(SysInfoReason.Start);
 
             // Then show our web panel.
-            if (this.webPanel && this.jupyterServer) {
-                await this.webPanel.show(true);
-            }
+            return super.show(true);
         }
     }
 
@@ -163,18 +155,7 @@ export class History implements IHistory {
         return this.submitCode(code, file, line, undefined, editor);
     }
 
-    // tslint:disable-next-line: no-any no-empty
-    public async postMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
-        if (this.webPanel) {
-            // Make sure the webpanel is up before we send it anything.
-            await this.webPanelInit.promise;
-
-            // Then send it the message
-            this.webPanel.postMessage({ type: type.toString(), payload: payload });
-        }
-    }
-
-    // tslint:disable-next-line: no-any no-empty
+    // tslint:disable-next-line: no-any no-empty cyclomatic-complexity
     public onMessage = (message: string, payload: any) => {
         switch (message) {
             case HistoryMessages.GotoCodeCell:
@@ -195,10 +176,6 @@ export class History implements IHistory {
 
             case HistoryMessages.Export:
                 this.dispatchMessage(message, payload, this.export);
-                break;
-
-            case HistoryMessages.Started:
-                this.webPanelRendered();
                 break;
 
             case HistoryMessages.SendInfo:
@@ -256,9 +233,13 @@ export class History implements IHistory {
             default:
                 break;
         }
+
+        // Pass onto our base class.
+        super.onMessage(message, payload);
     }
 
     public dispose = async () => {
+        await super.dispose();
         if (!this.disposed) {
             this.disposed = true;
             if (this.interpreterChangedDisposable) {
@@ -268,15 +249,15 @@ export class History implements IHistory {
                 this.closedEvent.fire(this);
             }
             this.updateContexts(undefined);
-            if (this.webPanel) {
-                this.webPanel.close();
-                this.webPanel = undefined;
-            }
         }
-        if (this.changeHandler) {
-            this.changeHandler.dispose();
-            this.changeHandler = undefined;
-        }
+    }
+
+    public startProgress() {
+        this.postMessage(HistoryMessages.StartProgress).ignoreErrors();
+    }
+
+    public stopProgress() {
+        this.postMessage(HistoryMessages.StopProgress).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.Undo)
@@ -368,6 +349,24 @@ export class History implements IHistory {
         }
     }
 
+    protected async activating() {
+        // Only activate if the active editor is empty. This means that
+        // vscode thinks we are actually supposed to have focus. It would be
+        // nice if they would more accurrately tell us this, but this works for now.
+        // Essentially the problem is the webPanel.active state doesn't track
+        // if the focus is supposed to be in the webPanel or not. It only tracks if
+        // it's been activated. However if there's no active text editor and we're active, we
+        // can safely attempt to give ourselves focus. This won't actually give us focus if we aren't
+        // allowed to have it.
+        if (this.viewState.active && !this.documentManager.activeTextEditor) {
+            // Force the webpanel to reveal and take focus.
+            await super.show(false);
+
+            // Send this to the react control
+            await this.postMessage(HistoryMessages.Activate);
+        }
+    }
+
     private async showDataViewer(variable: string) : Promise<void> {
         try {
             const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
@@ -385,35 +384,6 @@ export class History implements IHistory {
             }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());
-        }
-    }
-
-    private onViewStateChanged = (webPanel: IWebPanel) => {
-        const oldActive = this.viewState.active;
-        this.viewState.active = webPanel.isActive();
-        this.viewState.visible = webPanel.isVisible();
-
-        // See if suddenly becoming active or not
-        if (!oldActive && this.viewState.active) {
-            this.activate().ignoreErrors();
-        }
-    }
-
-    private async activate() {
-        // Only activate if the active editor is empty. This means that
-        // vscode thinks we are actually supposed to have focus. It would be
-        // nice if they would more accurrately tell us this, but this works for now.
-        // Essentially the problem is the webPanel.active state doesn't track
-        // if the focus is supposed to be in the webPanel or not. It only tracks if
-        // it's been activated. However if there's no active text editor and we're active, we
-        // can safely attempt to give ourselves focus. This won't actually give us focus if we aren't
-        // allowed to have it.
-        if (this.webPanel && this.viewState.active && !this.documentManager.activeTextEditor) {
-            // Force the webpanel to reveal and take focus.
-            await this.webPanel.show(false);
-
-            // Send this to the react control
-            await this.postMessage(HistoryMessages.Activate);
         }
     }
 
@@ -482,14 +452,6 @@ export class History implements IHistory {
         }
     }
 
-    // tslint:disable-next-line:no-any
-    private webPanelRendered() {
-        if (!this.webPanelInit.resolved) {
-            this.webPanelInit.resolve();
-        }
-    }
-
-    // tslint:disable-next-line:no-any
     private updateContexts(info: IHistoryInfo | undefined) {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
@@ -618,33 +580,31 @@ export class History implements IHistory {
     private onAddCodeEvent = (cells: ICell[], editor?: TextEditor) => {
         // Send each cell to the other side
         cells.forEach((cell: ICell) => {
-            if (this.webPanel) {
-                switch (cell.state) {
-                    case CellState.init:
-                        // Tell the react controls we have a new cell
-                        this.postMessage(HistoryMessages.StartCell, cell).ignoreErrors();
+            switch (cell.state) {
+                case CellState.init:
+                    // Tell the react controls we have a new cell
+                    this.postMessage(HistoryMessages.StartCell, cell).ignoreErrors();
 
-                        // Keep track of this unfinished cell so if we restart we can finish right away.
-                        this.unfinishedCells.push(cell);
-                        break;
+                    // Keep track of this unfinished cell so if we restart we can finish right away.
+                    this.unfinishedCells.push(cell);
+                    break;
 
-                    case CellState.executing:
-                        // Tell the react controls we have an update
-                        this.postMessage(HistoryMessages.UpdateCell, cell).ignoreErrors();
-                        break;
+                case CellState.executing:
+                    // Tell the react controls we have an update
+                    this.postMessage(HistoryMessages.UpdateCell, cell).ignoreErrors();
+                    break;
 
-                    case CellState.error:
-                    case CellState.finished:
-                        // Tell the react controls we're done
-                        this.postMessage(HistoryMessages.FinishCell, cell).ignoreErrors();
+                case CellState.error:
+                case CellState.finished:
+                    // Tell the react controls we're done
+                    this.postMessage(HistoryMessages.FinishCell, cell).ignoreErrors();
 
-                        // Remove from the list of unfinished cells
-                        this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
-                        break;
+                    // Remove from the list of unfinished cells
+                    this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
+                    break;
 
-                    default:
-                        break; // might want to do a progress bar or something
-                }
+                default:
+                    break; // might want to do a progress bar or something
             }
         });
 
@@ -657,13 +617,6 @@ export class History implements IHistory {
                 });
             }
         }
-    }
-
-    // Post a message to our webpanel and update our new datascience settings
-    private onSettingsChanged = () => {
-        // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
-        this.postMessage(HistoryMessages.UpdateSettings, dsSettings).ignoreErrors();
     }
 
     private onInterpreterChanged = () => {
@@ -868,11 +821,6 @@ export class History implements IHistory {
         return `${localize.DataScience.sysInfoURILabel()}${urlString}`;
     }
 
-    private shareMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        // Send our remote message.
-        this.messageListener.onMessage(type.toString(), payload);
-    }
-
     private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
         if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
             this.logger.logInformation(`Adding sys info for ${this.id} ${reason}`);
@@ -895,41 +843,6 @@ export class History implements IHistory {
         } else if (this.addSysInfoPromise) {
             this.logger.logInformation(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
-        }
-    }
-
-    private generateDataScienceExtraSettings() : IDataScienceExtraSettings {
-        const terminal = this.workspaceService.getConfiguration('terminal');
-        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
-        return {
-            ...this.configuration.getSettings().datascience,
-            extraSettings: {
-                terminalCursor: terminalCursor
-            }
-        };
-    }
-
-    private loadWebPanel = async (): Promise<void> => {
-        this.logger.logInformation(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
-
-        // Create our web panel (it's the UI that shows up for the history)
-        if (this.webPanel === undefined) {
-            // Figure out the name of our main bundle. Should be in our output directory
-            const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
-
-            this.logger.logInformation('Generating CSS...');
-            // Generate a css to put into the webpanel for viewing code
-            const css = await this.cssGenerator.generateThemeCss();
-
-            // Get our settings to pass along to the react control
-            const settings = this.generateDataScienceExtraSettings();
-
-            this.logger.logInformation('Loading web view...');
-            // Use this script to create our web view panel. It should contain all of the necessary
-            // script to communicate with this class.
-            this.webPanel = this.provider.create(ViewColumn.Two, this.messageListener, localize.DataScience.historyTitle(), mainScriptPath, css, settings);
-
-            this.logger.logInformation('Web view created.');
         }
     }
 
@@ -982,9 +895,6 @@ export class History implements IHistory {
                 // Indicate failing.
                 throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
             }
-
-            // Get the web panel to show first
-            await this.loadWebPanel();
 
             // Then load the jupyter server
             await this.loadJupyterServer();

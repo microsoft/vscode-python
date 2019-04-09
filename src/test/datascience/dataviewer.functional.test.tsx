@@ -57,7 +57,7 @@ suite('DataViewer tests', () => {
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
 
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} forceHeight={200}/>));
+        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} forceHeight={200}/>));
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataProvider = ioc.get<IDataViewerProvider>(IDataViewerProvider);

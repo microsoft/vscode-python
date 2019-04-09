@@ -3,6 +3,7 @@
 'use strict';
 import { JSONObject } from '@phosphor/coreutils';
 
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { IJupyterVariable } from '../types';
 
 export const RowFetchAllLimit = 1000;
@@ -16,8 +17,8 @@ export namespace DataViewerRowStates {
 }
 
 export namespace DataViewerMessages {
-    export const Started = 'started';
-    export const UpdateSettings = 'update_settings';
+    export const Started = SharedMessages.Started;
+    export const UpdateSettings = SharedMessages.UpdateSettings;
     export const InitializeData = 'init';
     export const GetAllRowsRequest = 'get_all_rows_request';
     export const GetAllRowsResponse = 'get_all_rows_response';
@@ -47,4 +48,6 @@ export class IDataViewerMapping {
     public [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
     public [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     public [DataViewerMessages.CompletedData]: never | undefined;
+    public [CssMessages.GetCssRequest] : IGetCssRequest;
+    public [CssMessages.GetCssResponse] : IGetCssResponse;
 }

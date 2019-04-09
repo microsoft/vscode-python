@@ -107,7 +107,7 @@ export class StatusProvider implements IStatusProvider {
         if (this.statusCount === 0) {
             const history = this.historyProvider.getActive();
             if (history && !skipHistory) {
-                history.postMessage(HistoryMessages.StartProgress);
+                history.startProgress();
             }
         }
         this.statusCount += 1;
@@ -118,7 +118,7 @@ export class StatusProvider implements IStatusProvider {
         if (updatedCount === 0) {
             const history = this.historyProvider.getActive();
             if (history && !skipHistory) {
-                history.postMessage(HistoryMessages.StopProgress);
+                history.stopProgress();
             }
         }
         this.statusCount = Math.max(updatedCount, 0);

@@ -15,7 +15,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { CssMessages, DefaultTheme, IGetCssRequest, Telemetry } from '../constants';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IDataViewer, IJupyterVariable, IJupyterVariables } from '../types';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import { DataViewerMessages, IDataViewerMapping, IGetRowsRequest } from './types';
@@ -128,9 +128,19 @@ export class DataViewer implements IDataViewer, IAsyncDisposable {
                 this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
                 break;
 
+            case CssMessages.GetCssRequest:
+                this.generateCss(payload as IGetCssRequest).ignoreErrors();
+                break;
+
             default:
                 break;
         }
+    }
+
+    private async generateCss(request: IGetCssRequest) : Promise<void> {
+        const settings = this.generateDataScienceExtraSettings();
+        const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
+        return this.postMessage(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme });
     }
 
     private onViewStateChanged = (webPanel: IWebPanel) => {
@@ -155,10 +165,14 @@ export class DataViewer implements IDataViewer, IAsyncDisposable {
     private generateDataScienceExtraSettings() : IDataScienceExtraSettings {
         const terminal = this.workspaceService.getConfiguration('terminal');
         const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        const ignoreTheme = this.configuration.getSettings().datascience.ignoreVscodeTheme ? true : false;
+        const theme = ignoreTheme ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configuration.getSettings().datascience,
             extraSettings: {
-                terminalCursor: terminalCursor
+                terminalCursor: terminalCursor,
+                theme: theme
             }
         };
     }
@@ -195,17 +209,13 @@ export class DataViewer implements IDataViewer, IAsyncDisposable {
             // Figure out the name of our main bundle. Should be in our output directory
             const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'data-explorer', 'index_bundle.js');
 
-            this.logger.logInformation('Generating CSS...');
-            // Generate a css to put into the webpanel for viewing code
-            const css = await this.cssGenerator.generateThemeCss();
-
             // Get our settings to pass along to the react control
             const settings = this.generateDataScienceExtraSettings();
 
             this.logger.logInformation('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(ViewColumn.One, this.messageListener, localize.DataScience.dataExplorerTitle(), mainScriptPath, css, settings);
+            this.webPanel = this.provider.create(ViewColumn.One, this.messageListener, localize.DataScience.dataExplorerTitle(), mainScriptPath, '', settings);
 
             this.logger.logInformation('Web view created.');
         }

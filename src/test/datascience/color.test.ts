@@ -13,6 +13,7 @@ import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
+import { IThemeFinder } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 // tslint:disable:max-func-body-length
@@ -97,7 +98,7 @@ suite('Theme colors', () => {
                 .returns((_s, d) => {
                     return d;
                 });
-                const colors = await cssGenerator.generateThemeCss();
+                const colors = await cssGenerator.generateThemeCss(isDark, themeName);
                 assert.ok(colors, `Cannot find theme colors for ${themeName}`);
 
                 // Make sure we have a string value that is not set to a variable
@@ -129,4 +130,24 @@ suite('Theme colors', () => {
 
     // One test to make sure unknown themes don't return a value.
     runTest('Knight Rider', true, false);
+
+    // Test for when theme's json can't be found.
+    test('Missing json theme', async () => {
+        const mockThemeFinder = TypeMoq.Mock.ofType<IThemeFinder>();
+        mockThemeFinder.setup(m => m.isThemeDark(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
+        mockThemeFinder.setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
+
+        cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, logger);
+
+        const colors = await cssGenerator.generateThemeCss(false, 'Kimbie Dark');
+        assert.ok(colors, 'Cannot find theme colors for Kimbie Dark');
+
+        // Make sure we have a string value that is not set to a variable
+        // (that would be the default and all themes have a string color)
+        const matches = /span\.cm-string\s\{color\:\s(.*?);/gm.exec(colors);
+        assert.ok(matches, 'No matches found for string color');
+        assert.equal(matches!.length, 2, 'Wrong number of matches for for string color');
+        assert.ok(matches![1].includes('#'), 'String color not found');
+    });
+
 });

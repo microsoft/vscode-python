@@ -12,13 +12,13 @@ import { HistoryMessages, IHistoryMapping } from '../../client/datascience/histo
 import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
+import { StyledRoot } from '../react-common/styledRoot';
 import { Cell, ICellViewModel } from './cell';
+import { ContentPanel, IContentPanelProps } from './contentPanel';
+import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { VariableExplorer } from './variableExplorer';
-
-import { ContentPanel, IContentPanelProps } from './contentPanel';
-import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -27,14 +27,10 @@ export interface IMainPanelProps {
     codeTheme: string;
 }
 
-class HistoryPostOffice extends PostOffice<IHistoryMapping> {}
-
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
     private updateCount = 0;
     private renderCount = 0;
-    private sentStartup = false;
-    private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
@@ -44,7 +40,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24 };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -60,11 +56,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.variableExplorerRef = React.createRef<VariableExplorer>();
     }
 
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        PostOffice.addHandler(this);
+
+        // Tell the history code we have started.
+        PostOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
+    }
+
     public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
         // If in test mode, update our outputs
         if (this.props.testMode) {
             this.updateCount = this.updateCount + 1;
         }
+    }
+
+    public componentWillUnmount() {
+        // Remove ourselves as a handler for the post office
+        PostOffice.removeHandler(this);
     }
 
     public render() {
@@ -81,7 +90,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                <StyledRoot isDark={baseTheme !== 'vscode-light'} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
             </div>
@@ -268,9 +277,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        if (this.postOffice) {
-            this.postOffice.sendMessage(type, payload);
-        }
+        PostOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {
@@ -441,16 +448,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private updateSelf = (r: HTMLDivElement) => {
         this.mainPanel = r;
-    }
-
-    private updatePostOffice = (postOffice: HistoryPostOffice) => {
-        if (this.postOffice !== postOffice) {
-            this.postOffice = postOffice;
-            if (!this.sentStartup) {
-                this.sentStartup = true;
-                this.postOffice.sendMessage(HistoryMessages.Started);
-            }
-        }
     }
 
     // tslint:disable-next-line:no-any

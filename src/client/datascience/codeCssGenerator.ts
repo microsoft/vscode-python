@@ -82,13 +82,13 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(ILogger) private logger: ILogger) {
     }
 
-    public generateThemeCss = async (): Promise<string> => {
+    public async generateThemeCss(isDark: boolean, theme: string): Promise<string> {
         let css : string = '';
         try {
             // First compute our current theme.
             const workbench = this.workspaceService.getConfiguration('workbench');
             const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
-            const theme = ignoreTheme ? DefaultTheme : workbench.get<string>('colorTheme');
+            theme = ignoreTheme ? DefaultTheme : theme;
             const terminalCursor = workbench.get<string>('terminal.integrated.cursorStyle', 'block');
             const editor = this.workspaceService.getConfiguration('editor', undefined);
             const font = editor.get<string>('fontFamily');
@@ -105,7 +105,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     css = this.generateCss(theme, tokenColors, font, fontSize, terminalCursor, ignoreTheme ? LightTheme : undefined);
                 } else if (tokenColors === null && font && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
-                    const style = (theme && await this.themeFinder.isThemeDark(theme)) ? DarkTheme : LightTheme ;
+                    const style = (theme && isDark) ? DarkTheme : LightTheme ;
                     css = this.generateCss(theme, null, font, fontSize, terminalCursor, style);
                 }
             }

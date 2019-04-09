@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as React from 'react';
 
 import { WebPanelMessage } from '../../client/common/application/types';
 
@@ -19,64 +18,66 @@ export interface IMessageHandler {
     handleMessage(type: string, payload?: any) : boolean;
 }
 
-interface IPostOfficeProps {
-    messageHandlers: IMessageHandler[];
-}
-
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
-export class PostOffice<Mapping> extends React.Component<IPostOfficeProps> {
+// tslint:disable-next-line: no-unnecessary-class
+export class PostOffice {
 
-    private vscodeApi : IVsCodeApi | undefined;
-    private registered: boolean = false;
+    private static vscodeApi : IVsCodeApi | undefined;
+    private static registered: boolean = false;
+    private static handlers: IMessageHandler[] = [];
 
-    constructor(props: IPostOfficeProps) {
-        super(props);
-    }
-
-    public sendMessage<M extends Mapping, T extends keyof M>(type: T, payload?: M[T]) {
-        const api = this.acquireApi();
+    public static sendMessage<M, T extends keyof M>(type: T, payload?: M[T]) {
+        const api = PostOffice.acquireApi();
         if (api) {
+            PostOffice.register();
             api.postMessage({ type: type.toString(), payload });
         }
     }
 
-    public componentDidMount() {
-        if (!this.registered) {
-            this.registered = true;
-            window.addEventListener('message', this.handleMessages);
+    // tslint:disable-next-line:no-any
+    public static sendUnsafeMessage(type: string, payload?: any) {
+        const api = PostOffice.acquireApi();
+        if (api) {
+            PostOffice.register();
+            api.postMessage({ type: type, payload });
         }
     }
 
-    public componentWillUnmount() {
-        if (this.registered) {
-            this.registered = false;
-            window.removeEventListener('message', this.handleMessages);
-        }
+    public static addHandler(handler: IMessageHandler) {
+        PostOffice.handlers.push(handler);
     }
 
-    public render() {
-        return null;
+    public static removeHandler(handler: IMessageHandler) {
+        PostOffice.handlers = PostOffice.handlers.filter(f => f !== handler);
     }
 
-    private acquireApi() : IVsCodeApi | undefined {
-
+    private static acquireApi() : IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
-        if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-            this.vscodeApi = acquireVsCodeApi();
+        if (!PostOffice.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+            PostOffice.vscodeApi = acquireVsCodeApi();
         }
 
-        return this.vscodeApi;
+        return PostOffice.vscodeApi;
     }
 
-    private handleMessages = async (ev: MessageEvent) => {
-        if (this.props) {
+    private static register() {
+        if (!PostOffice.registered) {
+            PostOffice.registered = true;
+            window.addEventListener('message', PostOffice.handleMessages);
+        }
+    }
+
+    private static handleMessages = async (ev: MessageEvent) => {
+        if (PostOffice.handlers) {
             const msg = ev.data as WebPanelMessage;
             if (msg) {
-                this.props.messageHandlers.forEach((h : IMessageHandler) => {
-                    h.handleMessage(msg.type, msg.payload);
+                PostOffice.handlers.forEach((h : IMessageHandler | null) => {
+                    if (h) {
+                        h.handleMessage(msg.type, msg.payload);
+                    }
                 });
             }
         }

@@ -19,6 +19,7 @@ import {
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { StyledRoot } from '../react-common/styledRoot';
 import { CellFormatter } from './cellFormatter';
 import { EmptyRowsView } from './emptyRowsView';
 import { generateTestData } from './testData';
@@ -40,6 +41,7 @@ const defaultColumnProperties = {
 export interface IMainPanelProps {
     skipDefault?: boolean;
     forceHeight?: number;
+    baseTheme: string;
 }
 
 //tslint:disable:no-any
@@ -55,10 +57,7 @@ interface IMainPanelState {
     sortColumn: string | number;
 }
 
-class DataViewerPostOffice extends PostOffice<IDataViewerMapping> { }
-
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
-    private postOffice: DataViewerPostOffice | undefined;
     private container: HTMLDivElement | null = null;
     private emptyRows: (() => JSX.Element) | undefined;
     private getEmptyRows: ((props: any) => JSX.Element) | undefined;
@@ -122,12 +121,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return (
-            <div className='background'>
-                <div className='main-panel' ref={this.updateContainer}>
-                    <DataViewerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
-                    {this.container && this.renderGrid()}
+            <StyledRoot isDark={this.props.baseTheme !== 'vscode-light'}>
+                <div className='background'>
+                    <div className='main-panel' ref={this.updateContainer}>
+                        {this.container && this.renderGrid()}
+                    </div>
                 </div>
-            </div>
+            </StyledRoot>
         );
     }
 
@@ -323,17 +323,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (this.state.fetchedRowCount === this.state.actualRowCount);
     }
 
-    private updatePostOffice = (postOffice: DataViewerPostOffice) => {
-        if (this.postOffice !== postOffice) {
-            this.postOffice = postOffice;
-            this.sendMessage(DataViewerMessages.Started);
-        }
-    }
-
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        if (this.postOffice) {
-            this.postOffice.sendMessage(type, payload);
-        }
+        PostOffice.sendMessage<M, T>(type, payload);
     }
 
     private getColumnType(name: string | number) : string | undefined {

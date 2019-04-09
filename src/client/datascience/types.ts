@@ -136,7 +136,8 @@ export interface IHistory extends Disposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
-    postMessage(type: string, payload?: any): void;
+    startProgress(): void;
+    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
@@ -216,7 +217,7 @@ export interface ISysInfo extends nbformat.IBaseCell {
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
-    generateThemeCss() : Promise<string>;
+    generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
@@ -251,6 +252,7 @@ export interface IJupyterCommandFactory {
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
+        theme: string;
     };
 }
 
