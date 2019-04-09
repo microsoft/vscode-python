@@ -6,6 +6,7 @@ import * as React from 'react';
 import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/constants';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
+import { detectBaseTheme } from './themeDetector';
 
 export interface IStyleInjectorProps {
     expectingDark: boolean;
@@ -72,24 +73,27 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         return true;
     }
 
-    public get knownDark() : boolean | undefined {
-        return this.state.knownDark;
-    }
-
     // tslint:disable-next-line:no-any
     private handleResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
-            if (this.state.knownDark !== response.knownDark &&
-                response.knownDark !== undefined &&
+
+            // Recompute our known dark value from the class name in the body
+            // VS code should update this dynamically when the theme changes
+            const computedKnownDark = this.computeKnownDark();
+
+            // We also get this in our response, but computing is more reliable
+            // than searching for it.
+
+            if (this.state.knownDark !== computedKnownDark &&
                 this.props.darkChanged) {
-                this.props.darkChanged(response.knownDark);
+                this.props.darkChanged(computedKnownDark);
             }
 
             this.setState({
                 rootCss: response.css,
                 theme: response.theme,
-                knownDark: response.knownDark
+                knownDark: computedKnownDark
             });
         }
     }
@@ -101,8 +105,13 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             const dsSettings = newSettings as IDataScienceExtraSettings;
             if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
                 // User changed the current theme. Rerender
-                PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
+                PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
             }
         }
+    }
+
+    private computeKnownDark() : boolean {
+        const baseTheme = detectBaseTheme();
+        return baseTheme !== 'vscode-light';
     }
 }
