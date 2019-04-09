@@ -104,7 +104,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             const newFontSize = parseInt(getComputedStyle(this.divRef.current).getPropertyValue('--code-font-size'), 10);
 
             // Make sure to check for update here so we don't update loop
-            if (this.state.fontSize !== newFontSize) {
+            // tslint:disable-next-line: use-isnan
+            if (newFontSize && newFontSize !== NaN && this.state.fontSize !== newFontSize) {
                 this.setState({fontSize: newFontSize});
             }
         }
