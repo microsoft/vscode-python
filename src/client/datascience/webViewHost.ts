@@ -3,7 +3,7 @@
 'use strict';
 import '../common/extensions';
 
-import { injectable } from 'inversify';
+import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, ViewColumn } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
@@ -25,16 +25,16 @@ export class WebViewHost<IMapping> implements IDisposable {
     private currentTheme: string;
 
     constructor(
-        private configService: IConfigurationService,
-        private provider: IWebPanelProvider,
-        private cssGenerator: ICodeCssGenerator,
-        private themeFinder: IThemeFinder,
-        private workspaceService: IWorkspaceService,
+        @unmanaged() private configService: IConfigurationService,
+        @unmanaged() private provider: IWebPanelProvider,
+        @unmanaged() private cssGenerator: ICodeCssGenerator,
+        @unmanaged() private themeFinder: IThemeFinder,
+        @unmanaged() private workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
-        messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
-        private mainScriptPath: string,
-        private title: string,
-        private viewColumn: ViewColumn
+        @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
+        @unmanaged() private mainScriptPath: string,
+        @unmanaged() private title: string,
+        @unmanaged() private viewColumn: ViewColumn
         ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));

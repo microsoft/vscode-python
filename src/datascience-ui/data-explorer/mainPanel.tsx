@@ -96,6 +96,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        PostOffice.addHandler(this);
+
+        // Tell the dataviewer code we have started.
+        PostOffice.sendMessage<IDataViewerMapping, 'started'>(DataViewerMessages.Started);
+    }
+
     public componentDidMount() {
         window.addEventListener('resize', this.updateDimensions);
         this.updateDimensions();
@@ -103,6 +111,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillUnmount() {
         window.removeEventListener('resize', this.updateDimensions);
+        PostOffice.removeHandler(this);
     }
 
     public componentDidUpdate() {

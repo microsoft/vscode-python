@@ -14,6 +14,13 @@ import { sleep } from '../../core';
 
 // tslint:disable:no-any max-func-body-length no-unnecessary-class
 suite('Common Utils - Decorators', () => {
+
+    setup(function () {
+        // This test is flakey. 
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    })
+
     teardown(() => {
         clearCache();
     });
@@ -243,9 +250,6 @@ suite('Common Utils - Decorators', () => {
     });
     test('Debounce: multiple async calls when awaiting on all', async function () {
 
-        // This test is flakey.
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
         const wait = 100;
         // tslint:disable-next-line:max-classes-per-file
         class One extends Base {
