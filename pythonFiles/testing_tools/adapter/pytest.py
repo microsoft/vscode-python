@@ -359,7 +359,7 @@ def _parse_node_id(nodeid, kind='function'):
         if suitename != '()':
             suiteids.insert(0, fullid)
             suites.insert(0, suitename)
-            parts.insert(0, suitename)
+        parts.insert(0, suitename)
     fileid = parentid
 
     parts.insert(0, fileid)
