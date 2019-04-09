@@ -346,7 +346,7 @@ def _parse_node_id(nodeid, kind='function'):
             funcid = nodeid
 
         parentid, _, name = funcid.rpartition('::')
-        if not name:
+        if not parentid or parentid == '()' or not name:
             # TODO: What to do?  We expect at least a filename and a function
             raise NotImplementedError
 
