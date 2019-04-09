@@ -46,7 +46,8 @@ import {
     INotebookExporter,
     INotebookServer,
     InterruptResult,
-    IStatusProvider
+    IStatusProvider,
+    IThemeFinder
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { HistoryMessageListener } from './historyMessageListener';
@@ -82,6 +83,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
+        @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(ILogger) private logger: ILogger,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
@@ -98,10 +100,12 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             configuration,
             provider,
             cssGenerator,
+            themeFinder,
             workspaceService,
-            (c, v, d) => new HistoryMessageListener(this.liveShare, c, v, d),
+            (c, v, d) => new HistoryMessageListener(liveShare, c, v, d),
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js'),
-            localize.DataScience.historyTitle());
+            localize.DataScience.historyTitle(),
+            ViewColumn.Two);
 
         // Create our unique id. We use this to skip messages we send to other history windows
         this.id = uuid();
@@ -156,7 +160,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity
-    public onMessage = (message: string, payload: any) => {
+    public onMessage(message: string, payload: any) {
         switch (message) {
             case HistoryMessages.GotoCodeCell:
                 this.dispatchMessage(message, payload, this.gotoCode);
@@ -238,8 +242,8 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         super.onMessage(message, payload);
     }
 
-    public dispose = async () => {
-        await super.dispose();
+    public dispose() {
+        super.dispose();
         if (!this.disposed) {
             this.disposed = true;
             if (this.interpreterChangedDisposable) {
@@ -513,7 +517,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             } catch (exc) {
                 // We should dispose ourselves if the load fails. Othewise the user
                 // updates their install and we just fail again because the load promise is the same.
-                await this.dispose();
+                this.dispose();
 
                 throw exc;
             }

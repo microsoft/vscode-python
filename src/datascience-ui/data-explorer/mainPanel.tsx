@@ -19,7 +19,7 @@ import {
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { StyledRoot } from '../react-common/styledRoot';
+import { StyleInjector } from '../react-common/styleInjector';
 import { CellFormatter } from './cellFormatter';
 import { EmptyRowsView } from './emptyRowsView';
 import { generateTestData } from './testData';
@@ -121,13 +121,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return (
-            <StyledRoot isDark={this.props.baseTheme !== 'vscode-light'}>
                 <div className='background'>
                     <div className='main-panel' ref={this.updateContainer}>
+                        <StyleInjector expectingDark={this.props.baseTheme !== 'vscode-light'} />
                         {this.container && this.renderGrid()}
                     </div>
                 </div>
-            </StyledRoot>
         );
     }
 

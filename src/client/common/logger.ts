@@ -1,9 +1,9 @@
 // tslint:disable:no-console no-any
-
 import { injectable } from 'inversify';
+
 import { sendTelemetryEvent } from '../telemetry';
-import { ILogger, LogLevel } from './types';
 import { isTestExecution } from './constants';
+import { ILogger, LogLevel } from './types';
 
 const PREFIX = 'Python Extension: ';
 

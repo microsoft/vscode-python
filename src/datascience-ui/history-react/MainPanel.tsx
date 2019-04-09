@@ -12,7 +12,7 @@ import { HistoryMessages, IHistoryMapping } from '../../client/datascience/histo
 import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
-import { StyledRoot } from '../react-common/styledRoot';
+import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
 import { ContentPanel, IContentPanelProps } from './contentPanel';
 import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
@@ -34,6 +34,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
+    private styleInjectorRef: React.RefObject<StyleInjector>;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -54,6 +55,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Create the ref to hold our variable explorer
         this.variableExplorerRef = React.createRef<VariableExplorer>();
+
+        // Create the ref to hold our style injector
+        this.styleInjectorRef = React.createRef<StyleInjector>();
     }
 
     public componentWillMount() {
@@ -83,14 +87,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.renderCount = this.renderCount + 1;
         }
 
-        const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
+        const baseTheme = this.computeBaseTheme();
 
         const headerProps = this.getHeaderProps(baseTheme);
         const contentProps = this.getContentProps(baseTheme);
 
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <StyledRoot isDark={baseTheme !== 'vscode-light'} />
+                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
             </div>
@@ -195,6 +199,30 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // Called by the header control when size changes (such as expanding variables)
     private onHeaderHeightChange = (newHeight: number) => {
         this.setState({contentTop: newHeight});
+    }
+
+    private darkChanged = (newDark: boolean) => {
+        // update our base theme
+        this.setState(
+            {
+                forceDark: newDark
+            }
+        );
+    }
+
+    private computeBaseTheme(): string {
+        // If we're ignoring, always light
+        if (getSettings && getSettings().ignoreVscodeTheme) {
+            return 'vscode-light';
+        }
+
+        // Otherwise see if the style injector has figured out
+        // the theme is dark or not
+        if (this.state.forceDark !== undefined) {
+            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
+        }
+
+        return this.props.baseTheme;
     }
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {

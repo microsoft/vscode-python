@@ -25,6 +25,7 @@ export interface IMainPanelState {
     contentTop: number;
     rootStyle?: string;
     theme?: string;
+    forceDark?: boolean;
 }
 
 // tslint:disable-next-line: no-multiline-string

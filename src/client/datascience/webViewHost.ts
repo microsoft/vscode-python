@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../common/extensions';
 
+import { injectable } from 'inversify';
 import { ConfigurationChangeEvent, ViewColumn } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { traceInfo } from '../common/logger';
-import { IAsyncDisposable, IConfigurationService, IDisposable } from '../common/types';
+import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { CssMessages, DefaultTheme, IGetCssRequest, SharedMessages } from './constants';
-import { ICodeCssGenerator, IDataScienceExtraSettings } from './types';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
-export class WebViewHost<IMapping> implements IAsyncDisposable {
+@injectable() // For some reason this is necessary to get the class hierarchy to work.
+export class WebViewHost<IMapping> implements IDisposable {
     protected viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
     private isDisposed: boolean = false;
     private webPanel: IWebPanel | undefined;
@@ -26,14 +28,16 @@ export class WebViewHost<IMapping> implements IAsyncDisposable {
         private configService: IConfigurationService,
         private provider: IWebPanelProvider,
         private cssGenerator: ICodeCssGenerator,
+        private themeFinder: IThemeFinder,
         private workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
         messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
         private mainScriptPath: string,
-        private title: string
+        private title: string,
+        private viewColumn: ViewColumn
         ) {
         // Create our message listener for our web panel.
-        this.messageListener = messageListenerCtor(this.onMessage, this.onViewStateChanged, this.dispose);
+        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));
 
         // Listen for theme changes.
         const workbench = this.workspaceService.getConfiguration('workbench');
@@ -60,7 +64,7 @@ export class WebViewHost<IMapping> implements IAsyncDisposable {
         }
     }
 
-    public dispose = async () => {
+    public dispose() {
         if (!this.isDisposed) {
             this.isDisposed = true;
             if (this.webPanel) {
@@ -79,7 +83,7 @@ export class WebViewHost<IMapping> implements IAsyncDisposable {
     }
 
     //tslint:disable-next-line:no-any
-    protected onMessage = (message: string, payload: any) => {
+    protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:
                 this.webPanelRendered();
@@ -132,10 +136,10 @@ export class WebViewHost<IMapping> implements IAsyncDisposable {
 
     private async generateCss(request: IGetCssRequest) : Promise<void> {
         const settings = this.generateDataScienceExtraSettings();
+        const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme });
+        return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
     }
-
 
     // tslint:disable-next-line:no-any
     private webPanelRendered() {
@@ -179,7 +183,6 @@ export class WebViewHost<IMapping> implements IAsyncDisposable {
         };
     }
 
-
     private loadWebPanel() {
         traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
 
@@ -192,7 +195,7 @@ export class WebViewHost<IMapping> implements IAsyncDisposable {
             traceInfo('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(ViewColumn.One, this.messageListener, this.title, this.mainScriptPath, '', settings);
+            this.webPanel = this.provider.create(this.viewColumn, this.messageListener, this.title, this.mainScriptPath, '', settings);
 
             traceInfo('Web view created.');
         }

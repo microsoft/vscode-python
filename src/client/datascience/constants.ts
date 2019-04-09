@@ -180,4 +180,5 @@ export interface IGetCssRequest {
 export interface IGetCssResponse {
     css: string;
     theme: string;
+    knownDark?: boolean;
 }

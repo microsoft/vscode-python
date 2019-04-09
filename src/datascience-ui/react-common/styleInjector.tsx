@@ -7,18 +7,20 @@ import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datas
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
 
-export interface IStyledRootProps {
-    isDark: boolean;
+export interface IStyleInjectorProps {
+    expectingDark: boolean;
+    darkChanged?(newDark: boolean): void;
 }
 
-interface IStyledRootState {
+interface IStyleInjectorState {
     rootCss?: string;
     theme?: string;
+    knownDark?: boolean;
 }
 
-export class StyledRoot extends React.Component<IStyledRootProps, IStyledRootState> implements IMessageHandler {
+export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleInjectorState> implements IMessageHandler {
 
-    constructor(props: IStyledRootProps) {
+    constructor(props: IStyleInjectorProps) {
         super(props);
         this.state = { rootCss: undefined, theme: undefined };
     }
@@ -38,13 +40,7 @@ export class StyledRoot extends React.Component<IStyledRootProps, IStyledRootSta
             window.console.log('Generating css');
             // Set to a temporary value.
             this.setState({rootCss: ' '});
-            PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.isDark });
-        }
-    }
-
-    public updateStyle(css: string, theme: string) {
-        if (this.state.theme !== theme) {
-            this.setState({rootCss: css, theme});
+            PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
         }
     }
 
@@ -77,13 +73,24 @@ export class StyledRoot extends React.Component<IStyledRootProps, IStyledRootSta
         return true;
     }
 
+    public get knownDark() : boolean | undefined {
+        return this.state.knownDark;
+    }
+
     // tslint:disable-next-line:no-any
     private handleResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
+            if (this.state.knownDark !== response.knownDark &&
+                response.knownDark !== undefined &&
+                this.props.darkChanged) {
+                this.props.darkChanged(response.knownDark);
+            }
+
             this.setState({
                 rootCss: response.css,
-                theme: response.theme
+                theme: response.theme,
+                knownDark: response.knownDark
             });
         }
     }
@@ -95,7 +102,7 @@ export class StyledRoot extends React.Component<IStyledRootProps, IStyledRootSta
             const dsSettings = newSettings as IDataScienceExtraSettings;
             if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
                 // User changed the current theme. Rerender
-                PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.isDark });
+                PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
             }
         }
     }

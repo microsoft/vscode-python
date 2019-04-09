@@ -9,7 +9,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -287,6 +287,6 @@ export interface IDataViewerProvider {
 }
 export const IDataViewer = Symbol('IDataViewer');
 
-export interface IDataViewer extends IAsyncDisposable {
-    show(variable: IJupyterVariable) : Promise<void>;
+export interface IDataViewer extends IDisposable {
+    showVariable(variable: IJupyterVariable) : Promise<void>;
 }
