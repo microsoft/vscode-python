@@ -228,6 +228,8 @@ def _parse_item(item, _normcase, _pathsep):
     # Figure out the file.
     fspath = str(item.fspath)
     if not fspath.endswith(_pathsep + fileid):
+        print(fspath)
+        print(_pathsep + fileid)
         raise NotImplementedError
     filename = fspath[-len(fileid):]
     testroot = str(item.fspath)[:-len(fileid)].rstrip(_pathsep)
