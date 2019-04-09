@@ -10,7 +10,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { NugetPackage } from '../../common/nuget/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { FolderVersionPair, IDownloadChannelRule, ILanguageServerFolderService, ILanguageServerPackageService } from '../types';
 
@@ -21,7 +21,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
 
     @traceDecorators.verbose('Get language server folder name')
-    public async getLanguageServerFolderName(): Promise<string> {
+    public async getLanguageServerFolderName(resource: Resource): Promise<string> {
         const currentFolder = await this.getCurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
 
@@ -30,7 +30,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
             return path.basename(currentFolder.path);
         }
 
-        serverVersion = await this.getLatestLanguageServerVersion()
+        serverVersion = await this.getLatestLanguageServerVersion(resource)
             .catch(() => undefined);
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
@@ -41,9 +41,9 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
     }
 
     @traceDecorators.verbose('Get latest version of Language Server')
-    public getLatestLanguageServerVersion(): Promise<NugetPackage | undefined> {
+    public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
-        return lsPackageService.getLatestNugetPackageVersion();
+        return lsPackageService.getLatestNugetPackageVersion(resource);
     }
     public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);

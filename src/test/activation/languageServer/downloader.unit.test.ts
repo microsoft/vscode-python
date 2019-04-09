@@ -50,7 +50,7 @@ suite('Activation - Downloader', () => {
 
         const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
         folderService
-            .setup(f => f.getLatestLanguageServerVersion())
+            .setup(f => f.getLatestLanguageServerVersion(undefined))
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
@@ -83,7 +83,7 @@ suite('Activation - Downloader', () => {
 
         const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
         folderService
-            .setup(f => f.getLatestLanguageServerVersion())
+            .setup(f => f.getLatestLanguageServerVersion(undefined))
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
@@ -108,7 +108,7 @@ suite('Activation - Downloader', () => {
 
         const pkg = makePkgInfo('ls', 'https://a.b.com/x/y/z/ls.nupkg');
         folderService
-            .setup(f => f.getLatestLanguageServerVersion())
+            .setup(f => f.getLatestLanguageServerVersion(undefined))
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
@@ -125,7 +125,7 @@ suite('Activation - Downloader', () => {
         // tslint:disable-next-line:no-http-string
         const pkg = makePkgInfo('ls', 'http://a.b.com/x/y/z/ls.nupkg');
         folderService
-            .setup(f => f.getLatestLanguageServerVersion())
+            .setup(f => f.getLatestLanguageServerVersion(undefined))
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
@@ -140,7 +140,7 @@ suite('Activation - Downloader', () => {
     test('Get download info - bogus URL', async () => {
         const pkg = makePkgInfo('ls', 'xyz');
         folderService
-            .setup(f => f.getLatestLanguageServerVersion())
+            .setup(f => f.getLatestLanguageServerVersion(undefined))
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
@@ -216,7 +216,7 @@ suite('Activation - Downloader', () => {
         test('Display error message if LS downloading fails', async () => {
             const pkg = makePkgInfo('ls', 'xyz');
             folderService
-                .setup(f => f.getLatestLanguageServerVersion())
+                .setup(f => f.getLatestLanguageServerVersion(undefined))
                 .returns(() => Promise.resolve(pkg))
                 .verifiable(TypeMoq.Times.once());
             output.setup(o => o.appendLine(LanguageService.downloadFailedOutputMessage()))
@@ -239,7 +239,7 @@ suite('Activation - Downloader', () => {
         test('Display error message if LS extraction fails', async () => {
             const pkg = makePkgInfo('ls', 'xyz');
             folderService
-                .setup(f => f.getLatestLanguageServerVersion())
+                .setup(f => f.getLatestLanguageServerVersion(undefined))
                 .returns(() => Promise.resolve(pkg))
                 .verifiable(TypeMoq.Times.once());
             output.setup(o => o.appendLine(LanguageService.extractionFailedOutputMessage()))

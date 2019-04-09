@@ -44,7 +44,7 @@ suite('Nuget Azure Storage Repository', () => {
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
         const packageName = lsPackageService.getNugetPackageName();
-        const packages = await repo.getPackages(packageName);
+        const packages = await repo.getPackages(packageName, undefined);
 
         expect(packages).to.be.length.greaterThan(0);
     });

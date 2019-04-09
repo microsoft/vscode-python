@@ -55,7 +55,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         if (!settings.downloadLanguageServer) {
             return;
         }
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
         if (!(await this.fs.fileExists(mscorlib))) {

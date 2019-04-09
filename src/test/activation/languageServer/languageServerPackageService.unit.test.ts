@@ -85,7 +85,7 @@ suite('Language', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget.object);
 
         repo
-            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
         nuget
@@ -93,7 +93,7 @@ suite('Language', () => {
             .returns(() => true)
             .verifiable(typeMoq.Times.atLeastOnce());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion();
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
 
         repo.verifyAll();
         nuget.verifyAll();
@@ -117,11 +117,11 @@ suite('Language', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo
-            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion();
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
 
         repo.verifyAll();
         expect(info).to.deep.equal(expectedPackage);
@@ -142,11 +142,11 @@ suite('Language', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo
-            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion();
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
 
         repo.verifyAll();
         const expectedPackage: NugetPackage = {

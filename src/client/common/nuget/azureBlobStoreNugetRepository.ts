@@ -7,25 +7,39 @@ import { inject, injectable, unmanaged } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { IWorkspaceService } from '../application/types';
 import { traceDecorators } from '../logger';
+import { Resource } from '../types';
 import { INugetRepository, INugetService, NugetPackage } from './types';
 
 @injectable()
 export class AzureBlobStoreNugetRepository implements INugetRepository {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @unmanaged() protected readonly azureBlobStorageAccount: string,
         @unmanaged() protected readonly azureBlobStorageContainer: string,
-        @unmanaged() protected readonly azureCDNBlobStorageAccount: string) { }
-    public async getPackages(packageName: string): Promise<NugetPackage[]> {
-        return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName, this.azureCDNBlobStorageAccount);
+        @unmanaged() protected readonly azureCDNBlobStorageAccount: string
+    ) { }
+    public async getPackages(packageName: string, resource: Resource): Promise<NugetPackage[]> {
+        return this.listPackages(
+            this.azureBlobStorageAccount,
+            this.azureBlobStorageContainer,
+            packageName,
+            this.azureCDNBlobStorageAccount,
+            resource
+        );
     }
 
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
     @traceDecorators.verbose('Listing Nuget Packages')
-    protected async listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string, azureCDNBlobStorageAccount: string) {
-        // tslint:disable-next-line:no-require-imports
-        const az = await import('azure-storage') as typeof import('azure-storage');
-        const blobStore = az.createBlobServiceAnonymous(azureBlobStorageAccount);
+    protected async listPackages(
+        azureBlobStorageAccount: string,
+        azureBlobStorageContainer: string,
+        packageName: string,
+        azureCDNBlobStorageAccount: string,
+        resource: Resource
+    ) {
+        const blobStore = await this.getBlobStore(azureBlobStorageAccount, resource);
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         return new Promise<NugetPackage[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
@@ -45,5 +59,18 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                     }));
                 });
         });
+    }
+    private async getBlobStore(uri: string, resource: Resource) {
+        if (uri.startsWith('https:')) {
+            const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+            const cfg = workspace.getConfiguration('http', resource);
+            if (!cfg.get<boolean>('proxyStrictSSL', true)) {
+                // tslint:disable-next-line:no-http-string
+                uri = uri.replace(/^https:/, 'http:');
+            }
+        }
+        // tslint:disable-next-line:no-require-imports
+        const az = await import('azure-storage') as typeof import('azure-storage');
+        return az.createBlobServiceAnonymous(uri);
     }
 }

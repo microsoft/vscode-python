@@ -39,7 +39,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     }
 
     public async getDownloadInfo(resource: Resource) {
-        const info = await this.lsFolderService.getLatestLanguageServerVersion()
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource)
             .then(item => item!);
 
         let uri = info.uri;

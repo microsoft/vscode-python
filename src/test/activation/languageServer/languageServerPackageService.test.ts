@@ -39,7 +39,7 @@ suite('Language Server Package Service', () => {
         const platform = typeMoq.Mock.ofType<IPlatformService>();
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platform.object);
         const packageName = lsPackageService.getNugetPackageName();
-        const packages = await nugetRepo.getPackages(packageName);
+        const packages = await nugetRepo.getPackages(packageName, undefined);
 
         const latestReleases = packages
             .filter(item => nugetService.isReleaseVersion(item.version))
