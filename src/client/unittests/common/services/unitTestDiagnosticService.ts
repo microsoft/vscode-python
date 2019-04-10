@@ -24,9 +24,9 @@ export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
         this.MessageSeverities.set(PythonUnitTestMessageSeverity.Failure, DiagnosticSeverity.Error);
         this.MessageSeverities.set(PythonUnitTestMessageSeverity.Skip, DiagnosticSeverity.Information);
         this.MessageSeverities.set(PythonUnitTestMessageSeverity.Pass, undefined);
-        this.MessagePrefixes.set(DiagnosticMessageType.Error, localize.UnitTests.testErrorDiagnosticMessage());
-        this.MessagePrefixes.set(DiagnosticMessageType.Fail, localize.UnitTests.testFailDiagnosticMessage());
-        this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.UnitTests.testSkippedDiagnosticMessage());
+        this.MessagePrefixes.set(DiagnosticMessageType.Error, localize.Testing.testErrorDiagnosticMessage());
+        this.MessagePrefixes.set(DiagnosticMessageType.Fail, localize.Testing.testFailDiagnosticMessage());
+        this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.Testing.testSkippedDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Pass, '');
     }
     public getMessagePrefix(status: TestStatus): string | undefined {

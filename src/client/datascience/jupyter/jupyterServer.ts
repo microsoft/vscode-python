@@ -80,12 +80,23 @@ class CellSubscriber {
         this.attemptToFinish();
     }
 
-    public reject() {
+    // tslint:disable-next-line:no-any
+    public reject(e: any) {
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
             this.subscriber.next(this.cellRef);
             this.subscriber.complete();
-            this.deferred.reject();
+            this.deferred.reject(e);
+            this.promiseComplete(this);
+        }
+    }
+
+    public cancel() {
+        if (!this.deferred.completed) {
+            this.cellRef.state = CellState.error;
+            this.subscriber.next(this.cellRef);
+            this.subscriber.complete();
+            this.deferred.resolve();
             this.promiseComplete(this);
         }
     }
@@ -162,7 +173,7 @@ export class JupyterServerBase implements INotebookServer {
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle ${this.id}`);
-            await this.session.waitForIdle();
+            await this.session.waitForIdle(Number.MAX_SAFE_INTEGER);
 
             traceInfo(`Performing initial setup ${this.id}`);
             // Run our initial setup and plot magics
@@ -186,8 +197,8 @@ export class JupyterServerBase implements INotebookServer {
         return this.shutdown();
     }
 
-    public waitForIdle(): Promise<void> {
-        return this.session ? this.session.waitForIdle() : Promise.resolve();
+    public waitForIdle(timeoutMs: number): Promise<void> {
+        return this.session ? this.session.waitForIdle(timeoutMs) : Promise.resolve();
     }
 
     public execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
@@ -261,17 +272,16 @@ export class JupyterServerBase implements INotebookServer {
         };
     }
 
-    public async restartKernel(): Promise<void> {
+    public async restartKernel(timeoutMs: number): Promise<void> {
         if (this.session) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
             // Complete all pending as an error. We're restarting
-            const copyPending = [...this.pendingCellSubscriptions];
-            copyPending.forEach(c => c.reject());
+            this.finishUncompletedCells();
 
             // Restart our kernel
-            await this.session.restart();
+            await this.session.restart(timeoutMs);
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
@@ -289,14 +299,12 @@ export class JupyterServerBase implements INotebookServer {
             // restarted the kernel.
             const interruptBeginTime = Date.now();
 
-            // Copy the list of pending cells. If these don't finish before the timeout
-            // then our interrupt didn't work.
-            const copyPending = [...this.pendingCellSubscriptions];
+            // Get just the first pending cell (it should be the oldest). If it doesn't finish
+            // by our timeout, then our interrupt didn't work.
+            const firstPending = this.pendingCellSubscriptions.length > 0 ? this.pendingCellSubscriptions[0] : undefined;
 
-            // Create a promise that resolves when all of our currently
-            // pending cells finish.
-            const finished = copyPending.length > 0 ?
-                Promise.all(copyPending.map(d => d.promise)) : Promise.resolve([CellState.finished]);
+            // Create a promise that resolves when the first pending cell finishes
+            const finished = firstPending ? firstPending.promise : Promise.resolve(CellState.finished);
 
             // Create a deferred promise that resolves if we have a failure
             const restarted = createDeferred<CellState[]>();
@@ -315,15 +323,12 @@ export class JupyterServerBase implements INotebookServer {
                 restarted.resolve([]);
 
                 // Fail all of the active (might be new ones) pending cell executes. We restarted.
-                const newCopyPending = [...this.pendingCellSubscriptions];
-                newCopyPending.forEach(c => {
-                    c.reject();
-                });
+                this.finishUncompletedCells();
             };
             const restartHandlerToken = this.session.onRestarted(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
-            this.session.interrupt().catch(exc => {
+            this.session.interrupt(timeoutMs).catch(exc => {
                 this.logger.logWarning(`Error during interrupt: ${exc}`);
                 restarted.resolve([]);
             });
@@ -331,21 +336,25 @@ export class JupyterServerBase implements INotebookServer {
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
                 const result = await Promise.race([finished, restarted.promise, sleep(timeoutMs)]);
-                const states = result as CellState[];
 
                 // See if we restarted or not
                 if (restarted.completed) {
                     return InterruptResult.Restarted;
                 }
 
-                if (states) {
-                    // We got back the pending cells
-                    return InterruptResult.Success;
+                // See if we timed out or not.
+                if (result === timeoutMs) {
+                    // We timed out. You might think we should stop our pending list, but that's not
+                    // up to us. The cells are still executing. The user has to request a restart or try again
+                    return InterruptResult.TimedOut;
                 }
 
-                // We timed out. You might think we should stop our pending list, but that's not
-                // up to us. The cells are still executing. The user has to request a restart or try again
-                return InterruptResult.TimedOut;
+                // Cancel all other pending cells as we interrupted.
+                this.finishUncompletedCells();
+
+                // Indicate the interrupt worked.
+                return InterruptResult.Success;
+
             } catch (exc) {
                 // Something failed. See if we restarted or not.
                 if (this.sessionStartTime && (interruptBeginTime < this.sessionStartTime)) {
@@ -377,6 +386,12 @@ export class JupyterServerBase implements INotebookServer {
             ...this.launchInfo.connectionInfo,
             dispose: noop
         };
+    }
+
+    private finishUncompletedCells() {
+        const copyPending = [...this.pendingCellSubscriptions];
+        copyPending.forEach(c => c.cancel());
+        this.pendingCellSubscriptions = [];
     }
 
     private getDisposedError(): Error {

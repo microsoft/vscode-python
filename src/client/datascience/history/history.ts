@@ -31,6 +31,7 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import {
     CellState,
     ICell,
@@ -167,7 +168,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 break;
 
             case HistoryMessages.RestartKernel:
-                this.restartKernel();
+                this.restartKernel().ignoreErrors();
                 break;
 
             case HistoryMessages.ReturnAllCells:
@@ -175,7 +176,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 break;
 
             case HistoryMessages.Interrupt:
-                this.interruptKernel();
+                this.interruptKernel().ignoreErrors();
                 break;
 
             case HistoryMessages.Export:
@@ -298,58 +299,52 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     @captureTelemetry(Telemetry.RestartKernel)
-    public restartKernel() {
+    public async restartKernel() : Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
             // Ask the user if they want us to restart or not.
             const message = localize.DataScience.restartKernelMessage();
             const yes = localize.DataScience.restartKernelMessageYes();
             const no = localize.DataScience.restartKernelMessageNo();
 
-            this.applicationShell.showInformationMessage(message, yes, no).then(v => {
-                if (v === yes) {
-                    this.restartKernelInternal().catch(e => {
-                        this.applicationShell.showErrorMessage(e);
-                        this.logger.logError(e);
-                    });
-                }
-            });
+            const v = await this.applicationShell.showInformationMessage(message, yes, no);
+            if (v === yes) {
+                await this.restartKernelInternal();
+            }
         }
+
+        return Promise.resolve();
     }
 
     @captureTelemetry(Telemetry.Interrupt)
-    public interruptKernel() {
+    public async interruptKernel() : Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
             const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus());
 
             const settings = this.configuration.getSettings();
             const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
-            this.jupyterServer.interruptKernel(interruptTimeout)
-                .then(result => {
-                    status.dispose();
-                    if (result === InterruptResult.TimedOut) {
-                        const message = localize.DataScience.restartKernelAfterInterruptMessage();
-                        const yes = localize.DataScience.restartKernelMessageYes();
-                        const no = localize.DataScience.restartKernelMessageNo();
+            try {
+                const result = await this.jupyterServer.interruptKernel(interruptTimeout);
+                status.dispose();
 
-                        this.applicationShell.showInformationMessage(message, yes, no).then(v => {
-                            if (v === yes) {
-                                this.restartKernelInternal().catch(e => {
-                                    this.applicationShell.showErrorMessage(e);
-                                    this.logger.logError(e);
-                                });
-                            }
-                        });
-                    } else if (result === InterruptResult.Restarted) {
-                        // Uh-oh, keyboard interrupt crashed the kernel.
-                        this.addSysInfo(SysInfoReason.Interrupt).ignoreErrors();
+                // We timed out, ask the user if they want to restart instead.
+                if (result === InterruptResult.TimedOut) {
+                    const message = localize.DataScience.restartKernelAfterInterruptMessage();
+                    const yes = localize.DataScience.restartKernelMessageYes();
+                    const no = localize.DataScience.restartKernelMessageNo();
+                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    if (v === yes) {
+                        await this.restartKernelInternal();
                     }
-                })
-                .catch(err => {
-                    status.dispose();
-                    this.logger.logError(err);
-                    this.applicationShell.showErrorMessage(err);
-                });
+                } else if (result === InterruptResult.Restarted) {
+                    // Uh-oh, keyboard interrupt crashed the kernel.
+                    this.addSysInfo(SysInfoReason.Interrupt).ignoreErrors();
+                }
+            } catch (err) {
+                status.dispose();
+                this.logger.logError(err);
+                this.applicationShell.showErrorMessage(err);
+            }
         }
     }
 
@@ -422,10 +417,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private async restartKernelInternal(): Promise<void> {
-        this.restartingKernel = true;
-
-        // First we need to finish all outstanding cells.
+    private finishOutstandingCells() {
         this.unfinishedCells.forEach(c => {
             c.state = CellState.error;
             this.postMessage(HistoryMessages.FinishCell, c).ignoreErrors();
@@ -433,14 +425,32 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         this.unfinishedCells = [];
         this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
         this.potentiallyUnfinishedStatus = [];
+    }
+
+    private async restartKernelInternal(): Promise<void> {
+        this.restartingKernel = true;
+
+        // First we need to finish all outstanding cells.
+        this.finishOutstandingCells();
 
         // Set our status
         const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus());
 
         try {
             if (this.jupyterServer) {
-                await this.jupyterServer.restartKernel();
+                await this.jupyterServer.restartKernel(this.generateDataScienceExtraSettings().jupyterInterruptTimeout);
                 await this.addSysInfo(SysInfoReason.Restart);
+            }
+        } catch (exc) {
+            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
+            if (exc instanceof JupyterKernelPromiseFailedError && this.jupyterServer) {
+                await this.jupyterServer.dispose();
+                await this.loadJupyterServer(true);
+                await this.addSysInfo(SysInfoReason.Restart);
+            } else {
+                // Show the error message
+                this.applicationShell.showErrorMessage(exc);
+                this.logger.logError(exc);
             }
         } finally {
             status.dispose();

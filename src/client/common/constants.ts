@@ -27,9 +27,9 @@ export namespace Commands {
     export const Sort_Imports = 'python.sortImports';
     export const Tests_Run = 'python.runtests';
     export const Tests_Debug = 'python.debugtests';
-    export const Tests_Ask_To_Stop_Test = 'python.askToStopUnitTests';
-    export const Tests_Ask_To_Stop_Discovery = 'python.askToStopUnitTestDiscovery';
-    export const Tests_Stop = 'python.stopUnitTests';
+    export const Tests_Ask_To_Stop_Test = 'python.askToStopTests';
+    export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
+    export const Tests_Stop = 'python.stopTests';
     export const Test_Reveal_Test_Item = 'python.revealTestItem';
     export const ViewOutput = 'python.viewOutput';
     export const Tests_ViewOutput = 'python.viewTestOutput';

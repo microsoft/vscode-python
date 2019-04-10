@@ -14,9 +14,12 @@ suite('Provider - Folding Provider', () => {
     const docStringFileAndExpectedFoldingRanges: FileFoldingRanges[] = [
         {
             file: path.join(pythonFilesPath, 'attach_server.py'), ranges: [
-                new FoldingRange(0, 14), new FoldingRange(44, 73, FoldingRangeKind.Comment),
-                new FoldingRange(95, 143), new FoldingRange(149, 150, FoldingRangeKind.Comment),
-                new FoldingRange(305, 313), new FoldingRange(320, 322)
+                new FoldingRange(0, 14),
+                new FoldingRange(44, 73, FoldingRangeKind.Comment),
+                new FoldingRange(98, 146),
+                new FoldingRange(152, 153, FoldingRangeKind.Comment),
+                new FoldingRange(312, 320),
+                new FoldingRange(327, 329)
             ]
         },
         {

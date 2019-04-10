@@ -83,9 +83,9 @@ export class JupyterServerFactory implements INotebookServer {
         return server.dispose();
     }
 
-    public async waitForIdle(): Promise<void> {
+    public async waitForIdle(timeoutMs: number): Promise<void> {
         const server = await this.serverFactory.get();
-        return server.waitForIdle();
+        return server.waitForIdle(timeoutMs);
     }
 
     public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
@@ -118,9 +118,9 @@ export class JupyterServerFactory implements INotebookServer {
         });
     }
 
-    public async restartKernel(): Promise<void> {
+    public async restartKernel(timeoutMs: number): Promise<void> {
         const server = await this.serverFactory.get();
-        return server.restartKernel();
+        return server.restartKernel(timeoutMs);
     }
 
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {

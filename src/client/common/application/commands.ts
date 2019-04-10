@@ -50,6 +50,9 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
+    // deprecated:
+    ['python.askToStopUnitTestDiscovery']: [];
+    ['python.askToStopUnitTests']: [];
 }
 
 /**
@@ -103,4 +106,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
+    // deprecated:
+    ['python.stopUnitTests']: [undefined, Uri];
 }

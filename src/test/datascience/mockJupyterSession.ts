@@ -5,6 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
 import { ICell, IJupyterSession } from '../../client/datascience/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -19,6 +20,7 @@ export class MockJupyterSession implements IJupyterSession {
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
     private executes: string[] = [];
+    private forceRestartTimeout : boolean = false;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -29,19 +31,28 @@ export class MockJupyterSession implements IJupyterSession {
         return this.restartedEvent.event;
     }
 
-    public async restart(): Promise<void> {
+    public async restart(_timeout: number): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach(r => r.cancel());
+
+        if (this.forceRestartTimeout) {
+            throw new JupyterKernelPromiseFailedError('Forcing restart timeout');
+        }
+
         return sleep(this.timedelay);
     }
-    public interrupt(): Promise<void> {
+    public interrupt(_timeout: number): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach(r => r.cancel());
         return sleep(this.timedelay);
     }
-    public waitForIdle(): Promise<void> {
+    public waitForIdle(_timeout: number): Promise<void> {
         return sleep(this.timedelay);
+    }
+
+    public prolongRestarts() {
+        this.forceRestartTimeout = true;
     }
     public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
         // Content should have the code

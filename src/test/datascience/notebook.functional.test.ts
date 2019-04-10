@@ -20,6 +20,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
 import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
@@ -388,17 +389,22 @@ suite('Jupyter notebook tests', () => {
 
         // In unit tests we have to wait for status idle before restarting. Unit tests
         // seem to be timing out if the restart throws any exceptions (even if they're caught)
-        await server!.waitForIdle();
+        await server!.waitForIdle(10000);
 
         console.log('Restarting kernel');
+        try {
+            await server!.restartKernel(10000);
 
-        await server!.restartKernel();
+            console.log('Waiting for idle');
+            await server!.waitForIdle(10000);
 
-        console.log('Waiting for idle');
-        await server!.waitForIdle();
+            console.log('Verifying restart');
+            await verifyError(server, 'a', `name 'a' is not defined`);
 
-        console.log('Verifying restart');
-        await verifyError(server, 'a', `name 'a' is not defined`);
+        } catch (exc) {
+            assert.ok(exc instanceof JupyterKernelPromiseFailedError, 'Restarting did not timeout correctly');
+        }
+
     });
 
     class TaggedCancellationTokenSource extends CancellationTokenSource {

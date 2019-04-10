@@ -13,7 +13,7 @@ import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
-import { UnitTests } from '../../../client/common/utils/localize';
+import { Testing } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../../client/unittests/common/constants';
@@ -298,7 +298,7 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell.setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => Promise.resolve(UnitTests.disableTests()))
+            .returns(() => Promise.resolve(Testing.disableTests()))
             .verifiable(typeMoq.Times.once());
 
         for (const setting of ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
@@ -335,7 +335,7 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell.setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => Promise.resolve(UnitTests.configureTests()))
+            .returns(() => Promise.resolve(Testing.configureTests()))
             .verifiable(typeMoq.Times.once());
 
         const undefinedArg = typeMoq.It.isValue(undefined);
