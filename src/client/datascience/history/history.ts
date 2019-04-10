@@ -341,20 +341,21 @@ export class History implements IHistory {
             try {
                 const result = await this.jupyterServer.interruptKernel(interruptTimeout);
                 status.dispose();
+
+                // We timed out, ask the user if they want to restart instead.
                 if (result === InterruptResult.TimedOut) {
                     const message = localize.DataScience.restartKernelAfterInterruptMessage();
                     const yes = localize.DataScience.restartKernelMessageYes();
                     const no = localize.DataScience.restartKernelMessageNo();
-                    this.applicationShell.showInformationMessage(message, yes, no).then(v => {
-                        if (v === yes) {
-                            this.restartKernelInternal().ignoreErrors();
-                        }
-                    });
-                }  else if (result === InterruptResult.Restarted) {
+                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    if (v === yes) {
+                        await this.restartKernelInternal();
+                    }
+                } else if (result === InterruptResult.Restarted) {
                     // Uh-oh, keyboard interrupt crashed the kernel.
                     this.addSysInfo(SysInfoReason.Interrupt).ignoreErrors();
                 }
-            }  catch (err) {
+            } catch (err) {
                 status.dispose();
                 this.logger.logError(err);
                 this.applicationShell.showErrorMessage(err);
