@@ -36,6 +36,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
 
     @traceDecorators.error('Error in event handler for detection of new environment')
     protected async handleNewEnvironment(resource: Uri): Promise<void> {
+        // Wait for a while, to ensure environment gets created and is accessible (as this is slow on Windows)
         await sleep(1000);
         const interpreters = await this.locator.getInterpreters(resource);
         const interpreter = this.helper.getBestInterpreter(interpreters);
