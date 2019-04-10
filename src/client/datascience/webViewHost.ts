@@ -150,7 +150,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     // Post a message to our webpanel and update our new datascience settings
     private onPossibleThemeChange = (event: ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration('workbench')) {
+        if (event.affectsConfiguration('workbench.colorTheme')) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
             if (newSettings && newSettings.extraSettings.theme !== this.currentTheme) {
