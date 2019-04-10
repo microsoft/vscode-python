@@ -7,6 +7,7 @@ import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import { InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -35,6 +36,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
 
     @traceDecorators.error('Error in event handler for detection of new environment')
     protected async handleNewEnvironment(resource: Uri): Promise<void> {
+        await sleep(1000);
         const interpreters = await this.locator.getInterpreters(resource);
         const interpreter = this.helper.getBestInterpreter(interpreters);
         if (!interpreter || this.hasUserDefinedPythonPath(resource)) {
