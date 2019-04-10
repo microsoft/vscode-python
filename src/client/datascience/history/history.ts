@@ -996,7 +996,18 @@ export class History implements IHistory {
 
     private requestVariables = async (): Promise<void> => {
         // Request our new list of variables
-        const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+        let vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+
+        const settings = this.configuration.getSettings();
+        const excludeString = settings.datascience.variableExplorerExclude;
+
+        if (excludeString) {
+            const excludeArray = excludeString.split(';');
+            vars = vars.filter((value) => {
+               return excludeArray.indexOf(value.type) === -1;
+            });
+        }
+
         this.postMessage(HistoryMessages.GetVariablesResponse, vars).ignoreErrors();
     }
 
