@@ -369,18 +369,13 @@ function getParentTestFolder(tests: Tests, item: TestFolder | TestFile): TestFol
  */
 export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): TestFile {
     let parent = getParent(tests, suite);
-    if (!parent) {
-        throw new Error('No parent file for provided test item');
-    }
-    let type = getTestType(parent);
-    while (parent && type !== TestType.testFile) {
-        parent = getParent(tests, parent);
-        if (parent) {
-            type = getTestType(parent);
+    while (parent) {
+        if (getTestType(parent) === TestType.testFile) {
+            return parent as TestFile;
         }
+        parent = getParent(tests, parent);
     }
-
-    return parent as TestFile;
+    throw new Error('No parent file for provided test item');
 }
 /**
  * Gets the parent test suite for a suite/function.
@@ -391,18 +386,13 @@ export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): Te
  */
 export function getParentSuite(tests: Tests, suite: TestSuite | TestFunction): TestSuite | undefined {
     let parent = getParent(tests, suite);
-    if (!parent) {
-        throw new Error('No parent suite for provided test item');
-    }
-    let type = getTestType(parent);
-    while (parent && type !== TestType.testFile && type !== TestType.testSuite) {
-        parent = getParent(tests, parent);
-        if (parent) {
-            type = getTestType(parent);
+    while (parent) {
+        if (getTestType(parent) === TestType.testSuite) {
+            return parent as TestSuite;
         }
+        parent = getParent(tests, parent);
     }
-
-    return parent && type === TestType.testSuite ? parent as TestSuite : undefined;
+    return;
 }
 
 /**

@@ -157,7 +157,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             token: new CancellationTokenSource().token,
             workspaceFolder: Uri.file(__dirname)
         };
-        const expectedDiscoveryArgs = ['discover', PYTEST_PROVIDER, '--', ...options.args];
+        const expectedDiscoveryArgs = ['discover', 'pytest', '--', ...options.args];
         const discoveryOptions = { ...options };
         discoveryOptions.args = expectedDiscoveryArgs;
 

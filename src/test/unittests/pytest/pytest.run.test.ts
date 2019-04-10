@@ -303,7 +303,7 @@ async function testDiagnosticRelatedInformation(relatedInfo: vscode.DiagnosticRe
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('xUnit Tests - pytest - run with mocked process output', () => {
+suite('Unit Tests - pytest - run with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     @injectable()
