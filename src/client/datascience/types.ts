@@ -260,6 +260,7 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 export interface IJupyterVariable {
     name: string;
     value: string | undefined;
+    supportsDataExplorer: boolean;
     type: string;
     size: number;
     shape: string;

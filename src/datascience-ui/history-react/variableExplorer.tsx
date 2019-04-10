@@ -127,9 +127,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
         const newGridRows = newVariables.map(newVar => {
-            //const supportsDataFrame = validDataTypes.indexOf(newVar.type) !== -1;
-            //return {buttons: supportsDataFrame, name: newVar.name, type: newVar.type, size: newVar.size, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
-            return { buttons: {name: newVar.name, type: newVar.type}, name: newVar.name, type: newVar.type, size: newVar.size, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
+            return { buttons: {name: newVar.name, supportsDataExplorer: newVar.supportsDataExplorer}, name: newVar.name, type: newVar.type, size: newVar.size, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
         });
 
         this.setState({ gridRows: newGridRows});
