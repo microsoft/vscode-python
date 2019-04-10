@@ -19,9 +19,9 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
@@ -30,7 +30,7 @@ const unitTestTestFilesCwdPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'p
 
 /*
 These test results are from `/src/test/pythonFiles/testFiles/...` directories.
-Run the command `python <ExtensionDir>/pythonFiles/testing_tools/run_adapter.py discover pytest -s --cache-clear` to get the JSON output.
+Run the command `python <ExtensionDir>/pythonFiles/testing_tools/run_adapter.py discover pytest -- -s --cache-clear` to get the JSON output.
 */
 
 // tslint:disable:max-func-body-length
