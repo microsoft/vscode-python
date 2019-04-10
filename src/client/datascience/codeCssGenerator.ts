@@ -105,7 +105,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     css = this.generateCss(theme, tokenColors, font, fontSize, terminalCursor, ignoreTheme ? LightTheme : undefined);
                 } else if (tokenColors === null && font && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
-                    const style = (theme && isDark) ? DarkTheme : LightTheme ;
+                    const style = isDark ? DarkTheme : LightTheme ;
                     css = this.generateCss(theme, null, font, fontSize, terminalCursor, style);
                 }
             }
