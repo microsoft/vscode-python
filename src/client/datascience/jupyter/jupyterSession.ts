@@ -22,6 +22,7 @@ import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 export class JupyterSession implements IJupyterSession {
@@ -72,7 +73,7 @@ export class JupyterSession implements IJupyterSession {
         return this.onRestartedEvent.event;
     }
 
-    public async waitForIdle() : Promise<void> {
+    public async waitForIdle(timeout: number) : Promise<void> {
         if (this.session && this.session.kernel) {
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
@@ -81,7 +82,7 @@ export class JupyterSession implements IJupyterSession {
             while (this.session &&
                 this.session.kernel &&
                 this.session.kernel.status !== 'idle' &&
-                (Date.now() - startTime < 10000)) {
+                (Date.now() - startTime < timeout)) {
                 traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
                 await sleep(10);
             }
@@ -93,15 +94,15 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public restart() : Promise<void> {
+    public restart(timeout: number) : Promise<void> {
         return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.restart(), localize.DataScience.restartingKernelFailed()) :
+            this.waitForKernelPromise(this.session.kernel.restart(), timeout, localize.DataScience.restartingKernelFailed()) :
             Promise.resolve();
     }
 
-    public interrupt() : Promise<void> {
+    public interrupt(timeout: number) : Promise<void> {
         return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.interrupt(), localize.DataScience.interruptingKernelFailed()) :
+            this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed()) :
             Promise.resolve();
     }
 
@@ -152,22 +153,13 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    private async waitForKernelPromise(kernelPromise: Promise<void>, errorMessage: string, secondTime?: boolean) : Promise<void> {
-        // Wait for five seconds for this kernel promise to happen
-        await Promise.race([kernelPromise, sleep(5000)]);
-
-        // If that didn't work, check status. Might have just not responded.
-        if (this.session && this.session.kernel && this.session.kernel.status === 'idle') {
-            return;
+    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string) : Promise<void> {
+        // Wait for this kernel promise to happen
+        const result = await Promise.race([kernelPromise, sleep(timeout)]);
+        if (result === timeout) {
+            // We timed out. Throw a specific exception
+            throw new JupyterKernelPromiseFailedError(errorMessage);
         }
-
-        // Otherwise wait another 5 seconds and check again
-        if (!secondTime) {
-            return this.waitForKernelPromise(kernelPromise, errorMessage, true);
-        }
-
-        // If this is our second try, then show an error
-        throw new Error(errorMessage);
     }
 
     private onStatusChanged(_s: Session.ISession, a: Kernel.Status) {

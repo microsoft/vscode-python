@@ -57,8 +57,8 @@ export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
-    restartKernel() : Promise<void>;
-    waitForIdle() : Promise<void>;
+    restartKernel(timeoutInMs: number) : Promise<void>;
+    waitForIdle(timeoutInMs: number) : Promise<void>;
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
@@ -93,9 +93,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;
-    restart() : Promise<void>;
-    interrupt() : Promise<void>;
-    waitForIdle() : Promise<void>;
+    restart(timeout: number) : Promise<void>;
+    interrupt(timeout: number) : Promise<void>;
+    waitForIdle(timeout: number) : Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined;
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
@@ -140,8 +140,8 @@ export interface IHistory extends Disposable {
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
-    interruptKernel(): void;
-    restartKernel(): void;
+    interruptKernel(): Promise<void>;
+    restartKernel(): Promise<void>;
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;

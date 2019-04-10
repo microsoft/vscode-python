@@ -81,7 +81,7 @@ export class HostJupyterServer
                 // Requests return arrays
                 service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
                 service.onRequest(LiveShareCommands.getSysInfo, (_args:  any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
-                service.onRequest(LiveShareCommands.restart, (_args:  any[], cancellation: CancellationToken) => this.onRestartRequest(cancellation));
+                service.onRequest(LiveShareCommands.restart, (args:  any[], cancellation: CancellationToken) => this.onRestartRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
                 service.onRequest(LiveShareCommands.interrupt, (args:  any[], cancellation: CancellationToken) => this.onInterruptRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
                 service.onRequest(LiveShareCommands.disposeServer, (_args:  any[], _cancellation: CancellationToken) => this.dispose());
 
@@ -139,9 +139,9 @@ export class HostJupyterServer
         }
     }
 
-    public async restartKernel(): Promise<void> {
+    public async restartKernel(timeoutMs: number): Promise<void> {
         try {
-            await super.restartKernel();
+            await super.restartKernel(timeoutMs);
         } catch (exc) {
             this.postException(exc, []);
             throw exc;
@@ -228,9 +228,9 @@ export class HostJupyterServer
         return super.getSysInfo();
     }
 
-    private onRestartRequest(_cancellation: CancellationToken) : Promise<any> {
+    private onRestartRequest(timeout: number, _cancellation: CancellationToken) : Promise<any> {
         // Just call the base
-        return super.restartKernel();
+        return super.restartKernel(timeout);
     }
     private onInterruptRequest(timeout: number, _cancellation: CancellationToken) : Promise<any> {
         // Just call the base

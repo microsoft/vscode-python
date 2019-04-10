@@ -78,6 +78,10 @@ suite('History output tests', () => {
         return ioc.wrapper!;
     }
 
+    // suiteTeardown(() => {
+    //     asyncDump();
+    // });
+
     teardown(async () => {
         for (const disposable of disposables) {
             if (!disposable) {
@@ -90,7 +94,6 @@ suite('History output tests', () => {
             }
         }
         await ioc.dispose();
-        delete (global as any).ascquireVsCodeApi;
     });
 
     async function getOrCreateHistory(): Promise<IHistory> {
@@ -536,5 +539,39 @@ for _ in range(50):
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
         verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
+    });
+
+    runMountedTest('Restart with session failure', async (wrapper) => {
+        // Prime the pump
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Then something that could possibly timeout
+        addContinuousMockData(ioc, 'import time\r\ntime.sleep(1000)', (_c) => {
+            return Promise.resolve({ result: '', haveMore: true});
+        });
+
+        // Then get our mock session and force it to not restart ever.
+        if (ioc.mockJupyter) {
+            const currentSession = ioc.mockJupyter.getCurrentSession();
+            if (currentSession) {
+                currentSession.prolongRestarts();
+            }
+        }
+
+        // Then try executing our long running cell and restarting in the middle
+        const history = await getOrCreateHistory();
+        const executed = createDeferred();
+        // We have to wait until the execute goes through before we reset.
+        history.onExecutedCode(() => executed.resolve());
+        const added = history.addCode('import time\r\ntime.sleep(1000)', 'foo', 0);
+        await executed.promise;
+        await history.restartKernel();
+        await added;
+
+        // Now see if our wrapper still works. History should have force a restart
+        await history.addCode('a=1\na', 'foo', 0);
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
     });
 });

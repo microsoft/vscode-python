@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Kernel } from '@jupyterlab/services';
+import { execSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -36,7 +37,6 @@ import {
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { execSync } from 'child_process';
 
 enum ModuleExistsResult {
     NotFound,
@@ -360,7 +360,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // We definitely need an ip address.
                         extraArgs.push('--ip');
                         extraArgs.push('127.0.0.1');
-    
+
                         // Now see if we need --allow-root.
                         const idResults = execSync('id', {encoding: 'utf-8'});
                         if (idResults.includes('(root)')) {
