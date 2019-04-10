@@ -10,6 +10,7 @@ import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
 import { CollapseButton } from './collapseButton';
+import { VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 
 import * as AdazzleReactDataGrid from 'react-data-grid';
@@ -20,6 +21,7 @@ interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
     onHeightChange(): void;
+    showDataExplorer(targetVariable: string): void;
 }
 
 interface IVariableExplorerState {
@@ -37,6 +39,9 @@ const defaultColumnProperties = {
     resizable: true
 };
 
+// IANHU: Move?
+//const validDataTypes = ['list', 'Series', 'dict', 'ndarray', 'DataFrame'];
+
 interface IGridRow {
     // tslint:disable-next-line:no-any
     [name: string]: any;
@@ -48,6 +53,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     constructor(prop: IVariableExplorerProps) {
         super(prop);
         const columns = [
+            //{key: 'buttons', name: '', type: 'boolean', width: 32, formatter: VariableExplorerButtonCellFormatter },
+            {key: 'buttons', name: '', type: 'boolean', width: 32, formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} /> },
             {key: 'name', name: getLocString('DataScience.variableExplorerNameColumn', 'Name'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />},
             {key: 'type', name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.type} />},
             {key: 'size', name: getLocString('DataScience.variableExplorerSizeColumn', 'Size'), type: 'number', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />},
@@ -120,7 +127,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
         const newGridRows = newVariables.map(newVar => {
-            return {name: newVar.name, type: newVar.type, size: newVar.size, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
+            //const supportsDataFrame = validDataTypes.indexOf(newVar.type) !== -1;
+            //return {buttons: supportsDataFrame, name: newVar.name, type: newVar.type, size: newVar.size, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
+            return { buttons: {name: newVar.name, type: newVar.type}, name: newVar.name, type: newVar.type, size: newVar.size, value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
         });
 
         this.setState({ gridRows: newGridRows});
@@ -159,7 +168,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (index >= 0 && index < this.state.gridRows.length) {
             return this.state.gridRows[index];
         }
-        return {name: '', type: '', size: '', value: ''};
+        return {buttons: '', name: '', type: '', size: '', value: ''};
     }
 
     private toggleInputBlock = () => {

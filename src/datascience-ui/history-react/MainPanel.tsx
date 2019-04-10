@@ -263,9 +263,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataViewer = () => {
-        this.sendMessage(HistoryMessages.ShowDataViewer, 'df');
+    private showDataViewer = (targetVariable: string) => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
     }
+
+    //private showDataViewer = () => {
+        //this.sendMessage(HistoryMessages.ShowDataViewer, 'df');
+    //}
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
         if (this.postOffice) {
