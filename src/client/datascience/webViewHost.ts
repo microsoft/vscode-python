@@ -123,6 +123,21 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    protected generateDataScienceExtraSettings() : IDataScienceExtraSettings {
+        const terminal = this.workspaceService.getConfiguration('terminal');
+        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
+        const theme = ignoreTheme || !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
+        return {
+            ...this.configService.getSettings().datascience,
+            extraSettings: {
+                terminalCursor: terminalCursor,
+                theme: theme
+            }
+        };
+    }
+
     private onViewStateChanged = (webPanel: IWebPanel) => {
         const oldActive = this.viewState.active;
         this.viewState.active = webPanel.isActive();
@@ -166,21 +181,6 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    }
-
-    private generateDataScienceExtraSettings() : IDataScienceExtraSettings {
-        const terminal = this.workspaceService.getConfiguration('terminal');
-        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
-        const theme = ignoreTheme || !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
-        return {
-            ...this.configService.getSettings().datascience,
-            extraSettings: {
-                terminalCursor: terminalCursor,
-                theme: theme
-            }
-        };
     }
 
     private loadWebPanel() {
