@@ -112,25 +112,6 @@ steps:
     displayName: 'code hygiene'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
 
-  # Enable test coverage reporting for all subsequent tests (typescript-based)
-  #
-  # Example command line (windows pwsh):
-  # > npm run cover:enable
-  - bash: |
-      npm run cover:enable
-    displayName: 'Enable coverage reporting'
-
-  # Run the typescript unit tests.
-  #
-  # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
-  #
-  # Example command line (windows pwsh):
-  # > npm run test:unittests
-  - bash: |
-      npm run test:unittests:cover
-    displayName: 'run test:unittest'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
-
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
     displayName: 'Publish test:unittest results'
