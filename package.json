@@ -41,7 +41,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.31.0"
+        "vscode": "^1.33.0"
     },
     "keywords": [
         "python",
@@ -2451,6 +2451,7 @@
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
+        "vsce": "^1.59.0",
         "vscode": "^1.1.30",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",

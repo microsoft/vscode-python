@@ -19,7 +19,7 @@
 
 ### Prerequisites
 
-1. Node.js (>= 8.9.1, < 9.0.0)
+1. Node.js 10.x
 1. Python 2.7 or later (required only for testing the extension and running unit tests)
 1. Windows, macOS, or Linux
 1. Visual Studio Code
