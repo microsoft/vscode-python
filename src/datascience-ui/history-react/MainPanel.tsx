@@ -35,6 +35,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
     private styleInjectorRef: React.RefObject<StyleInjector>;
+    private currentExecutionCount: number = 0;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -668,7 +669,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         // When a cell is finished refresh our variables
-        if (getSettings && getSettings().showJupyterVariableExplorer) {
+        // Use the ref here to maintain var explorer independence
+        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
             this.refreshVariables();
         }
     }
@@ -693,9 +695,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
+    private updateExecutionCount(cellVMs: ICellViewModel[]) {
         const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
+        this.currentExecutionCount = realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
+    }
+
+    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
+        this.updateExecutionCount(cellVMs);
+        return this.currentExecutionCount + 1;
+        //const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
+        //return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
     }
 
     private submitInput = (code: string) => {
@@ -747,7 +756,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
-        this.sendMessage(HistoryMessages.GetVariablesRequest);
+        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
     }
 
     // Find the display value for one specific variable
@@ -761,8 +770,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variable = payload as IJupyterVariable;
 
-            if (this.variableExplorerRef.current) {
-                this.variableExplorerRef.current.newVariableData(variable);
+            // Only send the updated variable data if we are on the same execution count as when we requsted it
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariableData(variable);
+                }
             }
         }
     }
@@ -773,12 +785,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variables = payload as IJupyterVariable[];
 
-            if (this.variableExplorerRef.current) {
-                this.variableExplorerRef.current.newVariablesData(variables);
-            }
+            // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
+            if (variables.length > 0 && variables[0].executionCount !== undefined && variables[0].executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariablesData(variables);
+                }
 
-            // Now put out a request for all of the sub values for the variables
-            variables.forEach(this.refreshVariable);
+                // Now put out a request for all of the sub values for the variables
+                variables.forEach(this.refreshVariable);
+            }
         }
     }
 }

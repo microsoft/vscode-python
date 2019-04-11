@@ -228,7 +228,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 break;
 
             case HistoryMessages.GetVariablesRequest:
-                this.requestVariables().ignoreErrors();
+                this.requestVariables(payload).ignoreErrors();
                 break;
 
             case HistoryMessages.GetVariableValueRequest:
@@ -918,9 +918,14 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private requestVariables = async (): Promise<void> => {
+    private requestVariables = async (executionCount: number): Promise<void> => {
         // Request our new list of variables
         let vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+
+        // Tag all of our jupyter variables with the execution count of the request
+        vars.forEach((value: IJupyterVariable) => {
+            value.executionCount = executionCount;
+        });
 
         const settings = this.configuration.getSettings();
         const excludeString = settings.datascience.variableExplorerExclude;

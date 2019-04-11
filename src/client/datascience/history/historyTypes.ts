@@ -96,7 +96,7 @@ export class IHistoryMapping {
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
     public [HistoryMessages.Activate] : never | undefined;
     public [HistoryMessages.ShowDataViewer]: string;
-    public [HistoryMessages.GetVariablesRequest]: never | undefined;
+    public [HistoryMessages.GetVariablesRequest]: number;
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariable[];
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
     public [HistoryMessages.GetVariableValueResponse]: IJupyterVariable;

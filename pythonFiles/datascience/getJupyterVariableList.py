@@ -12,8 +12,7 @@ _VSCode_JupyterVars = %who_ls
 print(_VSCODE_json.dumps([{'name': var,
                                'type': type(eval(var)).__name__,
                                'size': _VSCODE_getsizeof(var),
-                               'supportsDataExplorer': type(eval(var)).__name__ in _VSCode_supportsDataExplorer,
-                               'expensive': True
+                               'supportsDataExplorer': type(eval(var)).__name__ in _VSCode_supportsDataExplorer
                               } for var in _VSCode_JupyterVars]))
 
 del _VSCode_supportsDataExplorer

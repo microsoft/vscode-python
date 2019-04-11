@@ -262,13 +262,13 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 export interface IJupyterVariable {
     name: string;
     value: string | undefined;
+    executionCount?: number;
     supportsDataExplorer: boolean;
     type: string;
     size: number;
     shape: string;
     count: number;
     truncated: boolean;
-    expensive: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
 }

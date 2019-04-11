@@ -75,7 +75,7 @@ suite('JupyterVariables', () => {
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny(), undefined, typemoq.It.isAny()))
         .returns(() => Promise.resolve(generateCells(
-            '[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_float", "type": "float", "size": 58, "expensive": true}, {"name": "big_int", "type": "int", "size": 56, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_series", "type": "Series", "size": 59, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}, {"name": "big_tuple", "type": "tuple", "size": 58, "expensive": true}]',
+            '[{"name": "big_dataframe", "type": "DataFrame", "size": 62}, {"name": "big_dict", "type": "dict", "size": 57}, {"name": "big_float", "type": "float", "size": 58}, {"name": "big_int", "type": "int", "size": 56}, {"name": "big_list", "type": "list", "size": 57}, {"name": "big_nparray", "type": "ndarray", "size": 60}, {"name": "big_series", "type": "Series", "size": 59}, {"name": "big_string", "type": "str", "size": 59}, {"name": "big_tuple", "type": "tuple", "size": 58]',
             'stream'
         )))
         .verifiable(typemoq.Times.never());
@@ -157,7 +157,7 @@ suite('JupyterVariables', () => {
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
         .returns(() => Promise.resolve(generateCells(
-            '[{"name": "big_dataframe", "type": "DataFrame", "size": 62, "expensive": true}, {"name": "big_dict", "type": "dict", "size": 57, "expensive": true}, {"name": "big_int", "type": "int", "size": 56, "expensive": true}, {"name": "big_list", "type": "list", "size": 57, "expensive": true}, {"name": "big_nparray", "type": "ndarray", "size": 60, "expensive": true}, {"name": "big_string", "type": "str", "size": 59, "expensive": true}]',
+            '[{"name": "big_dataframe", "type": "DataFrame", "size": 62}, {"name": "big_dict", "type": "dict", "size": 57}, {"name": "big_int", "type": "int", "size": 56}, {"name": "big_list", "type": "list", "size": 57}, {"name": "big_nparray", "type": "ndarray", "size": 60}, {"name": "big_string", "type": "str", "size": 59}]',
             'stream'
         )))
         .verifiable(typemoq.Times.once());
@@ -168,12 +168,12 @@ suite('JupyterVariables', () => {
         assert.equal(results.length, 6);
 
         // Check our items (just the first few real items, no need to check all 19)
-        assert.deepEqual(results[0], {name: 'big_dataframe', size: 62, type: 'DataFrame', expensive: true});
-        assert.deepEqual(results[1], {name: 'big_dict', size: 57, type: 'dict', expensive: true});
-        assert.deepEqual(results[2], {name: 'big_int', size: 56, type: 'int', expensive: true});
-        assert.deepEqual(results[3], {name: 'big_list', size: 57, type: 'list', expensive: true});
-        assert.deepEqual(results[4], {name: 'big_nparray', size: 60, type: 'ndarray', expensive: true});
-        assert.deepEqual(results[5], {name: 'big_string', size: 59, type: 'str', expensive: true});
+        assert.deepEqual(results[0], {name: 'big_dataframe', size: 62, type: 'DataFrame'});
+        assert.deepEqual(results[1], {name: 'big_dict', size: 57, type: 'dict'});
+        assert.deepEqual(results[2], {name: 'big_int', size: 56, type: 'int'});
+        assert.deepEqual(results[3], {name: 'big_list', size: 57, type: 'list'});
+        assert.deepEqual(results[4], {name: 'big_nparray', size: 60, type: 'ndarray'});
+        assert.deepEqual(results[5], {name: 'big_string', size: 59, type: 'str'});
 
         fakeServer.verifyAll();
     });
@@ -186,17 +186,17 @@ suite('JupyterVariables', () => {
 
         fakeServer.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
         .returns(() => Promise.resolve(generateCells(
-            '{"name": "big_complex", "type": "complex", "size": 60, "expensive": true, "value": "(1+1j)"}',
+            '{"name": "big_complex", "type": "complex", "size": 60, "value": "(1+1j)"}',
             'stream'
         )))
         .verifiable(typemoq.Times.once());
 
-        const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, expensive: true, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };
+        const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };
 
         const resultVariable = await jupyterVariables.getValue(testVariable);
 
         // Verify the result value should be filled out from fake server result
-        assert.deepEqual(resultVariable, {name: 'big_complex', size: 60, type: 'complex', expensive: true, value: '(1+1j)'});
+        assert.deepEqual(resultVariable, {name: 'big_complex', size: 60, type: 'complex', value: '(1+1j)'});
         fakeServer.verifyAll();
     });
 });
