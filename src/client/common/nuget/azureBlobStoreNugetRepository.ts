@@ -39,9 +39,30 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         azureCDNBlobStorageAccount: string,
         resource: Resource
     ) {
-        const blobStore = await this.getBlobStore(azureBlobStorageAccount, resource);
+        const results = await this.listBlobStoreCatalog(
+            azureBlobStorageAccount,
+            azureBlobStorageContainer,
+            packageName,
+            resource
+        );
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
-        return new Promise<NugetPackage[]>((resolve, reject) => {
+        return results.map(item => {
+            return {
+                package: item.name,
+                uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
+                version: nugetService.getVersionFromPackageFileName(item.name)
+            };
+        });
+    }
+
+    private async listBlobStoreCatalog(
+        azureBlobStorageAccount: string,
+        azureBlobStorageContainer: string,
+        packageName: string,
+        resource: Resource
+    ): Promise<IBlobResult[]> {
+        const blobStore = await this.getBlobStore(azureBlobStorageAccount, resource);
+        return new Promise<IBlobResult[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
             // tslint:disable-next-line:no-any
             const token = undefined as any;
@@ -50,27 +71,8 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                     if (error) {
                         return reject(error);
                     }
-                    resolve(this.convertResults(
-                        result.entries,
-                        azureCDNBlobStorageAccount,
-                        azureBlobStorageContainer,
-                        nugetService
-                    ));
+                    resolve(result.entries);
                 });
-        });
-    }
-    private convertResults(
-        results: IBlobResult[],
-        azureCDNBlobStorageAccount: string,
-        azureBlobStorageContainer: string,
-        nugetService: INugetService
-    ): NugetPackage[] {
-        return results.map(item => {
-            return {
-                package: item.name,
-                uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
-                version: nugetService.getVersionFromPackageFileName(item.name)
-            };
         });
     }
     private async getBlobStore(uri: string, resource: Resource) {
