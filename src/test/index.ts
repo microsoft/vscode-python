@@ -39,6 +39,7 @@ const options: testRunner.SetupOptions & { retries: number } = {
     grep,
     testFilesSuffix
 };
+(options as any).exit = true;
 
 // If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
 // reporting to both the console (spec) and to a JUnit XML file. The xml file
