@@ -9,8 +9,9 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareTestingApi } from '../../client/common/application/types';
 import { LiveShareProxy } from '../../client/common/liveshare/liveshareProxy';
-import { IDisposable } from '../../client/common/types';
+import { IDisposable, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
+import { LiveShare } from '../../client/datascience/constants';
 
 // tslint:disable:no-any unified-signatures max-classes-per-file
 
@@ -20,9 +21,10 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     private requestHandlers: Map<string, vsls.RequestHandler> = new Map<string, vsls.RequestHandler>();
     private notifyHandlers: Map<string, vsls.NotifyHandler> = new Map<string, vsls.NotifyHandler>();
     private defaultCancellationSource = new CancellationTokenSource();
+    private sibling: MockLiveService | undefined;
 
-    constructor(_name: string) {
-        noop();
+    public setSibling(sibling: MockLiveService) {
+        this.sibling = sibling;
     }
 
     public get onDidChangeIsServiceAvailable(): Event<boolean> {
@@ -30,7 +32,7 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     }
     public request(name: string, args: any[], cancellation?: CancellationToken): Promise<any> {
         // See if any handlers.
-        const handler = this.requestHandlers.get(name);
+        const handler = this.sibling ? this.sibling.requestHandlers.get(name) : undefined;
         if (handler) {
             return handler(args, cancellation ? cancellation : this.defaultCancellationSource.token);
         }
@@ -44,10 +46,15 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     }
     public notify(name: string, args: object): void {
         // See if any handlers.
-        const handler = this.notifyHandlers.get(name);
+        const handler = this.sibling ? this.sibling.notifyHandlers.get(name) : undefined;
         if (handler) {
             handler(args);
         }
+    }
+
+    public clearHandlers(): void {
+        this.requestHandlers.clear();
+        this.notifyHandlers.clear();
     }
 }
 
@@ -157,9 +164,9 @@ class Emitter<T> {
     }
 }
 
-class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
+class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposable {
     private static others: MockLiveShare[] = [];
-    private static services: Map<string, MockLiveService> = new Map<string, MockLiveService>();
+    private static services: Map<string, MockLiveService[]> = new Map<string, MockLiveService[]>();
     private changeSessionEmitter = new Emitter<vsls.SessionChangeEvent>();
     private changePeersEmitter = new EventEmitter<vsls.PeersChangeEvent>();
     private currentPeers: vsls.Peer[] = [];
@@ -176,6 +183,10 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
             this.currentPeers.push(peer);
             this.changePeersEmitter.fire({ added: [peer], removed: [] });
         }
+    }
+
+    public dispose() {
+        MockLiveShare.others = MockLiveShare.others.filter(o => o._id !== this._id);
     }
 
     public get session(): vsls.Session {
@@ -200,8 +211,24 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
 
     public async stop(): Promise<void> {
         this._visibleRole = vsls.Role.None;
+        const existingPeers = this.currentPeers;
         this.currentPeers = [];
+        this.changePeersEmitter.fire({ added: [], removed: existingPeers });
         await this.changeSessionEmitter.fire({ session: this });
+    }
+
+    public removeHandlers(serviceName: string) {
+        const services = MockLiveShare.services.get(serviceName);
+        if (!services) {
+            throw new Error(`${serviceName} failure to add service to map`);
+        }
+
+        // Remove just the one corresponding to the role of this api
+        if (this.role === vsls.Role.Guest) {
+            services[1].clearHandlers();
+        } else {
+            services[0].clearHandlers();
+        }
     }
 
     public getContacts(_emails: string[]): Promise<vsls.ContactsCollection> {
@@ -244,18 +271,25 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
     public join(_link: Uri, _options?: vsls.JoinOptions): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    public end(): Promise<void> {
-        return this.stop();
+    public async end(): Promise<void> {
+        // If we're the guest, just stop ourselves. If we're the host, stop everybody
+        if (this._role === vsls.Role.Guest) {
+            await this.stop();
+        } else {
+            await Promise.all(MockLiveShare.others.map(p => p.stop()));
+        }
     }
     public shareService(name: string): Promise<vsls.SharedService> {
         if (!MockLiveShare.services.has(name)) {
-            MockLiveShare.services.set(name, new MockLiveService(name));
+            MockLiveShare.services.set(name, this.generateServicePair());
         }
-        const service = MockLiveShare.services.get(name);
-        if (!service) {
+        const services = MockLiveShare.services.get(name);
+        if (!services) {
             throw new Error(`${name} failure to add service to map`);
         }
-        return Promise.resolve(service);
+
+        // Host is always the first
+        return Promise.resolve(services[0]);
     }
     public unshareService(name: string): Promise<void> {
         MockLiveShare.services.delete(name);
@@ -264,13 +298,15 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
     public getSharedService(name: string): Promise<vsls.SharedServiceProxy> {
         if (!MockLiveShare.services.has(name)) {
             // Don't wait for the host to start. It shouldn't be necessary anyway.
-            MockLiveShare.services.set(name, new MockLiveService(name));
+            MockLiveShare.services.set(name, this.generateServicePair());
         }
-        const service = MockLiveShare.services.get(name);
-        if (!service) {
+        const services = MockLiveShare.services.get(name);
+        if (!services) {
             throw new Error(`${name} failure to add service to map`);
         }
-        return Promise.resolve(service);
+
+        // Guest is always the second one
+        return Promise.resolve(services[1]);
     }
     public convertLocalUriToShared(localUri: Uri): Uri {
         // Do the same checking that liveshare does
@@ -320,6 +356,15 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         // Ignore for now. We don't need to port forward during a test
         return Promise.resolve({ dispose: noop });
     }
+
+    private generateServicePair() : MockLiveService[] {
+        const hostService = new MockLiveService();
+        const guestService = new MockLiveService();
+        hostService.setSibling(guestService);
+        guestService.setSibling(hostService);
+        // Host is always first
+        return [hostService, guestService];
+    }
 }
 
 @injectable()
@@ -331,21 +376,24 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
     private sessionStarted = false;
 
     constructor(
-        @inject(IApplicationShell) private appShell : IApplicationShell
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(IApplicationShell) private appShell : IApplicationShell,
+        @inject(IConfigurationService) private config: IConfigurationService
         ) {
     }
 
     public getApi(): Promise<vsls.LiveShare | null> {
-        return this.externalProxy ? Promise.resolve(this.externalProxy) : Promise.resolve(this.internalApi);
+        return Promise.resolve(this.externalProxy);
     }
 
     public forceRole(role: vsls.Role) {
         // Force a role on our live share api
         if (role !== this.currentRole) {
             this.internalApi = new MockLiveShare(role);
+            this.externalProxy = new LiveShareProxy(this.appShell, this.config.getSettings().datascience.liveShareConnectionTimeout, this.internalApi);
             this.internalApi.onDidChangeSession(this.onInternalSessionChanged, this);
-            this.externalProxy = new LiveShareProxy(this.appShell, undefined, this.internalApi);
             this.currentRole = role;
+            this.disposables.push(this.internalApi);
         }
     }
 
@@ -368,7 +416,10 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
     }
 
     public disableGuestChecker() {
-        // If the external proxy isn't in use, then the guest check won't work.
+        // Remove the handlers for the guest checker notification
+        if (this.internalApi) {
+            this.internalApi.removeHandlers(LiveShare.GuestCheckerService);
+        }
         this.externalProxy = null;
     }
 
