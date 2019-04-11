@@ -1,101 +1,46 @@
-# Python extension for Visual Studio Code
+<!-- 
+Do you have a question instead of a bug report or enhancement request? Please ask it on https://stackoverflow.com/questions/tagged/visual-studio-code+python. 
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: 2.7, >=3.5), including features such as IntelliSense, linting, debugging, code navigation, code formatting, Jupyter notebook support, refactoring, variable explorer, test explorer, snippets, and more!
+Unable to install a linter or formatter? 'No installers available'? 
+Windows - https://stackoverflow.com/questions/4750806/how-do-i-install-pip-on-windows
+Linux - https://www.cyberciti.biz/faq/debian-ubuntu-centos-rhel-linux-install-pipclient/ , https://www.tecmint.com/install-pip-in-linux/
 
-## Quick start
+Python configuration issues? Please check https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites
 
-* **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported).
-* **Step 2.** Install the Python extension for Visual Studio Code.
-* **Step 3.** Open or create a Python file and start coding!
+Otherwise **please** fill in the requested details below. "XXX" markers should not be present in the final bug report.
 
-## Set up your environment 
-<!-- use less words -->
-* Select your Python interpreter by clicking on the status bar
+If you think a GIF of what is happening would be helpful, consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ .
+-->
 
-   ![InterpreterSelection](images/InterpreterSelectionZoom.gif)
+## Environment data
 
-* Configure tests by running the ``Configure Tests`` command 
+- VS Code version: XXX
+- Extension version (available under the Extensions sidebar): XXX
+- OS and version: XXX
+- Python version (& distribution if applicable, e.g. Anaconda): XXX
+- Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX 
+- Relevant/affected Python packages and their versions: XXX
 
-    ![ConfigureTests](images/ConfigureTestsGIF.gif)
+## Expected behaviour
 
-*  Run the ``Select Linter`` command  
+XXX
 
-    [GIF starting  with two lines: Ctrl shift p/ mac: cmd shift p]
+## Actual behaviour
 
+XXX
 
-For more information you can:
-* [Follow our Python tutorial](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) with step-by-step instructions for building a simple app.
-* Check out the [Python documentation on the VS Code site](https://code.visualstudio.com/docs/languages/python) for general information about using the extension.
+## Steps to reproduce:
+1. XXX
 
-## Useful commands
-Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/Linux) and type in one of the following commands:
+## Logs
+Output for `Python` in the `Output` panel (`View`→`Output`, change the drop-down the upper-right of the `Output` panel to `Python`)
 
-Command | Description
---- | ---
-```Python: Select Interpreter``` | Switch between Python interpreters, versions, and environments.
-```Python: Start REPL``` | Start an interactive Python REPL using the selected interpreter in the VS Code terminal.
-```Python: Run Python File in Terminal``` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting ```Run Python File in Terminal```.
-```Python: Select Linter``` | Switch from PyLint to flake8 or other supported linters.
-```Format Document``` |Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/editing#_formatting) in the ``settings.json`` file. |
-```Python: Configure Tests``` |  Select a test framework and configure it to display the Test Explorer.|
+```
+XXX
+```   
 
+Output from `Console` under the `Developer Tools` panel (toggle Developer Tools on under `Help`; turn on source maps to make any tracebacks be useful by running `Enable source map support for extension debugging`)
 
-To see all available Python commands, open the Command Palette and type ```Python```.
-
-## Feature details
-
-Learn more about the rich features of the Python extension:
-
-* [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense):  Support for the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) and  [Jedi](https://pypi.org/project/jedi/)
-
-
-* [Autocompletion](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense)
-* [Linting](https://code.visualstudio.com/docs/python/linting): Support for [Pylint](https://pypi.org/project/pylint/), [Flake8](https://pypi.org/project/flake8/) and more
-* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Support for [black](https://pypi.org/project/black/), [autopep](https://pypi.org/project/autopep8/) and [yapf](https://pypi.org/project/yapf/) 
-
-* [Debugging](https://code.visualstudio.com/docs/python/debugging): Support for remote, web apps, multi-threaded applications and more 
-
-* [Test Explorer](https://code.visualstudio.com/docs/python/unit-testing): Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.org/project/pytest/), and [nose](https://pypi.org/project/nose/)
-
-* [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Support for code cells, plot visualization, variable explorer and more
-
-* [Environments](https://code.visualstudio.com/docs/python/environments)
-
-* [Snippets](https://code.visualstudio.com/docs/languages/python#_snippets)
-
-* [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
-
-
-## Supported locales
-
-The extension is available in multiple languages thanks to external
-contributors (if you would like to contribute a translation, see the
-[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fr`, `it`, `ja`, `ko-kr`, `pt-br`, `ru`, `zh-cn`, `zh-tw`
-
-## Questions, issues, feature requests, and contributions
-
-* If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
-* If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python)
-* Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) for more details
-* Any and all feedback is appreciated and welcome!
-  - If someone has already [filed an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
-  - Otherwise please file a new issue
-* If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md#development-process)
-
-
-<!-- ![General Features](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/general.gif)
-
-![Debugging](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/debugDemo.gif)
-
-![Unit Tests](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/unittest.gif) -->
-
-
-## Data and telemetry
-
-The Microsoft Python Extension for Visual Studio Code collects usage
-data and sends it to Microsoft to help improve our products and
-services. Read our
-[privacy statement](https://privacy.microsoft.com/privacystatement) to
-learn more. This extension respects the `telemetry.enableTelemetry`
-setting which you can learn more about at
-https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+```
+XXX
+```
