@@ -153,6 +153,12 @@ suite('LiveShare tests', () => {
         return api.stopSession();
     }
 
+    function disableGuestChecker(role: vsls.Role) {
+        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        api.disableGuestChecker();
+    }
+
     test('Host alone', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
@@ -295,6 +301,27 @@ suite('LiveShare tests', () => {
         assert.equal(savedUri.fsPath, 'test.ipynb', 'Export did not work');
         assert.ok(outputContents, 'Output not exported');
         assert.ok(outputContents!.includes('data'), 'Output is empty');
+    });
+
+    test('Guest does not have extension', async () => {
+        // Should only need mock data in host
+        addMockData(hostContainer!, '#%%\na=1\na', 1);
+
+        // Start just the host and verify it works
+        await startSession(vsls.Role.Host);
+        let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Disable guest checking on the guest (same as if the guest doesn't have the python extension)
+        disableGuestChecker(vsls.Role.Guest);
+        await startSession(vsls.Role.Guest);
+
+        // Host should now be in a state that if any code runs, the session should end. However
+        // the code should still run
+        wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        assert.equal(isSessionStarted(vsls.Role.Host), false, 'Host should have exited session');
+        assert.equal(isSessionStarted(vsls.Role.Guest), false, 'Guest should have exited session');
     });
 
 });

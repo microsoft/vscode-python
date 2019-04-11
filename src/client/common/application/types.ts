@@ -905,6 +905,7 @@ export interface ILiveShareTestingApi extends ILiveShareApi {
     forceRole(role: vsls.Role): void;
     startSession(): Promise<void>;
     stopSession(): Promise<void>;
+    disableGuestChecker(): void;
 }
 
 export const ILanguageService = Symbol('ILanguageService');

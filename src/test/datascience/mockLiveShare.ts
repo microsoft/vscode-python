@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, EventEmitter, TreeDataProvider, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareTestingApi } from '../../client/common/application/types';
+import { IApplicationShell, ILiveShareTestingApi } from '../../client/common/application/types';
+import { LiveShareProxy } from '../../client/common/liveshare/liveshareProxy';
 import { IDisposable } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 
@@ -195,15 +196,12 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
                 }
             }
         }
-        return Promise.resolve();
     }
 
     public async stop(): Promise<void> {
         this._visibleRole = vsls.Role.None;
-
+        this.currentPeers = [];
         await this.changeSessionEmitter.fire({ session: this });
-
-        return Promise.resolve();
     }
 
     public getContacts(_emails: string[]): Promise<vsls.ContactsCollection> {
@@ -247,7 +245,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
         throw new Error('Method not implemented.');
     }
     public end(): Promise<void> {
-        throw new Error('Method not implemented.');
+        return this.stop();
     }
     public shareService(name: string): Promise<vsls.SharedService> {
         if (!MockLiveShare.services.has(name)) {
@@ -328,24 +326,32 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer {
 export class MockLiveShareApi implements ILiveShareTestingApi {
 
     private currentRole: vsls.Role = vsls.Role.None;
-    private currentApi: MockLiveShare | null = null;
+    private internalApi: MockLiveShare | null = null;
+    private externalProxy: vsls.LiveShare | null = null;
     private sessionStarted = false;
 
+    constructor(
+        @inject(IApplicationShell) private appShell : IApplicationShell
+        ) {
+    }
+
     public getApi(): Promise<vsls.LiveShare | null> {
-        return Promise.resolve(this.currentApi);
+        return this.externalProxy ? Promise.resolve(this.externalProxy) : Promise.resolve(this.internalApi);
     }
 
     public forceRole(role: vsls.Role) {
         // Force a role on our live share api
         if (role !== this.currentRole) {
-            this.currentApi = new MockLiveShare(role);
+            this.internalApi = new MockLiveShare(role);
+            this.internalApi.onDidChangeSession(this.onInternalSessionChanged, this);
+            this.externalProxy = new LiveShareProxy(this.appShell, undefined, this.internalApi);
             this.currentRole = role;
         }
     }
 
     public async startSession(): Promise<void> {
-        if (this.currentApi) {
-            await this.currentApi.start();
+        if (this.internalApi) {
+            await this.internalApi.start();
             this.sessionStarted = true;
         } else {
             throw Error('Cannot start session without a role.');
@@ -353,15 +359,26 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
     }
 
     public async stopSession(): Promise<void> {
-        if (this.currentApi) {
-            await this.currentApi.stop();
+        if (this.internalApi) {
+            await this.internalApi.stop();
             this.sessionStarted = false;
         } else {
             throw Error('Cannot start session without a role.');
         }
     }
 
+    public disableGuestChecker() {
+        // If the external proxy isn't in use, then the guest check won't work.
+        this.externalProxy = null;
+    }
+
     public get isSessionStarted(): boolean {
         return this.sessionStarted;
+    }
+
+    private onInternalSessionChanged(_ev: vsls.SessionChangeEvent) {
+        if (this.internalApi) {
+            this.sessionStarted = this.internalApi.role !== vsls.Role.None;
+        }
     }
 }
