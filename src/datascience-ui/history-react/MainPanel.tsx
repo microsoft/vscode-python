@@ -267,10 +267,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
     }
 
-    //private showDataViewer = () => {
-        //this.sendMessage(HistoryMessages.ShowDataViewer, 'df');
-    //}
-
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
         if (this.postOffice) {
             this.postOffice.sendMessage(type, payload);

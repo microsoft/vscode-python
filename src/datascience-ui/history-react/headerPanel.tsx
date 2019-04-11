@@ -74,7 +74,6 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps> {
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
-                    {this.renderDataFrameTestButton()}
                 </MenuBar>
                 {progressBar}
                 <VariableExplorer baseTheme={this.props.baseTheme} showDataExplorer={this.props.showDataExplorer} refreshVariables={this.props.refreshVariables} onHeightChange={this.onVariableHeightChange} ref={this.props.variableExplorerRef} />
@@ -97,19 +96,6 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps> {
             return <CellButton baseTheme={baseTheme} onClick={this.props.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
         }
 
-        return null;
-    }
-
-    // IANHU: Remove
-    private renderDataFrameTestButton() {
-        if (getSettings && getSettings().showJupyterVariableExplorer) {
-            return (
-                <div></div>
-                //<CellButton baseTheme={'vscode-light'} onClick={this.props.showDataExplorer} tooltip={'Show data explorer for \'df\' variable'}>
-                    //D
-                //</CellButton>
-            );
-        }
         return null;
     }
 }
