@@ -703,8 +703,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
         this.updateExecutionCount(cellVMs);
         return this.currentExecutionCount + 1;
-        //const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        //return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
     }
 
     private submitInput = (code: string) => {

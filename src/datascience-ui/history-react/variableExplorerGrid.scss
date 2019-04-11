@@ -36,8 +36,7 @@
 #variable-explorer-data-grid .react-grid-HeaderCell {
     background-color: var(--vscode-editor-lineHighlightBorder);
     color: var(--vscode-editor-foreground);
-    /* border-style: none none solid none; */
-    border-style: solid solid solid solid;
+    border-style: solid;
     border-color: var(--vscode-badge-background);
     padding: 2px;
 }
