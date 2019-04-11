@@ -12,13 +12,13 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 <!-- use less words -->
 * Select your Python interpreter by clicking on the status bar
 
-   ![InterpreterSelection](images/InterpreterSelectionZoom.gif)
+   <img src=images/InterpreterSelectionZoom.gif width=280 height=100>
 
 * Configure tests by running the ``Configure Tests`` command 
 
     ![ConfigureTests](images/ConfigureTestsGIF.gif)
 
-*  Run the ``Select Linter`` command  
+* Configure the debugger through the Debug View    
 
     [GIF starting  with two lines: Ctrl shift p/ mac: cmd shift p]
 
@@ -46,24 +46,24 @@ To see all available Python commands, open the Command Palette and type ```Pytho
 
 Learn more about the rich features of the Python extension:
 
-* [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense):  Support for the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) and  [Jedi](https://pypi.org/project/jedi/)
+* [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense):  Support for the Microsoft Python Language Server and  Jedi
 
 
-* [Autocompletion](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense)
-* [Linting](https://code.visualstudio.com/docs/python/linting): Support for [Pylint](https://pypi.org/project/pylint/), [Flake8](https://pypi.org/project/flake8/) and more
-* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Support for [black](https://pypi.org/project/black/), [autopep](https://pypi.org/project/autopep8/) and [yapf](https://pypi.org/project/yapf/) 
+* [Autocompletion](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Support for customized settings
+* [Linting](https://code.visualstudio.com/docs/python/linting): Support for Pylint, Flake8 and more
+* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Support for black, autopep and yapf
 
 * [Debugging](https://code.visualstudio.com/docs/python/debugging): Support for remote, web apps, multi-threaded applications and more 
 
-* [Test Explorer](https://code.visualstudio.com/docs/python/unit-testing): Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.org/project/pytest/), and [nose](https://pypi.org/project/nose/)
+* [Test Explorer](https://code.visualstudio.com/docs/python/unit-testing): Support for unittest, pytest, and nose
 
 * [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Support for code cells, plot visualization, variable explorer and more
 
 * [Environments](https://code.visualstudio.com/docs/python/environments): Support for auto-activation and interpreter selection 
 
-* [Code Snippets](https://code.visualstudio.com/docs/languages/python#_snippets)
+* [Code Snippets](https://code.visualstudio.com/docs/languages/python#_snippets): Support for configuring your own snippets 
 
-* [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
+* [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Support for variable extraction, method   extraction and import sorting
 
 
 ## Supported locales
