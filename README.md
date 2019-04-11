@@ -16,7 +16,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 * Configure tests by running the ``Configure Tests`` command 
 
-    ![ConfigureTests](images/ConfigureTestsGIF.gif)
+    <img src=images/ConfigureTests.gif width=734 height=413>
 
 * Configure the debugger through the Debug View    
 
