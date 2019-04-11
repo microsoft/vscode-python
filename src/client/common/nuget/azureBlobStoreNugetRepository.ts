@@ -50,14 +50,27 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                     if (error) {
                         return reject(error);
                     }
-                    resolve(result.entries.map(item => {
-                        return {
-                            package: item.name,
-                            uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
-                            version: nugetService.getVersionFromPackageFileName(item.name)
-                        };
-                    }));
+                    resolve(this.convertResults(
+                        result.entries,
+                        azureCDNBlobStorageAccount,
+                        azureBlobStorageContainer,
+                        nugetService
+                    ));
                 });
+        });
+    }
+    private convertResults(
+        results: IBlobResult[],
+        azureCDNBlobStorageAccount: string,
+        azureBlobStorageContainer: string,
+        nugetService: INugetService
+    ): NugetPackage[] {
+        return results.map(item => {
+            return {
+                package: item.name,
+                uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
+                version: nugetService.getVersionFromPackageFileName(item.name)
+            };
         });
     }
     private async getBlobStore(uri: string, resource: Resource) {
@@ -73,4 +86,8 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         const az = await import('azure-storage') as typeof import('azure-storage');
         return az.createBlobServiceAnonymous(uri);
     }
+}
+
+interface IBlobResult {
+    name: string;
 }
