@@ -42,6 +42,16 @@ body {
 .main-panel .react-grid-Toolbar {
     background-color: var(--vscode-editor-background);
     border: none;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.main-panel .react-grid-Toolbar .tools {
+    float: left;
+    margin-top: 0;
+    position: relative;
+    padding: 0;
+    margin-top: -6px;
 }
 
 .main-panel .react-grid-Toolbar .btn {
@@ -59,7 +69,7 @@ body {
 .main-panel .react-grid-Grid {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    border-color: var(--vscode-badge-background);
+    border-color: var(--vscode-editor-inactiveSelectionBackground);
 }
 
 .main-panel .react-grid-Canvas {
@@ -68,21 +78,22 @@ body {
 }
 
 .main-panel .react-grid-Header {
-    background-color: var(--vscode-notifications-background);
+    background-color: var(--vscode-debugToolBar-background);
 }
 
 .main-panel .react-grid-HeaderCell {
-    background-color: var(--vscode-notifications-background);
+    background-color: var(--vscode-debugToolBar-background);
     color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-badge-background);
-    border-bottom-color: var(--vscode-badge-background);
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    text-align: center;
 }
 
 .main-panel .react-grid-Cell {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-badge-background);
-    border-bottom-color: var(--vscode-badge-background);
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
 }
 
 .main-panel .react-grid-Cell:hover {

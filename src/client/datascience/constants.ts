@@ -162,3 +162,23 @@ export namespace LiveShareCommands {
     export const historyCreateSync = 'historyCreateSync';
     export const disposeServer = 'disposeServer';
 }
+
+export namespace CssMessages {
+    export const GetCssRequest = 'get_css_request';
+    export const GetCssResponse = 'get_css_response';
+}
+
+export namespace SharedMessages {
+    export const UpdateSettings = 'update_settings';
+    export const Started = 'started';
+}
+
+export interface IGetCssRequest {
+    isDark: boolean;
+}
+
+export interface IGetCssResponse {
+    css: string;
+    theme: string;
+    knownDark?: boolean;
+}

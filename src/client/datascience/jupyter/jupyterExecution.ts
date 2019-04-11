@@ -65,7 +65,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private sessionManager: IJupyterSessionManager,
         workspace: IWorkspaceService,
         private configuration: IConfigurationService,
-        private commandFactory : IJupyterCommandFactory,
+        private commandFactory: IJupyterCommandFactory,
         private serviceContainer: IServiceContainer
     ) {
         this.processServicePromise = this.processServiceFactory.create();
@@ -83,11 +83,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    public get sessionChanged() : Event<void> {
+    public get sessionChanged(): Event<void> {
         return this.eventEmitter.event;
     }
 
-    public dispose() : Promise<void> {
+    public dispose(): Promise<void> {
         // Clear our usableJupyterInterpreter
         this.onSettingsChanged();
         return Promise.resolve();
@@ -131,7 +131,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
-            let startInfo: {connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined} | undefined;
+            let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined } | undefined;
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const interpreter = await this.interpreterService.getActiveInterpreter();
 
@@ -220,7 +220,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return result.stdout;
     }
 
-    public getServer(_options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
     }
@@ -259,7 +259,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken) : Promise<{connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined}> {
+    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         let connection: IConnection | undefined;
         let kernelSpec: IJupyterKernelSpec | undefined;
 
@@ -295,7 +295,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         // Return the data we found.
-        return {connection, kernelSpec};
+        return { connection, kernelSpec };
     }
 
     private createRemoteConnectionInfo = (uri: string): IConnection => {
@@ -362,7 +362,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         extraArgs.push('127.0.0.1');
 
                         // Now see if we need --allow-root.
-                        const idResults = execSync('id', {encoding: 'utf-8'});
+                        const idResults = execSync('id', { encoding: 'utf-8' });
                         if (idResults.includes('(root)')) {
                             extraArgs.push('--allow-root');
                         }
@@ -510,9 +510,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
         const match = specs!
             .filter(s => s !== undefined)
             .find(s => {
-            const js = s as JupyterKernelSpec;
-            return js && js.name === specName;
-        }) as JupyterKernelSpec;
+                const js = s as JupyterKernelSpec;
+                return js && js.name === specName;
+            }) as JupyterKernelSpec;
         return match ? match.specFile : undefined;
     }
 
@@ -647,7 +647,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return bestSpec;
     }
 
-    private async readSpec(kernelSpecOutputLine: string) : Promise<JupyterKernelSpec | undefined> {
+    private async readSpec(kernelSpecOutputLine: string): Promise<JupyterKernelSpec | undefined> {
         const match = RegExpValues.KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
         if (match && match !== null && match.length > 2) {
             // Second match should be our path to the kernel spec
@@ -740,7 +740,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return undefined;
     }
 
-    private supportsSearchingForCommands() : boolean {
+    private supportsSearchingForCommands(): boolean {
         if (this.configuration) {
             const settings = this.configuration.getSettings();
             if (settings) {

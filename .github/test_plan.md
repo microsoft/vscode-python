@@ -404,6 +404,14 @@ def test_failure():
         1. The progress bar should be interrupted and you should see a KeyboardInterrupt error message in the output
         1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
         1. Use the expand all input and collapse all input commands to collapse all cell inputs
+- [ ] Verify theming works
+    1. Start Python Interactive window
+    1. Add a cell with some comments
+    1. Switch VS Code theme to something else
+    1. Check that the cell you just added updates the comment color
+    1. Switch back and forth between a 'light' and a 'dark' theme
+    1. Check that the cell switches colors
+    1. Check that the buttons on the top change to their appropriate 'light' or 'dark' versions
 - [ ] Verify code lenses
     1. Check that `Run Cell` `Run Above` and `Run Below` all do the correct thing
 - [ ] Verify context menu navigation commands

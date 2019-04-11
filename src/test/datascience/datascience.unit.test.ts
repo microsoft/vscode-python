@@ -200,5 +200,24 @@ def download(url, filename):
         assert.equal(cells[0].data.cell_type, 'code', 'code cell not generated');
         assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[3], '    """ utility function to download a file """\n', 'Lines for cell not emitted');
+
+// tslint:disable-next-line: no-multiline-string
+const multilineMarkdownWithCell = `#%% [markdown]
+# # Define a simple class
+class Pizza(object):
+    def __init__(self, size, toppings, price, rating):
+        self.size = size
+        self.toppings = toppings
+        self.price = price
+        self.rating = rating
+        `;
+
+        cells = generateCells(undefined, multilineMarkdownWithCell, 'foo', 0, true, '1');
+        assert.equal(cells.length, 2, 'cell split failed');
+        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
+        assert.equal(cells[0].data.source.length, 1, 'Lines for markdown not emitted');
+        assert.equal(cells[1].data.cell_type, 'code', 'code cell not generated');
+        assert.equal(cells[1].data.source.length, 7, 'Lines for code not emitted');
+        assert.equal(cells[1].data.source[3], '        self.toppings = toppings\n', 'Lines for cell not emitted');
         });
 });

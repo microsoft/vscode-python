@@ -193,5 +193,5 @@ export type InterpreterActivation = {
 
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {
-    activate() : Promise<void>;
+    activate(): Promise<void>;
 }

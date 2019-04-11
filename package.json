@@ -1388,6 +1388,12 @@
                     "description": "Show the variable explorer in the Python Interactive window. (experimental)",
                     "scope": "resource"
                 },
+                "python.dataScience.variableExplorerExclude": {
+                    "type": "string",
+                    "default": "module;builtin_function_or_method",
+                    "description": "Types to exclude from showing in the Python Interactive variable explorer",
+                    "scope": "resource"
+                },
                 "python.dataScience.codeRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",

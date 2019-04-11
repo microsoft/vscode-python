@@ -185,7 +185,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
+import { IVsCodeApi, PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
@@ -245,6 +245,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.wrapper.unmount();
             this.wrapper = undefined;
         }
+
+        PostOffice.resetApi();
     }
 
     //tslint:disable:max-func-body-length

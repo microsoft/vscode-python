@@ -9,7 +9,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -136,7 +136,8 @@ export interface IHistory extends Disposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
-    postMessage(type: string, payload?: any): void;
+    startProgress(): void;
+    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
@@ -216,7 +217,7 @@ export interface ISysInfo extends nbformat.IBaseCell {
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
-    generateThemeCss() : Promise<string>;
+    generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
@@ -251,6 +252,7 @@ export interface IJupyterCommandFactory {
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
+        theme: string;
     };
 }
 
@@ -286,6 +288,6 @@ export interface IDataViewerProvider {
 }
 export const IDataViewer = Symbol('IDataViewer');
 
-export interface IDataViewer extends IAsyncDisposable {
-    show(variable: IJupyterVariable) : Promise<void>;
+export interface IDataViewer extends IDisposable {
+    showVariable(variable: IJupyterVariable) : Promise<void>;
 }

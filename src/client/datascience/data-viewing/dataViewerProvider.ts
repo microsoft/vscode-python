@@ -38,7 +38,7 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         if (index >= 0) {
             const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
             this.activeExplorers.push(dataExplorer);
-            await dataExplorer.show(variables[index]);
+            await dataExplorer.showVariable(variables[index]);
             return dataExplorer;
         }
 

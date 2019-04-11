@@ -479,21 +479,21 @@ for _ in range(50):
 
         // Now send an undo command. This should change the state, so use our waitForInfo promise instead
         resetWaiting();
-        history.postMessage(HistoryMessages.Undo);
+        history.undoCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo as sysinfo is ignored');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
         resetWaiting();
-        history.postMessage(HistoryMessages.Redo);
+        history.redoCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after redo');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after redo');
 
         resetWaiting();
-        history.postMessage(HistoryMessages.DeleteAllCells);
+        history.removeAllCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
