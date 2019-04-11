@@ -50,7 +50,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         this.manager.dispose();
     }
     @traceDecorators.error('Failed to ensure language server is available')
-    protected async ensureLanguageServerIsAvailable(resource: Resource) {
+    public async ensureLanguageServerIsAvailable(resource: Resource) {
         const settings = this.configurationService.getSettings(resource);
         if (!settings.downloadLanguageServer) {
             return;
@@ -60,6 +60,15 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
         if (!(await this.fs.fileExists(mscorlib))) {
             await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, this.resource);
+            await this.prepareLanguageServerForNoICU(languageServerFolderPath);
         }
+    }
+    public async prepareLanguageServerForNoICU(languageServerFolderPath: string): Promise<void> {
+        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        if (await this.fs.fileExists(targetJsonFile)) {
+            return;
+        }
+        const json = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        await this.fs.writeFile(targetJsonFile, JSON.stringify(json));
     }
 }

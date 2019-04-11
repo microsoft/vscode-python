@@ -11,7 +11,6 @@ import { LanguageServerDownloader } from '../../../client/activation/languageSer
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
 import {
-    ILanguageServerActivator,
     ILanguageServerDownloader,
     ILanguageServerFolderService,
     ILanguageServerManager
@@ -30,7 +29,7 @@ import { sleep } from '../../core';
 // tslint:disable:max-func-body-length
 
 suite('Language Server - Activator', () => {
-    let activator: ILanguageServerActivator;
+    let activator: LanguageServerExtensionActivator;
     let workspaceService: IWorkspaceService;
     let manager: ILanguageServerManager;
     let fs: IFileSystem;
@@ -149,5 +148,60 @@ suite('Language Server - Activator', () => {
         activator.dispose();
 
         verify(manager.dispose()).once();
+    });
+    test('Download and check if ICU config exists', async () => {
+        const languageServerFolder = 'Some folder name';
+        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
+        const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
+        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+
+        when(settings.downloadLanguageServer).thenReturn(true);
+        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(fs.fileExists(mscorlib)).thenResolve(false);
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath)).thenResolve();
+        when(fs.fileExists(targetJsonFile)).thenResolve(false);
+
+        await activator.ensureLanguageServerIsAvailable(undefined);
+
+        verify(lsFolderService.getLanguageServerFolderName()).once();
+        verify(lsDownloader.downloadLanguageServer(anything())).once();
+        verify(fs.fileExists(targetJsonFile)).once();
+    });
+    test('Do not download nor check if ICU config exists after downloading', async () => {
+        const languageServerFolder = 'Some folder name';
+        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
+        const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
+        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+
+        when(settings.downloadLanguageServer).thenReturn(true);
+        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(fs.fileExists(mscorlib)).thenResolve(true);
+
+        await activator.ensureLanguageServerIsAvailable(undefined);
+
+        verify(lsFolderService.getLanguageServerFolderName()).once();
+        verify(lsDownloader.downloadLanguageServer(anything())).never();
+        verify(fs.fileExists(targetJsonFile)).never();
+    });
+    test('JSON file is created to ensure LS can start without ICU', async () => {
+        const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const contents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        when(fs.fileExists(targetJsonFile)).thenResolve(false);
+        when(fs.writeFile(targetJsonFile, JSON.stringify(contents))).thenResolve();
+
+        await activator.prepareLanguageServerForNoICU('some folder');
+
+        verify(fs.fileExists(targetJsonFile)).atLeast(1);
+        verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).once();
+    });
+    test('JSON file is not created if it already exists', async () => {
+        const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const contents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        when(fs.fileExists(targetJsonFile)).thenResolve(true);
+
+        await activator.prepareLanguageServerForNoICU('some folder');
+
+        verify(fs.fileExists(targetJsonFile)).atLeast(1);
+        verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).never();
     });
 });
