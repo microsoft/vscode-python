@@ -46,10 +46,7 @@ To see all available Python commands, open the Command Palette and type ```Pytho
 
 Learn more about the rich features of the Python extension:
 
-* [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense):  Support for the Microsoft Python Language Server and  Jedi
-
-
-* [Autocompletion](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Support for customized settings
+* [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Support for auto-completion, code navigation, syntax checking and more
 * [Linting](https://code.visualstudio.com/docs/python/linting): Support for Pylint, Flake8 and more
 * [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Support for black, autopep and yapf
 
