@@ -20,7 +20,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 * Configure the debugger through the Debug View    
 
-    [GIF starting  with two lines: Ctrl shift p/ mac: cmd shift p]
+    <img src=images/ConfigureDebugger.gif width=734 height=413>
 
 
 For more information you can:
