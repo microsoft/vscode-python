@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
+import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IHttpClient } from '../../../client/activation/types';
@@ -22,13 +23,18 @@ suite('Nuget Azure Storage Repository', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let httpClient: typeMoq.IMock<IHttpClient>;
     let workspace: typeMoq.IMock<IWorkspaceService>;
+    let cfg: typeMoq.IMock<WorkspaceConfiguration>;
     let repo: AzureBlobStoreNugetRepository;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         httpClient = typeMoq.Mock.ofType<IHttpClient>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
+        cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>();
+        cfg.setup(c => c.get('proxyStrictSSL', true))
+            .returns(() => true);
         workspace = typeMoq.Mock.ofType<IWorkspaceService>();
-        workspace.setup(w => w.getConfiguration('http', undefined));
+        workspace.setup(w => w.getConfiguration('http', undefined))
+            .returns(() => cfg.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspace.object);
 
