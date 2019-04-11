@@ -19,4 +19,4 @@ print(_VSCODE_json.dumps([{'name': var,
 del _VSCode_supportsDataExplorer
 del _VSCode_JupyterVars
 del _VSCODE_json
-del _VSCode_getsizeof
+del _VSCODE_getsizeof
