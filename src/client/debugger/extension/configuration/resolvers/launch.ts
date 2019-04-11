@@ -81,10 +81,15 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
+        if (debugConfiguration.justMyCode === undefined) {
+            // Because justMyCode has the opposite behavior of debugStdLib
+            debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
+            debugConfiguration.debugStdLib = undefined;
+        }
         // Pass workspace folder so we can get this when we get debug events firing.
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
-        if (debugConfiguration.debugStdLib) {
+        if (!debugConfiguration.justMyCode) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.stopOnEntry) {

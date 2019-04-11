@@ -38,7 +38,7 @@ import { isOs, OSType } from '../../common';
 use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length no-any
-suite('Unit Tests - Debug Launcher', () => {
+suite('xUnit Tests - Debug Launcher', () => {
     let unitTestSettings: TypeMoq.IMock<IUnitTestSettings>;
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
@@ -158,7 +158,8 @@ suite('Unit Tests - Debug Launcher', () => {
             stopOnEntry: false,
             showReturnValue: false,
             redirectOutput: true,
-            debugStdLib: false
+            debugStdLib: false,
+            justMyCode: true
         };
     }
     function setupSuccess(
@@ -212,7 +213,12 @@ suite('Unit Tests - Debug Launcher', () => {
         }
         expected.workspaceFolder = workspaceFolders[0].uri.fsPath;
         expected.debugOptions = [];
-        if (expected.debugStdLib) {
+        if (expected.justMyCode === undefined) {
+            // Because justMyCode has the opposite behavior of debugStdLib
+            expected.justMyCode = !expected.debugStdLib;
+            expected.debugStdLib = undefined;
+        }
+        if (!expected.justMyCode) {
             expected.debugOptions.push(DebugOptions.DebugStdLib);
         }
         if (expected.stopOnEntry) {
@@ -336,6 +342,7 @@ suite('Unit Tests - Debug Launcher', () => {
             envFile: 'some/dir/.env',
             redirectOutput: false,
             debugStdLib: true,
+            justMyCode: false,
             // added by LaunchConfigurationResolver:
             internalConsoleOptions: 'neverOpen'
         };
@@ -352,7 +359,8 @@ suite('Unit Tests - Debug Launcher', () => {
                 env: expected.env,
                 envFile: expected.envFile,
                 redirectOutput: expected.redirectOutput,
-                debugStdLib: expected.debugStdLib
+                debugStdLib: expected.debugStdLib,
+                justMyCode: expected.justMyCode
             }
         ]);
 

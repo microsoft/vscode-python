@@ -1071,10 +1071,10 @@
                                 "description": "Redirect output.",
                                 "default": true
                             },
-                            "debugStdLib": {
+                            "justMyCode": {
                                 "type": "boolean",
-                                "description": "Debug standard library code.",
-                                "default": false
+                                "description": "Debug only user-written code.",
+                                "default": true
                             },
                             "gevent": {
                                 "type": "boolean",
@@ -1158,10 +1158,10 @@
                                 "description": "Redirect output.",
                                 "default": true
                             },
-                            "debugStdLib": {
+                            "justMyCode": {
                                 "type": "boolean",
-                                "description": "Debug standard library code.",
-                                "default": false
+                                "description": "Debug only user-written code.",
+                                "default": true
                             }
                         }
                     },
@@ -1215,10 +1215,10 @@
                                 "description": "Redirect output.",
                                 "default": true
                             },
-                            "debugStdLib": {
+                            "justMyCode": {
                                 "type": "boolean",
-                                "description": "Debug standard library code.",
-                                "default": false
+                                "description": "Debug only user-written code.",
+                                "default": true
                             },
                             "django": {
                                 "type": "boolean",

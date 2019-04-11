@@ -318,6 +318,7 @@ export interface ITestDebugConfig extends DebugConfiguration {
     showReturnValue?: boolean;
     redirectOutput?: boolean;  // default: true
     debugStdLib?: boolean;
+    justMyCode?: boolean;
 }
 export const ITestContextService = Symbol('ITestContextService');
 export interface ITestContextService extends Disposable {

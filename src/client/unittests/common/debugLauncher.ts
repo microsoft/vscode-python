@@ -150,6 +150,9 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (cfg.debugStdLib === undefined) {
             cfg.debugStdLib = false;
         }
+        if (cfg.justMyCode === undefined) {
+            cfg.justMyCode = true;
+        }
     }
 
     private async convertConfigToArgs(
