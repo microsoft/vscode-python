@@ -668,6 +668,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
 
+        // After the cell is finished update our current execution count
+        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
+
         // When a cell is finished refresh our variables
         // Use the ref here to maintain var explorer independence
         if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
@@ -695,14 +698,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private updateExecutionCount(cellVMs: ICellViewModel[]) {
+    // Check our list of cell vms to see what our current execution count is
+    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
         const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        this.currentExecutionCount = realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
+        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
     }
 
     private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
-        this.updateExecutionCount(cellVMs);
-        return this.currentExecutionCount + 1;
+        return this.getCurrentExecutionCount(cellVMs) + 1;
     }
 
     private submitInput = (code: string) => {
