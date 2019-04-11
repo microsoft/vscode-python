@@ -73,6 +73,8 @@ export class HostJupyterServer
     }
 
     public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+        await super.onAttach(api);
+
         if (api && !this.disposed) {
             const service = await this.waitForService();
 
@@ -119,6 +121,8 @@ export class HostJupyterServer
     }
 
     public async onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void> {
+        await super.onPeerChange(ev);
+
         // Keep track of the number of guests that need to do a catchup request
         this.catchupPendingCount +=
             ev.added.filter(e => e.role === vsls.Role.Guest).length -

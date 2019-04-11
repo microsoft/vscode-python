@@ -91,6 +91,8 @@ export class HostJupyterExecution
     }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onAttach(api);
+
         if (api) {
             const service = await this.waitForService();
 

@@ -1418,6 +1418,12 @@
                     "description": "Don't use the VS Code theme in the Python Interactive window (requires reload of VS Code). This forces the Python Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
                     "scope": "resource"
                 },
+                "python.dataScience.liveShareConnectionTimeout": {
+                    "type": "number",
+                    "default": 1000,
+                    "description": "Amount of time to wait for guest connections to verify they have the Python extension installed.",
+                    "scope": "application"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,

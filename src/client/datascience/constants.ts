@@ -138,6 +138,7 @@ export namespace LiveShare {
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const HistoryProviderService = 'historyProviderService';
+    export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
     export const ResponseLifetime = 15000;
     export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
@@ -161,6 +162,7 @@ export namespace LiveShareCommands {
     export const historyCreate = 'historyCreate';
     export const historyCreateSync = 'historyCreateSync';
     export const disposeServer = 'disposeServer';
+    export const guestCheck = 'guestCheck';
 }
 
 export namespace CssMessages {
