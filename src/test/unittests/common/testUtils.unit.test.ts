@@ -447,6 +447,52 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParentSuite(tests, suite4), suite3);
         assert.equal(getParentSuite(tests, suite5), suite4);
     });
+    test('Get Parent file throws an exception', () => {
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const flattendSuite1: FlattenedTestSuite = {
+            testSuite: suite1,
+            xmlClassName: suite1.xmlName
+        } as any;
+        const flattendFn1: FlattenedTestFunction = {
+            testFunction: fn1,
+            xmlClassName: fn1.name
+        } as any;
+        const tests: Tests = {
+            rootTestFolders: [],
+            summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
+            testFiles: [file1],
+            testFolders: [],
+            testFunctions: [flattendFn1],
+            testSuites: [flattendSuite1]
+        };
+        assert.throws(()=> getParentFile(tests, fn1), 'No parent file for provided test item');
+        assert.throws(()=> getParentFile(tests, suite1), 'No parent file for provided test item');
+    });    
+    test('Get parent of orphaned items', () => {
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const flattendSuite1: FlattenedTestSuite = {
+            testSuite: suite1,
+            xmlClassName: suite1.xmlName
+        } as any;
+        const flattendFn1: FlattenedTestFunction = {
+            testFunction: fn1,
+            xmlClassName: fn1.name
+        } as any;
+        const tests: Tests = {
+            rootTestFolders: [],
+            summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
+            testFiles: [file1],
+            testFolders: [],
+            testFunctions: [flattendFn1],
+            testSuites: [flattendSuite1]
+        };
+        assert.equal(getParent(tests, fn1), undefined);
+        assert.equal(getParent(tests, suite1), undefined);
+    });    
     test('Get Parent of suite', () => {
         const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
         const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
