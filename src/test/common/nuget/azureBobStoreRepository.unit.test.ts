@@ -3,88 +3,108 @@
 
 'use strict';
 
+// tslint:disable:no-http-string
+
+import { BlobService, ErrorOrResult } from 'azure-storage';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
-import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
-import { IHttpClient } from '../../../client/activation/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Nuget Azure Storage Repository', () => {
-    const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
-    const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
-    const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
+    const packageName = 'Python-Language-Server-???';
 
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
-    let httpClient: typeMoq.IMock<IHttpClient>;
     let workspace: typeMoq.IMock<IWorkspaceService>;
+    let nugetService: typeMoq.IMock<INugetService>;
     let cfg: typeMoq.IMock<WorkspaceConfiguration>;
-
-    let repo: AzureBlobStoreNugetRepository;
-    let strictSSL: boolean;
 
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>(undefined, typeMoq.MockBehavior.Strict);
-        httpClient = typeMoq.Mock.ofType<IHttpClient>(undefined, typeMoq.MockBehavior.Strict);
         workspace = typeMoq.Mock.ofType<IWorkspaceService>(undefined, typeMoq.MockBehavior.Strict);
-        const nugetService = typeMoq.Mock.ofType<INugetService>(undefined, typeMoq.MockBehavior.Strict);
+        nugetService = typeMoq.Mock.ofType<INugetService>(undefined, typeMoq.MockBehavior.Strict);
         cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, typeMoq.MockBehavior.Strict);
 
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient)))
-            .returns(() => httpClient.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspace.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService)))
             .returns(() => nugetService.object);
-
-        nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny()))
-            .returns(() => new SemVer('1.1.1'));
-        workspace.setup(w => w.getConfiguration('http', undefined))
-            .returns(() => cfg.object);
-        cfg.setup(c => c.get('proxyStrictSSL', true))
-            .returns(() => strictSSL);
-
-        repo = new AzureBlobStoreNugetRepository(
-            serviceContainer.object,
-            azureBlobStorageAccount,
-            defaultStorageChannel,
-            azureCDNBlobStorageAccount
-        );
-        strictSSL = true;
     });
 
-    test('Get all packages (HTTPS)', async function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(15000);
-        const platformService = new PlatformService();
-        const packageJson = { languageServerVersion: '0.1.0' };
-        const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        appEnv.setup(e => e.packageJson).returns(() => packageJson);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
-        const packageName = lsPackageService.getNugetPackageName();
-        const packages = await repo.getPackages(packageName, undefined);
+    class FakeBlobStore {
+        // tslint:disable-next-line:no-any
+        public calls: [string, string, any][] = [];
+        public results?: BlobService.BlobResult[];
+        public error?: Error;
+        public contructor() {
+            this.calls = [];
+        }
+        // tslint:disable-next-line:no-any
+        public listBlobsSegmentedWithPrefix(c: string, p: string, t: any, cb: ErrorOrResult<BlobService.ListBlobsResult>) {
+            this.calls.push([c, p, t]);
+            const result: BlobService.ListBlobsResult = { entries: this.results! };
+            // tslint:disable-next-line:no-any
+            cb(this.error as Error, result, undefined as any);
+        }
+    }
 
-        expect(packages).to.be.length.greaterThan(0);
-    });
+    const tests: [string, boolean, string][] = [
+        ['https://az', true, 'https://az'],
+        ['https://az', false, 'http://az'],
+        ['http://az', true, 'http://az'],
+        ['http://az', false, 'http://az']
+    ];
+    for (const [uri, setting, expected] of tests) {
+        test(`Get all packages ("${uri}" / ${setting})`, async () => {
+            if (uri.startsWith('https://')) {
+                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
+                    .returns(() => workspace.object);
+                workspace.setup(w => w.getConfiguration('http', undefined))
+                    .returns(() => cfg.object);
+                cfg.setup(c => c.get('proxyStrictSSL', true))
+                    .returns(() => setting);
+            }
+            const blobstore = new FakeBlobStore();
+            // tslint:disable:no-object-literal-type-assertion
+            blobstore.results = [
+                { name: 'Azarath' } as BlobService.BlobResult,
+                { name: 'Metrion' } as BlobService.BlobResult,
+                { name: 'Zinthos' } as BlobService.BlobResult
+            ];
+            // tslint:enable:no-object-literal-type-assertion
+            const version = new SemVer('1.1.1');
+            blobstore.results.forEach(r => {
+                nugetService.setup(n => n.getVersionFromPackageFileName(r.name))
+                    .returns(() => version);
+            });
+            let actualURI = '';
+            const repo = new AzureBlobStoreNugetRepository(
+                serviceContainer.object,
+                uri,
+                'spam',
+                'eggs',
+                async (uriArg) => {
+                    actualURI = uriArg;
+                    return blobstore;
+                }
+            );
 
-    test('Get all packages (HTTP)', async function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(15000);
-        strictSSL = false;
-        const platformService = new PlatformService();
-        const packageJson = { languageServerVersion: '0.1.0' };
-        const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        appEnv.setup(e => e.packageJson).returns(() => packageJson);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
-        const packageName = lsPackageService.getNugetPackageName();
-        const packages = await repo.getPackages(packageName, undefined);
+            const packages = await repo.getPackages(packageName, undefined);
 
-        expect(packages).to.be.length.greaterThan(0);
-    });
+            expect(packages).to.deep.equal([
+                { package: 'Azarath', uri: 'eggs/spam/Azarath', version: version },
+                { package: 'Metrion', uri: 'eggs/spam/Metrion', version: version },
+                { package: 'Zinthos', uri: 'eggs/spam/Zinthos', version: version }
+            ]);
+            expect(actualURI).to.equal(expected);
+            expect(blobstore.calls).to.deep.equal([
+                ['spam', packageName, undefined]
+            ], 'failed');
+            serviceContainer.verifyAll();
+            workspace.verifyAll();
+            cfg.verifyAll();
+        });
+    }
 });

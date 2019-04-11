@@ -18,7 +18,8 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @unmanaged() protected readonly azureBlobStorageAccount: string,
         @unmanaged() protected readonly azureBlobStorageContainer: string,
-        @unmanaged() protected readonly azureCDNBlobStorageAccount: string
+        @unmanaged() protected readonly azureCDNBlobStorageAccount: string,
+        private getBlobStore: (uri: string) => Promise<IAZBlobStore> = _getAZBlobStore
     ) { }
     public async getPackages(packageName: string, resource: Resource): Promise<NugetPackage[]> {
         return this.listPackages(
@@ -40,10 +41,9 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         resource: Resource
     ) {
         const results = await this.listBlobStoreCatalog(
-            azureBlobStorageAccount,
+            this.fixBlobStoreURI(azureBlobStorageAccount, resource),
             azureBlobStorageContainer,
-            packageName,
-            resource
+            packageName
         );
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         return results.map(item => {
@@ -58,10 +58,9 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
     private async listBlobStoreCatalog(
         azureBlobStorageAccount: string,
         azureBlobStorageContainer: string,
-        packageName: string,
-        resource: Resource
+        packageName: string
     ): Promise<IBlobResult[]> {
-        const blobStore = await this.getBlobStore(azureBlobStorageAccount, resource);
+        const blobStore = await this.getBlobStore(azureBlobStorageAccount);
         return new Promise<IBlobResult[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
             // tslint:disable-next-line:no-any
@@ -75,16 +74,19 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                 });
         });
     }
-    private async getBlobStore(uri: string, resource: Resource) {
-        if (uri.startsWith('https:')) {
-            const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-            const cfg = workspace.getConfiguration('http', resource);
-            if (!cfg.get<boolean>('proxyStrictSSL', true)) {
-                // tslint:disable-next-line:no-http-string
-                uri = uri.replace(/^https:/, 'http:');
-            }
+    private fixBlobStoreURI(uri: string, resource: Resource) {
+        if (!uri.startsWith('https:')) {
+            return uri;
         }
-        return _getAZBlobStore(uri);
+
+        const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const cfg = workspace.getConfiguration('http', resource);
+        if (cfg.get<boolean>('proxyStrictSSL', true)) {
+            return uri;
+        }
+
+        // tslint:disable-next-line:no-http-string
+        return uri.replace(/^https:/, 'http:');
     }
 }
 
