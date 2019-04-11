@@ -467,9 +467,9 @@ suite('Unit Tests - TestUtils', () => {
             testFunctions: [flattendFn1],
             testSuites: [flattendSuite1]
         };
-        assert.throws(()=> getParentFile(tests, fn1), 'No parent file for provided test item');
-        assert.throws(()=> getParentFile(tests, suite1), 'No parent file for provided test item');
-    });    
+        assert.throws(() => getParentFile(tests, fn1), new RegExp('No parent file for provided test item'));
+        assert.throws(() => getParentFile(tests, suite1), new RegExp('No parent file for provided test item'));
+    });
     test('Get parent of orphaned items', () => {
         const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
         const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
@@ -492,7 +492,7 @@ suite('Unit Tests - TestUtils', () => {
         };
         assert.equal(getParent(tests, fn1), undefined);
         assert.equal(getParent(tests, suite1), undefined);
-    });    
+    });
     test('Get Parent of suite', () => {
         const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
         const file2 = createMockTestDataItem<TestFile>(TestType.testFile);

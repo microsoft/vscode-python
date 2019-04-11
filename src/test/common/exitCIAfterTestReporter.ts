@@ -9,7 +9,6 @@
 
 // tslint:disable:no-var-requires no-require-imports no-any no-console no-unnecessary-class no-default-export
 const log = require('why-is-node-running');
-const wtf = require('wtfnode');
 const mochaTests: any = require('mocha');
 const { EVENT_RUN_BEGIN, EVENT_RUN_END } = mochaTests.Runner.constants;
 class ExitReporter {
@@ -34,7 +33,6 @@ class ExitReporter {
                         console.info('Exiting from custom PVSC Mocha Reporter.');
                         try {
                             log();
-                            wtf();
                         } catch (ex) {
                             // Do nothing.
                         }
