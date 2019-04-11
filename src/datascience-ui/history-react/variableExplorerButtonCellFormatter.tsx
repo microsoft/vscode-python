@@ -36,9 +36,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
                     </div>
                 );
             } else {
-                return(
-                    <div></div>
-                );
+                return(null);
             }
         }
         return [];
