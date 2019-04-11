@@ -42,6 +42,8 @@ export namespace LanguageService {
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
+    export const doNotShowAgain = localize('Interpreters.doNotShowAgain', 'Do not show again');
+    export const environmentPromptMessage = localize('Interpreters.environmentPromptMessage', 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?');
 }
 
 export namespace Linters {
