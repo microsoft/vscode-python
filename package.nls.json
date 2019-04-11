@@ -231,5 +231,10 @@
     "DataScience.noRowsInDataViewer" : "Fetching data ...",
     "DataScience.pandasTooOldForViewingFormat" : "Python package 'pandas' is version {0}. Version 0.20 or greater is required for viewing data.",
     "DataScience.pandasRequiredForViewing" : "Python package 'pandas' is required for viewing data.",
-    "DataScience.valuesColumn": "values"
+    "DataScience.valuesColumn": "values",
+    "DataScience.variableExplorerNameColumn": "Name",
+    "DataScience.variableExplorerTypeColumn": "Type",
+    "DataScience.variableExplorerSizeColumn": "Size",
+    "DataScience.variableExplorerValueColumn": "Value",
+    "DataScience.showDataExplorerTooltip": "Show variable in data explorer."
 }
