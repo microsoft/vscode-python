@@ -9,7 +9,7 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareTestingApi } from '../../client/common/application/types';
 import { LiveShareProxy } from '../../client/common/liveshare/liveshareProxy';
-import { IDisposable, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { LiveShare } from '../../client/datascience/constants';
 

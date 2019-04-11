@@ -9,11 +9,11 @@ import { Disposable, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import {
+    IApplicationShell,
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    ILiveShareTestingApi,
-    IApplicationShell
+    ILiveShareTestingApi
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
