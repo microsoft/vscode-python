@@ -11,10 +11,8 @@ import * as request from 'request';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { DebuggerTypeName } from '../../client/debugger/constants';
 import { DEBUGGER_TIMEOUT } from './common/constants';
-import { DebugClientEx } from './debugClient';
 
 const testAdapterFilePath = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
 const debuggerType = DebuggerTypeName;
@@ -24,14 +22,9 @@ const debuggerType = DebuggerTypeName;
  * We do not need to support code coverage on AppVeyor, lets use the standard test adapter.
  * @returns {DebugClient}
  */
-export async function createDebugAdapter(coverageDirectory: string): Promise<DebugClient> {
+export async function createDebugAdapter(_coverageDirectory: string): Promise<DebugClient> {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    let debugClient: DebugClient;
-    if (IS_WINDOWS) {
-        debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
-    } else {
-        debugClient = new DebugClientEx(testAdapterFilePath, debuggerType, coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
-    }
+    const debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
     debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
     await debugClient.start();
     return debugClient;
