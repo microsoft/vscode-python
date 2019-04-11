@@ -82,12 +82,36 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                 uri = uri.replace(/^https:/, 'http:');
             }
         }
-        // tslint:disable-next-line:no-require-imports
-        const az = await import('azure-storage') as typeof import('azure-storage');
-        return az.createBlobServiceAnonymous(uri);
+        return _getAZBlobStore(uri);
     }
 }
 
+// The "azure-storage" package is large enough that importing it has
+// a significant impact on extension startup time.  So we import it
+// lazily and deal with the consequences below.
+
 interface IBlobResult {
     name: string;
+}
+
+interface IBlobResults {
+    entries: IBlobResult[];
+}
+
+type ErrorOrResult<TResult> = (error: Error, result: TResult) => void;
+
+interface IAZBlobStore {
+    listBlobsSegmentedWithPrefix(
+        container: string,
+        prefix: string,
+        // tslint:disable-next-line:no-any
+        currentToken: any,
+        callback: ErrorOrResult<IBlobResults>
+    ): void;
+}
+
+async function _getAZBlobStore(uri: string): Promise<IAZBlobStore> {
+    // tslint:disable-next-line:no-require-imports
+    const az = await import('azure-storage') as typeof import('azure-storage');
+    return az.createBlobServiceAnonymous(uri);
 }
