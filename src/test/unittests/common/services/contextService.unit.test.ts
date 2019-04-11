@@ -12,14 +12,14 @@ import { TestContextService } from '../../../../client/unittests/common/services
 import { TestCollectionStorageService } from '../../../../client/unittests/common/services/storageService';
 import { ITestCollectionStorageService, ITestContextService, TestStatus } from '../../../../client/unittests/common/types';
 import { UnitTestManagementService } from '../../../../client/unittests/main';
-import { IUnitTestManagementService, WorkspaceTestStatus } from '../../../../client/unittests/types';
+import { ITestManagementService, WorkspaceTestStatus } from '../../../../client/unittests/types';
 
 // tslint:disable:no-any max-func-body-length
 suite('Unit Tests - Context Service', () => {
     let cmdManager: ICommandManager;
     let contextService: ITestContextService;
     let storage: ITestCollectionStorageService;
-    let mgr: IUnitTestManagementService;
+    let mgr: ITestManagementService;
     const workspaceUri = Uri.file(__filename);
     type StatusChangeHandler = (status: WorkspaceTestStatus) => Promise<void>;
     setup(() => {

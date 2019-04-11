@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
-import { IUnitTestSettings, Product } from '../../common/types';
+import { ITestingSettings, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestDataItem, TestWorkspaceFolder } from '../types';
 import { CommandSource } from './constants';
@@ -91,22 +91,22 @@ export class TestsHelper implements ITestsHelper {
         switch (id) {
             case 'pytest': {
                 return {
-                    argsName: 'pyTestArgs' as keyof IUnitTestSettings,
-                    pathName: 'pyTestPath' as keyof IUnitTestSettings,
-                    enabledName: 'pyTestEnabled' as keyof IUnitTestSettings
+                    argsName: 'pyTestArgs' as keyof ITestingSettings,
+                    pathName: 'pyTestPath' as keyof ITestingSettings,
+                    enabledName: 'pyTestEnabled' as keyof ITestingSettings
                 };
             }
             case 'nosetest': {
                 return {
-                    argsName: 'nosetestArgs' as keyof IUnitTestSettings,
-                    pathName: 'nosetestPath' as keyof IUnitTestSettings,
-                    enabledName: 'nosetestsEnabled' as keyof IUnitTestSettings
+                    argsName: 'nosetestArgs' as keyof ITestingSettings,
+                    pathName: 'nosetestPath' as keyof ITestingSettings,
+                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings
                 };
             }
             case 'unittest': {
                 return {
-                    argsName: 'unittestArgs' as keyof IUnitTestSettings,
-                    enabledName: 'unittestEnabled' as keyof IUnitTestSettings
+                    argsName: 'unittestArgs' as keyof ITestingSettings,
+                    enabledName: 'unittestEnabled' as keyof ITestingSettings
                 };
             }
             default: {

@@ -44,9 +44,9 @@ suite('Unit Tests - debugging', () => {
     suiteSetup(async () => {
         // Test disvovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
         await initialize();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
     setup(async () => {
         await deleteDirectory(path.join(testFilesPath, '.cache'));
@@ -55,9 +55,9 @@ suite('Unit Tests - debugging', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {
@@ -121,17 +121,17 @@ suite('Unit Tests - debugging', () => {
     }
 
     test('Debugger should start (unittest)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         await testStartingDebugger('unittest');
     });
 
     test('Debugger should start (pytest)', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await testStartingDebugger('pytest');
     });
 
     test('Debugger should start (nosetest)', async () => {
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         await testStartingDebugger('nosetest');
     });
 
@@ -155,17 +155,17 @@ suite('Unit Tests - debugging', () => {
     }
 
     test('Debugger should stop when user invokes a test discovery (unittest)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         await testStoppingDebugger('unittest');
     });
 
     test('Debugger should stop when user invokes a test discovery (pytest)', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await testStoppingDebugger('pytest');
     });
 
     test('Debugger should stop when user invokes a test discovery (nosetest)', async () => {
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         await testStoppingDebugger('nosetest');
     });
 
@@ -205,17 +205,17 @@ suite('Unit Tests - debugging', () => {
     }
 
     test('Debugger should not stop when test discovery is invoked automatically by extension (unittest)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         await testDebuggerWhenRediscoveringTests('unittest');
     });
 
     test('Debugger should not stop when test discovery is invoked automatically by extension (pytest)', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await testDebuggerWhenRediscoveringTests('pytest');
     });
 
     test('Debugger should not stop when test discovery is invoked automatically by extension (nosetest)', async () => {
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         await testDebuggerWhenRediscoveringTests('nosetest');
     });
 });

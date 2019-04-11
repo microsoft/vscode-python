@@ -12,7 +12,7 @@ export class TestManager extends BaseTestManager {
     private readonly helper: ITestsHelper;
     private readonly runner: ITestManagerRunner;
     public get enabled() {
-        return this.settings.unitTest.unittestEnabled;
+        return this.settings.testing.unittestEnabled;
     }
     constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
         super(UNITTEST_PROVIDER, Product.unittest, workspaceFolder, rootDirectory, serviceContainer);
@@ -24,7 +24,7 @@ export class TestManager extends BaseTestManager {
         noop();
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
-        const args = this.settings.unitTest.unittestArgs.slice(0);
+        const args = this.settings.testing.unittestArgs.slice(0);
         return {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
@@ -46,9 +46,9 @@ export class TestManager extends BaseTestManager {
 
         const runAllTests = this.helper.shouldRunAllTests(testsToRun);
         if (debug) {
-            args = this.argsService.filterArguments(this.settings.unitTest.unittestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.unittestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
         } else {
-            args = this.argsService.filterArguments(this.settings.unitTest.unittestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.unittestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
         }
 
         const options: TestRunOptions = {

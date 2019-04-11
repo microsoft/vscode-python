@@ -32,8 +32,8 @@ import {
     TestFunction, TestStatus, TestsToRun
 } from './common/types';
 import {
-    ITestDisplay, ITestResultDisplay,
-    IUnitTestConfigurationService, IUnitTestManagementService,
+    ITestConfigurationService, ITestDisplay,
+    ITestManagementService, ITestResultDisplay,
     TestWorkspaceFolder,
     WorkspaceTestStatus
 } from './types';
@@ -41,7 +41,7 @@ import {
 // tslint:disable:no-any
 
 @injectable()
-export class UnitTestManagementService implements IUnitTestManagementService, Disposable {
+export class UnitTestManagementService implements ITestManagementService, Disposable {
     private readonly outputChannel: OutputChannel;
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
@@ -115,7 +115,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             return testManager;
         }
         if (displayTestNotConfiguredMessage) {
-            const configurationService = this.serviceContainer.get<IUnitTestConfigurationService>(IUnitTestConfigurationService);
+            const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
             await configurationService.displayTestFrameworkError(wkspace);
         }
     }
@@ -128,13 +128,13 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         if (!Array.isArray(this.workspaceService.workspaceFolders)) {
             return;
         }
-        const workspaceFolderUri = this.workspaceService.workspaceFolders.find(w => eventArgs.affectsConfiguration('python.unitTest', w.uri));
+        const workspaceFolderUri = this.workspaceService.workspaceFolders.find(w => eventArgs.affectsConfiguration('python.testing', w.uri));
         if (!workspaceFolderUri) {
             return;
         }
         const workspaceUri = workspaceFolderUri.uri;
         const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
-        if (!settings.unitTest.nosetestsEnabled && !settings.unitTest.pyTestEnabled && !settings.unitTest.unittestEnabled) {
+        if (!settings.testing.nosetestsEnabled && !settings.testing.pyTestEnabled && !settings.testing.unittestEnabled) {
             if (this.testResultDisplay) {
                 this.testResultDisplay.enabled = false;
             }
@@ -180,7 +180,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configurationService.getSettings(resource);
-        if (!settings.unitTest.nosetestsEnabled && !settings.unitTest.pyTestEnabled && !settings.unitTest.unittestEnabled) {
+        if (!settings.testing.nosetestsEnabled && !settings.testing.pyTestEnabled && !settings.testing.unittestEnabled) {
             return;
         }
 
@@ -355,7 +355,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         if (!wkspace) {
             return;
         }
-        const configurationService = this.serviceContainer.get<IUnitTestConfigurationService>(IUnitTestConfigurationService);
+        const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
         await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }
     private registerCommands(): void {
@@ -412,7 +412,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
     }
     private onDocumentSaved(doc: TextDocument) {
         const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(doc.uri);
-        if (!settings.unitTest.autoTestDiscoverOnSaveEnabled) {
+        if (!settings.testing.autoTestDiscoverOnSaveEnabled) {
             return;
         }
         this.discoverTestsForDocument(doc)

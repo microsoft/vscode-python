@@ -15,7 +15,7 @@ import { ProductInstaller } from '../../../client/common/installer/productInstal
 import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
-import { IConfigurationService, IFormattingSettings, IInstaller, IPythonSettings, IUnitTestSettings, IWorkspaceSymbolSettings, ModuleNamePurpose, Product, ProductType } from '../../../client/common/types';
+import { IConfigurationService, IFormattingSettings, IInstaller, IPythonSettings, ITestingSettings, IWorkspaceSymbolSettings, ModuleNamePurpose, Product, ProductType } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IFormatterHelper } from '../../../client/formatters/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -29,7 +29,7 @@ suite('Product Path', () => {
         getNamesAndValues<Product>(Product).forEach(product => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let formattingSettings: TypeMoq.IMock<IFormattingSettings>;
-            let unitTestSettings: TypeMoq.IMock<IUnitTestSettings>;
+            let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
             let workspaceSymnbolSettings: TypeMoq.IMock<IWorkspaceSymbolSettings>;
             let configService: TypeMoq.IMock<IConfigurationService>;
             let productInstaller: ProductInstaller;
@@ -37,13 +37,13 @@ suite('Product Path', () => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 formattingSettings = TypeMoq.Mock.ofType<IFormattingSettings>();
-                unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>();
+                unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>();
                 workspaceSymnbolSettings = TypeMoq.Mock.ofType<IWorkspaceSymbolSettings>();
 
                 productInstaller = new ProductInstaller(serviceContainer.object, TypeMoq.Mock.ofType<OutputChannel>().object);
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
                 pythonSettings.setup(p => p.formatting).returns(() => formattingSettings.object);
-                pythonSettings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
+                pythonSettings.setup(p => p.testing).returns(() => unitTestSettings.object);
                 pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymnbolSettings.object);
                 configService.setup(s => s.getSettings(TypeMoq.It.isValue(resource)))
                     .returns(() => pythonSettings.object);

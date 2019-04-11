@@ -13,7 +13,7 @@ import { EventName } from '../../telemetry/constants';
 import { CommandSource } from '../common/constants';
 import { getChildren, getParent, getTestType } from '../common/testUtils';
 import { ITestCollectionStorageService, TestStatus, TestType } from '../common/types';
-import { ITestDataItemResource, ITestTreeViewProvider, IUnitTestManagementService, TestDataItem, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
+import { ITestDataItemResource, ITestManagementService, ITestTreeViewProvider, TestDataItem, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
 @injectable()
@@ -27,7 +27,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
 
     constructor(
         @inject(ITestCollectionStorageService) private testStore: ITestCollectionStorageService,
-        @inject(IUnitTestManagementService) private testService: IUnitTestManagementService,
+        @inject(ITestManagementService) private testService: ITestManagementService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
@@ -149,7 +149,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
     }
 
     /**
-     * Event handler for TestStatusChanged (coming from the IUnitTestManagementService).
+     * Event handler for TestStatusChanged (coming from the ITestManagementService).
      * ThisThe TreeView needs to know when we begin discovery and when discovery completes.
      *
      * @param e The event payload containing context for the status change

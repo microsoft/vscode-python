@@ -147,7 +147,7 @@ suite('Unit Tests - unittest - run failed tests', () => {
         when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
         const settingsService = mock(ConfigurationService);
         const settings: IPythonSettings = {
-            unitTest: {
+            testing: {
                 unittestArgs: []
             }
         } as any;

@@ -43,11 +43,11 @@ suite('Unit Tests - ConfigSettingsService', () => {
                 function getTestArgSetting(prod: UnitTestProduct) {
                     switch (prod) {
                         case Product.unittest:
-                            return 'unitTest.unittestArgs';
+                            return 'testing.unittestArgs';
                         case Product.pytest:
-                            return 'unitTest.pyTestArgs';
+                            return 'testing.pyTestArgs';
                         case Product.nosetest:
-                            return 'unitTest.nosetestArgs';
+                            return 'testing.nosetestArgs';
                         default:
                             throw new Error('Invalid Test Product');
                     }
@@ -55,11 +55,11 @@ suite('Unit Tests - ConfigSettingsService', () => {
                 function getTestEnablingSetting(prod: UnitTestProduct) {
                     switch (prod) {
                         case Product.unittest:
-                            return 'unitTest.unittestEnabled';
+                            return 'testing.unittestEnabled';
                         case Product.pytest:
-                            return 'unitTest.pyTestEnabled';
+                            return 'testing.pyTestEnabled';
                         case Product.nosetest:
-                            return 'unitTest.nosetestsEnabled';
+                            return 'testing.nosetestsEnabled';
                         default:
                             throw new Error('Invalid Test Product');
                     }

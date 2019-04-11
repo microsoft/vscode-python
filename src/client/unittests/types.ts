@@ -17,8 +17,8 @@ import {
     TestStatus, TestsToRun, TestSuite, UnitTestProduct
 } from './common/types';
 
-export const IUnitTestConfigurationService = Symbol('IUnitTestConfigurationService');
-export interface IUnitTestConfigurationService {
+export const ITestConfigurationService = Symbol('ITestConfigurationService');
+export interface ITestConfigurationService {
     displayTestFrameworkError(wkspace: Uri): Promise<void>;
     selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined>;
     enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void>;
@@ -43,8 +43,8 @@ export interface ITestDisplay {
     displayFunctionTestPickerUI(cmdSource: CommandSource, wkspace: Uri, rootDirectory: string, file: Uri, testFunctions: TestFunction[], debug?: boolean): void;
 }
 
-export const IUnitTestManagementService = Symbol('IUnitTestManagementService');
-export interface IUnitTestManagementService {
+export const ITestManagementService = Symbol('ITestManagementService');
+export interface ITestManagementService {
     readonly onDidStatusChange: Event<WorkspaceTestStatus>;
     activate(symbolProvider: DocumentSymbolProvider): Promise<void>;
     getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
@@ -119,16 +119,16 @@ export interface IUnitTestHelper {
     getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[];
 }
 
-export const IUnitTestDiagnosticService = Symbol('IUnitTestDiagnosticService');
-export interface IUnitTestDiagnosticService {
+export const ITestDiagnosticService = Symbol('ITestDiagnosticService');
+export interface ITestDiagnosticService {
     getMessagePrefix(status: TestStatus): string | undefined;
-    getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity | undefined;
+    getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity | undefined;
 }
 
-export interface IPythonUnitTestMessage {
+export interface IPythonTestMessage {
     code: string | undefined;
     message?: string;
-    severity: PythonUnitTestMessageSeverity;
+    severity: PythonTestMessageSeverity;
     provider: string | undefined;
     traceback?: string;
     testTime: number;
@@ -136,7 +136,7 @@ export interface IPythonUnitTestMessage {
     locationStack?: ILocationStackFrameDetails[];
     testFilePath: string;
 }
-export enum PythonUnitTestMessageSeverity {
+export enum PythonTestMessageSeverity {
     Error,
     Failure,
     Skip,

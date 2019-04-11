@@ -13,7 +13,7 @@ export class TestManager extends BaseTestManager {
     private readonly helper: ITestsHelper;
     private readonly runner: ITestManagerRunner;
     public get enabled() {
-        return this.settings.unitTest.nosetestsEnabled;
+        return this.settings.testing.nosetestsEnabled;
     }
     constructor(workspaceFolder: Uri, rootDirectory: string,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -23,7 +23,7 @@ export class TestManager extends BaseTestManager {
         this.runner = this.serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, this.testProvider);
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
-        const args = this.settings.unitTest.nosetestArgs.slice(0);
+        const args = this.settings.testing.nosetestArgs.slice(0);
         return {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
@@ -36,9 +36,9 @@ export class TestManager extends BaseTestManager {
 
         const runAllTests = this.helper.shouldRunAllTests(testsToRun);
         if (debug) {
-            args = this.argsService.filterArguments(this.settings.unitTest.nosetestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.nosetestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
         } else {
-            args = this.argsService.filterArguments(this.settings.unitTest.nosetestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.nosetestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
         }
 
         if (runFailedTests === true && args.indexOf('--failed') === -1) {

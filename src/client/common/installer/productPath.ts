@@ -86,7 +86,7 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
             return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
         }
         const settings = this.configService.getSettings(resource);
-        return settings.unitTest[settingsPropNames.pathName] as string;
+        return settings.testing[settingsPropNames.pathName] as string;
     }
 }
 

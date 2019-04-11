@@ -45,7 +45,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
 
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
     setup(async () => {
         const cachePath = path.join(UNITTEST_TEST_FILES_PATH, '.cache');
@@ -58,7 +58,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {
@@ -118,7 +118,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
 
     test('Run Tests', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-v', '-s', './tests', '-p', 'test_unittest*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-v', '-s', './tests', '-p', 'test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test1.test_A
@@ -155,7 +155,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     });
 
     test('Run Failed Tests', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test1.test_A
@@ -207,7 +207,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     });
 
     test('Run Specific Test File', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
 
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
@@ -245,7 +245,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     });
 
     test('Run Specific Test Suite', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test_one_1.test_1_1_1
@@ -282,7 +282,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     });
 
     test('Run Specific Test Function', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test1.test_A

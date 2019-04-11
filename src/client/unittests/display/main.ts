@@ -150,8 +150,8 @@ export class TestResultDisplay implements ITestResultDisplay {
     // tslint:disable-next-line:no-any
     private async disableTests(): Promise<any> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settingsToDisable = ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
-            'unitTest.unittestEnabled', 'unitTest.nosetestsEnabled'];
+        const settingsToDisable = ['testing.promptToConfigure', 'testing.pyTestEnabled',
+            'testing.unittestEnabled', 'testing.nosetestsEnabled'];
 
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);

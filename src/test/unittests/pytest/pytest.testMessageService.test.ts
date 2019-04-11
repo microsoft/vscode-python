@@ -23,7 +23,7 @@ import { DiscoveredTests } from '../../../client/unittests/common/services/types
 import { ITestVisitor, PassCalculationFormulae, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/unittests/common/types';
 import { XUnitParser } from '../../../client/unittests/common/xUnitParser';
 import { TestMessageService } from '../../../client/unittests/pytest/services/testMessageService';
-import { ILocationStackFrameDetails, IPythonUnitTestMessage, PythonUnitTestMessageSeverity } from '../../../client/unittests/types';
+import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../../client/unittests/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { UnitTestIocContainer } from '../serviceRegistry';
@@ -34,24 +34,24 @@ const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python
 
 const filterdTestScenarios = testScenarios.filter((ts) => { return !ts.shouldRunFailed; });
 
-async function testMessageProperties(message: IPythonUnitTestMessage, expectedMessage: IPythonUnitTestMessage, imported: boolean = false, status: TestStatus) {
-    assert.equal(message.code, expectedMessage.code, 'IPythonUnitTestMessage code');
-    assert.equal(message.message, expectedMessage.message, 'IPythonUnitTestMessage message');
-    assert.equal(message.severity, expectedMessage.severity, 'IPythonUnitTestMessage severity');
-    assert.equal(message.provider, expectedMessage.provider, 'IPythonUnitTestMessage provider');
-    assert.isNumber(message.testTime, 'IPythonUnitTestMessage testTime');
-    assert.equal(message.status, expectedMessage.status, 'IPythonUnitTestMessage status');
-    assert.equal(message.testFilePath, expectedMessage.testFilePath, 'IPythonUnitTestMessage testFilePath');
+async function testMessageProperties(message: IPythonTestMessage, expectedMessage: IPythonTestMessage, imported: boolean = false, status: TestStatus) {
+    assert.equal(message.code, expectedMessage.code, 'IPythonTestMessage code');
+    assert.equal(message.message, expectedMessage.message, 'IPythonTestMessage message');
+    assert.equal(message.severity, expectedMessage.severity, 'IPythonTestMessage severity');
+    assert.equal(message.provider, expectedMessage.provider, 'IPythonTestMessage provider');
+    assert.isNumber(message.testTime, 'IPythonTestMessage testTime');
+    assert.equal(message.status, expectedMessage.status, 'IPythonTestMessage status');
+    assert.equal(message.testFilePath, expectedMessage.testFilePath, 'IPythonTestMessage testFilePath');
     if (status !== TestStatus.Pass) {
-        assert.equal(message.locationStack![0].lineText, expectedMessage.locationStack![0].lineText, 'IPythonUnitTestMessage line text');
-        assert.equal(message.locationStack![0].location.uri.fsPath, expectedMessage.locationStack![0].location.uri.fsPath, 'IPythonUnitTestMessage locationStack fsPath');
+        assert.equal(message.locationStack![0].lineText, expectedMessage.locationStack![0].lineText, 'IPythonTestMessage line text');
+        assert.equal(message.locationStack![0].location.uri.fsPath, expectedMessage.locationStack![0].location.uri.fsPath, 'IPythonTestMessage locationStack fsPath');
         if (status !== TestStatus.Skipped) {
-            assert.equal(message.locationStack![1].lineText, expectedMessage.locationStack![1].lineText, 'IPythonUnitTestMessage line text');
-            assert.equal(message.locationStack![1].location.uri.fsPath, expectedMessage.locationStack![1].location.uri.fsPath, 'IPythonUnitTestMessage locationStack fsPath');
+            assert.equal(message.locationStack![1].lineText, expectedMessage.locationStack![1].lineText, 'IPythonTestMessage line text');
+            assert.equal(message.locationStack![1].location.uri.fsPath, expectedMessage.locationStack![1].location.uri.fsPath, 'IPythonTestMessage locationStack fsPath');
         }
         if (imported) {
-            assert.equal(message.locationStack![2].lineText, expectedMessage.locationStack![2].lineText, 'IPythonUnitTestMessage imported line text');
-            assert.equal(message.locationStack![2].location.uri.fsPath, expectedMessage.locationStack![2].location.uri.fsPath, 'IPythonUnitTestMessage imported location fsPath');
+            assert.equal(message.locationStack![2].lineText, expectedMessage.locationStack![2].lineText, 'IPythonTestMessage imported line text');
+            assert.equal(message.locationStack![2].location.uri.fsPath, expectedMessage.locationStack![2].location.uri.fsPath, 'IPythonTestMessage imported location fsPath');
         }
     }
 }
@@ -103,7 +103,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -118,7 +118,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
     // Build tests for the test data that is relevant for this platform.
     filterdTestScenarios.forEach((scenario) => {
         suite(scenario.scenarioName, async () => {
-            let testMessages: IPythonUnitTestMessage[];
+            let testMessages: IPythonTestMessage[];
             suiteSetup(async () => {
                 await initializeTest();
                 initializeDI();
@@ -152,20 +152,20 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
             });
             suiteTeardown(async () => {
                 await ioc.dispose();
-                await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+                await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
             });
             scenario.testDetails!.forEach((td) => {
                 suite(td.nameToRun, () => {
-                    let testMessage: IPythonUnitTestMessage;
-                    let expectedMessage: IPythonUnitTestMessage;
+                    let testMessage: IPythonTestMessage;
+                    let expectedMessage: IPythonTestMessage;
                     suiteSetup(async () => {
-                        let expectedSeverity: PythonUnitTestMessageSeverity;
+                        let expectedSeverity: PythonTestMessageSeverity;
                         if (td.status === TestStatus.Error || td.status === TestStatus.Fail) {
-                            expectedSeverity = PythonUnitTestMessageSeverity.Error;
+                            expectedSeverity = PythonTestMessageSeverity.Error;
                         } else if (td.status === TestStatus.Skipped) {
-                            expectedSeverity = PythonUnitTestMessageSeverity.Skip;
+                            expectedSeverity = PythonTestMessageSeverity.Skip;
                         } else {
-                            expectedSeverity = PythonUnitTestMessageSeverity.Pass;
+                            expectedSeverity = PythonTestMessageSeverity.Pass;
                         }
                         const expectedLocationStack = await getExpectedLocationStackFromTestDetails(td);
                         expectedMessage = {

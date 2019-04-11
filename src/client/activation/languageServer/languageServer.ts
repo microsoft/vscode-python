@@ -14,7 +14,7 @@ import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IUnitTestManagementService } from '../../unittests/types';
+import { ITestManagementService } from '../../unittests/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
 import { ProgressReporting } from './progress';
 
@@ -30,7 +30,7 @@ export class LanguageServer implements ILanguageServer {
         @inject(ILanguageClientFactory)
         @named(LanguageClientFactory.base)
         private readonly factory: ILanguageClientFactory,
-        @inject(IUnitTestManagementService) private readonly testManager: IUnitTestManagementService,
+        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         this.startupCompleted = createDeferred<void>();

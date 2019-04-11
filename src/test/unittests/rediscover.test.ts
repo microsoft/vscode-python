@@ -46,9 +46,9 @@ suite('Unit Tests re-discovery', () => {
     });
 
     async function resetSettings() {
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     }
 
     function initializeDI() {
@@ -74,17 +74,17 @@ suite('Unit Tests re-discovery', () => {
     }
 
     test('Re-discover tests (unittest)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         await discoverUnitTests('unittest');
     });
 
     test('Re-discover tests (pytest)', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await discoverUnitTests('pytest');
     });
 
     test('Re-discover tests (nosetest)', async () => {
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         await discoverUnitTests('nosetest');
     });
 });

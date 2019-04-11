@@ -35,11 +35,11 @@ suite('Unit Tests - nose - run against actual python process', () => {
                 fs.unlinkSync(file);
             }
         });
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         await initialize();
     });
     suiteTeardown(async () => {
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         filesToDelete.forEach(file => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
@@ -52,7 +52,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {
@@ -98,7 +98,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
     test('Run Tests', async () => {
         await injectTestDiscoveryOutput('run.one.output');
         await injectTestRunOutput('run.one.result');
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const results = await testManager.runTest(CommandSource.ui);
@@ -112,7 +112,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
         await injectTestDiscoveryOutput('run.two.output');
         await injectTestRunOutput('run.two.result');
         await injectTestRunOutput('run.two.again.result', true);
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         let results = await testManager.runTest(CommandSource.ui);
@@ -131,7 +131,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
     test('Run Specific Test File', async () => {
         await injectTestDiscoveryOutput('run.three.output');
         await injectTestRunOutput('run.three.result');
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -149,7 +149,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
     test('Run Specific Test Suite', async () => {
         await injectTestDiscoveryOutput('run.four.output');
         await injectTestRunOutput('run.four.result');
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -167,7 +167,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
     test('Run Specific Test Function', async () => {
         await injectTestDiscoveryOutput('run.five.output');
         await injectTestRunOutput('run.five.result');
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);

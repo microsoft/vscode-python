@@ -29,11 +29,11 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     private getTestArgSetting(product: UnitTestProduct) {
         switch (product) {
             case Product.unittest:
-                return 'unitTest.unittestArgs';
+                return 'testing.unittestArgs';
             case Product.pytest:
-                return 'unitTest.pyTestArgs';
+                return 'testing.pyTestArgs';
             case Product.nosetest:
-                return 'unitTest.nosetestArgs';
+                return 'testing.nosetestArgs';
             default:
                 throw new Error('Invalid Test Product');
         }
@@ -41,11 +41,11 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     private getTestEnablingSetting(product: UnitTestProduct) {
         switch (product) {
             case Product.unittest:
-                return 'unitTest.unittestEnabled';
+                return 'testing.unittestEnabled';
             case Product.pytest:
-                return 'unitTest.pyTestEnabled';
+                return 'testing.pyTestEnabled';
             case Product.nosetest:
-                return 'unitTest.nosetestsEnabled';
+                return 'testing.nosetestsEnabled';
             default:
                 throw new Error('Invalid Test Product');
         }
@@ -72,7 +72,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
 }
 
 export class BufferedTestConfigSettingsService implements ITestConfigSettingsService {
-    private ops: [ string, string | Uri, UnitTestProduct, string[] ][];
+    private ops: [string, string | Uri, UnitTestProduct, string[]][];
     constructor() {
         this.ops = [];
     }

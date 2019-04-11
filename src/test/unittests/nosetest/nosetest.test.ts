@@ -31,11 +31,11 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
                 fs.unlinkSync(file);
             }
         });
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         await initialize();
     });
     suiteTeardown(async () => {
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         filesToDelete.forEach(file => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
@@ -48,7 +48,7 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {

@@ -11,7 +11,7 @@ import { StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { Testing } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
@@ -24,7 +24,7 @@ import { sleep } from '../../core';
 suite('Unit Tests - TestResultDisplay', () => {
     const workspaceUri = Uri.file(__filename);
     let appShell: typeMoq.IMock<IApplicationShell>;
-    let unitTestSettings: typeMoq.IMock<IUnitTestSettings>;
+    let unitTestSettings: typeMoq.IMock<ITestingSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let display: TestResultDisplay;
     let testsHelper: typeMoq.IMock<ITestsHelper>;
@@ -34,12 +34,12 @@ suite('Unit Tests - TestResultDisplay', () => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         configurationService = typeMoq.Mock.ofType<IConfigurationService>();
         appShell = typeMoq.Mock.ofType<IApplicationShell>();
-        unitTestSettings = typeMoq.Mock.ofType<IUnitTestSettings>();
+        unitTestSettings = typeMoq.Mock.ofType<ITestingSettings>();
         const pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
         testsHelper = typeMoq.Mock.ofType<ITestsHelper>();
         cmdManager = typeMoq.Mock.ofType<ICommandManager>();
 
-        pythonSettings.setup(p => p.unitTest).returns(() => unitTestSettings.object);
+        pythonSettings.setup(p => p.testing).returns(() => unitTestSettings.object);
         configurationService.setup(c => c.getSettings(workspaceUri)).returns(() => pythonSettings.object);
 
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
@@ -301,8 +301,8 @@ suite('Unit Tests - TestResultDisplay', () => {
             .returns(() => Promise.resolve(Testing.disableTests()))
             .verifiable(typeMoq.Times.once());
 
-        for (const setting of ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
-            'unitTest.unittestEnabled', 'unitTest.nosetestsEnabled']) {
+        for (const setting of ['testing.promptToConfigure', 'testing.pyTestEnabled',
+            'testing.unittestEnabled', 'testing.nosetestsEnabled']) {
             configurationService.setup(c => c.updateSetting(typeMoq.It.isValue(setting), typeMoq.It.isValue(false)))
                 .returns(() => Promise.resolve())
                 .verifiable(typeMoq.Times.once());

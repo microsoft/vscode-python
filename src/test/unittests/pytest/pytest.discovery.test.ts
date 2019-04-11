@@ -54,7 +54,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     }
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
     setup(async () => {
         await initializeTest();
@@ -62,7 +62,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {
@@ -492,7 +492,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             ]
         }
         ]));
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -557,7 +557,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             }
         ]
         ));
-        await updateSetting('unitTest.pyTestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -730,7 +730,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             }
         ]
         ));
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -782,7 +782,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 ]
             }
         ]));
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, unitTestTestFilesCwdPath);
 

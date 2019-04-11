@@ -19,7 +19,7 @@ import { JediSymbolProvider } from '../providers/symbolProvider';
 import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
 import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';
 import { OnEnterFormatter } from '../typeFormatters/onEnterFormatter';
-import { IUnitTestManagementService } from '../unittests/types';
+import { ITestManagementService } from '../unittests/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { ILanguageServerActivator } from './types';
 
@@ -108,7 +108,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer))
         );
 
-        const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
+        const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
         testManagementService
             .activate(symbolProvider)
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));

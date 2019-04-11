@@ -55,6 +55,7 @@
     "python.command.python.datascience.collapseallcells.title": "Collapse all Python Interactive cells",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "Debug a Python Program with Standard Output",
+    "python.snippet.launch.test.description": "Python: Tests",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
     "python.snippet.launch.pyspark.description": "Debug PySpark",
     "python.snippet.launch.module.label": "Python: Module",

@@ -1005,10 +1005,10 @@
                         }
                     },
                     {
-                        "label": "Python: Unit Tests",
-                        "description": "%python.snippet.launch.unitTests.description%",
+                        "label": "Python: Tests",
+                        "description": "%python.snippet.launch.test.description%",
                         "body": {
-                            "name": "Unit Tests",
+                            "name": "Tests",
                             "type": "python",
                             "request": "test"
                         }
@@ -2036,19 +2036,19 @@
                     "description": "Python launch arguments to use when executing a file in the terminal.",
                     "scope": "resource"
                 },
-                "python.unitTest.cwd": {
+                "python.testing.cwd": {
                     "type": "string",
                     "default": null,
                     "description": "Optional working directory for unit tests.",
                     "scope": "resource"
                 },
-                "python.unitTest.debugPort": {
+                "python.testing.debugPort": {
                     "type": "number",
                     "default": 3000,
-                    "description": "Port number used for debugging of unittests.",
+                    "description": "Port number used for debugging of tests.",
                     "scope": "resource"
                 },
-                "python.unitTest.nosetestArgs": {
+                "python.testing.nosetestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
@@ -2057,25 +2057,25 @@
                     },
                     "scope": "resource"
                 },
-                "python.unitTest.nosetestsEnabled": {
+                "python.testing.nosetestsEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using nosetests.",
                     "scope": "resource"
                 },
-                "python.unitTest.nosetestPath": {
+                "python.testing.nosetestPath": {
                     "type": "string",
                     "default": "nosetests",
                     "description": "Path to nosetests, you can use a custom version of nosetests by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
-                "python.unitTest.promptToConfigure": {
+                "python.testing.promptToConfigure": {
                     "type": "boolean",
                     "default": true,
                     "description": "Prompt to configure a test framework if potential tests directories are discovered.",
                     "scope": "resource"
                 },
-                "python.unitTest.pyTestArgs": {
+                "python.testing.pyTestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
@@ -2084,19 +2084,19 @@
                     },
                     "scope": "resource"
                 },
-                "python.unitTest.pyTestEnabled": {
+                "python.testing.pyTestEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using pytest.",
                     "scope": "resource"
                 },
-                "python.unitTest.pyTestPath": {
+                "python.testing.pyTestPath": {
                     "type": "string",
                     "default": "pytest",
                     "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
-                "python.unitTest.unittestArgs": {
+                "python.testing.unittestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [
@@ -2111,13 +2111,13 @@
                     },
                     "scope": "resource"
                 },
-                "python.unitTest.unittestEnabled": {
+                "python.testing.unittestEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using unittest.",
                     "scope": "resource"
                 },
-                "python.unitTest.autoTestDiscoverOnSaveEnabled": {
+                "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable auto run test discovery when saving a unit test file.",

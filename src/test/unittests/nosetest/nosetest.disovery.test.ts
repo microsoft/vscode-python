@@ -38,11 +38,11 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
                 fs.unlinkSync(file);
             }
         });
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         await initialize();
     });
     suiteTeardown(async () => {
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         filesToDelete.forEach(file => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
@@ -55,7 +55,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {
@@ -107,7 +107,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
     test('Discover Tests (-m=test)', async () => {
         await injectTestDiscoveryOutput('three.output');
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -123,7 +123,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
 
     test('Discover Tests (-w=specific -m=tst)', async () => {
         await injectTestDiscoveryOutput('four.output');
-        await updateSetting('unitTest.nosetestArgs', ['-w', 'specific', '-m', 'tst'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-w', 'specific', '-m', 'tst'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -136,7 +136,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
 
     test('Discover Tests (-m=test_)', async () => {
         await injectTestDiscoveryOutput('five.output');
-        await updateSetting('unitTest.nosetestArgs', ['-m', 'test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.nosetestArgs', ['-m', 'test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);

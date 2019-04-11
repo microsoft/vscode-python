@@ -6,13 +6,13 @@
 import { injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import * as localize from '../../../common/utils/localize';
-import { DiagnosticMessageType, IUnitTestDiagnosticService, PythonUnitTestMessageSeverity } from '../../types';
+import { DiagnosticMessageType, ITestDiagnosticService, PythonTestMessageSeverity } from '../../types';
 import { TestStatus } from '../types';
 
 @injectable()
-export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
+export class UnitTestDiagnosticService implements ITestDiagnosticService {
     private MessageTypes = new Map<TestStatus, DiagnosticMessageType>();
-    private MessageSeverities = new Map<PythonUnitTestMessageSeverity, DiagnosticSeverity | undefined>();
+    private MessageSeverities = new Map<PythonTestMessageSeverity, DiagnosticSeverity | undefined>();
     private MessagePrefixes = new Map<DiagnosticMessageType, string>();
 
     constructor() {
@@ -20,10 +20,10 @@ export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
         this.MessageTypes.set(TestStatus.Fail, DiagnosticMessageType.Fail);
         this.MessageTypes.set(TestStatus.Skipped, DiagnosticMessageType.Skipped);
         this.MessageTypes.set(TestStatus.Pass, DiagnosticMessageType.Pass);
-        this.MessageSeverities.set(PythonUnitTestMessageSeverity.Error, DiagnosticSeverity.Error);
-        this.MessageSeverities.set(PythonUnitTestMessageSeverity.Failure, DiagnosticSeverity.Error);
-        this.MessageSeverities.set(PythonUnitTestMessageSeverity.Skip, DiagnosticSeverity.Information);
-        this.MessageSeverities.set(PythonUnitTestMessageSeverity.Pass, undefined);
+        this.MessageSeverities.set(PythonTestMessageSeverity.Error, DiagnosticSeverity.Error);
+        this.MessageSeverities.set(PythonTestMessageSeverity.Failure, DiagnosticSeverity.Error);
+        this.MessageSeverities.set(PythonTestMessageSeverity.Skip, DiagnosticSeverity.Information);
+        this.MessageSeverities.set(PythonTestMessageSeverity.Pass, undefined);
         this.MessagePrefixes.set(DiagnosticMessageType.Error, localize.Testing.testErrorDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Fail, localize.Testing.testFailDiagnosticMessage());
         this.MessagePrefixes.set(DiagnosticMessageType.Skipped, localize.Testing.testSkippedDiagnosticMessage());
@@ -33,7 +33,7 @@ export class UnitTestDiagnosticService implements IUnitTestDiagnosticService {
         const msgType = this.MessageTypes.get(status);
         return msgType !== undefined ? this.MessagePrefixes.get(msgType!) : undefined;
     }
-    public getSeverity(unitTestSeverity: PythonUnitTestMessageSeverity): DiagnosticSeverity | undefined {
+    public getSeverity(unitTestSeverity: PythonTestMessageSeverity): DiagnosticSeverity | undefined {
         return this.MessageSeverities.get(unitTestSeverity);
     }
 }

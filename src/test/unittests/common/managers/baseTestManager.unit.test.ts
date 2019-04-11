@@ -26,7 +26,7 @@ import { TestManager as NoseTestManager } from '../../../../client/unittests/nos
 import { TestManager as PyTestTestManager } from '../../../../client/unittests/pytest/main';
 import { ArgumentsService } from '../../../../client/unittests/pytest/services/argsService';
 import { TestMessageService } from '../../../../client/unittests/pytest/services/testMessageService';
-import { IArgumentsService, ITestManagerRunner, IUnitTestDiagnosticService } from '../../../../client/unittests/types';
+import { IArgumentsService, ITestDiagnosticService, ITestManagerRunner } from '../../../../client/unittests/types';
 import { TestManager as UnitTestTestManager } from '../../../../client/unittests/unittest/main';
 import { TestManagerRunner } from '../../../../client/unittests/unittest/runner';
 import { noop } from '../../../core';
@@ -48,7 +48,7 @@ suite('Unit Tests - Base Test Manager', () => {
             let storageService: ITestCollectionStorageService;
             let resultsService: ITestResultsService;
             let workspaceService: IWorkspaceService;
-            let diagnosticService: IUnitTestDiagnosticService;
+            let diagnosticService: ITestDiagnosticService;
             let statusUpdater: ITestsStatusUpdaterService;
             let commandManager: ICommandManager;
             setup(() => {
@@ -74,7 +74,7 @@ suite('Unit Tests - Base Test Manager', () => {
                 when(serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(storageService));
                 when(serviceContainer.get<ITestResultsService>(ITestResultsService)).thenReturn(instance(resultsService));
                 when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-                when(serviceContainer.get<IUnitTestDiagnosticService>(IUnitTestDiagnosticService)).thenReturn(instance(diagnosticService));
+                when(serviceContainer.get<ITestDiagnosticService>(ITestDiagnosticService)).thenReturn(instance(diagnosticService));
                 when(serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService)).thenReturn(instance(statusUpdater));
                 when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
 

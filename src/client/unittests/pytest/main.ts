@@ -6,7 +6,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import { ITestMessageService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
-import { IArgumentsService, IPythonUnitTestMessage, ITestManagerRunner, TestFilter } from '../types';
+import { IArgumentsService, IPythonTestMessage, ITestManagerRunner, TestFilter } from '../types';
 
 export class TestManager extends BaseTestManager {
     private readonly argsService: IArgumentsService;
@@ -14,7 +14,7 @@ export class TestManager extends BaseTestManager {
     private readonly runner: ITestManagerRunner;
     private readonly testMessageService: ITestMessageService;
     public get enabled() {
-        return this.settings.unitTest.pyTestEnabled;
+        return this.settings.testing.pyTestEnabled;
     }
     constructor(workspaceFolder: Uri, rootDirectory: string,
         serviceContainer: IServiceContainer) {
@@ -25,7 +25,7 @@ export class TestManager extends BaseTestManager {
         this.testMessageService = this.serviceContainer.get<ITestMessageService>(ITestMessageService, this.testProvider);
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
-        const args = this.settings.unitTest.pyTestArgs.slice(0);
+        const args = this.settings.testing.pyTestArgs.slice(0);
         return {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
@@ -38,9 +38,9 @@ export class TestManager extends BaseTestManager {
 
         const runAllTests = this.helper.shouldRunAllTests(testsToRun);
         if (debug) {
-            args = this.argsService.filterArguments(this.settings.unitTest.pyTestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.pyTestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
         } else {
-            args = this.argsService.filterArguments(this.settings.unitTest.pyTestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.pyTestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
         }
 
         if (runFailedTests === true && args.indexOf('--lf') === -1 && args.indexOf('--last-failed') === -1) {
@@ -54,7 +54,7 @@ export class TestManager extends BaseTestManager {
             outChannel: this.outputChannel
         };
         const testResults = await this.runner.runTest(this.testResultsService, options, this);
-        const messages: IPythonUnitTestMessage[] = await this.testMessageService.getFilteredTestMessages(this.rootDirectory, testResults);
+        const messages: IPythonTestMessage[] = await this.testMessageService.getFilteredTestMessages(this.rootDirectory, testResults);
         await this.updateDiagnostics(tests, messages);
         return testResults;
     }

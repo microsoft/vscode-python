@@ -8,7 +8,7 @@ import { ICommandManager } from '../../../common/application/types';
 import { ContextKey } from '../../../common/contextKey';
 import { IDisposable } from '../../../common/types';
 import { swallowExceptions } from '../../../common/utils/decorators';
-import { IUnitTestManagementService, WorkspaceTestStatus } from '../../types';
+import { ITestManagementService, WorkspaceTestStatus } from '../../types';
 import { ITestCollectionStorageService, ITestContextService, TestStatus } from '../types';
 
 @injectable()
@@ -20,7 +20,7 @@ export class TestContextService implements ITestContextService {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService,
-        @inject(IUnitTestManagementService) private readonly testManager: IUnitTestManagementService,
+        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(ICommandManager) cmdManager: ICommandManager
     ) {
         this.hasFailedTests = new ContextKey('hasFailedTests', cmdManager);

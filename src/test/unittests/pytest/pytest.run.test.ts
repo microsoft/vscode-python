@@ -323,7 +323,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -381,7 +381,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
                 await injectTestRunOutput(scenario.runOutput);
                 if (scenario.shouldRunFailed === true) { await injectTestRunOutput(scenario.failedRunOutput!, true); }
-                await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+                await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
                 factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
                 testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
                 const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -389,7 +389,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             });
             suiteTeardown(async () => {
                 await ioc.dispose();
-                await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+                await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
             });
             const shouldRunProperly = (suiteName: string, failedRun = false) => {
                 suite(suiteName, () => {

@@ -39,7 +39,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
 
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
     setup(async () => {
         const cachePath = path.join(UNITTEST_TEST_FILES_PATH, '.cache');
@@ -51,7 +51,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {
@@ -80,7 +80,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     }
 
     test('Discover Tests (single test file)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
     test_one.Test_test1.test_A
@@ -97,7 +97,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     });
 
     test('Discover Tests', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
     test_unittest_one.Test_test1.test_A
@@ -121,7 +121,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     });
 
     test('Discover Tests (pattern = *_test_*.py)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=*_test*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=*_test*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
     unittest_three_test.Test_test3.test_A
@@ -137,7 +137,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     });
 
     test('Setting cwd should return tests', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
         await injectTestDiscoveryOutput(`start
     test_cwd.Test_Current_Working_Directory.test_cwd

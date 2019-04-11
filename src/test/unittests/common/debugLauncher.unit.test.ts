@@ -21,7 +21,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import {
     LaunchConfigurationResolver
@@ -39,7 +39,7 @@ use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length no-any
 suite('Unit Tests - Debug Launcher', () => {
-    let unitTestSettings: TypeMoq.IMock<IUnitTestSettings>;
+    let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -82,8 +82,8 @@ suite('Unit Tests - Debug Launcher', () => {
         configService.setup(c => c.getSettings(TypeMoq.It.isAny()))
             .returns(() => settings.object);
 
-        unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>(undefined, TypeMoq.MockBehavior.Strict);
-        settings.setup(p => p.unitTest)
+        unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>(undefined, TypeMoq.MockBehavior.Strict);
+        settings.setup(p => p.testing)
             .returns(() => unitTestSettings.object);
 
         debugLauncher = new DebugLauncher(

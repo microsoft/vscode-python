@@ -30,11 +30,11 @@ import {
 import {
     TestTreeViewProvider
 } from '../../../client/unittests/explorer/testTreeViewProvider';
-import { IUnitTestManagementService } from '../../../client/unittests/types';
+import { ITestManagementService } from '../../../client/unittests/types';
 
 /**
  * Disposable class that doesn't do anything, help for event-registration against
- * IUnitTestManagementService.
+ * ITestManagementService.
  */
 export class ExplorerTestsDisposable implements IDisposable {
     // tslint:disable-next-line:no-empty
@@ -184,12 +184,12 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
 }
 
 /**
- * Create an IUnitTestManagementService that will work for the TeestTreeViewProvider in a unit test scenario.
+ * Create an ITestManagementService that will work for the TeestTreeViewProvider in a unit test scenario.
  *
  * Provider an 'onDidStatusChange' hook that can be called, but that does nothing.
  */
-export function createMockUnitTestMgmtService(): typemoq.IMock<IUnitTestManagementService> {
-    const unitTestMgmtSrvMoq = typemoq.Mock.ofType<IUnitTestManagementService>();
+export function createMockUnitTestMgmtService(): typemoq.IMock<ITestManagementService> {
+    const unitTestMgmtSrvMoq = typemoq.Mock.ofType<ITestManagementService>();
     unitTestMgmtSrvMoq.setup(u => u.onDidStatusChange(typemoq.It.isAny()))
         .returns(() => new ExplorerTestsDisposable());
     return unitTestMgmtSrvMoq;
@@ -231,7 +231,7 @@ export function createMockWorkspaceService(): typemoq.IMock<IWorkspaceService> {
 export function createMockTestExplorer(
     testStore?: ITestCollectionStorageService,
     testsData?: Tests,
-    unitTestMgmtService?: IUnitTestManagementService,
+    unitTestMgmtService?: ITestManagementService,
     workspaceService?: IWorkspaceService,
     commandManager?: ICommandManager
 ): TestTreeViewProvider {

@@ -86,11 +86,11 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
     let testRunnerExecutablePath: string | undefined;
     switch (testProvider) {
         case NOSETEST_PROVIDER: {
-            testRunnerExecutablePath = settings.unitTest.nosetestPath;
+            testRunnerExecutablePath = settings.testing.nosetestPath;
             break;
         }
         case PYTEST_PROVIDER: {
-            testRunnerExecutablePath = settings.unitTest.pyTestPath;
+            testRunnerExecutablePath = settings.testing.pyTestPath;
             break;
         }
         default: {

@@ -53,10 +53,10 @@ import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/ser
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
     IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
-    ITestConfigurationManagerFactory, ITestDataItemResource, ITestDisplay,
-    ITestManagerRunner, ITestResultDisplay, ITestTreeViewProvider,
-    IUnitTestConfigurationService,
-    IUnitTestDiagnosticService, IUnitTestHelper, IUnitTestManagementService
+    ITestConfigurationManagerFactory, ITestConfigurationService, ITestDataItemResource,
+    ITestDiagnosticService, ITestDisplay, ITestManagementService,
+    ITestManagerRunner,
+    ITestResultDisplay, ITestTreeViewProvider, IUnitTestHelper
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -103,14 +103,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
     serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
 
-    serviceManager.addSingleton<IUnitTestConfigurationService>(IUnitTestConfigurationService, UnitTestConfigurationService);
-    serviceManager.addSingleton<IUnitTestManagementService>(IUnitTestManagementService, UnitTestManagementService);
+    serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
+    serviceManager.addSingleton<ITestManagementService>(ITestManagementService, UnitTestManagementService);
     serviceManager.addSingleton<ITestResultDisplay>(ITestResultDisplay, TestResultDisplay);
     serviceManager.addSingleton<ITestDisplay>(ITestDisplay, TestDisplay);
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);
     serviceManager.addSingleton<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory, TestConfigurationManagerFactory);
 
-    serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
+    serviceManager.addSingleton<ITestDiagnosticService>(ITestDiagnosticService, UnitTestDiagnosticService);
     serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
     serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);

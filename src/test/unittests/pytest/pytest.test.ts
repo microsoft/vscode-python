@@ -19,7 +19,7 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
     setup(async () => {
         await initializeTest();
@@ -27,7 +27,7 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
 
     function initializeDI() {

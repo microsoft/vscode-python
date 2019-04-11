@@ -44,7 +44,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     suiteSetup(async () => {
 
         await initialize();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri!, configTarget);
     });
     setup(async () => {
         const cachePath = path.join(UNITTEST_TEST_FILES_PATH, '.cache');
@@ -56,7 +56,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri!, configTarget);
     });
 
     function initializeDI() {
@@ -73,7 +73,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     }
 
     test('Discover Tests (single test file)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -84,7 +84,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
 
     test('Discover Tests (many test files, subdir included)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_MULTI_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -97,7 +97,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
 
     test('Run single test', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_MULTI_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -122,7 +122,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
 
     test('Ensure correct test count for running a set of tests multiple times', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -146,7 +146,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
 
     test('Re-run failed tests results in the correct number of tests counted', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
+        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);

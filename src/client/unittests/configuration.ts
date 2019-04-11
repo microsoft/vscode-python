@@ -13,11 +13,11 @@ import { BufferedTestConfigSettingsService } from './common/services/configSetti
 import { ITestsHelper, UnitTestProduct } from './common/types';
 import {
     ITestConfigSettingsService, ITestConfigurationManager,
-    ITestConfigurationManagerFactory, IUnitTestConfigurationService
+    ITestConfigurationManagerFactory, ITestConfigurationService
 } from './types';
 
 @injectable()
-export class UnitTestConfigurationService implements IUnitTestConfigurationService {
+export class UnitTestConfigurationService implements ITestConfigurationService {
     private readonly configurationService: IConfigurationService;
     private readonly appShell: IApplicationShell;
     private readonly workspaceService: IWorkspaceService;
@@ -28,9 +28,9 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
     }
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
         const settings = this.configurationService.getSettings(wkspace);
-        let enabledCount = settings.unitTest.pyTestEnabled ? 1 : 0;
-        enabledCount += settings.unitTest.nosetestsEnabled ? 1 : 0;
-        enabledCount += settings.unitTest.unittestEnabled ? 1 : 0;
+        let enabledCount = settings.testing.pyTestEnabled ? 1 : 0;
+        enabledCount += settings.testing.nosetestsEnabled ? 1 : 0;
+        enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
             return this._promptToEnableAndConfigureTestFramework(wkspace, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
         } else {
@@ -89,10 +89,10 @@ export class UnitTestConfigurationService implements IUnitTestConfigurationServi
 
     private _enableTest(wkspace: Uri, configMgr: ITestConfigurationManager) {
         const pythonConfig = this.workspaceService.getConfiguration('python', wkspace);
-        if (pythonConfig.get<boolean>('unitTest.promptToConfigure')) {
+        if (pythonConfig.get<boolean>('testing.promptToConfigure')) {
             return configMgr.enable();
         }
-        return pythonConfig.update('unitTest.promptToConfigure', undefined).then(() => {
+        return pythonConfig.update('testing.promptToConfigure', undefined).then(() => {
             return configMgr.enable();
         }, reason => {
             return configMgr.enable()

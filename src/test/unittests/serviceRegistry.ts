@@ -53,7 +53,7 @@ import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/u
 import { TestsParser as NoseTestTestsParser } from '../../client/unittests/nosetest/services/parserService';
 import { TestManager as PyTestTestManager } from '../../client/unittests/pytest/main';
 import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/unittests/pytest/services/discoveryService';
-import { IUnitTestDiagnosticService } from '../../client/unittests/types';
+import { ITestDiagnosticService } from '../../client/unittests/types';
 import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
 import {
     TestDiscoveryService as UnitTestTestDiscoveryService
@@ -111,7 +111,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestDiagnosticServices() {
-        this.serviceManager.addSingleton<IUnitTestDiagnosticService>(IUnitTestDiagnosticService, UnitTestDiagnosticService);
+        this.serviceManager.addSingleton<ITestDiagnosticService>(ITestDiagnosticService, UnitTestDiagnosticService);
     }
 
     public registerTestManagers() {

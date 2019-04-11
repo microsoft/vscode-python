@@ -12,7 +12,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { FlattenedTestFunction, ITestMessageService, Tests, TestStatus } from '../../common/types';
-import { ILocationStackFrameDetails, IPythonUnitTestMessage, PythonUnitTestMessageSeverity } from '../../types';
+import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../types';
 
 @injectable()
 export class TestMessageService implements ITestMessageService {
@@ -24,23 +24,23 @@ export class TestMessageService implements ITestMessageService {
      *
      * @param testResults Details about all known tests.
      */
-    public async getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]> {
+    public async getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonTestMessage[]> {
         const testFuncs = testResults.testFunctions.reduce<FlattenedTestFunction[]>((filtered, test) => {
             if (test.testFunction.passed !== undefined || test.testFunction.status === TestStatus.Skipped) {
                 filtered.push(test);
             }
             return filtered;
         }, []);
-        const messages: IPythonUnitTestMessage[] = [];
+        const messages: IPythonTestMessage[] = [];
         for (const tf of testFuncs) {
             const nameToRun = tf.testFunction.nameToRun;
             const provider = ProductNames.get(Product.pytest)!;
             const status = tf.testFunction.status!;
             if (status === TestStatus.Pass) {
                 // If the test passed, there's not much to do with it.
-                const msg: IPythonUnitTestMessage = {
+                const msg: IPythonTestMessage = {
                     code: nameToRun,
-                    severity: PythonUnitTestMessageSeverity.Pass,
+                    severity: PythonTestMessageSeverity.Pass,
                     provider: provider,
                     testTime: tf.testFunction.time,
                     status: status,
@@ -54,12 +54,12 @@ export class TestMessageService implements ITestMessageService {
                 const locationStack = await this.getLocationStack(rootDirectory, tf);
                 const message = tf.testFunction.message;
                 const testFilePath = tf.parentTestFile.fullPath;
-                let severity = PythonUnitTestMessageSeverity.Error;
+                let severity = PythonTestMessageSeverity.Error;
                 if (tf.testFunction.status === TestStatus.Skipped) {
-                    severity = PythonUnitTestMessageSeverity.Skip;
+                    severity = PythonTestMessageSeverity.Skip;
                 }
 
-                const msg: IPythonUnitTestMessage = {
+                const msg: IPythonTestMessage = {
                     code: nameToRun,
                     message: message,
                     severity: severity,

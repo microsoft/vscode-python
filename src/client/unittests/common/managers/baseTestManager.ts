@@ -23,7 +23,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
-import { IPythonUnitTestMessage, IUnitTestDiagnosticService, WorkspaceTestStatus } from '../../types';
+import { IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
 import { copyDesiredTestResults } from '../testUtils';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import {
@@ -50,7 +50,7 @@ enum CancellationTokenType {
 export abstract class BaseTestManager implements ITestManager {
     public diagnosticCollection: DiagnosticCollection;
     protected readonly settings: IPythonSettings;
-    private readonly unitTestDiagnosticService: IUnitTestDiagnosticService;
+    private readonly unitTestDiagnosticService: ITestDiagnosticService;
     public abstract get enabled(): boolean;
     protected get outputChannel() {
         return this._outputChannel;
@@ -93,7 +93,7 @@ export abstract class BaseTestManager implements ITestManager {
         this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.diagnosticCollection = languages.createDiagnosticCollection(this.testProvider);
-        this.unitTestDiagnosticService = serviceContainer.get<IUnitTestDiagnosticService>(IUnitTestDiagnosticService);
+        this.unitTestDiagnosticService = serviceContainer.get<ITestDiagnosticService>(ITestDiagnosticService);
         this.testsStatusUpdaterService = serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService);
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         disposables.push(this);
@@ -114,7 +114,7 @@ export abstract class BaseTestManager implements ITestManager {
         return this._onDidStatusChange.event;
     }
     public get workingDirectory(): string {
-        return this.settings.unitTest.cwd && this.settings.unitTest.cwd.length > 0 ? this.settings.unitTest.cwd : this.rootDirectory;
+        return this.settings.testing.cwd && this.settings.testing.cwd.length > 0 ? this.settings.testing.cwd : this.rootDirectory;
     }
     public stop() {
         if (this.testDiscoveryCancellationTokenSource) {
@@ -326,7 +326,7 @@ export abstract class BaseTestManager implements ITestManager {
                 return Promise.reject<Tests>(reason);
             });
     }
-    public async updateDiagnostics(tests: Tests, messages: IPythonUnitTestMessage[]): Promise<void> {
+    public async updateDiagnostics(tests: Tests, messages: IPythonTestMessage[]): Promise<void> {
         await this.stripStaleDiagnostics(tests, messages);
 
         // Update relevant file diagnostics for tests that have problems.
@@ -403,7 +403,7 @@ export abstract class BaseTestManager implements ITestManager {
      *
      * @param messages Details about the tests that were just run.
      */
-    private async stripStaleDiagnostics(tests: Tests, messages: IPythonUnitTestMessage[]): Promise<void> {
+    private async stripStaleDiagnostics(tests: Tests, messages: IPythonTestMessage[]): Promise<void> {
         this.diagnosticCollection.forEach((diagnosticUri, oldDiagnostics, collection) => {
             const newDiagnostics: Diagnostic[] = [];
             for (const diagnostic of oldDiagnostics) {
@@ -422,7 +422,7 @@ export abstract class BaseTestManager implements ITestManager {
         });
     }
 
-    private createDiagnostics(message: IPythonUnitTestMessage): Diagnostic {
+    private createDiagnostics(message: IPythonTestMessage): Diagnostic {
         const stackStart = message.locationStack![0];
         const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;

@@ -34,15 +34,15 @@ export class TestManagerService implements ITestManagerService {
     }
     public getTestWorkingDirectory() {
         const settings = this.configurationService.getSettings(this.wkspace);
-        return settings.unitTest.cwd && settings.unitTest.cwd.length > 0 ? settings.unitTest.cwd : this.wkspace.fsPath;
+        return settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : this.wkspace.fsPath;
     }
     public getPreferredTestManager(): UnitTestProduct | undefined {
         const settings = this.configurationService.getSettings(this.wkspace);
-        if (settings.unitTest.nosetestsEnabled) {
+        if (settings.testing.nosetestsEnabled) {
             return Product.nosetest;
-        } else if (settings.unitTest.pyTestEnabled) {
+        } else if (settings.testing.pyTestEnabled) {
             return Product.pytest;
-        } else if (settings.unitTest.unittestEnabled) {
+        } else if (settings.testing.unittestEnabled) {
             return Product.unittest;
         }
         return undefined;

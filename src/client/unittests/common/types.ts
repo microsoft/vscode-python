@@ -2,10 +2,10 @@ import {
     CancellationToken, DebugConfiguration, DiagnosticCollection,
     Disposable, Event, OutputChannel, Uri
 } from 'vscode';
-import { IUnitTestSettings, Product } from '../../common/types';
+import { ITestingSettings, Product } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { ConsoleType } from '../../debugger/types';
-import { IPythonUnitTestMessage, TestDataItem, WorkspaceTestStatus } from '../types';
+import { IPythonTestMessage, TestDataItem, WorkspaceTestStatus } from '../types';
 import { CommandSource } from './constants';
 
 export type TestProvider = 'nosetest' | 'pytest' | 'unittest';
@@ -162,9 +162,9 @@ export interface IWorkspaceTestManagerService extends Disposable {
 }
 
 export type TestSettingsPropertyNames = {
-    enabledName: keyof IUnitTestSettings;
-    argsName: keyof IUnitTestSettings;
-    pathName?: keyof IUnitTestSettings;
+    enabledName: keyof ITestingSettings;
+    argsName: keyof ITestingSettings;
+    pathName?: keyof ITestingSettings;
 };
 
 export const ITestsHelper = Symbol('ITestsHelper');
@@ -300,7 +300,7 @@ export type PythonVersionInformation = {
 
 export const ITestMessageService = Symbol('ITestMessageService');
 export interface ITestMessageService {
-    getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonUnitTestMessage[]>;
+    getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonTestMessage[]>;
 }
 
 export interface ITestDebugConfig extends DebugConfiguration {
