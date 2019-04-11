@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { ExecuteVSCCommand } from '../../../../client/application/diagnostics/commands/execVSCCommand';
 import { DiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/factory';
-import { LaunchBrowserCommand } from '../../../../client/application/diagnostics/commands/launchBrowser';
 import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { IDiagnostic } from '../../../../client/application/diagnostics/types';
 import { ICommandManager } from '../../../../client/common/application/types';
@@ -42,7 +41,7 @@ suite('Application Diagnostics - Exec VSC Commands', () => {
         const command = commandFactory.createCommand(diagnostic.object, { type: 'executeVSCCommand', options: 'editor.action.formatDocument' });
         await command.invoke();
 
-        expect(command).to.be.instanceOf(LaunchBrowserCommand);
+        expect(command).to.be.instanceOf(ExecuteVSCCommand);
         commandManager.verifyAll();
     });
 });
