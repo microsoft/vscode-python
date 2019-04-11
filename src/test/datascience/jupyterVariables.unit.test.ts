@@ -191,7 +191,7 @@ suite('JupyterVariables', () => {
         )))
         .verifiable(typemoq.Times.once());
 
-        const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, expensive: true, truncated: false, count: 0, shape: '', value: '' };
+        const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, expensive: true, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };
 
         const resultVariable = await jupyterVariables.getValue(testVariable);
 

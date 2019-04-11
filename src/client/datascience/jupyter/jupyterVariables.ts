@@ -22,6 +22,8 @@ export class JupyterVariables implements IJupyterVariables {
     private fetchDataFrameInfoScript?: string;
     private fetchDataFrameRowsScript?: string;
     private filesLoaded: boolean = false;
+    // tslint:disable:quotemark
+    private dataExplorerSupportedTypes: string = "['list', 'Series', 'dict', 'ndarray', 'DataFrame']";
 
     constructor(
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -36,7 +38,8 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<IJupyterVariable[]>(
             undefined,
             [],
-            () => this.fetchVariablesScript);
+            () => this.fetchVariablesScript,
+            [{key: '_VSCode_sub_supportsDataExplorer', value: this.dataExplorerSupportedTypes}]);
     }
 
     public async getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable> {
@@ -53,7 +56,10 @@ export class JupyterVariables implements IJupyterVariables {
             targetVariable,
             targetVariable,
             () => this.fetchDataFrameInfoScript,
-            [{key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn()}]);
+            [
+                {key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn()},
+                {key: '_VSCode_sub_supportsDataExplorer', value: this.dataExplorerSupportedTypes}
+            ]);
     }
 
     public async getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number): Promise<JSONObject> {

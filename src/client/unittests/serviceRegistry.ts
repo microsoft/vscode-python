@@ -10,10 +10,13 @@ import { DebugLauncher } from './common/debugLauncher';
 import { TestRunner } from './common/runner';
 import { TestConfigSettingsService } from './common/services/configSettingService';
 import { TestContextService } from './common/services/contextService';
+import { TestDiscoveredTestParser } from './common/services/discoveredTestParser';
+import { TestsDiscoveryService } from './common/services/discovery';
 import { TestCollectionStorageService } from './common/services/storageService';
 import { TestManagerService } from './common/services/testManagerService';
 import { TestResultsService } from './common/services/testResultsService';
 import { TestsStatusUpdaterService } from './common/services/testsStatusService';
+import { ITestDiscoveredTestParser } from './common/services/types';
 import { UnitTestDiagnosticService } from './common/services/unitTestDiagnosticService';
 import { WorkspaceTestManagerService } from './common/services/workspaceTestManagerService';
 import { TestsHelper } from './common/testUtils';
@@ -47,7 +50,6 @@ import { TestManager as PyTestTestManager } from './pytest/main';
 import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
-import { TestsParser as PytestTestsParser } from './pytest/services/parserService';
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
     IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
@@ -71,6 +73,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IWorkspaceTestManagerService>(IWorkspaceTestManagerService, WorkspaceTestManagerService);
 
     serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
+    serviceManager.add<ITestDiscoveredTestParser>(ITestDiscoveredTestParser, TestDiscoveredTestParser);
+    serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, TestsDiscoveryService, 'common');
     serviceManager.add<IUnitTestSocketServer>(IUnitTestSocketServer, UnitTestSocketServer);
     serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
     serviceManager.addSingleton<ITestsStatusUpdaterService>(ITestsStatusUpdaterService, TestsStatusUpdaterService);
@@ -81,7 +85,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
 
     serviceManager.add<ITestsParser>(ITestsParser, UnitTestTestsParser, UNITTEST_PROVIDER);
-    serviceManager.add<ITestsParser>(ITestsParser, PytestTestsParser, PYTEST_PROVIDER);
     serviceManager.add<ITestsParser>(ITestsParser, NoseTestTestsParser, NOSETEST_PROVIDER);
 
     serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, UnitTestTestDiscoveryService, UNITTEST_PROVIDER);

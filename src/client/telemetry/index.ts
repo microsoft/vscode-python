@@ -310,6 +310,7 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_CONFIGURING]: TestConfiguringTelemetry;
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
+    [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;

@@ -361,6 +361,41 @@ function getParentTestFolder(tests: Tests, item: TestFolder | TestFile): TestFol
 }
 
 /**
+ * Gets the parent test file for a test item.
+ *
+ * @param {Tests} tests
+ * @param {(TestSuite | TestFunction)} suite
+ * @returns {TestFile}
+ */
+export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): TestFile {
+    let parent = getParent(tests, suite);
+    while (parent) {
+        if (getTestType(parent) === TestType.testFile) {
+            return parent as TestFile;
+        }
+        parent = getParent(tests, parent);
+    }
+    throw new Error('No parent file for provided test item');
+}
+/**
+ * Gets the parent test suite for a suite/function.
+ *
+ * @param {Tests} tests
+ * @param {(TestSuite | TestFunction)} suite
+ * @returns {(TestSuite | undefined)}
+ */
+export function getParentSuite(tests: Tests, suite: TestSuite | TestFunction): TestSuite | undefined {
+    let parent = getParent(tests, suite);
+    while (parent) {
+        if (getTestType(parent) === TestType.testSuite) {
+            return parent as TestSuite;
+        }
+        parent = getParent(tests, parent);
+    }
+    return;
+}
+
+/**
  * Returns the parent test folder give a given test file.
  *
  * @param {Tests} tests

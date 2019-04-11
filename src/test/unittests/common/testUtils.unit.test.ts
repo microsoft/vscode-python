@@ -8,8 +8,8 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import {
-    getChildren, getParent, getTestFile, getTestFolder, getTestFunction,
-    getTestSuite, getTestType
+    getChildren, getParent, getParentFile, getParentSuite, getTestFile,
+    getTestFolder, getTestFunction, getTestSuite, getTestType
 } from '../../../client/unittests/common/testUtils';
 import {
     FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile,
@@ -273,6 +273,226 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParent(tests, file3), folder3);
         assert.equal(getParent(tests, file4), folder5);
     });
+    test('Get Parent File', () => {
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        file1.suites.push(suite1);
+        file1.suites.push(suite2);
+        file3.suites.push(suite3);
+        suite3.suites.push(suite4);
+        suite4.suites.push(suite5);
+        file1.functions.push(fn1);
+        file1.functions.push(fn2);
+        suite1.functions.push(fn3);
+        suite1.functions.push(fn4);
+        suite3.functions.push(fn5);
+        const flattendSuite1: FlattenedTestSuite = {
+            testSuite: suite1,
+            xmlClassName: suite1.xmlName
+        } as any;
+        const flattendSuite2: FlattenedTestSuite = {
+            testSuite: suite2,
+            xmlClassName: suite2.xmlName
+        } as any;
+        const flattendSuite3: FlattenedTestSuite = {
+            testSuite: suite3,
+            xmlClassName: suite3.xmlName
+        } as any;
+        const flattendSuite4: FlattenedTestSuite = {
+            testSuite: suite4,
+            xmlClassName: suite4.xmlName
+        } as any;
+        const flattendSuite5: FlattenedTestSuite = {
+            testSuite: suite5,
+            xmlClassName: suite5.xmlName
+        } as any;
+        const flattendFn1: FlattenedTestFunction = {
+            testFunction: fn1,
+            xmlClassName: fn1.name
+        } as any;
+        const flattendFn2: FlattenedTestFunction = {
+            testFunction: fn2,
+            xmlClassName: fn2.name
+        } as any;
+        const flattendFn3: FlattenedTestFunction = {
+            testFunction: fn3,
+            xmlClassName: fn3.name
+        } as any;
+        const flattendFn4: FlattenedTestFunction = {
+            testFunction: fn4,
+            xmlClassName: fn4.name
+        } as any;
+        const flattendFn5: FlattenedTestFunction = {
+            testFunction: fn5,
+            xmlClassName: fn5.name
+        } as any;
+        const tests: Tests = {
+            rootTestFolders: [],
+            summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
+            testFiles: [file1, file2, file3, file4],
+            testFolders: [],
+            testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+        };
+        // Test parent file of functions (standalone and those in suites).
+        assert.equal(getParentFile(tests, fn1), file1);
+        assert.equal(getParentFile(tests, fn2), file1);
+        assert.equal(getParentFile(tests, fn3), file1);
+        assert.equal(getParentFile(tests, fn4), file1);
+        assert.equal(getParentFile(tests, fn5), file3);
+
+        // Test parent file of suites (standalone and nested suites).
+        assert.equal(getParentFile(tests, suite1), file1);
+        assert.equal(getParentFile(tests, suite2), file1);
+        assert.equal(getParentFile(tests, suite3), file3);
+        assert.equal(getParentFile(tests, suite4), file3);
+        assert.equal(getParentFile(tests, suite5), file3);
+    });
+    test('Get Parent Suite', () => {
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        file1.suites.push(suite1);
+        file1.suites.push(suite2);
+        file3.suites.push(suite3);
+        suite3.suites.push(suite4);
+        suite4.suites.push(suite5);
+        file1.functions.push(fn1);
+        file1.functions.push(fn2);
+        suite1.functions.push(fn3);
+        suite1.functions.push(fn4);
+        suite3.functions.push(fn5);
+        const flattendSuite1: FlattenedTestSuite = {
+            testSuite: suite1,
+            xmlClassName: suite1.xmlName
+        } as any;
+        const flattendSuite2: FlattenedTestSuite = {
+            testSuite: suite2,
+            xmlClassName: suite2.xmlName
+        } as any;
+        const flattendSuite3: FlattenedTestSuite = {
+            testSuite: suite3,
+            xmlClassName: suite3.xmlName
+        } as any;
+        const flattendSuite4: FlattenedTestSuite = {
+            testSuite: suite4,
+            xmlClassName: suite4.xmlName
+        } as any;
+        const flattendSuite5: FlattenedTestSuite = {
+            testSuite: suite5,
+            xmlClassName: suite5.xmlName
+        } as any;
+        const flattendFn1: FlattenedTestFunction = {
+            testFunction: fn1,
+            xmlClassName: fn1.name
+        } as any;
+        const flattendFn2: FlattenedTestFunction = {
+            testFunction: fn2,
+            xmlClassName: fn2.name
+        } as any;
+        const flattendFn3: FlattenedTestFunction = {
+            testFunction: fn3,
+            xmlClassName: fn3.name
+        } as any;
+        const flattendFn4: FlattenedTestFunction = {
+            testFunction: fn4,
+            xmlClassName: fn4.name
+        } as any;
+        const flattendFn5: FlattenedTestFunction = {
+            testFunction: fn5,
+            xmlClassName: fn5.name
+        } as any;
+        const tests: Tests = {
+            rootTestFolders: [],
+            summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
+            testFiles: [file1, file2, file3, file4],
+            testFolders: [],
+            testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
+            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+        };
+        // Test parent file of functions (standalone and those in suites).
+        assert.equal(getParentSuite(tests, fn1), undefined);
+        assert.equal(getParentSuite(tests, fn2), undefined);
+        assert.equal(getParentSuite(tests, fn3), suite1);
+        assert.equal(getParentSuite(tests, fn4), suite1);
+        assert.equal(getParentSuite(tests, fn5), suite3);
+
+        // Test parent file of suites (standalone and nested suites).
+        assert.equal(getParentSuite(tests, suite1), undefined);
+        assert.equal(getParentSuite(tests, suite2), undefined);
+        assert.equal(getParentSuite(tests, suite3), undefined);
+        assert.equal(getParentSuite(tests, suite4), suite3);
+        assert.equal(getParentSuite(tests, suite5), suite4);
+    });
+    test('Get Parent file throws an exception', () => {
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const flattendSuite1: FlattenedTestSuite = {
+            testSuite: suite1,
+            xmlClassName: suite1.xmlName
+        } as any;
+        const flattendFn1: FlattenedTestFunction = {
+            testFunction: fn1,
+            xmlClassName: fn1.name
+        } as any;
+        const tests: Tests = {
+            rootTestFolders: [],
+            summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
+            testFiles: [file1],
+            testFolders: [],
+            testFunctions: [flattendFn1],
+            testSuites: [flattendSuite1]
+        };
+        assert.throws(()=> getParentFile(tests, fn1), 'No parent file for provided test item');
+        assert.throws(()=> getParentFile(tests, suite1), 'No parent file for provided test item');
+    });    
+    test('Get parent of orphaned items', () => {
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const flattendSuite1: FlattenedTestSuite = {
+            testSuite: suite1,
+            xmlClassName: suite1.xmlName
+        } as any;
+        const flattendFn1: FlattenedTestFunction = {
+            testFunction: fn1,
+            xmlClassName: fn1.name
+        } as any;
+        const tests: Tests = {
+            rootTestFolders: [],
+            summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
+            testFiles: [file1],
+            testFolders: [],
+            testFunctions: [flattendFn1],
+            testSuites: [flattendSuite1]
+        };
+        assert.equal(getParent(tests, fn1), undefined);
+        assert.equal(getParent(tests, suite1), undefined);
+    });    
     test('Get Parent of suite', () => {
         const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
         const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
