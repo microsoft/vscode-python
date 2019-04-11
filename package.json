@@ -286,15 +286,6 @@
                 }
             },
             {
-                "command": "python.stopUnitTests",
-                "title": "%python.command.python.stopTests.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/stop.svg",
-                    "dark": "resources/dark/stop.svg"
-                }
-            },
-            {
                 "command": "python.configureTests",
                 "title": "%python.command.python.configureTests.title%",
                 "category": "Python"
