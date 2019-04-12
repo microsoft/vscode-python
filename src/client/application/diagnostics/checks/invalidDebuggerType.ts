@@ -53,9 +53,11 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         super([DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic], serviceContainer, disposableRegistry, true);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        return ([] as IDiagnostic[])
-            .concat(await this.diagnoseCode(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, resource))
-            .concat(await this.diagnoseCode(DiagnosticCodes.JustMyCodeDiagnostic, resource));
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return [];
+        }
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource)! : this.workspaceService.workspaceFolders![0];
+        return this.diagnoseWorkspace(workspaceFolder, resource);
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         diagnostics.forEach(diagnostic => this.handleDiagnostic(diagnostic));
@@ -68,6 +70,22 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         await Promise.all(
             this.workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(code, workspaceFolder))
         );
+    }
+    private async diagnoseWorkspace(workspaceFolder: WorkspaceFolder, resource: Resource) {
+        const launchJson = this.getLaunchJsonFile(workspaceFolder);
+        if (!(await this.fs.fileExists(launchJson))) {
+            return [];
+        }
+
+        const fileContents = await this.fs.readFile(launchJson);
+        const diagnostics: IDiagnostic[] = [];
+        if (fileContents.indexOf('"pythonExperimental"') > 0) {
+            diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, resource));
+        }
+        if (fileContents.indexOf('"debugStdLib"') > 0) {
+            diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, resource));
+        }
+        return diagnostics;
     }
     private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
         if (!this.canHandle(diagnostic)) {
@@ -90,30 +108,10 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
 
         await this.messageService.handle(diagnostic, { commandPrompts });
     }
-    private async diagnoseCode(code: DiagnosticCodes.InvalidDebuggerTypeDiagnostic | DiagnosticCodes.JustMyCodeDiagnostic, resource: Resource): Promise<IDiagnostic[]> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
-            return [];
-        }
-
-        const results = await Promise.all(
-            this.workspaceService.workspaceFolders!.map(workspaceFolder =>
-                this.isLaunchJsonInvalidInWorkspace(code, workspaceFolder)
-            )
-        );
-        return results.filter(used => used === true).length > 0 ? [new InvalidLaunchJsonDebuggerDiagnostic(code, resource)] : [];
-    }
-    private async isLaunchJsonInvalidInWorkspace(code: DiagnosticCodes, workspaceFolder: WorkspaceFolder) {
-        const launchJson = this.getLaunchJsonFile(workspaceFolder);
-        if (!(await this.fs.fileExists(launchJson))) {
-            return false;
-        }
-
-        const fileContents = await this.fs.readFile(launchJson);
-        return fileContents.indexOf(
-            code === DiagnosticCodes.InvalidDebuggerTypeDiagnostic ? '"pythonExperimental"' : '"debugStdLib"'
-        ) > 0;
-    }
     private async fixLaunchJsonInWorkspace(code: DiagnosticCodes, workspaceFolder: WorkspaceFolder) {
+        if ((await this.diagnoseWorkspace(workspaceFolder, undefined)).length === 0) {
+            return;
+        }
         const launchJson = this.getLaunchJsonFile(workspaceFolder);
         let fileContents = await this.fs.readFile(launchJson);
         switch (code) {
