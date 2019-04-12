@@ -18,7 +18,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
     <img src=images/ConfigureTests.gif width=734 height=413>
 
-* Configure the debugger through the Debug View    
+* Configure the debugger through the Debug Activity Bar   
 
     <img src=images/ConfigureDebugger.gif width=734 height=413>
 
@@ -46,21 +46,19 @@ To see all available Python commands, open the Command Palette and type ```Pytho
 
 Learn more about the rich features of the Python extension:
 
-* [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Support for auto-completion, code navigation, syntax checking and more
-* [Linting](https://code.visualstudio.com/docs/python/linting): Support for Pylint, Flake8 and more
-* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Support for black, autopep and yapf
+* [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
+* [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
+* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your Python code with black, autopep or yapf
 
-* [Debugging](https://code.visualstudio.com/docs/python/debugging): Support for remote, web apps, multi-threaded applications and more 
+* [Debugging](https://code.visualstudio.com/docs/python/debugging): Inspect your  Python applications, with support for remote, multi-threaded and web apps  
 
-* [Test Explorer](https://code.visualstudio.com/docs/python/unit-testing): Support for unittest, pytest, and nose
+* [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest, pytest or nose
 
-* [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Support for code cells, plot visualization, variable explorer and more
+* [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Define and run code cells, render plots, visualize variables through the variable explorer and more
 
-* [Environments](https://code.visualstudio.com/docs/python/environments): Support for auto-activation and interpreter selection 
+* [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
 
-* [Code Snippets](https://code.visualstudio.com/docs/languages/python#_snippets): Support for configuring your own snippets 
-
-* [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Support for variable extraction, method   extraction and import sorting
+* [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction, method extraction and import sorting
 
 
 ## Supported locales
