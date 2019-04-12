@@ -123,7 +123,7 @@ export class ImportTracker implements IImportTracker {
                     } else if (match.groups.importImport !== undefined) {
                         // `import pkg1, pkg2, ...`
                         const packageNames = match.groups.importImport.split(',').map(rawPackageName => rawPackageName.trim());
-                        // Can't pass in this.sendTelemetry directly as that rebinds `this`.
+                        // Can't pass in `this.sendTelemetry` directly as that rebinds `this`.
                         packageNames.forEach(p => this.sendTelemetry(p));
                     }
                 }
