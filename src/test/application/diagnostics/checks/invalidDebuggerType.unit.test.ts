@@ -223,7 +223,7 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             messageHandler.verifyAll();
             baseWorkspaceService.verifyAll();
             expect(options!.commandPrompts).to.be.lengthOf(2);
-            expect(options!.commandPrompts[0].prompt).to.be.equal(Diagnostics.bannerLabelYes());
+            expect(options!.commandPrompts[0].prompt).to.be.equal(Diagnostics.yesUpdateLaunch());
             expect(options!.commandPrompts[0].command).not.to.be.equal(undefined, 'Command not set');
         }
     });

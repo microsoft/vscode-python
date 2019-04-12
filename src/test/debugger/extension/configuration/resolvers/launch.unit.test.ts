@@ -314,21 +314,64 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('debugOptions');
         expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.DebugStdLib]);
     });
-    test('Test justMyCode property is correctly derived from debugStdLib', async () => {
+    const testsForJustMyCode =
+        [
+            {
+                justMyCode: false,
+                debugStdLib: true,
+                expectedResult: false
+            },
+            {
+                justMyCode: false,
+                debugStdLib: false,
+                expectedResult: false
+            },
+            {
+                justMyCode: false,
+                debugStdLib: undefined,
+                expectedResult: false
+            },
+            {
+                justMyCode: true,
+                debugStdLib: false,
+                expectedResult: true
+            },
+            {
+                justMyCode: true,
+                debugStdLib: true,
+                expectedResult: true
+            },
+            {
+                justMyCode: true,
+                debugStdLib: undefined,
+                expectedResult: true
+            },
+            {
+                justMyCode: undefined,
+                debugStdLib: false,
+                expectedResult: true
+            },
+            {
+                justMyCode: undefined,
+                debugStdLib: true,
+                expectedResult: false
+            },
+            {
+                justMyCode: undefined,
+                debugStdLib: undefined,
+                expectedResult: true
+            }
+        ];
+    test('Ensure justMyCode property is correctly derived from debugStdLib', async () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
         const pythonFile = 'xyz.py';
         setupIoc(pythonPath);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
-
-        let debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as LaunchRequestArguments);
-        expect(debugConfig).to.have.property('justMyCode', true);
-
-        debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugStdLib: false } as LaunchRequestArguments);
-        expect(debugConfig).to.have.property('justMyCode', true);
-
-        debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugStdLib: true } as LaunchRequestArguments);
-        expect(debugConfig).to.have.property('justMyCode', false);
+        testsForJustMyCode.forEach(async testParams => {
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugStdLib: testParams.debugStdLib, justMyCode: testParams.justMyCode } as LaunchRequestArguments);
+            expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
+        });
     });
     async function testFixFilePathCase(isWindows: boolean, isMac: boolean, isLinux: boolean) {
         const pythonPath = `PythonPath_${new Date().toString()}`;

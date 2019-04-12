@@ -249,6 +249,55 @@ getNamesAndValues(OSType).forEach(os => {
 
             expect(debugConfig).to.have.property('debugOptions').to.be.deep.equal(expectedDebugOptions);
         });
+
+        const testsForJustMyCode =
+            [
+                {
+                    justMyCode: false,
+                    debugStdLib: true,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: false,
+                    debugStdLib: false,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: false,
+                    debugStdLib: undefined,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: true,
+                    debugStdLib: false,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: true,
+                    debugStdLib: true,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: true,
+                    debugStdLib: undefined,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: undefined,
+                    debugStdLib: false,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: undefined,
+                    debugStdLib: true,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: undefined,
+                    debugStdLib: undefined,
+                    expectedResult: true
+                }
+            ];
         test('Ensure justMyCode property is correctly derived from debugStdLib', async () => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -258,14 +307,10 @@ getNamesAndValues(OSType).forEach(os => {
 
             const debugOptions = debugOptionsAvailable.slice().concat(DebugOptions.Jinja, DebugOptions.Sudo);
 
-            let debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach' } as any as DebugConfiguration);
-            expect(debugConfig).to.have.property('justMyCode', true);
-
-            debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', debugStdLib: false } as any as DebugConfiguration);
-            expect(debugConfig).to.have.property('justMyCode', true);
-
-            debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', debugStdLib: true } as any as DebugConfiguration);
-            expect(debugConfig).to.have.property('justMyCode', false);
+            testsForJustMyCode.forEach(async testParams => {
+                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', justMyCode: testParams.justMyCode, debugStdLib: testParams.debugStdLib } as any as DebugConfiguration);
+                expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
+            });
         });
     });
 });

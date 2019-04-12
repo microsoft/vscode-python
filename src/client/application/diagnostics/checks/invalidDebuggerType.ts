@@ -93,7 +93,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         }
         const commandPrompts = [
             {
-                prompt: Diagnostics.bannerLabelYes(),
+                prompt: Diagnostics.yesUpdateLaunch(),
                 command: {
                     diagnostic,
                     invoke: async (): Promise<void> => {

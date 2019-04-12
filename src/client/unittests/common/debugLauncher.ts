@@ -125,6 +125,9 @@ export class DebugLauncher implements ITestDebugLauncher {
         configSettings: IPythonSettings
     ) {
         // cfg.pythonPath is handled by LaunchConfigurationResolver.
+
+        // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
+        // Have to provide it if and when we remove complete support for debugStdLib
         if (!cfg.console) {
             cfg.console = 'none';
         }
@@ -150,8 +153,6 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (cfg.debugStdLib === undefined) {
             cfg.debugStdLib = false;
         }
-        // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
-        // Have to provide it if and when we remove complete support for debugStdLib
     }
 
     private async convertConfigToArgs(
