@@ -227,6 +227,49 @@ export class DataScience implements IDataScience {
         }
     }
 
+    private getCurrentCodeLens() : vscode.CodeLens | undefined {
+        const activeEditor = this.documentManager.activeTextEditor;
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeEditor && activeCodeWatcher) {
+            // Find the cell that matches
+            return activeCodeWatcher.getCodeLenses().find((c: vscode.CodeLens) => {
+                if (c.range.end.line >= activeEditor.selection.anchor.line &&
+                    c.range.start.line <= activeEditor.selection.anchor.line) {
+                    return true;
+                }
+                return false;
+            });
+        }
+    }
+
+    private async runAllCellsAboveFromCursor(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const currentCodeLens = this.getCurrentCodeLens();
+        if (currentCodeLens) {
+            const activeCodeWatcher = this.getCurrentCodeWatcher();
+            if (activeCodeWatcher) {
+                return activeCodeWatcher.runAllCellsAbove(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+            }
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    private async runCellAndAllBelowFromCursor(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const currentCodeLens = this.getCurrentCodeLens();
+        if (currentCodeLens) {
+            const activeCodeWatcher = this.getCurrentCodeWatcher();
+            if (activeCodeWatcher) {
+                return activeCodeWatcher.runCellAndAllBelow(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+            }
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     private validateURI = (testURI: string): string | undefined | null => {
         try {
             // tslint:disable-next-line:no-unused-expression
@@ -287,6 +330,10 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunAllCellsAbovePalette, this.runAllCellsAboveFromCursor, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCellAndAllBelowPalette, this.runCellAndAllBelowFromCursor, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunToLine, this.runToLine, this);
         this.disposableRegistry.push(disposable);
