@@ -7,7 +7,7 @@ import { IServiceManager } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
-import { InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId } from './checks/invalidDebuggerType';
+import { InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId } from './checks/invalidDebuggerType';
 import { InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId } from './checks/invalidPythonPathInDebugger';
 import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import { InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId } from './checks/macPythonInterpreter';
@@ -23,7 +23,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId);
-    serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId);
+    serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId);

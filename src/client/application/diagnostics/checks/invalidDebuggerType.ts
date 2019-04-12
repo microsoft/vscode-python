@@ -3,30 +3,32 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DiagnosticSeverity, WorkspaceFolder } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
+import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../../common/types';
+import { Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
-import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
-const InvalidDebuggerTypeMessage =
-    'Your launch.json file needs to be updated to change the "pythonExperimental" debug ' +
-    'configurations to use the "python" debugger type, otherwise Python debugging may ' +
-    'not work. Would you like to automatically update your launch.json file now?';
+const messages = {
+    [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]:
+        Diagnostics.invalidDebuggerTypeDiagnostic(),
+    [DiagnosticCodes.JustMyCodeDiagnostic]:
+        Diagnostics.justMyCodeDiagnostic()
+};
 
-export class InvalidDebuggerTypeDiagnostic extends BaseDiagnostic {
-    constructor(message: string, resource: Resource) {
+export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
+    constructor(code: DiagnosticCodes.InvalidDebuggerTypeDiagnostic | DiagnosticCodes.JustMyCodeDiagnostic, resource: Resource) {
         super(
-            DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
-            message,
+            code,
+            messages[code],
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
             resource,
@@ -35,102 +37,113 @@ export class InvalidDebuggerTypeDiagnostic extends BaseDiagnostic {
     }
 }
 
-export const InvalidDebuggerTypeDiagnosticsServiceId = 'InvalidDebuggerTypeDiagnosticsServiceId';
-
-const CommandName = 'python.debugger.replaceExperimental';
+export const InvalidLaunchJsonDebuggerServiceId = 'InvalidLaunchJsonDebuggerServiceId';
 
 @injectable()
-export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsService {
-    protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
-    protected readonly fs: IFileSystem;
+export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
-            IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
-        );
-        const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        cmdManager.registerCommand(CommandName, this.fixLaunchJson, this);
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IDiagnosticHandlerService)
+        @named(DiagnosticCommandPromptHandlerServiceId)
+        private readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
+    ) {
+        super([DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic], serviceContainer, disposableRegistry, true);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        if (await this.isExperimentalDebuggerUsed()) {
-            return [new InvalidDebuggerTypeDiagnostic(InvalidDebuggerTypeMessage, resource)];
-        } else {
-            return [];
-        }
+        let diagnostics: IDiagnostic[] = [];
+        diagnostics = diagnostics.concat(await this.diagnoseCode(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, resource));
+        return diagnostics.concat(await this.diagnoseCode(DiagnosticCodes.JustMyCodeDiagnostic, resource));
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
-        // This class can only handle one type of diagnostic, hence just use first item in list.
-        if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
+        diagnostics.forEach(diagnostic => this.handleDiagnostic(diagnostic));
+    }
+    private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
+        if (!this.canHandle(diagnostic)) {
             return;
         }
-        const diagnostic = diagnostics[0];
-        const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
-        const options = [
+        const commandPrompts = [
             {
-                prompt: 'Yes, update launch.json',
-                command: commandFactory.createCommand(diagnostic, {
-                    type: 'executeVSCCommand',
-                    options: 'python.debugger.replaceExperimental'
-                })
+                prompt: Diagnostics.bannerLabelYes(),
+                command: {
+                    diagnostic,
+                    invoke: async (): Promise<void> => {
+                        await this.fixLaunchJson(diagnostic.code);
+                    }
+                }
             },
             {
-                prompt: 'No, I will do it later'
+                prompt: Diagnostics.bannerLabelNo()
             }
         ];
 
-        await this.messageService.handle(diagnostic, { commandPrompts: options });
+        await this.messageService.handle(diagnostic, { commandPrompts });
     }
-    private async isExperimentalDebuggerUsed() {
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        if (!workspaceService.hasWorkspaceFolders) {
-            return false;
+    private async diagnoseCode(code: DiagnosticCodes.InvalidDebuggerTypeDiagnostic | DiagnosticCodes.JustMyCodeDiagnostic, resource: Resource): Promise<IDiagnostic[]> {
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return [];
         }
 
         const results = await Promise.all(
-            workspaceService.workspaceFolders!.map(workspaceFolder =>
-                this.isExperimentalDebuggerUsedInWorkspace(workspaceFolder)
+            this.workspaceService.workspaceFolders!.map(workspaceFolder =>
+                this.isLaunchJsonInvalidInWorkspace(code, workspaceFolder)
             )
         );
-        return results.filter(used => used === true).length > 0;
+        return results.filter(used => used === true).length > 0 ? [new InvalidLaunchJsonDebuggerDiagnostic(code, resource)] : [];
     }
-    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
-        return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
-    }
-    private async isExperimentalDebuggerUsedInWorkspace(workspaceFolder: WorkspaceFolder) {
+    private async isLaunchJsonInvalidInWorkspace(code: DiagnosticCodes, workspaceFolder: WorkspaceFolder) {
         const launchJson = this.getLaunchJsonFile(workspaceFolder);
         if (!(await this.fs.fileExists(launchJson))) {
             return false;
         }
 
         const fileContents = await this.fs.readFile(launchJson);
-        return fileContents.indexOf('"pythonExperimental"') > 0;
+        if (code === DiagnosticCodes.InvalidDebuggerTypeDiagnostic){
+            return fileContents.indexOf('"pythonExperimental"') > 0;
+        } else{
+            return fileContents.indexOf('"debugStdLib"') > 0;
+        }
     }
-    private async fixLaunchJson() {
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        if (!workspaceService.hasWorkspaceFolders) {
-            return false;
+    private async fixLaunchJson(code: DiagnosticCodes) {
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return;
         }
 
         await Promise.all(
-            workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(workspaceFolder))
+            this.workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(code, workspaceFolder))
         );
     }
-    private async fixLaunchJsonInWorkspace(workspaceFolder: WorkspaceFolder) {
-        if (!(await this.isExperimentalDebuggerUsedInWorkspace(workspaceFolder))) {
+    private async fixLaunchJsonInWorkspace(code: DiagnosticCodes, workspaceFolder: WorkspaceFolder) {
+        if (!(await this.isLaunchJsonInvalidInWorkspace(code, workspaceFolder))) {
             return;
         }
 
         const launchJson = this.getLaunchJsonFile(workspaceFolder);
         let fileContents = await this.fs.readFile(launchJson);
-        const debuggerType = new RegExp('"pythonExperimental"', 'g');
-        const debuggerLabel = new RegExp('"Python Experimental:', 'g');
-
-        fileContents = fileContents.replace(debuggerType, '"python"');
-        fileContents = fileContents.replace(debuggerLabel, '"Python:');
+        switch (code) {
+            case DiagnosticCodes.InvalidDebuggerTypeDiagnostic: {
+                fileContents = this.findAndReplace(fileContents, '"pythonExperimental"', '"python"');
+                fileContents = this.findAndReplace(fileContents, '"Python Experimental:', '"Python:');
+                break;
+            }
+            case DiagnosticCodes.JustMyCodeDiagnostic: {
+                fileContents = this.findAndReplace(fileContents, '"debugStdLib": false', '"justMyCode": true');
+                fileContents = this.findAndReplace(fileContents, '"debugStdLib": true', '"justMyCode": false');
+                break;
+            }
+            default: {
+                return;
+            }
+        }
 
         await this.fs.writeFile(launchJson, fileContents);
+    }
+    private findAndReplace(fileContents: string, match: string, replace: string){
+        const matchedRegex = new RegExp(match, 'g');
+        return fileContents.replace(matchedRegex, replace);
+    }
+    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
+        return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
     }
 }

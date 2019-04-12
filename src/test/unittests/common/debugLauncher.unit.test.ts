@@ -214,9 +214,8 @@ suite('xUnit Tests - Debug Launcher', () => {
         expected.workspaceFolder = workspaceFolders[0].uri.fsPath;
         expected.debugOptions = [];
         if (expected.justMyCode === undefined) {
-            // Because justMyCode has the opposite behavior of debugStdLib
+            // Populate justMyCode using debugStdLib
             expected.justMyCode = !expected.debugStdLib;
-            expected.debugStdLib = undefined;
         }
         if (!expected.justMyCode) {
             expected.debugOptions.push(DebugOptions.DebugStdLib);

@@ -16,6 +16,10 @@ export namespace Diagnostics {
     export const lsNotSupported = localize('diagnostics.lsNotSupported', 'Your operating system does not meet the minimum requirements of the Language Server. Reverting to the alternative, Jedi.');
     export const invalidPythonPathInDebuggerSettings = localize('diagnostics.invalidPythonPathInDebuggerSettings', 'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.');
     export const invalidPythonPathInDebuggerLaunch = localize('diagnostics.invalidPythonPathInDebuggerLaunch', 'The Python path in your debug configuration is invalid.');
+    export const invalidDebuggerTypeDiagnostic = localize('diagnostics.invalidDebuggerTypeDiagnostic', 'Your launch.json file needs to be updated to change the "pythonExperimental" debug configurations to use the "python" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?');
+    export const justMyCodeDiagnostic = localize('diagnostics.justMyCodeDiagnostic', 'Configuration "debugStdLib" in launch.json is no longer supported. It\'s recommended to replace it with "justMyCode", which is the exact opposite of using "debugStdLib". Would you like to automatically update your launch.json file to do that?');
+    export const bannerLabelYes = localize('diagnostics.bannerLabelYes', 'Yes, update launch.json');
+    export const bannerLabelNo = localize('diagnostics.bannerLabelYes', 'No, I will do it later');
 }
 
 export namespace Common {
