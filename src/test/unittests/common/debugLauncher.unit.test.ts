@@ -38,7 +38,7 @@ import { isOs, OSType } from '../../common';
 use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length no-any
-suite('xUnit Tests - Debug Launcher', () => {
+suite('Unit Tests - Debug Launcher', () => {
     let unitTestSettings: TypeMoq.IMock<IUnitTestSettings>;
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;

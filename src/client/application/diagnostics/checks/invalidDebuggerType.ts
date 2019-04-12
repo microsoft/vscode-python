@@ -52,9 +52,9 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         super([DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic], serviceContainer, disposableRegistry, true);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        let diagnostics: IDiagnostic[] = [];
-        diagnostics = diagnostics.concat(await this.diagnoseCode(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, resource));
-        return diagnostics.concat(await this.diagnoseCode(DiagnosticCodes.JustMyCodeDiagnostic, resource));
+        return ([] as IDiagnostic[])
+            .concat(await this.diagnoseCode(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, resource))
+            .concat(await this.diagnoseCode(DiagnosticCodes.JustMyCodeDiagnostic, resource));
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         diagnostics.forEach(diagnostic => this.handleDiagnostic(diagnostic));
@@ -99,11 +99,9 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         }
 
         const fileContents = await this.fs.readFile(launchJson);
-        if (code === DiagnosticCodes.InvalidDebuggerTypeDiagnostic){
-            return fileContents.indexOf('"pythonExperimental"') > 0;
-        } else{
-            return fileContents.indexOf('"debugStdLib"') > 0;
-        }
+        return fileContents.indexOf(
+            code === DiagnosticCodes.InvalidDebuggerTypeDiagnostic ? '"pythonExperimental"' : '"debugStdLib"'
+        ) > 0;
     }
     private async fixLaunchJson(code: DiagnosticCodes) {
         if (!this.workspaceService.hasWorkspaceFolders) {
@@ -139,9 +137,9 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
 
         await this.fs.writeFile(launchJson, fileContents);
     }
-    private findAndReplace(fileContents: string, match: string, replace: string){
-        const matchedRegex = new RegExp(match, 'g');
-        return fileContents.replace(matchedRegex, replace);
+    private findAndReplace(fileContents: string, search: string, replace: string) {
+        const searchRegex = new RegExp(search, 'g');
+        return fileContents.replace(searchRegex, replace);
     }
     private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
         return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
