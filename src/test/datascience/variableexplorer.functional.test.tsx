@@ -2,16 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
+import { expect } from 'chai';
 import { mount, ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
+import { parse } from 'node-html-parser';
 import * as path from 'path';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { createDeferred } from '../../client/common/utils/async';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IHistory, IHistoryProvider, IJupyterExecution, IJupyterVariable } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { VariableExplorer } from '../../datascience-ui/history-react/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
     addCode,
@@ -40,6 +44,7 @@ suite('History variable explorer tests', () => {
     let ioc: DataScienceIocContainer;
     let historyProvider: IHistoryProvider;
     let jupyterExecution: IJupyterExecution;
+    let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -118,9 +123,102 @@ suite('History variable explorer tests', () => {
         });
     }
 
-    runMountedTest('Variable explorer simple', async (wrapper) => {
+    //runMountedTest('Variable explorer simple', async (wrapper) => {
+        //await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+
+        //verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+    //});
+
+    // *********** Note all of the above code is shared with history.functional.test.tsx should be combine? Move into same file or add helpers? ************
+    runMountedTest('Variable explorer basic', async (wrapper) => {
+        openVariableExplorer(wrapper);
+
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        // After code is added, open up our variable explorer which will cause a data fetch
+        //openVariableExplorer(wrapper);
+        //openVariableExplorer(wrapper);
+
+        // Verify that we actually update the variable explorer
+        await waitForUpdate(wrapper, VariableExplorer, 2);
+
+        //const requestingValues = getValuesPromise();
+        //await requestingValues;
+
+        const targetVariables: IJupyterVariable[] = [
+            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 50, shape: '', count: 0, truncated: false}
+        ];
+        verifyVariables(wrapper, targetVariables);
+
+        //const varExplorer = findVariableExplorer(wrapper);
+
+        //verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
+
+    // IANHU Shared with dataviewer
+    function waitForMessage(message: string) : Promise<void> {
+        // Wait for the mounted web panel to send a message back to the data explorer
+        const promise = createDeferred<void>();
+        messageWrapper = (m: string, _p: any) => {
+            if (m === message) {
+                promise.resolve();
+            }
+        };
+        return promise.promise;
+    }
+    // IANHU Share with dataviewer
+    function getValuesPromise() : Promise<void> {
+        return waitForMessage(HistoryMessages.GetVariableValueRequest);
+    }
 });
+
+// Open up our variable explorer which also triggers a data fetch
+function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+    const varExp: VariableExplorer = wrapper.find('VariableExplorer').instance() as VariableExplorer;
+
+    assert(varExp);
+
+    if (varExp) {
+        //varExp.toggleInputBlock();
+        varExp.setState({open: true});
+    }
+
+    //const varExp: VariableExplorer = wrapper.find('VariableExplorer').instance() as VariableExplorer;
+
+    //assert(varExp);
+
+    //if (varExp) {
+        //varExp.toggleInputBlock();
+    //}
+}
+
+function verifyVariables(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariables: IJupyterVariable[]) {
+    const foundRows = wrapper.find('div.react-grid-Row');
+
+    assert(foundRows.length === targetVariables.length);
+
+    foundRows.forEach((row, index) => {
+        verifyRow(row, targetVariables[index]);
+    });
+}
+
+function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariable: IJupyterVariable) {
+    const rowCells = rowWrapper.find('div.react-grid-Cell');
+
+    expect(rowCells.length).to.be.equal(5);
+
+    //verifyCell(rowCells.at(0), 'a');
+    //verifyCell(rowCells.at(1), 'int');
+    //verifyCell(rowCells.at(2), '50');
+    //verifyCell(rowCells.at(3), '1');
+    verifyCell(rowCells.at(0), targetVariable.name);
+    verifyCell(rowCells.at(1), targetVariable.type);
+    verifyCell(rowCells.at(2), targetVariable.size.toString());
+    verifyCell(rowCells.at(3), targetVariable.value ? targetVariable.value : '');
+}
+
+function verifyCell(cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, value: string) {
+    const cellHTML = parse(cellWrapper.html()) as any;
+    // tslint:disable-next-line:no-string-literal
+    expect(cellHTML.firstChild.rawAttributes['value'] as string).to.be.equal(value);
+}

@@ -132,8 +132,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     // Update the value of a single variable already in our list
     public newVariableData(newVariable: IJupyterVariable) {
-        // IANHU: This will eventually have to add in something like the execution count, can't just use the name
-        // to match on
         const newGridRows = this.state.gridRows.slice();
         for (let i = 0; i < newGridRows.length; i = i + 1) {
             if (newGridRows[i].name === newVariable.name) {
@@ -143,6 +141,15 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         this.setState({ gridRows: newGridRows });
+    }
+
+    public toggleInputBlock = () => {
+        this.setState({open: !this.state.open});
+
+        // If we toggle open request a data refresh
+        if (!this.state.open) {
+            this.props.refreshVariables();
+        }
     }
 
     private updateHeight = () => {
@@ -164,14 +171,5 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return this.state.gridRows[index];
         }
         return {buttons: '', name: '', type: '', size: '', value: ''};
-    }
-
-    private toggleInputBlock = () => {
-        this.setState({open: !this.state.open});
-
-        // If we toggle open request a data refresh
-        if (!this.state.open) {
-            this.props.refreshVariables();
-        }
     }
 }

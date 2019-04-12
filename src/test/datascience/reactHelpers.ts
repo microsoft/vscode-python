@@ -8,7 +8,7 @@ import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
 
-// tslint:disable:no-string-literal no-any object-literal-key-quotes
+// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length
 
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
@@ -26,6 +26,8 @@ export function setUpDomEnvironment() {
         userAgent: 'node.js',
         platform: 'node'
     };
+    // tslint:disable-next-line:no-string-literal no-any
+    (global as any)['getComputedStyle'] = window.getComputedStyle;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['self'] = window;
     copyProps(window, global);
@@ -103,7 +105,9 @@ export function setUpDomEnvironment() {
             searchForJupyter: true,
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
-            allowInput: true
+            allowInput: true,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method'
         };
     };
 

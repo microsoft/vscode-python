@@ -323,6 +323,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             liveShareConnectionTimeout: 100
         };
 
