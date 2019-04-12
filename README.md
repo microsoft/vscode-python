@@ -48,9 +48,9 @@ Learn more about the rich features of the Python extension:
 
 * [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
 * [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
-* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your Python code with black, autopep or yapf
+* [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your code with black, autopep or yapf
 
-* [Debugging](https://code.visualstudio.com/docs/python/debugging): Inspect your  Python applications, with support for remote, multi-threaded and web apps  
+* [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes   
 
 * [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest, pytest or nose
 
