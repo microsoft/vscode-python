@@ -152,7 +152,7 @@ suite('Unit Tests - Debug Launcher', () => {
             name: 'Debug Unit Test',
             type: DebuggerTypeName,
             request: 'launch',
-            console: 'none',
+            console: 'internalConsole',
             env: {},
             envFile: __filename,
             stopOnEntry: false,

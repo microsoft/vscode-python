@@ -129,7 +129,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
         // Have to provide it if and when we remove complete support for debugStdLib
         if (!cfg.console) {
-            cfg.console = 'none';
+            cfg.console = 'internalConsole';
         }
         if (!cfg.cwd) {
             cfg.cwd = workspaceFolder.uri.fsPath;

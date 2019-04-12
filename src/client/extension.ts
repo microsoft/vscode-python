@@ -195,7 +195,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         ]
     });
 
-    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'none') {
+    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));

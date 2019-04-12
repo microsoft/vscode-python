@@ -75,7 +75,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.console = 'integratedTerminal';
         }
         // If using a terminal, then never open internal console.
-        if (debugConfiguration.console !== 'none' && !debugConfiguration.internalConsoleOptions) {
+        if (debugConfiguration.console !== 'internalConsole' && !debugConfiguration.internalConsoleOptions) {
             debugConfiguration.internalConsoleOptions = 'neverOpen';
         }
         if (!Array.isArray(debugConfiguration.debugOptions)) {
