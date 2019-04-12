@@ -8,6 +8,7 @@ import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
+import { Decorator } from './editor-integration/decorator';
 import { History } from './history/history';
 import { HistoryCommandListener } from './history/historycommandlistener';
 import { HistoryProvider } from './history/historyProvider';
@@ -26,6 +27,7 @@ import {
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
+    IDataScienceTextEditorDecorator,
     IDataViewer,
     IDataViewerProvider,
     IHistory,
@@ -60,4 +62,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
+    serviceManager.addSingleton<IDataScienceTextEditorDecorator>(IDataScienceTextEditorDecorator, Decorator);
 }

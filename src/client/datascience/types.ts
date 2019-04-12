@@ -291,3 +291,7 @@ export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
     showVariable(variable: IJupyterVariable) : Promise<void>;
 }
+
+export const IDataScienceTextEditorDecorator = Symbol('IDataScienceTextEditorDecorator');
+export interface IDataScienceTextEditorDecorator {
+}

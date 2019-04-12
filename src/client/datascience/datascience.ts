@@ -23,7 +23,7 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IDataScienceTextEditorDecorator } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -65,6 +65,9 @@ export class DataScience implements IDataScience {
         // Listen for active editor changes so we can detect have code cells or not
         this.disposableRegistry.push(this.documentManager.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor()));
         this.onChangedActiveTextEditor();
+
+        // Startup our decorator
+        this.serviceContainer.get<IDataScienceTextEditorDecorator>(IDataScienceTextEditorDecorator);
     }
 
     public async dispose() {

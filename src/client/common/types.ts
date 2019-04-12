@@ -305,6 +305,7 @@ export interface IDataScienceSettings {
     showJupyterVariableExplorer?: boolean;
     variableExplorerExclude?: string;
     liveShareConnectionTimeout?: number;
+    decorateCells?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
