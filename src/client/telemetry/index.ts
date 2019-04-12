@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 // tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
+import { JSONObject } from '@phosphor/coreutils';
 import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
@@ -324,6 +325,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;

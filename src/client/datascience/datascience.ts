@@ -3,13 +3,15 @@
 'use strict';
 import '../common/extensions';
 
+import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
+import { traceError } from '../common/logger';
 import {
     BANNER_NAME_DS_SURVEY,
     IConfigurationService,
@@ -18,9 +20,10 @@ import {
     IExtensionContext,
     IPythonExtensionBanner
 } from '../common/types';
+import { debounceAsync } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
-import { captureTelemetry } from '../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
@@ -39,7 +42,9 @@ export class DataScience implements IDataScience {
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IApplicationShell) private appShell: IApplicationShell) {
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        ) {
         this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
@@ -65,6 +70,9 @@ export class DataScience implements IDataScience {
         // Listen for active editor changes so we can detect have code cells or not
         this.disposableRegistry.push(this.documentManager.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor()));
         this.onChangedActiveTextEditor();
+
+        // Send telemetry for all of our settings
+        this.sendSettingsTelemetry().ignoreErrors();
     }
 
     public async dispose() {
@@ -357,6 +365,38 @@ export class DataScience implements IDataScience {
             editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings().datascience)).catch();
         } else {
             editorContext.set(false).catch();
+        }
+    }
+
+    @debounceAsync(1)
+    private async sendSettingsTelemetry() : Promise<void> {
+        try {
+            // Get our current settings. This is what we want to send.
+            // tslint:disable-next-line:no-any
+            const settings = this.configuration.getSettings().datascience as any;
+
+            // Translate all of the 'string' based settings into known values or not.
+            const pythonConfig = this.workspace.getConfiguration('python');
+            if (pythonConfig) {
+                const keys = Object.keys(settings);
+                const resultSettings: JSONObject = {};
+                for (const k of keys) {
+                    const currentValue = settings[k];
+                    if (typeof currentValue === 'string') {
+                        const inspectResult = pythonConfig.inspect<string>(`dataScience.${k}`);
+                        if (inspectResult && inspectResult.defaultValue !== currentValue) {
+                            resultSettings[k] = 'non-default';
+                        } else {
+                            resultSettings[k] = 'default';
+                        }
+                    } else {
+                        resultSettings[k] = currentValue;
+                    }
+                }
+                sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
+            }
+        } catch (err) {
+            traceError(err);
         }
     }
 }

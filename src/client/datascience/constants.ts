@@ -105,7 +105,8 @@ export enum Telemetry {
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
-    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD'
+    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
+    DataScienceSettings = 'DATASCIENCE.SETTINGS'
  }
 
 export namespace HelpLinks {

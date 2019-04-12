@@ -722,7 +722,6 @@
                     "category": "Python",
                     "when": "config.noExists"
                 }
-
             ],
             "view/title": [
                 {
