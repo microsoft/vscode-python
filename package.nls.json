@@ -178,6 +178,7 @@
     "diagnostics.justMyCodeDiagnostic": "Configuration \"debugStdLib\" in launch.json is no longer supported. It's recommended to replace it with \"justMyCode\", which is the exact opposite of using \"debugStdLib\". Would you like to automatically update your launch.json file to do that?",
     "diagnostics.yesUpdateLaunch": "Yes, update launch.json",
     "diagnostics.bannerLabelNo": "No, I will do it later",
+    "diagnostics.invalidTestSettings": "Your settings needs to be updated to change the setting \"python.unitTest.\" to \"python.testing.\", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?",
     "DataScience.interruptKernel": "Interrupt iPython Kernel",
     "DataScience.exportingFormat": "Exporting {0}",
     "DataScience.exportCancel": "Cancel",
