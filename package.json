@@ -1415,6 +1415,12 @@
                     "description": "Amount of time to wait for guest connections to verify they have the Python extension installed.",
                     "scope": "application"
                 },
+                "python.dataScience.enableCellCodeLens": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables code lens for 'cells' in a python file.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,

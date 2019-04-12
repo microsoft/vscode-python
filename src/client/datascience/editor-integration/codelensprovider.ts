@@ -24,7 +24,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         vscode.CodeLens[] {
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();
-        if (!settings.datascience.enabled) {
+        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
             if (this.activeCodeWatchers.length > 0) {
