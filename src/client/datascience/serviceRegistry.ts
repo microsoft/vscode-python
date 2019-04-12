@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { IExtensionActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { DataViewer } from './data-viewing/dataViewer';
@@ -27,7 +28,6 @@ import {
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
-    IDataScienceTextEditorDecorator,
     IDataViewer,
     IDataViewerProvider,
     IHistory,
@@ -62,5 +62,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
-    serviceManager.addSingleton<IDataScienceTextEditorDecorator>(IDataScienceTextEditorDecorator, Decorator);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
 }

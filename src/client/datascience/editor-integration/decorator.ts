@@ -4,30 +4,44 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
+import { IExtensionActivationService } from '../../activation/types';
 import { IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { generateCellRanges } from '../cellFactory';
-import { IDataScienceTextEditorDecorator } from '../types';
 
 @injectable()
-export class Decorator implements IDataScienceTextEditorDecorator {
+export class Decorator implements IExtensionActivationService, IDisposable {
 
     private activeCellType: vscode.TextEditorDecorationType;
     private timer: NodeJS.Timer | undefined;
 
     constructor(@inject(IDocumentManager) private documentManager: IDocumentManager,
+                @inject(IDisposableRegistry) disposables: IDisposableRegistry,
                 @inject(IConfigurationService) private configuration: IConfigurationService)
     {
         this.activeCellType = this.documentManager.createTextEditorDecorationType({
             backgroundColor: new vscode.ThemeColor('sideBarSectionHeader.background'),
             isWholeLine: true
         });
-        this.configuration.getSettings().onDidChange(this.settingsChanged, this);
+        disposables.push(this);
+        disposables.push(this.configuration.getSettings().onDidChange(this.settingsChanged, this));
+        disposables.push(this.documentManager.onDidChangeActiveTextEditor(this.changedEditor, this));
+        disposables.push(this.documentManager.onDidChangeTextEditorSelection(this.changedSelection, this));
+        disposables.push(this.documentManager.onDidChangeTextDocument(this.changedDocument, this));
         this.settingsChanged();
-        this.documentManager.onDidChangeActiveTextEditor(this.changedEditor, this);
-        this.documentManager.onDidChangeTextEditorSelection(this.changedSelection, this);
-        this.documentManager.onDidChangeTextDocument(this.changedDocument, this);
+    }
+
+    public activate(_resource: Resource) : Promise<void> {
+        // We don't need to do anything here as we already did all of our work in the
+        // constructor.
+        return Promise.resolve();
+    }
+
+    public dispose() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
     }
 
     private settingsChanged() {
