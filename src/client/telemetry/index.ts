@@ -328,6 +328,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
