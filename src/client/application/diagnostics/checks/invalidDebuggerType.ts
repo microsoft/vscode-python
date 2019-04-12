@@ -41,7 +41,8 @@ export const InvalidLaunchJsonDebuggerServiceId = 'InvalidLaunchJsonDebuggerServ
 
 @injectable()
 export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -58,6 +59,15 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         diagnostics.forEach(diagnostic => this.handleDiagnostic(diagnostic));
+    }
+    protected async fixLaunchJson(code: DiagnosticCodes) {
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return;
+        }
+
+        await Promise.all(
+            this.workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(code, workspaceFolder))
+        );
     }
     private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
         if (!this.canHandle(diagnostic)) {
@@ -103,20 +113,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             code === DiagnosticCodes.InvalidDebuggerTypeDiagnostic ? '"pythonExperimental"' : '"debugStdLib"'
         ) > 0;
     }
-    private async fixLaunchJson(code: DiagnosticCodes) {
-        if (!this.workspaceService.hasWorkspaceFolders) {
-            return;
-        }
-
-        await Promise.all(
-            this.workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(code, workspaceFolder))
-        );
-    }
     private async fixLaunchJsonInWorkspace(code: DiagnosticCodes, workspaceFolder: WorkspaceFolder) {
-        if (!(await this.isLaunchJsonInvalidInWorkspace(code, workspaceFolder))) {
-            return;
-        }
-
         const launchJson = this.getLaunchJsonFile(workspaceFolder);
         let fileContents = await this.fs.readFile(launchJson);
         switch (code) {
