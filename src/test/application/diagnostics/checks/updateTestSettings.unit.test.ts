@@ -21,7 +21,7 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentState } from '../../../../client/common/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
 
-// tslint:disable:max-func-body-length no-any
+// tslint:disable:max-func-body-length
 suite('Application Diagnostics - Check Test Settings', () => {
     let diagnosticService: InvalidTestSettingDiagnosticsService;
     let fs: IFileSystem;
