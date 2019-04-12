@@ -14,6 +14,7 @@ import { generateCellRanges } from '../cellFactory';
 export class Decorator implements IExtensionActivationService, IDisposable {
 
     private activeCellType: vscode.TextEditorDecorationType;
+    private cellSeparatorType: vscode.TextEditorDecorationType;
     private timer: NodeJS.Timer | undefined;
 
     constructor(@inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -22,6 +23,12 @@ export class Decorator implements IExtensionActivationService, IDisposable {
     {
         this.activeCellType = this.documentManager.createTextEditorDecorationType({
             backgroundColor: new vscode.ThemeColor('sideBarSectionHeader.background'),
+            isWholeLine: true
+        });
+        this.cellSeparatorType = this.documentManager.createTextEditorDecorationType({
+            borderColor: new vscode.ThemeColor('sideBarSectionHeader.background'),
+            borderWidth: '1px 0px 0px 0px',
+            borderStyle: 'solid',
             isWholeLine: true
         });
         disposables.push(this);
@@ -79,10 +86,17 @@ export class Decorator implements IExtensionActivationService, IDisposable {
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
                 const cells = generateCellRanges(editor.document, this.configuration.getSettings().datascience);
-                const cellRanges = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));
-                editor.setDecorations(this.activeCellType, cellRanges);
+
+                // Find the range for our active cell.
+                const activeRanges = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));
+                editor.setDecorations(this.activeCellType, activeRanges);
+
+                // Find the start range for the rest
+                const startRanges = cells.map(c => new vscode.Range(c.range.start, c.range.start));
+                editor.setDecorations(this.cellSeparatorType, startRanges);
             } else {
                 editor.setDecorations(this.activeCellType, []);
+                editor.setDecorations(this.cellSeparatorType, []);
             }
         }
     }
