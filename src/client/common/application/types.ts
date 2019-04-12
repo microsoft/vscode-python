@@ -12,6 +12,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DecorationRenderOptions,
     Disposable,
     DocumentSelector,
     Event,
@@ -33,8 +34,10 @@ import {
     Terminal,
     TerminalOptions,
     TextDocument,
+    TextDocumentChangeEvent,
     TextDocumentShowOptions,
     TextEditor,
+    TextEditorDecorationType,
     TextEditorEdit,
     TextEditorOptionsChangeEvent,
     TextEditorSelectionChangeEvent,
@@ -434,6 +437,13 @@ export interface IDocumentManager {
     readonly onDidChangeActiveTextEditor: Event<TextEditor | undefined>;
 
     /**
+     * An event that is emitted when a [text document](#TextDocument) is changed. This usually happens
+     * when the [contents](#TextDocument.getText) changes but also when other things like the
+     * [dirty](#TextDocument.isDirty)-state changes.
+     */
+    readonly onDidChangeTextDocument: Event<TextDocumentChangeEvent>;
+
+    /**
      * An [event](#Event) which fires when the array of [visible editors](#window.visibleTextEditors)
      * has changed.
      */
@@ -549,6 +559,15 @@ export interface IDocumentManager {
      * @return A thenable that resolves when the edit could be applied.
      */
     applyEdit(edit: WorkspaceEdit): Thenable<boolean>;
+
+    /**
+     * Create a TextEditorDecorationType that can be used to add decorations to text editors.
+     *
+     * @param options Rendering options for the decoration type.
+     * @return A new decoration type instance.
+     */
+    createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType;
+
 }
 
 export const IWorkspaceService = Symbol('IWorkspaceService');

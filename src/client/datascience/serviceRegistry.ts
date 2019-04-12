@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { IExtensionActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { DataViewer } from './data-viewing/dataViewer';
@@ -8,6 +9,7 @@ import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
+import { Decorator } from './editor-integration/decorator';
 import { History } from './history/history';
 import { HistoryCommandListener } from './history/historycommandlistener';
 import { HistoryProvider } from './history/historyProvider';
@@ -60,4 +62,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
 }
