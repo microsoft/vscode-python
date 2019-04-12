@@ -13,6 +13,7 @@ import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } fr
 import { InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId } from './checks/macPythonInterpreter';
 import { PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId } from './checks/powerShellActivation';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
+import { InvalidTestSettingDiagnosticsService, InvalidTestSettingsDiagnosticscServiceId } from './checks/updateTestSettings';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -29,6 +30,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId);
+    serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidTestSettingDiagnosticsService, InvalidTestSettingsDiagnosticscServiceId);
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
 }

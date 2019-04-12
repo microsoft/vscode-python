@@ -796,35 +796,35 @@ export interface IApplicationEnvironment {
      *
      * @readonly
      */
-    appName: string;
+    readonly appName: string;
 
     /**
      * The extension name.
      *
      * @readonly
      */
-    extensionName: string;
+    readonly extensionName: string;
 
     /**
      * The application root folder from which the editor is running.
      *
      * @readonly
      */
-    appRoot: string;
+    readonly appRoot: string;
 
     /**
      * Represents the preferred user-language, like `de-CH`, `fr`, or `en-US`.
      *
      * @readonly
      */
-    language: string;
+    readonly language: string;
 
     /**
      * A unique identifier for the computer.
      *
      * @readonly
      */
-    machineId: string;
+    readonly machineId: string;
 
     /**
      * A unique identifier for the current session.
@@ -832,14 +832,21 @@ export interface IApplicationEnvironment {
      *
      * @readonly
      */
-    sessionId: string;
+    readonly sessionId: string;
     /**
      * Contents of `package.json` as a JSON object.
      *
      * @type {any}
      * @memberof IApplicationEnvironment
      */
-    packageJson: any;
+    readonly packageJson: any;
+    /**
+     * Gets the full path to the user settings file. (may or may not exist).
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly userSettingsFile: string | undefined;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
