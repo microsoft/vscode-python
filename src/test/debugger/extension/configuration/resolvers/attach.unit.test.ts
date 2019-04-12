@@ -249,5 +249,23 @@ getNamesAndValues(OSType).forEach(os => {
 
             expect(debugConfig).to.have.property('debugOptions').to.be.deep.equal(expectedDebugOptions);
         });
+        test('Ensure justMyCode property is correctly derived from debugStdLib', async () => {
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+
+            const debugOptions = debugOptionsAvailable.slice().concat(DebugOptions.Jinja, DebugOptions.Sudo);
+
+            let debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach' } as any as DebugConfiguration);
+            expect(debugConfig).to.have.property('justMyCode', true);
+
+            debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', debugStdLib: false } as any as DebugConfiguration);
+            expect(debugConfig).to.have.property('justMyCode', true);
+
+            debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', debugStdLib: true } as any as DebugConfiguration);
+            expect(debugConfig).to.have.property('justMyCode', false);
+        });
     });
 });

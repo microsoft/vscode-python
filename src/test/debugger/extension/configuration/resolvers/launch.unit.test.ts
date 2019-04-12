@@ -305,13 +305,30 @@ suite('Debugging - Config Resolver Launch', () => {
         setupIoc(pythonPath);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false } as LaunchRequestArguments);
+        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, justMyCode: false } as LaunchRequestArguments);
 
         expect(debugConfig).to.have.property('console', 'integratedTerminal');
         expect(debugConfig).to.have.property('stopOnEntry', false);
         expect(debugConfig).to.have.property('showReturnValue', false);
+        expect(debugConfig).to.have.property('justMyCode', false);
         expect(debugConfig).to.have.property('debugOptions');
-        expect((debugConfig as any).debugOptions).to.be.deep.equal([]);
+        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.DebugStdLib]);
+    });
+    test('Test justMyCode property is correctly derived from debugStdLib', async () => {
+        const pythonPath = `PythonPath_${new Date().toString()}`;
+        const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+        const pythonFile = 'xyz.py';
+        setupIoc(pythonPath);
+        setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+
+        let debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as LaunchRequestArguments);
+        expect(debugConfig).to.have.property('justMyCode', true);
+
+        debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugStdLib: false } as LaunchRequestArguments);
+        expect(debugConfig).to.have.property('justMyCode', true);
+
+        debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugStdLib: true } as LaunchRequestArguments);
+        expect(debugConfig).to.have.property('justMyCode', false);
     });
     async function testFixFilePathCase(isWindows: boolean, isMac: boolean, isLinux: boolean) {
         const pythonPath = `PythonPath_${new Date().toString()}`;

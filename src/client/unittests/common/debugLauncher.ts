@@ -150,9 +150,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (cfg.debugStdLib === undefined) {
             cfg.debugStdLib = false;
         }
-        if (cfg.justMyCode === undefined) {
-            cfg.justMyCode = true;
-        }
+        // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
+        // Have to provide it if and when we remove complete support for debugStdLib
     }
 
     private async convertConfigToArgs(

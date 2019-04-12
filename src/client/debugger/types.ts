@@ -27,6 +27,7 @@ interface ICommonDebugArguments {
     django?: boolean;
     gevent?: boolean;
     jinja?: boolean;
+    debugStdLib?: boolean;
     justMyCode?: boolean;
     logToFile?: boolean;
     debugOptions?: DebugOptions[];

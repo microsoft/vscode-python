@@ -158,8 +158,7 @@ suite('Unit Tests - Debug Launcher', () => {
             stopOnEntry: false,
             showReturnValue: false,
             redirectOutput: true,
-            debugStdLib: false,
-            justMyCode: true
+            debugStdLib: false
         };
     }
     function setupSuccess(
@@ -359,7 +358,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 envFile: expected.envFile,
                 redirectOutput: expected.redirectOutput,
                 debugStdLib: expected.debugStdLib,
-                justMyCode: expected.justMyCode
+                justMyCode: undefined
             }
         ]);
 
