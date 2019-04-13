@@ -191,7 +191,7 @@ def _get_binary_location(executable_directory):
     if sys.platform.startswith("win"):
         return os.path.join(executable_directory, "Code.exe")
 
-    return os.path.join(executable_directory, "code")
+    return os.path.join(executable_directory, "VSCode-linux-x64", "code")
 
 
 def _get_cli_location(executable_directory):
@@ -206,4 +206,7 @@ def _get_cli_location(executable_directory):
             "cli.js",
         )
 
-    return os.path.join(executable_directory, "resources", "app", "out", "cli.js")
+    if sys.platform.startswith("win"):
+        return os.path.join(executable_directory, "resources", "app", "out", "cli.js")
+
+    return os.path.join(executable_directory, "VSCode-linux-x64", "resources", "app", "out", "cli.js")
