@@ -85,6 +85,7 @@ def download_vscode(download_path, channel="stable"):
     version = _get_latest_version(channel)
     url = _get_download_url(version, download_platform, channel)
 
-    zip_file = os.path.join(tempfile.mkdtemp(), "vscode.zip")
+    file_name = "vscode.tar.gz" if sys.platform.startswith("linux") else "vscode.zip"
+    zip_file = os.path.join(tempfile.mkdtemp(), file_name)
     uitests.tools.download_file(url, zip_file, f"Downloading VS Code {channel}")
     uitests.tools.unzip_file(zip_file, download_path)

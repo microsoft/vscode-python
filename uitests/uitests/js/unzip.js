@@ -43,7 +43,7 @@ async function unzipTarGz(zipFile, targetFolder) {
             .pipe(gulpFilter)
             .pipe(chmod(493)) // 0o755
             .pipe(gulpFilter.restore)
-            .pipe(vfs.dest(testRunFolder))
+            .pipe(vfs.dest(targetFolder))
             .on('end', resolve)
             .on('error', reject);
     });
