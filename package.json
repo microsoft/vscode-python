@@ -2103,7 +2103,7 @@
         }
     },
     "scripts": {
-        "package": "gulp clean && gulp prePublishBundle && vsce package",
+        "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
@@ -2260,6 +2260,7 @@
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
+        "gulp-vinyl-zip": "^2.1.2",
         "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
@@ -2305,6 +2306,7 @@
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
+        "vinyl-fs": "^3.0.3",
         "vsce": "^1.59.0",
         "vscode": "^1.1.30",
         "vscode-debugadapter-testsupport": "^1.27.0",

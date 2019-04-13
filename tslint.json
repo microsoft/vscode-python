@@ -10,7 +10,6 @@
         "messages-must-be-localized": true,
         "no-unused-expression": true,
         "no-duplicate-variable": true,
-        "no-unused-variable": true,
         "curly": true,
         "non-literal-fs-path": false,
         "newline-per-chained-call": false,

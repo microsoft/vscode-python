@@ -1,0 +1,179 @@
+steps:
+    # Show the complete set of environment variabes if we are in verbose mode.
+    - bash: |
+          printenv
+      displayName: "Show all env vars"
+      condition: eq(variables['system.debug'], 'true')
+
+    - task: NodeTool@0
+      displayName: "Use Node $(NodeVersion)"
+      inputs:
+          versionSpec: $(NodeVersion)
+
+    - task: UsePythonVersion@0
+      displayName: "Setup Python $(PythonVersion) for extension"
+      inputs:
+          versionSpec: $(PythonVersion)
+      condition: eq(variables['Test'], 'true')
+
+    - script: |
+          export CI_PYTHON_PATH=`which python`
+          echo '##vso[task.setvariable variable=CI_PYTHON_PATH]'$CI_PYTHON_PATH
+      displayName: "Setup CI_PYTHON_PATH for extension"
+      condition: and(succeeded(), eq(variables['Test'], 'true'), not(eq(variables['agent.os'], 'Windows_NT')))
+
+    - powershell: |
+          $CI_PYTHON_PATH = (get-command  python).path
+          Write-Host "##vso[task.setvariable variable=CI_PYTHON_PATH]$CI_PYTHON_PATH"
+          Write-Host $CI_PYTHON_PATH
+      displayName: "Setup CI_PYTHON_PATH for extension"
+      condition: and(succeeded(), eq(variables['Test'], 'true'), eq(variables['agent.os'], 'Windows_NT'))
+
+    # When using pyenv, use Python 3.7 to run the scripts that drive the ui tests.
+    - task: UsePythonVersion@0
+      displayName: "Use Python 3.7 (to drive tests)"
+      inputs:
+          versionSpec: 3.7
+
+    - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
+
+    - task: Npm@1
+      displayName: "npm ci"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: ci
+
+    - bash: |
+          echo AVAILABLE DEPENDENCY VERSIONS
+          echo Node Version = `node -v`
+          echo NPM Version = `npm -v`
+          echo Python Version = `python --version`
+          echo Gulp Version = `gulp --version`
+      condition: and(succeeded(), eq(variables['system.debug'], 'true'))
+      displayName: Show Dependency Versions
+
+    - bash: |
+          python -m pip install -U pip
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+      displayName: "pip install requirements"
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
+
+    # Start the X virtual frame buffer (X-windows in memory only) on Linux. Linux VMs do not
+    # provide a desktop so VS Code cannot properly launch there. To get around this we use the
+    # xvfb service to emulate a desktop instead. See
+    # https://code.visualstudio.com/api/working-with-extensions/continuous-integration#azure-pipelines
+    #
+    # This task will only run if we are running on Linux and variable SkipXvfb is false.
+    #
+    # Example command line (windows pwsh): N/A
+    - bash: |
+          set -e
+          /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+          disown -ar
+      displayName: "Start xvfb"
+      condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), not(variables['SkipXvfb']))
+
+    # Build the extension
+    - bash: |
+          npm install -g vsce
+          npm run clean
+          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+          npm run package
+      displayName: "Build VSIX"
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
+
+    - task: CopyFiles@2
+      inputs:
+          contents: "*.vsix"
+          targetFolder: $(Build.ArtifactStagingDirectory)
+      displayName: "Copy VSIX"
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: VSIX
+      displayName: "Publish VSIX to Arifacts"
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
+
+    # Download VSIX
+    - task: DownloadBuildArtifacts@0
+      inputs:
+          buildType: "current"
+          artifactName: "VSIX"
+          downloadPath: "$(Build.SourcesDirectory)"
+      displayName: "Restore VSIX"
+      condition: and(succeeded(), or(eq(variables['Test'], 'true'), eq(variables['Upload'], 'true')))
+
+    - task: CopyFiles@2
+      inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/VSIX"
+          targetFolder: $(Build.SourcesDirectory)
+      displayName: "Copy VSIX"
+      condition: and(succeeded(), or(eq(variables['Test'], 'true'), eq(variables['Upload'], 'true')))
+
+    # Upload VSIX
+    - task: Gulp@0
+      displayName: "Upload VSIX to Blobstore"
+      env:
+          AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+          AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
+          AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+      inputs:
+          targets: "uploadDeveloperExtension"
+      condition: and(succeeded(), eq(variables['Upload'], 'true'))
+
+    # Run the UI Tests
+    - bash: |
+          python -m pip install -U pip
+          python -m pip install --upgrade -r ./uitests/requirements.txt
+          python uitests download
+          npm install -g vsce
+          python uitests install
+      displayName: "Download & Install UI Test Dependencies"
+      condition: and(succeeded(), eq(variables['Test'], 'true'))
+
+    - script: python uitests test -- --format progress $(Tags) -D python_path=$(CI_PYTHON_PATH)
+      env:
+          AgentJobName: $(Agent.JobName)
+      failOnStderr: true
+      displayName: "Run Tests"
+      condition: and(succeeded(), eq(variables['Test'], 'true'))
+
+    - script: python uitests report
+      env:
+          AgentJobName: $(Agent.JobName)
+      displayName: "Generate Reports"
+      condition: and(always(), eq(variables['Test'], 'true'))
+
+    - task: CopyFiles@2
+      inputs:
+          contents: ".vscode-test/reports/**"
+          targetFolder: $(Build.ArtifactStagingDirectory)
+      displayName: "Copy Reports"
+      condition: and(always(), eq(variables['Test'], 'true'))
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: $(Agent.JobName)
+      displayName: "Upload Reports"
+      condition: and(always(), eq(variables['Test'], 'true'))
+
+    - task: PublishTestResults@2
+      inputs:
+          testRunner: JUnit
+          testResultsFiles: "$(Build.SourcesDirectory)/.vscode-test/reports/*.xml"
+      condition: and(always(), eq(variables['Test'], 'true'))
+
+    - task: PublishTestResults@2
+      inputs:
+          testRunner: JUnit
+          testResultsFiles: "**/.vscode-test/reports/*.xml"
+      condition: and(always(), eq(variables['Test'], 'true'))

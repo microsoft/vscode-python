@@ -17,6 +17,7 @@ coverage/
 .vscode-test/**
 .vscode-smoke/**
 **/.venv*/
+**/venv*/
 precommit.hook
 pythonFiles/experimental/ptvsd/**
 pythonFiles/lib/**

@@ -1,5 +1,0 @@
-docopt~=0.6.2
-behave~=1.2.6
-requests~=2.21.0
-selenium~=3.141.0
-progress~=1.5

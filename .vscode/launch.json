@@ -185,26 +185,34 @@
             ]
         },
         {
-            "name": "Behave Smoke Tests",
+            "name": "UI Tests (BDD)",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/smokeTests/__main__.py",
+            "program": "${workspaceFolder}/uitests/__main__.py",
             "args": [
-                "test"
+                "test",
+                "--",
+                "--format",
+                "pretty",
+                "--tags=wip"
             ],
             "debugStdLib": true,
             "console": "none"
         },
         {
-            "name": "PyInvoke",
+            "name": "Behave",
             "type": "python",
             "request": "launch",
-            "module": "invoke",
+            "module": "behave",
+            "console": "integratedTerminal",
             "args": [
-                // Change to debug a specific task.
-                "smoke"
+                "uitests/uitests"
             ],
-            "console": "none"
+            "env": {
+                "PYTHONPATH": "./uitests"
+            },
+            "stopOnEntry": true,
+            "debugStdLib": true
         }
     ],
     "compounds": [

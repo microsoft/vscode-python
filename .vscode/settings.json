@@ -16,27 +16,22 @@
         "coverage": true,
         "languageServer*/**": true
     },
+    "editor.formatOnSave": true,
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
+    "typescript.preferences.quoteStyle": "single",
+    "javascript.preferences.quoteStyle": "single",
+    "typescriptHero.imports.stringQuoteStyle": "'",
     "tslint.enable": true,
-    "python.linting.enabled": false,
-    "python.testing.promptToConfigure": false,
-    "python.linting.enabled": true,
     "python.jediEnabled": false,
+    "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
     "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "black",
-    "typescript.preferences.quoteStyle": "single",
-    "javascript.preferences.quoteStyle": "single",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Args": [
         "--max-line-length=120"
-    ],
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": false
-    },
-    "editor.formatOnSave": true,
-    "python.linting.pylintEnabled": false,
-    "python.analysis.logLevel": "Trace",
-    "python.pythonPath": "/Users/donjayamanne/.local/share/virtualenvs/pythonVSCode-5rU-mS3t/bin/python"
+    ]
 }

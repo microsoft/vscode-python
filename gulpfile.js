@@ -83,10 +83,10 @@ gulp.task('compile', (done) => {
     const tsProject = ts.createProject("tsconfig.json");
     tsProject.src()
         .pipe(tsProject())
-        .on("error", ()=> failed = true)
+        .on("error", () => failed = true)
         .js
         .pipe(gulp.dest("out"))
-        .on("finish",  ()=> failed ? done(new Error('TypeScript compilation errors')) : done());
+        .on("finish", () => failed ? done(new Error('TypeScript compilation errors')) : done());
 });
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
@@ -279,6 +279,9 @@ gulp.task('installPythonLibs', async () => {
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
+    console.log(process.cwd());
+    console.log(fs.existsSync(path.join(process.cwd(), 'ms-python-insiders.vsix')));
+    console.log(fs.existsSync(path.join(process.cwd(), uploadBlobName)));
     return gulp.src('python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
