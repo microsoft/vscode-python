@@ -10,7 +10,8 @@ def activate_python_extension(context):
     for _ in range(5):
         quick_open.select_command(context, "Activate Python Extension")
         try:
-            notifications.wait_for_message(context, "Python Extension Activated")
+            # Sometimes it takes a while, specially on Windows.
+            notifications.wait_for_message(context, "Python Extension Activated", timeout=30)
             break
         except Exception as ex:
             last_error = ex

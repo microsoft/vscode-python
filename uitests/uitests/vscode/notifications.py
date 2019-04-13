@@ -15,7 +15,7 @@ def wait_for_message(context, value, **kwargs):
     def find(elements):
         return [element for element in elements if element.text == value]
 
-    return core.wait_for_elements(context.driver, selector, find)
+    return core.wait_for_elements(context.driver, selector, find, **kwargs)
 
 
 def wait_for_message_containing(context, value, **kwargs):
@@ -24,4 +24,4 @@ def wait_for_message_containing(context, value, **kwargs):
     def find(elements):
         return [element for element in elements if value in element.text]
 
-    return core.wait_for_elements(context.driver, selector, find)
+    return core.wait_for_elements(context.driver, selector, find, **kwargs)
