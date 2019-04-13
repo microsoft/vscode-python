@@ -78,9 +78,9 @@ def get_options(
     return options
 
 
-def setup_environment(dirs):
+def setup_environment(options):
     """Setup environment for smoke tests."""
-    os.environ["PATH"] += os.pathsep + dirs.executable_dir
+    os.environ["PATH"] += os.pathsep + options.executable_dir
 
 
 def uninstall_extension(options):

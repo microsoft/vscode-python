@@ -60,7 +60,9 @@ def install(destination, channel, vsix, **kwargs):
     vscode.application.install_extension(options)
 
     # Launch extension and exit (we want to ensure folders are created & extensions work).
-    context = vscode.startup.start(options)
+    vscode.application.setup_environment(options)
+    driver = vscode.application.launch_extension(options)
+    context = vscode.startup.Context(options, driver)
     vscode.application.exit(context)
 
 
