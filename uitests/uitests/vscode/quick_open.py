@@ -77,6 +77,7 @@ def wait_until_selected(context, value, **kwargs):
 
 def _open(context, value, **kwargs):
     retry = kwargs.get("retry", 5)
+    timeout = kwargs.get("timeout", 5)
     # This is a hack, we cannot send key strokes to the electron app using selenium.
     # So, lets bring up the `Go to line` input window
     # then type in the character '>' to turn it into a quick input window 😊
@@ -85,13 +86,13 @@ def _open(context, value, **kwargs):
         element = core.wait_for_element(
             context.driver,
             ".part.statusbar .statusbar-item.left.statusbar-entry a[title='PySmoke']",
-            timeout=5,
+            timeout=timeout,
         )
         element.click()
         try:
             element = _wait_until_opened(context, 10)
             core.dispatch_keys(context.driver, f"> {value}", element=element)
-            wait_until_selected(context, value, timeout=5)
+            wait_until_selected(context, value, timeout=timeout)
             return element
         except Exception as ex:
             last_ex = ex
