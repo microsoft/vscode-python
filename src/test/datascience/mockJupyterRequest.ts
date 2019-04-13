@@ -191,10 +191,12 @@ export class MockJupyterRequest implements Kernel.IFuture {
                     }
 
                     // Move onto the next producer if allowed
-                    if (r.haveMore) {
-                        this.sendMessages(producers, delay);
-                    } else {
-                        this.sendMessages(producers.slice(1), delay);
+                    if (!this.cancelToken.isCancellationRequested) {
+                        if (r.haveMore) {
+                            this.sendMessages(producers, delay);
+                        } else {
+                            this.sendMessages(producers.slice(1), delay);
+                        }
                     }
                 }).ignoreErrors();
             }, delay);

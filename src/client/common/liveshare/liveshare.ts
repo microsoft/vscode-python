@@ -4,8 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
+import { LiveShareProxy } from './liveshareProxy';
 
 // tslint:disable:no-any unified-signatures
 
@@ -18,7 +19,8 @@ export class LiveShareApi implements ILiveShareApi {
     constructor(
         @inject(IDisposableRegistry) disposableRegistry : IDisposableRegistry,
         @inject(IWorkspaceService) workspace : IWorkspaceService,
-        @inject(IConfigurationService) private configService : IConfigurationService
+        @inject(IConfigurationService) private configService : IConfigurationService,
+        @inject(IApplicationShell) private appShell : IApplicationShell
         ) {
         const disposable = workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration('python.dataScience', undefined)) {
@@ -38,7 +40,11 @@ export class LiveShareApi implements ILiveShareApi {
         const supported = this.configService.getSettings().datascience.allowLiveShare;
         if (supported !== this.supported) {
             this.supported = supported ? true : false;
-            this.apiPromise = supported ? vsls.getApi() : Promise.resolve(null);
+            const liveShareTimeout = this.configService.getSettings().datascience.liveShareConnectionTimeout;
+            this.apiPromise = supported ?
+                vsls.getApi().then(a => a ? new LiveShareProxy(this.appShell, liveShareTimeout, a) : a) :
+                Promise.resolve(null);
+
         } else if (!this.apiPromise) {
             this.apiPromise = Promise.resolve(null);
         }

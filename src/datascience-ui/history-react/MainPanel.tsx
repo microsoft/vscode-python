@@ -12,13 +12,13 @@ import { HistoryMessages, IHistoryMapping } from '../../client/datascience/histo
 import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
+import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
+import { ContentPanel, IContentPanelProps } from './contentPanel';
+import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { VariableExplorer } from './variableExplorer';
-
-import { ContentPanel, IContentPanelProps } from './contentPanel';
-import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -27,24 +27,22 @@ export interface IMainPanelProps {
     codeTheme: string;
 }
 
-class HistoryPostOffice extends PostOffice<IHistoryMapping> {}
-
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
     private updateCount = 0;
     private renderCount = 0;
-    private sentStartup = false;
-    private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
+    private styleInjectorRef: React.RefObject<StyleInjector>;
+    private currentExecutionCount: number = 0;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24 };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -58,6 +56,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Create the ref to hold our variable explorer
         this.variableExplorerRef = React.createRef<VariableExplorer>();
+
+        // Create the ref to hold our style injector
+        this.styleInjectorRef = React.createRef<StyleInjector>();
+    }
+
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        PostOffice.addHandler(this);
+
+        // Tell the history code we have started.
+        PostOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
     }
 
     public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
@@ -67,6 +76,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    public componentWillUnmount() {
+        // Remove ourselves as a handler for the post office
+        PostOffice.removeHandler(this);
+    }
+
     public render() {
 
         // If in test mode, update our outputs
@@ -74,14 +88,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.renderCount = this.renderCount + 1;
         }
 
-        const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
+        const baseTheme = this.computeBaseTheme();
 
         const headerProps = this.getHeaderProps(baseTheme);
         const contentProps = this.getContentProps(baseTheme);
 
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
             </div>
@@ -188,6 +202,30 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({contentTop: newHeight});
     }
 
+    private darkChanged = (newDark: boolean) => {
+        // update our base theme
+        this.setState(
+            {
+                forceDark: newDark
+            }
+        );
+    }
+
+    private computeBaseTheme(): string {
+        // If we're ignoring, always light
+        if (getSettings && getSettings().ignoreVscodeTheme) {
+            return 'vscode-light';
+        }
+
+        // Otherwise see if the style injector has figured out
+        // the theme is dark or not
+        if (this.state.forceDark !== undefined) {
+            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
+        }
+
+        return this.props.baseTheme;
+    }
+
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
@@ -263,14 +301,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataViewer = () => {
-        this.sendMessage(HistoryMessages.ShowDataViewer, 'df');
+    private showDataViewer = (targetVariable: string) => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        if (this.postOffice) {
-            this.postOffice.sendMessage(type, payload);
-        }
+        PostOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {
@@ -441,16 +477,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private updateSelf = (r: HTMLDivElement) => {
         this.mainPanel = r;
-    }
-
-    private updatePostOffice = (postOffice: HistoryPostOffice) => {
-        if (this.postOffice !== postOffice) {
-            this.postOffice = postOffice;
-            if (!this.sentStartup) {
-                this.sentStartup = true;
-                this.postOffice.sendMessage(HistoryMessages.Started);
-            }
-        }
     }
 
     // tslint:disable-next-line:no-any
@@ -642,8 +668,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
 
+        // After the cell is finished update our current execution count
+        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
+
         // When a cell is finished refresh our variables
-        if (getSettings && getSettings().showJupyterVariableExplorer) {
+        // Use the ref here to maintain var explorer independence
+        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
             this.refreshVariables();
         }
     }
@@ -668,9 +698,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
+    // Check our list of cell vms to see what our current execution count is
+    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
         const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
+        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
+    }
+
+    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
+        return this.getCurrentExecutionCount(cellVMs) + 1;
     }
 
     private submitInput = (code: string) => {
@@ -722,7 +757,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
-        this.sendMessage(HistoryMessages.GetVariablesRequest);
+        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
     }
 
     // Find the display value for one specific variable
@@ -736,8 +771,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variable = payload as IJupyterVariable;
 
-            if (this.variableExplorerRef.current) {
-                this.variableExplorerRef.current.newVariableData(variable);
+            // Only send the updated variable data if we are on the same execution count as when we requsted it
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariableData(variable);
+                }
             }
         }
     }
@@ -748,12 +786,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variables = payload as IJupyterVariable[];
 
-            if (this.variableExplorerRef.current) {
-                this.variableExplorerRef.current.newVariablesData(variables);
-            }
+            // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
+            if (variables.length > 0 && variables[0].executionCount !== undefined && variables[0].executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariablesData(variables);
+                }
 
-            // Now put out a request for all of the sub values for the variables
-            variables.forEach(this.refreshVariable);
+                // Now put out a request for all of the sub values for the variables
+                variables.forEach(this.refreshVariable);
+            }
         }
     }
 }

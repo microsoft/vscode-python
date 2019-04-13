@@ -72,6 +72,13 @@ export class DebugLauncher implements ITestDebugLauncher {
                 request: 'test'
             };
         }
+        if (!debugConfig.rules) {
+            debugConfig.rules = [];
+        }
+        debugConfig.rules.push({
+            path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
+            include: false
+        });
         this.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);

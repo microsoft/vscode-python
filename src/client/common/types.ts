@@ -303,6 +303,10 @@ export interface IDataScienceSettings {
     errorBackgroundColor: string;
     ignoreVscodeTheme?: boolean;
     showJupyterVariableExplorer?: boolean;
+    variableExplorerExclude?: string;
+    liveShareConnectionTimeout?: number;
+    decorateCells?: boolean;
+    enableCellCodeLens?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

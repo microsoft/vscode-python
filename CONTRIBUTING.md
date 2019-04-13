@@ -19,12 +19,12 @@
 
 ### Prerequisites
 
-1. Node.js (>= 8.9.1, < 9.0.0)
-1. Python 2.7 or later (required only for testing the extension and running unit tests)
+1. [Node.js](https://nodejs.org/) 10.x
+1. [Python](https://www.python.org/) 2.7 or later (required only for testing the extension and running unit tests)
 1. Windows, macOS, or Linux
-1. Visual Studio Code
-1. Following VS Code extensions:
-    * [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint)
+1. [Visual Studio Code](https://code.visualstudio.com/)
+1. The following VS Code extensions:
+    * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
     * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 1. Have an issue which has been accepted with a "needs PR" label (feel free to indicate you would be happy to provide a PR for the issue)
 
@@ -67,7 +67,7 @@ Use the `Launch Extension` launch option.
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Tests via the `Debug Unit Tests`  launch options.
+1. Run the Tests via the `Unit Tests`  launch option.
 
 You can also run them from the command-line (after compiling):
 
@@ -82,7 +82,7 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ```js
     "args": [
         "--timeout=60000",
-        "--grep=[The suite name of your unit test file]"
+        "--grep", "<suite name>"
     ],
 ```
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).

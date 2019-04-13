@@ -1,6 +1,20 @@
 # Changelog
 
 
+## 2019.3.3 (8 April 2019)
+
+### Fixes
+
+1. Update ptvsd to [4.2.7](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.7).
+    * Fix issues related to debugging Django templagtes.
+1. Update the Python language server to 0.2.47.
+
+### Code Health
+
+1. Capture telemetry to track switching to and from the Language Server.
+   ([#5162](https://github.com/Microsoft/vscode-python/issues/5162))
+
+
 ## 2019.3.2 (2 April 2019)
 
 ### Fixes

@@ -34,7 +34,7 @@ export interface ITestDetails {
 export const allTestDetails: ITestDetails[] = [
     {
         className: 'test_root.Test_Root_test1',
-        nameToRun: 'test_root.py::Test_Root_test1::test_Root_A',
+        nameToRun: './test_root.py::Test_Root_test1::test_Root_A',
         fileName: 'test_root.py',
         testName: 'test_Root_A',
         sourceTestName: 'test_Root_A',
@@ -47,7 +47,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'test_root.Test_Root_test1',
-        nameToRun: 'test_root.py::Test_Root_test1::test_Root_B',
+        nameToRun: './test_root.py::Test_Root_test1::test_Root_B',
         fileName: 'test_root.py',
         testName: 'test_Root_B',
         sourceTestName: 'test_Root_B',
@@ -56,7 +56,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'test_root.Test_Root_test1',
-        nameToRun: 'test_root.py::Test_Root_test1::test_Root_c',
+        nameToRun: './test_root.py::Test_Root_test1::test_Root_c',
         fileName: 'test_root.py',
         testName: 'test_Root_c',
         sourceTestName: 'test_Root_c',
@@ -67,7 +67,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_another_pytest',
-        nameToRun: 'tests/test_another_pytest.py::test_username',
+        nameToRun: './tests/test_another_pytest.py::test_username',
         fileName: path.join(...'tests/test_another_pytest.py'.split('/')),
         testName: 'test_username',
         sourceTestName: 'test_username',
@@ -76,7 +76,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_another_pytest',
-        nameToRun: 'tests/test_another_pytest.py::test_parametrized_username[one]',
+        nameToRun: './tests/test_another_pytest.py::test_parametrized_username[one]',
         fileName: path.join(...'tests/test_another_pytest.py'.split('/')),
         testName: 'test_parametrized_username[one]',
         sourceTestName: 'test_parametrized_username',
@@ -85,7 +85,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_another_pytest',
-        nameToRun: 'tests/test_another_pytest.py::test_parametrized_username[two]',
+        nameToRun: './tests/test_another_pytest.py::test_parametrized_username[two]',
         fileName: path.join(...'tests/test_another_pytest.py'.split('/')),
         testName: 'test_parametrized_username[two]',
         sourceTestName: 'test_parametrized_username',
@@ -94,7 +94,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_another_pytest',
-        nameToRun: 'tests/test_another_pytest.py::test_parametrized_username[three]',
+        nameToRun: './tests/test_another_pytest.py::test_parametrized_username[three]',
         fileName: path.join(...'tests/test_another_pytest.py'.split('/')),
         testName: 'test_parametrized_username[three]',
         sourceTestName: 'test_parametrized_username',
@@ -107,7 +107,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.().TestExtraNestedForeignTests.()',
-        nameToRun: 'tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
+        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
         simpleClassName: 'TestInheritingHere',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_super_deep_foreign',
@@ -123,7 +123,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.()',
-        nameToRun: 'tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
+        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
         simpleClassName: 'TestInheritingHere',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_foreign_test',
@@ -139,7 +139,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.()',
-        nameToRun: 'tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
+        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_nested_normal',
         sourceTestName: 'test_nested_normal',
@@ -148,7 +148,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests',
-        nameToRun: 'tests/test_foreign_nested_tests.py::TestNestedForeignTests::test_normal',
+        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::test_normal',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_normal',
         sourceTestName: 'test_normal',
@@ -157,7 +157,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::test_simple_check',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::test_simple_check',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_simple_check',
         sourceTestName: 'test_simple_check',
@@ -168,7 +168,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::test_complex_check',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::test_complex_check',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_complex_check',
         sourceTestName: 'test_complex_check',
@@ -177,7 +177,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.()',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_nested_class_methodB',
         sourceTestName: 'test_nested_class_methodB',
@@ -186,7 +186,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.().Test_nested_classB_Of_A.()',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_d',
         sourceTestName: 'test_d',
@@ -195,7 +195,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.()',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_nested_class_methodC',
         sourceTestName: 'test_nested_class_methodC',
@@ -204,7 +204,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::test_simple_check2',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::test_simple_check2',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_simple_check2',
         sourceTestName: 'test_simple_check2',
@@ -213,7 +213,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest.Test_CheckMyApp',
-        nameToRun: 'tests/test_pytest.py::Test_CheckMyApp::test_complex_check2',
+        nameToRun: './tests/test_pytest.py::Test_CheckMyApp::test_complex_check2',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_complex_check2',
         sourceTestName: 'test_complex_check2',
@@ -222,7 +222,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest',
-        nameToRun: 'tests/test_pytest.py::test_username',
+        nameToRun: './tests/test_pytest.py::test_username',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_username',
         sourceTestName: 'test_username',
@@ -231,7 +231,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest',
-        nameToRun: 'tests/test_pytest.py::test_parametrized_username[one]',
+        nameToRun: './tests/test_pytest.py::test_parametrized_username[one]',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_parametrized_username[one]',
         sourceTestName: 'test_parametrized_username',
@@ -240,7 +240,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest',
-        nameToRun: 'tests/test_pytest.py::test_parametrized_username[two]',
+        nameToRun: './tests/test_pytest.py::test_parametrized_username[two]',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_parametrized_username[two]',
         sourceTestName: 'test_parametrized_username',
@@ -249,7 +249,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_pytest',
-        nameToRun: 'tests/test_pytest.py::test_parametrized_username[three]',
+        nameToRun: './tests/test_pytest.py::test_parametrized_username[three]',
         fileName: path.join(...'tests/test_pytest.py'.split('/')),
         testName: 'test_parametrized_username[three]',
         sourceTestName: 'test_parametrized_username',
@@ -262,7 +262,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_one.Test_test1',
-        nameToRun: 'tests/test_unittest_one.py::Test_test1::test_A',
+        nameToRun: './tests/test_unittest_one.py::Test_test1::test_A',
         fileName: path.join(...'tests/test_unittest_one.py'.split('/')),
         testName: 'test_A',
         sourceTestName: 'test_A',
@@ -275,7 +275,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_one.Test_test1',
-        nameToRun: 'tests/test_unittest_one.py::Test_test1::test_B',
+        nameToRun: './tests/test_unittest_one.py::Test_test1::test_B',
         fileName: path.join(...'tests/test_unittest_one.py'.split('/')),
         testName: 'test_B',
         sourceTestName: 'test_B',
@@ -284,7 +284,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_one.Test_test1',
-        nameToRun: 'tests/test_unittest_one.py::Test_test1::test_c',
+        nameToRun: './tests/test_unittest_one.py::Test_test1::test_c',
         fileName: path.join(...'tests/test_unittest_one.py'.split('/')),
         testName: 'test_c',
         sourceTestName: 'test_c',
@@ -295,7 +295,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
-        nameToRun: 'tests/test_unittest_two.py::Test_test2::test_A2',
+        nameToRun: './tests/test_unittest_two.py::Test_test2::test_A2',
         fileName: path.join(...'tests/test_unittest_two.py'.split('/')),
         testName: 'test_A2',
         sourceTestName: 'test_A2',
@@ -308,7 +308,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
-        nameToRun: 'tests/test_unittest_two.py::Test_test2::test_B2',
+        nameToRun: './tests/test_unittest_two.py::Test_test2::test_B2',
         fileName: path.join(...'tests/test_unittest_two.py'.split('/')),
         testName: 'test_B2',
         sourceTestName: 'test_B2',
@@ -317,7 +317,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
-        nameToRun: 'tests/test_unittest_two.py::Test_test2::test_C2',
+        nameToRun: './tests/test_unittest_two.py::Test_test2::test_C2',
         fileName: path.join(...'tests/test_unittest_two.py'.split('/')),
         testName: 'test_C2',
         sourceTestName: 'test_C2',
@@ -330,7 +330,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_two.Test_test2',
-        nameToRun: 'tests/test_unittest_two.py::Test_test2::test_D2',
+        nameToRun: './tests/test_unittest_two.py::Test_test2::test_D2',
         fileName: path.join(...'tests/test_unittest_two.py'.split('/')),
         testName: 'test_D2',
         sourceTestName: 'test_D2',
@@ -343,7 +343,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_two.Test_test2a',
-        nameToRun: 'tests/test_unittest_two.py::Test_test2a::test_222A2',
+        nameToRun: './tests/test_unittest_two.py::Test_test2a::test_222A2',
         fileName: path.join(...'tests/test_unittest_two.py'.split('/')),
         testName: 'test_222A2',
         sourceTestName: 'test_222A2',
@@ -357,7 +357,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_unittest_two.Test_test2a',
-        nameToRun: 'tests/test_unittest_two.py::Test_test2a::test_222B2',
+        nameToRun: './tests/test_unittest_two.py::Test_test2a::test_222B2',
         fileName: path.join(...'tests/test_unittest_two.py'.split('/')),
         testName: 'test_222B2',
         sourceTestName: 'test_222B2',
@@ -366,7 +366,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.unittest_three_test.Test_test3',
-        nameToRun: 'tests/unittest_three_test.py::Test_test3::test_A',
+        nameToRun: './tests/unittest_three_test.py::Test_test3::test_A',
         fileName: path.join(...'tests/unittest_three_test.py'.split('/')),
         testName: 'test_A',
         sourceTestName: 'test_A',
@@ -379,7 +379,7 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.unittest_three_test.Test_test3',
-        nameToRun: 'tests/unittest_three_test.py::Test_test3::test_B',
+        nameToRun: './tests/unittest_three_test.py::Test_test3::test_B',
         fileName: path.join(...'tests/unittest_three_test.py'.split('/')),
         testName: 'test_B',
         sourceTestName: 'test_B',

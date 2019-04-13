@@ -174,7 +174,7 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         }
     }
 
-    private synchronizeCreate() : Promise<void> {
+    private async synchronizeCreate() : Promise<void> {
         // Create a new pending wait if necessary
         if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
             const key = uuid();
@@ -182,13 +182,11 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
             this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
 
             // Make sure all providers have an active history
-            this.postOffice.postCommand(LiveShareCommands.historyCreate, this.id, key).ignoreErrors();
+            await this.postOffice.postCommand(LiveShareCommands.historyCreate, this.id, key);
 
             // Wait for the waitable to be signaled or the peer count on the post office to change
-            return waitable.promise;
+            await waitable.promise;
         }
-
-        return Promise.resolve();
     }
 
     private onHistoryExecute = (code: string) => {

@@ -23,3 +23,10 @@ else:
     _VSCODE_targetVariable['value'] = _VSCODE_targetValue
 
 print(_VSCODE_json.dumps(_VSCODE_targetVariable))
+
+# Cleanup
+del _VSCODE_max_len
+del _VSCODE_json
+del _VSCODE_targetVariable
+del _VSCODE_evalResult
+del _VSCODE_targetValue

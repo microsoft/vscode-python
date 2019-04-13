@@ -11,6 +11,8 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
+    export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';
     export const RunToLine = 'python.datascience.runtoline';
     export const RunFromLine = 'python.datascience.runfromline';
     export const RunCell = 'python.datascience.runcell';
@@ -100,10 +102,12 @@ export enum Telemetry {
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
+    DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
-    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD'
+    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
+    DataScienceSettings = 'DATASCIENCE.SETTINGS'
  }
 
 export namespace HelpLinks {
@@ -138,6 +142,7 @@ export namespace LiveShare {
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const HistoryProviderService = 'historyProviderService';
+    export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
     export const ResponseLifetime = 15000;
     export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
@@ -161,4 +166,25 @@ export namespace LiveShareCommands {
     export const historyCreate = 'historyCreate';
     export const historyCreateSync = 'historyCreateSync';
     export const disposeServer = 'disposeServer';
+    export const guestCheck = 'guestCheck';
+}
+
+export namespace CssMessages {
+    export const GetCssRequest = 'get_css_request';
+    export const GetCssResponse = 'get_css_response';
+}
+
+export namespace SharedMessages {
+    export const UpdateSettings = 'update_settings';
+    export const Started = 'started';
+}
+
+export interface IGetCssRequest {
+    isDark: boolean;
+}
+
+export interface IGetCssResponse {
+    css: string;
+    theme: string;
+    knownDark?: boolean;
 }

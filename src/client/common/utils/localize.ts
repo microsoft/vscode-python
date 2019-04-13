@@ -42,6 +42,8 @@ export namespace LanguageService {
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
+    export const doNotShowAgain = localize('Interpreters.doNotShowAgain', 'Do not show again');
+    export const environmentPromptMessage = localize('Interpreters.environmentPromptMessage', 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?');
 }
 
 export namespace Linters {
@@ -151,6 +153,7 @@ export namespace DataScience {
     export const pandasTooOldForViewingFormat = localize('DataScience.pandasTooOldForViewingFormat', 'Python package \'pandas\' is version {0}. Version 0.20 or greater is required for viewing data.');
     export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');
     export const valuesColumn = localize('DataScience.valuesColumn', 'values');
+    export const liveShareInvalid = localize('DataScience.liveShareInvalid', 'One or more guests in the session do not have the Python Extension installed. Live share session cannot continue.');
 }
 
 export namespace DebugConfigurationPrompts {
@@ -193,12 +196,12 @@ export namespace DebugConfigurationPrompts {
     export const launchJsonConfigurationsCompletionDescription = localize('debug.launchJsonConfigurationsCompletionDescription', 'Select a debug configuration');
 }
 
-export namespace UnitTests {
-    export const testErrorDiagnosticMessage = localize('UnitTests.testErrorDiagnosticMessage', 'Error');
-    export const testFailDiagnosticMessage = localize('UnitTests.testFailDiagnosticMessage', 'Fail');
-    export const testSkippedDiagnosticMessage = localize('UnitTests.testSkippedDiagnosticMessage', 'Skipped');
-    export const configureTests = localize('UnitTests.configureTests', 'Configure Test Framework');
-    export const disableTests = localize('UnitTests.disableTests', 'Disable Tests');
+export namespace Testing {
+    export const testErrorDiagnosticMessage = localize('Testing.testErrorDiagnosticMessage', 'Error');
+    export const testFailDiagnosticMessage = localize('Testing.testFailDiagnosticMessage', 'Fail');
+    export const testSkippedDiagnosticMessage = localize('Testing.testSkippedDiagnosticMessage', 'Skipped');
+    export const configureTests = localize('Testing.configureTests', 'Configure Test Framework');
+    export const disableTests = localize('Testing.disableTests', 'Disable Tests');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

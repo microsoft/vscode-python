@@ -3,7 +3,7 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2019.4.0-alpha",
-    "languageServerVersion": "0.2.31",
+    "languageServerVersion": "0.2.47",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -41,7 +41,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.31.0"
+        "vscode": "^1.33.0"
     },
     "keywords": [
         "python",
@@ -277,8 +277,8 @@
                 }
             },
             {
-                "command": "python.stopUnitTests",
-                "title": "%python.command.python.stopUnitTests.title%",
+                "command": "python.stopTests",
+                "title": "%python.command.python.stopTests.title%",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/stop.svg",
@@ -328,6 +328,16 @@
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcurrentcellandallbelow.palette",
+                "title": "%python.command.python.datascience.runcurrentcellandallbelow.palette.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runallcellsabove.palette",
+                "title": "%python.command.python.datascience.runallcellsabove.palette.title%",
                 "category": "Python"
             },
             {
@@ -573,7 +583,7 @@
                     "when": "config.noExists"
                 },
                 {
-                    "command": "python.stopUnitTests",
+                    "command": "python.stopTests",
                     "category": "Python",
                     "when": "config.noExists"
                 },
@@ -598,6 +608,18 @@
                 {
                     "command": "python.datascience.runcurrentcelladvance",
                     "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runcurrentcellandallbelow.palette",
+                    "title": "%python.command.python.datascience.runcurrentcellandallbelow.palette.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runallcellsabove.palette",
+                    "title": "%python.command.python.datascience.runallcellsabove.palette.title%",
                     "category": "Python",
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
@@ -689,6 +711,16 @@
                     "title": "%python.command.python.datascience.exportoutputasnotebook.title%",
                     "category": "Python",
                     "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runcellandallbelow",
+                    "category": "Python",
+                    "when": "config.noExists"
+                },
+                {
+                    "command": "python.datascience.runallcellsabove",
+                    "category": "Python",
+                    "when": "config.noExists"
                 }
             ],
             "view/title": [
@@ -703,7 +735,7 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "python.stopUnitTests",
+                    "command": "python.stopTests",
                     "when": "view == python_tests && busyTests",
                     "group": "navigation@1"
                 },
@@ -1379,6 +1411,12 @@
                     "description": "Show the variable explorer in the Python Interactive window. (experimental)",
                     "scope": "resource"
                 },
+                "python.dataScience.variableExplorerExclude": {
+                    "type": "string",
+                    "default": "module;builtin_function_or_method",
+                    "description": "Types to exclude from showing in the Python Interactive variable explorer",
+                    "scope": "resource"
+                },
                 "python.dataScience.codeRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
@@ -1401,6 +1439,24 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Don't use the VS Code theme in the Python Interactive window (requires reload of VS Code). This forces the Python Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
+                    "scope": "resource"
+                },
+                "python.dataScience.liveShareConnectionTimeout": {
+                    "type": "number",
+                    "default": 1000,
+                    "description": "Amount of time to wait for guest connections to verify they have the Python extension installed.",
+                    "scope": "application"
+                },
+                "python.dataScience.decorateCells": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Draw a highlight behind the currently active cell.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableCellCodeLens": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables code lens for 'cells' in a python file.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2241,9 +2297,9 @@
         "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --require source-map-support/register --opts ./build/.mocha.unittests.opts",
-        "test:unittests:cover": "nyc --nycrc-path ./build/.nycrc npm run test:unittests",
+        "test:unittests:cover": "npm run test:unittests",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
-        "test:functional:cover": "nyc --nycrc-path ./build/.nycrc npm run test:functional",
+        "test:functional:cover": "npm run test:functional",
         "testDebugger": "node ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
@@ -2426,10 +2482,11 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.2.2",
+        "typescript": "^3.4.3",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
+        "vsce": "^1.59.0",
         "vscode": "^1.1.30",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",

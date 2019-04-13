@@ -61,6 +61,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private sessionTimeout: number | undefined;
     private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs : {name: string; dir: string}[] = [];
+    private currentSession: MockJupyterSession | undefined;
 
     constructor(serviceManager: IServiceManager) {
         // Save async registry. Need to stick servers created into it
@@ -107,6 +108,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public makeActive(interpreter: PythonInterpreter) {
         this.activeInterpreter = interpreter;
+    }
+
+    public getCurrentSession() : MockJupyterSession | undefined {
+        return this.currentSession;
     }
 
     public setProcessDelay(timeout: number | undefined) {
@@ -217,10 +222,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {
                 await sleep(localTimeout);
-                return new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
+                return this.createNewSession();
             }, cancelToken);
         } else {
-            return Promise.resolve(new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay));
+            return Promise.resolve(this.createNewSession());
         }
     }
 
@@ -230,6 +235,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     private onConfigChanged = () => {
         this.changedInterpreterEvent.fire();
+    }
+
+    private createNewSession() : MockJupyterSession {
+        this.currentSession = new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
+        return this.currentSession;
     }
 
     private createStreamResult(str: string) : nbformat.IStream {

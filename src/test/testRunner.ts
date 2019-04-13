@@ -51,7 +51,7 @@ if (!tty.getWindowSize) {
 
 let mocha = new Mocha(<any>{
     ui: 'tdd',
-    useColors: true
+    colors: true
 });
 
 export type SetupOptions = MochaSetupOptions & {
@@ -70,6 +70,8 @@ export function configure(setupOptions: SetupOptions, coverageOpts?: { coverageC
     if (setupOptions.testFilesSuffix) {
         testFilesGlob = setupOptions.testFilesSuffix;
     }
+    // Force Mocha to exit.
+    (setupOptions as any).exit = true;
     mocha = new Mocha(setupOptions);
     coverageOptions = coverageOpts;
 }

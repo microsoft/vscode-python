@@ -222,7 +222,7 @@ def main():
     (opts, _) = parser.parse_args()
 
     if opts.debug:
-        from ptvsd.visualstudio_py_debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
+        from ptvsd.visualstudio_py_debugger import DEBUG_ENTRYPOINTS, get_code
 
     sys.path[0] = os.getcwd()
     if opts.result_port:
@@ -238,7 +238,7 @@ def main():
         sys.stderr = _TestOutput(sys.stderr, is_stdout = False)
 
     if opts.debug:
-        DONT_DEBUG.append(os.path.normcase(__file__))
+        # TODO: Stop using this internal API? (See #3201.)
         DEBUG_ENTRYPOINTS.add(get_code(main))
 
         pass

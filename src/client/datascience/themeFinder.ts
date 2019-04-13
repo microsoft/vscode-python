@@ -58,6 +58,11 @@ export class ThemeFinder {
     }
 
     private async findMatchingTheme(themeName: string) : Promise<IThemeData | undefined> {
+        // Environment variable to mimic missing json problem
+        if (process.env.VSC_PYTHON_MIMIC_REMOTE) {
+            return undefined;
+        }
+
         // Look through all extensions to find the theme. This will search
         // the default extensions folder and our installed extensions.
         const extensions = this.extensions.all;

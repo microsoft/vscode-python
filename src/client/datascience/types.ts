@@ -9,7 +9,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -57,8 +57,8 @@ export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
-    restartKernel() : Promise<void>;
-    waitForIdle() : Promise<void>;
+    restartKernel(timeoutInMs: number) : Promise<void>;
+    waitForIdle(timeoutInMs: number) : Promise<void>;
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
@@ -93,9 +93,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;
-    restart() : Promise<void>;
-    interrupt() : Promise<void>;
-    waitForIdle() : Promise<void>;
+    restart(timeout: number) : Promise<void>;
+    interrupt(timeout: number) : Promise<void>;
+    waitForIdle(timeout: number) : Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined;
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
@@ -136,12 +136,13 @@ export interface IHistory extends Disposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
-    postMessage(type: string, payload?: any): void;
+    startProgress(): void;
+    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
-    interruptKernel(): void;
-    restartKernel(): void;
+    interruptKernel(): Promise<void>;
+    restartKernel(): Promise<void>;
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
@@ -216,7 +217,7 @@ export interface ISysInfo extends nbformat.IBaseCell {
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
-    generateThemeCss() : Promise<string>;
+    generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
@@ -251,6 +252,7 @@ export interface IJupyterCommandFactory {
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
+        theme: string;
     };
 }
 
@@ -260,12 +262,13 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 export interface IJupyterVariable {
     name: string;
     value: string | undefined;
+    executionCount?: number;
+    supportsDataExplorer: boolean;
     type: string;
     size: number;
     shape: string;
     count: number;
     truncated: boolean;
-    expensive: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
 }
@@ -285,6 +288,6 @@ export interface IDataViewerProvider {
 }
 export const IDataViewer = Symbol('IDataViewer');
 
-export interface IDataViewer extends IAsyncDisposable {
-    show(variable: IJupyterVariable) : Promise<void>;
+export interface IDataViewer extends IDisposable {
+    showVariable(variable: IJupyterVariable) : Promise<void>;
 }

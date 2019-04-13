@@ -134,6 +134,7 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private getJupyterURLFromString(data: any) {
+        // tslint:disable-next-line:no-any
         const urlMatch = urlMatcher.exec(data) as any;
         const groups = urlMatch.groups() as RegExpValues.IUrlPatternGroupType;
         if (urlMatch && !this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {

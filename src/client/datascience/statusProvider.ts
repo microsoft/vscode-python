@@ -6,7 +6,6 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { HistoryMessages } from './history/historyTypes';
 import { IHistoryProvider, IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
@@ -107,7 +106,7 @@ export class StatusProvider implements IStatusProvider {
         if (this.statusCount === 0) {
             const history = this.historyProvider.getActive();
             if (history && !skipHistory) {
-                history.postMessage(HistoryMessages.StartProgress);
+                history.startProgress();
             }
         }
         this.statusCount += 1;
@@ -118,7 +117,7 @@ export class StatusProvider implements IStatusProvider {
         if (updatedCount === 0) {
             const history = this.historyProvider.getActive();
             if (history && !skipHistory) {
-                history.postMessage(HistoryMessages.StopProgress);
+                history.stopProgress();
             }
         }
         this.statusCount = Math.max(updatedCount, 0);

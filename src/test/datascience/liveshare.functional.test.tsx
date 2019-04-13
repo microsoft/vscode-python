@@ -9,6 +9,7 @@ import { Disposable, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import {
+    IApplicationShell,
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
@@ -38,6 +39,7 @@ suite('LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
+    let lastErrorMessage : string | undefined;
 
     setup(() => {
         hostContainer = createContainer(vsls.Role.Host);
@@ -57,11 +59,25 @@ suite('LiveShare tests', () => {
         }
         await hostContainer.dispose();
         await guestContainer.dispose();
+        lastErrorMessage = undefined;
     });
 
     function createContainer(role: vsls.Role): DataScienceIocContainer {
         const result = new DataScienceIocContainer();
         result.registerDataScienceTypes();
+
+        // Rebind the appshell so we can change what happens on an error
+        const dummyDisposable = {
+            dispose: () => { return; }
+        };
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => lastErrorMessage = e);
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
+        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+
+        result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
         result.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
@@ -135,8 +151,14 @@ suite('LiveShare tests', () => {
             } else {
                 // Add code to the apropriate container
                 const host = await getOrCreateHistory(vsls.Role.Host);
-                const guest = await getOrCreateHistory(vsls.Role.Guest);
-                return (role === vsls.Role.Host ? host.addCode(code, 'foo.py', 2) : guest.addCode(code, 'foo.py', 2));
+
+                // Make sure guest is still creatable
+                if (isSessionStarted(vsls.Role.Guest)) {
+                    const guest = await getOrCreateHistory(vsls.Role.Guest);
+                    return (role === vsls.Role.Host ? host.addCode(code, 'foo.py', 2) : guest.addCode(code, 'foo.py', 2));
+                } else {
+                    return host.addCode(code, 'foo.py', 2);
+                }
             }
         }, expectedRenderCount);
     }
@@ -151,6 +173,12 @@ suite('LiveShare tests', () => {
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
         const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
         return api.stopSession();
+    }
+
+    function disableGuestChecker(role: vsls.Role) {
+        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        api.disableGuestChecker();
     }
 
     test('Host alone', async () => {
@@ -295,6 +323,28 @@ suite('LiveShare tests', () => {
         assert.equal(savedUri.fsPath, 'test.ipynb', 'Export did not work');
         assert.ok(outputContents, 'Output not exported');
         assert.ok(outputContents!.includes('data'), 'Output is empty');
+    });
+
+    test('Guest does not have extension', async () => {
+        // Should only need mock data in host
+        addMockData(hostContainer!, '#%%\na=1\na', 1);
+
+        // Start just the host and verify it works
+        await startSession(vsls.Role.Host);
+        let wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Disable guest checking on the guest (same as if the guest doesn't have the python extension)
+        await startSession(vsls.Role.Guest);
+        disableGuestChecker(vsls.Role.Guest);
+
+        // Host should now be in a state that if any code runs, the session should end. However
+        // the code should still run
+        wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        assert.equal(isSessionStarted(vsls.Role.Host), false, 'Host should have exited session');
+        assert.equal(isSessionStarted(vsls.Role.Guest), false, 'Guest should have exited session');
+        assert.ok(lastErrorMessage, 'Error was not set during session shutdown');
     });
 
 });

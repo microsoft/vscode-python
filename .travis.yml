@@ -59,8 +59,8 @@ before_install: |
   fi
   git clone https://github.com/creationix/nvm.git ./.nvm
   source ./.nvm/nvm.sh
-  nvm install 8.9.1
-  nvm use 8.9.1
+  nvm install 10.5.0
+  nvm use 10.5.0
   npm install npm@latest -g
   npm install -g vsce
   export CI_PYTHON_PATH=`which python`
@@ -75,24 +75,19 @@ install:
 script:
   - if [ $UNIT_TEST == "true" ]; then
         npx gulp compile;
-        npm run cover:enable;
         npm run test:unittests:cover;
     fi
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
-        npm run cover:enable;
         npm run testDebugger --silent;
     fi
-  - npm run debugger-coverage
   - if [ $FUNCTIONAL_TEST == "true" ]; then
         python -m pip install --upgrade -r ./build/functional-test-requirements.txt;
         npm run test:functional:cover;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
-        npm run cover:enable;
         npm run testSingleWorkspace --silent;
     fi
   - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
-        npm run cover:enable;
         npm run testMultiWorkspace --silent;
     fi
   - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then

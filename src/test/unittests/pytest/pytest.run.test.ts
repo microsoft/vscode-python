@@ -3,15 +3,21 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IProcessServiceFactory } from '../../../client/common/process/types';
+import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
+import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
+import { ExecutionFactoryCreateWithEnvironmentOptions, IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import { IConfigurationService } from '../../../client/common/types';
+import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/unittests/common/services/unitTestDiagnosticService';
 import { FlattenedTestFunction, ITestManager, ITestManagerFactory, Tests, TestStatus, TestsToRun } from '../../../client/unittests/common/types';
@@ -300,11 +306,25 @@ async function testDiagnosticRelatedInformation(relatedInfo: vscode.DiagnosticRe
 suite('Unit Tests - pytest - run with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+    @injectable()
+    class ExecutionFactory extends PythonExecutionFactory {
+        constructor(@inject(IServiceContainer) private readonly _serviceContainer: IServiceContainer,
+            @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
+            @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
+            @inject(IConfigurationService) private readonly _configService: IConfigurationService,
+            @inject(IBufferDecoder) decoder: IBufferDecoder) {
+            super(_serviceContainer, activationHelper, processServiceFactory, _configService, decoder);
+        }
+        public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
+            const pythonPath = options.interpreter ? options.interpreter.path : this._configService.getSettings(options.resource).pythonPath;
+            const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+            return new PythonExecutionService(this._serviceContainer, procService, pythonPath);
+        }
+    }
     suiteSetup(async () => {
         await initialize();
         await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
     });
-
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
@@ -314,15 +334,15 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((_file, args, _options, callback) => {
-            if (args.indexOf('--collect-only') >= 0) {
+        procService.onExec((_file, args, _options, callback) => {
+            if (args.indexOf('discover') >= 0 && args.indexOf('pytest') >= 0) {
                 callback({
-                    out: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8').replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, PYTEST_RESULTS_PATH),
-                    source: 'stdout'
+                    stdout: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8').replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH))
                 });
             }
         });
