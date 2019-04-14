@@ -54,28 +54,28 @@ jobs:
         Tags: "--tags=smoke"
         Test: true
 
+      "Mac-Py3.7 Testing":
+        PythonVersion: "3.7"
+        VMImageName: "macos-10.13"
+        Tags: "--tags=test"
+        Test: true
+
       "Win-Py3.7 Smoke":
         PythonVersion: "3.7"
         VMImageName: 'vs2017-win2016'
         Tags: "--tags=smoke"
         Test: true
 
+      "Win-Py3.7 Testing":
+        PythonVersion: "3.7"
+        VMImageName: 'vs2017-win2016'
+        Tags: "--tags=test"
+        Test: true
+
       "Linux-Py3.7 Smoke":
         PythonVersion: "3.7"
         VMImageName: 'ubuntu-16.04'
         Tags: "--tags=smoke"
-        Test: true
-
-      "Mac-Py3.7 Tests":
-        PythonVersion: "3.7"
-        VMImageName: "macos-10.13"
-        Tags: "--tags=test"
-        Test: true
-
-      "Win-Py3.7 Tests":
-        PythonVersion: "3.7"
-        VMImageName: 'vs2017-win2016'
-        Tags: "--tags=test"
         Test: true
 
       # "Mac-Py3.7 Testing":
@@ -119,7 +119,15 @@ jobs:
         Test: true
         Pyenv: true
 
-      "Mac-Py3.6 Smoke":
+      "Mac-Py3.6 Testing":
+        PythonVersion: "3.6"
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: "UITests"
+        Tags: "--tags=test"
+        Test: true
+        Pyenv: true
+
+      "Win-Py3.6 Smoke":
         PythonVersion: "3.6"
         VMImageName: 'vs2017-win2016'
         TestsToRun: "UITests"
@@ -127,15 +135,7 @@ jobs:
         Test: true
         Pyenv: true
 
-      "Mac-Py3.6 Tests":
-        PythonVersion: "3.6"
-        VMImageName: "macos-10.13"
-        TestsToRun: "UITests"
-        Tags: "--tags=test"
-        Test: true
-        Pyenv: true
-
-      "Mac-Py3.6 Tests":
+      "Win-Py3.6 Testing":
         PythonVersion: "3.6"
         VMImageName: 'vs2017-win2016'
         TestsToRun: "UITests"
@@ -224,7 +224,7 @@ jobs:
         Test: true
         Pyenv: true
 
-      "Mac-Py2.7 Tests":
+      "Mac-Py2.7 Testing":
         PythonVersion: "2.7"
         VMImageName: "macos-10.13"
         Tags: "--tags=test"
@@ -238,7 +238,7 @@ jobs:
         Test: true
         Pyenv: true
 
-      "Win-Py2.7 Tests":
+      "Win-Py2.7 Testing":
         PythonVersion: "2.7"
         VMImageName: 'vs2017-win2016'
         Tags: "--tags=test"
