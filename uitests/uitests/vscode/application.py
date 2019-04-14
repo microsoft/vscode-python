@@ -129,7 +129,7 @@ def launch_extension(options):
     # Else selenium throws errors.
     if sys.platform.startswith("linux"):
         file_stat = os.stat(chrome_options.binary_location)
-        os.chmod(file_stat, file_stat.st_mode | stat.S_IEXEC)
+        os.chmod(chrome_options.binary_location, file_stat.st_mode | stat.S_IEXEC)
 
     driver = webdriver.Chrome(options=chrome_options)
     return driver
