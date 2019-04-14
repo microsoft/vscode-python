@@ -5,6 +5,7 @@
 import base64
 import contextlib
 import io
+import logging
 import os
 import os.path
 import shutil
@@ -128,6 +129,7 @@ def launch_extension(options):
     # Set necessary permissions on Linux to be able to start.
     # Else selenium throws errors.
     if sys.platform.startswith("linux"):
+        logging.info(f"chmod u+x {chrome_options.binary_location}")
         file_stat = os.stat(chrome_options.binary_location)
         os.chmod(chrome_options.binary_location, file_stat.st_mode | stat.S_IEXEC)
 
