@@ -8,6 +8,7 @@ import io
 import os
 import os.path
 import shutil
+import stat
 import sys
 import tempfile
 import traceback
@@ -124,6 +125,12 @@ def launch_extension(options):
         chrome_options.add_argument(arg)
 
     chrome_options.binary_location = _get_binary_location(options.executable_dir)
+    # Set necessary permissions on Linux to be able to start.
+    # Else selenium throws errors.
+    if sys.platform.startswith("linux"):
+        file_stat = os.stat(chrome_options.binary_location)
+        os.chmod(file_stat, file_stat.st_mode | stat.S_IEXEC)
+
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
