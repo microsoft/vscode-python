@@ -1052,7 +1052,7 @@
                             },
                             "console": {
                                 "enum": [
-                                    "none",
+                                    "internalConsole",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
