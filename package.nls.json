@@ -175,6 +175,7 @@
     "diagnostics.invalidPythonPathInDebuggerSettings": "You need to select a Python interpreter before you start debugging.\n\nTip: click on \"Select Python Interpreter\" in the status bar.",
     "diagnostics.invalidPythonPathInDebuggerLaunch": "The Python path in your debug configuration is invalid.",
     "diagnostics.invalidDebuggerTypeDiagnostic": "Your launch.json file needs to be updated to change the \"pythonExperimental\" debug configurations to use the \"python\" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?",
+    "diagnostics.consoleTypeDiagnostic": "Your launch.json file needs to be updated to change the console type string from \"none\" to \"internalConsole\", otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?",
     "diagnostics.justMyCodeDiagnostic": "Configuration \"debugStdLib\" in launch.json is no longer supported. It's recommended to replace it with \"justMyCode\", which is the exact opposite of using \"debugStdLib\". Would you like to automatically update your launch.json file to do that?",
     "diagnostics.yesUpdateLaunch": "Yes, update launch.json",
     "diagnostics.bannerLabelNo": "No, I will do it later",

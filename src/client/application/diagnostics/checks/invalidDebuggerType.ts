@@ -21,11 +21,13 @@ const messages = {
     [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]:
         Diagnostics.invalidDebuggerTypeDiagnostic(),
     [DiagnosticCodes.JustMyCodeDiagnostic]:
-        Diagnostics.justMyCodeDiagnostic()
+        Diagnostics.justMyCodeDiagnostic(),
+    [DiagnosticCodes.ConsoleTypeDiagnostic]:
+        Diagnostics.consoleTypeDiagnostic()
 };
 
 export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.InvalidDebuggerTypeDiagnostic | DiagnosticCodes.JustMyCodeDiagnostic, resource: Resource) {
+    constructor(code: DiagnosticCodes.InvalidDebuggerTypeDiagnostic | DiagnosticCodes.JustMyCodeDiagnostic | DiagnosticCodes.ConsoleTypeDiagnostic, resource: Resource) {
         super(
             code,
             messages[code],
@@ -50,7 +52,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         @named(DiagnosticCommandPromptHandlerServiceId)
         private readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
     ) {
-        super([DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic], serviceContainer, disposableRegistry, true);
+        super([DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic], serviceContainer, disposableRegistry, true);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!this.workspaceService.hasWorkspaceFolders) {
@@ -84,6 +86,9 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         }
         if (fileContents.indexOf('"debugStdLib"') > 0) {
             diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, resource));
+        }
+        if (fileContents.indexOf('"console": "none"') > 0) {
+            diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConsoleTypeDiagnostic, resource));
         }
         return diagnostics;
     }
@@ -123,6 +128,10 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             case DiagnosticCodes.JustMyCodeDiagnostic: {
                 fileContents = this.findAndReplace(fileContents, '"debugStdLib": false', '"justMyCode": true');
                 fileContents = this.findAndReplace(fileContents, '"debugStdLib": true', '"justMyCode": false');
+                break;
+            }
+            case DiagnosticCodes.ConsoleTypeDiagnostic: {
+                fileContents = this.findAndReplace(fileContents, '"console": "none"', '"console": "internalConsole"');
                 break;
             }
             default: {
