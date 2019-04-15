@@ -202,4 +202,18 @@ z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
         expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}, {hashedName: pandasHash}]);
     });
+
+    test('Do not send the same package twice', () => {
+        const code = `
+import pandas
+import pandas`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+    });
+
+    test('Ignore relative imports', () => {
+        const code = 'from .pandas import not_real';
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([]);
+    });
 });
