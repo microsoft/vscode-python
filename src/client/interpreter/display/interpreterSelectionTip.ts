@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { swallowExceptions } from '../../common/utils/decorators';
 import { Common, Interpreters } from '../../common/utils/localize';
 
 @injectable()
@@ -22,13 +23,14 @@ export class InterpreterSelectionTip implements IExtensionActivationService {
             return;
         }
         this.displayedInSession = true;
-        await this.showTip();
+        this.showTip().ignoreErrors();
     }
+    @swallowExceptions('Failed to display tip')
     private async showTip() {
         const selection = await this.shell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt());
         if (selection !== Common.gotIt()) {
             return;
         }
-        this.storage.updateValue(true);
+        await this.storage.updateValue(true);
     }
 }
