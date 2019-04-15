@@ -5,9 +5,9 @@
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { CommandSource } from '../../unittests/common/constants';
-import { TestFunction, TestsToRun } from '../../unittests/common/types';
-import { TestDataItem, TestWorkspaceFolder } from '../../unittests/types';
+import { CommandSource } from '../../testing/common/constants';
+import { TestFunction, TestsToRun } from '../../testing/common/types';
+import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
 import { Commands } from '../constants';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;

@@ -15,7 +15,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
-import { CommandSource } from '../../unittests/common/constants';
+import { CommandSource } from '../../testing/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import {

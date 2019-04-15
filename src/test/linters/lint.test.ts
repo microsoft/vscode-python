@@ -19,7 +19,7 @@ import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager } from '../../client/linters/types';
 import { rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);

@@ -14,7 +14,7 @@ import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITestManagementService } from '../../unittests/types';
+import { ITestManagementService } from '../../testing/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
 import { ProgressReporting } from './progress';
 

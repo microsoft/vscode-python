@@ -6,7 +6,7 @@ import { FormatterHelper } from '../../client/formatters/helper';
 import { FormatterId } from '../../client/formatters/types';
 import { getExtensionSettings } from '../common';
 import { initialize } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Formatting - Helper', () => {

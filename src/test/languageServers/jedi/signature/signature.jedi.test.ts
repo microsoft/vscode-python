@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { rootWorkspaceUri } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
-import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'signature');
 

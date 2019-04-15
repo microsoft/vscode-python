@@ -54,8 +54,8 @@ def _adjust_pytest_args(pytestargs):
     # Duplicate entries should be okay.
     pytestargs.insert(0, '--collect-only')
     # TODO: pull in code from:
-    #  src/client/unittests/pytest/services/discoveryService.ts
-    #  src/client/unittests/pytest/services/argsService.ts
+    #  src/client/testing/pytest/services/discoveryService.ts
+    #  src/client/testing/pytest/services/argsService.ts
     return pytestargs
 
 

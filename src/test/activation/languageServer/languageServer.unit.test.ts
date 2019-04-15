@@ -14,8 +14,8 @@ import { ILanguageClientFactory } from '../../../client/activation/types';
 import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
-import { UnitTestManagementService } from '../../../client/unittests/main';
-import { ITestManagementService } from '../../../client/unittests/types';
+import { UnitTestManagementService } from '../../../client/testing/main';
+import { ITestManagementService } from '../../../client/testing/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 

@@ -17,10 +17,10 @@
     "src/client/providers/simpleRefactorProvider.ts",
     "src/client/providers/updateSparkLibraryProvider.ts",
     "src/client/terminals/codeExecution/helper.ts",
-    "src/client/unittests/common/debugLauncher.ts",
-    "src/client/unittests/common/managers/baseTestManager.ts",
-    "src/client/unittests/configuration.ts",
-    "src/client/unittests/display/main.ts",
-    "src/client/unittests/main.ts",
+    "src/client/testing/common/debugLauncher.ts",
+    "src/client/testing/common/managers/baseTestManager.ts",
+    "src/client/testing/configuration.ts",
+    "src/client/testing/display/main.ts",
+    "src/client/testing/main.ts",
     "src/client/workspaceSymbols/generator.ts"
 ]

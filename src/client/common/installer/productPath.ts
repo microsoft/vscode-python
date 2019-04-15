@@ -11,7 +11,7 @@ import { Uri } from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
-import { ITestsHelper } from '../../unittests/common/types';
+import { ITestsHelper } from '../../testing/common/types';
 import { IConfigurationService, IInstaller, ModuleNamePurpose, Product } from '../types';
 import { IProductPathService } from './types';
 

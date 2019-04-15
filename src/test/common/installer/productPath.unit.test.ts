@@ -20,7 +20,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IFormatterHelper } from '../../../client/formatters/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
-import { ITestsHelper } from '../../../client/unittests/common/types';
+import { ITestsHelper } from '../../../client/testing/common/types';
 
 use(chaiAsPromised);
 

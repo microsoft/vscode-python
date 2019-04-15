@@ -13,7 +13,7 @@ import { DebugClientHelper } from '../../client/debugger/debugAdapter/DebugClien
 import { LaunchRequestArguments } from '../../client/debugger/types';
 import { isOs, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 use(chaiAsPromised);
 
