@@ -142,6 +142,7 @@ class DiscoveredTests(object):
                                       rootdir, parent)
                 self._parents[(rootdir, parentid)] = funcinfo
         elif parent != parentid:
+            print(parent, parentid)
             # TODO: What to do?
             raise NotImplementedError
         return parentid
@@ -169,10 +170,12 @@ class DiscoveredTests(object):
     def _ensure_suites(self, fullsuite, rootdir, fileid, suiteids):
         if not fullsuite:
             if suiteids:
+                print(suiteids)
                 # TODO: What to do?
                 raise NotImplementedError
             return None
         if len(suiteids) != fullsuite.count('.') + 1:
+            print(suiteids)
             # TODO: What to do?
             raise NotImplementedError
 
@@ -328,6 +331,7 @@ def _parse_node_id(nodeid, kind, _pathsep):
         try:
             parentid, name = nodeid.split('::')
         except ValueError:
+            print(nodeid)
             # TODO: Unexpected!  What to do?
             raise NotImplementedError
         funcid = None
@@ -337,6 +341,7 @@ def _parse_node_id(nodeid, kind, _pathsep):
         if nodeid.endswith(']'):
             funcid, sep, parameterized = nodeid.partition('[')
             if not sep:
+                print(nodeid)
                 # TODO: Unexpected!  What to do?
                 raise NotImplementedError
             parameterized = sep + parameterized
@@ -346,6 +351,7 @@ def _parse_node_id(nodeid, kind, _pathsep):
             funcid = '.' + _pathsep + funcid
         parentid, _, name = funcid.rpartition('::')
         if not parentid or not name:
+            print(parentid, name)
             # TODO: What to do?  We expect at least a filename and a function
             raise NotImplementedError
     if not parentid.startswith('.' + _pathsep):
