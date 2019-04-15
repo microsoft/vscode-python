@@ -215,7 +215,7 @@ def _parse_item(item, _normcase, _pathsep):
     kind, _ = _get_item_kind(item)
     # Figure out the func, suites, and subs.
     (nodeid, fileid, suiteids, suites, funcid, basename, parameterized
-     ) = _parse_node_id(item.nodeid, kind, _pathsep)
+     ) = _parse_node_id(item.nodeid, kind, _pathsep, _normcase)
     if kind == 'function':
         funcname = basename
         # Note: funcname does not necessarily match item.function.__name__.
@@ -326,9 +326,18 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
     return srcfile, lineno
 
 
-def _parse_node_id(nodeid, kind, _pathsep):
+def _parse_node_id(nodeid, kind, _pathsep, _normcase):
     if not nodeid.startswith('.' + _pathsep):
         nodeid = '.' + _pathsep + nodeid
+
+    fileid, _, remainder = nodeid.partition('::')
+    if not fileid or not remainder:
+        print(nodeid)
+        # TODO: Unexpected!  What to do?
+        raise NotImplementedError
+    fileid = _normcase(fileid)
+    nodeid = fileid + '::' + remainder
+
     if kind == 'doctest':
         try:
             parentid, name = nodeid.split('::')
@@ -362,7 +371,9 @@ def _parse_node_id(nodeid, kind, _pathsep):
         parentid, _, suitename = fullid.rpartition('::')
         suiteids.insert(0, fullid)
         suites.insert(0, suitename)
-    fileid = parentid
+    if parentid != fileid:
+        print(nodeid)
+        print(parentid, fileid)
 
     return nodeid, fileid, suiteids, suites, funcid, name, parameterized
 

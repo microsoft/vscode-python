@@ -726,7 +726,7 @@ class CollectorTests(unittest.TestCase):
         session.items = [
             StubPytestItem(
                 stub,
-                nodeid=relfile + '::SpamTests::test_spam',
+                nodeid='X/Y/Z/test_eggs.py::SpamTests::test_spam',
                 name='test_spam',
                 location=('x/y/z/test_eggs.py', 12, 'SpamTests.test_spam'),
                 fspath=testroot + '\\' + relfile,
@@ -747,9 +747,9 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=['.\\' + relfile + '::SpamTests'],
+                suiteids=[r'.\x\y\z\test_eggs.py::SpamTests'],
                 test=TestInfo(
-                    id='.\\' + relfile + '::SpamTests::test_spam',
+                    id=r'.\x\y\z\test_eggs.py::SpamTests::test_spam',
                     name='test_spam',
                     path=TestPath(
                         root=testroot,
@@ -759,7 +759,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source=r'.\x\y\z\test_eggs.py:{}'.format(13),
                     markers=None,
-                    parentid='.\\' + relfile + '::SpamTests',
+                    parentid=r'.\x\y\z\test_eggs.py::SpamTests',
                     ),
                 )),
             ])
