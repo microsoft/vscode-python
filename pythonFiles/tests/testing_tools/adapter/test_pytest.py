@@ -764,48 +764,6 @@ class CollectorTests(unittest.TestCase):
                 )),
             ])
 
-    def test_mysterious_parens(self):
-        stub = Stub()
-        discovered = StubDiscoveredTests(stub)
-        session = StubPytestSession(stub)
-        testroot = '/a/b/c'.replace('/', os.path.sep)
-        relfile = 'x/y/z/test_eggs.py'.replace('/', os.path.sep)
-        relfileid = os.path.join('.', relfile)
-        session.items = [
-            StubPytestItem(
-                stub,
-                nodeid=relfile + '::SpamTests::()::test_spam',
-                name='test_spam',
-                location=(relfile, 12, 'SpamTests.test_spam'),
-                fspath=os.path.join(testroot, relfile),
-                function=FakeFunc('test_spam'),
-                ),
-            ]
-        collector = TestCollector(tests=discovered)
-
-        collector.pytest_collection_finish(session)
-
-        self.maxDiff = None
-        self.assertEqual(stub.calls, [
-            ('discovered.reset', None, None),
-            ('discovered.add_test', None, dict(
-                suiteids=[relfileid + '::SpamTests'],
-                test=TestInfo(
-                    id=relfileid + '::SpamTests::()::test_spam',
-                    name='test_spam',
-                    path=TestPath(
-                        root=testroot,
-                        relfile=relfileid,
-                        func='SpamTests.test_spam',
-                        sub=[],
-                        ),
-                    source='{}:{}'.format(relfileid, 13),
-                    markers=None,
-                    parentid=relfileid + '::SpamTests',
-                    ),
-                )),
-            ])
-
     def test_imported_test(self):
         # pytest will even discover tests that were imported from
         # another module!

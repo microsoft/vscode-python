@@ -82,17 +82,6 @@ def fix_source(tests, testid, srcfile, lineno):
     test['source'] = fix_path('{}:{}'.format(srcfile, lineno))
 
 
-def remove_id_parens(tests):
-    fixed = []
-    for test in tests:
-        test = {k: v if k != 'markers' else v[:]
-                for k, v in test.items()}
-        while '::()::' in test['id']:
-            test['id'] = test['id'].replace('::()::', '::')
-        fixed.append(test)
-    return fixed
-
-
 @pytest.mark.functional
 class PytestTests(unittest.TestCase):
 
@@ -148,7 +137,6 @@ class PytestTests(unittest.TestCase):
                           testroot)
         result = json.loads(out)
         result[0]['tests'] = fix_test_order(result[0]['tests'])
-        result[0]['tests'] = remove_id_parens(result[0]['tests'])
 
         self.maxDiff = None
         self.assertEqual(result, expected)
@@ -219,7 +207,6 @@ class PytestTests(unittest.TestCase):
                           projroot)
         result = json.loads(out)
         result[0]['tests'] = fix_test_order(result[0]['tests'])
-        result[0]['tests'] = remove_id_parens(result[0]['tests'])
 
         self.maxDiff = None
         self.assertEqual(result, expected)

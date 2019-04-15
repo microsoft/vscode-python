@@ -327,6 +327,8 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
 
 
 def _parse_node_id(nodeid, kind, _pathsep):
+    if not nodeid.startswith('.' + _pathsep):
+        nodeid = '.' + _pathsep + nodeid
     if kind == 'doctest':
         try:
             parentid, name = nodeid.split('::')
@@ -347,30 +349,20 @@ def _parse_node_id(nodeid, kind, _pathsep):
             parameterized = sep + parameterized
         else:
             funcid = nodeid
-        if not funcid.startswith('.' + _pathsep):
-            funcid = '.' + _pathsep + funcid
         parentid, _, name = funcid.rpartition('::')
         if not parentid or not name:
             print(parentid, name)
             # TODO: What to do?  We expect at least a filename and a function
             raise NotImplementedError
-    if not parentid.startswith('.' + _pathsep):
-        parentid = '.' + _pathsep + parentid
 
     suites = []
     suiteids = []
-    parts = [name]
     while '::' in parentid:
         fullid = parentid
         parentid, _, suitename = fullid.rpartition('::')
-        if suitename != '()':
-            suiteids.insert(0, fullid)
-            suites.insert(0, suitename)
-        parts.insert(0, suitename)
+        suiteids.insert(0, fullid)
+        suites.insert(0, suitename)
     fileid = parentid
-
-    parts.insert(0, fileid)
-    nodeid = '::'.join(parts) + parameterized
 
     return nodeid, fileid, suiteids, suites, funcid, name, parameterized
 
