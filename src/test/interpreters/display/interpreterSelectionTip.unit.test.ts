@@ -41,6 +41,19 @@ suite('Interpreters - Interpreter Selection Tip', () => {
         verify(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).once();
         verify(storage.updateValue(true)).never();
     });
+    test('Show tip once per session', async () => {
+        when(storage.value).thenReturn(false);
+        when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve();
+
+        await Promise.all([
+            selectionTip.activate(undefined),
+            selectionTip.activate(undefined),
+            selectionTip.activate(undefined)
+        ]);
+
+        verify(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).once();
+        verify(storage.updateValue(true)).never();
+    });
     test('Show tip and track it', async () => {
         when(storage.value).thenReturn(false);
         when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve(Common.gotIt() as any);

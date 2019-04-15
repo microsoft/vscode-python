@@ -12,14 +12,16 @@ import { Common, Interpreters } from '../../common/utils/localize';
 @injectable()
 export class InterpreterSelectionTip implements IExtensionActivationService {
     private readonly storage: IPersistentState<boolean>;
+    private displayedInSession: boolean = false;
     constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly factory: IPersistentStateFactory) {
         this.storage = this.factory.createGlobalPersistentState('InterpreterSelectionTip', false);
     }
     public async activate(_resource: Resource): Promise<void> {
-        if (this.storage.value) {
+        if (this.storage.value || this.displayedInSession) {
             return;
         }
+        this.displayedInSession = true;
         await this.showTip();
     }
     private async showTip() {
