@@ -300,55 +300,49 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         }
     });
 
-    test('File launch.json is fixed correctly when code equals JustMyCodeDiagnostic ', async function () {
-        // https://github.com/Microsoft/vscode-python/issues/5262
-        // tslint:disable-next-line: no-invalid-this
-        return this.skip();
-        // const launchJson = '{"debugStdLib": true, "debugStdLib": false}';
-        // const correctedlaunchJson = '{"justMyCode": false, "justMyCode": true}';
-        // workspaceService.setup(w => w.hasWorkspaceFolders)
-        //     .returns(() => true)
-        //     .verifiable(TypeMoq.Times.once());
-        // workspaceService.setup(w => w.workspaceFolders)
-        //     .returns(() => [workspaceFolder])
-        //     .verifiable(TypeMoq.Times.once());
-        // fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(true))
-        //     .verifiable(TypeMoq.Times.once());
-        // fs.setup(w => w.readFile(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(launchJson))
-        //     .verifiable(TypeMoq.Times.atLeastOnce());
-        // fs.setup(w => w.writeFile('full\\path\\to\\workspace\\.vscode\\launch.json', correctedlaunchJson))
-        //     .returns(() => Promise.resolve())
-        //     .verifiable(TypeMoq.Times.once());
-        // await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.JustMyCodeDiagnostic);
-        // workspaceService.verifyAll();
-        // fs.verifyAll();
+    test('File launch.json is fixed correctly when code equals JustMyCodeDiagnostic ', async () => {
+        const launchJson = '{"debugStdLib": true, "debugStdLib": false}';
+        const correctedlaunchJson = '{"justMyCode": false, "justMyCode": true}';
+        workspaceService.setup(w => w.hasWorkspaceFolders)
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService.setup(w => w.workspaceFolders)
+            .returns(() => [workspaceFolder])
+            .verifiable(TypeMoq.Times.once());
+        fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+        fs.setup(w => w.readFile(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(launchJson))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        fs.setup(w => w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.JustMyCodeDiagnostic);
+        workspaceService.verifyAll();
+        fs.verifyAll();
     });
 
-    test('File launch.json is fixed correctly when code equals InvalidDebuggerTypeDiagnostic ', async function () {
-        // https://github.com/Microsoft/vscode-python/issues/5262
-        // tslint:disable-next-line: no-invalid-this
-        return this.skip();
-        // const launchJson = '{"Python Experimental: task" "pythonExperimental"}';
-        // const correctedlaunchJson = '{"Python: task" "python"}';
-        // workspaceService.setup(w => w.hasWorkspaceFolders)
-        //     .returns(() => true)
-        //     .verifiable(TypeMoq.Times.once());
-        // workspaceService.setup(w => w.workspaceFolders)
-        //     .returns(() => [workspaceFolder])
-        //     .verifiable(TypeMoq.Times.once());
-        // fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(true))
-        //     .verifiable(TypeMoq.Times.once());
-        // fs.setup(w => w.readFile(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(launchJson))
-        //     .verifiable(TypeMoq.Times.atLeastOnce());
-        // fs.setup(w => w.writeFile('full\\path\\to\\workspace\\.vscode\\launch.json', correctedlaunchJson))
-        //     .returns(() => Promise.resolve())
-        //     .verifiable(TypeMoq.Times.once());
-        // await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.InvalidDebuggerTypeDiagnostic);
-        // workspaceService.verifyAll();
-        // fs.verifyAll();
+    test('File launch.json is fixed correctly when code equals InvalidDebuggerTypeDiagnostic ', async () => {
+        const launchJson = '{"Python Experimental: task" "pythonExperimental"}';
+        const correctedlaunchJson = '{"Python: task" "python"}';
+        workspaceService.setup(w => w.hasWorkspaceFolders)
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService.setup(w => w.workspaceFolders)
+            .returns(() => [workspaceFolder])
+            .verifiable(TypeMoq.Times.once());
+        fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+        fs.setup(w => w.readFile(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(launchJson))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        fs.setup(w => w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.InvalidDebuggerTypeDiagnostic);
+        workspaceService.verifyAll();
+        fs.verifyAll();
     });
 });
