@@ -156,15 +156,15 @@ suite('Language Server - Activator', () => {
         const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
 
         when(settings.downloadLanguageServer).thenReturn(true);
-        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(undefined)).thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(false);
-        when(lsDownloader.downloadLanguageServer(languageServerFolderPath)).thenResolve();
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined)).thenResolve();
         when(fs.fileExists(targetJsonFile)).thenResolve(false);
 
         await activator.ensureLanguageServerIsAvailable(undefined);
 
-        verify(lsFolderService.getLanguageServerFolderName()).once();
-        verify(lsDownloader.downloadLanguageServer(anything())).once();
+        verify(lsFolderService.getLanguageServerFolderName(undefined)).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
         verify(fs.fileExists(targetJsonFile)).once();
     });
     test('Do not download nor check if ICU config exists after downloading', async () => {
@@ -174,13 +174,13 @@ suite('Language Server - Activator', () => {
         const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
 
         when(settings.downloadLanguageServer).thenReturn(true);
-        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(undefined)).thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(true);
 
         await activator.ensureLanguageServerIsAvailable(undefined);
 
-        verify(lsFolderService.getLanguageServerFolderName()).once();
-        verify(lsDownloader.downloadLanguageServer(anything())).never();
+        verify(lsFolderService.getLanguageServerFolderName(undefined)).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).never();
         verify(fs.fileExists(targetJsonFile)).never();
     });
     test('JSON file is created to ensure LS can start without ICU', async () => {
