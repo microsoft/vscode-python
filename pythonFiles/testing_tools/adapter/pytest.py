@@ -329,6 +329,8 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
 def _parse_node_id(nodeid, kind, _pathsep, _normcase):
     if not nodeid.startswith('.' + _pathsep):
         nodeid = '.' + _pathsep + nodeid
+    while '::()::' in nodeid:
+        nodeid = nodeid.replace('::()::', '::')
 
     fileid, _, remainder = nodeid.partition('::')
     if not fileid or not remainder:
