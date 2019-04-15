@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../../common/types';
-import { Diagnostics } from '../../../common/utils/localize';
+import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { DiagnosticCodes } from '../constants';
@@ -102,7 +102,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
                 }
             },
             {
-                prompt: Diagnostics.bannerLabelNo()
+                prompt: Common.noIWillDoItLater()
             }
         ];
 

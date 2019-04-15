@@ -19,7 +19,6 @@ export namespace Diagnostics {
     export const invalidDebuggerTypeDiagnostic = localize('diagnostics.invalidDebuggerTypeDiagnostic', 'Your launch.json file needs to be updated to change the "pythonExperimental" debug configurations to use the "python" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?');
     export const justMyCodeDiagnostic = localize('diagnostics.justMyCodeDiagnostic', 'Configuration "debugStdLib" in launch.json is no longer supported. It\'s recommended to replace it with "justMyCode", which is the exact opposite of using "debugStdLib". Would you like to automatically update your launch.json file to do that?');
     export const yesUpdateLaunch = localize('diagnostics.yesUpdateLaunch', 'Yes, update launch.json');
-    export const bannerLabelNo = localize('diagnostics.bannerLabelNo', 'No, I will do it later');
     export const invalidTestSettings = localize('diagnostics.invalidTestSettings', 'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?');
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
 }
