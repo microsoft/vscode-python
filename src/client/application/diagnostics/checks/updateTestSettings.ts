@@ -10,7 +10,7 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../common/appl
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IPersistentState, IPersistentStateFactory, Resource } from '../../../common/types';
 import { swallowExceptions } from '../../../common/utils/decorators';
-import { Diagnostics } from '../../../common/utils/localize';
+import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
@@ -99,7 +99,7 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
         const diagnostic = diagnostics[0];
         const options = [
             {
-                prompt: 'Yes, update settings',
+                prompt: Diagnostics.updateSettings(),
                 command: {
                     diagnostic,
                     invoke: async (): Promise<void> => {
@@ -108,9 +108,9 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
                     }
                 }
             },
-            { prompt: 'No, I will do it later' },
+            { prompt: Common.noIWillDoItLater() },
             {
-                prompt: 'Do not show again',
+                prompt: Common.doNotShowAgain(),
                 command: this.commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
             }
         ];

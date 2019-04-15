@@ -19,6 +19,7 @@ import { PersistentState, PersistentStateFactory } from '../../../../client/comm
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentState } from '../../../../client/common/types';
+import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { ServiceContainer } from '../../../../client/ioc/container';
 
 // tslint:disable:max-func-body-length
@@ -60,9 +61,9 @@ suite('Application Diagnostics - Check Test Settings', () => {
         const prompts = options[1]!.commandPrompts;
 
         assert.equal(prompts.length, 3);
-        assert.equal(prompts[0].prompt, 'Yes, update settings');
-        assert.equal(prompts[1].prompt, 'No, I will do it later');
-        assert.equal(prompts[2].prompt, 'Do not show again');
+        assert.equal(prompts[0].prompt, Diagnostics.updateSettings());
+        assert.equal(prompts[1].prompt, Common.noIWillDoItLater());
+        assert.equal(prompts[2].prompt, Common.doNotShowAgain());
     });
     test('When there are no workspaces open, then return just the user settings file', async () => {
         when(workspace.hasWorkspaceFolders).thenReturn(false);

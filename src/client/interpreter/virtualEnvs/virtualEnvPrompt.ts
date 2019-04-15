@@ -8,7 +8,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
-import { InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
+import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPythonPathUpdaterServiceManager } from '../configuration/types';
@@ -50,7 +50,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Interpreters.doNotShowAgain()];
+        const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.doNotShowAgain()];
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(Interpreters.environmentPromptMessage(), ...prompts);
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });

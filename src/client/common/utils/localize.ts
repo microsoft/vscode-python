@@ -21,12 +21,15 @@ export namespace Diagnostics {
     export const yesUpdateLaunch = localize('diagnostics.yesUpdateLaunch', 'Yes, update launch.json');
     export const bannerLabelNo = localize('diagnostics.bannerLabelNo', 'No, I will do it later');
     export const invalidTestSettings = localize('diagnostics.invalidTestSettings', 'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?');
+    export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
 }
 
 export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
     export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
+    export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
+    export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
 }
 
 export namespace LanguageService {
@@ -47,7 +50,6 @@ export namespace LanguageService {
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
-    export const doNotShowAgain = localize('Interpreters.doNotShowAgain', 'Do not show again');
     export const environmentPromptMessage = localize('Interpreters.environmentPromptMessage', 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?');
 }
 
