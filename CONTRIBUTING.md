@@ -19,7 +19,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 10.x
+1. [Node.js](https://nodejs.org/) (>= 8.9.1, < 9.0.0)
 1. [Python](https://www.python.org/) 2.7 or later (required only for testing the extension and running unit tests)
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
