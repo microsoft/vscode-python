@@ -40,7 +40,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         const serviceContainer = mock(ServiceContainer);
         const stateFactory = mock(PersistentStateFactory);
 
-        when(stateFactory.createGlobalPersistentState('python.unitTestSetting', anything())).thenReturn(instance(storage));
+        when(stateFactory.createGlobalPersistentState('python.unitTest.Settings', anything())).thenReturn(instance(storage));
         when(serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId))
             .thenReturn(instance(messageService));
 

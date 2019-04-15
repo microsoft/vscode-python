@@ -15,6 +15,7 @@ import { ITestTreeViewProvider, TestDataItem } from '../types';
 export class TreeViewService implements IExtensionActivationService, IDisposable {
     private _treeView!: TreeView<TestDataItem>;
     private readonly disposables: IDisposable[] = [];
+    private activated: boolean = false;
     public get treeView(): TreeView<TestDataItem> {
         return this._treeView;
     }
@@ -28,6 +29,10 @@ export class TreeViewService implements IExtensionActivationService, IDisposable
         this.disposables.forEach(d => d.dispose());
     }
     public async activate(_resource: Resource): Promise<void> {
+        if (this.activated) {
+            return;
+        }
+        this.activated = true;
         this._treeView = this.appShell.createTreeView('python_tests', { showCollapseAll: true, treeDataProvider: this.treeViewProvider });
         this.disposables.push(this._treeView);
         this.disposables.push(this.commandManager.registerCommand(Commands.Test_Reveal_Test_Item, this.onRevealTestItem, this));

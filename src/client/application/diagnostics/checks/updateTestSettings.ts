@@ -37,6 +37,7 @@ export const InvalidTestSettingsDiagnosticscServiceId = 'InvalidTestSettingsDiag
 export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     protected readonly stateStore: IPersistentState<string[]>;
+    private readonly handledWorkspaces: Set<string>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
@@ -49,15 +50,45 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
             IDiagnosticHandlerService,
             DiagnosticCommandPromptHandlerServiceId
         );
-        this.stateStore = stateFactory.createGlobalPersistentState<string[]>('python.unitTestSetting', []);
+        this.stateStore = stateFactory.createGlobalPersistentState<string[]>('python.unitTest.Settings', []);
+        this.handledWorkspaces = new Set<string>();
     }
-    public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
+    public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
+        if (!this.shouldHandleResource(resource)) {
+            return [];
+        }
         const filesToBeFixed = await this.getFilesToBeFixed();
         if (filesToBeFixed.length === 0) {
             return [];
         } else {
             return [new InvalidTestSettingsDiagnostic()];
         }
+    }
+    /**
+     * Checks whether to handle a particular workspace resource.
+     * If required, we'll track that resource to ensure we don't handle it again.
+     * This is necessary for multi-root workspaces.
+     *
+     * @param {Resource} resource
+     * @returns {boolean}
+     * @memberof InvalidTestSettingDiagnosticsService
+     */
+    public shouldHandleResource(resource: Resource): boolean {
+        const folder = this.workspace.getWorkspaceFolder(resource);
+
+        if (!folder || !resource || !this.workspace.hasWorkspaceFolders) {
+            if (this.handledWorkspaces.has('')) {
+                return false;
+            }
+            this.handledWorkspaces.add('');
+            return true;
+        }
+
+        if (this.handledWorkspaces.has(folder.uri.fsPath)) {
+            return false;
+        }
+        this.handledWorkspaces.add(folder.uri.fsPath);
+        return true;
     }
     public async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         // This class can only handle one type of diagnostic, hence just use first item in list.

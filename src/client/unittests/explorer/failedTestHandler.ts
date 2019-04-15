@@ -19,6 +19,7 @@ import { TestDataItem } from '../types';
 export class FailedTestHandler implements IExtensionActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     private readonly failedItems: TestDataItem[] = [];
+    private activated: boolean = false;
     constructor(@inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService) {
@@ -28,6 +29,10 @@ export class FailedTestHandler implements IExtensionActivationService, IDisposab
         this.disposables.forEach(d => d.dispose());
     }
     public async activate(_resource: Resource): Promise<void> {
+        if (this.activated) {
+            return;
+        }
+        this.activated = true;
         this.storage.onDidChange(this.onDidChangeTestData, this, this.disposables);
     }
     public onDidChangeTestData(args: { uri: Uri; data?: TestDataItem }): void {

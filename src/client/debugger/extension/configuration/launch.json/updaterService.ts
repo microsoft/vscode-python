@@ -94,12 +94,17 @@ export class LaunchJsonUpdaterServiceHelper {
 
 @injectable()
 export class LaunchJsonUpdaterService implements IExtensionActivationService {
+    private activated: boolean = false;
     constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService) { }
     public async activate(_resource: Resource): Promise<void> {
+        if (this.activated) {
+            return;
+        }
+        this.activated = true;
         const handler = new LaunchJsonUpdaterServiceHelper(this.commandManager, this.workspace, this.documentManager, this.configurationProvider);
         this.disposableRegistry.push(this.commandManager.registerCommand('python.SelectAndInsertDebugConfiguration', handler.selectAndInsertDebugConfig, handler));
     }
