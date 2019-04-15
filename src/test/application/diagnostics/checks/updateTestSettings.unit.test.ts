@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { InvalidTestSettingDiagnosticsService, InvalidTestSettingsDiagnostic } from '../../../../client/application/diagnostics/checks/updateTestSettings';
 import { DiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
-import { DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
+import { DiagnosticCommandPromptHandlerService, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
 import { IDiagnosticHandlerService } from '../../../../client/application/diagnostics/types';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
@@ -42,11 +42,10 @@ suite('Application Diagnostics - Check Test Settings', () => {
         const stateFactory = mock(PersistentStateFactory);
 
         when(stateFactory.createGlobalPersistentState('python.unitTest.Settings', anything())).thenReturn(instance(storage));
-        when(serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId))
-            .thenReturn(instance(messageService));
 
         diagnosticService = new InvalidTestSettingDiagnosticsService(instance(serviceContainer),
             instance(fs), instance(appEnv), instance(stateFactory),
+            instance(messageService),
             instance(commandFactory), instance(workspace), []);
     });
 

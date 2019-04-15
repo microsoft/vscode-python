@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { DiagnosticSeverity } from 'vscode';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../common/application/types';
@@ -35,21 +35,17 @@ export const InvalidTestSettingsDiagnosticscServiceId = 'InvalidTestSettingsDiag
 
 @injectable()
 export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService {
-    protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     protected readonly stateStore: IPersistentState<string[]>;
     private readonly handledWorkspaces: Set<string>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
+        @inject(IDiagnosticHandlerService) @named(DiagnosticCommandPromptHandlerServiceId) private readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
         @inject(IDiagnosticsCommandFactory) private readonly commandFactory: IDiagnosticsCommandFactory,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
         super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
-            IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
-        );
         this.stateStore = stateFactory.createGlobalPersistentState<string[]>('python.unitTest.Settings', []);
         this.handledWorkspaces = new Set<string>();
     }
@@ -63,32 +59,6 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
         } else {
             return [new InvalidTestSettingsDiagnostic()];
         }
-    }
-    /**
-     * Checks whether to handle a particular workspace resource.
-     * If required, we'll track that resource to ensure we don't handle it again.
-     * This is necessary for multi-root workspaces.
-     *
-     * @param {Resource} resource
-     * @returns {boolean}
-     * @memberof InvalidTestSettingDiagnosticsService
-     */
-    public shouldHandleResource(resource: Resource): boolean {
-        const folder = this.workspace.getWorkspaceFolder(resource);
-
-        if (!folder || !resource || !this.workspace.hasWorkspaceFolders) {
-            if (this.handledWorkspaces.has('')) {
-                return false;
-            }
-            this.handledWorkspaces.add('');
-            return true;
-        }
-
-        if (this.handledWorkspaces.has(folder.uri.fsPath)) {
-            return false;
-        }
-        this.handledWorkspaces.add(folder.uri.fsPath);
-        return true;
     }
     public async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         // This class can only handle one type of diagnostic, hence just use first item in list.
@@ -133,18 +103,6 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
         }));
         return result.filter(item => item.needsFixing).map(item => item.file);
     }
-    @swallowExceptions('Failed to check if file needs to be fixed')
-    public async doesFileNeedToBeFixed(filePath: string) {
-        // If we have fixed the path to this file once before,
-        // then no need to check agian. If user adds subsequently, nothing we can do,
-        // as user will see warnings in editor about invalid entries.
-        // This will speed up loading of extension (reduce unwanted disc IO).
-        if (this.stateStore.value.indexOf(filePath) >= 0) {
-            return false;
-        }
-        const contents = await this.fs.readFile(filePath);
-        return contents.indexOf('python.unitTest.') > 0;
-    }
     @swallowExceptions('Failed to update settings.json')
     public async fixSettingInFile(filePath: string) {
         const fileContents = await this.fs.readFile(filePath);
@@ -155,5 +113,43 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
         // Keep track of updated file.
         this.stateStore.value.push(filePath);
         await this.stateStore.updateValue(this.stateStore.value.slice());
+    }
+    @swallowExceptions('Failed to check if file needs to be fixed')
+    private async doesFileNeedToBeFixed(filePath: string) {
+        // If we have fixed the path to this file once before,
+        // then no need to check agian. If user adds subsequently, nothing we can do,
+        // as user will see warnings in editor about invalid entries.
+        // This will speed up loading of extension (reduce unwanted disc IO).
+        if (this.stateStore.value.indexOf(filePath) >= 0) {
+            return false;
+        }
+        const contents = await this.fs.readFile(filePath);
+        return contents.indexOf('python.unitTest.') > 0;
+    }
+    /**
+     * Checks whether to handle a particular workspace resource.
+     * If required, we'll track that resource to ensure we don't handle it again.
+     * This is necessary for multi-root workspaces.
+     *
+     * @param {Resource} resource
+     * @returns {boolean}
+     * @memberof InvalidTestSettingDiagnosticsService
+     */
+    private shouldHandleResource(resource: Resource): boolean {
+        const folder = this.workspace.getWorkspaceFolder(resource);
+
+        if (!folder || !resource || !this.workspace.hasWorkspaceFolders) {
+            if (this.handledWorkspaces.has('')) {
+                return false;
+            }
+            this.handledWorkspaces.add('');
+            return true;
+        }
+
+        if (this.handledWorkspaces.has(folder.uri.fsPath)) {
+            return false;
+        }
+        this.handledWorkspaces.add(folder.uri.fsPath);
+        return true;
     }
 }
