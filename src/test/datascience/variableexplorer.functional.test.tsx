@@ -4,38 +4,16 @@
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { mount, ReactWrapper } from 'enzyme';
-import * as fs from 'fs-extra';
 import { parse } from 'node-html-parser';
-import * as path from 'path';
 import * as React from 'react';
-import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor } from 'vscode';
-import { createDeferred } from '../../client/common/utils/async';
+import { Disposable } from 'vscode';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider, IJupyterExecution, IJupyterVariable } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { VariableExplorer } from '../../datascience-ui/history-react/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import {
-    addCode,
-    addContinuousMockData,
-    addMockData,
-    CellInputState,
-    CellPosition,
-    defaultDataScienceSettings,
-    enterInput,
-    escapePath,
-    findButton,
-    getCellResults,
-    getLastOutputCell,
-    initialDataScienceSettings,
-    srcDirectory,
-    toggleCellExpansion,
-    updateDataScienceSettings,
-    verifyHtmlOnCell,
-    verifyLastCellInputState
-} from './historyTestHelpers';
+import { addCode, addMockData } from './historyTestHelpers';
 import { blurWindow, waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -44,7 +22,6 @@ suite('History variable explorer tests', () => {
     let ioc: DataScienceIocContainer;
     let historyProvider: IHistoryProvider;
     let jupyterExecution: IJupyterExecution;
-    let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -236,6 +213,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
     });
 
+    // Test our display of basic types. We render 8 rows by default so only 8 values per test
     runMountedTest('Variable explorer - Types A', async (wrapper) => {
         const basicCode: string = `import numpy as np
 import pandas as pd
@@ -253,17 +231,10 @@ for value in myList:
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
         await addCode(getOrCreateHistory, wrapper, basicCode, 4);
 
-        // After code is added, open up our variable explorer which will cause a data fetch
-        //openVariableExplorer(wrapper);
-        //openVariableExplorer(wrapper);
-
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
-        // IANU calculate this based on var count automatically
         await waitForUpdate(wrapper, VariableExplorer, 6);
 
-        //const requestingValues = getValuesPromise();
-        //await requestingValues;
         const targetVariables: IJupyterVariable[] = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myDict', value: '{0: 0.0, 1: 0.5, 4: 2.0, 9: 4.5, 16: 8.0, 25: 12.5, 36: 18.0, 49: 24.5, 64: 32.0, 81: 40.5, 100: 50.0, 121: 60.5, 144: 72.0, 169: 84.5, 196: 98.0, 225: 112.5, 256: 128.0, 289: 144.5, 324: 162.0, 361: ', supportsDataExplorer: true, type: 'dict', size: 54, shape: '', count: 0, truncated: false},
@@ -272,13 +243,7 @@ for value in myList:
             {name: 'value', value: '9999800001', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
         ];
         verifyVariables(wrapper, targetVariables);
-
-        //const varExplorer = findVariableExplorer(wrapper);
-
-        //verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
-
-  //});
 
     // *********** Note all of the above code is shared with history.functional.test.tsx should be combine? Move into same file or add helpers? ************
     runMountedTest('Variable explorer - Basic B', async (wrapper) => {
@@ -301,17 +266,10 @@ myTuple = 1,2,3,4,5,6,7,8,9
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
         await addCode(getOrCreateHistory, wrapper, basicCode, 4);
 
-        // After code is added, open up our variable explorer which will cause a data fetch
-        //openVariableExplorer(wrapper);
-        //openVariableExplorer(wrapper);
-
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
-        // IANU calculate this based on var count automatically
         await waitForUpdate(wrapper, VariableExplorer, 9);
 
-        //const requestingValues = getValuesPromise();
-        //await requestingValues;
         const targetVariables: IJupyterVariable[] = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myComplex', value: '(1+1j)', supportsDataExplorer: false, type: 'complex', size: 54, shape: '', count: 0, truncated: false},
@@ -333,27 +291,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
  9.99980000e+04 1.00000000e+05]`, supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
-
-        //const varExplorer = findVariableExplorer(wrapper);
-
-        //verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     });
-
-    // IANHU Shared with dataviewer
-    function waitForMessage(message: string) : Promise<void> {
-        // Wait for the mounted web panel to send a message back to the data explorer
-        const promise = createDeferred<void>();
-        messageWrapper = (m: string, _p: any) => {
-            if (m === message) {
-                promise.resolve();
-            }
-        };
-        return promise.promise;
-    }
-    // IANHU Share with dataviewer
-    function getValuesPromise() : Promise<void> {
-        return waitForMessage(HistoryMessages.GetVariableValueRequest);
-    }
 });
 
 // Open up our variable explorer which also triggers a data fetch
@@ -363,30 +301,22 @@ function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     assert(varExp);
 
     if (varExp) {
-        //varExp.toggleInputBlock();
         varExp.setState({open: true});
     }
-
-    //const varExp: VariableExplorer = wrapper.find('VariableExplorer').instance() as VariableExplorer;
-
-    //assert(varExp);
-
-    //if (varExp) {
-        //varExp.toggleInputBlock();
-    //}
 }
 
+// Verify a set of rows versus a set of expected variables
 function verifyVariables(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariables: IJupyterVariable[]) {
     const foundRows = wrapper.find('div.react-grid-Row');
 
     expect(foundRows.length).to.be.equal(targetVariables.length, 'Different number of variable explorer rows and target variables');
-    //assert(foundRows.length === targetVariables.length);
 
     foundRows.forEach((row, index) => {
         verifyRow(row, targetVariables[index]);
     });
 }
 
+// Verify a single row versus a single expected variable
 function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariable: IJupyterVariable) {
     const rowCells = rowWrapper.find('div.react-grid-Cell');
 
@@ -394,10 +324,10 @@ function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
 
     verifyCell(rowCells.at(0), targetVariable.name, targetVariable.name);
     verifyCell(rowCells.at(1), targetVariable.type, targetVariable.name);
-    //verifyCell(rowCells.at(2), targetVariable.size.toString());
     verifyCell(rowCells.at(3), targetVariable.value ? targetVariable.value : '', targetVariable.name);
 }
 
+// Verify a single cell value against a specific target value
 function verifyCell(cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, value: string, targetName: string) {
     const cellHTML = parse(cellWrapper.html()) as any;
     // tslint:disable-next-line:no-string-literal
