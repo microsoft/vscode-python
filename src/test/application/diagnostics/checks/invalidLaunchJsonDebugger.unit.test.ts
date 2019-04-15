@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
-import { InvalidLaunchJsonDebuggerDiagnostic, InvalidLaunchJsonDebuggerService } from '../../../../client/application/diagnostics/checks/invalidDebuggerType';
+import { InvalidLaunchJsonDebuggerDiagnostic, InvalidLaunchJsonDebuggerService } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';

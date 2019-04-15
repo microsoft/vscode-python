@@ -7,7 +7,7 @@ import { IServiceManager } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
-import { InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId } from './checks/invalidDebuggerType';
+import { InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId } from './checks/invalidLaunchJsonDebugger';
 import { InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId } from './checks/invalidPythonPathInDebugger';
 import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import { InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId } from './checks/macPythonInterpreter';
