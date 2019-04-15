@@ -6,7 +6,7 @@
 import { injectable, unmanaged } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { Resource } from '../../common/types';
+import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -17,25 +17,35 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService, IDiagnosticsSer
 export abstract class BaseDiagnostic implements IDiagnostic {
     constructor(public readonly code: DiagnosticCodes, public readonly message: string,
         public readonly severity: DiagnosticSeverity, public readonly scope: DiagnosticScope,
-        public readonly resource: Resource) { }
+        public readonly resource: Resource,
+        public readonly invokeHandler: 'always' | 'default' = 'default') { }
 }
 
 @injectable()
-export abstract class BaseDiagnosticsService implements IDiagnosticsService {
+export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDisposable {
     protected static handledDiagnosticCodeKeys: string[] = [];
     protected readonly filterService: IDiagnosticFilterService;
     constructor(
         @unmanaged() private readonly supportedDiagnosticCodes: string[],
-        @unmanaged() protected serviceContainer: IServiceContainer
+        @unmanaged() protected serviceContainer: IServiceContainer,
+        @unmanaged() disposableRegistry: IDisposableRegistry,
+        @unmanaged() public readonly runInBackground: Boolean = false
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
+        disposableRegistry.push(this);
     }
     public abstract diagnose(resource: Resource): Promise<IDiagnostic[]>;
+    public dispose() {
+        // Nothing to do, but can be overidden
+    }
     public async handle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
         }
         const diagnosticsToHandle = diagnostics.filter(item => {
+            if (item.invokeHandler && item.invokeHandler === 'always') {
+                return true;
+            }
             const key = this.getDiagnosticsKey(item);
             if (BaseDiagnosticsService.handledDiagnosticCodeKeys.indexOf(key) !== -1) {
                 return false;

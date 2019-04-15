@@ -22,7 +22,11 @@ import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
 import {
-    IAvailableLinterActivator, ILinter, ILinterInfo, ILinterManager, ILintMessage
+    IAvailableLinterActivator,
+    ILinter,
+    ILinterInfo,
+    ILinterManager,
+    ILintMessage
 } from './types';
 
 class DisabledLinter implements ILinter {
@@ -30,7 +34,7 @@ class DisabledLinter implements ILinter {
     public get info() {
         return new LinterInfo(Product.pylint, 'pylint', this.configService);
     }
-    public async lint(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
+    public async lint(_document: TextDocument, _cancellation: CancellationToken): Promise<ILintMessage[]> {
         return [];
     }
 }
@@ -44,6 +48,7 @@ export class LinterManager implements ILinterManager {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
             new LinterInfo(Product.bandit, 'bandit', this.configService),
             new LinterInfo(Product.flake8, 'flake8', this.configService),
@@ -61,11 +66,11 @@ export class LinterManager implements ILinterManager {
     }
 
     public getLinterInfo(product: Product): ILinterInfo {
-        const x = this.linters.findIndex((value, index, obj) => value.product === product);
+        const x = this.linters.findIndex((value, _index, _obj) => value.product === product);
         if (x >= 0) {
             return this.linters[x];
         }
-        throw new Error('Invalid linter');
+        throw new Error(`Invalid linter '${Product[product]}'`);
     }
 
     public async isLintingEnabled(silent: boolean, resource?: Uri): Promise<boolean> {

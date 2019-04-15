@@ -229,7 +229,7 @@ suite('Interpreters service', () => {
             const pythonPath = '1234';
             const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
             const fileHash = 'File_Hash';
-            const hash = `${fileHash}-${md5(JSON.stringify(interpreterInfo))}`;
+            const hash = `${fileHash}-${md5(JSON.stringify({ ...interpreterInfo, displayName: '' }))}`;
             fileSystem
                 .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
@@ -368,14 +368,6 @@ suite('Interpreters service', () => {
     });
 
     suite('Interprter Cache', () => {
-        class InterpreterServiceTest extends InterpreterService {
-            public async getInterpreterCache(pythonPath: string): Promise<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>> {
-                return super.getInterpreterCache(pythonPath);
-            }
-            public async updateCachedInterpreterInformation(info: PythonInterpreter): Promise<void> {
-                return super.updateCachedInterpreterInformation(info);
-            }
-        }
         setup(() => {
             setupSuite();
             fileSystem.reset();
@@ -412,7 +404,7 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterServiceTest(serviceContainer);
+            const service = new InterpreterService(serviceContainer);
 
             const store = await service.getInterpreterCache(pythonPath);
 
@@ -452,7 +444,7 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterServiceTest(serviceContainer);
+            const service = new InterpreterService(serviceContainer);
 
             const store = await service.getInterpreterCache(pythonPath);
 

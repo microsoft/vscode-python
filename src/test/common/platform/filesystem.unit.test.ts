@@ -97,7 +97,7 @@ suite('FileSystem', () => {
         await fileSystem.createTemporaryFile('.tmp').then((tf: TemporaryFile) => {
             expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
             const writeStream = fileSystem.createWriteStream(tf.filePath);
-            writeStream.write('hello', 'utf8', (err) => {
+            writeStream.write('hello', 'utf8', (err: Error) => {
                 expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
             });
         }, (failReason) => {
@@ -107,7 +107,7 @@ suite('FileSystem', () => {
     test('Ensure chmod works against a temporary file', async () => {
         await fileSystem.createTemporaryFile('.tmp').then(async (fl: TemporaryFile) => {
             await fileSystem.chmod(fl.filePath, '7777').then(
-                (success: void) => {
+                (_success: void) => {
                     // cannot check for success other than we got here, chmod in Windows won't have any effect on the file itself.
                 },
                 (failReason) => {

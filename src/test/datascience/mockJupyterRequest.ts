@@ -32,13 +32,13 @@ class SimpleMessageProducer implements IMessageProducer {
     }
 
     public produceNextMessage() : Promise<IMessageResult> {
-        return new Promise<IMessageResult>((resolve, reject) => {
+        return new Promise<IMessageResult>((resolve, _reject) => {
             const message = this.generateMessage(this.type, this.result, this.channel);
             resolve({message: message, haveMore: false});
         });
     }
 
-    protected generateMessage(msgType: string, result: any, channel: string = 'iopub') : KernelMessage.IIOPubMessage {
+    protected generateMessage(msgType: string, result: any, _channel: string = 'iopub') : KernelMessage.IIOPubMessage {
         return {
             channel: 'iopub',
             header: {
@@ -73,7 +73,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
         // Special case the 'generator' cell that returns a function
         // to generate output.
         if (this.output.output_type === 'generator') {
-            const resultEntry = <any>this.output['resultGenerator'];
+            const resultEntry = <any>this.output.resultGenerator;
             const resultGenerator = resultEntry as (t: CancellationToken) => Promise<{result: nbformat.IStream; haveMore: boolean}>;
             if (resultGenerator) {
                 const streamResult = await resultGenerator(this.cancelToken);
@@ -139,13 +139,13 @@ export class MockJupyterRequest implements Kernel.IFuture {
     public get done() : Promise<KernelMessage.IShellMessage> {
         return this.deferred.promise;
     }
-    public registerMessageHook(hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
+    public registerMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
-    public removeMessageHook(hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
+    public removeMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
-    public sendInputReply(content: KernelMessage.IInputReply): void {
+    public sendInputReply(_content: KernelMessage.IInputReply): void {
         noop();
     }
     public dispose(): void {
@@ -191,10 +191,12 @@ export class MockJupyterRequest implements Kernel.IFuture {
                     }
 
                     // Move onto the next producer if allowed
-                    if (r.haveMore) {
-                        this.sendMessages(producers, delay);
-                    } else {
-                        this.sendMessages(producers.slice(1), delay);
+                    if (!this.cancelToken.isCancellationRequested) {
+                        if (r.haveMore) {
+                            this.sendMessages(producers, delay);
+                        } else {
+                            this.sendMessages(producers.slice(1), delay);
+                        }
                     }
                 }).ignoreErrors();
             }, delay);

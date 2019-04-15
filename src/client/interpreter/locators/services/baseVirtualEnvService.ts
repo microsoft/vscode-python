@@ -3,6 +3,7 @@
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider, PythonInterpreter } from '../../contracts';
@@ -44,7 +45,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource))))
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!))
             .catch((err) => {
-                console.error('Python Extension (lookForInterpretersInVenvs):', err);
+                traceError('Python Extension (lookForInterpretersInVenvs):', err);
                 // Ignore exceptions.
                 return [] as PythonInterpreter[];
             });

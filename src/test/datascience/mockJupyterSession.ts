@@ -5,6 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
 import { ICell, IJupyterSession } from '../../client/datascience/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -18,6 +19,8 @@ export class MockJupyterSession implements IJupyterSession {
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
+    private executes: string[] = [];
+    private forceRestartTimeout : boolean = false;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -28,23 +31,35 @@ export class MockJupyterSession implements IJupyterSession {
         return this.restartedEvent.event;
     }
 
-    public async restart(): Promise<void> {
+    public async restart(_timeout: number): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach(r => r.cancel());
+
+        if (this.forceRestartTimeout) {
+            throw new JupyterKernelPromiseFailedError('Forcing restart timeout');
+        }
+
         return sleep(this.timedelay);
     }
-    public interrupt(): Promise<void> {
+    public interrupt(_timeout: number): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach(r => r.cancel());
         return sleep(this.timedelay);
     }
-    public waitForIdle(): Promise<void> {
+    public waitForIdle(_timeout: number): Promise<void> {
         return sleep(this.timedelay);
     }
-    public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture {
+
+    public prolongRestarts() {
+        this.forceRestartTimeout = true;
+    }
+    public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
         // Content should have the code
         const cell = this.findCell(content.code);
+        if (cell) {
+            this.executes.push(content.code);
+        }
 
         // Create a new dummy request
         this.executionCount += 1;
@@ -60,8 +75,12 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
-    public async dispose(): Promise<void> {
-        await sleep(10);
+    public dispose(): Promise<void> {
+        return sleep(10);
+    }
+
+    public getExecutes() : string [] {
+        return this.executes;
     }
 
     private findCell = (code : string) : ICell => {
@@ -72,7 +91,7 @@ export class MockJupyterSession implements IJupyterSession {
             return this.dict[withoutLines] as ICell;
         }
         // tslint:disable-next-line:no-console
-        console.log(`Cell ${code.splitLines()[0]} not found in mock`);
-        throw new Error(`Cell ${code.splitLines()[0]} not found in mock`);
+        console.log(`Cell ${code.splitLines()[1]} not found in mock`);
+        throw new Error(`Cell ${code.splitLines()[1]} not found in mock`);
     }
 }

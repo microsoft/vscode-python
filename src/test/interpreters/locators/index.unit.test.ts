@@ -90,7 +90,7 @@ suite('Interpreters - Locators Index', () => {
 
                 helper
                     .setup(h => h.mergeInterpreters(TypeMoq.It.isAny()))
-                    .returns(() => locatorsWithInterpreters.map(item => item.interpreters[0]))
+                    .returns(() => Promise.resolve(locatorsWithInterpreters.map(item => item.interpreters[0])))
                     .verifiable(TypeMoq.Times.once());
 
                 await locator.getInterpreters(resource);
@@ -151,7 +151,7 @@ suite('Interpreters - Locators Index', () => {
                 const expectedInterpreters = locatorsWithInterpreters.map(item => item.interpreters[0]);
                 helper
                     .setup(h => h.mergeInterpreters(TypeMoq.It.isAny()))
-                    .returns(() => expectedInterpreters)
+                    .returns(() => Promise.resolve(expectedInterpreters))
                     .verifiable(TypeMoq.Times.once());
 
                 const interpreters = await locator.getInterpreters(resource);

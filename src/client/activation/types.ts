@@ -10,19 +10,33 @@ import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, LanguageServerDownloadChannels, Resource } from '../common/types';
 
-export const IExtensionActivationService = Symbol('IExtensionActivationService');
-export interface IExtensionActivationService {
+export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
+export interface IExtensionActivationManager extends IDisposable {
     activate(): Promise<void>;
+    activateWorkspace(resource: Resource): Promise<void>;
 }
 
-export enum ExtensionActivators {
+export const IExtensionActivationService = Symbol('IExtensionActivationService');
+/**
+ * Classes implementing this interface will have their `activate` methods
+ * invoked during the actiavtion of the extension.
+ * This is a great hook for extension activation code, i.e. you don't need to modify
+ * the `extension.ts` file to invoke some code when extension gets activated.
+ * @export
+ * @interface IExtensionActivationService
+ */
+export interface IExtensionActivationService {
+    activate(resource: Resource): Promise<void>;
+}
+
+export enum LanguageServerActivator {
     Jedi = 'Jedi',
     DotNet = 'DotNet'
 }
 
-export const IExtensionActivator = Symbol('IExtensionActivator');
-export interface IExtensionActivator extends IDisposable {
-    activate(): Promise<void>;
+export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
+export interface ILanguageServerActivator extends IDisposable {
+    activate(resource: Resource): Promise<void>;
 }
 
 export const IHttpClient = Symbol('IHttpClient');
@@ -35,22 +49,21 @@ export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 
 export interface ILanguageServerFolderService {
-    getLanguageServerFolderName(): Promise<string>;
-    getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
+    getLanguageServerFolderName(resource: Resource): Promise<string>;
+    getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-    getDownloadInfo(): Promise<NugetPackage>;
-    downloadLanguageServer(destinationFolder: string): Promise<void>;
+    downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void>;
 }
 
 export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
 export interface ILanguageServerPackageService {
     getNugetPackageName(): string;
-    getLatestNugetPackageVersion(): Promise<NugetPackage>;
+    getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage>;
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 
@@ -70,7 +83,7 @@ export enum LanguageClientFactory {
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
-    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions): Promise<LanguageClient>;
+    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient>;
 }
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
@@ -81,6 +94,12 @@ export interface ILanguageServerAnalysisOptions extends IDisposable {
 export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
     start(resource: Resource): Promise<void>;
+}
+export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
+export interface ILanguageServerExtension extends IDisposable {
+    readonly invoked: Event<void>;
+    loadExtensionArgs?: {};
+    register(): void;
 }
 export const ILanguageServer = Symbol('ILanguageServer');
 export interface ILanguageServer extends IDisposable {
@@ -93,18 +112,6 @@ export interface ILanguageServer extends IDisposable {
      * @memberof ILanguageServer
      */
     loadExtension(args?: {}): void;
-}
-export type InterpreterData = {
-    readonly dataVersion: number;
-    readonly path: string;
-    readonly version: string;
-    readonly searchPaths: string;
-    readonly hash: string;
-};
-
-export const IInterpreterDataService = Symbol('InterpreterDataService');
-export interface IInterpreterDataService {
-    getInterpreterData(resource: Resource): Promise<InterpreterData | undefined>;
 }
 
 export enum PlatformName {

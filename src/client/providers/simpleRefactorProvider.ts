@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Commands } from '../common/constants';
 import { getTextEditsFromPatch } from '../common/editor';
 import { IConfigurationService, IInstaller, Product } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -15,7 +16,7 @@ let installer: IInstaller;
 
 export function activateSimplePythonRefactorProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer) {
     installer = serviceContainer.get<IInstaller>(IInstaller);
-    let disposable = vscode.commands.registerCommand('python.refactorExtractVariable', () => {
+    let disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Variable, () => {
         const stopWatch = new StopWatch();
         const promise = extractVariable(context.extensionPath,
             vscode.window.activeTextEditor!,
@@ -26,7 +27,7 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
     });
     context.subscriptions.push(disposable);
 
-    disposable = vscode.commands.registerCommand('python.refactorExtractMethod', () => {
+    disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Method, () => {
         const stopWatch = new StopWatch();
         const promise = extractMethod(context.extensionPath,
             vscode.window.activeTextEditor!,
@@ -57,7 +58,7 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
             return response.results[0].diff;
         });
 
-        return extractName(extensionDir, textEditor, range, newName, rename, outputChannel);
+        return extractName(textEditor, newName, rename, outputChannel);
     });
 }
 
@@ -80,7 +81,7 @@ export function extractMethod(extensionDir: string, textEditor: vscode.TextEdito
             return response.results[0].diff;
         });
 
-        return extractName(extensionDir, textEditor, range, newName, rename, outputChannel);
+        return extractName(textEditor, newName, rename, outputChannel);
     });
 }
 
@@ -102,7 +103,7 @@ function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any
     });
 }
 
-function extractName(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range, newName: string,
+function extractName(textEditor: vscode.TextEditor, newName: string,
     // tslint:disable-next-line:no-any
     renameResponse: Promise<string>, outputChannel: vscode.OutputChannel): Promise<any> {
     let changeStartsAtLine = -1;

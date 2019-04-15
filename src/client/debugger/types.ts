@@ -28,6 +28,7 @@ interface ICommonDebugArguments {
     gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
+    justMyCode?: boolean;
     logToFile?: boolean;
     debugOptions?: DebugOptions[];
     port?: number;

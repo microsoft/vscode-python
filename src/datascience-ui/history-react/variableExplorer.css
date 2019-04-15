@@ -1,0 +1,4 @@
+.variable-explorer {
+    margin: 5px;
+    background-color: var(--vscode-editor-background);
+}

@@ -64,7 +64,7 @@ export class ItemInfoSource implements IItemInfoSource {
 
     private async getHoverResultFromDocumentRange(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken)
         : Promise<proxy.IHoverResult | undefined> {
-        const cmd: proxy.ICommand<proxy.IHoverResult> = {
+        const cmd: proxy.ICommand = {
             command: proxy.CommandType.Hover,
             fileName: document.fileName,
             columnIndex: range.end.character,
@@ -78,7 +78,7 @@ export class ItemInfoSource implements IItemInfoSource {
 
     private async getHoverResultFromTextRange(documentUri: vscode.Uri, fileName: string, range: vscode.Range, sourceText: string, token: vscode.CancellationToken)
         : Promise<proxy.IHoverResult | undefined> {
-        const cmd: proxy.ICommand<proxy.IHoverResult> = {
+        const cmd: proxy.ICommand = {
             command: proxy.CommandType.Hover,
             fileName: fileName,
             columnIndex: range.end.character,
@@ -102,7 +102,7 @@ export class ItemInfoSource implements IItemInfoSource {
                     lines.shift();
                     const endIndex = lines.findIndex(line => item.signature.endsWith(line));
                     if (endIndex >= 0) {
-                        lines = lines.filter((line, index) => index > endIndex);
+                        lines = lines.filter((_line, index) => index > endIndex);
                     }
                 }
                 if (lines.length > 0 && currentWord.length > 0 && item.signature.startsWith(currentWord) && lines[0].startsWith(currentWord) && lines[0].endsWith(')')) {

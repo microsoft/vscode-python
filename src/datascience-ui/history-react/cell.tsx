@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-import '../../client/common/extensions';
-import './cell.css';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
@@ -11,18 +10,21 @@ import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
+import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
+import './cell.css';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
+import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
@@ -34,7 +36,9 @@ interface ICellProps {
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
-    history: string [];
+    history: InputHistory | undefined;
+    showWatermark: boolean;
+    errorBackgroundColor: string;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -52,8 +56,11 @@ export interface ICellViewModel {
 }
 
 export class Cell extends React.Component<ICellProps> {
+    private code: Code | undefined;
+
     constructor(prop: ICellProps) {
         super(prop);
+        this.state = {focused: this.props.autoFocus};
     }
 
     public render() {
@@ -61,6 +68,12 @@ export class Cell extends React.Component<ICellProps> {
             return <SysInfo theme={this.props.baseTheme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
         } else {
             return this.renderNormalCell();
+        }
+    }
+
+    public giveFocus() {
+        if (this.code) {
+            this.code.giveFocus();
         }
     }
 
@@ -107,11 +120,12 @@ export class Cell extends React.Component<ICellProps> {
         const results: JSX.Element[] = this.renderResults();
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || (results && results.length > 0);
+        const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
 
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className='cell-wrapper'>
+                <div className='cell-wrapper' role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
@@ -120,10 +134,8 @@ export class Cell extends React.Component<ICellProps> {
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
                         </CellButton>
                     </MenuBar>
-                    <div className='cell-outer'>
-                        <div className='controls-div'>
-                            {this.renderControls()}
-                        </div>
+                    <div className={cellOuterClass}>
+                        {this.renderControls()}
                         <div className='content-div'>
                             <div className='cell-result-container'>
                                 {this.renderInputs()}
@@ -137,6 +149,13 @@ export class Cell extends React.Component<ICellProps> {
 
         // Shouldn't be rendered because not allowing empty input and not a direct input cell
         return null;
+    }
+
+    private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
+        // When we receive a click, tell the code element.
+        if (this.code) {
+            this.code.onParentClick(ev);
+        }
     }
 
     private showInputs = () : boolean => {
@@ -156,20 +175,32 @@ export class Cell extends React.Component<ICellProps> {
         const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '0';
-        const afterExecution = this.props.cellVM.editable ?
-            <CommandPrompt /> :
-            <CollapseButton theme={this.props.baseTheme}
+
+        // Only code cells have controls. Markdown should be empty
+        if (this.isCodeCell()) {
+
+            return this.props.cellVM.editable ?
+                (
+                    <div className='controls-div'>
+                        <CommandPrompt />
+                    </div>
+                ) : (
+                    <div className='controls-div'>
+                        <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
+                        <CollapseButton theme={this.props.baseTheme}
                             visible={collapseVisible}
                             open={this.props.cellVM.inputBlockOpen}
                             onClick={this.toggleInputBlock}
-                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>;
+                            tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')} />
+                    </div>
+                );
+        } else {
+            return null;
+        }
+    }
 
-        return (
-            <div className='controls-flex'>
-                <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()}/>
-                {afterExecution}
-            </div>
-        );
+    private updateCodeRef = (ref: Code) => {
+        this.code = ref;
     }
 
     private renderInputs = () => {
@@ -184,8 +215,10 @@ export class Cell extends React.Component<ICellProps> {
                         codeTheme={this.props.codeTheme}
                         testMode={this.props.testMode ? true : false}
                         readOnly={!this.props.cellVM.editable}
+                        showWatermark={this.props.showWatermark}
                         onSubmit={this.props.submitNewCode}
                         onChangeLineCount={this.onChangeLineCount}
+                        ref={this.updateCodeRef}
                         />
                 </div>
             );
@@ -239,10 +272,10 @@ export class Cell extends React.Component<ICellProps> {
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
-        return [<Transform data={source}/>];
+        return [<Transform key={0} data={source}/>];
     }
 
-    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean) => {
+    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean, forceLightTheme: boolean) => {
 
         // If we found a mimetype, use the transform
         if (mimetype) {
@@ -264,19 +297,24 @@ export class Cell extends React.Component<ICellProps> {
                         renderWithScrollbars = true;
                     }
 
+                    // Create a default set of properties
+                    const style: React.CSSProperties = {
+                    };
+
                     // Create a scrollbar style if necessary
                     if (renderWithScrollbars && this.props.maxTextSize) {
-                        const style: React.CSSProperties = {
-                            maxHeight : `${this.props.maxTextSize}px`,
-                            overflowY : 'auto',
-                            overflowX : 'auto'
-                        };
-
-                        return <div id='stylewrapper' style={style}><Transform key={index} data={data} /></div>;
-                    } else {
-                        return <Transform key={index} data={data} />;
+                        style.overflowX = 'auto';
+                        style.overflowY = 'auto';
+                        style.maxHeight = `${this.props.maxTextSize}px`;
                     }
 
+                    // Change the background if necessary
+                    if (forceLightTheme) {
+                        style.backgroundColor = this.props.errorBackgroundColor;
+                        style.color = this.invertColor(this.props.errorBackgroundColor);
+                    }
+
+                    return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -286,6 +324,40 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return <div></div>;
+    }
+
+    private convertToLinearRgb(color: number) : number {
+        let c = color / 255;
+        if (c <= 0.03928) {
+            c = c / 12.92;
+        } else {
+            c = Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+        return c;
+    }
+
+    private invertColor(color: string) {
+        if (color.indexOf('#') === 0) {
+            color = color.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (color.length === 3) {
+            color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+        }
+        if (color.length === 6) {
+            // http://stackoverflow.com/a/3943023/112731
+            const r = this.convertToLinearRgb(parseInt(color.slice(0, 2), 16));
+            const g = this.convertToLinearRgb(parseInt(color.slice(2, 4), 16));
+            const b = this.convertToLinearRgb(parseInt(color.slice(4, 6), 16));
+
+            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+
+            return (L > 0.179)
+                ? '#000000'
+                : '#FFFFFF';
+        } else {
+            return color;
+        }
     }
 
     private renderOutput = (output : nbformat.IOutput, index: number) => {
@@ -306,6 +378,7 @@ export class Cell extends React.Component<ICellProps> {
 
         // Only for text and error ouptut do we add scrollbars
         let addScrollbars = false;
+        let forceLightTheme = false;
 
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
@@ -322,7 +395,7 @@ export class Cell extends React.Component<ICellProps> {
             // Output may have goofy ascii colorization chars in it. Try
             // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
-                if (formatted.includes('<')) {
+                if (!formatted.includes('<')) {
                     const converter = new ansiToHtml();
                     const html = converter.toHtml(formatted);
                     copy.data = {
@@ -335,6 +408,7 @@ export class Cell extends React.Component<ICellProps> {
 
         } else if (copy.output_type === 'error') {
             addScrollbars = true;
+            forceLightTheme = true;
             const error = copy as nbformat.IError;
             try {
                 const converter = new ansiToHtml();
@@ -358,7 +432,7 @@ export class Cell extends React.Component<ICellProps> {
 
         // If that worked, use the transform
         if (mimetype) {
-            return this.renderWithTransform(mimetype, copy, index, addScrollbars);
+            return this.renderWithTransform(mimetype, copy, index, addScrollbars, forceLightTheme);
         }
 
         if (copy.data) {
@@ -371,7 +445,7 @@ export class Cell extends React.Component<ICellProps> {
         return <div key={index}>{str}</div>;
     }
 
-    private onChangeLineCount = (lineCount: number) => {
+    private onChangeLineCount = (_lineCount: number) => {
         // Ignored for now. Might use this to update the . next to the code lines
     }
 }

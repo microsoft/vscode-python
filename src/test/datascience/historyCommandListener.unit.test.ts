@@ -6,23 +6,10 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
-import {
-    Disposable,
-    Event,
-    EventEmitter,
-    TextDocument,
-    TextDocumentShowOptions,
-    TextEditor,
-    TextEditorOptionsChangeEvent,
-    TextEditorSelectionChangeEvent,
-    TextEditorViewColumnChangeEvent,
-    Uri,
-    ViewColumn,
-    WorkspaceEdit
-} from 'vscode';
+import * as uuid from 'uuid/v4';
+import { Disposable, EventEmitter, Uri } from 'vscode';
 
 import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IDocumentManager } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Logger } from '../../client/common/logger';
@@ -31,9 +18,9 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable, ILogger } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
-import { HistoryCommandListener } from '../../client/datascience/historycommandlistener';
-import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
+import { HistoryProvider } from '../../client/datascience/history/historyProvider';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { IHistory, INotebookServer, IStatusProvider } from '../../client/datascience/types';
@@ -43,8 +30,8 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as vscodeMocks from '../vscode-mock';
-import { createDocument } from './editor-integration/helpers';
 import { MockCommandManager } from './mockCommandManager';
+import { MockDocumentManager } from './mockDocumentManager';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
@@ -52,79 +39,19 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
     // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
     const result = TypeMoq.Mock.ofType<T>();
-    (result as any)['tag'] = tag;
+    (result as any).tag = tag;
     result.setup((x: any) => x.then).returns(() => undefined);
     return result;
 }
 
-class MockDocumentManager implements IDocumentManager {
-    public textDocuments: TextDocument[] = [];
-    public activeTextEditor: TextEditor | undefined;
-    public visibleTextEditors: TextEditor[] = [];
-    private didChangeEmitter = new EventEmitter<TextEditor>();
-    private didOpenEmitter = new EventEmitter<TextDocument>();
-    private didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
-    private didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();
-    private didChangeTextEditorOptionsEmitter = new EventEmitter<TextEditorOptionsChangeEvent>();
-    private didChangeTextEditorViewColumnEmitter = new EventEmitter<TextEditorViewColumnChangeEvent>();
-    private didCloseEmitter = new EventEmitter<TextDocument>();
-    private didSaveEmitter = new EventEmitter<TextDocument>();
-    public get onDidChangeActiveTextEditor(): Event<TextEditor> {
-        return this.didChangeEmitter.event;
-    }
-    public get onDidOpenTextDocument(): Event<TextDocument> {
-        return this.didOpenEmitter.event;
-    }
-    public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
-        return this.didChangeVisibleEmitter.event;
-    }
-    public get onDidChangeTextEditorSelection(): Event<TextEditorSelectionChangeEvent> {
-        return this.didChangeTextEditorSelectionEmitter.event;
-    }
-    public get onDidChangeTextEditorOptions(): Event<TextEditorOptionsChangeEvent> {
-        return this.didChangeTextEditorOptionsEmitter.event;
-    }
-    public get onDidChangeTextEditorViewColumn(): Event<TextEditorViewColumnChangeEvent> {
-        return this.didChangeTextEditorViewColumnEmitter.event;
-    }
-    public get onDidCloseTextDocument(): Event<TextDocument> {
-        return this.didCloseEmitter.event;
-    }
-    public get onDidSaveTextDocument(): Event<TextDocument> {
-        return this.didSaveEmitter.event;
-    }
-    public showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
-    public showTextDocument(document: TextDocument | Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
-    public showTextDocument(document: any, column?: any, preserveFocus?: any): Thenable<TextEditor> {
-        const mockEditor = createTypeMoq<TextEditor>('TextEditor');
-        mockEditor.setup(e => e.document).returns(() => this.getDocument());
-        this.activeTextEditor = mockEditor.object;
-        return Promise.resolve(mockEditor.object);
-    }
-    public openTextDocument(fileName: string | Uri): Thenable<TextDocument>;
-    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
-    public openTextDocument(options?: any): Thenable<TextDocument> {
-        return Promise.resolve(this.getDocument());
-    }
-    public applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
-        throw new Error('Method not implemented.');
-    }
-
-    private getDocument(): TextDocument {
-        const mockDoc = createDocument('#%%\r\nprint("code")', 'bar.ipynb', 1, TypeMoq.Times.atMost(100), true);
-        mockDoc.setup((x: any) => x.then).returns(() => undefined);
-        return mockDoc.object;
-    }
-}
-
 class MockStatusProvider implements IStatusProvider {
-    public set(message: string, timeout?: number): Disposable {
+    public set(_message: string, _timeout?: number): Disposable {
         return {
             dispose: noop
         };
     }
 
-    public waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T> {
+    public waitWithStatus<T>(promise: () => Promise<T>, _message: string, _timeout?: number, _canceled?: () => void): Promise<T> {
         return promise();
     }
 
@@ -145,7 +72,7 @@ suite('History command listener', async () => {
     const notebookImporter = mock(JupyterImporter);
     const notebookExporter = mock(JupyterExporter);
     const applicationShell = mock(ApplicationShell);
-    const jupyterExecution = mock(JupyterExecution);
+    const jupyterExecution = mock(JupyterExecutionFactory);
     const documentManager = new MockDocumentManager();
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
@@ -209,7 +136,13 @@ suite('History command listener', async () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            collapseCellInputCodeByDefault: true
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -257,6 +190,11 @@ suite('History command listener', async () => {
             when(jupyterExecution.isNotebookSupported()).thenResolve(true);
         }
 
+        documentManager.addDocument('#%%\r\nprint("code")', 'bar.ipynb');
+
+        when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
+        when(applicationShell.showInformationMessage(anything())).thenReturn(Promise.resolve('moo'));
+
         const result = new HistoryCommandListener(
             disposableRegistry,
             instance(historyProvider),
@@ -278,12 +216,12 @@ suite('History command listener', async () => {
     test('Import', async () => {
         createCommandListener(undefined);
         when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(Promise.resolve([Uri.file('foo')]));
-        await commandManager.executeCommand(Commands.ImportNotebook);
+        await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Import File', async () => {
         createCommandListener(undefined);
-        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'));
+        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Export File', async () => {
@@ -292,7 +230,7 @@ suite('History command listener', async () => {
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
 
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'));
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });
     test('Export File and output', async () => {
@@ -300,8 +238,8 @@ suite('History command listener', async () => {
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
-        server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny())).returns(() => {
-            return Promise.resolve(generateCells('a=1', 'bar.py', 0, false));
+        server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
+            return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
         });
 
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
@@ -321,7 +259,7 @@ suite('History command listener', async () => {
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook);
+        await commandManager.executeCommand(Commands.ExportFileAsNotebook, undefined, undefined);
         assert.ok(lastFileContents, 'Export file was not written to');
     });
 

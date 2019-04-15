@@ -68,6 +68,9 @@
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+            },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
@@ -128,8 +131,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--timeout=300000",
-                "--grep="
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
@@ -149,8 +152,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--timeout=300000",
-                "--grep="
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

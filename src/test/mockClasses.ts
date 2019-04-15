@@ -21,7 +21,7 @@ export class MockOutputChannel implements vscode.OutputChannel {
     public show(preservceFocus?: boolean): void;
     public show(column?: vscode.ViewColumn, preserveFocus?: boolean): void;
     // tslint:disable-next-line:no-any
-    public show(x?: any, y?: any): void {
+    public show(_x?: any, _y?: any): void {
         this.isShown = true;
     }
     public hide() {

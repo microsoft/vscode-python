@@ -10,7 +10,7 @@ import { EnvironmentVariables } from '../../client/common/variables/types';
 @injectable()
 export class MockProcess implements ICurrentProcess {
     constructor(public env: EnvironmentVariables = { ...process.env }) { }
-    public on(event: string | symbol, listener: Function): this {
+    public on(_event: string | symbol, _listener: Function): this {
         return this;
     }
     public get argv(): string[] {

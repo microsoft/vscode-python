@@ -3,7 +3,9 @@
 
 'use strict';
 
-import { CancellationToken, Uri, WorkspaceEdit } from 'vscode';
+import {
+    CancellationToken, Uri, WorkspaceEdit
+} from 'vscode';
 
 export const ISortImportsEditingProvider = Symbol('ISortImportsEditingProvider');
 export interface ISortImportsEditingProvider {

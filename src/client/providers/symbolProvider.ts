@@ -30,7 +30,8 @@ function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string
         tree.name,
         // Type coercion is a bit fuzzy when it comes to enums, so we
         // play it safe by explicitly converting.
-        SymbolKind[SymbolKind[kind]],
+        // tslint:disable-next-line:no-any
+        (SymbolKind as any)[(SymbolKind as any)[kind]],
         containerName,
         new Location(uri, range)
     );
@@ -112,7 +113,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
             }
 
             const filename = document.fileName;
-            const cmd: proxy.ICommand<proxy.ISymbolResult> = {
+            const cmd: proxy.ICommand = {
                 command: proxy.CommandType.Symbols,
                 fileName: filename,
                 columnIndex: 0,
@@ -146,23 +147,23 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
 
     // This does not appear to be used anywhere currently...
     // tslint:disable-next-line:no-unused-variable
-    private provideDocumentSymbolsUnthrottled(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
-        const filename = document.fileName;
+    // private provideDocumentSymbolsUnthrottled(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
+    //     const filename = document.fileName;
 
-        const cmd: proxy.ICommand<proxy.ISymbolResult> = {
-            command: proxy.CommandType.Symbols,
-            fileName: filename,
-            columnIndex: 0,
-            lineIndex: 0
-        };
+    //     const cmd: proxy.ICommand<proxy.ISymbolResult> = {
+    //         command: proxy.CommandType.Symbols,
+    //         fileName: filename,
+    //         columnIndex: 0,
+    //         lineIndex: 0
+    //     };
 
-        if (document.isDirty) {
-            cmd.source = document.getText();
-        }
+    //     if (document.isDirty) {
+    //         cmd.source = document.getText();
+    //     }
 
-        return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommandNonCancellableCommand(cmd, token)
-            .then(data => this.parseData(document, data));
-    }
+    //     return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommandNonCancellableCommand(cmd, token)
+    //         .then(data => this.parseData(document, data));
+    // }
 
     private parseData(document: TextDocument, data?: proxy.ISymbolResult): SymbolInformation[] {
         if (data) {

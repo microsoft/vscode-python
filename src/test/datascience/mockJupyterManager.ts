@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -60,6 +61,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private sessionTimeout: number | undefined;
     private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs : {name: string; dir: string}[] = [];
+    private currentSession: MockJupyterSession | undefined;
 
     constructor(serviceManager: IServiceManager) {
         // Save async registry. Need to stick servers created into it
@@ -97,6 +99,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Setup our default cells that happen for everything
         this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt');
+        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')');
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');
@@ -107,12 +110,16 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.activeInterpreter = interpreter;
     }
 
+    public getCurrentSession() : MockJupyterSession | undefined {
+        return this.currentSession;
+    }
+
     public setProcessDelay(timeout: number | undefined) {
         this.processService.setDelay(timeout);
         this.pythonServices.forEach(p => p.setDelay(timeout));
     }
 
-    public addInterpreter(interpreter: PythonInterpreter, supportedCommands: SupportedCommands, notebookStdErr?: string[]) {
+    public addInterpreter(interpreter: PythonInterpreter, supportedCommands: SupportedCommands, notebookStdErr?: string[], notebookProc?: ChildProcess) {
         this.installedInterpreters.push(interpreter);
 
         // Add the python calls first.
@@ -124,7 +131,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.pythonExecutionFactory.setup(f => f.createActivatedEnvironment(TypeMoq.It.is(o => {
             return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
         }))).returns(() => Promise.resolve(pythonService));
-        this.setupSupportedPythonService(pythonService, interpreter, supportedCommands, notebookStdErr);
+        this.setupSupportedPythonService(pythonService, interpreter, supportedCommands, notebookStdErr, notebookProc);
 
         // Then the process calls
         this.setupSupportedProcessService(interpreter, supportedCommands, notebookStdErr);
@@ -150,7 +157,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{result: string; haveMore: boolean}>) {
-        const cells = generateCells(code, 'foo.py', 1, true);
+        const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
         cells.forEach(c => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
@@ -161,7 +168,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 data.outputs = [...data.outputs, taggedResult];
 
                 // Tag on our extra data
-                (taggedResult as any)['resultGenerator'] = async (t: CancellationToken) => {
+                (taggedResult as any).resultGenerator = async (t: CancellationToken) => {
                     const result = await resultGenerator(t);
                     return {
                         result: this.createStreamResult(result.result),
@@ -181,7 +188,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
-        const cells = generateCells(code, 'foo.py', 1, true);
+        const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
         cells.forEach(c => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
@@ -215,19 +222,24 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {
                 await sleep(localTimeout);
-                return new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
+                return this.createNewSession();
             }, cancelToken);
         } else {
-            return Promise.resolve(new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay));
+            return Promise.resolve(this.createNewSession());
         }
     }
 
-    public getActiveKernelSpecs(connection: IConnection) : Promise<IJupyterKernelSpec[]> {
+    public getActiveKernelSpecs(_connection: IConnection) : Promise<IJupyterKernelSpec[]> {
         return Promise.resolve([]);
     }
 
     private onConfigChanged = () => {
         this.changedInterpreterEvent.fire();
+    }
+
+    private createNewSession() : MockJupyterSession {
+        this.currentSession = new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
+        return this.currentSession;
     }
 
     private createStreamResult(str: string) : nbformat.IStream {
@@ -297,7 +309,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }
@@ -307,9 +319,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
         service.addExecModuleResult(module, args, result);
     }
 
-    private setupPythonServiceExecObservable(service: MockPythonService, module: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
+    private setupPythonServiceExecObservable(service: MockPythonService, module: string, args: (string | RegExp)[], stderr: string[], stdout: string[], proc?: ChildProcess) {
         const result = {
-            proc: undefined,
+            proc,
             out: new Observable<Output<string>>(subscriber => {
                 stderr.forEach(s => subscriber.next({ source: 'stderr', out: s }));
                 stdout.forEach(s => subscriber.next({ source: 'stderr', out: s }));
@@ -342,7 +354,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         });
     }
 
-    private setupSupportedPythonService(service: MockPythonService, workingPython: PythonInterpreter, supportedCommands: SupportedCommands, notebookStdErr?: string[]) {
+    private setupSupportedPythonService(service: MockPythonService, workingPython: PythonInterpreter, supportedCommands: SupportedCommands, notebookStdErr?: string[], notebookProc?: ChildProcess) {
         if ((supportedCommands & SupportedCommands.ipykernel) === SupportedCommands.ipykernel) {
             this.setupPythonServiceExec(service, 'ipykernel', ['--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
             this.setupPythonServiceExec(service, 'ipykernel', ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
@@ -361,8 +373,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         if ((supportedCommands & SupportedCommands.notebook) === SupportedCommands.notebook) {
             this.setupPythonServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
-            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
-            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
+            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
         }
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
             this.setupPythonServiceExec(service, 'jupyter', ['kernelspec', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));

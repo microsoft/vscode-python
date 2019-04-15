@@ -5,6 +5,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
@@ -141,19 +142,25 @@ export abstract class BaseLinter implements ILinter {
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {
-            this.handleError(error, document.uri, executionInfo);
+            await this.handleError(error, document.uri, executionInfo);
             return [];
         }
     }
 
-    protected async parseMessages(output: string, document: vscode.TextDocument, token: vscode.CancellationToken, regEx: string) {
+    protected async parseMessages(output: string, _document: vscode.TextDocument, _token: vscode.CancellationToken, regEx: string) {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }
 
-    protected handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
-        this.errorHandler.handleError(error, resource, execInfo)
-            .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
+    protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
+        if (isTestExecution()) {
+            this.errorHandler.handleError(error, resource, execInfo)
+                .ignoreErrors();
+        } else {
+            this.errorHandler.handleError(error, resource, execInfo)
+                .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'))
+                .ignoreErrors();
+        }
     }
 
     private parseLine(line: string, regEx: string): ILintMessage | undefined {

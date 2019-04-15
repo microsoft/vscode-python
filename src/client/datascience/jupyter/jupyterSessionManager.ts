@@ -26,18 +26,20 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getActiveKernelSpecs(connection: IConnection) : Promise<IJupyterKernelSpec[]> {
-        // Use our connection to create a session manager
-        const serverSettings = ServerConnection.makeSettings(
-            {
-                baseUrl: connection.baseUrl,
-                token: connection.token,
-                pageUrl: '',
-                // A web socket is required to allow token authentication (what if there is no token authentication?)
-                wsUrl: connection.baseUrl.replace('http', 'ws'),
-                init: { cache: 'no-store', credentials: 'same-origin' }
-            });
-        const sessionManager = new SessionManager({ serverSettings: serverSettings });
+        let sessionManager: SessionManager | undefined ;
         try {
+            // Use our connection to create a session manager
+            const serverSettings = ServerConnection.makeSettings(
+                {
+                    baseUrl: connection.baseUrl,
+                    token: connection.token,
+                    pageUrl: '',
+                    // A web socket is required to allow token authentication (what if there is no token authentication?)
+                    wsUrl: connection.baseUrl.replace('http', 'ws'),
+                    init: { cache: 'no-store', credentials: 'same-origin' }
+                });
+            sessionManager = new SessionManager({ serverSettings: serverSettings });
+
             // Ask the session manager to refresh its list of kernel specs.
             await sessionManager.refreshSpecs();
 

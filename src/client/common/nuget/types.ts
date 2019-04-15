@@ -4,6 +4,7 @@
 'use strict';
 
 import { SemVer } from 'semver';
+import { Resource } from '../types';
 export type NugetPackage = { package: string; version: SemVer; uri: string };
 
 export const INugetService = Symbol('INugetService');
@@ -14,5 +15,5 @@ export interface INugetService {
 
 export const INugetRepository = Symbol('INugetRepository');
 export interface INugetRepository {
-    getPackages(packageName: string): Promise<NugetPackage[]>;
+    getPackages(packageName: string, resource: Resource): Promise<NugetPackage[]>;
 }

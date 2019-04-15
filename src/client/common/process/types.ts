@@ -60,6 +60,7 @@ export type ExecutionFactoryCreationOptions = {
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
     interpreter?: PythonInterpreter;
+    allowEnvironmentFetchExceptions?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
@@ -73,6 +74,7 @@ export type InterpreterInfomation = {
     sysVersion: string;
     architecture: Architecture;
     sysPrefix: string;
+    pipEnvWorkspaceFolder?: string;
 };
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TextEditor, Uri } from 'vscode';
+import { Event, TextEditor, Uri } from 'vscode';
+import { IDisposable } from '../common/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
@@ -23,10 +24,11 @@ export interface ICodeExecutionHelper {
 export const ICodeExecutionManager = Symbol('ICodeExecutionManager');
 
 export interface ICodeExecutionManager {
+    onExecutedCode: Event<string>;
     registerCommands(): void;
 }
 
 export const ITerminalAutoActivation = Symbol('ITerminalAutoActivation');
-export interface ITerminalAutoActivation {
+export interface ITerminalAutoActivation extends IDisposable {
     register(): void;
 }

@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/diagnostics/checks/invalidPythonPathInDebugger';
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
@@ -18,12 +17,14 @@ import { BaseConfigurationResolver } from './base';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
-    constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService,
+    constructor(
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IConfigurationProviderUtils) private readonly configurationProviderUtils: IConfigurationProviderUtils,
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService) {
+        @inject(IConfigurationService) configurationService: IConfigurationService
+    ) {
         super(workspaceService, documentManager, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
@@ -61,8 +62,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
         if (typeof debugConfiguration.envFile !== 'string' && workspaceFolder) {
-            const envFile = path.join(workspaceFolder.fsPath, '.env');
-            debugConfiguration.envFile = envFile;
+            const settings = this.configurationService.getSettings(workspaceFolder);
+            debugConfiguration.envFile = settings.envFile;
         }
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
@@ -80,10 +81,14 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
+        if (debugConfiguration.justMyCode === undefined) {
+            // Populate justMyCode using debugStdLib
+            debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
+        }
         // Pass workspace folder so we can get this when we get debug events firing.
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
-        if (debugConfiguration.debugStdLib) {
+        if (!debugConfiguration.justMyCode) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.stopOnEntry) {
@@ -119,11 +124,14 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.pyramid) {
             debugConfiguration.program = (await this.configurationProviderUtils.getPyramidStartupScriptFilePath(workspaceFolder))!;
         }
-        this.sendTelemetry('launch', debugConfiguration);
+        this.sendTelemetry(
+            debugConfiguration.request as 'launch' | 'test',
+            debugConfiguration
+        );
     }
 
     protected async validateLaunchConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
-        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath, folder ? folder.uri : undefined);
+        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath, this.pythonPathSource, folder ? folder.uri : undefined);
     }
 }

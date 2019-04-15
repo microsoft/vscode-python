@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import { CancellationToken, ConfigurationChangeEvent, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Resource } from '../types';
 import { IWorkspaceService } from './types';
 
 @injectable()
@@ -23,10 +24,10 @@ export class WorkspaceService implements IWorkspaceService {
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0;
     }
     public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
-        return workspace.getConfiguration(section, resource);
+        return workspace.getConfiguration(section, resource || null);
     }
-    public getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
-        return workspace.getWorkspaceFolder(uri);
+    public getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
+        return uri ? workspace.getWorkspaceFolder(uri) : undefined;
     }
     public asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string {
         return workspace.asRelativePath(pathOrUri, includeWorkspaceFolder);
@@ -37,8 +38,8 @@ export class WorkspaceService implements IWorkspaceService {
     public findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]> {
         return workspace.findFiles(include, exclude, maxResults, token);
     }
-    public getWorkspaceFolderIdentifier(resource: Uri): string {
+    public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        return workspaceFolder ? workspaceFolder.uri.fsPath : '';
+        return workspaceFolder ? workspaceFolder.uri.fsPath : defaultValue;
     }
 }

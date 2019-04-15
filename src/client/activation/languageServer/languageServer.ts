@@ -7,11 +7,14 @@ import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
-import { Resource } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
+import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { ITestManagementService } from '../../testing/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
 import { ProgressReporting } from './progress';
 
@@ -26,7 +29,9 @@ export class LanguageServer implements ILanguageServer {
     constructor(
         @inject(ILanguageClientFactory)
         @named(LanguageClientFactory.base)
-        private readonly factory: ILanguageClientFactory
+        private readonly factory: ILanguageClientFactory,
+        @inject(ITestManagementService) private readonly testManager: ITestManagementService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -54,10 +59,16 @@ export class LanguageServer implements ILanguageServer {
         await this.serverReady();
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
-        this.languageClient.onTelemetry(telemetryEvent => {
-            const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-            sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
-        });
+
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer) {
+            this.languageClient.onTelemetry(telemetryEvent => {
+                const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
+            });
+        }
+
+        await this.registerTestServices();
     }
     @traceDecorators.error('Failed to load Language Server extension')
     public loadExtension(args?: {}) {
@@ -74,10 +85,17 @@ export class LanguageServer implements ILanguageServer {
             .ignoreErrors();
     }
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)
-    private async serverReady(): Promise<void> {
+    protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient!.initializeResult) {
             await sleep(100);
         }
         this.startupCompleted.resolve();
+    }
+    @swallowExceptions('Activating Unit Tests Manager for Language Server')
+    protected async registerTestServices() {
+        if (!this.languageClient) {
+            throw new Error('languageClient not initialized');
+        }
+        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
     }
 }

@@ -5,11 +5,14 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 
+import { IDataScienceSettings } from '../../client/common/types';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ICellViewModel } from './cell';
+import { InputHistory } from './inputHistory';
 
 export interface IMainPanelState {
     cellVMs: ICellViewModel[];
@@ -17,8 +20,47 @@ export interface IMainPanelState {
     skipNextScroll? : boolean;
     undoStack : ICellViewModel[][];
     redoStack : ICellViewModel[][];
-    historyStack: string[];
+    submittedText: boolean;
+    history: InputHistory;
+    contentTop: number;
+    rootStyle?: string;
+    theme?: string;
+    forceDark?: boolean;
 }
+
+// tslint:disable-next-line: no-multiline-string
+const darkStyle = `
+        :root {
+            --code-comment-color: #6A9955;
+            --code-numeric-color: #b5cea8;
+            --code-string-color: #ce9178;
+            --code-variable-color: #9CDCFE;
+            --code-type-color: #4EC9B0;
+            --code-font-family: Consolas, 'Courier New', monospace;
+            --code-font-size: 14px;
+        }
+
+        .cm-header, .cm-strong {font-weight: bold;}
+        .cm-em {font-style: italic;}
+        .cm-link {text-decoration: underline;}
+        .cm-strikethrough {text-decoration: line-through;}
+
+        .cm-s-ipython-theme span.cm-keyword {color: #C586C0; font-style: normal; }
+        .cm-s-ipython-theme span.cm-number {color: #b5cea8; font-style: normal; }
+        .cm-s-ipython-theme span.cm-def {color: var(--vscode-editor-foreground); }
+        .cm-s-ipython-theme span.cm-variable {color: #9CDCFE; font-style: normal; }
+        .cm-s-ipython-theme span.cm-punctuation {color: var(--override-foreground, var(--vscode-editor-foreground)); font-style: normal; }
+        .cm-s-ipython-theme span.cm-property,
+        .cm-s-ipython-theme span.cm-operator {color: #d4d4d4; font-style: normal; }
+        .cm-s-ipython-theme span.cm-variable-2 {color: #9CDCFE; font-style: normal; }
+        .cm-s-ipython-theme span.cm-variable-3, .cm-s-Default Dark+ .cm-type {color: #9CDCFE; font-style: normal; }
+        .cm-s-ipython-theme span.cm-comment {color: #6A9955; font-style: normal; }
+        .cm-s-ipython-theme span.cm-string {color: #ce9178; font-style: normal; }
+        .cm-s-ipython-theme span.cm-string-2 {color: #ce9178; font-style: normal; }
+        .cm-s-ipython-theme span.cm-builtin {color: #DCDCAA; font-style: normal; }
+        .cm-s-ipython-theme div.CodeMirror-cursor { border: 1px solid var(--vscode-editor-foreground); background: var(--vscode-editor-foreground); width: 5px; z-index: 100; }
+        .cm-s-ipython-theme div.CodeMirror-selected {background: var(--vscode-editor-selectionBackground) !important;}
+`;
 
 // This function generates test state when running under a browser instead of inside of
 export function generateTestState(inputBlockToggled : (id: string) => void, filePath: string = '') : IMainPanelState {
@@ -28,7 +70,10 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         skipNextScroll : false,
         undoStack : [],
         redoStack : [],
-        historyStack: []
+        submittedText: false,
+        history: new InputHistory(),
+        contentTop: 24,
+        rootStyle: darkStyle
     };
 }
 
@@ -58,16 +103,24 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
     };
 }
 
-export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) : ICellViewModel {
-    let inputLinesCount = 0;
+export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined) : string {
     let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
+    const matcher = new CellMatcher(settings);
 
     // Eliminate the #%% on the front if it has nothing else on the line
-    if (source.length > 0 && /^\s*#\s*%%\s*$/.test(source[0].trim())) {
-        source = source.slice(1);
+    if (source.length > 0) {
+        const title = matcher.exec(source[0].trim());
+        if (title !== undefined && title.length <= 0) {
+            source = source.slice(1);
+        }
     }
 
-    const inputText = inputCell.data.cell_type === 'code' ? concatMultilineString(source) : '';
+    return concatMultilineString(source);
+}
+
+export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled : (id: string) => void) : ICellViewModel {
+    let inputLinesCount = 0;
+    const inputText = inputCell.data.cell_type === 'code' ? extractInputText(inputCell, settings) : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }
@@ -86,7 +139,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
 function generateVMs(inputBlockToggled : (id: string) => void, filePath: string) : ICellViewModel [] {
     const cells = generateCells(filePath);
     return cells.map((cell : ICell) => {
-        return createCellVM(cell, inputBlockToggled);
+        return createCellVM(cell, undefined, inputBlockToggled);
     });
 }
 
@@ -121,7 +174,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
         },
         {
             cell_type: 'code',
-            execution_count: 4,
+            execution_count: 467,
             metadata: {
                 slideshow: {
                     slide_type: '-'

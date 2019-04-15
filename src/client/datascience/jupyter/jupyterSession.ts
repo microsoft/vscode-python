@@ -16,10 +16,14 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
+import { isTestExecution } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
+import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -28,7 +32,7 @@ export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;
     private contentsManager: ContentsManager | undefined;
     private notebookFile: Contents.IModel | undefined;
-    private onRestartedEvent : EventEmitter<void> = new EventEmitter<void>();
+    private onRestartedEvent : EventEmitter<void> | undefined;
     private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
 
@@ -43,7 +47,7 @@ export class JupyterSession implements IJupyterSession {
         return this.shutdown();
     }
 
-    public shutdown = async () : Promise<void> => {
+    public async shutdown(): Promise<void> {
         await this.destroyKernelSpec();
 
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
@@ -59,29 +63,47 @@ export class JupyterSession implements IJupyterSession {
                 noop();
             }
         }
-        await this.shutdownSessionAndConnection();
+        return this.shutdownSessionAndConnection();
     }
 
     public get onRestarted() : Event<void> {
-        return this.onRestartedEvent.event.bind(this.onRestartedEvent);
+        if (!this.onRestartedEvent) {
+            this.onRestartedEvent = new EventEmitter<void>();
+        }
+        return this.onRestartedEvent.event;
     }
 
-    public async waitForIdle() : Promise<void> {
+    public async waitForIdle(timeout: number) : Promise<void> {
         if (this.session && this.session.kernel) {
-            await this.session.kernel.ready;
+            // This function seems to cause CI builds to timeout randomly on
+            // different tests. Waiting for status to go idle doesn't seem to work and
+            // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
+            const startTime = Date.now();
+            while (this.session &&
+                this.session.kernel &&
+                this.session.kernel.status !== 'idle' &&
+                (Date.now() - startTime < timeout)) {
+                traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
+                await sleep(10);
+            }
 
-            while (this.session.kernel.status !== 'idle') {
-                await sleep(0);
+            // If we didn't make it out in ten seconds, indicate an error
+            if (!this.session || !this.session.kernel || this.session.kernel.status !== 'idle') {
+                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
             }
         }
     }
 
-    public restart() : Promise<void> {
-        return this.session && this.session.kernel ? this.session.kernel.restart() : Promise.resolve();
+    public restart(timeout: number) : Promise<void> {
+        return this.session && this.session.kernel ?
+            this.waitForKernelPromise(this.session.kernel.restart(), timeout, localize.DataScience.restartingKernelFailed()) :
+            Promise.resolve();
     }
 
-    public interrupt() : Promise<void> {
-        return this.session && this.session.kernel ? this.session.kernel.interrupt() : Promise.resolve();
+    public interrupt(timeout: number) : Promise<void> {
+        return this.session && this.session.kernel ?
+            this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed()) :
+            Promise.resolve();
     }
 
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined {
@@ -131,8 +153,17 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    private onStatusChanged(s: Session.ISession, a: Kernel.Status) {
-        if (a === 'starting') {
+    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string) : Promise<void> {
+        // Wait for this kernel promise to happen
+        const result = await Promise.race([kernelPromise, sleep(timeout)]);
+        if (result === timeout) {
+            // We timed out. Throw a specific exception
+            throw new JupyterKernelPromiseFailedError(errorMessage);
+        }
+    }
+
+    private onStatusChanged(_s: Session.ISession, a: Kernel.Status) {
+        if (a === 'starting' && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }
     }
@@ -148,7 +179,8 @@ export class JupyterSession implements IJupyterSession {
         this.kernelSpec = undefined;
     }
 
-    private shutdownSessionAndConnection = async () => {
+    //tslint:disable:cyclomatic-complexity
+    private async shutdownSessionAndConnection(): Promise<void> {
         if (this.contentsManager) {
             this.contentsManager.dispose();
             this.contentsManager = undefined;
@@ -160,25 +192,48 @@ export class JupyterSession implements IJupyterSession {
                     this.statusHandler = undefined;
                 }
                 if (this.session) {
-                    // Shutdown may fail if the process has been killed
-                    await Promise.race([this.session.shutdown(), sleep(100)]);
-                    this.session.dispose();
+                    try {
+                        // When running under a test, mark all futures as done so we
+                        // don't hit this problem:
+                        // https://github.com/jupyterlab/jupyterlab/issues/4252
+                        // tslint:disable:no-any
+                        if (isTestExecution()) {
+                            if (this.session && this.session.kernel) {
+                                const defaultKernel = this.session.kernel as any;
+                                if (defaultKernel && defaultKernel._futures) {
+                                    const futures = defaultKernel._futures as Map<any, any>;
+                                    if (futures) {
+                                        futures.forEach(f => {
+                                            if (f._status !== undefined) {
+                                                f._status |= 4;
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        // Shutdown may fail if the process has been killed
+                        await Promise.race([this.session.shutdown(), sleep(1000)]);
+                    } catch {
+                        noop();
+                    }
+                    if (this.session && !this.session.isDisposed) {
+                        this.session.dispose();
+                    }
                 }
-                if (this.sessionManager) {
+                if (this.sessionManager && !this.sessionManager.isDisposed) {
                     this.sessionManager.dispose();
                 }
             } catch {
-                if (this.session) {
-                    this.session.dispose();
-                }
-                if (this.sessionManager) {
-                    this.sessionManager.dispose();
-                }
+                noop();
             }
             this.session = undefined;
             this.sessionManager = undefined;
         }
-        this.onRestartedEvent.dispose();
+        if (this.onRestartedEvent) {
+            this.onRestartedEvent.dispose();
+        }
         if (this.connInfo) {
             this.connInfo.dispose(); // This should kill the process that's running
             this.connInfo = undefined;

@@ -31,6 +31,7 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+const argv = require('yargs').argv;
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -45,8 +46,11 @@ const noop = function () { };
 */
 
 const all = [
-    'src/**/*',
-    'src/client/**/*',
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    'src/**/*.d.ts',
+    'src/**/*.js',
+    'src/**/*.jsx'
 ];
 
 const tsFilter = [
@@ -74,13 +78,22 @@ const tslintFilter = [
     '!**/*.d.ts'
 ];
 
+gulp.task('compile', (done) => {
+    let failed = false;
+    const tsProject = ts.createProject("tsconfig.json");
+    tsProject.src()
+        .pipe(tsProject())
+        .on("error", ()=> failed = true)
+        .js
+        .pipe(gulp.dest("out"))
+        .on("finish",  ()=> failed ? done(new Error('TypeScript compilation errors')) : done());
+});
+
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
-gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
-
-gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
+gulp.task('hygiene', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
 gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
 
@@ -109,7 +122,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix', 'c
 
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
-        throw new Error('Native dependencies deteced');
+        done(new Error('Native dependencies deteced'));
     }
     done();
 });
@@ -144,37 +157,64 @@ gulp.task('inlinesource', () => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
-
-gulp.task("compile", () => {
-    const tsProject = ts.createProject("tsconfig.json");
-    return tsProject.src()
-        .pipe(tsProject())
-        .js.pipe(gulp.dest("out"));
-});
-
-
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 
 gulp.task('webpack', async () => {
     await buildWebPack('production', []);
-    await buildWebPack('sourceMaps', ['--config', './build/webpack/webpack.extension.sourceMaps.config.js']);
     await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
     await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
 });
 
+gulp.task('updateBuildNumber', async () => {
+    await updateBuildNumber(argv)
+});
+
+async function updateBuildNumber(args) {
+    if (args && args.buildNumber) {
+
+        // Edit the version number from the package.json
+        const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+        const packageJson = JSON.parse(packageJsonContents);
+
+        // Change version number
+        const versionParts = packageJson['version'].split('.');
+        const buildNumberPortion = versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
+        const newVersion = versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}` : packageJson['version'];
+        packageJson['version'] = newVersion;
+
+        // Write back to the package json
+        await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+
+        // Update the changelog.md if we are told to (this should happen on the release branch)
+        if (args.updateChangelog) {
+            const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+            const fixedContents = changeLogContents.replace(/##\s*(\d+)\.(\d+)\.(\d+)\s*\(/, `## $1.$2.${buildNumberPortion} (`);
+
+            // Write back to changelog.md
+            await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
+        }
+    } else {
+        throw Error('buildNumber argument required for updateBuildNumber task')
+    }
+}
+
 async function buildWebPack(webpackConfigName, args) {
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName);
     const stdOut = await spawnAsync('npx', ['webpack', ...args, ...['--mode', 'production']], allowedWarnings);
-    const warnings = stdOut
+    const stdOutLines = stdOut
         .split('\n')
         .map(item => item.trim())
-        .filter(item => item.length > 0)
+        .filter(item => item.length > 0);
+    const warnings = stdOutLines
         .filter(item => item.startsWith('WARNING in '))
         .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
-    if (warnings.length === 0) {
-        return;
+    const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
+    if (errors) {
+        throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
-    throw new Error(`Warnings in ${webpackConfigName}, \n{warnings.join(', ')}\n\n${stdOut}`);
+    if (warnings.length > 0) {
+        throw new Error(`Warnings in ${webpackConfigName}, \n\n${stdOut}`);
+    }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
     switch (buildConfig) {
@@ -183,12 +223,11 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
                 'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
                 'WARNING in webpack performance recommendations:',
+                'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js'
             ];
-        case 'sourceMaps':
-            return [];
         case 'extension':
             return [];
         case 'debugAdapter':
@@ -206,12 +245,19 @@ gulp.task('renameSourceMaps', async () => {
     await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
 });
 
+gulp.task('verifyBundle', async () => {
+    const matches = await glob.sync(path.join(__dirname, '*.vsix'));
+    if (!matches || matches.length == 0) {
+        throw new Error('Bundle does not exist');
+    } else {
+        console.log(`Bundle ${matches[0]} exists.`);
+    }
+
+});
+
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
-const installPythonLibArgs = ['-m', 'pip', '--disable-pip-version-check', 'install',
-    '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps',
-    '--upgrade', '-r', 'requirements.txt'];
 gulp.task('installPythonLibs', async () => {
     const requirements = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8').split('\n').map(item => item.trim()).filter(item => item.length > 0);
     const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
@@ -229,6 +275,21 @@ gulp.task('installPythonLibs', async () => {
         }
     }));
 });
+
+function uploadExtension(uploadBlobName) {
+    const azure = require('gulp-azure-storage');
+    const rename = require("gulp-rename");
+    return gulp.src('python*.vsix')
+        .pipe(rename(uploadBlobName))
+        .pipe(azure.upload({
+            account: process.env.AZURE_STORAGE_ACCOUNT,
+            key: process.env.AZURE_STORAGE_ACCESS_KEY,
+            container: process.env.AZURE_STORAGE_CONTAINER
+        }));
+}
+
+gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
@@ -274,36 +335,38 @@ async function checkDatascienceDependencies() {
     if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
         throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
     }
-    json.chunks[0].modules.forEach(m => {
-        const name = m.name;
-        if (!name.startsWith('./node_modules')) {
-            return;
-        }
-        const nameWithoutNodeModules = name.substring('./node_modules'.length);
-        let moduleName1 = nameWithoutNodeModules.split('/')[1];
-        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
-        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
-
-        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
-        switch (matchedModules.length) {
-            case 0:
-                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
-                break;
-            case 1:
-                break;
-            default: {
-                throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+    json.children.forEach(c => {
+        c.chunks[0].modules.forEach(m => {
+            const name = m.name;
+            if (!name.startsWith('./node_modules')) {
+                return;
             }
-        }
+            const nameWithoutNodeModules = name.substring('./node_modules'.length);
+            let moduleName1 = nameWithoutNodeModules.split('/')[1];
+            moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+            const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
 
-        const moduleName = matchedModules[0];
-        if (existingModulesCopy.has(moduleName)) {
-            existingModulesCopy.delete(moduleName);
-        }
-        if (existingModules.has(moduleName) || newModules.has(moduleName)) {
-            return;
-        }
-        newModules.add(moduleName);
+            const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
+            switch (matchedModules.length) {
+                case 0:
+                    throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                    break;
+                case 1:
+                    break;
+                default: {
+                    throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+                }
+            }
+
+            const moduleName = matchedModules[0];
+            if (existingModulesCopy.has(moduleName)) {
+                existingModulesCopy.delete(moduleName);
+            }
+            if (existingModules.has(moduleName) || newModules.has(moduleName)) {
+                return;
+            }
+            newModules.add(moduleName);
+        });
     });
 
     const errorMessages = [];
@@ -368,15 +431,12 @@ function buildDebugAdapterCoverage(done) {
 * @property {boolean=} skipLinter - Skip linter.
 */
 
-const tsProjectMap = {};
 /**
  *
  * @param {hygieneOptions} options
  */
 function getTsProject(options) {
-    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
-    const mode = tsOptions && tsOptions.mode ? tsOptions.mode : '';
-    return tsProjectMap[mode] ? tsProjectMap[mode] : tsProjectMap[mode] = ts.createProject('tsconfig.json', tsOptions);
+    return ts.createProject('tsconfig.json');
 }
 
 let configuration;
@@ -398,6 +458,7 @@ let reRunCompilation = false;
  * @returns {NodeJS.ReadWriteStream}
  */
 const hygiene = (options, done) => {
+    done = done || noop;
     if (compilationInProgress) {
         reRunCompilation = true;
         return done();

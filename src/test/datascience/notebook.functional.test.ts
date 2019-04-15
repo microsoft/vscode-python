@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
+import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { SemVer } from 'semver';
+import { Readable, Writable } from 'stream';
+import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
@@ -18,60 +18,49 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
-import { JupyterExecution } from '../../client/datascience/jupyter/jupyterExecution';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
+import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
-    ICell,
     IConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    InterruptResult,
+    InterruptResult
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
+import { ClassType } from '../../client/ioc/types';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
-import { IS_VSTS } from '../ciConstants';
-import { isOs, OSType } from '../common';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { SupportedCommands } from './mockJupyterManager';
+import { MockJupyterSession } from './mockJupyterSession';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file
+interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
+
+}
+
+// tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
-    const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
-
-    const workingPython: PythonInterpreter = {
-        path: '/foo/bar/python.exe',
-        version: new SemVer('3.6.6-final'),
-        sysVersion: '1.0.0.0',
-        sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-    };
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
-        if (ioc.mockJupyter) {
-            ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all);
-        }
     });
 
     teardown(async () => {
@@ -104,7 +93,7 @@ suite('Jupyter notebook tests', () => {
     }
 
     async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any): Promise<void> {
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -117,13 +106,13 @@ suite('Jupyter notebook tests', () => {
         assert.ok(data, `No data object on the cell`);
         if (data) { // For linter
             assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
-            assert.ok(data['text/plain'], `Cell mime type not correct`);
-            assert.equal(data['text/plain'], expectedValue, 'Cell value does not match');
+            assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
+            assert.equal((data as any)['text/plain'], expectedValue, 'Cell value does not match');
         }
     }
 
     async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string): Promise<void> {
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
         const cell = cells[0].data as nbformat.ICodeCell;
@@ -137,7 +126,7 @@ suite('Jupyter notebook tests', () => {
 
     async function verifyCell(jupyterServer: INotebookServer | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue: (data: any) => void): Promise<void> {
         // Verify results of an execute
-        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2);
+        const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
         if (cellType === 'code') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -148,11 +137,15 @@ suite('Jupyter notebook tests', () => {
                 assert.ok(false, `${index}: Unexpected error: ${error}`);
             }
             const data = cell.outputs[0].data;
-            assert.ok(data, `${index}: No data object on the cell`);
+            const text = cell.outputs[0].text;
+            assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
-                assert.ok(data[mimeType], `${index}: Cell mime type not correct`);
-                verifyValue(data[mimeType]);
+                assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
+                verifyValue((data as any)[mimeType]);
+            }
+            if (text) {
+                verifyValue(text);
             }
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -168,7 +161,7 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    function testMimeTypes(types: { code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
+    function testMimeTypes(types: { markdownRegEx: string | undefined; code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
         runTest('MimeTypes', async () => {
             // Prefill with the output (This is only necessary for mocking)
             types.forEach(t => {
@@ -178,23 +171,17 @@ suite('Jupyter notebook tests', () => {
             // Test all mime types together so we don't have to startup and shutdown between
             // each
             const server = await createNotebookServer(true);
-            let statusCount: number = 0;
             if (server) {
-                server.onStatusChanged((bool: boolean) => {
-                    statusCount += 1;
-                });
                 for (let i = 0; i < types.length; i += 1) {
-                    const prevCount = statusCount;
+                    const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
+                    ioc.getSettings().datascience.markdownRegularExpression = markdownRegex!;
                     await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
-                    if (types[i].cellType !== 'markdown') {
-                        assert.ok(statusCount > prevCount, 'Status didnt update');
-                    }
                 }
             }
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>) {
+    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess) {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
@@ -206,11 +193,11 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean): Promise<INotebookServer | undefined> {
+    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebookServer | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer(undefined, useDefaultConfig, undefined, testDir);
+            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1' });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -258,7 +245,7 @@ suite('Jupyter notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer(uri!, true);
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             if (!server) {
                 assert.fail('Failed to connect to remote server');
             }
@@ -283,7 +270,7 @@ suite('Jupyter notebook tests', () => {
 
     runTest('Failure', async () => {
         // Make a dummy class that will fail during launch
-        class FailedProcess extends JupyterExecution {
+        class FailedProcess extends JupyterExecutionFactory {
             public isNotebookSupported = (): Promise<boolean> => {
                 return Promise.resolve(false);
             }
@@ -305,25 +292,25 @@ suite('Jupyter notebook tests', () => {
             public onDidChangeInterpreterInformation(_listener: (e: PythonInterpreter) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+            public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
                 return Promise.resolve([]);
             }
             public autoSetInterpreter(): Promise<void> {
                 throw new Error('Method not implemented');
             }
-            public getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+            public getActiveInterpreter(_resource?: Uri): Promise<PythonInterpreter | undefined> {
                 return Promise.resolve(undefined);
             }
-            public getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<PythonInterpreter> {
+            public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonInterpreter> {
                 throw new Error('Method not implemented');
             }
-            public refresh(resource: Uri): Promise<void> {
+            public refresh(_resource: Uri): Promise<void> {
                 throw new Error('Method not implemented');
             }
             public initialize(): void {
                 throw new Error('Method not implemented');
             }
-            public getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string> {
+            public getDisplayName(_interpreter: Partial<PythonInterpreter>): Promise<string> {
                 throw new Error('Method not implemented');
             }
             public shouldAutoSetInterpreter(): Promise<boolean> {
@@ -344,8 +331,8 @@ suite('Jupyter notebook tests', () => {
     runTest('Export/Import', async () => {
         // Get a bunch of test cells (use our test cells from the react controls)
         const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-        const testState = generateTestState(id => { return; }, testFolderPath);
-        const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
+        const testState = generateTestState(_id => { return; }, testFolderPath);
+        const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
@@ -359,7 +346,7 @@ suite('Jupyter notebook tests', () => {
             const nbcells = notebook['cells'];
             if (nbcells) {
                 // tslint:disable-next-line:no-string-literal
-                const firstCellText: string = nbcells[0]['source'] as string;
+                const firstCellText: string = (nbcells as any)[0]['source'] as string;
                 assert.ok(firstCellText.includes('os.chdir'));
             }
         }
@@ -385,13 +372,7 @@ suite('Jupyter notebook tests', () => {
         }
     });
 
-    runTest('Restart kernel', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Restart kernel', async () => {
         addMockData(`a=1${os.EOL}a`, 1);
         addMockData(`a+=1${os.EOL}a`, 2);
         addMockData(`a+=4${os.EOL}a`, 6);
@@ -408,17 +389,22 @@ suite('Jupyter notebook tests', () => {
 
         // In unit tests we have to wait for status idle before restarting. Unit tests
         // seem to be timing out if the restart throws any exceptions (even if they're caught)
-        await server!.waitForIdle();
+        await server!.waitForIdle(10000);
 
         console.log('Restarting kernel');
+        try {
+            await server!.restartKernel(10000);
 
-        await server!.restartKernel();
+            console.log('Waiting for idle');
+            await server!.waitForIdle(10000);
 
-        console.log('Waiting for idle');
-        await server!.waitForIdle();
+            console.log('Verifying restart');
+            await verifyError(server, 'a', `name 'a' is not defined`);
 
-        console.log('Verifying restart');
-        await verifyError(server, 'a', `name 'a' is not defined`);
+        } catch (exc) {
+            assert.ok(exc instanceof JupyterKernelPromiseFailedError, 'Restarting did not timeout correctly');
+        }
+
     });
 
     class TaggedCancellationTokenSource extends CancellationTokenSource {
@@ -431,15 +417,18 @@ suite('Jupyter notebook tests', () => {
 
     async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
-        const disp = setTimeout((s) => {
+        let canceled = false;
+        const disp = setTimeout((_s) => {
+            canceled = true;
             tokenSource.cancel();
         }, timeout, tokenSource.tag);
 
         try {
             // tslint:disable-next-line:no-string-literal
-            tokenSource.token['tag'] = messageFormat.format(timeout.toString());
+            (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
-            assert.ok(false, messageFormat.format(timeout.toString()));
+            // We might get here before the cancel finishes
+            assert.ok(!canceled, messageFormat.format(timeout.toString()));
         } catch (exc) {
             // This should happen. This means it was canceled.
             assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);
@@ -461,20 +450,14 @@ suite('Jupyter notebook tests', () => {
         return true;
     }
 
-    runTest('Cancel execution', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Cancel execution', async () => {
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(2000);
             addMockData(`a=1${os.EOL}a`, 1);
         }
 
         // Try different timeouts, canceling after the timeout on each
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, true, t), 'Cancel did not cancel start after {0}ms'));
+        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, t), 'Cancel did not cancel start after {0}ms'));
 
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(undefined);
@@ -482,7 +465,7 @@ suite('Jupyter notebook tests', () => {
 
         // Make sure doing normal start still works
         const nonCancelSource = new CancellationTokenSource();
-        const server = await jupyterExecution.connectToNotebookServer(undefined, true, nonCancelSource.token);
+        const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
         assert.ok(server, 'Server not found with a cancel token that does not cancel');
 
         // Make sure can run some code too
@@ -493,7 +476,7 @@ suite('Jupyter notebook tests', () => {
         }
 
         // Force a settings changed so that all of the cached data is cleared
-        ioc.forceSettingsChanged();
+        ioc.forceSettingsChanged('/usr/bin/test3/python');
 
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
@@ -506,10 +489,8 @@ suite('Jupyter notebook tests', () => {
         let finishedBefore = false;
         const finishedPromise = createDeferred();
         let error;
-        const observable = server!.executeObservable(code, 'foo.py', 0);
-        let cells: ICell[] = [];
+        const observable = server!.executeObservable(code, 'foo.py', 0, uuid(), false);
         observable.subscribe(c => {
-            cells = c;
             if (c.length > 0 && c[0].state === CellState.error) {
                 finishedBefore = !interrupted;
                 finishedPromise.resolve();
@@ -536,13 +517,7 @@ suite('Jupyter notebook tests', () => {
         return result;
     }
 
-    runTest('Interrupt kernel', async function () {
-        // This test is failing on Ubuntu under AzDO, but works on Travis. See issue #3973.
-        if (IS_VSTS && isRollingBuild && isOs(OSType.Linux)) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    runTest('Interrupt kernel', async () => {
         const returnable =
             `import signal
 import _thread
@@ -582,13 +557,13 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((t) => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
             return { result: '.', haveMore: haveMore };
         });
-        addInterruptableMockData(fourSecondSleep, async (cancelToken: CancellationToken) => {
+        addInterruptableMockData(fourSecondSleep, async (_cancelToken: CancellationToken) => {
             // This one sleeps for four seconds and then it's done.
             await sleep(4000);
             return { result: 'foo', haveMore: false };
@@ -597,7 +572,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((t) => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -611,23 +586,23 @@ while keep_going:
         await sleep(100);
 
         // Try with something we can interrupt
-        let interruptResult = await interruptExecute(server, returnable, 1000, 1000);
+        await interruptExecute(server, returnable, 1000, 1000);
 
         // Try again with something that doesn't return. However it should finish before
         // we get to our own sleep. Note: We need the print so that the test knows something happened.
-        interruptResult = await interruptExecute(server, fourSecondSleep, 7000, 7000);
+        await interruptExecute(server, fourSecondSleep, 7000, 7000);
 
         // Try again with something that doesn't return. Make sure it times out
-        interruptResult = await interruptExecute(server, fourSecondSleep, 100, 7000);
-        assert.equal(interruptResult, InterruptResult.TimedOut);
+        await interruptExecute(server, fourSecondSleep, 100, 7000);
 
         // The tough one, somethign that causes a kernel reset.
-        interruptResult = await interruptExecute(server, kill, 1000, 1000);
+        await interruptExecute(server, kill, 1000, 1000);
     });
 
     testMimeTypes(
         [
             {
+                markdownRegEx: undefined,
                 code:
                     `a=1
 a`,
@@ -637,6 +612,7 @@ a`,
                 verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -648,6 +624,7 @@ df.head()`,
                 verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -658,6 +635,7 @@ df.head()`,
                 verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
             },
             {
+                markdownRegEx: undefined,
                 code:
                     `#%% [markdown]#
 # #HEADER`,
@@ -667,7 +645,18 @@ df.head()`,
                 verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
             },
             {
+                markdownRegEx: '\\s*#\\s*<markdowncell>',
+                code:
+                    `# <markdowncell>
+# #HEADER`,
+                mimeType: 'text/plain',
+                cellType: 'markdown',
+                result: '#HEADER',
+                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+            },
+            {
                 // Test relative directories too.
+                markdownRegEx: undefined,
                 code:
                     `import pandas as pd
 df = pd.read_csv("./DefaultSalesReport.csv")
@@ -678,7 +667,30 @@ df.head()`,
                 verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
             },
             {
+                // Important to test as multiline cell magics only work if they are the first item in the cell
+                // Doesn't work with a comment though.
+                markdownRegEx: undefined,
+                code:
+                    `%%bash
+echo 'hello'`,
+                mimeType: 'text/plain',
+                cellType: 'code',
+                result: 'hello',
+                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
+            },
+            {
+                // Test shell command should work on PC / Mac / Linux
+                markdownRegEx: undefined,
+                code:
+                    `!echo world`,
+                mimeType: 'text/plain',
+                cellType: 'code',
+                result: 'world',
+                verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
+            },
+            {
                 // Plotly
+                markdownRegEx: undefined,
                 code:
                     `import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -690,7 +702,7 @@ plt.show()`,
                 result: `00000`,
                 mimeType: 'image/png',
                 cellType: 'code',
-                verifyValue: (d) => { return; }
+                verifyValue: (_d) => { return; }
             }
         ]
     );
@@ -754,11 +766,41 @@ plt.show()`,
         }
     });
 
+    async function getNotebookSession(server: INotebookServer | undefined): Promise<MockJupyterSession | undefined> {
+        if (server) {
+            // This is kinda fragile. It reliese on impl details to get to the session. Might
+            // just expose it?
+            const innerServerFactory = (server as any).serverFactory as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
+            const innerServer = await innerServerFactory.get();
+            assert.ok(innerServer, 'Cannot find the inner server');
+            return (innerServer as any).session as MockJupyterSession;
+        }
+    }
+
+    runTest('Theme modifies execution', async () => {
+        if (ioc.mockJupyter) {
+            let server = await createNotebookServer(true, false, false);
+            let session = await getNotebookSession(server);
+            const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
+            const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
+
+            assert.ok(session!.getExecutes().indexOf(light) >= 0, 'light not found');
+            assert.ok(session!.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
+            await server!.dispose();
+
+            server = await createNotebookServer(true, false, true);
+            session = await getNotebookSession(server);
+            assert.ok(session!.getExecutes().indexOf(dark) >= 0, 'dark not found');
+            assert.ok(session!.getExecutes().indexOf(light) < 0, 'light found when not allowed');
+            await server!.dispose();
+        }
+    });
+
     runTest('Invalid kernel spec works', async () => {
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
-            class FailedKernelSpec extends JupyterExecution {
-                protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+            class FailedKernelSpec extends JupyterExecutionFactory {
+                protected async getMatchingKernelSpec(_connection?: IConnection, _cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);
                 }
             }
@@ -773,23 +815,121 @@ plt.show()`,
         }
     });
 
-    // Tests that should be running:
-    // - Creation
-    // - Failure
-    // - Not installed
-    // - Different mime types
-    // - Export/import
-    // - Auto import
-    // - changing directories
-    // - Restart
-    // - Error types
-    // Test to write after jupyter process abstraction
-    // - jupyter not installed
-    // - kernel spec not matching
-    // - ipykernel not installed
-    // - kernelspec not installed
-    // - startup / shutdown / restart - make uses same kernelspec. Actually should be in memory already
-    // - Starting with python that doesn't have jupyter and make sure it can switch to one that does
-    // - Starting with python that doesn't have jupyter and make sure the switch still uses a python that's close as the kernel
+    runTest('Server cache working', async () => {
+        console.log('Staring server cache test');
+        const s1 = await createNotebookServer(true, false, false, 'same');
+        console.log('Creating s2');
+        const s2 = await createNotebookServer(true, false, false, 'same');
+        console.log('Testing s1 and s2, creating s3');
+        assert.ok(s1 === s2, 'Two servers not the same when they should be');
+        const s3 = await createNotebookServer(false, false, false, 'same');
+        console.log('Testing s1 and s3, creating s4');
+        assert.ok(s1 !== s3, 'Different config should create different server');
+        const s4 = await createNotebookServer(true, false, false, 'different');
+        console.log('Testing s1 and s4, creating s5');
+        assert.ok(s1 !== s4, 'Different purpose should create different server');
+        const s5 = await createNotebookServer(true, false, true, 'different');
+        assert.ok(s4 === s5, 'Dark theme should be same server');
+        console.log('Disposing of all');
+        await s1!.dispose();
+        await s3!.dispose();
+        await s4!.dispose();
+    });
+
+    class DyingProcess implements ChildProcess {
+        public stdin: Writable;
+        public stdout: Readable;
+        public stderr: Readable;
+        public stdio: [Writable, Readable, Readable];
+        public killed: boolean = false;
+        public pid: number = 1;
+        public connected: boolean = true;
+        constructor(private timeout: number) {
+            noop();
+            this.stderr = this.stdout = new Readable();
+            this.stdin = new Writable();
+            this.stdio = [this.stdin, this.stdout, this.stderr];
+        }
+        public kill(_signal?: string): void {
+            throw new Error('Method not implemented.');
+        }
+        public send(_message: any, _sendHandle?: any, _options?: any, _callback?: any): any {
+            throw new Error('Method not implemented.');
+        }
+        public disconnect(): void {
+            throw new Error('Method not implemented.');
+        }
+        public unref(): void {
+            throw new Error('Method not implemented.');
+        }
+        public ref(): void {
+            throw new Error('Method not implemented.');
+        }
+        public addListener(_event: any, _listener: any): this {
+            throw new Error('Method not implemented.');
+        }
+        public emit(_event: any, _message?: any, _sendHandle?: any, ..._rest: any[]): any {
+            throw new Error('Method not implemented.');
+        }
+        public on(event: any, listener: any): this {
+            if (event === 'exit') {
+                setTimeout(() => listener(2), this.timeout);
+            }
+            return this;
+        }
+        public once(_event: any, _listener: any): this {
+            throw new Error('Method not implemented.');
+        }
+        public prependListener(_event: any, _listener: any): this {
+            throw new Error('Method not implemented.');
+        }
+        public prependOnceListener(_event: any, _listener: any): this {
+            throw new Error('Method not implemented.');
+        }
+        public removeListener(_event: string | symbol, _listener: (...args: any[]) => void): this {
+            return this;
+        }
+        public removeAllListeners(_event?: string | symbol): this {
+            throw new Error('Method not implemented.');
+        }
+        public setMaxListeners(_n: number): this {
+            throw new Error('Method not implemented.');
+        }
+        public getMaxListeners(): number {
+            throw new Error('Method not implemented.');
+        }
+        public listeners(_event: string | symbol): Function[] {
+            throw new Error('Method not implemented.');
+        }
+        public rawListeners(_event: string | symbol): Function[] {
+            throw new Error('Method not implemented.');
+        }
+        public eventNames(): (string | symbol)[] {
+            throw new Error('Method not implemented.');
+        }
+        public listenerCount(_type: string | symbol): number {
+            throw new Error('Method not implemented.');
+        }
+    }
+
+    runTest('Server death', async () => {
+        if (ioc.mockJupyter) {
+            // Only run this test for mocks. We need to mock the server dying.
+            addMockData(`a=1${os.EOL}a`, 1);
+            const server = await createNotebookServer(true);
+            assert.ok(server, 'Server died before running');
+
+            // Sleep for 100 ms so it crashes
+            await sleep(100);
+
+            try {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
+                assert.ok(false, 'Exception should have been thrown');
+            } catch {
+                noop();
+            }
+
+        }
+    }, new DyingProcess(100));
 
 });

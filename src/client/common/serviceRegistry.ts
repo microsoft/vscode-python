@@ -2,12 +2,15 @@
 // Licensed under the MIT License.
 import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
+import { ImportTracker } from '../telemetry/importTracker';
+import { IImportTracker } from '../telemetry/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
+import { LanguageService } from './application/languageService';
 import { TerminalManager } from './application/terminalManager';
 import {
     IApplicationEnvironment,
@@ -15,6 +18,8 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
+    ILanguageService,
+    ILiveShareApi,
     ITerminalManager,
     IWorkspaceService
 } from './application/types';
@@ -24,6 +29,7 @@ import { ConfigurationService } from './configuration/service';
 import { EditorUtils } from './editor';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { ProductInstaller } from './installer/productInstaller';
+import { LiveShareApi } from './liveshare/liveshare';
 import { Logger } from './logger';
 import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
@@ -87,12 +93,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+    serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<INugetService>(INugetService, NugetService);
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
     serviceManager.addSingleton<ITerminalActivationHandler>(ITerminalActivationHandler, PowershellTerminalActivationFailedHandler);
+    serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -109,4 +117,5 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
+    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
 }

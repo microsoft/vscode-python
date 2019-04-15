@@ -42,7 +42,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         if (pythonPathInConfig.workspaceFolderValue) {
             return NextAction.runNextRule;
         }
-        const pipEnvPromise = createDeferredFromPromise(this.pipEnvInterpreterLocator.getInterpreters(workspacePath.folderUri));
+        const pipEnvPromise = createDeferredFromPromise(this.pipEnvInterpreterLocator.getInterpreters(workspacePath.folderUri, true));
         const virtualEnvPromise = createDeferredFromPromise(this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri));
 
         // Use only one, we currently do not have support for both pipenv and virtual env in same workspace.
@@ -61,6 +61,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             await this.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
             await manager.setWorkspaceInterpreter(workspacePath.folderUri!, bestInterpreter);
         }
+
         traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
         return NextAction.runNextRule;
     }
@@ -85,6 +86,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
     protected async cacheSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
         // We should never clear settings in user settings.json.
         if (!interpreter) {
+            await super.cacheSelectedInterpreter(resource, interpreter);
             return;
         }
         const activeWorkspace = this.helper.getActiveWorkspaceUri(resource);

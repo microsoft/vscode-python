@@ -2,7 +2,6 @@
     --button-size: 18px;
 }
 
-
 .cell-button {
     border-width: 0px;
     border-style: solid;
@@ -30,6 +29,10 @@
 .cell-button-child img{
     max-width: 100%;
     max-height: 100%;
+}
+
+.cell-button-image svg{
+    pointer-events: none;
 }
 
 .cell-button-vscode-light:disabled {

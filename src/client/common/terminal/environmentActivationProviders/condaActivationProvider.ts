@@ -67,7 +67,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                     `source ${activatePath}`;
                 return [
                     firstActivate,
-                    `conda activate ${envInfo.name}`
+                    `conda activate ${envInfo.name.toCommandArgument()}`
                 ];
             }
         }

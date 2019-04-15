@@ -23,7 +23,7 @@ import { getNamesAndValues } from '../../client/common/utils/enum';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length
@@ -83,7 +83,7 @@ suite('Installer', () => {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
-        processService.onExec((file, args, options, callback) => {
+        processService.onExec((_file, args, _options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);
             if (args.length > 1 && args[0] === '-c' && args[1] === `import ${moduleName}`) {
                 checkInstalledDef.resolve(true);

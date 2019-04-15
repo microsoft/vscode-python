@@ -1,9 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { fsExistsAsync } from '../common/utils/fs';
-import { Tag } from './contracts';
+import { ITag } from './contracts';
 
 // tslint:disable:no-require-imports no-var-requires no-suspicious-comment
+// tslint:disable:no-any
 // TODO: Turn these into imports.
 const LineByLineReader = require('line-by-line');
 const NamedRegexp = require('named-js-regexp');
@@ -20,7 +21,7 @@ export interface IRegexGroup {
     line: number;
 }
 
-export function matchNamedRegEx(data, regex): IRegexGroup | null {
+export function matchNamedRegEx(data: String, regex: String): IRegexGroup | null {
     const compiledRegexp = NamedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {
@@ -96,34 +97,33 @@ CTagKinMapping.set('_singleton methods', vscode.SymbolKind.Method);
 
 const newValuesAndKeys = {};
 CTagKinMapping.forEach((value, key) => {
-    newValuesAndKeys[key.substring(1)] = value;
+    (newValuesAndKeys as any)[key.substring(1)] = value;
 });
 Object.keys(newValuesAndKeys).forEach(key => {
-    CTagKinMapping.set(key, newValuesAndKeys[key]);
+    CTagKinMapping.set(key, (newValuesAndKeys as any)[key]);
 });
 
 export function parseTags(
     workspaceFolder: string,
     tagFile: string,
     query: string,
-    token: vscode.CancellationToken,
-    maxItems: number = 200
-): Promise<Tag[]> {
+    token: vscode.CancellationToken
+): Promise<ITag[]> {
     return fsExistsAsync(tagFile).then(exists => {
         if (!exists) {
             return Promise.resolve([]);
         }
 
-        return new Promise<Tag[]>((resolve, reject) => {
+        return new Promise<ITag[]>((resolve, reject) => {
             const lr = new LineByLineReader(tagFile);
             let lineNumber = 0;
-            const tags: Tag[] = [];
+            const tags: ITag[] = [];
 
-            lr.on('error', (err) => {
+            lr.on('error', (err: Error) => {
                 reject(err);
             });
 
-            lr.on('line', (line) => {
+            lr.on('line', (line: string) => {
                 lineNumber = lineNumber + 1;
                 if (token.isCancellationRequested) {
                     lr.close();
@@ -144,7 +144,7 @@ export function parseTags(
         });
     });
 }
-function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): Tag | undefined {
+function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): ITag | undefined {
     if (IsFileRegEx.test(line)) {
         return;
     }

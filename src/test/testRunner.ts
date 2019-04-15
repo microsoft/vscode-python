@@ -10,9 +10,11 @@ import * as glob from 'glob';
 import * as istanbul from 'istanbul';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import * as process from 'process';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
-import { setUpDomEnvironment } from './datascience/reactHelpers';
+import { IS_SMOKE_TEST } from './constants';
+import { initialize } from './initialize';
 
 interface ITestRunnerOptions {
     enabled?: boolean;
@@ -42,12 +44,14 @@ type TestCallback = (error?: Error, failures?: number) => void;
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function (): number[] { return [80, 75]; };
+    tty.getWindowSize = function (): number[] {
+        return [80, 75];
+    };
 }
 
 let mocha = new Mocha(<any>{
     ui: 'tdd',
-    useColors: true
+    colors: true
 });
 
 export type SetupOptions = MochaSetupOptions & {
@@ -66,6 +70,8 @@ export function configure(setupOptions: SetupOptions, coverageOpts?: { coverageC
     if (setupOptions.testFilesSuffix) {
         testFilesGlob = setupOptions.testFilesSuffix;
     }
+    // Force Mocha to exit.
+    (setupOptions as any).exit = true;
     mocha = new Mocha(setupOptions);
     coverageOptions = coverageOpts;
 }
@@ -76,7 +82,10 @@ export function run(testsRoot: string, callback: TestCallback): void {
 
     // nteract/transforms-full expects to run in the browser so we have to fake
     // parts of the browser here.
-    setUpDomEnvironment();
+    if (!IS_SMOKE_TEST) {
+        const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
+        reactHelpers.setUpDomEnvironment();
+    }
 
     // Check whether code coverage is enabled.
     const options = getCoverageOptions(testsRoot);
@@ -87,18 +96,43 @@ export function run(testsRoot: string, callback: TestCallback): void {
         coverageRunner.setupCoverage();
     }
 
+    /**
+     * Waits until the Python Extension completes loading or a timeout.
+     * When running tests within VSC, we need to wait for the Python Extension to complete loading,
+     * this is where `initialize` comes in, we load the PVSC extension using VSC API, wait for it
+     * to complete.
+     * That's when we know out PVSC extension specific code is ready for testing.
+     * So, this code needs to run always for every test running in VS Code (what we call these `system test`) .
+     * @returns
+     */
+    function initializationScript() {
+        const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
+        let timer: NodeJS.Timer | undefined;
+        const failed = new Promise((_, reject) => {
+            timer = setTimeout(() => reject(ex), 120_000);
+        });
+        const promise = Promise.race([initialize(), failed]);
+        promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
+        return promise;
+    }
     // Run the tests.
-    glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
-        if (error) {
-            return callback(error);
+    glob(
+        `**/**.${testFilesGlob}.js`,
+        { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot },
+        (error, files) => {
+            if (error) {
+                return callback(error);
+            }
+            try {
+                files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                initializationScript()
+                    .then(() => mocha.run(failures => callback(undefined, failures)))
+                    .catch(callback);
+            } catch (error) {
+                return callback(error);
+            }
         }
-        try {
-            files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
-            mocha.run((failures) => callback(undefined, failures));
-        } catch (error) {
-            return callback(error);
-        }
-    });
+    );
 }
 
 function getCoverageOptions(testsRoot: string): ITestRunnerOptions | undefined {
@@ -110,7 +144,7 @@ function getCoverageOptions(testsRoot: string): ITestRunnerOptions | undefined {
 }
 
 class CoverageRunner {
-    private coverageVar: string = `$$cov_${new Date().getTime()}$$`;
+    private readonly coverageVar: string = `$$cov_${new Date().getTime()}$$`;
     private sourceFiles: string[] = [];
     private instrumenter!: Instrumenter;
 
@@ -129,7 +163,11 @@ class CoverageRunner {
         global[this.coverageVar] = value;
     }
 
-    constructor(private options: ITestRunnerOptions, private testsRoot: string, endRunCallback: TestCallback) {
+    constructor(
+        private readonly options: ITestRunnerOptions,
+        private readonly testsRoot: string,
+        endRunCallback: TestCallback
+    ) {
         if (!options.relativeSourcePath) {
             endRunCallback(new Error('Error - relativeSourcePath must be defined for code coverage to work'));
         }
@@ -210,7 +248,7 @@ class CoverageRunner {
                 // When instrumenting the code, istanbul will give each FunctionDeclaration a value of 1 in coverState.s,
                 // presumably to compensate for function hoisting. We need to reset this, as the function was not hoisted,
                 // as it was never loaded.
-                Object.keys(this.instrumenter.coverState.s).forEach(key => this.instrumenter.coverState.s[key] = 0);
+                Object.keys(this.instrumenter.coverState.s).forEach(key => ((this.instrumenter.coverState.s as any)[key] = 0));
 
                 coverage[file] = this.instrumenter.coverState;
             });
@@ -222,7 +260,7 @@ class CoverageRunner {
         fs.writeFileSync(coverageFile, JSON.stringify(coverage), 'utf8');
 
         const remappedCollector: istanbul.Collector = remapIstanbul.remap(coverage, {
-            warn: warning => {
+            warn: (warning: any) => {
                 // We expect some warnings as any JS file without a typescript mapping will cause this.
                 // By default, we'll skip printing these to the console as it clutters it up.
                 if (this.options.verbose) {

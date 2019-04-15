@@ -65,7 +65,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
         processService = mock(ProcessService);
         currentProcess = mock(CurrentProcess);
         envVarsService = mock(EnvironmentVariablesProvider);
-        workspace = mockedVSCodeNamespaces['workspace']!;
+        workspace = mockedVSCodeNamespaces.workspace!;
         when(envVarsService.onDidEnvironmentVariablesChange).thenReturn(noop as any);
         service = new EnvironmentActivationService(
             instance(helper), instance(platform),
@@ -84,7 +84,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
         verify(envVarsService.onDidEnvironmentVariablesChange).once();
     }
     teardown(() => {
-        mockedVSCodeNamespaces['workspace']!.reset();
+        mockedVSCodeNamespaces.workspace!.reset();
     });
 
     function title(resource?: Uri, interpreter?: PythonInterpreter) {
@@ -163,7 +163,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
                         const options = capture(processService.shellExec).first()[1];
 
                         const expectedShell = defaultShells[osType.value];
-                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars });
+                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
                     });
                     test('Use current process variables if there are no custom variables', async () => {
                         const cmd = ['1', '2'];
@@ -187,7 +187,7 @@ suite('Interprters Activation - Python Environment Variables', () => {
                         const options = capture(processService.shellExec).first()[1];
 
                         const expectedShell = defaultShells[osType.value];
-                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars });
+                        expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
                     });
                     test('Error must be swallowed when activation fails', async () => {
                         const cmd = ['1', '2'];

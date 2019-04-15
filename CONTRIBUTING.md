@@ -5,9 +5,9 @@
 
 ---
 
-| macOS/Windows CI | Linux CI | Rolling CI (macOS/Windows) | Code Coverage |
+| macOS/Linux/Windows CI | Linux CI | Nightly CI (macOS/Linux/Windows) | Code Coverage |
 |-|-|-|-|
-|[![Build Status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/vscode-python-ci-pr_validation)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=18) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/PR%20Validation?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=84&branchName=master) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python/branches) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -19,12 +19,12 @@
 
 ### Prerequisites
 
-1. Node.js (>= 8.9.1, < 9.0.0)
-1. Python 2.7 or later (required only for testing the extension and running unit tests)
+1. [Node.js](https://nodejs.org/) 10.x
+1. [Python](https://www.python.org/) 2.7 or later (required only for testing the extension and running unit tests)
 1. Windows, macOS, or Linux
-1. Visual Studio Code
-1. Following VS Code extensions:
-    * [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint)
+1. [Visual Studio Code](https://code.visualstudio.com/)
+1. The following VS Code extensions:
+    * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
     * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 1. Have an issue which has been accepted with a "needs PR" label (feel free to indicate you would be happy to provide a PR for the issue)
 
@@ -33,25 +33,22 @@
 ```shell
 git clone https://github.com/microsoft/vscode-python
 cd vscode-python
-npm install
+npm ci
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
 python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-# Specifying the virtual environment simply varies between shells.
-export CI_PYTHON_PATH=`pwd`/.venv/bin/python
+# Optionally Update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter.
 ```
-
 You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
 
 ### Incremental Build
 
-Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
+Run the `Compile` and `Hygiene` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build and hygiene tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
-You can also compile from the command-line:
-
+You can also compile from the command-line. For a full compile you can use `npx gulp prePublishNonBundle`. For incremental builds you can use the following commands depending on your needs:
 ```shell
-tsc -p ./  # full compile
-tsc --watch -p ./  # incremental
+npm run compile
+npm run compile-webviews-watch # For data science (React Code)
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out`.
@@ -70,7 +67,7 @@ Use the `Launch Extension` launch option.
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Tests via the `Debug Unit Tests`  launch options.
+1. Run the Tests via the `Unit Tests`  launch option.
 
 You can also run them from the command-line (after compiling):
 
@@ -85,7 +82,7 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ```js
     "args": [
         "--timeout=60000",
-        "--grep=[The suite name of your unit test file]"
+        "--grep", "<suite name>"
     ],
 ```
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
@@ -131,6 +128,22 @@ const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
 ...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
 
 And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
+
+### Testing Python Scripts
+
+The extension has a number of scripts in ./pythonFiles.  Tests for these
+scripts are found in ./pythonFiles/tests.  To run those tests:
+
+* `python2.7 pythonFiles/tests/run_all.py`
+* `python3 -m pythonFiles.tests`
+
+By default, functional tests are included.  To exclude them:
+
+`python3 -m pythonFiles.tests --no-functional`
+
+To run only the functional tests:
+
+`python3 -m pythonFiles.tests --functional`
 
 ### Standard Debugging
 
@@ -222,10 +235,6 @@ Once an issue has been appropriately classified, there are two keys ways to help
 
 The other way to help is to go through issues that are labeled as [`validate fix`](https://github.com/Microsoft/vscode-python/labels/validate%20fix). These issues are believed to be fixed, but having an independent validation is always appreciated.
 
-#### Closed issues
-
-If a closed issue is labeled with ["volunteer"](https://github.com/Microsoft/vscode-python/issues?q=label%3Avolunteer+is%3Aclosed) that means the development team has no plans to implement the work for the issue, but that we would accept a pull request if provided. We close these types of issues to help us stay focused on the issues we do plan/hope to get to (which we will also accept pull requests for, just please discuss design considerations with us first to help make sure your pull request will be accepted).
-
 ### Pull requests
 
 Key details that all pull requests are expected to handle should be
@@ -238,11 +247,10 @@ Starting in 2018, the extension switched to
 auto-updates and thus there is no need to track its version
 number for backwards-compatibility. As such, the major version
 is the current year, the minor version is the month when feature
-freeze was reached, and the micro version is how many releases there
-have been in that month (starting at 0). For example
-the release made when we reach feature freeze in July 2018
-would be `2018.7.0`, and if there is a second release in that month
-it would be `2018.7.1`.
+freeze was reached, and the build number is a number that increments for every build.
+For example the release made when we reach feature freeze in July 2018
+would be `2018.7.<some number>`, and if there is a second release in that month
+it would be `2018.7.<some larger number>`.
 
 ## Releasing
 

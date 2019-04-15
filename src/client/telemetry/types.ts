@@ -12,9 +12,14 @@ import { PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
+    pythonVersion: string | undefined;
+    interpreterType: InterpreterType | undefined;
     terminal: TerminalShellType;
-    hasUserDefinedInterpreter: boolean;
-    isAutoSelectedWorkspaceInterpreterUsed: boolean;
+    workspaceFolderCount: number;
+    hasPython3: boolean;
+    usingUserDefinedInterpreter: boolean;
+    usingAutoSelectedWorkspaceInterpreter: boolean;
+    usingGlobalInterpreter: boolean;
 };
 export type FormatTelemetry = {
     tool: 'autopep8' | 'black' | 'yapf';
@@ -25,6 +30,7 @@ export type FormatTelemetry = {
 export type LanguageServerVersionTelemetry = {
     success: boolean;
     lsVersion?: string;
+    usedSSL?: boolean;
 };
 
 export type LanguageServerErrorTelemetry = {
@@ -65,7 +71,7 @@ export type CodeExecutionTelemetry = {
     scope: 'file' | 'selection';
 };
 export type DebuggerTelemetry = {
-    trigger: 'launch' | 'attach';
+    trigger: 'launch' | 'attach' | 'test';
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     hasEnvVars: boolean;
     hasArgs: boolean;
@@ -88,15 +94,21 @@ export type DebuggerPerformanceTelemetry = {
     duration: number;
     action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
 };
+export type TestTool = 'nosetest' | 'pytest' | 'unittest';
 export type TestRunTelemetry = {
-    tool: 'nosetest' | 'pytest' | 'unittest';
+    tool: TestTool;
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
     debugging: boolean;
-    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto';
+    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
-    tool: 'nosetest' | 'pytest' | 'unittest';
+    tool: TestTool;
+    trigger: 'ui' | 'commandpalette';
+    failed: boolean;
+};
+export type TestConfiguringTelemetry = {
+    tool?: TestTool;
     trigger: 'ui' | 'commandpalette';
     failed: boolean;
 };
@@ -179,3 +191,8 @@ export type InterpreterActivation = {
     pythonVersion?: string;
     interpreterType: InterpreterType;
 };
+
+export const IImportTracker = Symbol('IImportTracker');
+export interface IImportTracker {
+    activate(): Promise<void>;
+}

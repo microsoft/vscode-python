@@ -11,9 +11,9 @@ import { IFileSystem } from '../../common/platform/types';
 @injectable()
 export class DjangoContextInitializer implements Disposable {
     private readonly isDjangoProject: ContextKey;
-    private monitoringActiveTextEditor: boolean;
+    private monitoringActiveTextEditor: boolean = false;
     private workspaceContextKeyValues = new Map<string, boolean>();
-    private lastCheckedWorkspace: string;
+    private lastCheckedWorkspace: string = '';
     private disposables: Disposable[] = [];
 
     constructor(private documentManager: IDocumentManager,

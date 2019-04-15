@@ -19,7 +19,7 @@ import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
 import { compareFiles } from '../textUtils';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 const ch = window.createOutputChannel('Tests');
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
@@ -104,7 +104,7 @@ suite('Formatting - General', () => {
 
     async function injectFormatOutput(outputFileName: string) {
         const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
-        procService.onExecObservable((file, args, options, callback) => {
+        procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(formatFilesPath, outputFileName), 'utf8'),

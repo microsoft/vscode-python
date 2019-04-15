@@ -1,7 +1,12 @@
+import { DocumentFilter } from 'vscode';
+
 export const PYTHON_LANGUAGE = 'python';
-export const PYTHON = [
+export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
+];
+export const PYTHON_ALLFILES = [
+    { language: PYTHON_LANGUAGE }
 ];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
@@ -15,21 +20,25 @@ export namespace Commands {
     export const Tests_View_UI = 'python.viewTestUI';
     export const Tests_Picker_UI = 'python.selectTestToRun';
     export const Tests_Picker_UI_Debug = 'python.selectTestToDebug';
+    export const Tests_Configure = 'python.configureTests';
     export const Tests_Discover = 'python.discoverTests';
+    export const Tests_Discovering = 'python.discoveringTests';
     export const Tests_Run_Failed = 'python.runFailedTests';
     export const Sort_Imports = 'python.sortImports';
     export const Tests_Run = 'python.runtests';
     export const Tests_Debug = 'python.debugtests';
-    export const Tests_Ask_To_Stop_Test = 'python.askToStopUnitTests';
-    export const Tests_Ask_To_Stop_Discovery = 'python.askToStopUnitTestDiscovery';
-    export const Tests_Stop = 'python.stopUnitTests';
+    export const Tests_Ask_To_Stop_Test = 'python.askToStopTests';
+    export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
+    export const Tests_Stop = 'python.stopTests';
+    export const Test_Reveal_Test_Item = 'python.revealTestItem';
+    export const ViewOutput = 'python.viewOutput';
     export const Tests_ViewOutput = 'python.viewTestOutput';
     export const Tests_Select_And_Run_Method = 'python.selectAndRunTestMethod';
     export const Tests_Select_And_Debug_Method = 'python.selectAndDebugTestMethod';
     export const Tests_Select_And_Run_File = 'python.selectAndRunTestFile';
     export const Tests_Run_Current_File = 'python.runCurrentTestFile';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
-    export const Refaactor_Extract_Method = 'python.refactorExtractMethod';
+    export const Refactor_Extract_Method = 'python.refactorExtractMethod';
     export const Update_SparkLibrary = 'python.updateSparkLibrary';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
@@ -38,6 +47,12 @@ export namespace Commands {
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
+    export const navigateToTestFunction = 'navigateToTestFunction';
+    export const navigateToTestSuite = 'navigateToTestSuite';
+    export const navigateToTestFile = 'navigateToTestFile';
+    export const openTestNodeInEditor = 'python.openTestNodeInEditor';
+    export const runTestNode = 'python.runTestNode';
+    export const debugTestNode = 'python.debugTestNode';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

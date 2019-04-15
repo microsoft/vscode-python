@@ -15,10 +15,12 @@ import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTelemetry } from '../../../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../types';
+import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
 
 @injectable()
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration> implements IDebugConfigurationResolver<T> {
+    protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
     constructor(protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
         protected readonly configurationService: IConfigurationService) { }
@@ -54,6 +56,9 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         if (debugConfiguration.pythonPath === '${config:python.pythonPath}' || !debugConfiguration.pythonPath) {
             const pythonPath = this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = pythonPath;
+            this.pythonPathSource = PythonPathSource.settingsJson;
+        } else{
+            this.pythonPathSource = PythonPathSource.launchJson;
         }
     }
     protected debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
@@ -69,7 +74,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
     }
-    protected sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
+    protected sendTelemetry(trigger: 'launch' | 'attach' | 'test', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         const name = debugConfiguration.name || '';
         const moduleName = debugConfiguration.module || '';
         const telemetryProps: DebuggerTelemetry = {

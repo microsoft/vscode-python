@@ -8,7 +8,7 @@ import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
 import { Logger } from '../../../common/logger';
 import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
-import { IConfigurationService, ICurrentProcess, Resource } from '../../../common/types';
+import { IConfigurationService, ICurrentProcess, IDisposableRegistry, Resource } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
@@ -28,7 +28,8 @@ export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
             PowershellActivationNotSupportedWithBatchFilesMessage,
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
-            resource
+            resource,
+            'always'
         );
     }
 }
@@ -39,10 +40,13 @@ export const PowerShellActivationHackDiagnosticsServiceId =
 @injectable()
 export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
         super(
             [DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic],
-            serviceContainer
+            serviceContainer,
+            disposableRegistry,
+            true
         );
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
