@@ -8,8 +8,7 @@
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
-            "pythonPath": "${config:python.pythonPath}",
-            "args": ["${file}"]
+            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
         },
         {
             "name": "Python: Current File",
