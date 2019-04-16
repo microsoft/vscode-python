@@ -6,9 +6,12 @@ import sys
 import os
 import json
 from .scripts import get_variable_value, get_variables, get_data_frame_info, get_data_frame_rows
-from IPython import get_ipython
+import importlib
+haveIPython = importlib.util.find_spec('IPython')
+if haveIPython:
+    from IPython import get_ipython
 
-@pytest.mark.skipif(get_ipython() == None,
+@pytest.mark.skipif(haveIPython == None,
                     reason="Can't run variable tests without IPython console")
 def test_variable_list(capsys):
     # Execute a single cell before we get the variables. 
@@ -25,7 +28,7 @@ def test_variable_list(capsys):
     assert have_y
     assert have_z
 
-@pytest.mark.skipif(get_ipython() == None,
+@pytest.mark.skipif(haveIPython == None,
                     reason="Can't run variable tests without IPython console")
 def test_variable_value(capsys):
     # Execute a single cell before we get the variables. This is the variable we'll look for.
@@ -35,7 +38,7 @@ def test_variable_value(capsys):
     assert varx_value
     assert varx_value == '3'
 
-@pytest.mark.skipif(get_ipython() == None,
+@pytest.mark.skipif(haveIPython == None,
                     reason="Can't run variable tests without IPython console")
 def test_dataframe_info(capsys):
     # Setup some different types
@@ -73,7 +76,7 @@ def verify_dataframe_info(vars, name: str, capsys, hasInfo: bool):
     assert 'rowCount' in info
     assert info['rowCount'] > 0 if hasInfo else info['rowCount'] == 0
 
-@pytest.mark.skipif(get_ipython() == None,
+@pytest.mark.skipif(haveIPython == None,
                     reason="Can't run variable tests without IPython console")
 def test_dataframe_rows(capsys):
     # Setup some different types

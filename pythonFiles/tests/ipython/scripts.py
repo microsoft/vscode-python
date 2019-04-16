@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import re
-from IPython import get_ipython
 import os
 import json
+import importlib
+haveIPython = importlib.util.find_spec('IPython')
+if haveIPython:
+    from IPython import get_ipython
 
 def execute_script(file: str, replace_dict: dict = dict([])):
     regex = re.compile('|'.join(replace_dict.keys())) if len(replace_dict.keys()) > 0 else None
