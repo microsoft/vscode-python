@@ -55,7 +55,7 @@ def fix_path(nodeid):
 
 
 def fix_test_order(tests):
-    if sys.version_info > (3,):
+    if sys.version_info >= (3, 6):
         return tests
     fixed = []
     curfile = None
