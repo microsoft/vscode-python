@@ -63,4 +63,4 @@ def get_data_frame_rows(varJson, start, end, capsys):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)
     else:
-        raise Exception('Printing variable value failed.')
+        raise Exception('Getting dataframe rows failed.')
