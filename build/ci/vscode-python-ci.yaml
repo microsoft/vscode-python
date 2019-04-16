@@ -32,6 +32,7 @@ jobs:
       # Each member of this list may contain these values:
         # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
         # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+        # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
         # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
         # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
         # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
@@ -42,70 +43,82 @@ jobs:
       'Win-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testUnitTests, pythonUnitTests'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
       'Linux-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
       'Mac-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
       'Win-Py3.6 Unit':
         PythonVersion: '3.6'
         VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonUnitTests'
+        TestsToRun: 'pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
       'Linux-Py3.6 Unit':
         PythonVersion: '3.6'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'pythonUnitTests'
+        TestsToRun: 'pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
       'Mac-Py3.6 Unit':
         PythonVersion: '3.6'
         VMImageName: 'macos-10.13'
-        TestsToRun: 'pythonUnitTests'
+        TestsToRun: 'pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
 
       'Win-Py3.7 Venv':
         VMImageName: 'vs2017-win2016'
         PythonVersion: '3.7'
-        TestsToRun: 'venvTests'
+        TestsToRun: 'venvTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
         # This is for the venvTests to use, not needed if you don't run venv tests...
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Linux-Py3.7 Venv':
         VMImageName: 'ubuntu-16.04'
         PythonVersion: '3.7'
-        TestsToRun: 'venvTests'
+        TestsToRun: 'venvTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.7 Venv':
         VMImageName: 'macos-10.13'
         PythonVersion: '3.7'
-        TestsToRun: 'venvTests'
+        TestsToRun: 'venvTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Win-Py3.6 Venv':
         VMImageName: 'vs2017-win2016'
         PythonVersion: '3.6'
-        TestsToRun: 'venvTests'
+        TestsToRun: 'venvTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Linux-Py3.6 Venv':
         VMImageName: 'ubuntu-16.04'
         PythonVersion: '3.6'
-        TestsToRun: 'venvTests'
+        TestsToRun: 'venvTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.6 Venv':
         VMImageName: 'macos-10.13'
         PythonVersion: '3.6'
-        TestsToRun: 'venvTests'
+        TestsToRun: 'venvTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
 
       # SingleWorkspace Tests

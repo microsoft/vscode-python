@@ -28,6 +28,5 @@
     "typescriptHero.imports.stringQuoteStyle": "'",
     "prettier.tslintIntegration": false,
     "prettier.printWidth": 180,
-    "prettier.singleQuote": true,
-    "python.pythonPath": "C:\\Users\\rchiodo\\AppData\\Local\\Continuum\\anaconda3\\python.exe"
+    "prettier.singleQuote": true
 }
