@@ -3,12 +3,20 @@
 import re
 import os
 import json
-import importlib
-haveIPython = importlib.util.find_spec('IPython')
-if haveIPython:
-    from IPython import get_ipython
+import sys
+import imp
 
-def execute_script(file: str, replace_dict: dict = dict([])):
+def check_for_ipython():
+    if int(sys.version[0]) >= 3:
+        try:
+            from IPython import get_ipython
+            return not get_ipython() == None
+        except ImportError:
+            pass
+    return False
+
+def execute_script(file, replace_dict = dict([])):
+    from IPython import get_ipython
     regex = re.compile('|'.join(replace_dict.keys())) if len(replace_dict.keys()) > 0 else None
 
     # Open the file. Read all lines into a string
@@ -31,12 +39,12 @@ def get_variables(capsys):
     else:
         raise Exception('Getting variables failed.')
 
-def find_variable_json(varList, varName: str):
+def find_variable_json(varList, varName):
     for sub in varList:
         if sub['name'] == varName:
             return sub
 
-def get_variable_value(variables, name: str, capsys) -> str:
+def get_variable_value(variables, name, capsys):
     varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(os.path.join(path, '../../datascience/getJupyterVariableValue.py'))
