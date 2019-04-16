@@ -58,6 +58,8 @@ else:
         _VSCODE_colobj['name'] = _VSCODE_column_name
         _VSCODE_colobj['type'] = str(_VSCODE_column_type)
         _VSCODE_columns.append(_VSCODE_colobj)
+        del _VSCODE_column_name
+        del _VSCODE_column_type
 
     del _VSCODE_columnNames
     del _VSCODE_columnTypes

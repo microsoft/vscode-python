@@ -28,27 +28,29 @@ def get_variables(capsys):
     else:
         raise Exception('Printing variables failed.')
 
-def find_variable_json(varName: str, varList):
+def find_variable_json(varList, varName: str):
     for sub in varList:
         if sub['name'] == varName:
             return sub
 
-def get_variable_value(variableJson, capsys) -> str:
+def get_variable_value(variables, name: str, capsys) -> str:
+    varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(os.path.join(path, '../../datascience/getJupyterVariableValue.py'))
-    keys = dict([('_VSCode_JupyterTestValue', json.dumps(variableJson))])
+    keys = dict([('_VSCode_JupyterTestValue', json.dumps(varJson))])
     if execute_script(file, keys):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)['value']
     else:
         raise Exception('Printing variable value failed.')
 
-def get_data_frame_info(variableJson, capsys):
+def get_data_frame_info(variables, name, capsys):
+    varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(os.path.join(path, '../../datascience/getJupyterVariableValue.py'))
-    keys = dict([('_VSCode_JupyterTestValue', json.dumps(variableJson))])
+    file = os.path.abspath(os.path.join(path, '../../datascience/getJupyterVariableDataFrameInfo.py'))
+    keys = dict([('_VSCode_JupyterTestValue', json.dumps(varJson))])
     if execute_script(file, keys):
         read_out = capsys.readouterr()
-        return json.loads(read_out.out)['value']
+        return json.loads(read_out.out)
     else:
         raise Exception('Printing variable value failed.')
