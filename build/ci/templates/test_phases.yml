@@ -71,6 +71,14 @@ steps:
       verbose: true
       customCommand: 'install -g npm@$(NpmVersion)'
 
+  # On Mac, the command `node` doesn't always point to the current node version.
+  - script: |
+        export NODE_PATH=`which node`
+        echo $NODE_PATH
+        echo '##vso[task.setvariable variable=NODE_PATH]'$NODE_PATH
+    displayName: "Setup NODE_PATH for extension"
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
   # Install node_modules.
   # Example command line (windows pwsh):
   # > npm ci

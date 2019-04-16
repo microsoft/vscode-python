@@ -24,7 +24,7 @@ const debuggerType = DebuggerTypeName;
  */
 export async function createDebugAdapter(_coverageDirectory: string): Promise<DebugClient> {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
+    const debugClient = new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
     debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
     await debugClient.start();
     return debugClient;
