@@ -20,7 +20,7 @@
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "tslint.enable": true,
     "python.linting.enabled": false,
-    "python.unitTest.promptToConfigure": false,
+    "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "none",
     "typescript.preferences.quoteStyle": "single",
@@ -28,5 +28,6 @@
     "typescriptHero.imports.stringQuoteStyle": "'",
     "prettier.tslintIntegration": false,
     "prettier.printWidth": 180,
-    "prettier.singleQuote": true
+    "prettier.singleQuote": true,
+    "python.pythonPath": "C:\\Users\\rchiodo\\AppData\\Local\\Continuum\\anaconda3\\python.exe"
 }
