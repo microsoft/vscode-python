@@ -67,24 +67,7 @@ Learn more about the rich features of the Python extension:
 
 The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
-<<<<<<< HEAD
 [pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fr`, `it`, `ja`, `ko-kr`, `pt-br`, `ru`, `zh-cn`, `zh-tw`
-=======
-[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
-
-* `de`
-* `en`
-* `es`
-* `fr`
-* `it`
-* `ja`
-* `ko-kr`
-* `pl`
-* `pt-br`
-* `ru`
-* `zh-cn`
-* `zh-tw`
->>>>>>> upstream/master
 
 ## Questions, issues, feature requests, and contributions
 
@@ -95,66 +78,6 @@ contributors (if you would like to contribute a translation, see the
   - If someone has already [filed an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
   - Otherwise please file a new issue
 * If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md#development-process)
-
-
-<<<<<<< HEAD
-<!-- ![General Features](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/general.gif)
-=======
-* IDE-like features
-  + Automatic indenting
-  + Code navigation ("Go to", "Find all" references)
-  + Code definition (Peek and hover definition, View signatures)
-  + Rename refactoring
-  + Sorting import statements (use the `Python: Sort Imports` command)
-* Intellisense and autocomplete (including PEP 484 and PEP 526 support)
-  + Ability to include custom module paths (e.g. include paths for libraries like Google App Engine, etc.; use the setting `python.autoComplete.extraPaths = []`)
-* Code formatting
-  + Auto formatting of code upon saving changes (default to 'Off')
-  + Use either [yapf](https://pypi.org/project/yapf/), [autopep8](https://pypi.org/project/autopep8/), or [Black](https://pypi.org/project/black/) for code formatting (defaults to autopep8)
-* Linting
-  + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Prospector](https://pypi.org/project/prospector/), [Flake8](https://pypi.org/project/flake8/), [pylama](https://pypi.org/project/pylama/), [pydocstyle](https://pypi.org/project/pydocstyle/), and [mypy](https://pypi.org/project/mypy/) are also supported)
-* Python Interactive (Jupyter support)
-    + Bring the power of Jupyter Notebooks into VS Code
-    + Import / export Jupyter Notebooks
-    + Connect to local / remote Jupyter servers for code execution
-    + Visualize data frames and plots
-    + Integrated IPython console - Python Interactive window
-* Debugging
-  + Watch window
-  + Evaluate expressions
-  + Step through code ("Step in", "Step out", "Continue")
-  + Add/remove breakpoints
-  + Local variables and arguments
-  + Multi-threaded applications
-  + Web applications (such as [Flask](http://flask.pocoo.org/) & [Django](https://www.djangoproject.com/), with template debugging)
-  + Expanding values (viewing children, properties, etc)
-  + Conditional breakpoints
-  + Remote debugging (over SSH)
-  + Google App Engine
-  + Debugging in the integrated or external terminal window
-  + Debugging as sudo
-* Unit testing
-  + Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.org/project/pytest/), and [nose](https://pypi.org/project/nose/)
-  + Ability to run all failed tests, individual tests
-  + Debugging unit tests
-* Snippets
-* Miscellaneous
-  + Running a file or selected text in python terminal
-  + Automatic activation of environments in the terminal
-* Refactoring
-  + Rename refactorings
-  + Extract variable refactorings
-  + Extract method refactorings
-  + Sort imports
-
-![General Features](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/general.gif)
->>>>>>> upstream/master
-
-![Python Interactive (Jupyter support)](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/interactive.gif)
-
-![Debugging](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/debugDemo.gif)
-
-![Unit Tests](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/unittest.gif) -->
 
 
 ## Data and telemetry
