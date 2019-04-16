@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount, ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
 
@@ -15,7 +13,7 @@ import { noop } from '../../client/common/utils/misc';
 import { EditorContexts } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { sleep } from '../core';
@@ -33,54 +31,24 @@ import {
     getCellResults,
     getLastOutputCell,
     initialDataScienceSettings,
+    runMountedTest,
     srcDirectory,
     toggleCellExpansion,
     updateDataScienceSettings,
     verifyHtmlOnCell,
     verifyLastCellInputState
 } from './historyTestHelpers';
-import { blurWindow, waitForUpdate } from './reactHelpers';
+import { waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('History output tests', () => {
     const disposables: Disposable[] = [];
-    let jupyterExecution: IJupyterExecution;
-    let historyProvider: IHistoryProvider;
     let ioc: DataScienceIocContainer;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     });
-
-    function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
-
-        // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />));
-
-        // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
-        historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-
-        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-        // ready.
-        const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<void> => {
-            await origFunc();
-            const history = historyProvider.getActive();
-
-            // During testing the MainPanel sends the init message before our history is created.
-            // Pretend like it's happening now
-            const listener = ((history as any).messageListener) as HistoryMessageListener;
-            listener.onMessage(HistoryMessages.Started, {});
-        };
-
-        return ioc.wrapper!;
-    }
-
-    // suiteTeardown(() => {
-    //     asyncDump();
-    // });
 
     teardown(async () => {
         for (const disposable of disposables) {
@@ -96,7 +64,12 @@ suite('History output tests', () => {
         await ioc.dispose();
     });
 
+    // suiteTeardown(() => {
+    //     asyncDump();
+    // });
+
     async function getOrCreateHistory(): Promise<IHistory> {
+        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
         const result = await historyProvider.getOrCreateActive();
 
         // During testing the MainPanel sends the init message before our history is created.
@@ -105,28 +78,6 @@ suite('History output tests', () => {
         listener.onMessage(HistoryMessages.Started, {});
 
         return result;
-    }
-
-    // tslint:disable-next-line:no-any
-    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
-        test(name, async () => {
-            if (await jupyterExecution.isNotebookSupported()) {
-                addMockData(ioc, 'a=1\na', 1);
-                const wrapper = mountWebView();
-                try {
-                    await testFunc(wrapper);
-                } finally {
-                    // Blur window focus so we don't have editors polling
-                    blurWindow();
-
-                    // Make sure to unmount the wrapper or it will interfere with other tests
-                    wrapper.unmount();
-                }
-            } else {
-                // tslint:disable-next-line:no-console
-                console.log(`${name} skipped, no Jupyter installed.`);
-            }
-        });
     }
 
     async function waitForMessageResponse(action: () => void): Promise<void> {
@@ -140,7 +91,7 @@ suite('History output tests', () => {
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Hide inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
@@ -155,7 +106,7 @@ suite('History output tests', () => {
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.First);
         verifyHtmlOnCell(wrapper, undefined, CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Show inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
@@ -164,14 +115,14 @@ suite('History output tests', () => {
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Expand inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Expanded);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
@@ -189,7 +140,7 @@ suite('History output tests', () => {
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Hide / show cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
@@ -208,7 +159,7 @@ suite('History output tests', () => {
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Mime Types', async (wrapper) => {
         const badPanda = `import pandas as pd
@@ -261,7 +212,7 @@ for _ in range(50):
 
         await addCode(getOrCreateHistory, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {
         const history = await getOrCreateHistory();
@@ -302,7 +253,7 @@ for _ in range(50):
         });
 
         assert.equal(afterUndo.length, 3, `Undo should put cells back`);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Click buttons', async (wrapper) => {
         // Goto source should cause the visible editor to be picked as long as its filename matches
@@ -378,7 +329,7 @@ for _ in range(50):
             return Promise.resolve();
         });
         assert.equal(afterDelete.length, 2, `Delete should remove a cell`);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Export', async (wrapper) => {
         // Export should cause the export dialog to come up. Remap appshell so we can check
@@ -422,7 +373,7 @@ for _ in range(50):
         await Promise.race([sleep(10), response]);
         assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
 
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Dispose test', async () => {
         // tslint:disable-next-line:no-any
@@ -435,7 +386,7 @@ for _ in range(50):
         const equal = Object.is(history, h2);
         await h2.show();
         assert.ok(!equal, 'Disposing is not removing the active history');
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Editor Context', async (wrapper) => {
         // Verify we can send different commands to the UI and it will respond
@@ -497,7 +448,7 @@ for _ in range(50):
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Simple input', async (wrapper) => {
         // Create a history so that it listens to the results.
@@ -507,7 +458,7 @@ for _ in range(50):
         // Then enter some code.
         await enterInput(wrapper, 'a=1\na');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Multiple input', async (wrapper) => {
         // Create a history so that it listens to the results.
@@ -539,7 +490,7 @@ for _ in range(50):
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
         verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Restart with session failure', async (wrapper) => {
         // Prime the pump
@@ -573,5 +524,5 @@ for _ in range(50):
         await history.addCode('a=1\na', 'foo', 0);
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
-    });
+    }, () => { return ioc; });
 });

@@ -3,55 +3,38 @@
 'use strict';
 import * as assert from 'assert';
 import { expect } from 'chai';
-import { mount, ReactWrapper } from 'enzyme';
+import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import { Disposable } from 'vscode';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider, IJupyterExecution, IJupyterVariable } from '../../client/datascience/types';
-import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { IHistory, IHistoryProvider, IJupyterVariable } from '../../client/datascience/types';
 import { VariableExplorer } from '../../datascience-ui/history-react/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCode, addMockData } from './historyTestHelpers';
-import { blurWindow, waitForUpdate } from './reactHelpers';
+import { addCode, runMountedTest } from './historyTestHelpers';
+import { waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('History variable explorer tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
-    let historyProvider: IHistoryProvider;
-    let jupyterExecution: IJupyterExecution;
+
+    suiteSetup(function () {
+        // These test require python, so only run with a non-mocked jupyter
+        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+        if (!isRollingBuild) {
+            // tslint:disable-next-line:no-console
+            console.log('Skipping Variable Explorer tests. Requires python environment');
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
+    });
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     });
-
-    function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
-
-        // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />));
-
-        // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
-        historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-
-        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-        // ready.
-        const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<void> => {
-            await origFunc();
-            const history = historyProvider.getActive();
-
-            // During testing the MainPanel sends the init message before our history is created.
-            // Pretend like it's happening now
-            const listener = ((history as any).messageListener) as HistoryMessageListener;
-            listener.onMessage(HistoryMessages.Started, {});
-        };
-
-        return ioc.wrapper!;
-    }
 
     teardown(async () => {
         for (const disposable of disposables) {
@@ -68,6 +51,7 @@ suite('History variable explorer tests', () => {
     });
 
     async function getOrCreateHistory(): Promise<IHistory> {
+        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
         const result = await historyProvider.getOrCreateActive();
 
         // During testing the MainPanel sends the init message before our history is created.
@@ -78,37 +62,11 @@ suite('History variable explorer tests', () => {
         return result;
     }
 
-    // tslint:disable-next-line:no-any
-    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
-        test(name, async () => {
-            if (await jupyterExecution.isNotebookSupported()) {
-                addMockData(ioc, 'a=1\na', 1);
-                const wrapper = mountWebView();
-                try {
-                    await testFunc(wrapper);
-                } finally {
-                    // Blur window focus so we don't have editors polling
-                    blurWindow();
-
-                    // Make sure to unmount the wrapper or it will interfere with other tests
-                    wrapper.unmount();
-                }
-            } else {
-                // tslint:disable-next-line:no-console
-                console.log(`${name} skipped, no Jupyter installed.`);
-            }
-        });
-    }
-
     runMountedTest('Variable explorer - Exclude', async (wrapper) => {
         const basicCode: string = `import numpy as np
 import pandas as pd
 value = 'hello world'`;
         const basicCode2: string = `value2 = 'hello world 2'`;
-
-        // Set up our mock data first
-        addMockData(ioc, basicCode, undefined);
-        addMockData(ioc, basicCode2, undefined);
 
         openVariableExplorer(wrapper);
 
@@ -139,15 +97,11 @@ value = 'hello world'`;
             {name: 'sys', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Variable explorer - Update', async (wrapper) => {
         const basicCode: string = `value = 'hello world'`;
         const basicCode2: string = `value2 = 'hello world 2'`;
-
-        // Set up our mock data first
-        addMockData(ioc, basicCode, undefined);
-        addMockData(ioc, basicCode2, undefined);
 
         openVariableExplorer(wrapper);
 
@@ -180,13 +134,10 @@ value = 'hello world'`;
             {name: 'value2', value: 'hello world 2', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Variable explorer - Loading', async (wrapper) => {
         const basicCode: string = `value = 'hello world'`;
-
-        // Set up our mock data first
-        addMockData(ioc, basicCode, undefined);
 
         openVariableExplorer(wrapper);
 
@@ -211,7 +162,7 @@ value = 'hello world'`;
             {name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
-    });
+    }, () => { return ioc; });
 
     // Test our display of basic types. We render 8 rows by default so only 8 values per test
     runMountedTest('Variable explorer - Types A', async (wrapper) => {
@@ -222,9 +173,6 @@ mySet = set(myList)
 myDict = {}
 for value in myList:
     myDict[value] = value / 2`;
-
-        // Set up our mock data first
-        addMockData(ioc, basicCode, undefined);
 
         openVariableExplorer(wrapper);
 
@@ -243,9 +191,8 @@ for value in myList:
             {name: 'value', value: '9999800001', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
         ];
         verifyVariables(wrapper, targetVariables);
-    });
+    }, () => { return ioc; });
 
-    // *********** Note all of the above code is shared with history.functional.test.tsx should be combine? Move into same file or add helpers? ************
     runMountedTest('Variable explorer - Basic B', async (wrapper) => {
         const basicCode: string = `import numpy as np
 import pandas as pd
@@ -257,9 +204,6 @@ myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 myTuple = 1,2,3,4,5,6,7,8,9
 `;
-
-        // Set up our mock data first
-        addMockData(ioc, basicCode, undefined);
 
         openVariableExplorer(wrapper);
 
@@ -291,7 +235,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
  9.99980000e+04 1.00000000e+05]`, supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
-    });
+    }, () => { return ioc; });
 });
 
 // Open up our variable explorer which also triggers a data fetch
