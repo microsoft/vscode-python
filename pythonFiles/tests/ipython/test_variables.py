@@ -6,7 +6,7 @@ import sys
 import os
 import pandas as pd
 import json
-from .scripts import print_variable_value, print_variables, find_variable_json
+from .scripts import get_variable_value, get_variables, find_variable_json
 from IPython import get_ipython
 
 @pytest.mark.skipif(get_ipython() == None,
