@@ -203,13 +203,13 @@ steps:
   # > python -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
-      python pythonFiles/tests/run_all.py --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
-    displayName: 'Python unittests'
+      python -m IPython pythonFiles/tests/run_all.py --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
+    displayName: 'Python ipython tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
-    displayName: 'Publish Python unittests results'
+    displayName: 'Publish IPython test results'
     condition: contains(variables['TestsToRun'], 'pythonIPythonTests')
     inputs:
       testResultsFiles: 'ipython-tests-junit.xml'
