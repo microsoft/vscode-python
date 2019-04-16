@@ -26,7 +26,7 @@ def get_variables(capsys):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)
     else:
-        raise Exception('Printing variables failed.')
+        raise Exception('Getting variables failed.')
 
 def find_variable_json(varList, varName: str):
     for sub in varList:
@@ -42,13 +42,23 @@ def get_variable_value(variables, name: str, capsys) -> str:
         read_out = capsys.readouterr()
         return json.loads(read_out.out)['value']
     else:
-        raise Exception('Printing variable value failed.')
+        raise Exception('Getting variable value failed.')
 
 def get_data_frame_info(variables, name, capsys):
     varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(os.path.join(path, '../../datascience/getJupyterVariableDataFrameInfo.py'))
     keys = dict([('_VSCode_JupyterTestValue', json.dumps(varJson))])
+    if execute_script(file, keys):
+        read_out = capsys.readouterr()
+        return json.loads(read_out.out)
+    else:
+        raise Exception('Get dataframe info failed.')
+
+def get_data_frame_rows(varJson, start, end, capsys):
+    path = os.path.dirname(os.path.abspath(__file__))
+    file = os.path.abspath(os.path.join(path, '../../datascience/getJupyterVariableDataFrameRows.py'))
+    keys = dict([('_VSCode_JupyterTestValue', json.dumps(varJson)), ('_VSCode_JupyterStartRow', str(start)), ('_VSCode_JupyterEndRow', str(end))])
     if execute_script(file, keys):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)

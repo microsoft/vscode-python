@@ -4,9 +4,8 @@
 import pytest
 import sys
 import os
-import pandas as pd
 import json
-from .scripts import get_variable_value, get_variables, get_data_frame_info
+from .scripts import get_variable_value, get_variables, get_data_frame_info, get_data_frame_rows
 from IPython import get_ipython
 
 @pytest.mark.skipif(get_ipython() == None,
@@ -73,5 +72,25 @@ def verify_dataframe_info(vars, name: str, capsys, hasInfo: bool):
     assert len(info['columns']) > 0 if hasInfo else True
     assert 'rowCount' in info
     assert info['rowCount'] > 0 if hasInfo else info['rowCount'] == 0
+
+@pytest.mark.skipif(get_ipython() == None,
+                    reason="Can't run variable tests without IPython console")
+def test_dataframe_rows(capsys):
+    # Setup some different types
+    path = os.path.dirname(os.path.abspath(__file__))
+    file = os.path.abspath(os.path.join(path, 'random.csv'))
+    file = file.replace('\\', '\\\\')
+    dfstr = 'import pandas as pd\r\ndf = pd.read_csv(\'{}\')'.format(file)
+    get_ipython().run_cell(dfstr)
+    vars = get_variables(capsys)
+    df = get_variable_value(vars, 'df', capsys)
+    assert df
+    info = get_data_frame_info(vars, 'df', capsys)
+    assert 'rowCount' in info
+    assert info['rowCount'] == 6000
+    rows = get_data_frame_rows(info, 100, 200, capsys)
+    assert rows
+    assert rows['data'][0]['+h2'] == 'Fy3 W[pMT['
+
 
 
