@@ -87,6 +87,10 @@ class MockJupyterServer implements INotebookServer {
     public setInitialDirectory(_directory: string): Promise<void> {
         throw new Error('Method not implemented');
     }
+
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        noop();
+    }
     public getConnectionInfo(): IConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }

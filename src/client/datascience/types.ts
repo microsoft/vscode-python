@@ -46,7 +46,6 @@ export interface INotebookServerLaunchInfo
     currentInterpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
-    usingDarkTheme: boolean;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
 }
@@ -65,6 +64,7 @@ export interface INotebookServer extends IAsyncDisposable {
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     getConnectionInfo(): IConnection | undefined;
     getSysInfo() : Promise<ICell | undefined>;
+    setMatplotLibStyle(useDark: boolean) : Promise<void>;
 }
 
 export interface INotebookServerOptions {

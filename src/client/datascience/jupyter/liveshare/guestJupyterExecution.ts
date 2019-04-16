@@ -110,7 +110,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
                 result = await super.connectToNotebookServer(
                     {
                         uri: newUri,
-                        usingDarkTheme: options && options.usingDarkTheme,
                         useDefaultConfig: options && options.useDefaultConfig,
                         workingDir: options ? options.workingDir : undefined,
                         purpose

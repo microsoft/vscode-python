@@ -375,6 +375,14 @@ export class JupyterServerBase implements INotebookServer {
         return this.connectPromise.promise;
     }
 
+    public async setMatplotLibStyle(useDark: boolean) : Promise<void> {
+        // Reset the matplotlib style based on if dark or not.
+        await this.executeSilently(useDark ?
+            'matplotlib.style.use(\'dark_background\')' :
+            `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
+
+    }
+
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
         if (!this.launchInfo) {
@@ -513,8 +521,10 @@ export class JupyterServerBase implements INotebookServer {
                 await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
             }
 
+            // Force matplotlib to inline and save the default style. We'll use this later if we
+            // get a request to update style
             await this.executeSilently(
-                `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+                `import matplotlib${os.EOL}%matplotlib inline${os.EOL}${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)`,
                 cancelToken
             );
         } catch (e) {

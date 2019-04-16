@@ -98,6 +98,11 @@ export class JupyterServerFactory implements INotebookServer {
         return server.setInitialDirectory(directory);
     }
 
+    public async setMatplotLibStyle(useDark: boolean): Promise<void> {
+        const server = await this.serverFactory.get();
+        return server.setMatplotLibStyle(useDark);
+    }
+
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
         // Create a wrapper observable around the actual server (because we have to wait for a promise)
         return new Observable<ICell[]>(subscriber => {

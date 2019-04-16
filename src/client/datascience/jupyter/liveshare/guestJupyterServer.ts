@@ -98,6 +98,10 @@ export class GuestJupyterServer
         return Promise.resolve();
     }
 
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        // Guest can't change the style. Maybe output a warning here?
+    }
+
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
         this.waitForService().then(s => {

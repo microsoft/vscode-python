@@ -6,14 +6,14 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
-import { IHistory, IHistoryProvider, INotebookServerOptions, IThemeFinder } from '../types';
+import { IHistory, IHistoryProvider, INotebookServerOptions } from '../types';
 
 interface ISyncData {
     count: number;
@@ -34,9 +34,7 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IThemeFinder) private themeFinder: IThemeFinder
+        @inject(IConfigurationService) private configService: IConfigurationService
         ) {
         asyncRegistry.push(this);
 
@@ -84,16 +82,6 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         const settings = this.configService.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-        // Check for dark theme, if so set matplot lib to use dark_background settings
-        let darkTheme: boolean | undefined = false;
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        if (workbench) {
-            const theme = workbench.get<string>('colorTheme');
-            const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
-            if (theme && !ignoreTheme) {
-                darkTheme = await this.themeFinder.isThemeDark(theme);
-            }
-        }
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
         if (serverURI === Settings.JupyterServerLocalLaunch) {
@@ -102,7 +90,6 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
 
         return {
             uri: serverURI,
-            usingDarkTheme: darkTheme,
             useDefaultConfig,
             purpose: Identifiers.HistoryPurpose
         };

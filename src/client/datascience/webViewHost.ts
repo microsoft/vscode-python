@@ -23,6 +23,7 @@ export class WebViewHost<IMapping> implements IDisposable {
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
     private currentTheme: string;
+    private themeIsDarkPromise: Deferred<boolean>;
 
     constructor(
         @unmanaged() private configService: IConfigurationService,
@@ -50,6 +51,10 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Setup our init promise for the web panel. We use this to make sure we're in sync with our
         // react control.
         this.webPanelInit = createDeferred();
+
+        // Setup a promise that will wait until the webview passes back
+        // a message telling us what them is in use
+        this.themeIsDarkPromise = createDeferred<boolean>();
 
         // Load our actual web panel
         this.loadWebPanel();
@@ -90,7 +95,7 @@ export class WebViewHost<IMapping> implements IDisposable {
                 break;
 
             case CssMessages.GetCssRequest:
-                this.generateCss(payload as IGetCssRequest).ignoreErrors();
+                this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
                 break;
 
             default:
@@ -138,6 +143,10 @@ export class WebViewHost<IMapping> implements IDisposable {
         };
     }
 
+    protected isDark() : Promise<boolean> {
+        return this.themeIsDarkPromise.promise;
+    }
+
     private onViewStateChanged = (webPanel: IWebPanel) => {
         const oldActive = this.viewState.active;
         this.viewState.active = webPanel.isActive();
@@ -149,7 +158,13 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    private async generateCss(request: IGetCssRequest) : Promise<void> {
+    private async handleCssRequest(request: IGetCssRequest) : Promise<void> {
+        if (!this.themeIsDarkPromise.resolved) {
+            this.themeIsDarkPromise.resolve(request.isDark);
+        } else {
+            this.themeIsDarkPromise = createDeferred<boolean>();
+            this.themeIsDarkPromise.resolve(request.isDark);
+        }
         const settings = this.generateDataScienceExtraSettings();
         const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);

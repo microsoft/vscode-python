@@ -29,7 +29,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { CssMessages, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import {
@@ -241,6 +241,20 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
         // Pass onto our base class.
         super.onMessage(message, payload);
+
+        // After our base class handles some stuff, handle it ourselves too.
+        switch (message) {
+            case CssMessages.GetCssRequest:
+                // Update the jupyter server if we have one:
+                if (this.jupyterServer) {
+                    this.isDark().then(d => this.jupyterServer ? this.jupyterServer.setMatplotLibStyle(d) : Promise.resolve()).ignoreErrors();
+                }
+                break;
+
+            default:
+                break;
+        }
+
     }
 
     public dispose() {
@@ -764,6 +778,9 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private async loadJupyterServer(_restart?: boolean): Promise<void> {
         this.logger.logInformation('Getting jupyter server options ...');
 
+        // Wait for the webpanel to pass back our current theme darkness
+        const knownDark = await this.isDark();
+
         // Extract our options
         const options = await this.historyProvider.getNotebookOptions();
 
@@ -771,6 +788,11 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
+
+        // Before we run any cells, update the dark setting
+        if (this.jupyterServer) {
+            await this.jupyterServer.setMatplotLibStyle(knownDark);
+        }
 
         this.logger.logInformation('Connected to jupyter server.');
     }

@@ -150,7 +150,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connectionInfo: startInfo.connection,
                         currentInterpreter: interpreter,
                         kernelSpec: startInfo.kernelSpec,
-                        usingDarkTheme: options && options.usingDarkTheme ? options.usingDarkTheme : false,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
