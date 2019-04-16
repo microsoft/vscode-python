@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -116,6 +117,10 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
                         purpose
                     },
                     cancelToken);
+                // Save in our cache
+                if (result) {
+                    await this.serverCache.set(result, noop, options);
+                }
             }
         }
 

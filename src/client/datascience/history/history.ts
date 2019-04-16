@@ -228,11 +228,11 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 break;
 
             case HistoryMessages.GetVariablesRequest:
-                this.requestVariables(payload).ignoreErrors();
+                this.dispatchMessage(message, payload, this.requestVariables);
                 break;
 
             case HistoryMessages.GetVariableValueRequest:
-                this.requestVariableValue(payload).ignoreErrors();
+                this.dispatchMessage(message, payload, this.requestVariableValue);
                 break;
 
             default:
