@@ -37,6 +37,26 @@ jobs:
         # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
         # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+      'Mac-Py3.7 Debugger':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Debugger':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.5 Debugger':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Debugger':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testDebugger'
+        NeedsPythonTestReqs: true
       'Win-Py3.7 Unit':
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools'

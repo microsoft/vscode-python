@@ -50,7 +50,11 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
      * @returns {DebugClient}
      */
     function createDebugAdapter(): DebugClient {
-        return new DebugClient('node', testAdapterFilePath, debuggerType);
+        // tslint:disable-next-line: no-console
+        console.log('Node Path');
+        // tslint:disable-next-line: no-console
+        console.log(process.env.NODE_PATH || 'node');
+        return new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
     }
     function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
         const env = { PYTHONPATH: PTVSD_PATH };

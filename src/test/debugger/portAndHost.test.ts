@@ -31,7 +31,11 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
             this.skip();
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
-        debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
+        // tslint:disable-next-line: no-console
+        console.log('Node Path');
+        // tslint:disable-next-line: no-console
+        console.log(process.env.NODE_PATH || 'node');
+        debugClient = new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
         debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
         await debugClient.start();
     });
