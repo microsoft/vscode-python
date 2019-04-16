@@ -81,12 +81,12 @@ steps:
       verbose: true
       customCommand: ci
 
-    - script: |
-          export NODE_PATH=`which node`
-          echo $NODE_PATH
-          echo '##vso[task.setvariable variable=NODE_PATH]'$NODE_PATH
-      displayName: "Setup NODE_PATH for extension"
-      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+  - script: |
+        export NODE_PATH=`which node`
+        echo $NODE_PATH
+        echo '##vso[task.setvariable variable=NODE_PATH]'$NODE_PATH
+    displayName: "Setup NODE_PATH for extension"
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
   # Show all versions installed/available on PATH if in verbose mode.
   # Example command line (windows pwsh):
