@@ -51,8 +51,8 @@ export class BaseLanguageClientFactory implements ILanguageClientFactory {
 export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
     constructor(@inject(IPlatformData) private readonly platformData: IPlatformData,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) { }
-    public async createLanguageClient(_resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient> {
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+    public async createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient> {
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineExecutableName);
         const options = { stdio: 'pipe', env };
         const serverOptions: ServerOptions = {
@@ -75,8 +75,8 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
 export class SimpleLanguageClientFactory implements ILanguageClientFactory {
     constructor(@inject(IPlatformData) private readonly platformData: IPlatformData,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) { }
-    public async createLanguageClient(_resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient> {
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+    public async createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient> {
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const options = { stdio: 'pipe', env };
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineDllName);
         const serverOptions: ServerOptions = {

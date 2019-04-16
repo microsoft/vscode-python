@@ -7,9 +7,10 @@
 
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
+import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
-import { IApplicationEnvironment } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService } from '../../../client/common/nuget/types';
@@ -30,6 +31,14 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
+        const workspace = typeMoq.Mock.ofType<IWorkspaceService>();
+        const cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>();
+        cfg.setup(c => c.get('proxyStrictSSL', true))
+            .returns(() => true);
+        workspace.setup(w => w.getConfiguration('http', undefined))
+            .returns(() => cfg.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspace.object);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
         const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
@@ -39,7 +48,7 @@ suite('Language Server Package Service', () => {
         const platform = typeMoq.Mock.ofType<IPlatformService>();
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platform.object);
         const packageName = lsPackageService.getNugetPackageName();
-        const packages = await nugetRepo.getPackages(packageName);
+        const packages = await nugetRepo.getPackages(packageName, undefined);
 
         const latestReleases = packages
             .filter(item => nugetService.isReleaseVersion(item.version))

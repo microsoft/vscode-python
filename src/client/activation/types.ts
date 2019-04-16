@@ -49,22 +49,21 @@ export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 
 export interface ILanguageServerFolderService {
-    getLanguageServerFolderName(): Promise<string>;
-    getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
+    getLanguageServerFolderName(resource: Resource): Promise<string>;
+    getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-    getDownloadInfo(): Promise<NugetPackage>;
-    downloadLanguageServer(destinationFolder: string): Promise<void>;
+    downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void>;
 }
 
 export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
 export interface ILanguageServerPackageService {
     getNugetPackageName(): string;
-    getLatestNugetPackageVersion(): Promise<NugetPackage>;
+    getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage>;
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 

@@ -5,7 +5,7 @@ import { workspace } from 'vscode';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
 import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
-import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Configuration Service', () => {

@@ -20,7 +20,7 @@ import {
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
-    IUnitTestSettings,
+    ITestingSettings,
     IWorkspaceSymbolSettings
 } from './types';
 import { debounceSync } from './utils/decorators';
@@ -46,7 +46,7 @@ export class PythonSettings implements IPythonSettings {
     public linting!: ILintingSettings;
     public formatting!: IFormattingSettings;
     public autoComplete!: IAutoCompleteSettings;
-    public unitTest!: IUnitTestSettings;
+    public testing!: ITestingSettings;
     public terminal!: ITerminalSettings;
     public sortImports!: ISortImportSettings;
     public workspaceSymbols!: IWorkspaceSymbolSettings;
@@ -295,41 +295,41 @@ export class PythonSettings implements IPythonSettings {
         this.workspaceSymbols.tagFilePath = getAbsolutePath(systemVariables.resolveAny(this.workspaceSymbols.tagFilePath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        const unitTestSettings = systemVariables.resolveAny(pythonSettings.get<IUnitTestSettings>('unitTest'))!;
-        if (this.unitTest) {
-            Object.assign<IUnitTestSettings, IUnitTestSettings>(this.unitTest, unitTestSettings);
+        const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
+        if (this.testing) {
+            Object.assign<ITestingSettings, ITestingSettings>(this.testing, testSettings);
         } else {
-            this.unitTest = unitTestSettings;
-            if (isTestExecution() && !this.unitTest) {
+            this.testing = testSettings;
+            if (isTestExecution() && !this.testing) {
                 // tslint:disable-next-line:prefer-type-cast
                 // tslint:disable-next-line:no-object-literal-type-assertion
-                this.unitTest = {
+                this.testing = {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
                     nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
-                } as IUnitTestSettings;
+                } as ITestingSettings;
             }
         }
 
         // Support for travis.
-        this.unitTest = this.unitTest ? this.unitTest : {
+        this.testing = this.testing ? this.testing : {
             promptToConfigure: true,
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
             pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
             unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
-        this.unitTest.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.pyTestPath), workspaceRoot);
-        this.unitTest.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.nosetestPath), workspaceRoot);
-        if (this.unitTest.cwd) {
-            this.unitTest.cwd = getAbsolutePath(systemVariables.resolveAny(this.unitTest.cwd), workspaceRoot);
+        this.testing.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pyTestPath), workspaceRoot);
+        this.testing.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.nosetestPath), workspaceRoot);
+        if (this.testing.cwd) {
+            this.testing.cwd = getAbsolutePath(systemVariables.resolveAny(this.testing.cwd), workspaceRoot);
         }
 
         // Resolve any variables found in the test arguments.
-        this.unitTest.nosetestArgs = this.unitTest.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.unitTest.pyTestArgs = this.unitTest.pyTestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.unitTest.unittestArgs = this.unitTest.unittestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.nosetestArgs = this.testing.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.pyTestArgs = this.testing.pyTestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.unittestArgs = this.testing.unittestArgs.map(arg => systemVariables.resolveAny(arg));
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;

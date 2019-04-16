@@ -43,7 +43,7 @@ You may see warnings that ```The engine "vscode" appears to be invalid.```, you 
 
 ### Incremental Build
 
-Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
+Run the `Compile` and `Hygiene` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build and hygiene tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
 You can also compile from the command-line. For a full compile you can use `npx gulp prePublishNonBundle`. For incremental builds you can use the following commands depending on your needs:
 ```shell
@@ -128,6 +128,22 @@ const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
 ...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
 
 And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
+
+### Testing Python Scripts
+
+The extension has a number of scripts in ./pythonFiles.  Tests for these
+scripts are found in ./pythonFiles/tests.  To run those tests:
+
+* `python2.7 pythonFiles/tests/run_all.py`
+* `python3 -m pythonFiles.tests`
+
+By default, functional tests are included.  To exclude them:
+
+`python3 -m pythonFiles.tests --no-functional`
+
+To run only the functional tests:
+
+`python3 -m pythonFiles.tests --functional`
 
 ### Standard Debugging
 

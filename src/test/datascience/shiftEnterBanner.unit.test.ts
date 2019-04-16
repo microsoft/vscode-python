@@ -95,12 +95,11 @@ function loadBanner(
         return Promise.resolve(jupyterFound);
     }).verifiable(executionCalled ? typemoq.Times.once() : typemoq.Times.never());
 
-    const message = 'Would you like shift-enter to send code to the new Interactive Window experience?';
     const yes = 'Yes';
     const no = 'No';
 
     // Config AppShell
-    appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message),
+    appShell.setup(a => a.showInformationMessage(typemoq.It.isAny(),
         typemoq.It.isValue(yes),
         typemoq.It.isValue(no)))
         .verifiable(bannerShown ? typemoq.Times.once() : typemoq.Times.never());

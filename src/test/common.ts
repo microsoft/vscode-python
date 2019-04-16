@@ -46,9 +46,9 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.enabled' | 'linting.pylintEnabled' |
     'linting.flake8Enabled' | 'linting.pep8Enabled' | 'linting.pylamaEnabled' |
     'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' | 'linting.banditEnabled' |
-    'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
+    'testing.nosetestArgs' | 'testing.pyTestArgs' | 'testing.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
-    'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
+    'testing.nosetestsEnabled' | 'testing.pyTestEnabled' | 'testing.unittestEnabled' |
     'envFile' | 'jediEnabled' | 'linting.ignorePatterns' | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {

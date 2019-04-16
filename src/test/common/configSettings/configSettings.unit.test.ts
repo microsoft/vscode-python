@@ -20,7 +20,7 @@ import {
     ILintingSettings,
     ISortImportSettings,
     ITerminalSettings,
-    IUnitTestSettings,
+    ITestingSettings,
     IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
@@ -97,8 +97,8 @@ suite('Python Settings', () => {
             .returns(() => sourceSettings.autoComplete);
         config.setup(c => c.get<IWorkspaceSymbolSettings>('workspaceSymbols'))
             .returns(() => sourceSettings.workspaceSymbols);
-        config.setup(c => c.get<IUnitTestSettings>('unitTest'))
-            .returns(() => sourceSettings.unitTest);
+        config.setup(c => c.get<ITestingSettings>('testing'))
+            .returns(() => sourceSettings.testing);
         config.setup(c => c.get<ITerminalSettings>('terminal'))
             .returns(() => sourceSettings.terminal);
         config.setup(c => c.get<IDataScienceSettings>('dataScience'))

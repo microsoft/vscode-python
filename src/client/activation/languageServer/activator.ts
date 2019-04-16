@@ -26,13 +26,13 @@ import {
  */
 @injectable()
 export class LanguageServerExtensionActivator implements ILanguageServerActivator {
+    private resource?: Resource;
     constructor(
         @inject(ILanguageServerManager) private readonly manager: ILanguageServerManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService)
-        private readonly languageServerFolderService: ILanguageServerFolderService,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) { }
     @traceDecorators.error('Failed to activate language server')
@@ -42,6 +42,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
                 ? this.workspace.workspaceFolders![0].uri
                 : undefined;
         }
+        this.resource = resource;
         await this.ensureLanguageServerIsAvailable(resource);
         await this.manager.start(resource);
     }
@@ -49,16 +50,25 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         this.manager.dispose();
     }
     @traceDecorators.error('Failed to ensure language server is available')
-    protected async ensureLanguageServerIsAvailable(resource: Resource) {
+    public async ensureLanguageServerIsAvailable(resource: Resource) {
         const settings = this.configurationService.getSettings(resource);
         if (!settings.downloadLanguageServer) {
             return;
         }
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
         if (!(await this.fs.fileExists(mscorlib))) {
-            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath);
+            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, this.resource);
+            await this.prepareLanguageServerForNoICU(languageServerFolderPath);
         }
+    }
+    public async prepareLanguageServerForNoICU(languageServerFolderPath: string): Promise<void> {
+        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        if (await this.fs.fileExists(targetJsonFile)) {
+            return;
+        }
+        const json = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        await this.fs.writeFile(targetJsonFile, JSON.stringify(json));
     }
 }

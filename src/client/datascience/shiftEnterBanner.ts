@@ -97,6 +97,7 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         return Promise.resolve(this.enabled && !this.disabledInCurrentSession && !settings.datascience.sendSelectionToInteractiveWindow && settings.datascience.enabled);
     }
 
+    @captureTelemetry(Telemetry.DisableInteractiveShiftEnter)
     public async disable(): Promise<void> {
         await this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, false).updateValue(false);
     }

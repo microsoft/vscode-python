@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 
 import os.path
+import sys
 
 import pytest
 
@@ -54,8 +55,8 @@ def _adjust_pytest_args(pytestargs):
     # Duplicate entries should be okay.
     pytestargs.insert(0, '--collect-only')
     # TODO: pull in code from:
-    #  src/client/unittests/pytest/services/discoveryService.ts
-    #  src/client/unittests/pytest/services/argsService.ts
+    #  src/client/testing/pytest/services/discoveryService.ts
+    #  src/client/testing/pytest/services/argsService.ts
     return pytestargs
 
 
@@ -141,6 +142,7 @@ class DiscoveredTests(object):
                                       rootdir, parent)
                 self._parents[(rootdir, parentid)] = funcinfo
         elif parent != parentid:
+            print(parent, parentid)
             # TODO: What to do?
             raise NotImplementedError
         return parentid
@@ -168,10 +170,12 @@ class DiscoveredTests(object):
     def _ensure_suites(self, fullsuite, rootdir, fileid, suiteids):
         if not fullsuite:
             if suiteids:
+                print(suiteids)
                 # TODO: What to do?
                 raise NotImplementedError
             return None
         if len(suiteids) != fullsuite.count('.') + 1:
+            print(suiteids)
             # TODO: What to do?
             raise NotImplementedError
 
@@ -210,13 +214,12 @@ def _parse_item(item, _normcase, _pathsep):
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
     # Figure out the func, suites, and subs.
-    (fileid, suiteids, suites, funcid, basename, parameterized
-     ) = _parse_node_id(item.nodeid, kind)
+    (nodeid, fileid, suiteids, suites, funcid, basename, parameterized
+     ) = _parse_node_id(item.nodeid, kind, _pathsep, _normcase)
     if kind == 'function':
         funcname = basename
-        if funcid and item.function.__name__ != funcname:
-            # TODO: What to do?
-            raise NotImplementedError
+        # Note: funcname does not necessarily match item.function.__name__.
+        # This can result from importing a test function from another module.
         if suites:
             testfunc = '.'.join(suites) + '.' + funcname
         else:
@@ -226,32 +229,23 @@ def _parse_item(item, _normcase, _pathsep):
         funcname = None
 
     # Figure out the file.
+    relfile = _normcase(fileid)
     fspath = str(item.fspath)
-    if not fspath.endswith(_pathsep + fileid):
+    if not _normcase(fspath).endswith(relfile[1:]):
+        print(fspath)
+        print(relfile)
         raise NotImplementedError
-    filename = fspath[-len(fileid):]
-    testroot = str(item.fspath)[:-len(fileid)].rstrip(_pathsep)
-    if _pathsep in filename:
-        relfile = filename
-    else:
-        relfile = '.' + _pathsep + filename
-    srcfile, lineno, fullname = item.location
-    if srcfile != fileid:
-        # pytest supports discovery of tests imported from other
-        # modules.  This is reflected by a different filename
-        # in item.location.
-        if _normcase(fileid) == _normcase(srcfile):
-            srcfile = fileid
-    else:
-        srcfile = relfile
-    location = '{}:{}'.format(srcfile, lineno)
+    testroot = str(item.fspath)[:-len(relfile) + 1]
+    location, fullname = _get_location(item, relfile, _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
-            print(fullname, testfunc)
+            print(item.nodeid)
+            print(fullname, suites, testfunc)
             # TODO: What to do?
             raise NotImplementedError
     elif kind == 'doctest':
         if testfunc and fullname != testfunc + parameterized:
+            print(item.nodeid)
             print(fullname, testfunc)
             # TODO: What to do?
             raise NotImplementedError
@@ -280,7 +274,7 @@ def _parse_item(item, _normcase, _pathsep):
         # TODO: Support other markers?
 
     test = TestInfo(
-        id=item.nodeid,
+        id=nodeid,
         name=item.name,
         path=TestPath(
             root=testroot,
@@ -295,11 +289,62 @@ def _parse_item(item, _normcase, _pathsep):
     return test, suiteids
 
 
-def _parse_node_id(nodeid, kind='function'):
+def _get_location(item, relfile, _normcase, _pathsep):
+    srcfile, lineno, fullname = item.location
+    srcfile = _normcase(srcfile)
+    if srcfile in (relfile, relfile[len(_pathsep) + 1:]):
+        srcfile = relfile
+    else:
+        # pytest supports discovery of tests imported from other
+        # modules.  This is reflected by a different filename
+        # in item.location.
+        srcfile, lineno = _find_location(
+                srcfile, lineno, relfile, item.function, _pathsep)
+        if not srcfile.startswith('.' + _pathsep):
+            srcfile = '.' + _pathsep + srcfile
+    # from pytest, line numbers are 0-based
+    location = '{}:{}'.format(srcfile, int(lineno) + 1)
+    return location, fullname
+
+
+def _find_location(srcfile, lineno, relfile, func, _pathsep):
+    if sys.version_info > (3,):
+        return srcfile, lineno
+    if (_pathsep + 'unittest' + _pathsep + 'case.py') not in srcfile:
+        return srcfile, lineno
+
+    # Unwrap the decorator (e.g. unittest.skip).
+    srcfile = relfile
+    lineno = -1
+    try:
+        func = func.__closure__[0].cell_contents
+    except (IndexError, AttributeError):
+        return srcfile, lineno
+    else:
+        if callable(func) and func.__code__.co_filename.endswith(relfile[1:]):
+            lineno = func.__code__.co_firstlineno - 1
+    return srcfile, lineno
+
+
+def _parse_node_id(nodeid, kind, _pathsep, _normcase):
+    if not nodeid.startswith('.' + _pathsep):
+        nodeid = '.' + _pathsep + nodeid
+    while '::()::' in nodeid:
+        nodeid = nodeid.replace('::()::', '::')
+
+    fileid, _, remainder = nodeid.partition('::')
+    if not fileid or not remainder:
+        print(nodeid)
+        # TODO: Unexpected!  What to do?
+        raise NotImplementedError
+    fileid = _normcase(fileid)
+    nodeid = fileid + '::' + remainder
+
     if kind == 'doctest':
         try:
             parentid, name = nodeid.split('::')
         except ValueError:
+            print(nodeid)
             # TODO: Unexpected!  What to do?
             raise NotImplementedError
         funcid = None
@@ -309,26 +354,30 @@ def _parse_node_id(nodeid, kind='function'):
         if nodeid.endswith(']'):
             funcid, sep, parameterized = nodeid.partition('[')
             if not sep:
+                print(nodeid)
                 # TODO: Unexpected!  What to do?
                 raise NotImplementedError
             parameterized = sep + parameterized
         else:
             funcid = nodeid
-
         parentid, _, name = funcid.rpartition('::')
-        if not name:
+        if not parentid or not name:
+            print(parentid, name)
             # TODO: What to do?  We expect at least a filename and a function
             raise NotImplementedError
 
     suites = []
     suiteids = []
     while '::' in parentid:
-        suiteids.insert(0, parentid)
-        parentid, _, suitename = parentid.rpartition('::')
+        fullid = parentid
+        parentid, _, suitename = fullid.rpartition('::')
+        suiteids.insert(0, fullid)
         suites.insert(0, suitename)
-    fileid = parentid
+    if parentid != fileid:
+        print(nodeid)
+        print(parentid, fileid)
 
-    return fileid, suiteids, suites, funcid, name, parameterized
+    return nodeid, fileid, suiteids, suites, funcid, name, parameterized
 
 
 def _get_item_kind(item):

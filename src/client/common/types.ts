@@ -152,7 +152,7 @@ export interface IPythonSettings {
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
-    readonly unitTest: IUnitTestSettings;
+    readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
@@ -170,7 +170,7 @@ export interface ISortImportSettings {
     readonly args: string[];
 }
 
-export interface IUnitTestSettings {
+export interface ITestingSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
     readonly nosetestsEnabled: boolean;

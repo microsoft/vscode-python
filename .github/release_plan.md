@@ -27,6 +27,7 @@
 - [ ] GDPR bookkeeping
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
+- [ ] Ask CTI to test the release candidate
 
 
 # Final (Tuesday, XXX XX)

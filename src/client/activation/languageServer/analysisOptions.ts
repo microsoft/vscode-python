@@ -38,7 +38,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     public async initialize(resource: Resource) {
         this.resource = resource;
-        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
 
         let disposable = this.workspace.onDidChangeConfiguration(this.onSettingsChangedHandler, this);
         this.disposables.push(disposable);

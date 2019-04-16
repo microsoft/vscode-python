@@ -11,12 +11,27 @@ import { sendTelemetryEvent } from '.';
 import { noop } from '../../test/core';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
-import { IHistoryProvider } from '../datascience/types';
-import { ICodeExecutionManager } from '../terminals/types';
 import { EventName } from './constants';
 import { IImportTracker } from './types';
 
-const ImportRegEx = /^(?!['"#]).*from\s+([a-zA-Z0-9_\.]+)\s+import.*(?!['"])|^(?!['"#]).*import\s+([a-zA-Z0-9_\., ]+).*(?!['"])/;
+/*
+Python has a fairly rich import statement, but luckily we only care about top-level (public) packages.
+That means we can ignore:
+
+- Relative imports
+- `as` rebindings
+-  The`fromlist`
+
+We can also ignore multi-line/parenthesized imports for simplicity since we don't' need 100% accuracy,
+just enough to be able to tell what packages user's rely on to make sure we are covering our bases
+in terms of support.
+
+We can rely on the fact that the use of the `from` and `import` keywords from the start of a line are
+only usable for imports (`from` can also be used when raising an exception, but `raise` would be the
+first keyword on a line in that instance). We also get to rely on the fact that we only care about
+the top-level package, keeping the regex extremely greedy and simple for performance.
+*/
+const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+))/;
 const MAX_DOCUMENT_LINES = 1000;
 
 // Capture isTestExecution on module load so that a test can turn it off and still
@@ -32,25 +47,14 @@ export class ImportTracker implements IImportTracker {
     private hashFn = require('hash.js').sha256;
 
     constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
-        @inject(ICodeExecutionManager) private executionManager: ICodeExecutionManager
+        @inject(IDocumentManager) private documentManager: IDocumentManager
     ) {
-        // Sign up for document open/save events so we can track known imports
         this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
         this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
-
-        // Sign up for history execution events (user can input code here too)
-        this.historyProvider.onExecutedCode(c => this.onExecutedCode(c));
-
-        // Sign up for terminal execution events (user can send code to the terminal)
-        // However we won't get any text typed directly into the terminal. Not part of the VS code API
-        // Could potentially hook stdin? Not sure that's possible.
-        this.executionManager.onExecutedCode(c => this.onExecutedCode(c));
     }
 
     public async activate(): Promise<void> {
-        // Act like all of our open documents just opened. Our timeout will make sure this is delayed
+        // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
@@ -66,9 +70,8 @@ export class ImportTracker implements IImportTracker {
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
-        // Make sure this is a python file.
+        // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
-            // Parse the contents of the document, looking for import matches on each line
             this.scheduleDocument(document);
         }
     }
@@ -94,48 +97,39 @@ export class ImportTracker implements IImportTracker {
     private checkDocument(document: TextDocument) {
         this.pendingDocs.delete(document.fileName);
         const lines = this.getDocumentLines(document);
-        this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_FILE);
+        this.lookForImports(lines);
     }
 
-    private onExecutedCode(code: string) {
-        const lines = code.splitLines({ trim: true, removeEmptyEntries: true });
-        this.lookForImports(lines, EventName.KNOWN_IMPORT_FROM_EXECUTION);
+    private sendTelemetry(packageName: string) {
+        // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
+        if (this.sentMatches.has(packageName)) {
+            return;
+        }
+        this.sentMatches.add(packageName);
+        // Hash the package name so that we will never accidentally see a
+        // user's private package name.
+        const hash = this.hashFn().update(packageName).digest('hex');
+        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, {hashedName: hash});
     }
 
-    private lookForImports(lines: (string | undefined)[], eventName: string) {
+    private lookForImports(lines: (string | undefined)[]) {
         try {
-            // Use a regex to parse each line, looking for imports
-            const matches: Set<string> = new Set<string>();
             for (const s of lines) {
                 const match = s ? ImportRegEx.exec(s) : null;
-                if (match && match.length > 2) {
-                    // Could be a from or a straight import. from is the first entry.
-                    const actual = match[1] ? match[1] : match[2];
-
-                    // Use just the bits to the left of ' as '
-                    const left = actual.split(' as ')[0];
-
-                    // Now split this based on, and chop off all .
-                    const baseNames = left.split(',').map(l => l.split('.')[0].trim());
-                    baseNames.forEach(l => {
-                        // Hash this value and save this in our import
-                        const hash = this.hashFn().update(l).digest('hex');
-                        if (!this.sentMatches.has(hash)) {
-                            matches.add(hash);
-                        }
-                    });
+                if (match !== null && match.groups !== undefined) {
+                    if (match.groups.fromImport !== undefined) {
+                        // `from pkg ...`
+                        this.sendTelemetry(match.groups.fromImport);
+                    } else if (match.groups.importImport !== undefined) {
+                        // `import pkg1, pkg2, ...`
+                        const packageNames = match.groups.importImport.split(',').map(rawPackageName => rawPackageName.trim());
+                        // Can't pass in `this.sendTelemetry` directly as that rebinds `this`.
+                        packageNames.forEach(p => this.sendTelemetry(p));
+                    }
                 }
             }
-
-            // For each unique match, emit a new telemetry event.
-            matches.forEach(s => {
-                sendTelemetryEvent(
-                    eventName === EventName.KNOWN_IMPORT_FROM_FILE ? EventName.KNOWN_IMPORT_FROM_FILE : EventName.KNOWN_IMPORT_FROM_EXECUTION,
-                    0,
-                    { import: s });
-                this.sentMatches.add(s);
-            });
         } catch {
+            // Don't care about failures since this is just telemetry.
             noop();
         }
     }

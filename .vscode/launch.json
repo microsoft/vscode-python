@@ -147,8 +147,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--timeout=300000",
-                "--grep="
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
@@ -168,8 +168,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--timeout=300000",
-                "--grep="
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

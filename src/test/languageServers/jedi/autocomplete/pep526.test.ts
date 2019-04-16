@@ -12,7 +12,7 @@ import {
     closeActiveWindows, initialize,
     initializeTest
 } from '../../../initialize';
-import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep526 = path.join(autoCompPath, 'pep526.py');

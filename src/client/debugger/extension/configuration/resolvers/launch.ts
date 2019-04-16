@@ -75,16 +75,20 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.console = 'integratedTerminal';
         }
         // If using a terminal, then never open internal console.
-        if (debugConfiguration.console !== 'none' && !debugConfiguration.internalConsoleOptions) {
+        if (debugConfiguration.console !== 'internalConsole' && !debugConfiguration.internalConsoleOptions) {
             debugConfiguration.internalConsoleOptions = 'neverOpen';
         }
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
+        if (debugConfiguration.justMyCode === undefined) {
+            // Populate justMyCode using debugStdLib
+            debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
+        }
         // Pass workspace folder so we can get this when we get debug events firing.
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
-        if (debugConfiguration.debugStdLib) {
+        if (!debugConfiguration.justMyCode) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.stopOnEntry) {

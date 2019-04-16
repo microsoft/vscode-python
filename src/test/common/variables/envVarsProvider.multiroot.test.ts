@@ -22,7 +22,7 @@ import { clearPythonPathInWorkspaceFolder, isOs, OSType, updateSetting } from '.
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
-import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
 use(chaiAsPromised);
 

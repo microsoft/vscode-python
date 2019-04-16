@@ -11,7 +11,6 @@ import { LanguageServerDownloader } from '../../../client/activation/languageSer
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
 import {
-    ILanguageServerActivator,
     ILanguageServerDownloader,
     ILanguageServerFolderService,
     ILanguageServerManager
@@ -30,7 +29,7 @@ import { sleep } from '../../core';
 // tslint:disable:max-func-body-length
 
 suite('Language Server - Activator', () => {
-    let activator: ILanguageServerActivator;
+    let activator: LanguageServerExtensionActivator;
     let workspaceService: IWorkspaceService;
     let manager: ILanguageServerManager;
     let fs: IFileSystem;
@@ -80,8 +79,8 @@ suite('Language Server - Activator', () => {
 
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
-        verify(lsFolderService.getLanguageServerFolderName()).never();
-        verify(lsDownloader.downloadLanguageServer(anything())).never();
+        verify(lsFolderService.getLanguageServerFolderName(anything())).never();
+        verify(lsDownloader.downloadLanguageServer(anything(), anything())).never();
     });
     test('Do not download LS if not required', async () => {
         const languageServerFolder = 'Some folder name';
@@ -91,15 +90,16 @@ suite('Language Server - Activator', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(manager.start(undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(true);
-        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything()))
+            .thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(true);
 
         await activator.activate(undefined);
 
         verify(manager.start(undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
-        verify(lsFolderService.getLanguageServerFolderName()).once();
-        verify(lsDownloader.downloadLanguageServer(anything())).never();
+        verify(lsFolderService.getLanguageServerFolderName(anything())).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), anything())).never();
     });
     test('Start language server after downloading', async () => {
         const deferred = createDeferred<void>();
@@ -110,15 +110,17 @@ suite('Language Server - Activator', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(manager.start(undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(true);
-        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything()))
+            .thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(false);
-        when(lsDownloader.downloadLanguageServer(languageServerFolderPath)).thenReturn(deferred.promise);
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined))
+            .thenReturn(deferred.promise);
 
         const promise = activator.activate(undefined);
         await sleep(1);
         verify(workspaceService.hasWorkspaceFolders).once();
-        verify(lsFolderService.getLanguageServerFolderName()).once();
-        verify(lsDownloader.downloadLanguageServer(anything())).once();
+        verify(lsFolderService.getLanguageServerFolderName(anything())).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
 
         verify(manager.start(undefined)).never();
 
@@ -146,5 +148,60 @@ suite('Language Server - Activator', () => {
         activator.dispose();
 
         verify(manager.dispose()).once();
+    });
+    test('Download and check if ICU config exists', async () => {
+        const languageServerFolder = 'Some folder name';
+        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
+        const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
+        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+
+        when(settings.downloadLanguageServer).thenReturn(true);
+        when(lsFolderService.getLanguageServerFolderName(undefined)).thenResolve(languageServerFolder);
+        when(fs.fileExists(mscorlib)).thenResolve(false);
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined)).thenResolve();
+        when(fs.fileExists(targetJsonFile)).thenResolve(false);
+
+        await activator.ensureLanguageServerIsAvailable(undefined);
+
+        verify(lsFolderService.getLanguageServerFolderName(undefined)).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
+        verify(fs.fileExists(targetJsonFile)).once();
+    });
+    test('Do not download nor check if ICU config exists after downloading', async () => {
+        const languageServerFolder = 'Some folder name';
+        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
+        const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
+        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+
+        when(settings.downloadLanguageServer).thenReturn(true);
+        when(lsFolderService.getLanguageServerFolderName(undefined)).thenResolve(languageServerFolder);
+        when(fs.fileExists(mscorlib)).thenResolve(true);
+
+        await activator.ensureLanguageServerIsAvailable(undefined);
+
+        verify(lsFolderService.getLanguageServerFolderName(undefined)).once();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).never();
+        verify(fs.fileExists(targetJsonFile)).never();
+    });
+    test('JSON file is created to ensure LS can start without ICU', async () => {
+        const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const contents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        when(fs.fileExists(targetJsonFile)).thenResolve(false);
+        when(fs.writeFile(targetJsonFile, JSON.stringify(contents))).thenResolve();
+
+        await activator.prepareLanguageServerForNoICU('some folder');
+
+        verify(fs.fileExists(targetJsonFile)).atLeast(1);
+        verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).once();
+    });
+    test('JSON file is not created if it already exists', async () => {
+        const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const contents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        when(fs.fileExists(targetJsonFile)).thenResolve(true);
+
+        await activator.prepareLanguageServerForNoICU('some folder');
+
+        verify(fs.fileExists(targetJsonFile)).atLeast(1);
+        verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).never();
     });
 });

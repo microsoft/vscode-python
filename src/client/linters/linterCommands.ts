@@ -59,10 +59,10 @@ export class LinterCommands implements IDisposable {
 
         const selection = await this.appShell.showQuickPick(linterList, quickPickOptions);
         if (selection !== undefined) {
-            if (selection === 'Disable Linting'){
+            if (selection === 'Disable Linting') {
                 await this.linterManager.enableLintingAsync(false);
-                sendTelemetryEvent(EventName.SELECT_LINTER, undefined, {enabled: false});
-            } else{
+                sendTelemetryEvent(EventName.SELECT_LINTER, undefined, { enabled: false });
+            } else {
                 const index = linters.findIndex(x => x.id === selection);
                 if (activeLinters.length > 1) {
                     const response = await this.appShell.showWarningMessage(Linters.replaceWithSelectedLinter().format(selection), 'Yes', 'No');
@@ -71,7 +71,7 @@ export class LinterCommands implements IDisposable {
                     }
                 }
                 await this.linterManager.setActiveLintersAsync([linters[index].product], this.settingsUri);
-                sendTelemetryEvent(EventName.SELECT_LINTER, undefined, {tool: selection as LinterId, enabled: true});
+                sendTelemetryEvent(EventName.SELECT_LINTER, undefined, { tool: selection as LinterId, enabled: true });
             }
         }
     }
