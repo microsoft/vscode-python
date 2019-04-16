@@ -369,7 +369,7 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         fs.setup(w => w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.InvalidDebuggerTypeDiagnostic);
+        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.ConsoleTypeDiagnostic);
         workspaceService.verifyAll();
         fs.verifyAll();
     });
