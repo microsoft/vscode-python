@@ -7,14 +7,16 @@ import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
+import { DocumentSelector } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { ILanguageServerFolderService } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -24,8 +26,11 @@ import { sleep } from '../../core';
 
 // tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
 
-suite('Language Server - Analysis Options', () => {
+suite('xLanguage Server - Analysis Options', () => {
     class TestClass extends LanguageServerAnalysisOptions {
+        public getDocumentSelector(resource: Resource): DocumentSelector {
+            return super.getDocumentSelector(resource);
+        }
         public getExcludedFiles(): string[] {
             return super.getExcludedFiles();
         }
@@ -198,5 +203,36 @@ suite('Language Server - Analysis Options', () => {
         await sleep(10);
 
         expect(settingsChangedInvokedCount).to.be.equal(1);
+    });
+    test('Ensure search pattern is only provided in multi-root workspaces', () => {
+        const resource = Uri.file(__filename);
+        const workspaceFolder = { name: '', index: 0, uri: Uri.file(__dirname) };
+        when(workspace.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
+
+        const expectedSelector = [
+            { scheme: 'file', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+
+        const selector = analysisOptions.getDocumentSelector(resource);
+
+        expect(selector).to.deep.equal(expectedSelector);
+    });
+    test('Ensure search pattern is provided in a multi-root workspace', () => {
+        const resource = Uri.file(__filename);
+        const workspaceFolder1 = { name: '1', index: 0, uri: Uri.file(__dirname) };
+        const workspaceFolder2 = { name: '2', index: 1, uri: Uri.file(__dirname) };
+        when(workspace.getWorkspaceFolder(resource)).thenReturn(workspaceFolder1);
+        when(workspace.workspaceFolders).thenReturn([workspaceFolder1, workspaceFolder2]);
+
+        const expectedSelector = [
+            { scheme: 'file', language: PYTHON_LANGUAGE, pattern: `${workspaceFolder1.uri.fsPath}/**/*` },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+
+        const selector = analysisOptions.getDocumentSelector(resource);
+
+        expect(selector).to.deep.equal(expectedSelector);
     });
 });
