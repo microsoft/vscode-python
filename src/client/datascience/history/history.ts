@@ -216,6 +216,10 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 this.logTelemetry(Telemetry.CollapseAll);
                 break;
 
+            case HistoryMessages.VariableExplorerToggle:
+                this.variableExplorerToggle(payload);
+                break;
+
             case HistoryMessages.AddedSysInfo:
                 this.dispatchMessage(message, payload, this.onAddedSysInfo);
                 break;
@@ -940,6 +944,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
 
         this.postMessage(HistoryMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
+        sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: variablesResponse.variables.length });
     }
 
     // tslint:disable-next-line: no-any
@@ -949,6 +954,17 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Request our variable value
             const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar);
             this.postMessage(HistoryMessages.GetVariableValueResponse, varValue).ignoreErrors();
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private variableExplorerToggle = (payload?: any) => {
+        // Direct undefined check as false boolean will skip code
+        if (payload !== undefined) {
+            const openValue = payload as boolean;
+
+            // Log the state in our Telemetry
+            sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
         }
     }
 }

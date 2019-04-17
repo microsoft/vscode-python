@@ -34,6 +34,7 @@ export namespace HistoryMessages {
     export const GetVariablesResponse = 'get_variables_response';
     export const GetVariableValueRequest = 'get_variable_value_request';
     export const GetVariableValueResponse = 'get_variable_value_response';
+    export const VariableExplorerToggle = 'variable_explorer_toggle';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -100,6 +101,7 @@ export class IHistoryMapping {
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
     public [HistoryMessages.GetVariableValueResponse]: IJupyterVariable;
+    public [HistoryMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
 }

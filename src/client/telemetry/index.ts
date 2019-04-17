@@ -360,6 +360,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [Telemetry.VariableExplorerToggled]: { open: boolean };
+    [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
     [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };

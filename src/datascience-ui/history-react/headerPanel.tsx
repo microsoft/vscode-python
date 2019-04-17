@@ -36,6 +36,7 @@ export interface IHeaderPanelProps {
     clearAll(): void;
     showDataExplorer(targetVariable: string): void;
     refreshVariables(): void;
+    variableExplorerToggled(open: boolean): void;
     onHeightChange(newHeight: number): void;
 }
 
@@ -76,7 +77,12 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps> {
                     </CellButton>
                 </MenuBar>
                 {progressBar}
-                <VariableExplorer baseTheme={this.props.baseTheme} showDataExplorer={this.props.showDataExplorer} refreshVariables={this.props.refreshVariables} onHeightChange={this.onVariableHeightChange} ref={this.props.variableExplorerRef} />
+                <VariableExplorer baseTheme={this.props.baseTheme}
+                 showDataExplorer={this.props.showDataExplorer}
+                 refreshVariables={this.props.refreshVariables}
+                 onHeightChange={this.onVariableHeightChange}
+                 variableExplorerToggled={this.props.variableExplorerToggled}
+                 ref={this.props.variableExplorerRef} />
             </div>
         );
     }

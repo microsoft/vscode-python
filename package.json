@@ -1234,8 +1234,8 @@
                 },
                 "python.dataScience.showJupyterVariableExplorer": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Show the variable explorer in the Python Interactive window. (experimental)",
+                    "default": true,
+                    "description": "Show the variable explorer in the Python Interactive window.",
                     "scope": "resource"
                 },
                 "python.dataScience.variableExplorerExclude": {

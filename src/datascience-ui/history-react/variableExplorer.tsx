@@ -22,6 +22,7 @@ interface IVariableExplorerProps {
     refreshVariables(): void;
     onHeightChange(): void;
     showDataExplorer(targetVariable: string): void;
+    variableExplorerToggled(open: boolean): void;
 }
 
 interface IVariableExplorerState {
@@ -150,6 +151,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (!this.state.open) {
             this.props.refreshVariables();
         }
+
+        // Notify of the toggle, reverse it as the state is not updated yet
+        this.props.variableExplorerToggled(!this.state.open);
     }
 
     private updateHeight = () => {
