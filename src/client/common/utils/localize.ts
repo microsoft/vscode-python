@@ -166,43 +166,145 @@ export namespace DataScience {
 }
 
 export namespace DebugConfigurationPrompts {
-    export const selectConfigurationTitle = localize('debug.selectConfigurationTitle', 'Select a debug configuration');
-    export const selectConfigurationPlaceholder = localize('debug.selectConfigurationPlaceholder', 'Debug Configuration');
-    export const debugFileConfigurationLabel = localize('debug.debugFileConfigurationLabel', 'Python File');
-    export const debugFileConfigurationDescription = localize('debug.debugFileConfigurationDescription', 'Debug currently active Python file');
-    export const debugModuleConfigurationLabel = localize('debug.debugModuleConfigurationLabel', 'Module');
-    export const debugModuleConfigurationDescription = localize('debug.debugModuleConfigurationDescription', 'Debug a python module by invoking it with \'-m\'');
-    export const remoteAttachConfigurationLabel = localize('debug.remoteAttachConfigurationLabel', 'Remote Attach');
-    export const remoteAttachConfigurationDescription = localize('debug.remoteAttachConfigurationDescription', 'Attach to a remote ptsvd debug server');
-    export const debugDjangoConfigurationLabel = localize('debug.debugDjangoConfigurationLabel', 'Django');
-    export const debugDjangoConfigurationDescription = localize('debug.debugDjangoConfigurationDescription', 'Launch and debug a Django web application');
-    export const debugFlaskConfigurationLabel = localize('debug.debugFlaskConfigurationLabel', 'Flask');
-    export const debugFlaskConfigurationDescription = localize('debug.debugFlaskConfigurationDescription', 'Launch and debug a Flask web application');
-    export const debugPyramidConfigurationLabel = localize('debug.debugPyramidConfigurationLabel', 'Pyramid');
-    export const debugPyramidConfigurationDescription = localize('debug.debugPyramidConfigurationDescription', 'Web Application');
-    export const djangoEnterManagePyPathTitle = localize('debug.djangoEnterManagePyPathTitle', 'Debug Django');
-    // tslint:disable-next-line:no-invalid-template-strings
-    export const djangoEnterManagePyPathPrompt = localize('debug.djangoEnterManagePyPathPrompt', 'Enter path to manage.py (\'${workspaceFolder}\' points to the root of the current workspace folder)');
-    export const djangoEnterManagePyPathInvalidFilePathError = localize('debug.djangoEnterManagePyPathInvalidFilePathError', 'Enter a valid python file path');
-    export const flaskEnterAppPathOrNamePathTitle = localize('debug.flaskEnterAppPathOrNamePathTitle', 'Debug Flask');
-    export const flaskEnterAppPathOrNamePathPrompt = localize('debug.flaskEnterAppPathOrNamePathPrompt', 'Enter path to application, e.g. \'app.py\' or \'app\'');
-    export const flaskEnterAppPathOrNamePathInvalidNameError = localize('debug.flaskEnterAppPathOrNamePathInvalidNameError', 'Enter a valid name');
+    export const selectConfigurationTitle = localize(
+        'debug.selectConfigurationTitle',
+        'Select a debug configuration'
+    );
+    export const selectConfigurationPlaceholder = localize(
+        'debug.selectConfigurationPlaceholder',
+        'Debug Configuration'
+    );
+    export const debugFileConfigurationLabel = localize(
+        'debug.debugFileConfigurationLabel',
+        'Python File'
+    );
+    export const debugFileConfigurationDescription = localize(
+        'debug.debugFileConfigurationDescription',
+        'Debug currently active Python file'
+    );
+    export const debugModuleConfigurationLabel = localize(
+        'debug.debugModuleConfigurationLabel',
+        'Module'
+    );
+    export const debugModuleConfigurationDescription = localize(
+        'debug.debugModuleConfigurationDescription',
+        'Debug a python module by invoking it with \'-m\''
+    );
+    export const remoteAttachConfigurationLabel = localize(
+        'debug.remoteAttachConfigurationLabel',
+        'Remote Attach'
+    );
+    export const remoteAttachConfigurationDescription = localize(
+        'debug.remoteAttachConfigurationDescription',
+        'Attach to a remote ptsvd debug server'
+    );
+    export const debugDjangoConfigurationLabel = localize(
+        'debug.debugDjangoConfigurationLabel',
+        'Django'
+    );
+    export const debugDjangoConfigurationDescription = localize(
+        'debug.debugDjangoConfigurationDescription',
+        'Launch and debug a Django web application'
+    );
+    export const debugFlaskConfigurationLabel = localize(
+        'debug.debugFlaskConfigurationLabel',
+        'Flask'
+    );
+    export const debugFlaskConfigurationDescription = localize(
+        'debug.debugFlaskConfigurationDescription',
+        'Launch and debug a Flask web application'
+    );
+    export const debugPyramidConfigurationLabel = localize(
+        'debug.debugPyramidConfigurationLabel',
+        'Pyramid'
+    );
+    export const debugPyramidConfigurationDescription = localize(
+        'debug.debugPyramidConfigurationDescription',
+        'Web Application'
+    );
+    export const djangoEnterManagePyPathTitle = localize(
+        'debug.djangoEnterManagePyPathTitle',
+        'Debug Django'
+    );
+    export const djangoEnterManagePyPathPrompt = localize(
+        'debug.djangoEnterManagePyPathPrompt',
+        // tslint:disable-next-line:no-invalid-template-strings
+        'Enter path to manage.py (\'${workspaceFolder}\' points to the root of the current workspace folder)'
+    );
+    export const djangoEnterManagePyPathInvalidFilePathError = localize(
+        'debug.djangoEnterManagePyPathInvalidFilePathError',
+        'Enter a valid python file path'
+    );
+    export const flaskEnterAppPathOrNamePathTitle = localize(
+        'debug.flaskEnterAppPathOrNamePathTitle',
+        'Debug Flask'
+    );
+    export const flaskEnterAppPathOrNamePathPrompt = localize(
+        'debug.flaskEnterAppPathOrNamePathPrompt',
+        'Enter path to application, e.g. \'app.py\' or \'app\''
+    );
+    export const flaskEnterAppPathOrNamePathInvalidNameError = localize(
+        'debug.flaskEnterAppPathOrNamePathInvalidNameError',
+        'Enter a valid name'
+    );
 
-    export const moduleEnterModuleTitle = localize('debug.moduleEnterModuleTitle', 'Debug Module');
-    export const moduleEnterModulePrompt = localize('debug.moduleEnterModulePrompt', 'Enter Python module/package name');
-    export const moduleEnterModuleInvalidNameError = localize('debug.moduleEnterModuleInvalidNameError', 'Enter a valid module name');
-    export const pyramidEnterDevelopmentIniPathTitle = localize('debug.pyramidEnterDevelopmentIniPathTitle', 'Debug Pyramid');
-    // tslint:disable-next-line:no-invalid-template-strings
-    export const pyramidEnterDevelopmentIniPathPrompt = localize('debug.pyramidEnterDevelopmentIniPathPrompt', '`Enter path to development.ini (\'${workspaceFolderToken}\' points to the root of the current workspace folder)`');
-    export const pyramidEnterDevelopmentIniPathInvalidFilePathError = localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError', 'Enter a valid file path');
-    export const attachRemotePortTitle = localize('debug.attachRemotePortTitle', 'Remote Debugging');
-    export const attachRemotePortPrompt = localize('debug.attachRemotePortPrompt', 'Enter the port number that the ptvsd server is listening on');
-    export const attachRemotePortValidationError = localize('debug.attachRemotePortValidationError', 'Enter a valid port number');
-    export const attachRemoteHostTitle = localize('debug.attachRemoteHostTitle', 'Remote Debugging');
-    export const attachRemoteHostPrompt = localize('debug.attachRemoteHostPrompt', 'Enter host name');
-    export const attachRemoteHostValidationError = localize('debug.attachRemoteHostValidationError', 'Enter a host name or IP address');
-    export const launchJsonConfigurationsCompletionLabel = localize('debug.launchJsonConfigurationsCompletionLabel', 'Python');
-    export const launchJsonConfigurationsCompletionDescription = localize('debug.launchJsonConfigurationsCompletionDescription', 'Select a debug configuration');
+    export const moduleEnterModuleTitle = localize(
+        'debug.moduleEnterModuleTitle',
+        'Debug Module'
+    );
+    export const moduleEnterModulePrompt = localize(
+        'debug.moduleEnterModulePrompt',
+        'Enter Python module/package name'
+    );
+    export const moduleEnterModuleInvalidNameError = localize(
+        'debug.moduleEnterModuleInvalidNameError',
+        'Enter a valid module name'
+    );
+    export const pyramidEnterDevelopmentIniPathTitle = localize(
+        'debug.pyramidEnterDevelopmentIniPathTitle',
+        'Debug Pyramid'
+    );
+    export const pyramidEnterDevelopmentIniPathPrompt = localize(
+        'debug.pyramidEnterDevelopmentIniPathPrompt',
+        // tslint:disable-next-line:no-invalid-template-strings
+        '`Enter path to development.ini (\'${workspaceFolderToken}\' points to the root of the current workspace folder)`'
+    );
+    export const pyramidEnterDevelopmentIniPathInvalidFilePathError = localize(
+        'debug.pyramidEnterDevelopmentIniPathInvalidFilePathError',
+        'Enter a valid file path'
+    );
+    export const attachRemotePortTitle = localize(
+        'debug.attachRemotePortTitle',
+        'Remote Debugging'
+    );
+    export const attachRemotePortPrompt = localize(
+        'debug.attachRemotePortPrompt',
+        'Enter the port number that the ptvsd server is listening on'
+    );
+    export const attachRemotePortValidationError = localize(
+        'debug.attachRemotePortValidationError',
+        'Enter a valid port number'
+    );
+    export const attachRemoteHostTitle = localize(
+        'debug.attachRemoteHostTitle',
+        'Remote Debugging'
+    );
+    export const attachRemoteHostPrompt = localize(
+        'debug.attachRemoteHostPrompt',
+        'Enter host name'
+    );
+    export const attachRemoteHostValidationError = localize(
+        'debug.attachRemoteHostValidationError',
+        'Enter a host name or IP address'
+    );
+    export const launchJsonConfigurationsCompletionLabel = localize(
+        'debug.launchJsonConfigurationsCompletionLabel',
+        'Python'
+    );
+    export const launchJsonConfigurationsCompletionDescription = localize(
+        'debug.launchJsonConfigurationsCompletionDescription',
+        'Select a debug configuration'
+    );
 }
 
 export namespace Testing {

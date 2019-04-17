@@ -59,15 +59,37 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         const jsonStr = await this.fs.readFile(jsFilePath);
         return JSON.parse(jsonStr) as DebugConfiguration[];
     }
-    protected async  pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
+    protected async  pickDebugConfiguration(
+        input: IMultiStepInput<DebugConfigurationState>,
+        state: DebugConfigurationState
+    ): Promise<InputStep<DebugConfigurationState> | void> {
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
-            { label: DebugConfigurationPrompts.debugFileConfigurationLabel(), type: DebugConfigurationType.launchFile, description: DebugConfigurationPrompts.debugFileConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugModuleConfigurationLabel(), type: DebugConfigurationType.launchModule, description: DebugConfigurationPrompts.debugModuleConfigurationDescription() },
-            { label: DebugConfigurationPrompts.remoteAttachConfigurationLabel(), type: DebugConfigurationType.remoteAttach, description: DebugConfigurationPrompts.remoteAttachConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugDjangoConfigurationLabel(), type: DebugConfigurationType.launchDjango, description: DebugConfigurationPrompts.debugDjangoConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugFlaskConfigurationLabel(), type: DebugConfigurationType.launchFlask, description: DebugConfigurationPrompts.debugFlaskConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugPyramidConfigurationLabel(), type: DebugConfigurationType.launchPyramid, description: DebugConfigurationPrompts.debugPyramidConfigurationDescription() }
+            {
+                label: DebugConfigurationPrompts.debugFileConfigurationLabel(),
+                type: DebugConfigurationType.launchFile,
+                description: DebugConfigurationPrompts.debugFileConfigurationDescription()
+            }, {
+                label: DebugConfigurationPrompts.debugModuleConfigurationLabel(),
+                type: DebugConfigurationType.launchModule,
+                description: DebugConfigurationPrompts.debugModuleConfigurationDescription()
+            }, {
+                label: DebugConfigurationPrompts.remoteAttachConfigurationLabel(),
+                type: DebugConfigurationType.remoteAttach,
+                description: DebugConfigurationPrompts.remoteAttachConfigurationDescription()
+            }, {
+                label: DebugConfigurationPrompts.debugDjangoConfigurationLabel(),
+                type: DebugConfigurationType.launchDjango,
+                description: DebugConfigurationPrompts.debugDjangoConfigurationDescription()
+            }, {
+                label: DebugConfigurationPrompts.debugFlaskConfigurationLabel(),
+                type: DebugConfigurationType.launchFlask,
+                description: DebugConfigurationPrompts.debugFlaskConfigurationDescription()
+            }, {
+                label: DebugConfigurationPrompts.debugPyramidConfigurationLabel(),
+                type: DebugConfigurationType.launchPyramid,
+                description: DebugConfigurationPrompts.debugPyramidConfigurationDescription()
+            }
         ];
         state.config = {};
         const pick = await input.showQuickPick<DebugConfigurationQuickPickItem, IQuickPickParameters<DebugConfigurationQuickPickItem>>({
