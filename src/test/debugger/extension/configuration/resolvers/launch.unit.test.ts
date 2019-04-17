@@ -279,7 +279,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('stopOnEntry', false);
         expect(debugConfig).to.have.property('showReturnValue', true);
         expect(debugConfig).to.have.property('debugOptions');
-        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.RedirectOutput]);
+        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.ShowReturnValue, DebugOptions.RedirectOutput]);
     });
     test('Test defaults of python debugger', async () => {
         if ('python' === DebuggerTypeName) {
@@ -312,7 +312,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('showReturnValue', true);
         expect(debugConfig).to.have.property('justMyCode', false);
         expect(debugConfig).to.have.property('debugOptions');
-        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.DebugStdLib]);
+        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.ShowReturnValue, DebugOptions.DebugStdLib]);
     });
     const testsForJustMyCode =
         [
