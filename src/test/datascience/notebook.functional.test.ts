@@ -777,25 +777,6 @@ plt.show()`,
         }
     }
 
-    runTest('Theme modifies execution', async () => {
-        if (ioc.mockJupyter) {
-            let server = await createNotebookServer(true, false, false);
-            let session = await getNotebookSession(server);
-            const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
-            const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
-
-            assert.ok(session!.getExecutes().indexOf(light) >= 0, 'light not found');
-            assert.ok(session!.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
-            await server!.dispose();
-
-            server = await createNotebookServer(true, false, true);
-            session = await getNotebookSession(server);
-            assert.ok(session!.getExecutes().indexOf(dark) >= 0, 'dark not found');
-            assert.ok(session!.getExecutes().indexOf(light) < 0, 'light found when not allowed');
-            await server!.dispose();
-        }
-    });
-
     runTest('Invalid kernel spec works', async () => {
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
