@@ -23,7 +23,7 @@ getNamesAndValues(OSType).forEach(os => {
     if (os.value === OSType.Unknown) {
         return;
     }
-    suite(`Debugging - Config Resolver attach, OS = ${os.name}`, () => {
+    suite(`xDebugging - Config Resolver attach, OS = ${os.name}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
@@ -38,6 +38,7 @@ getNamesAndValues(OSType).forEach(os => {
         } else {
             debugOptionsAvailable.push(DebugOptions.UnixClient);
         }
+        debugOptionsAvailable.push(DebugOptions.ShowReturnValue);
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();

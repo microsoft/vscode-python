@@ -78,6 +78,9 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         } else {
             this.debugOption(debugOptions, DebugOptions.UnixClient);
         }
+        if (debugConfiguration.showReturnValue) {
+            this.debugOption(debugOptions, DebugOptions.ShowReturnValue);
+        }
 
         if (!debugConfiguration.pathMappings) {
             debugConfiguration.pathMappings = [];
