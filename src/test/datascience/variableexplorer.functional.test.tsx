@@ -169,7 +169,7 @@ value = 'hello world'`;
         const basicCode: string = `import numpy as np
 import pandas as pd
 myList = [x ** 2 for x in range(0,100000)]
-mySet = set(myList)
+mySet = set([42])
 myDict = {}
 for value in myList:
     myDict[value] = value / 2`;
@@ -187,7 +187,7 @@ for value in myList:
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myDict', value: '{0: 0.0, 1: 0.5, 4: 2.0, 9: 4.5, 16: 8.0, 25: 12.5, 36: 18.0, 49: 24.5, 64: 32.0, 81: 40.5, 100: 50.0, 121: 60.5, 144: 72.0, 169: 84.5, 196: 98.0, 225: 112.5, 256: 128.0, 289: 144.5, 324: 162.0, 361: ', supportsDataExplorer: true, type: 'dict', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myList', value: '[0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400, 441, 484, 529, 576, 625, 676, 729, 784, 841, 900, 961, 1024, 1089, 1156, 1225, 1296, 1369, 1444, 1521, 1600,', supportsDataExplorer: true, type: 'list', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'mySet', value: '{0, 1, 262144, 1048576, 4, 16777216, 9437184, 67108864, 58982400, 9, 268435456, 1073741824, 2415919104, 4294967296, 6710886400, 132342016, 16, 1073479696, 1074003984, 3088580625, 4295491600, 429444302', supportsDataExplorer: true, type: 'set', size: 54, shape: '', count: 0, truncated: false},
+            {name: 'mySet', value: '{42}', supportsDataExplorer: true, type: 'set', size: 54, shape: '', count: 0, truncated: false},
             {name: 'value', value: '9999800001', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
         ];
         verifyVariables(wrapper, targetVariables);
