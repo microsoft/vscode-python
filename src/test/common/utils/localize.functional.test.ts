@@ -73,7 +73,7 @@ suite('Localization', () => {
         });
         setLocale('spam');
 
-        const title = localize.DebugConfigStrings.selectConfigurationTitle();
+        const title = localize.DebugConfigStrings.selectConfiguration.title();
         const gotIt = localize.Common.gotIt();
 
         assert.equal(title, '???', 'not used');
@@ -216,11 +216,16 @@ function useEveryLocalization(topns: any) {
 function useEveryLocalizationInNS(ns: any) {
     // The namespace should have functions inside of it.
     // @ts-ignore
-    const funcs = Object.keys(ns);
+    const props = Object.keys(ns);
 
-    // Run every function; this should fill up our "asked-for keys" collection.
-    funcs.forEach((key: string) => {
-        const func = ns[key];
-        func();
+    // Run every function and cover every sub-namespace.
+    // This should fill up our "asked-for keys" collection.
+    props.forEach((key: string) => {
+        if (typeof ns[key] === 'function') {
+            const func = ns[key];
+            func();
+        } else {
+            useEveryLocalizationInNS(ns[key]);
+        }
     });
 }

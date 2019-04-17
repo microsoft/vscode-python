@@ -79,7 +79,7 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         }
 
         const config = {
-            name: DebugConfigStrings.attachSnippetName(),
+            name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
             port: 5678,
@@ -112,7 +112,7 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         }
 
         const config = {
-            name: DebugConfigStrings.attachSnippetName(),
+            name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
             port: 9999,

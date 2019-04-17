@@ -19,7 +19,7 @@ const defaultPort = 5678;
 export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurationProvider {
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
         const config: Partial<AttachRequestArguments> = {
-            name: DebugConfigStrings.attachSnippetName(),
+            name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
             port: defaultPort,
@@ -34,12 +34,12 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
         };
 
         config.host = await input.showInputBox({
-            title: DebugConfigStrings.attachRemoteHostTitle(),
+            title: DebugConfigStrings.attach.enterRemoteHost.title(),
             step: 1,
             totalSteps: 2,
             value: config.host || defaultHost,
-            prompt: DebugConfigStrings.attachRemoteHostPrompt(),
-            validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.attachRemoteHostValidationError())
+            prompt: DebugConfigStrings.attach.enterRemoteHost.prompt(),
+            validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid())
         });
         if (!config.host) {
             config.host = defaultHost;
@@ -51,12 +51,12 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
     }
     protected async configurePort(input: MultiStepInput<DebugConfigurationState>, config: Partial<AttachRequestArguments>) {
         const port = await input.showInputBox({
-            title: DebugConfigStrings.attachRemotePortTitle(),
+            title: DebugConfigStrings.attach.enterRemotePort.title(),
             step: 2,
             totalSteps: 2,
             value: (config.port || defaultPort).toString(),
-            prompt: DebugConfigStrings.attachRemotePortPrompt(),
-            validate: value => Promise.resolve((value && /^\d+$/.test(value.trim())) ? undefined : DebugConfigStrings.attachRemotePortValidationError())
+            prompt: DebugConfigStrings.attach.enterRemotePort.prompt(),
+            validate: value => Promise.resolve((value && /^\d+$/.test(value.trim())) ? undefined : DebugConfigStrings.attach.enterRemotePort.invalid())
         });
         if (port && /^\d+$/.test(port.trim())) {
             config.port = parseInt(port, 10);

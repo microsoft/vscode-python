@@ -30,10 +30,10 @@ suite('Debugging - Configuration Provider Module', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.moduleSnippetName(),
+            name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: DebugConfigStrings.moduleEnterModuleDefault()
+            module: DebugConfigStrings.module.snippet.default(),
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -48,7 +48,7 @@ suite('Debugging - Configuration Provider Module', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.moduleSnippetName(),
+            name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'hello'

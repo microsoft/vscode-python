@@ -131,7 +131,7 @@ suite('Debugging - Configuration Provider Django', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.djangoSnippetName(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: 'xyz.py',
@@ -155,7 +155,7 @@ suite('Debugging - Configuration Provider Django', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.djangoSnippetName(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: 'hello',
@@ -182,7 +182,7 @@ suite('Debugging - Configuration Provider Django', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.djangoSnippetName(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: defaultProgram,

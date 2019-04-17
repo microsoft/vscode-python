@@ -35,14 +35,14 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
             {
                 command: {
                     command: 'python.SelectAndInsertDebugConfiguration',
-                    title: DebugConfigStrings.launchJsonConfigurationsCompletionDescription(),
+                    title: DebugConfigStrings.launchJsonCompletions.description(),
                     arguments: [document, position, token]
                 },
-                documentation: DebugConfigStrings.launchJsonConfigurationsCompletionDescription(),
+                documentation: DebugConfigStrings.launchJsonCompletions.description(),
                 sortText: 'AAAA',
                 preselect: true,
                 kind: CompletionItemKind.Enum,
-                label: DebugConfigStrings.launchJsonConfigurationsCompletionLabel(),
+                label: DebugConfigStrings.launchJsonCompletions.label(),
                 insertText: new SnippetString()
             }
         ];

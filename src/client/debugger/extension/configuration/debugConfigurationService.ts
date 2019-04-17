@@ -66,35 +66,35 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
             {
-                label: DebugConfigStrings.debugFileConfigurationLabel(),
+                label: DebugConfigStrings.file.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFile,
-                description: DebugConfigStrings.debugFileConfigurationDescription()
+                description: DebugConfigStrings.file.selectConfiguration.description()
             }, {
-                label: DebugConfigStrings.debugModuleConfigurationLabel(),
+                label: DebugConfigStrings.module.selectConfiguration.label(),
                 type: DebugConfigurationType.launchModule,
-                description: DebugConfigStrings.debugModuleConfigurationDescription()
+                description: DebugConfigStrings.module.selectConfiguration.description()
             }, {
-                label: DebugConfigStrings.remoteAttachConfigurationLabel(),
+                label: DebugConfigStrings.attach.selectConfiguration.label(),
                 type: DebugConfigurationType.remoteAttach,
-                description: DebugConfigStrings.remoteAttachConfigurationDescription()
+                description: DebugConfigStrings.attach.selectConfiguration.description()
             }, {
-                label: DebugConfigStrings.debugDjangoConfigurationLabel(),
+                label: DebugConfigStrings.django.selectConfiguration.label(),
                 type: DebugConfigurationType.launchDjango,
-                description: DebugConfigStrings.debugDjangoConfigurationDescription()
+                description: DebugConfigStrings.django.selectConfiguration.description()
             }, {
-                label: DebugConfigStrings.debugFlaskConfigurationLabel(),
+                label: DebugConfigStrings.flask.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFlask,
-                description: DebugConfigStrings.debugFlaskConfigurationDescription()
+                description: DebugConfigStrings.flask.selectConfiguration.description()
             }, {
-                label: DebugConfigStrings.debugPyramidConfigurationLabel(),
+                label: DebugConfigStrings.pyramid.selectConfiguration.label(),
                 type: DebugConfigurationType.launchPyramid,
-                description: DebugConfigStrings.debugPyramidConfigurationDescription()
+                description: DebugConfigStrings.pyramid.selectConfiguration.description()
             }
         ];
         state.config = {};
         const pick = await input.showQuickPick<DebugConfigurationQuickPickItem, IQuickPickParameters<DebugConfigurationQuickPickItem>>({
-            title: DebugConfigStrings.selectConfigurationTitle(),
-            placeholder: DebugConfigStrings.selectConfigurationPlaceholder(),
+            title: DebugConfigStrings.selectConfiguration.title(),
+            placeholder: DebugConfigStrings.selectConfiguration.placeholder(),
             activeItem: items[0],
             items: items
         });

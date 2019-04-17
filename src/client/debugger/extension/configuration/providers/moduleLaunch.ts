@@ -17,16 +17,16 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         let manuallyEnteredAValue: boolean | undefined;
         const config: Partial<LaunchRequestArguments> = {
-            name: DebugConfigStrings.moduleSnippetName(),
+            name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: DebugConfigStrings.moduleSnippetDefault()
+            module: DebugConfigStrings.module.snippet.default()
         };
         const selectedModule = await input.showInputBox({
-            title: DebugConfigStrings.moduleEnterModuleTitle(),
-            value: config.module || DebugConfigStrings.moduleEnterModuleDefault(),
-            prompt: DebugConfigStrings.moduleEnterModulePrompt(),
-            validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.moduleEnterModuleInvalidNameError())
+            title: DebugConfigStrings.module.enterModule.title(),
+            value: config.module || DebugConfigStrings.module.enterModule.default(),
+            prompt: DebugConfigStrings.module.enterModule.prompt(),
+            validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.module.enterModule.invalid())
         });
         if (selectedModule) {
             manuallyEnteredAValue = true;

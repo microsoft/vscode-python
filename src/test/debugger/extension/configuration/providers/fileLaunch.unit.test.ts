@@ -24,7 +24,7 @@ suite('Debugging - Configuration Provider File', () => {
         await provider.buildConfiguration(undefined as any, state);
 
         const config = {
-            name: DebugConfigStrings.fileSnippetName(),
+            name: DebugConfigStrings.file.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             // tslint:disable-next-line:no-invalid-template-strings
