@@ -10,6 +10,7 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
+import { LinterId } from '../linters/types';
 import { EventName } from './constants';
 import {
     CodeExecutionTelemetry,
@@ -36,7 +37,6 @@ import {
     TestDiscoverytTelemetry,
     TestRunTelemetry
 } from './types';
-import { LinterId } from '../linters/types';
 
 /**
  * Checks whether telemetry is supported.

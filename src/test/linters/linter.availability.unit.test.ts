@@ -150,7 +150,7 @@ suite('Linter Availability Provider tests', () => {
         ];
         if (promptEnabled) {
             appShellMock.setup(ap => ap.showInformationMessage(
-                TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
+                TypeMoq.It.isValue(Linters.enablePylint().format(linterInfo.id)),
                 TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
                 TypeMoq.It.isAny(),
                 TypeMoq.It.isAny())
@@ -162,7 +162,7 @@ suite('Linter Availability Provider tests', () => {
             }
         } else {
             appShellMock.setup(ap => ap.showInformationMessage(
-                TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
+                TypeMoq.It.isValue(Linters.enablePylint().format(linterInfo.id)),
                 TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
                 TypeMoq.It.isAny(),
                 TypeMoq.It.isAny())
@@ -265,7 +265,7 @@ suite('Linter Availability Provider tests', () => {
             Common.doNotShowAgain()
         ];
         appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
+            TypeMoq.It.isValue(Linters.enablePylint().format(linterInfo.id)),
             TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny())
