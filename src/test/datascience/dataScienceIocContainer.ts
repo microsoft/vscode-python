@@ -185,7 +185,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { IVsCodeApi, PostOffice } from '../../datascience-ui/react-common/postOffice';
+import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
@@ -201,6 +201,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
+    // tslint:disable-next-line:no-any
+    private missedMessages : any[] = [];
     private pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -245,8 +247,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.wrapper.unmount();
             this.wrapper = undefined;
         }
-
-        PostOffice.resetApi();
     }
 
     //tslint:disable:max-func-body-length
@@ -490,6 +490,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             // Keep track of the current listener. It listens to messages through the vscode api
             this.webPanelListener = listener;
 
+            // Send messages that were already posted but were missed.
+            // During normal operation, the react control will not be created before
+            // the webPanelListener
+            if (this.missedMessages.length && this.webPanelListener) {
+                this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
+
+                // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
+                // create multiple webpanels with the same mount. We need to resend these messages to
+                // other webpanels that get created with the same mount.
+            }
+
             // Return our dummy web panel
             return webPanel.object;
         });
@@ -563,7 +574,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private postMessageToWebPanel(msg: any) {
         if (this.webPanelListener) {
             this.webPanelListener.onMessage(msg.type, msg.payload);
+        } else {
+            this.missedMessages.push(msg);
         }
+
         if (this.extraListeners.length) {
             this.extraListeners.forEach(e => e(msg.type, msg.payload));
         }
@@ -573,6 +587,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     private mountReactControl(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>) {
+        // This is a remount (or first time). Clear out messages that were sent
+        // by the last mount
+        this.missedMessages = [];
+
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {

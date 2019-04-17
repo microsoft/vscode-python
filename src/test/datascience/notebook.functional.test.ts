@@ -49,7 +49,7 @@ interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 }
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
-suite('Jupyter notebook tests', () => {
+suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
     let processFactory: IProcessServiceFactory;

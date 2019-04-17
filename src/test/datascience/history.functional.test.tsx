@@ -41,7 +41,7 @@ import {
 import { waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('History output tests', () => {
+suite('DataScience History output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 

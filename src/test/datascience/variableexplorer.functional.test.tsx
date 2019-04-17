@@ -16,7 +16,7 @@ import { addCode, runMountedTest } from './historyTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('History variable explorer tests', () => {
+suite('DataScience History variable explorer tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 

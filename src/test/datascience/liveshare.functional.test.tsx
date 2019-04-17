@@ -17,15 +17,7 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import {
-    ICodeWatcher,
-    IDataScienceCommandListener,
-    IHistory,
-    IHistoryProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
+import { ICodeWatcher, IDataScienceCommandListener, IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
@@ -35,7 +27,7 @@ import { waitForUpdate } from './reactHelpers';
 //tslint:disable:trailing-comma no-any no-multiline-string
 
 // tslint:disable-next-line:max-func-body-length no-any
-suite('LiveShare tests', () => {
+suite('DataScience LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
@@ -83,22 +75,9 @@ suite('LiveShare tests', () => {
         result.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
-        const historyProvider = result.get<IHistoryProvider>(IHistoryProvider);
+        // This is necessary to get the appropriate live share services up and running.
+        result.get<IHistoryProvider>(IHistoryProvider);
         result.get<IJupyterExecution>(IJupyterExecution);
-
-        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-        // ready.
-        const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<void> => {
-            await origFunc();
-            const history = historyProvider.getActive();
-
-            // During testing the MainPanel sends the init message before our history is created.
-            // Pretend like it's happening now
-            const listener = ((history as any).messageListener) as HistoryMessageListener;
-            listener.onMessage(HistoryMessages.Started, {});
-        };
-
         return result;
     }
 
@@ -137,8 +116,8 @@ suite('LiveShare tests', () => {
             // Generate our results
             await resultGenerator(true);
 
-            // Wait for all of the renders to go through
-            await Promise.all([hostRenderPromise, guestRenderPromise]);
+            // Wait for all of the renders to go through. Guest may have been shutdown by now.
+            await Promise.all([hostRenderPromise, isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()]);
         }
         return container.wrapper!;
     }

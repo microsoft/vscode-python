@@ -14,7 +14,6 @@ import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
-import { DataViewerMessageListener } from '../../client/datascience/data-viewing/dataViewerMessageListener';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
 import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
@@ -22,7 +21,7 @@ import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // import { asyncDump } from '../common/asyncDump';
-suite('DataViewer tests', () => {
+suite('DataScience DataViewer tests', () => {
     const disposables: Disposable[] = [];
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
@@ -55,26 +54,11 @@ suite('DataViewer tests', () => {
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
-
         // Setup our webview panel
         ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} forceHeight={200}/>));
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataProvider = ioc.get<IDataViewerProvider>(IDataViewerProvider);
-
-        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-        // ready.
-        const origFunc = (dataProvider as any).create.bind(dataProvider);
-        (dataProvider as any).create = async (v: string): Promise<void> => {
-            const dataViewer = await origFunc(v);
-
-            // During testing the MainPanel sends the init message before our history is created.
-            // Pretend like it's happening now
-            const listener = ((dataViewer as any).messageListener) as DataViewerMessageListener;
-            listener.onMessage(DataViewerMessages.Started, {});
-
-            return dataViewer;
-        };
 
         return ioc.wrapper!;
     }

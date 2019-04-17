@@ -18,6 +18,7 @@ import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/co
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
+import { Identifiers } from '../../client/datascience/constants';
 import {
     ICell,
     IConnection,
@@ -98,8 +99,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.kernelSpecs.push({name: '0e8519db-0895-416c-96df-fa80131ecea0', dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'});
 
         // Setup our default cells that happen for everything
-        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt');
-        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')');
+        this.addCell(`import matplotlib${os.EOL}%matplotlib inline${os.EOL}${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)`);
+        this.addCell('matplotlib.style.use(\'dark_background\')');
+        this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');

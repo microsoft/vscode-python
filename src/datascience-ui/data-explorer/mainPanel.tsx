@@ -62,6 +62,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private emptyRows: (() => JSX.Element) | undefined;
     private getEmptyRows: ((props: any) => JSX.Element) | undefined;
     private sentDone = false;
+    private postOffice: PostOffice = new PostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -98,10 +99,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillMount() {
         // Add ourselves as a handler for the post office
-        PostOffice.addHandler(this);
+        this.postOffice.addHandler(this);
 
         // Tell the dataviewer code we have started.
-        PostOffice.sendMessage<IDataViewerMapping, 'started'>(DataViewerMessages.Started);
+        this.postOffice.sendMessage<IDataViewerMapping, 'started'>(DataViewerMessages.Started);
     }
 
     public componentDidMount() {
@@ -111,7 +112,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillUnmount() {
         window.removeEventListener('resize', this.updateDimensions);
-        PostOffice.removeHandler(this);
+        this.postOffice.removeHandler(this);
+        this.postOffice.dispose();
     }
 
     public componentDidUpdate() {
@@ -132,7 +134,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (
                 <div className='background'>
                     <div className='main-panel' ref={this.updateContainer}>
-                        <StyleInjector expectingDark={this.props.baseTheme !== 'vscode-light'} />
+                        <StyleInjector expectingDark={this.props.baseTheme !== 'vscode-light'} postOffice={this.postOffice} />
                         {this.container && this.renderGrid()}
                     </div>
                 </div>
@@ -332,7 +334,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        PostOffice.sendMessage<M, T>(type, payload);
+        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getColumnType(name: string | number) : string | undefined {

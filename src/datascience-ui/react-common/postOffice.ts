@@ -3,6 +3,7 @@
 'use strict';
 
 import { WebPanelMessage } from '../../client/common/application/types';
+import { IDisposable } from '../../client/common/types';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
@@ -22,66 +23,64 @@ export interface IMessageHandler {
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
 // tslint:disable-next-line: no-unnecessary-class
-export class PostOffice {
+export class PostOffice implements IDisposable {
 
-    private static vscodeApi : IVsCodeApi | undefined;
-    private static registered: boolean = false;
-    private static handlers: IMessageHandler[] = [];
+    private registered: boolean = false;
+    private vscodeApi : IVsCodeApi | undefined;
+    private handlers: IMessageHandler[] = [];
+    private baseHandler = this.handleMessages.bind(this);
 
-    public static sendMessage<M, T extends keyof M>(type: T, payload?: M[T]) {
-        const api = PostOffice.acquireApi();
+    public dispose() {
+        if (this.registered) {
+            this.registered = false;
+            window.removeEventListener('message', this.baseHandler);
+        }
+    }
+
+    public sendMessage<M, T extends keyof M>(type: T, payload?: M[T]) {
+        const api = this.acquireApi();
         if (api) {
             api.postMessage({ type: type.toString(), payload });
         }
     }
 
     // tslint:disable-next-line:no-any
-    public static sendUnsafeMessage(type: string, payload?: any) {
-        const api = PostOffice.acquireApi();
+    public sendUnsafeMessage(type: string, payload?: any) {
+        const api = this.acquireApi();
         if (api) {
             api.postMessage({ type: type, payload });
         }
     }
 
-    public static addHandler(handler: IMessageHandler) {
+    public addHandler(handler: IMessageHandler) {
         // Acquire here too so that the message handlers are setup during tests.
-        PostOffice.acquireApi();
-        PostOffice.handlers.push(handler);
+        this.acquireApi();
+        this.handlers.push(handler);
     }
 
-    public static removeHandler(handler: IMessageHandler) {
-        PostOffice.handlers = PostOffice.handlers.filter(f => f !== handler);
+    public removeHandler(handler: IMessageHandler) {
+        this.handlers = this.handlers.filter(f => f !== handler);
     }
 
-    public static resetApi() {
-        // This is necessary so that tests can reset the vscode api for the next test
-        // to find.
-        PostOffice.vscodeApi = undefined;
-        if (PostOffice.registered) {
-            PostOffice.registered = false;
-            window.removeEventListener('message', PostOffice.handleMessages);
-        }
-    }
-
-    private static acquireApi() : IVsCodeApi | undefined {
+    private acquireApi() : IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
-        if (!PostOffice.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-            PostOffice.vscodeApi = acquireVsCodeApi();
+        if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+            this.vscodeApi = acquireVsCodeApi();
         }
-        if (!PostOffice.registered) {
-            PostOffice.registered = true;
-            window.addEventListener('message', PostOffice.handleMessages);
+        if (!this.registered) {
+            this.registered = true;
+            window.addEventListener('message', this.baseHandler);
         }
 
-        return PostOffice.vscodeApi;
+        return this.vscodeApi;
     }
 
-    private static handleMessages = async (ev: MessageEvent) => {
-        if (PostOffice.handlers) {
+    private async handleMessages(ev: MessageEvent) {
+        if (this.handlers) {
             const msg = ev.data as WebPanelMessage;
             if (msg) {
-                PostOffice.handlers.forEach((h : IMessageHandler | null) => {
+                this.handlers.forEach((h : IMessageHandler | null) => {
                     if (h) {
                         h.handleMessage(msg.type, msg.payload);
                     }

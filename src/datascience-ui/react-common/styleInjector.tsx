@@ -10,6 +10,7 @@ import { detectBaseTheme } from './themeDetector';
 
 export interface IStyleInjectorProps {
     expectingDark: boolean;
+    postOffice: PostOffice;
     darkChanged?(newDark: boolean): void;
 }
 
@@ -28,19 +29,19 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
 
     public componentWillMount() {
         // Add ourselves as a handler for the post office
-        PostOffice.addHandler(this);
+        this.props.postOffice.addHandler(this);
     }
 
     public componentWillUnmount() {
         // Remove ourselves as a handler for the post office
-        PostOffice.removeHandler(this);
+        this.props.postOffice.removeHandler(this);
     }
 
     public componentDidMount() {
         if (!this.state.rootCss) {
             // Set to a temporary value.
             this.setState({rootCss: ' '});
-            PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
+            this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
         }
     }
 
@@ -105,7 +106,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             const dsSettings = newSettings as IDataScienceExtraSettings;
             if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
                 // User changed the current theme. Rerender
-                PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
+                this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
             }
         }
     }

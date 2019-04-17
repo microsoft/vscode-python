@@ -10,9 +10,8 @@ import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IHistory, IJupyterExecution } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
@@ -69,27 +68,8 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
 //}
 
 export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement<any>): ReactWrapper<any, Readonly<{}>, React.Component> {
-
     // Setup our webview panel
     ioc.createWebView(() => mount(node));
-    //ioc.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />));
-
-    // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
-    const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-
-    // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-    // ready.
-    const origFunc = (historyProvider as any).create.bind(historyProvider);
-    (historyProvider as any).create = async (): Promise<void> => {
-        await origFunc();
-        const history = historyProvider.getActive();
-
-        // During testing the MainPanel sends the init message before our history is created.
-        // Pretend like it's happening now
-        const listener = ((history as any).messageListener) as HistoryMessageListener;
-        listener.onMessage(HistoryMessages.Started, {});
-    };
-
     return ioc.wrapper!;
 }
 

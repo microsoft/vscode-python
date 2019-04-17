@@ -36,6 +36,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private variableExplorerRef: React.RefObject<VariableExplorer>;
     private styleInjectorRef: React.RefObject<StyleInjector>;
     private currentExecutionCount: number = 0;
+    private postOffice: PostOffice = new PostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -63,10 +64,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillMount() {
         // Add ourselves as a handler for the post office
-        PostOffice.addHandler(this);
+        this.postOffice.addHandler(this);
 
         // Tell the history code we have started.
-        PostOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
+        this.postOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
     }
 
     public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
@@ -78,7 +79,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillUnmount() {
         // Remove ourselves as a handler for the post office
-        PostOffice.removeHandler(this);
+        this.postOffice.removeHandler(this);
+
+        // Get rid of our post office
+        this.postOffice.dispose();
     }
 
     public render() {
@@ -95,7 +99,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
+                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} postOffice={this.postOffice} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
             </div>
@@ -203,12 +207,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private darkChanged = (newDark: boolean) => {
-        // update our base theme
-        this.setState(
-            {
-                forceDark: newDark
-            }
-        );
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    forceDark: newDark
+                }
+            );
+        }
     }
 
     private computeBaseTheme(): string {
@@ -306,7 +313,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        PostOffice.sendMessage<M, T>(type, payload);
+        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {
