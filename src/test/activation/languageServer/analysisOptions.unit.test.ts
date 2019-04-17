@@ -204,7 +204,7 @@ suite('Language Server - Analysis Options', () => {
 
         expect(settingsChangedInvokedCount).to.be.equal(1);
     });
-    test('Ensure search pattern is provided when there are no workspace folders', () => {
+    test('Ensure search pattern is not provided when there are no workspaces', () => {
         when(workspace.workspaceFolders).thenReturn([]);
 
         const expectedSelector = [
@@ -216,7 +216,7 @@ suite('Language Server - Analysis Options', () => {
 
         expect(selector).to.deep.equal(expectedSelector);
     });
-    test('Ensure search pattern is only provided in multi-root workspaces', () => {
+    test('Ensure search pattern is not provided in single-root workspaces', () => {
         const workspaceFolder: WorkspaceFolder = { name: '', index: 0, uri: Uri.file(__dirname) };
         when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
 
