@@ -16,7 +16,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
