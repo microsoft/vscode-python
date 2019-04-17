@@ -167,232 +167,103 @@ export namespace DataScience {
 
 export namespace DebugConfigStrings {
     export const selectConfiguration = {
-        title: localize(
-            'debug.selectConfigurationTitle',
-            'Select a debug configuration'
-        ),
-        placeholder: localize(
-            'debug.selectConfigurationPlaceholder',
-            'Debug Configuration'
-        )
+        title: localize('debug.selectConfigurationTitle'),
+        placeholder: localize('debug.selectConfigurationPlaceholder')
     };
     export const launchJsonCompletions = {
-        label: localize(
-            'debug.launchJsonConfigurationsCompletionLabel',
-            'Python'
-        ),
-        description: localize(
-            'debug.launchJsonConfigurationsCompletionDescription',
-            'Select a debug configuration'
-        )
+        label: localize('debug.launchJsonConfigurationsCompletionLabel'),
+        description: localize('debug.launchJsonConfigurationsCompletionDescription')
     };
 
     export namespace file {
         export const snippet = {
-            name: localize(
-                'python.snippet.launch.standard.label',
-                'Python: Current File'
-            )
+            name: localize('python.snippet.launch.standard.label')
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
-            label: localize(
-                'debug.debugFileConfigurationLabel',
-                'Python File'
-            ),
-            description: localize(
-                'debug.debugFileConfigurationDescription',
-                'Debug currently active Python file'
-            )
+            label: localize('debug.debugFileConfigurationLabel'),
+            description: localize('debug.debugFileConfigurationDescription')
         };
     }
     export namespace module {
         export const snippet = {
-            name: localize(
-                'python.snippet.launch.module.label',
-                'Python: Module'
-            ),
-            default: localize(
-                'python.snippet.launch.module.default',
-                'enter-your-module-name'
-            )
+            name: localize('python.snippet.launch.module.label'),
+            default: localize('python.snippet.launch.module.default')
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
-            label: localize(
-                'debug.debugModuleConfigurationLabel',
-                'Module'
-            ),
-            description: localize(
-                'debug.debugModuleConfigurationDescription',
-                'Debug a python module by invoking it with \'-m\''
-            )
+            label: localize('debug.debugModuleConfigurationLabel'),
+            description: localize('debug.debugModuleConfigurationDescription')
         };
         export const enterModule = {
-            title: localize(
-                'debug.moduleEnterModuleTitle',
-                'Debug Module'
-            ),
-            prompt: localize(
-                'debug.moduleEnterModulePrompt',
-                'Enter Python module/package name'
-            ),
-            default: localize(
-                'debug.moduleEnterModuleDefault',
-                'enter-your-module-name'
-            ),
-            invalid: localize(
-                'debug.moduleEnterModuleInvalidNameError',
-                'Enter a valid module name'
-            )
+            title: localize('debug.moduleEnterModuleTitle'),
+            prompt: localize('debug.moduleEnterModulePrompt'),
+            default: localize('debug.moduleEnterModuleDefault'),
+            invalid: localize('debug.moduleEnterModuleInvalidNameError')
         };
     }
     export namespace attach {
         export const snippet = {
-            name: localize(
-                'python.snippet.launch.attach.label',
-                'Python: Remote Attach'
-            )
+            name: localize('python.snippet.launch.attach.label')
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
-            label: localize(
-                'debug.remoteAttachConfigurationLabel',
-                'Remote Attach'
-            ),
-            description: localize(
-                'debug.remoteAttachConfigurationDescription',
-                'Attach to a remote ptsvd debug server'
-            )
+            label: localize('debug.remoteAttachConfigurationLabel'),
+            description: localize('debug.remoteAttachConfigurationDescription')
         };
         export const enterRemoteHost = {
-            title: localize(
-                'debug.attachRemoteHostTitle',
-                'Remote Debugging'
-            ),
-            prompt: localize(
-                'debug.attachRemoteHostPrompt',
-                'Enter host name'
-            ),
-            invalid: localize(
-                'debug.attachRemoteHostValidationError',
-                'Enter a host name or IP address'
-            )
+            title: localize('debug.attachRemoteHostTitle'),
+            prompt: localize('debug.attachRemoteHostPrompt'),
+            invalid: localize('debug.attachRemoteHostValidationError')
         };
         export const enterRemotePort = {
-            title: localize(
-                'debug.attachRemotePortTitle',
-                'Remote Debugging'
-            ),
-            prompt: localize(
-                'debug.attachRemotePortPrompt',
-                'Enter the port number that the ptvsd server is listening on'
-            ),
-            invalid: localize(
-                'debug.attachRemotePortValidationError',
-                'Enter a valid port number'
-            )
+            title: localize('debug.attachRemotePortTitle'),
+            prompt: localize('debug.attachRemotePortPrompt'),
+            invalid: localize('debug.attachRemotePortValidationError')
         };
     }
     export namespace django {
         export const snippet = {
-            name: localize(
-                'python.snippet.launch.django.label',
-                'Python: Django'
-            )
+            name: localize('python.snippet.launch.django.label')
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
-            label: localize(
-                'debug.debugDjangoConfigurationLabel',
-                'Django'
-            ),
-            description: localize(
-                'debug.debugDjangoConfigurationDescription',
-                'Launch and debug a Django web application'
-            )
+            label: localize('debug.debugDjangoConfigurationLabel'),
+            description: localize('debug.debugDjangoConfigurationDescription')
         };
         export const enterManagePyPath = {
-            title: localize(
-                'debug.djangoEnterManagePyPathTitle',
-                'Debug Django'
-            ),
-            prompt: localize(
-                'debug.djangoEnterManagePyPathPrompt',
-                // tslint:disable-next-line:no-invalid-template-strings
-                'Enter path to manage.py (\'${workspaceFolder}\' points to the root of the current workspace folder)'
-            ),
-            invalid: localize(
-                'debug.djangoEnterManagePyPathInvalidFilePathError',
-                'Enter a valid python file path'
-            )
+            title: localize('debug.djangoEnterManagePyPathTitle'),
+            prompt: localize('debug.djangoEnterManagePyPathPrompt'),
+            invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
         };
     }
     export namespace flask {
         export const snippet = {
-            name: localize(
-                'python.snippet.launch.flask.label',
-                'Python: Flask'
-            )
+            name: localize('python.snippet.launch.flask.label')
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
-            label: localize(
-                'debug.debugFlaskConfigurationLabel',
-                'Flask'
-            ),
-            description: localize(
-                'debug.debugFlaskConfigurationDescription',
-                'Launch and debug a Flask web application'
-            )
+            label: localize('debug.debugFlaskConfigurationLabel'),
+            description: localize('debug.debugFlaskConfigurationDescription')
         };
         export const enterAppPathOrNamePath = {
-            title: localize(
-                'debug.flaskEnterAppPathOrNamePathTitle',
-                'Debug Flask'
-            ),
-            //prompt: localize(
-            //    'debug.flaskEnterAppPathOrNamePathPrompt',
-            //    'Enter path to application, e.g. \'app.py\' or \'app\''
-            //),
-            invalid: localize(
-                'debug.flaskEnterAppPathOrNamePathInvalidNameError',
-                'Enter a valid name'
-            )
+            title: localize('debug.flaskEnterAppPathOrNamePathTitle'),
+            invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
         };
     }
     export namespace pyramid {
         export const snippet = {
-            name: localize(
-                'python.snippet.launch.pyramid.label',
-                'Python: Pyramid Application'
-            )
+            name: localize('python.snippet.launch.pyramid.label')
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
-            label: localize(
-                'debug.debugPyramidConfigurationLabel',
-                'Pyramid'
-            ),
-            description: localize(
-                'debug.debugPyramidConfigurationDescription',
-                'Web Application'
-            )
+            label: localize('debug.debugPyramidConfigurationLabel'),
+            description: localize('debug.debugPyramidConfigurationDescription')
         };
         export const enterDevelopmentIniPath = {
-            title: localize(
-                'debug.pyramidEnterDevelopmentIniPathTitle',
-                'Debug Pyramid'
-            ),
-            prompt: localize(
-                'debug.pyramidEnterDevelopmentIniPathPrompt',
-                // tslint:disable-next-line:no-invalid-template-strings
-                '`Enter path to development.ini (\'${workspaceFolderToken}\' points to the root of the current workspace folder)`'
-            ),
-            invalid: localize(
-                'debug.pyramidEnterDevelopmentIniPathInvalidFilePathError',
-                'Enter a valid file path'
-            )
+            title: localize('debug.pyramidEnterDevelopmentIniPathTitle'),
+            prompt: localize('debug.pyramidEnterDevelopmentIniPathPrompt'),
+            invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError')
         };
     }
 }
@@ -411,6 +282,8 @@ let loadedCollection: Record<string, string> | undefined;
 let defaultCollection: Record<string, string> | undefined;
 let askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
+
+const REQUIRED = '<localization required>';
 
 // This is exported only for testing purposes.
 export function _resetCollections() {
@@ -437,10 +310,10 @@ export function getCollectionJSON(): string {
     return JSON.stringify({ ...defaultCollection, ...loadedCollection });
 }
 
-function localize(key: string, defValue: string) {
+export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {
-        return getString(key, defValue);
+        return getString(key, defValue || REQUIRED);
     };
 }
 
@@ -468,6 +341,9 @@ function getString(key: string, defValue: string) {
         return defaultCollection[key];
     }
 
+    if (defValue === REQUIRED) {
+        throw Error(`missing localization for string "${key}"`);
+    }
     // Not found, return the default
     askedForCollection[key] = defValue;
     return defValue;
