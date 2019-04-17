@@ -42,6 +42,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             // Populate justMyCode using debugStdLib
             debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
         }
+        debugConfiguration.showReturnValue = debugConfiguration.showReturnValue !== false;
         // Pass workspace folder so we can get this when we get debug events firing.
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;

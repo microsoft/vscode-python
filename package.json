@@ -875,7 +875,7 @@
                             "showReturnValue": {
                                 "type": "boolean",
                                 "description": "Show return value of functions when stepping.",
-                                "default": false
+                                "default": true
                             },
                             "console": {
                                 "enum": [
@@ -977,7 +977,7 @@
                             "showReturnValue": {
                                 "type": "boolean",
                                 "description": "Show return value of functions when stepping.",
-                                "default": false
+                                "default": true
                             },
                             "console": {
                                 "enum": [
@@ -1088,6 +1088,11 @@
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
                                 "default": false
+                            },
+                            "showReturnValue": {
+                                "type": "boolean",
+                                "description": "Show return value of functions when stepping.",
+                                "default": true
                             }
                         }
                     }

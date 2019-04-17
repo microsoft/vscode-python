@@ -44,7 +44,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
         } catch (ex) { }
     });
 
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, port?: number, host?: string, showReturnValue: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, port?: number, host?: string, showReturnValue: boolean = true): LaunchRequestArguments {
         return {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,

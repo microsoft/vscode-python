@@ -277,7 +277,7 @@ suite('Debugging - Config Resolver Launch', () => {
 
         expect(debugConfig).to.have.property('console', 'integratedTerminal');
         expect(debugConfig).to.have.property('stopOnEntry', false);
-        expect(debugConfig).to.have.property('showReturnValue', false);
+        expect(debugConfig).to.have.property('showReturnValue', true);
         expect(debugConfig).to.have.property('debugOptions');
         expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.RedirectOutput]);
     });
@@ -294,7 +294,7 @@ suite('Debugging - Config Resolver Launch', () => {
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
 
         expect(debugConfig).to.have.property('stopOnEntry', false);
-        expect(debugConfig).to.have.property('showReturnValue', false);
+        expect(debugConfig).to.have.property('showReturnValue', true);
         expect(debugConfig).to.have.property('debugOptions');
         expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.RedirectOutput]);
     });
@@ -309,7 +309,7 @@ suite('Debugging - Config Resolver Launch', () => {
 
         expect(debugConfig).to.have.property('console', 'integratedTerminal');
         expect(debugConfig).to.have.property('stopOnEntry', false);
-        expect(debugConfig).to.have.property('showReturnValue', false);
+        expect(debugConfig).to.have.property('showReturnValue', true);
         expect(debugConfig).to.have.property('justMyCode', false);
         expect(debugConfig).to.have.property('debugOptions');
         expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.DebugStdLib]);

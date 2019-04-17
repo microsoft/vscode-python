@@ -52,7 +52,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     function createDebugAdapter(): DebugClient {
         return new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
     }
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = true): LaunchRequestArguments {
         const env = { PYTHONPATH: PTVSD_PATH };
         // tslint:disable-next-line:no-unnecessary-local-variable
         const options = {

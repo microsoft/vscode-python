@@ -137,9 +137,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (cfg.stopOnEntry === undefined) {
             cfg.stopOnEntry = false;
         }
-        if (cfg.showReturnValue === undefined) {
-            cfg.showReturnValue = false;
-        }
+        cfg.showReturnValue = cfg.showReturnValue !== false;
         if (cfg.redirectOutput === undefined) {
             cfg.redirectOutput = true;
         }

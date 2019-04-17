@@ -157,7 +157,7 @@ suite('Unit Tests - Debug Launcher', () => {
             env: {},
             envFile: __filename,
             stopOnEntry: false,
-            showReturnValue: false,
+            showReturnValue: true,
             redirectOutput: true,
             debugStdLib: false
         };
