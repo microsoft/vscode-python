@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument } from 'vscode';
+import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, DocumentSelector, LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
@@ -103,7 +103,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
         const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
-        const documentSelector = this.getDocumentSelector(this.resource);
+        const documentSelector = this.getDocumentSelector(workspaceFolder);
         // Options to control the language client.
         return {
             // Register the server for Python documents.
@@ -141,13 +141,12 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             }
         };
     }
-    protected getDocumentSelector(resource: Resource): DocumentSelector {
+    protected getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
         const documentSelector: DocumentFilter[] = [
             { scheme: 'file', language: PYTHON_LANGUAGE },
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
         // Set the document selector only when in a multi-root workspace scenario.
-        const workspaceFolder = this.workspace.getWorkspaceFolder(resource);
         if (workspaceFolder && Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders!.length > 1) {
             // tslint:disable-next-line:no-any
             documentSelector[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;

@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
 import { DocumentSelector } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
@@ -28,8 +28,8 @@ import { sleep } from '../../core';
 
 suite('Language Server - Analysis Options', () => {
     class TestClass extends LanguageServerAnalysisOptions {
-        public getDocumentSelector(resource: Resource): DocumentSelector {
-            return super.getDocumentSelector(resource);
+        public getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
+            return super.getDocumentSelector(workspaceFolder);
         }
         public getExcludedFiles(): string[] {
             return super.getExcludedFiles();
@@ -204,10 +204,20 @@ suite('Language Server - Analysis Options', () => {
 
         expect(settingsChangedInvokedCount).to.be.equal(1);
     });
+    test('Ensure search pattern is provided when there are no workspace folders', () => {
+        when(workspace.workspaceFolders).thenReturn([]);
+
+        const expectedSelector = [
+            { scheme: 'file', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+
+        const selector = analysisOptions.getDocumentSelector();
+
+        expect(selector).to.deep.equal(expectedSelector);
+    });
     test('Ensure search pattern is only provided in multi-root workspaces', () => {
-        const resource = Uri.file(__filename);
-        const workspaceFolder = { name: '', index: 0, uri: Uri.file(__dirname) };
-        when(workspace.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        const workspaceFolder: WorkspaceFolder = { name: '', index: 0, uri: Uri.file(__dirname) };
         when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
 
         const expectedSelector = [
@@ -215,15 +225,13 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
 
-        const selector = analysisOptions.getDocumentSelector(resource);
+        const selector = analysisOptions.getDocumentSelector(workspaceFolder);
 
         expect(selector).to.deep.equal(expectedSelector);
     });
     test('Ensure search pattern is provided in a multi-root workspace', () => {
-        const resource = Uri.file(__filename);
         const workspaceFolder1 = { name: '1', index: 0, uri: Uri.file(__dirname) };
         const workspaceFolder2 = { name: '2', index: 1, uri: Uri.file(__dirname) };
-        when(workspace.getWorkspaceFolder(resource)).thenReturn(workspaceFolder1);
         when(workspace.workspaceFolders).thenReturn([workspaceFolder1, workspaceFolder2]);
 
         const expectedSelector = [
@@ -231,7 +239,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
 
-        const selector = analysisOptions.getDocumentSelector(resource);
+        const selector = analysisOptions.getDocumentSelector(workspaceFolder1);
 
         expect(selector).to.deep.equal(expectedSelector);
     });
