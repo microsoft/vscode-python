@@ -1274,7 +1274,7 @@
                 "python.diagnostics.sourceMapsEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable source map support for meaningful strack traces in error logs.",
+                    "description": "Enable source map support for meaningful stack traces in error logs.",
                     "scope": "application"
                 },
                 "python.autoComplete.addBrackets": {
