@@ -312,7 +312,7 @@ suite('Debugging - Config Resolver Launch', () => {
         expect(debugConfig).to.have.property('showReturnValue', true);
         expect(debugConfig).to.have.property('justMyCode', false);
         expect(debugConfig).to.have.property('debugOptions');
-        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.ShowReturnValue, DebugOptions.DebugStdLib]);
+        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.DebugStdLib, DebugOptions.ShowReturnValue]);
     });
     const testsForJustMyCode =
         [
