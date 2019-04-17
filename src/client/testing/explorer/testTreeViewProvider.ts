@@ -4,15 +4,17 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CommandSource } from '../common/constants';
 import { getChildren, getParent, getTestType } from '../common/testUtils';
-import { ITestCollectionStorageService, TestStatus, TestType } from '../common/types';
+import { ITestCollectionStorageService, Tests, TestStatus, TestType } from '../common/types';
 import { ITestDataItemResource, ITestManagementService, ITestTreeViewProvider, TestDataItem, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
@@ -30,6 +32,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         @inject(ITestManagementService) private testService: ITestManagementService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -92,7 +95,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
                     await this.commandManager.executeCommand(Commands.Tests_Discover, element, CommandSource.testExplorer, undefined);
                     tests = this.testStore.getTests(element.workspaceFolder.uri);
                 }
-                return tests ? tests.rootTestFolders : [];
+                return this.getRootNodes(tests);
             }
             return getChildren(element!);
         }
@@ -106,7 +109,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         // If we are in a single workspace
         if (this.workspace.workspaceFolders.length === 1) {
             const tests = this.testStore.getTests(this.workspace.workspaceFolders[0].uri);
-            return tests ? tests.rootTestFolders : [];
+            return this.getRootNodes(tests);
         }
 
         // If we are in a mult-root workspace, then nest the test data within a
@@ -131,7 +134,23 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         const tests = this.testStore.getTests(element.resource);
         return tests ? getParent(tests, element) : undefined;
     }
-
+    /**
+     * If we have test files directly in root directory, return those.
+     * If we have test folders and no test files under the root directory, then just return the test directories.
+     * The goal is not avoid returning an empty root node, when all it contains are child nodes for folders.
+     *
+     * @param {Tests} [tests]
+     * @returns
+     * @memberof TestTreeViewProvider
+     */
+    public getRootNodes(tests?: Tests) {
+        if (tests && tests.rootTestFolders && tests.rootTestFolders.length === 1) {
+            const rootFolder = tests.rootTestFolders[0].name;
+            const testFiles = tests.testFiles.filter(file => this.fs.arePathsSame(path.dirname(file.fullPath), rootFolder));
+            return [...testFiles, ...tests.rootTestFolders[0].folders];
+        }
+        return tests ? tests.rootTestFolders : [];
+    }
     /**
      * Refresh the view by rebuilding the model and signaling the tree view to update itself.
      *

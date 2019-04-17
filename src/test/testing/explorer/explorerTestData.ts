@@ -15,6 +15,7 @@ import { CommandManager } from '../../../client/common/application/commandManage
 import {
     IApplicationShell, ICommandManager, IWorkspaceService
 } from '../../../client/common/application/types';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import {
     IDisposable, IDisposableRegistry
 } from '../../../client/common/types';
@@ -255,6 +256,7 @@ export function createMockTestExplorer(
     dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
 
     return new TestTreeViewProvider(
-        testStore, unitTestMgmtService, workspaceService, commandManager, dispRegMoq.object
+        testStore, unitTestMgmtService, workspaceService, commandManager,
+        tsmockito.instance(tsmockito.mock(FileSystem)), dispRegMoq.object
     );
 }
