@@ -122,13 +122,13 @@ suite('Linter Availability Provider tests', () => {
         workspaceServiceMock.verifyAll();
     });
 
-    async function testForLinterPromptResponse(promptReply: 'enable' | 'ignore' | 'disablePrompt' | undefined): Promise<boolean> {
+    async function testForLinterPromptResponse(promptAction: 'enable' | 'ignore' | 'disablePrompt' | undefined, promptEnabled = true): Promise<boolean> {
         // arrange
         const [appShellMock, fsMock, workspaceServiceMock, , factoryMock] = getDependenciesForAvailabilityTests();
         const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
 
         const linterInfo = new class extends LinterInfo {
-            public testIsEnabled: boolean = promptReply === 'enable' ? true : false;
+            public testIsEnabled: boolean = promptAction === 'enable' ? true : false;
 
             public async enableAsync(enabled: boolean, _resource?: Uri): Promise<void> {
                 this.testIsEnabled = enabled;
@@ -138,32 +138,44 @@ suite('Linter Availability Provider tests', () => {
         }(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
 
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
         factoryMock
             .setup(f => f.createWorkspacePersistentState(TypeMoq.It.isAny(), true))
             .returns(() => notificationPromptEnabled.object);
+        notificationPromptEnabled.setup(n => n.value).returns(() => promptEnabled);
         const selections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
         const optButtons = [
             Linters.enableLinter().format(linterInfo.id),
             Common.notNow(),
             Common.doNotShowAgain()
         ];
-        appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
-            TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny())
-        )
-            .returns(() => Promise.resolve(promptReply ? optButtons[selections.indexOf(promptReply)] : undefined))
-            .verifiable(TypeMoq.Times.once());
+        if (promptEnabled) {
+            appShellMock.setup(ap => ap.showInformationMessage(
+                TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
+                TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
+                TypeMoq.It.isAny(),
+                TypeMoq.It.isAny())
+            )
+                .returns(() => Promise.resolve(promptAction ? optButtons[selections.indexOf(promptAction)] : undefined))
+                .verifiable(TypeMoq.Times.once());
+            if (promptAction === 'disablePrompt') {
+                notificationPromptEnabled.setup(n => n.updateValue(false)).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+            }
+        } else {
+            appShellMock.setup(ap => ap.showInformationMessage(
+                TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
+                TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
+                TypeMoq.It.isAny(),
+                TypeMoq.It.isAny())
+            )
+                .returns(() => Promise.resolve(promptAction ? optButtons[selections.indexOf(promptAction)] : undefined))
+                .verifiable(TypeMoq.Times.never());
+        }
 
         // perform test
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
         const result = await availabilityProvider.promptToConfigureAvailableLinter(linterInfo);
-        if (promptReply === 'enable') {
+        if (promptEnabled && promptAction === 'enable') {
             expect(linterInfo.testIsEnabled).to.equal(true, 'LinterInfo test class was not updated as a result of the test.');
-        } else if (promptReply === 'disablePrompt') {
-            notificationPromptEnabled.setup(n => n.updateValue(false)).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
         }
 
         appShellMock.verifyAll();
@@ -175,22 +187,34 @@ suite('Linter Availability Provider tests', () => {
     test('Linter is enabled after being prompted and "Enable <linter>" is selected', async () => {
         // set expectations
         const expectedResult = true;
-        const promptReply = 'enable';
+        const promptAction = 'enable';
 
         // run scenario
-        const result = await testForLinterPromptResponse(promptReply);
+        const result = await testForLinterPromptResponse(promptAction);
 
         // test results
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
     });
 
-    test('Prompt is disabled when "Do not show again" is selected', async () => {
+    test('Linter is left unconfigured and prompt is disabled when "Do not show again" is selected', async () => {
         // set expectations
         const expectedResult = false;
-        const promptReply = 'disablePrompt';
+        const promptAction = 'disablePrompt';
 
         // run scenario
-        const result = await testForLinterPromptResponse(promptReply);
+        const result = await testForLinterPromptResponse(promptAction);
+
+        // test results
+        expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return false.');
+    });
+
+    test('Linter is left unconfigured and no notification is shown if prompt is disabled', async () => {
+        // set expectations
+        const expectedResult = false;
+        const promptAction = 'disablePrompt';
+
+        // run scenario
+        const result = await testForLinterPromptResponse(promptAction, false);
 
         // test results
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return false.');
@@ -198,11 +222,11 @@ suite('Linter Availability Provider tests', () => {
 
     test('Linter is left unconfigured after being prompted and the prompt is disabled without any selection made', async () => {
         // set expectation
-        const promptReply = undefined;
+        const promptAction = undefined;
         const expectedResult = false;
 
         // run scenario
-        const result = await testForLinterPromptResponse(promptReply);
+        const result = await testForLinterPromptResponse(promptAction);
 
         // test results
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return false.');
@@ -210,11 +234,11 @@ suite('Linter Availability Provider tests', () => {
 
     test('Linter is left unconfigured when "Not now" is selected', async () => {
         // set expectation
-        const promptReply = 'ignore';
+        const promptAction = 'ignore';
         const expectedResult = false;
 
         // run scenario
-        const result = await testForLinterPromptResponse(promptReply);
+        const result = await testForLinterPromptResponse(promptAction);
 
         // test results
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return false.');
@@ -228,20 +252,25 @@ suite('Linter Availability Provider tests', () => {
         public pylintWorkspaceEnabled?: boolean;
         public pylintWorkspaceFolderEnabled?: boolean;
         public linterIsInstalled: boolean = true;
-        public promptReply?: { title: string; enabled: boolean };
+        public promptAction?: 'enable' | 'disablePrompt' | 'ignore';
     }
 
     async function performTestOfOverallImplementation(options: AvailablityTestOverallOptions): Promise<boolean> {
         // arrange
         const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
+        const selections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
+        const optButtons = [
+            Linters.enableLinter().format(linterInfo.id),
+            Common.notNow(),
+            Common.doNotShowAgain()
+        ];
         appShellMock.setup(ap => ap.showInformationMessage(
             TypeMoq.It.isValue(Linters.installedButNotEnabled().format(linterInfo.id)),
             TypeMoq.It.isValue(Linters.enableLinter().format(linterInfo.id)),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny())
         )
-            // tslint:disable-next-line:no-any
-            .returns(() => options.promptReply as any)
+            .returns(() => Promise.resolve(options.promptAction ? optButtons[selections.indexOf(options.promptAction)] : undefined))
             .verifiable(TypeMoq.Times.once());
 
         const workspaceFolder = { uri: Uri.parse('full/path/to/workspace'), name: '', index: 0 };
@@ -265,6 +294,11 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock
         );
 
+        const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        factoryMock
+            .setup(f => f.createWorkspacePersistentState(TypeMoq.It.isAny(), true))
+            .returns(() => notificationPromptEnabled.object);
+        notificationPromptEnabled.setup(n => n.value).returns(() => true);
         // perform test
         const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
         return availabilityProvider.promptIfLinterAvailable(linterInfo);
@@ -323,7 +357,7 @@ suite('Linter Availability Provider tests', () => {
     test('Overall implementation does not change configuration when user is prompted and prompt is dismissed', async () => {
         // set expectations
         const testOpts = new AvailablityTestOverallOptions();
-        testOpts.promptReply = undefined; // just being explicit for test readability - this is the default
+        testOpts.promptAction = undefined; // just being explicit for test readability - this is the default
         const expectedResult = false;
 
         // arrange
@@ -332,11 +366,23 @@ suite('Linter Availability Provider tests', () => {
         expect(expectedResult).to.equal(result, 'Configuration should not change if the user is prompted and they dismiss the prompt.');
     });
 
-    test('Overall implementation changes configuration when user is prompted and "Disable <linter>" is selected', async () => {
+    test('Overall implementation does not change configuration when user is prompted and "Do not show again" is selected', async () => {
         // set expectations
         const testOpts = new AvailablityTestOverallOptions();
-        testOpts.promptReply = { title: 'Disable pylint', enabled: false };
-        const expectedResult = true;
+        testOpts.promptAction = 'disablePrompt';
+        const expectedResult = false;
+
+        // arrange
+        const result = await performTestOfOverallImplementation(testOpts);
+
+        expect(expectedResult).to.equal(result, 'Configuration should change if the user is prompted and they choose to update the linter config.');
+    });
+
+    test('Overall implementation does not change configuration when user is prompted and "Not now" is selected', async () => {
+        // set expectations
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.promptAction = 'ignore';
+        const expectedResult = false;
 
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
@@ -347,7 +393,7 @@ suite('Linter Availability Provider tests', () => {
     test('Overall implementation changes configuration when user is prompted and "Enable <linter>" is selected', async () => {
         // set expectations
         const testOpts = new AvailablityTestOverallOptions();
-        testOpts.promptReply = { title: 'Enable pylint', enabled: true };
+        testOpts.promptAction = 'enable';
         const expectedResult = true;
 
         // arrange
