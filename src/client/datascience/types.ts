@@ -281,6 +281,12 @@ export interface IJupyterVariables {
     getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
 }
 
+// Wrapper to hold an execution count for our variable requests
+export interface IJupyterVariablesResponse {
+    executionCount: number;
+    variables: IJupyterVariable[];
+}
+
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
 export interface IDataViewerProvider {
     create(variable: string) : Promise<IDataViewer>;

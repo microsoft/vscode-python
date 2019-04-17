@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
-import { ICell, IHistoryInfo, IJupyterVariable } from '../types';
+import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
 export namespace HistoryMessages {
     export const StartCell = 'start_cell';
@@ -97,7 +97,7 @@ export class IHistoryMapping {
     public [HistoryMessages.Activate] : never | undefined;
     public [HistoryMessages.ShowDataViewer]: string;
     public [HistoryMessages.GetVariablesRequest]: number;
-    public [HistoryMessages.GetVariablesResponse]: IJupyterVariable[];
+    public [HistoryMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
     public [HistoryMessages.GetVariableValueResponse]: IJupyterVariable;
     public [CssMessages.GetCssRequest] : IGetCssRequest;

@@ -44,6 +44,7 @@ import {
     IJupyterExecution,
     IJupyterVariable,
     IJupyterVariables,
+    IJupyterVariablesResponse,
     INotebookExporter,
     INotebookServer,
     InterruptResult,
@@ -918,13 +919,14 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private requestVariables = async (executionCount: number): Promise<void> => {
+    private requestVariables = async (requestExecutionCount: number): Promise<void> => {
         // Request our new list of variables
-        let vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+        const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
+        const variablesResponse: IJupyterVariablesResponse = {executionCount: requestExecutionCount, variables: vars };
 
         // Tag all of our jupyter variables with the execution count of the request
-        vars.forEach((value: IJupyterVariable) => {
-            value.executionCount = executionCount;
+        variablesResponse.variables.forEach((value: IJupyterVariable) => {
+            value.executionCount = requestExecutionCount;
         });
 
         const settings = this.configuration.getSettings();
@@ -932,12 +934,12 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
         if (excludeString) {
             const excludeArray = excludeString.split(';');
-            vars = vars.filter((value) => {
+            variablesResponse.variables = variablesResponse.variables.filter((value) => {
                return excludeArray.indexOf(value.type) === -1;
             });
         }
 
-        this.postMessage(HistoryMessages.GetVariablesResponse, vars).ignoreErrors();
+        this.postMessage(HistoryMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
     }
 
     // tslint:disable-next-line: no-any

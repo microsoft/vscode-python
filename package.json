@@ -1240,7 +1240,7 @@
                 },
                 "python.dataScience.variableExplorerExclude": {
                     "type": "string",
-                    "default": "module;builtin_function_or_method",
+                    "default": "module;function;builtin_function_or_method",
                     "description": "Types to exclude from showing in the Python Interactive variable explorer",
                     "scope": "resource"
                 },

@@ -9,7 +9,7 @@ import * as React from 'react';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -784,16 +784,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     private getVariablesResponse = (payload?: any) => {
         if (payload) {
-            const variables = payload as IJupyterVariable[];
+            const variablesResponse = payload as IJupyterVariablesResponse;
 
             // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
-            if (variables.length > 0 && variables[0].executionCount !== undefined && variables[0].executionCount === this.currentExecutionCount) {
+            if (variablesResponse.executionCount === this.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
-                    this.variableExplorerRef.current.newVariablesData(variables);
+                    this.variableExplorerRef.current.newVariablesData(variablesResponse.variables);
                 }
 
                 // Now put out a request for all of the sub values for the variables
-                variables.forEach(this.refreshVariable);
+                variablesResponse.variables.forEach(this.refreshVariable);
             }
         }
     }
