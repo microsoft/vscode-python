@@ -146,6 +146,7 @@
     "DataScience.pythonNewHeader": "Started new kernel:",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Shift-enter to run",
+    "Linter.enableLinter": "Enable {0}",
     "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
     "Linter.replaceWithSelectedLinter": "Multiple linters are enabled in settings. Replace with '{0}'?",
     "DataScience.jupyterSelectURILaunchLocal": "Launch a local Jupyter server when needed",
@@ -251,6 +252,7 @@
     "DataScience.liveShareInvalid": "One or more guests in the session do not have the Python [extension](https://marketplace.visualstudio.com/itemdetails?itemName=ms-python.python) installed.\r\nYour Live Share session cannot continue and will be closed.",
     "diagnostics.updateSettings": "Yes, update settings",
     "Common.noIWillDoItLater": "No, I will do it later",
+    "Common.notNow": "Not now",
     "Common.gotIt": "Got it!",
     "Interpreters.selectInterpreterTip": "Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar"
 }

@@ -36,6 +36,7 @@ import {
     TestDiscoverytTelemetry,
     TestRunTelemetry
 } from './types';
+import { LinterId } from '../linters/types';
 
 /**
  * Checks whether telemetry is supported.
@@ -304,6 +305,7 @@ export interface IEventNamePropertyMapping {
     [EventName.REFERENCE]: never | undefined;
     [EventName.REPL]: never | undefined;
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
+    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: { tool: LinterId; action: 'enable' | 'ignore' | 'disablePrompt' | undefined };
     [EventName.SIGNATURE]: never | undefined;
     [EventName.SYMBOL]: never | undefined;
     [EventName.UNITTEST_CONFIGURE]: never | undefined;

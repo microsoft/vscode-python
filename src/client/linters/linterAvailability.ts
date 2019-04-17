@@ -10,18 +10,22 @@ import { IApplicationShell, IWorkspaceService } from '../common/application/type
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, Product } from '../common/types';
-import { Linters } from '../common/utils/localize';
+import { IConfigurationService, IPersistentStateFactory, Product } from '../common/types';
+import { Common, Linters } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { PYLINT_CONFIG } from './constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
+const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_CONFIGURE_AVAILABLE_LINTER_PROMPT';
 @injectable()
 export class AvailableLinterActivator implements IAvailableLinterActivator {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
     ) { }
 
     /**
@@ -63,29 +67,25 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if the user requested a configuration change, false otherwise.
      */
     public async promptToConfigureAvailableLinter(linterInfo: ILinterInfo): Promise<boolean> {
-        type ConfigureLinterMessage = {
-            enabled: boolean;
-            title: string;
-        };
-
-        const optButtons: ConfigureLinterMessage[] = [
-            {
-                title: `Enable ${linterInfo.id}`,
-                enabled: true
-            },
-            {
-                title: `Disable ${linterInfo.id}`,
-                enabled: false
-            }
+        const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayPromptStateKey, true);
+        if (!notificationPromptEnabled.value) {
+            return false;
+        }
+        const optButtons = [
+            Linters.enableLinter().format(linterInfo.id),
+            Common.notNow(),
+            Common.doNotShowAgain()
         ];
 
-        // tslint:disable-next-line:messages-must-be-localized
+        const telemetrySelections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
         const pick = await this.appShell.showInformationMessage(Linters.installedButNotEnabled().format(linterInfo.id), ...optButtons);
-        if (pick) {
-            await linterInfo.enableAsync(pick.enabled);
+        sendTelemetryEvent(EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT, undefined, { tool: linterInfo.id, action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined });
+        if (pick === optButtons[0]) {
+            await linterInfo.enableAsync(true);
             return true;
+        } else if (pick === optButtons[2]) {
+            await notificationPromptEnabled.updateValue(false);
         }
-
         return false;
     }
 
