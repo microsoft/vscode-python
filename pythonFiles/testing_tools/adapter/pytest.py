@@ -35,7 +35,11 @@ def discover(pytestargs=None, hidestdio=False,
     # platform-dependent issues.
     with util.hide_stdio() if hidestdio else util.noop_cm():
         ec = _pytest_main(pytestargs, [_plugin])
-    if ec != 0:
+    # See: https://docs.pytest.org/en/latest/usage.html#possible-exit-codes
+    if ec == 5:
+        # No tests were discovered.
+        pass
+    elif ec != 0:
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
         raise Exception('pytest discovery did not start')

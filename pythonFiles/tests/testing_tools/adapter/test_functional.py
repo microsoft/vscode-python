@@ -217,6 +217,24 @@ class PytestTests(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(result, expected)
 
+    def test_discover_not_found(self):
+        projroot, testroot = resolve_testroot('notests')
+
+        out = run_adapter('discover', 'pytest',
+                          '--rootdir', projroot,
+                          testroot)
+        result = json.loads(out)
+
+        self.maxDiff = None
+        self.assertEqual(result, [])
+        # TODO: Expect the following instead?
+        #self.assertEqual(result, [{
+        #    'root': projroot,
+        #    'rootid': '.',
+        #    'parents': [],
+        #    'tests': [],
+        #    }])
+
 
 COMPLEX = {
         'root': None,

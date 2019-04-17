@@ -237,6 +237,26 @@ class DiscoverTests(unittest.TestCase):
                                    'plugins': [plugin]}),
             ])
 
+    def test_no_tests_found(self):
+        stub = Stub()
+        pytest = StubPyTest(stub)
+        pytest.return_main = 5
+        plugin = StubPlugin(stub)
+        expected = []
+        plugin.discovered = expected
+
+        parents, tests = discover([], _pytest_main=pytest.main, _plugin=plugin)
+
+        self.assertEqual(parents, [])
+        self.assertEqual(tests, expected)
+        self.assertEqual(stub.calls, [
+            ('pytest.main', None, {'args': self.DEFAULT_ARGS,
+                                   'plugins': [plugin]}),
+            ('discovered.parents', None, None),
+            ('discovered.__len__', None, None),
+            ('discovered.__getitem__', (0,), None),
+            ])
+
     def test_stdio_hidden(self):
         pytest_stdout = 'spamspamspamspamspamspamspammityspam'
         stub = Stub()
