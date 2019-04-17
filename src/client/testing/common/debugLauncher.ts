@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
+import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import * as stripJsonComments from 'strip-json-comments';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
@@ -12,9 +12,7 @@ import { DebuggerTypeName } from '../../debugger/constants';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
-import {
-    ITestDebugConfig, ITestDebugLauncher, LaunchOptions, TestProvider
-} from './types';
+import { ITestDebugConfig, ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -103,9 +101,8 @@ export class DebugLauncher implements ITestDebugLauncher {
             return [];
         }
         try {
-            let text = await this.fs.readFile(filename);
-            text = stripJsonComments(text);
-            const parsed = JSON.parse(text);
+            const text = await this.fs.readFile(filename);
+            const parsed = parse(text, [], { allowTrailingComma: true, disallowComments: false });
             if (!parsed.version || !parsed.configurations || !Array.isArray(parsed.configurations)) {
                 throw Error('malformed launch.json');
             }
