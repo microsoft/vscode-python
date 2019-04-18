@@ -34,7 +34,7 @@
    ([#4849](https://github.com/Microsoft/vscode-python/issues/4849))
 1. Add prompt to select virtual environment for the worskpace.
    ([#4908](https://github.com/Microsoft/vscode-python/issues/4908))
-1. Prompt to turn on Pylint if a `pylintrc` or `.pylintrc` file is found
+1. Prompt to turn on Pylint if a `pylintrc` or `.pylintrc` file is found.
    ([#4941](https://github.com/Microsoft/vscode-python/issues/4941))
 1. Variable explorer handles new cell submissions
    ([#4948](https://github.com/Microsoft/vscode-python/issues/4948))
