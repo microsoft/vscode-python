@@ -56,7 +56,7 @@
    ([#5211](https://github.com/Microsoft/vscode-python/issues/5211))
 1. Change settings from `python.unitTest.*` to `python.testing.*`.
    ([#5219](https://github.com/Microsoft/vscode-python/issues/5219))
-1. Add telemetry for variable explorer and turn on by default
+1. Add telemetry for variable explorer and turn on by default.
    ([#5337](https://github.com/Microsoft/vscode-python/issues/5337))
 
 ### Fixes
