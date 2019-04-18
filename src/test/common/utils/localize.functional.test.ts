@@ -45,8 +45,7 @@ suite('Localization', () => {
         }
     });
 
-    // tslint:disable-next-line:no-any
-    function addLocale(locale: string, nls: any) {
+    function addLocale(locale: string, nls: Record<string, string>) {
         const filename = addLocaleFile(locale, nls);
         localeFiles.push(filename);
     }
@@ -102,13 +101,11 @@ suite('Localization', () => {
 
         // Now verify all of the asked for keys exist
         const askedFor = localize._getAskedForCollection();
-        const missing = {};
+        const missing: Record<string, string> = {};
         Object.keys(askedFor).forEach((key: string) => {
             // Now check that this key exists somewhere in the nls collection
-            // tslint:disable-next-line:no-any
-            if (!(nlsCollection as any)[key]) {
-                // tslint:disable-next-line:no-any
-                (missing as any)[key] = askedFor[key];
+            if (!nlsCollection[key]) {
+                missing[key] = askedFor[key];
             }
         });
 
@@ -117,8 +114,7 @@ suite('Localization', () => {
         if (missingKeys && missingKeys.length > 0) {
             let message = 'Missing keys. Add the following to package.nls.json:\n';
             missingKeys.forEach((k: string) => {
-                // tslint:disable-next-line:no-any
-                message = message.concat(`\t"${k}" : "${(missing as any)[k]}",\n`);
+                message = message.concat(`\t"${k}" : "${missing[k]}",\n`);
             });
             assert.fail(message);
         }
@@ -137,8 +133,7 @@ suite('Localization', () => {
 
         // Now verify all of the asked for keys exist
         const askedFor = localize._getAskedForCollection();
-        // tslint:disable-next-line:no-any
-        const extra: any = {};
+        const extra: Record<string, string> = {};
         Object.keys(nlsCollection).forEach((key: string) => {
             // Now check that this key exists somewhere in the nls collection
             if (askedFor[key]) {
@@ -155,7 +150,6 @@ suite('Localization', () => {
         if (extraKeys && extraKeys.length > 0) {
             let message = 'Unused keys. Remove the following from package.nls.json:\n';
             extraKeys.forEach((k: string) => {
-                // tslint:disable-next-line:no-any
                 message = message.concat(`\t"${k}" : "${extra[k]}",\n`);
             });
             assert.fail(message);
@@ -165,8 +159,7 @@ suite('Localization', () => {
     });
 });
 
-// tslint:disable-next-line:no-any
-function addLocaleFile(locale: string, nls: any) {
+function addLocaleFile(locale: string, nls: Record<string, string>) {
     const filename = path.join(EXTENSION_ROOT_DIR, `package.nls.${locale}.json`);
     if (fs.existsSync(filename)) {
         throw Error('NLS file already exists');
@@ -177,8 +170,7 @@ function addLocaleFile(locale: string, nls: any) {
 }
 
 function setLocale(locale: string) {
-    // tslint:disable-next-line:no-any
-    let nls: any;
+    let nls: Record<string, string>;
     if (process.env.VSCODE_NLS_CONFIG) {
         nls = JSON.parse(process.env.VSCODE_NLS_CONFIG);
         nls.locale = locale;
