@@ -48,7 +48,7 @@
    ([#5104](https://github.com/Microsoft/vscode-python/issues/5104))
 1. Display a tip to the user informing them of the ability to change the interpreter from the statusbar.
    ([#5180](https://github.com/Microsoft/vscode-python/issues/5180))
-1. Hook up the variable explorer to the data frame explorer
+1. Hook up the variable explorer to the data frame explorer.
    ([#5187](https://github.com/Microsoft/vscode-python/issues/5187))
 1. Remove the debug config snippets (rely on handler instead).
    ([#5189](https://github.com/Microsoft/vscode-python/issues/5189))
