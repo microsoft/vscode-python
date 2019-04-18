@@ -71,7 +71,7 @@
    ([#4029](https://github.com/Microsoft/vscode-python/issues/4029))
 1. Use configuration API and provide Resource when retrieving settings.
    ([#4486](https://github.com/Microsoft/vscode-python/issues/4486))
-1. When debugging, the extension correctly uses custom .env files
+1. When debugging, the extension correctly uses custom `.env` files.
    ([#4537](https://github.com/Microsoft/vscode-python/issues/4537))
 1. Accomadate trailing commands in the JSON contents of `launch.json` file.
    ([#4543](https://github.com/Microsoft/vscode-python/issues/4543))
