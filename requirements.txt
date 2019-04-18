@@ -1,4 +1,4 @@
 jedi==0.12.0
 parso==0.2.1
 isort==4.3.17
-ptvsd==4.2.7
+ptvsd==4.2.8
