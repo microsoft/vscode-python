@@ -26,7 +26,7 @@
    ([#4767](https://github.com/Microsoft/vscode-python/issues/4767))
 1. Use `Python` code for discovery of tests when using `pytest`.
    ([#4795](https://github.com/Microsoft/vscode-python/issues/4795))
-1. Intergrate the variable explorer into the header better and refactor HTML and CSS
+1. Intergrate the variable explorer into the header better and refactor HTML and CSS.
    ([#4800](https://github.com/Microsoft/vscode-python/issues/4800))
 1. Integrate the variable viewer with the IJupyterVariable interface
    ([#4802](https://github.com/Microsoft/vscode-python/issues/4802))
