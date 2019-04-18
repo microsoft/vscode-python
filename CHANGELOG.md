@@ -83,7 +83,7 @@
    ([#4979](https://github.com/Microsoft/vscode-python/issues/4979))
 1. Fix hangs in functional tests.
    ([#4992](https://github.com/Microsoft/vscode-python/issues/4992))
-1. Fix triple quoted comments in cells to not affect anything
+1. Fix triple quoted comments in cells to not affect anything.
    ([#5012](https://github.com/Microsoft/vscode-python/issues/5012))
 1. Restarting the kernel will eventually force Jupyter server to shutdown if it doesn't come back.
    ([#5025](https://github.com/Microsoft/vscode-python/issues/5025))
