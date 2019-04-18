@@ -9,6 +9,8 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import * as localize from '../../../client/common/utils/localize';
 
+const defaultNLSFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
+
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Localization', () => {
     // Note: We use package.nls.json by default for tests.  Use the
@@ -46,14 +48,7 @@ suite('Localization', () => {
 
     test('keys exist', done => {
         // Read in the JSON object for the package.nls.json
-        let nlsCollection = {};
-        const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
-        if (fs.existsSync(defaultNlsFile)) {
-            const contents = fs.readFileSync(defaultNlsFile, 'utf8');
-            nlsCollection = JSON.parse(contents);
-        } else {
-            nlsCollection = {};
-        }
+        const nlsCollection = getDefaultCollection();
 
         // Now match all of our namespace entries to our nls entries
         useEveryLocalization(localize);
@@ -95,6 +90,14 @@ function setLocale(locale: string) {
         nls = { locale: locale };
     }
     process.env.VSCODE_NLS_CONFIG = JSON.stringify(nls);
+}
+
+function getDefaultCollection() {
+    if (!fs.existsSync(defaultNLSFile)) {
+        throw Error('package.nls.json is missing');
+    }
+    const contents = fs.readFileSync(defaultNLSFile, 'utf8');
+    return JSON.parse(contents);
 }
 
 // tslint:disable-next-line:no-any
