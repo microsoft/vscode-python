@@ -12,7 +12,7 @@
    ([#3542](https://github.com/Microsoft/vscode-python/issues/3542))
 1. Change default behavior of debugger to display return values.
    ([#3754](https://github.com/Microsoft/vscode-python/issues/3754))
-1. Replace setting debugStdLib with `justMyCode`
+1. Replace setting `debugStdLib` with `justMyCode`
    ([#4032](https://github.com/Microsoft/vscode-python/issues/4032))
 1. Change "Unit Test" phrasing to "Test" or "Testing".
    ([#4384](https://github.com/Microsoft/vscode-python/issues/4384))
