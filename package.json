@@ -2188,6 +2188,7 @@
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
+        "@types/codemirror": "0.0.74",
         "@types/copy-webpack-plugin": "^4.4.2",
         "@types/del": "^3.0.0",
         "@types/diff-match-patch": "^1.0.32",

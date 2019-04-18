@@ -9,6 +9,10 @@ import * as CodeMirror from 'codemirror';
 import * as React from 'react';
 import * as RCM from 'react-codemirror';
 
+// tslint:disable-next-line: no-require-imports no-var-requires
+require('codemirror/addon/hint/show-hint');
+import 'codemirror/addon/hint/show-hint.css';
+
 import './code.css';
 
 import { getLocString } from '../react-common/locReactSide';
@@ -36,6 +40,13 @@ interface ICodeState {
     cursorBottom: number;
     charUnderCursor: string;
     allowWatermark: boolean;
+}
+
+interface ICompletionResult {
+    list: string[];
+    from: CodeMirror.Position;
+    to: CodeMirror.Position;
+    selectedHint?: number;
 }
 
 export class Code extends React.Component<ICodeProps, ICodeState> {
@@ -96,13 +107,16 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                                 Down: this.arrowDown,
                                 Enter: this.enter,
                                 'Shift-Enter': this.shiftEnter,
-                                Up: this.arrowUp
+                                Up: this.arrowUp,
+                                'Ctrl-Space': 'autocomplete'
                             },
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
                             cursorBlinkRate: -1,
                             readOnly: readOnly ? true : false,
-                            lineWrapping: true
+                            lineWrapping: true,
+                            hintOptions: { hint: this.provideHint }
+                            // onKeyEvent could be used to provide autocomplete on say '.' for key up
                         }
                     }
                     ref={this.updateCodeMirror}
@@ -302,4 +316,20 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     private onChange = (_newValue: string, _change: CodeMirror.EditorChange) => {
         this.setState({allowWatermark: false});
     }
+
+    // tslint:disable-next-line:no-any
+    private provideHint = async (instance: CodeMirror.Editor, _option: any) : Promise<ICompletionResult | null> => {
+        const doc = instance.getDoc();
+        const cursor = doc ? doc.getCursor() : undefined;
+        if (cursor) {
+            return {
+                list: ['foo', 'bar', 'baz'],
+                from: cursor,
+                to: cursor
+            };
+        }
+
+        return null;
+    }
+
 }
