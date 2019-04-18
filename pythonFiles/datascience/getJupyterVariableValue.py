@@ -8,10 +8,10 @@ _VSCODE_targetVariable = _VSCODE_json.loads('_VSCode_JupyterTestValue')
 _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
 
 # Find shape and count if available
-if _VSCODE_targetVariable['type'] in ['ndarray','DataFrame','Series']:
+if (hasattr(_VSCODE_evalResult, 'shape')):
     _VSCODE_targetVariable['shape'] = str(_VSCODE_evalResult.shape)
 
-if _VSCODE_targetVariable['type'] in ['tuple', 'str', 'dict', 'list', 'set', 'ndarray','DataFrame','Series']:
+if (hasattr(_VSCODE_evalResult, '__len__')):
     _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
 
 # Get the string of the eval result, truncate it as it could be far too long

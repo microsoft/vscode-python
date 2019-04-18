@@ -268,6 +268,13 @@ function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
 
     verifyCell(rowCells.at(0), targetVariable.name, targetVariable.name);
     verifyCell(rowCells.at(1), targetVariable.type, targetVariable.name);
+
+    if (targetVariable.shape && targetVariable.shape !== '') {
+        verifyCell(rowCells.at(2), targetVariable.shape, targetVariable.name);
+    } else if (targetVariable.count) {
+        verifyCell(rowCells.at(2), targetVariable.count.toString(), targetVariable.name);
+    }
+
     verifyCell(rowCells.at(3), targetVariable.value ? targetVariable.value : '', targetVariable.name);
 }
 
