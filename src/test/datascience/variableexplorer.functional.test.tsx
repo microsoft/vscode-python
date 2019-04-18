@@ -84,16 +84,16 @@ value = 'hello world'`;
         // Update our exclude list to only exlude strings
         ioc.getSettings().datascience.variableExplorerExclude = 'str';
 
-        // Add another string and check our vars
+        // Add another string and check our vars, modules should be shown and str should be hidden
         await addCode(getOrCreateHistory, wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 7);
 
         targetVariables = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
+            {name: 'matplotlib', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
             {name: 'notebook', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
             {name: 'np', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
             {name: 'pd', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'plt', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
             {name: 'sys', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
