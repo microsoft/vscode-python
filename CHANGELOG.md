@@ -102,7 +102,7 @@
    ([#5143](https://github.com/Microsoft/vscode-python/issues/5143))
 1. Variables not cleared after a kernel restart.
    ([#5244](https://github.com/Microsoft/vscode-python/issues/5244))
-1. Fix variable explorer to work in live share
+1. Fix variable explorer to work in Live Share.
    ([#5277](https://github.com/Microsoft/vscode-python/issues/5277))
 1. Update matplotlib based on theme changes.
    ([#5294](https://github.com/Microsoft/vscode-python/issues/5294))
