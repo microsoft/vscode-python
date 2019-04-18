@@ -9,7 +9,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigurationPrompts } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -31,7 +31,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         let manuallyEnteredAValue: boolean | undefined;
         const defaultProgram = `${workspaceFolderToken}${this.pathUtils.separator}manage.py`;
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.django.label', 'Python: Django')(),
+            name: DebugConfigurationPrompts.djangoSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             program: program || defaultProgram,

@@ -4,7 +4,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigurationPrompts } from '../../../../common/utils/localize';
 import { InputStep, MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -19,7 +19,7 @@ const defaultPort = 5678;
 export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurationProvider {
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
         const config: Partial<AttachRequestArguments> = {
-            name: localize('python.snippet.launch.attach.label', 'Python: Remote Attach')(),
+            name: DebugConfigurationPrompts.attachSnippetName(),
             type: DebuggerTypeName,
             request: 'attach',
             port: defaultPort,

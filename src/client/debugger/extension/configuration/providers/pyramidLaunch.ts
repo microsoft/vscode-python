@@ -9,7 +9,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigurationPrompts } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -32,7 +32,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         let manuallyEnteredAValue: boolean | undefined;
 
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.pyramid.label', 'Python: Pyramid Application')(),
+            name: DebugConfigurationPrompts.pyramidSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             args: [

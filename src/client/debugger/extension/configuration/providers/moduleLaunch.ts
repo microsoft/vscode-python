@@ -4,7 +4,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigurationPrompts } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -17,7 +17,7 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         let manuallyEnteredAValue: boolean | undefined;
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.module.label', 'Python: Module')(),
+            name: DebugConfigurationPrompts.moduleSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'enter-your-module-name'

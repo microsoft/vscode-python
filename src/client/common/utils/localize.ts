@@ -305,6 +305,31 @@ export namespace DebugConfigurationPrompts {
         'debug.launchJsonConfigurationsCompletionDescription',
         'Select a debug configuration'
     );
+
+    export const fileSnippetName = localize(
+        'python.snippet.launch.standard.label',
+        'Python: Current File'
+    );
+    export const moduleSnippetName = localize(
+        'python.snippet.launch.module.label',
+        'Python: Module'
+    );
+    export const attachSnippetName = localize(
+        'python.snippet.launch.attach.label',
+        'Python: Remote Attach'
+    );
+    export const djangoSnippetName = localize(
+        'python.snippet.launch.django.label',
+        'Python: Django'
+    );
+    export const flaskSnippetName = localize(
+        'python.snippet.launch.flask.label',
+        'Python: Flask'
+    );
+    export const pyramidSnippetName = localize(
+        'python.snippet.launch.pyramid.label',
+        'Python: Pyramid Application'
+    );
 }
 
 export namespace Testing {
@@ -322,7 +347,7 @@ let defaultCollection: Record<string, string> | undefined;
 const askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
-export function localize(key: string, defValue: string) {
+function localize(key: string, defValue: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {
         return getString(key, defValue);
