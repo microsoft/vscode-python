@@ -52,7 +52,7 @@
    ([#5187](https://github.com/Microsoft/vscode-python/issues/5187))
 1. Remove the debug config snippets (rely on handler instead).
    ([#5189](https://github.com/Microsoft/vscode-python/issues/5189))
-1. Add setting to just enable/disable the datascience codelens.
+1. Add setting to just enable/disable the data science codelens.
    ([#5211](https://github.com/Microsoft/vscode-python/issues/5211))
 1. Change settings from `python.unitTest.*` to `python.testing.*`.
    ([#5219](https://github.com/Microsoft/vscode-python/issues/5219))
