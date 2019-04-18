@@ -182,7 +182,7 @@
 1. Add telemetry around people hitting 'no' on the enable interactive shift enter.
    Reword the message to be more descriptive.
    ([#5213](https://github.com/Microsoft/vscode-python/issues/5213))
-1. Fix failing variable explorer test
+1. Fix failing variable explorer test.
    ([#5348](https://github.com/Microsoft/vscode-python/issues/5348))
 
 ### Thanks
