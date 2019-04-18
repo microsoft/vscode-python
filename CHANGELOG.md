@@ -126,7 +126,7 @@
    ([#4321](https://github.com/Microsoft/vscode-python/issues/4321))
 1. Change flaky tests (relying on File System Watchers) into unit tests.
    ([#4468](https://github.com/Microsoft/vscode-python/issues/4468))
-1. Corrected Smoke test failure for 'Run Python File In Terminal'
+1. Corrected Smoke test failure for 'Run Python File In Terminal'.
    ([#4515](https://github.com/Microsoft/vscode-python/issues/4515))
 1. Drop (official) support for Python 3.4.
    ([#4528](https://github.com/Microsoft/vscode-python/issues/4528))
