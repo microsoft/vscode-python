@@ -38,7 +38,7 @@
    ([#4941](https://github.com/Microsoft/vscode-python/issues/4941))
 1. Variable explorer handles new cell submissions.
    ([#4948](https://github.com/Microsoft/vscode-python/issues/4948))
-1. Pass one at getting our data grid styled correctly to match vscode styles and the spec
+1. Pass one at getting our data grid styled correctly to match vscode styles and the spec.
    ([#4998](https://github.com/Microsoft/vscode-python/issues/4998))
 1. Ensure `Language Server` can start without [ICU](http://site.icu-project.org/home).
    ([#5043](https://github.com/Microsoft/vscode-python/issues/5043))
