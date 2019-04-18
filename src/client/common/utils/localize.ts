@@ -239,10 +239,6 @@ export namespace DebugConfigStrings {
         'debug.flaskEnterAppPathOrNamePathTitle',
         'Debug Flask'
     );
-    export const flaskEnterAppPathOrNamePathPrompt = localize(
-        'debug.flaskEnterAppPathOrNamePathPrompt',
-        'Enter path to application, e.g. \'app.py\' or \'app\''
-    );
     export const flaskEnterAppPathOrNamePathInvalidNameError = localize(
         'debug.flaskEnterAppPathOrNamePathInvalidNameError',
         'Enter a valid name'
