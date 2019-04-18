@@ -44,7 +44,7 @@
    ([#5043](https://github.com/Microsoft/vscode-python/issues/5043))
 1. Support running under docker.
    ([#5047](https://github.com/Microsoft/vscode-python/issues/5047))
-1. Add exclude list to variable viewer
+1. Add exclude list to variable viewer.
    ([#5104](https://github.com/Microsoft/vscode-python/issues/5104))
 1. Display a tip to the user informing them of the ability to change the interpreter from the statusbar.
    ([#5180](https://github.com/Microsoft/vscode-python/issues/5180))
