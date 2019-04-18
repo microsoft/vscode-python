@@ -122,7 +122,7 @@
    ([#611](https://github.com/Microsoft/vscode-python/issues/611))
 1. Update to use `Node` version `10.5.0`.
    ([#1138](https://github.com/Microsoft/vscode-python/issues/1138))
-1. Update launch.json to use internalConsole instead of none
+1. Update `launch.json` to use `internalConsole` instead of none.
    ([#4321](https://github.com/Microsoft/vscode-python/issues/4321))
 1. Change flaky tests (relying on File System Watchers) into unit tests.
    ([#4468](https://github.com/Microsoft/vscode-python/issues/4468))
