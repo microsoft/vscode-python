@@ -283,8 +283,6 @@ let defaultCollection: Record<string, string> | undefined;
 let askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
-const REQUIRED = '<localization required>';
-
 // This is exported only for testing purposes.
 export function _resetCollections() {
     loadedLocale = '';
@@ -310,10 +308,12 @@ export function getCollectionJSON(): string {
     return JSON.stringify({ ...defaultCollection, ...loadedCollection });
 }
 
-export function localize(key: string, defValue?: string) {
+// tslint:disable-next-line:no-suspicious-comment
+// TODO: Get rid of the second argument in the calls above.
+export function localize(key: string, _defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {
-        return getString(key, defValue || REQUIRED);
+        return getString(key);
     };
 }
 
@@ -323,30 +323,24 @@ function parseLocale(): string {
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
 }
 
-function getString(key: string, defValue: string) {
+function getString(key: string) {
     // Load the current collection
     if (!loadedCollection || parseLocale() !== loadedLocale) {
         load();
     }
 
-    // First lookup in the dictionary that matches the current locale
+    // The default collection (package.nls.json) is the fallback.
+    // Note that we are guaranteed the following:
+    //  1. defaultCollection was initialized by the load() call above
+    //  2. defaultCollection has the key (see the "keys exist" test)
+    let collection = defaultCollection!;
+
+    // Use the current locale if the key is defined there.
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
-        askedForCollection[key] = loadedCollection[key];
-        return loadedCollection[key];
+        collection = loadedCollection;
     }
-
-    // Fallback to the default dictionary
-    if (defaultCollection && defaultCollection.hasOwnProperty(key)) {
-        askedForCollection[key] = defaultCollection[key];
-        return defaultCollection[key];
-    }
-
-    if (defValue === REQUIRED) {
-        throw Error(`missing localization for string "${key}"`);
-    }
-    // Not found, return the default
-    askedForCollection[key] = defValue;
-    return defValue;
+    askedForCollection[key] = collection[key];
+    return collection[key];
 }
 
 function load() {
