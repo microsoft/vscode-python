@@ -108,7 +108,7 @@
    ([#5294](https://github.com/Microsoft/vscode-python/issues/5294))
 1. Restrict files from being processed by `Language Server` only when in a mult-root workspace.
    ([#5333](https://github.com/Microsoft/vscode-python/issues/5333))
-1. Fix dataviewer header column alignment
+1. Fix dataviewer header column alignment.
    ([#5351](https://github.com/Microsoft/vscode-python/issues/5351))
 1. Update ptvsd to [4.2.8](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.8).
     * Path mapping bug fixes.
