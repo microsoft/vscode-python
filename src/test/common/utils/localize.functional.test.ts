@@ -9,18 +9,6 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import * as localize from '../../../client/common/utils/localize';
 
-function setLocale(locale: string) {
-    // tslint:disable-next-line:no-any
-    let nls: any;
-    if (process.env.VSCODE_NLS_CONFIG) {
-        nls = JSON.parse(process.env.VSCODE_NLS_CONFIG);
-        nls.locale = locale;
-    } else {
-        nls = { locale: locale };
-    }
-    process.env.VSCODE_NLS_CONFIG = JSON.stringify(nls);
-}
-
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Localization', () => {
     // Note: We use package.nls.json by default for tests.  Use the
@@ -57,9 +45,6 @@ suite('Localization', () => {
     });
 
     test('keys exist', done => {
-        // Read all of the namespaces from the localize import
-        const entries = Object.keys(localize);
-
         // Read in the JSON object for the package.nls.json
         let nlsCollection = {};
         const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
@@ -71,21 +56,7 @@ suite('Localization', () => {
         }
 
         // Now match all of our namespace entries to our nls entries
-        entries.forEach((e: string) => {
-            // @ts-ignore
-            if (typeof localize[e] !== 'function') {
-                // This must be a namespace. It should have functions inside of it
-                // @ts-ignore
-                const namespace = localize[e];
-                const funcs = Object.keys(namespace);
-
-                // Run every function, this should fill up our asked for keys collection
-                funcs.forEach((f: string) => {
-                    const func = namespace[f];
-                    func();
-                });
-            }
-        });
+        useEveryLocalization(localize);
 
         // Now verify all of the asked for keys exist
         const askedFor = localize._getAskedForCollection();
@@ -113,3 +84,44 @@ suite('Localization', () => {
         done();
     });
 });
+
+function setLocale(locale: string) {
+    // tslint:disable-next-line:no-any
+    let nls: any;
+    if (process.env.VSCODE_NLS_CONFIG) {
+        nls = JSON.parse(process.env.VSCODE_NLS_CONFIG);
+        nls.locale = locale;
+    } else {
+        nls = { locale: locale };
+    }
+    process.env.VSCODE_NLS_CONFIG = JSON.stringify(nls);
+}
+
+// tslint:disable-next-line:no-any
+function useEveryLocalization(topns: any) {
+    // Read all of the namespaces from the localize import.
+    const entries = Object.keys(topns);
+
+    // Now match all of our namespace entries to our nls entries.
+    entries.forEach((e: string) => {
+        // @ts-ignore
+        if (typeof topns[e] === 'function') {
+            return;
+        }
+        // It must be a namespace.
+        useEveryLocalizationInNS(topns[e]);
+    });
+}
+
+// tslint:disable-next-line:no-any
+function useEveryLocalizationInNS(ns: any) {
+    // The namespace should have functions inside of it.
+    // @ts-ignore
+    const funcs = Object.keys(ns);
+
+    // Run every function; this should fill up our "asked-for keys" collection.
+    funcs.forEach((key: string) => {
+        const func = ns[key];
+        func();
+    });
+}
