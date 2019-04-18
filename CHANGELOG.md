@@ -136,7 +136,7 @@
    ([#4739](https://github.com/Microsoft/vscode-python/issues/4739))
 1. Remove the use of timers in unittest code. Simulate the passing of time instead.
    ([#4776](https://github.com/Microsoft/vscode-python/issues/4776))
-1. Add functional testing for variable explorer
+1. Add functional testing for variable explorer.
    ([#4803](https://github.com/Microsoft/vscode-python/issues/4803))
 1. Add tests for variable explorer Python files.
    ([#4804](https://github.com/Microsoft/vscode-python/issues/4804))
