@@ -88,7 +88,7 @@ suite('Localization', () => {
         });
 
         // Now verify all of the asked for keys exist
-        const askedFor = localize.getAskedForCollection();
+        const askedFor = localize._getAskedForCollection();
         const missing = {};
         Object.keys(askedFor).forEach((key: string) => {
             // Now check that this key exists somewhere in the nls collection

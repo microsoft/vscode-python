@@ -347,25 +347,29 @@ let defaultCollection: Record<string, string> | undefined;
 const askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
-function localize(key: string, defValue: string) {
-    // Return a pointer to function so that we refetch it on each call.
-    return () => {
-        return getString(key, defValue);
-    };
+// This is exported only for testing purposes.
+export function _getAskedForCollection() {
+    return askedForCollection;
 }
 
-export function getCollection() {
+// Return the effective set of all localization strings, by key.
+//
+// This should not be used for direct lookup.
+export function getCollectionJSON(): string {
     // Load the current collection
     if (!loadedCollection || parseLocale() !== loadedLocale) {
         load();
     }
 
     // Combine the default and loaded collections
-    return { ...defaultCollection, ...loadedCollection };
+    return JSON.stringify({ ...defaultCollection, ...loadedCollection });
 }
 
-export function getAskedForCollection() {
-    return askedForCollection;
+function localize(key: string, defValue: string) {
+    // Return a pointer to function so that we refetch it on each call.
+    return () => {
+        return getString(key, defValue);
+    };
 }
 
 function parseLocale(): string {
