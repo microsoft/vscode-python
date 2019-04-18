@@ -9,8 +9,37 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import * as localize from '../../../client/common/utils/localize';
 
+function setLocale(locale: string) {
+    // tslint:disable-next-line:no-any
+    let nls: any;
+    if (process.env.VSCODE_NLS_CONFIG) {
+        nls = JSON.parse(process.env.VSCODE_NLS_CONFIG);
+        nls.locale = locale;
+    } else {
+        nls = { locale: locale };
+    }
+    process.env.VSCODE_NLS_CONFIG = JSON.stringify(nls);
+}
+
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Localization', () => {
+    // Note: We use package.nls.json by default for tests.  Use the
+    // setLocale() helper to switch to a different locale.
+
+    let nls_orig: string | undefined;
+
+    setup(() => {
+        nls_orig = process.env.VSCODE_NLS_CONFIG;
+        setLocale('en-us');
+    });
+
+    teardown(() => {
+        if (nls_orig) {
+            process.env.VSCODE_NLS_CONFIG = nls_orig;
+        } else {
+            delete process.env.VSCODE_NLS_CONFIG;
+        }
+    });
 
     test('keys', done => {
         const val = localize.LanguageService.bannerMessage();
@@ -20,7 +49,7 @@ suite('Localization', () => {
 
     test('keys italian', done => {
         // Force a config change
-        process.env.VSCODE_NLS_CONFIG = '{ "locale": "it" }';
+        setLocale('it');
 
         const val = localize.LanguageService.bannerLabelYes();
         assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
