@@ -144,7 +144,7 @@
    ([#4820](https://github.com/Microsoft/vscode-python/issues/4820))
 1. Handle done on all jupyter requests to make sure an unhandle exception isn't passed on shutdown.
    ([#4827](https://github.com/Microsoft/vscode-python/issues/4827))
-1. Clean up language server initialization and configuration
+1. Clean up language server initialization and configuration.
    ([#4832](https://github.com/Microsoft/vscode-python/issues/4832))
 1. Hash imports of top-level packages to see what users need supported.
    ([#4852](https://github.com/Microsoft/vscode-python/issues/4852))
