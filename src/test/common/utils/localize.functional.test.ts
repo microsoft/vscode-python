@@ -6,11 +6,11 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import * as localize from '../../client/common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import * as localize from '../../../client/common/utils/localize';
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite('localize tests', () => {
+suite('Localization', () => {
 
     test('keys', done => {
         const val = localize.LanguageService.bannerMessage();
