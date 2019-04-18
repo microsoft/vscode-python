@@ -91,7 +91,7 @@
    ([#5058](https://github.com/Microsoft/vscode-python/issues/5058))
 1. Fix MimeTypes test after we stopped stripping comments.
    ([#5086](https://github.com/Microsoft/vscode-python/issues/5086))
-1. No prompt displayed to install pylint
+1. No prompt displayed to install pylint.
    ([#5087](https://github.com/Microsoft/vscode-python/issues/5087))
 1. Fix scrolling in the interactive window.
    ([#5131](https://github.com/Microsoft/vscode-python/issues/5131))
