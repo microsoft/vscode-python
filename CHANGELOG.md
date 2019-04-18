@@ -69,7 +69,7 @@
    ([#3958](https://github.com/Microsoft/vscode-python/issues/3958))
 1. Fix tabs in comments to come out in cells.
    ([#4029](https://github.com/Microsoft/vscode-python/issues/4029))
-1. Use configuration api and provide Resource when retrieving settings
+1. Use configuration API and provide Resource when retrieving settings.
    ([#4486](https://github.com/Microsoft/vscode-python/issues/4486))
 1. When debugging, the extension correctly uses custom .env files
    ([#4537](https://github.com/Microsoft/vscode-python/issues/4537))
