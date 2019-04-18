@@ -352,8 +352,13 @@ export namespace Testing {
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: Record<string, string> | undefined;
 let defaultCollection: Record<string, string> | undefined;
-const askedForCollection: Record<string, string> = {};
+let askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
+
+// This is exported only for testing purposes.
+export function _resetAskedForCollection() {
+    askedForCollection = {};
+}
 
 // This is exported only for testing purposes.
 export function _getAskedForCollection() {

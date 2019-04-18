@@ -53,6 +53,7 @@ suite('Localization', () => {
         const nlsCollection = getDefaultCollection();
 
         // Now match all of our namespace entries to our nls entries
+        localize._resetAskedForCollection();
         useEveryLocalization(localize);
 
         // Now verify all of the asked for keys exist
