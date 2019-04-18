@@ -30,7 +30,7 @@
    ([#4800](https://github.com/Microsoft/vscode-python/issues/4800))
 1. Integrate the variable viewer with the IJupyterVariable interface.
    ([#4802](https://github.com/Microsoft/vscode-python/issues/4802))
-1. Include number of skipped tests in Test Data item tooltip
+1. Include number of skipped tests in Test Data item tooltip.
    ([#4849](https://github.com/Microsoft/vscode-python/issues/4849))
 1. Add prompt to select virtual environment for the worskpace
    ([#4908](https://github.com/Microsoft/vscode-python/issues/4908))
