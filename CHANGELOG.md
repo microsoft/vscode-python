@@ -79,7 +79,7 @@
    ([#4947](https://github.com/Microsoft/vscode-python/issues/4947))
 1. Shutting down a session should not cause the host to stop working.
    ([#4949](https://github.com/Microsoft/vscode-python/issues/4949))
-1. Fix cell spacing issues
+1. Fix cell spacing issues.
    ([#4979](https://github.com/Microsoft/vscode-python/issues/4979))
 1. Fix hangs in functional tests.
    ([#4992](https://github.com/Microsoft/vscode-python/issues/4992))
