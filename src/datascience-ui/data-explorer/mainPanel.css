@@ -86,7 +86,7 @@ body {
     color: var(--vscode-editor-foreground);
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
     border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    text-align: center;
+    text-align: left;
 }
 
 .main-panel .react-grid-Cell {
