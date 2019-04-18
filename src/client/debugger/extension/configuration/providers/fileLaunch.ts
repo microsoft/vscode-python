@@ -4,7 +4,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { DebugConfigurationPrompts } from '../../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { captureTelemetry } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -17,7 +17,7 @@ export class FileLaunchDebugConfigurationProvider implements IDebugConfiguration
     @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS, { configurationType: DebugConfigurationType.launchFile }, false)
     public async buildConfiguration(_input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const config: Partial<LaunchRequestArguments> = {
-            name: DebugConfigurationPrompts.fileSnippetName(),
+            name: DebugConfigStrings.fileSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             // tslint:disable-next-line:no-invalid-template-strings

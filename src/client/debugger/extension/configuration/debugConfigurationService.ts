@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, QuickPickItem, WorkspaceFolder } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
-import { DebugConfigurationPrompts } from '../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../common/utils/localize';
 import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../../../common/utils/multiStepInput';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -66,35 +66,35 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
             {
-                label: DebugConfigurationPrompts.debugFileConfigurationLabel(),
+                label: DebugConfigStrings.debugFileConfigurationLabel(),
                 type: DebugConfigurationType.launchFile,
-                description: DebugConfigurationPrompts.debugFileConfigurationDescription()
+                description: DebugConfigStrings.debugFileConfigurationDescription()
             }, {
-                label: DebugConfigurationPrompts.debugModuleConfigurationLabel(),
+                label: DebugConfigStrings.debugModuleConfigurationLabel(),
                 type: DebugConfigurationType.launchModule,
-                description: DebugConfigurationPrompts.debugModuleConfigurationDescription()
+                description: DebugConfigStrings.debugModuleConfigurationDescription()
             }, {
-                label: DebugConfigurationPrompts.remoteAttachConfigurationLabel(),
+                label: DebugConfigStrings.remoteAttachConfigurationLabel(),
                 type: DebugConfigurationType.remoteAttach,
-                description: DebugConfigurationPrompts.remoteAttachConfigurationDescription()
+                description: DebugConfigStrings.remoteAttachConfigurationDescription()
             }, {
-                label: DebugConfigurationPrompts.debugDjangoConfigurationLabel(),
+                label: DebugConfigStrings.debugDjangoConfigurationLabel(),
                 type: DebugConfigurationType.launchDjango,
-                description: DebugConfigurationPrompts.debugDjangoConfigurationDescription()
+                description: DebugConfigStrings.debugDjangoConfigurationDescription()
             }, {
-                label: DebugConfigurationPrompts.debugFlaskConfigurationLabel(),
+                label: DebugConfigStrings.debugFlaskConfigurationLabel(),
                 type: DebugConfigurationType.launchFlask,
-                description: DebugConfigurationPrompts.debugFlaskConfigurationDescription()
+                description: DebugConfigStrings.debugFlaskConfigurationDescription()
             }, {
-                label: DebugConfigurationPrompts.debugPyramidConfigurationLabel(),
+                label: DebugConfigStrings.debugPyramidConfigurationLabel(),
                 type: DebugConfigurationType.launchPyramid,
-                description: DebugConfigurationPrompts.debugPyramidConfigurationDescription()
+                description: DebugConfigStrings.debugPyramidConfigurationDescription()
             }
         ];
         state.config = {};
         const pick = await input.showQuickPick<DebugConfigurationQuickPickItem, IQuickPickParameters<DebugConfigurationQuickPickItem>>({
-            title: DebugConfigurationPrompts.selectConfigurationTitle(),
-            placeholder: DebugConfigurationPrompts.selectConfigurationPlaceholder(),
+            title: DebugConfigStrings.selectConfigurationTitle(),
+            placeholder: DebugConfigStrings.selectConfigurationPlaceholder(),
             activeItem: items[0],
             items: items
         });

@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { DebugConfigurationPrompts } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { FileLaunchDebugConfigurationProvider } from '../../../../../client/debugger/extension/configuration/providers/fileLaunch';
 
@@ -24,7 +24,7 @@ suite('Debugging - Configuration Provider File', () => {
         await provider.buildConfiguration(undefined as any, state);
 
         const config = {
-            name: DebugConfigurationPrompts.fileSnippetName(),
+            name: DebugConfigStrings.fileSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             // tslint:disable-next-line:no-invalid-template-strings

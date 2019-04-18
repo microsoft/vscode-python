@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { DebugConfigurationPrompts } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { MultiStepInput } from '../../../../../client/common/utils/multiStepInput';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { ModuleLaunchDebugConfigurationProvider } from '../../../../../client/debugger/extension/configuration/providers/moduleLaunch';
@@ -30,7 +30,7 @@ suite('Debugging - Configuration Provider Module', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigurationPrompts.moduleSnippetName(),
+            name: DebugConfigStrings.moduleSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'enter-your-module-name'
@@ -48,7 +48,7 @@ suite('Debugging - Configuration Provider Module', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigurationPrompts.moduleSnippetName(),
+            name: DebugConfigStrings.moduleSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'hello'

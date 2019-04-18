@@ -165,7 +165,7 @@ export namespace DataScience {
     export const liveShareInvalid = localize('DataScience.liveShareInvalid', 'One or more guests in the session do not have the Python Extension installed. Live share session cannot continue.');
 }
 
-export namespace DebugConfigurationPrompts {
+export namespace DebugConfigStrings {
     export const selectConfigurationTitle = localize(
         'debug.selectConfigurationTitle',
         'Select a debug configuration'
