@@ -4,7 +4,7 @@
 
 ### Enhancements
 
-1. Download the language server using HTTP if "http.proxyStrictSSL" is set to true.
+1. Download the language server using HTTP if `http.proxyStrictSSL` is set to `true`.
    ([#2849](https://github.com/Microsoft/vscode-python/issues/2849))
 1. Launch the `Python` debug configuration UI when manually adding entries into the `launch.json` file.
    ([#3321](https://github.com/Microsoft/vscode-python/issues/3321))
