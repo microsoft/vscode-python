@@ -36,7 +36,7 @@
    ([#4908](https://github.com/Microsoft/vscode-python/issues/4908))
 1. Prompt to turn on Pylint if a `pylintrc` or `.pylintrc` file is found.
    ([#4941](https://github.com/Microsoft/vscode-python/issues/4941))
-1. Variable explorer handles new cell submissions
+1. Variable explorer handles new cell submissions.
    ([#4948](https://github.com/Microsoft/vscode-python/issues/4948))
 1. Pass one at getting our data grid styled correctly to match vscode styles and the spec
    ([#4998](https://github.com/Microsoft/vscode-python/issues/4998))
