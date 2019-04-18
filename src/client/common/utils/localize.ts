@@ -356,7 +356,9 @@ let askedForCollection: Record<string, string> = {};
 let loadedLocale: string;
 
 // This is exported only for testing purposes.
-export function _resetAskedForCollection() {
+export function _resetCollections() {
+    loadedLocale = '';
+    loadedCollection = undefined;
     askedForCollection = {};
 }
 

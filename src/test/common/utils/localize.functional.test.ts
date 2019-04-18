@@ -18,11 +18,17 @@ suite('Localization', () => {
     // Note: We use package.nls.json by default for tests.  Use the
     // setLocale() helper to switch to a different locale.
 
+    let localeFiles: string[];
     let nls_orig: string | undefined;
 
     setup(() => {
+        localeFiles = [];
+
         nls_orig = process.env.VSCODE_NLS_CONFIG;
         setLocale('en-us');
+
+        // Ensure each test starts fresh.
+        localize._resetCollections();
     });
 
     teardown(() => {
@@ -31,7 +37,19 @@ suite('Localization', () => {
         } else {
             delete process.env.VSCODE_NLS_CONFIG;
         }
+
+        const filenames = localeFiles;
+        localeFiles = [];
+        for (const filename of filenames) {
+            fs.unlinkSync(filename);
+        }
     });
+
+    // tslint:disable-next-line:no-any
+    function addLocale(locale: string, nls: any) {
+        const filename = addLocaleFile(locale, nls);
+        localeFiles.push(filename);
+    }
 
     test('keys', done => {
         const val = localize.LanguageService.bannerMessage();
@@ -48,12 +66,38 @@ suite('Localization', () => {
         done();
     });
 
+    test('key found for locale', done => {
+        addLocale('spam', {
+            'debug.selectConfigurationTitle': '???',
+            'Common.gotIt': '!!!'
+        });
+        setLocale('spam');
+
+        const title = localize.DebugConfigStrings.selectConfigurationTitle();
+        const gotIt = localize.Common.gotIt();
+
+        assert.equal(title, '???', 'not used');
+        assert.equal(gotIt, '!!!', 'not used');
+        done();
+    });
+
+    test('key not found for locale (default used)', done => {
+        addLocale('spam', {
+            'debug.selectConfigurationTitle': '???'
+        });
+        setLocale('spam');
+
+        const gotIt = localize.Common.gotIt();
+
+        assert.equal(gotIt, 'Got it!', `default not used (got ${gotIt})`);
+        done();
+    });
+
     test('keys exist', done => {
         // Read in the JSON object for the package.nls.json
         const nlsCollection = getDefaultCollection();
 
         // Now match all of our namespace entries to our nls entries
-        localize._resetAskedForCollection();
         useEveryLocalization(localize);
 
         // Now verify all of the asked for keys exist
@@ -120,6 +164,17 @@ suite('Localization', () => {
         done();
     });
 });
+
+// tslint:disable-next-line:no-any
+function addLocaleFile(locale: string, nls: any) {
+    const filename = path.join(EXTENSION_ROOT_DIR, `package.nls.${locale}.json`);
+    if (fs.existsSync(filename)) {
+        throw Error('NLS file already exists');
+    }
+    const contents = JSON.stringify(nls);
+    fs.writeFileSync(filename, contents);
+    return filename;
+}
 
 function setLocale(locale: string) {
     // tslint:disable-next-line:no-any
