@@ -33,7 +33,7 @@ suite('Debugging - Configuration Provider Module', () => {
             name: DebugConfigStrings.moduleSnippetName(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'enter-your-module-name'
+            module: DebugConfigStrings.moduleEnterModuleDefault()
         };
 
         expect(state.config).to.be.deep.equal(config);

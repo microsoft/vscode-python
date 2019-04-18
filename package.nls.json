@@ -195,6 +195,7 @@
     "debug.flaskEnterAppPathOrNamePathInvalidNameError": "Enter a valid name",
     "debug.moduleEnterModuleTitle": "Debug Module",
     "debug.moduleEnterModulePrompt": "Enter Python module/package name",
+    "debug.moduleEnterModuleDefault": "enter-your-module-name",
     "debug.moduleEnterModuleInvalidNameError": "Enter a valid name",
     "debug.pyramidEnterDevelopmentIniPathTitle": "Debug Pyramid",
     "debug.pyramidEnterDevelopmentIniPathPrompt": "`Enter path to development.ini ('${workspaceFolderToken}' points to the root of the current workspace folder)`",

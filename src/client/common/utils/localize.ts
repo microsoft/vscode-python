@@ -256,6 +256,10 @@ export namespace DebugConfigStrings {
         'debug.moduleEnterModulePrompt',
         'Enter Python module/package name'
     );
+    export const moduleEnterModuleDefault = localize(
+        'debug.moduleEnterModuleDefault',
+        'enter-your-module-name'
+    );
     export const moduleEnterModuleInvalidNameError = localize(
         'debug.moduleEnterModuleInvalidNameError',
         'Enter a valid module name'
@@ -313,6 +317,10 @@ export namespace DebugConfigStrings {
     export const moduleSnippetName = localize(
         'python.snippet.launch.module.label',
         'Python: Module'
+    );
+    export const moduleSnippetDefault = localize(
+        'python.snippet.launch.module.default',
+        'enter-your-module-name'
     );
     export const attachSnippetName = localize(
         'python.snippet.launch.attach.label',
