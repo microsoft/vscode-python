@@ -140,7 +140,7 @@
    ([#4803](https://github.com/Microsoft/vscode-python/issues/4803))
 1. Add tests for variable explorer Python files.
    ([#4804](https://github.com/Microsoft/vscode-python/issues/4804))
-1. Add real environment variables provider on to get functional tests to pass on mac.
+1. Add real environment variables provider on to get functional tests to pass on macOS.
    ([#4820](https://github.com/Microsoft/vscode-python/issues/4820))
 1. Handle done on all jupyter requests to make sure an unhandle exception isn't passed on shutdown.
    ([#4827](https://github.com/Microsoft/vscode-python/issues/4827))
