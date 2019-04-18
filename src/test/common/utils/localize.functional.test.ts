@@ -78,6 +78,39 @@ suite('Localization', () => {
 
         done();
     });
+
+    test('all keys used', done => {
+        const nlsCollection = getDefaultCollection();
+        useEveryLocalization(localize);
+
+        // Now verify all of the asked for keys exist
+        const askedFor = localize._getAskedForCollection();
+        // tslint:disable-next-line:no-any
+        const extra: any = {};
+        Object.keys(nlsCollection).forEach((key: string) => {
+            // Now check that this key exists somewhere in the nls collection
+            if (askedFor[key]) {
+                return;
+            }
+            if (key.toLowerCase().indexOf('datascience') >= 0) {
+                return;
+            }
+            extra[key] = nlsCollection[key];
+        });
+
+        // If any missing keys, output an error
+        const extraKeys = Object.keys(extra);
+        if (extraKeys && extraKeys.length > 0) {
+            let message = 'Unused keys. Remove the following from package.nls.json:\n';
+            extraKeys.forEach((k: string) => {
+                // tslint:disable-next-line:no-any
+                message = message.concat(`\t"${k}" : "${extra[k]}",\n`);
+            });
+            assert.fail(message);
+        }
+
+        done();
+    });
 });
 
 function setLocale(locale: string) {
