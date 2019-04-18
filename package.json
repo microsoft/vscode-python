@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.4.0-alpha",
+    "version": "2019.4.0-rc",
     "languageServerVersion": "0.2.59",
     "publisher": "ms-python",
     "author": {
