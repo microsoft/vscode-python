@@ -53,22 +53,37 @@ suite('Linter Info - Pylint', () => {
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
-    test('Test enabled when using Language Server and Pylint is configured', async () => {
-        const config = mock(ConfigurationService);
-        const workspaceService = mock(WorkspaceService);
-        const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
+    const testsForisEnabled =
+        [
+            {
+                testName: 'When workspaceFolder setting is provided',
+                inspection: { workspaceFolderValue: true }
+            },
+            {
+                testName: 'When workspace setting is provided',
+                inspection: { workspaceValue: true }
+            },
+            {
+                testName: 'When global setting is provided',
+                inspection: { globalValue: true }
+            }
+        ];
 
-        const inspection = {
-            globalValue: 'something',
-            workspaceFolderValue: 'something',
-            workspaceValue: 'something'
-        };
-        const pythonConfig = {
-            inspect: () => inspection
-        };
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: true }, jediEnabled: false } as any);
-        when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
+    suite('Test is enabled when using Language Server and Pylint is configured', () => {
+        testsForisEnabled.forEach(testParams => {
+            test(testParams.testName, async () => {
+                const config = mock(ConfigurationService);
+                const workspaceService = mock(WorkspaceService);
+                const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
 
-        expect(linterInfo.isEnabled()).to.be.true;
+                const pythonConfig = {
+                    inspect: () => testParams.inspection
+                };
+                when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: true }, jediEnabled: false } as any);
+                when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
+
+                expect(linterInfo.isEnabled()).to.be.true;
+            });
+        });
     });
 });
