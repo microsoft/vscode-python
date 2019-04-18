@@ -100,7 +100,7 @@
    ([#5136](https://github.com/Microsoft/vscode-python/issues/5136))
 1. Replace 'Run Above' and 'Run Below' in the palette with 'Run Cells Above Cursor' and 'Run Current Cell and Below'.
    ([#5143](https://github.com/Microsoft/vscode-python/issues/5143))
-1. Variables not cleared after a kernel restart
+1. Variables not cleared after a kernel restart.
    ([#5244](https://github.com/Microsoft/vscode-python/issues/5244))
 1. Fix variable explorer to work in live share
    ([#5277](https://github.com/Microsoft/vscode-python/issues/5277))
