@@ -28,7 +28,15 @@ steps:
       displayName: "Setup CI_PYTHON_PATH for extension"
       condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-    # When using pyenv, use Python 3.7 to run the scripts that drive the ui tests.
+    # Some tests need to have both 2.7 & 3.7 available.
+    # Also, use Python 3.7 to run the scripts that drive the ui tests.
+    # Order matters, currently active python version will be used to drive tests.
+    # Hence ensure 3.7 is setup last.
+    - task: UsePythonVersion@0
+      displayName: "Use Python 2.7"
+      inputs:
+          versionSpec: 2.7
+
     - task: UsePythonVersion@0
       displayName: "Use Python 3.7 (to drive tests)"
       inputs:

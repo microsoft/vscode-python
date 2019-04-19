@@ -3,7 +3,6 @@
 
 import time
 
-import behave
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
@@ -26,12 +25,16 @@ def wait_for_stop_hidden(context):
 
 
 def wait_for_run_failed_icon(context):
-    selector = "div[id='workbench.parts.sidebar'] .action-item a[title='Run Failed Unit Tests']"
+    selector = (
+        "div[id='workbench.parts.sidebar'] .action-item a[title='Run Failed Tests']"
+    )
     uitests.vscode.core.wait_for_element(context.driver, selector)
 
 
 def wait_for_run_failed_hidden(context):
-    selector = "div[id='workbench.parts.sidebar'] .action-item a[title='Run Failed Unit Tests']"
+    selector = (
+        "div[id='workbench.parts.sidebar'] .action-item a[title='Run Failed Tests']"
+    )
     uitests.vscode.core.wait_for_element_to_be_hidden(context.driver, selector)
 
 
@@ -42,7 +45,9 @@ def stop(context):
 
 
 def run_failed_tests(context):
-    selector = "div[id='workbench.parts.sidebar'] .action-item a[title='Run Failed Unit Tests']"
+    selector = (
+        "div[id='workbench.parts.sidebar'] .action-item a[title='Run Failed Tests']"
+    )
     element = uitests.vscode.core.wait_for_element(context.driver, selector)
     element.click()
 

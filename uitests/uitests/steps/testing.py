@@ -54,7 +54,7 @@ def explorer_expand_nodes(context):
         return
     except TimeoutError:
         # Rediscover tests.
-        uitests.vscode.quick_open.select_command(context, "Python: Discover Unit Tests")
+        uitests.vscode.quick_open.select_command(context, "Python: Discover Tests")
         # As this is a flaky scenario, lets wait for 5s.
         # Enough time for tests to start & perhaps complete.
         time.sleep(5)

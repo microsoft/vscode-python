@@ -1,11 +1,11 @@
-@test @wip
+@test
 @git://github.com/DonJayamanne/pyvscSmokeTesting.git
 Feature: Test Explorer - Re-run Failed Tests
 
     Scenario: We are able to re-run a failed tests (unitest)
-        Given the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is enabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        Given the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is enabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             0
@@ -15,13 +15,13 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,-1,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
         Then there are 15 nodes in the tree
         And 15 nodes have a status of "Unknown"
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
@@ -57,9 +57,9 @@ Feature: Test Explorer - Re-run Failed Tests
 
     Scenario: We are able to re-run a failed tests (pytest)
         Given the package "pytest" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             0
@@ -69,13 +69,13 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,-1,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
         Then there are 15 nodes in the tree
         And 15 nodes have a status of "Unknown"
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
@@ -111,9 +111,9 @@ Feature: Test Explorer - Re-run Failed Tests
 
     Scenario: We are able to re-run a failed tests (nose)
         Given the package "nose" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is enabled
+        And the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is enabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             0
@@ -123,13 +123,13 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,-1,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
         Then there are 15 nodes in the tree
         And 15 nodes have a status of "Unknown"
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
@@ -165,9 +165,9 @@ Feature: Test Explorer - Re-run Failed Tests
 
 
     Scenario: We are able to stop tests after re-running failed tests (unitest)
-        Given the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is enabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        Given the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is enabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             0
@@ -177,13 +177,13 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,-1,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
         Then there are 15 nodes in the tree
         And 15 nodes have a status of "Unknown"
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
@@ -225,9 +225,9 @@ Feature: Test Explorer - Re-run Failed Tests
 
     Scenario: We are able to stop tests after re-running failed tests (pytest)
         Given the package "pytest" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             0
@@ -237,13 +237,13 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,-1,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
         Then there are 15 nodes in the tree
         And 15 nodes have a status of "Unknown"
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
@@ -285,9 +285,9 @@ Feature: Test Explorer - Re-run Failed Tests
 
     Scenario: We are able to stop tests after re-running failed tests (nose)
         Given the package "nose" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is enabled
+        And the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is enabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             0
@@ -297,13 +297,13 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,-1,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
         Then there are 15 nodes in the tree
         And 15 nodes have a status of "Unknown"
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"

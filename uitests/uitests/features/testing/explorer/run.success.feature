@@ -3,15 +3,15 @@
 Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a success status (unitest)
-        Given the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is enabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        Given the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is enabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -32,15 +32,15 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a success status (pytest)
         Given the package "pytest" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -61,15 +61,15 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a success status (nose)
         Given the package "nose" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is enabled
+        And the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is enabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -89,9 +89,9 @@ Feature: Test Explorer Discovering icons and stop discovery
 
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a error status (unitest)
-        Given the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is enabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        Given the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is enabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
@@ -101,7 +101,7 @@ Feature: Test Explorer Discovering icons and stop discovery
             [1,2,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -121,9 +121,9 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a error status (pytest)
         Given the package "pytest" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
@@ -133,7 +133,7 @@ Feature: Test Explorer Discovering icons and stop discovery
             [1,2,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -153,9 +153,9 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a error status (nose)
         Given the package "nose" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is enabled
+        And the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is enabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
@@ -165,7 +165,7 @@ Feature: Test Explorer Discovering icons and stop discovery
             [1,2,-1,4,5,6]
             """
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -184,11 +184,11 @@ Feature: Test Explorer Discovering icons and stop discovery
         And 11 nodes have a status of "Unknown"
 
     Scenario: When running tests, the nodes will have the progress icon and when stopped will have an unknown status (unitest)
-        Given the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is enabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        Given the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is enabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         When I reload VSC
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -212,11 +212,11 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when stopped will have an unknown status (pytest)
         Given the package "pytest" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         When I reload VSC
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -240,11 +240,11 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When running tests, the nodes will have the progress icon and when stopped will have an unknown status (nose)
         Given the package "nose" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is enabled
+        And the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is enabled
         When I reload VSC
-        When I select the command "Python: Run All Unit Tests"
+        When I select the command "Python: Run All Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes

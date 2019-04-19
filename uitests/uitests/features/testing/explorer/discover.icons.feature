@@ -3,11 +3,11 @@
 Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When discovering tests, the nodes will have the progress icon and clicking stop will stop discovery (unitest)
-        Given the workspace setting "python.unitTest.pyTestEnabled" is disabled
-        And the workspace setting "python.unitTest.unittestEnabled" is enabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        Given the workspace setting "python.testing.pyTestEnabled" is disabled
+        And the workspace setting "python.testing.unittestEnabled" is enabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -17,7 +17,7 @@ Feature: Test Explorer Discovering icons and stop discovery
             """
             10
             """
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         And I wait for 1 second
         Then all of the test tree nodes have a progress icon
         And the stop icon is visible in the toolbar
@@ -26,11 +26,11 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When discovering tests, the nodes will have the progress icon and clicking stop will stop discovery (pytest)
         Given the package "pytest" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -40,7 +40,7 @@ Feature: Test Explorer Discovering icons and stop discovery
             """
             10
             """
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         And I wait for 1 second
         Then all of the test tree nodes have a progress icon
         And the stop icon is visible in the toolbar
@@ -49,11 +49,11 @@ Feature: Test Explorer Discovering icons and stop discovery
 
     Scenario: When discovering tests, the nodes will have the progress icon and clicking stop will stop discovery (nose)
         Given the package "nose" is installed
-        And the workspace setting "python.unitTest.pyTestEnabled" is enabled
-        And the workspace setting "python.unitTest.unittestEnabled" is disabled
-        And the workspace setting "python.unitTest.nosetestsEnabled" is disabled
+        And the workspace setting "python.testing.pyTestEnabled" is enabled
+        And the workspace setting "python.testing.unittestEnabled" is disabled
+        And the workspace setting "python.testing.nosetestsEnabled" is disabled
         When I reload VSC
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
@@ -63,7 +63,7 @@ Feature: Test Explorer Discovering icons and stop discovery
             """
             10
             """
-        When I select the command "Python: Discover Unit Tests"
+        When I select the command "Python: Discover Tests"
         And I wait for 1 second
         Then all of the test tree nodes have a progress icon
         And the stop icon is visible in the toolbar
