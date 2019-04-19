@@ -341,6 +341,48 @@ jobs:
         TestsToRun: 'testDebugger'
         NeedsPythonTestReqs: true
 
+      # Smoke tests
+      'Linux-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.6 Smoke':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.6 Smoke':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.5 Smoke':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.5 Smoke':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7 Smoke':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7 Smoke':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+
       # Functional tests (not mocked Jupyter)
       'Windows-Py3.7 Functional':
         PythonVersion: '3.7'
