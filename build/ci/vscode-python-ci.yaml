@@ -1,15 +1,25 @@
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci'
-# PR Validation build.
-# Notes: Only trigger a PR build for master and release, and skip build/rebuild
-#        on changes in the news and .vscode folders.
-trigger:
+pr:
+  autoCancel: true
   branches:
     include: ["master", "release"]
   paths:
     exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
 
-# Not the PR build for merges to master and release.
-pr: none
+# Not the CI build for merges to master and release.
+trigger: none
+
+# # PR Validation build.
+# # Notes: Only trigger a PR build for master and release, and skip build/rebuild
+# #        on changes in the news and .vscode folders.
+# trigger:
+#   branches:
+#     include: ["master", "release"]
+#   paths:
+#     exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
+
+# # Not the PR build for merges to master and release.
+# pr: none
 
 # Variables that are available for the entire pipeline.
 variables:
@@ -21,25 +31,17 @@ variables:
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
 
 jobs:
+- job: Build
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/build_phases.yml
 
-- job: 'CI'
-
+- job: Test
+  # These are the tests that must pass no matter what for VSIX to be uploaded.
   strategy:
     matrix:
-      # Each member of this list must contain these values:
-        # VMImageName: '[name]' - the VM image to run the tests on.
-        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
-      # Each member of this list may contain these values:
-        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
-        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-        # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
-        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-
-      ## Virtual Environment Tests:
-
+      # Unit Tests
       'Win-Py3.7 Unit':
         PythonVersion: '3.7'
         VMImageName: 'vs2017-win2016'
@@ -76,11 +78,70 @@ jobs:
         TestsToRun: 'pythonUnitTests, pythonIPythonTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
+      # IPython tests
+      'Win-Py3.7 IPython':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonIPythonTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+      'Linux-Py3.7 IPython':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'pythonIPythonTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+      'Mac-Py3.7 IPython':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'pythonIPythonTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+      'Win-Py3.6 IPython':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'pythonIPythonTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+      'Linux-Py3.6 IPython':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'pythonIPythonTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+      'Mac-Py3.6 IPython':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'pythonIPythonTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+
+  pool:
+    vmImage: $(VMImageName)
+
+  steps:
+    - template: templates/test_phases.yml
+
+- job: Test_Flaky
+  # Some of these are tests that are known to be flaky.
+  strategy:
+    matrix:
+      # Each member of this list must contain these values:
+        # VMImageName: '[name]' - the VM image to run the tests on.
+        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+      # Each member of this list may contain these values:
+        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+        # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
+        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
 
       'Win-Py3.7 Venv':
         VMImageName: 'vs2017-win2016'
         PythonVersion: '3.7'
-        TestsToRun: 'venvTests, pythonIPythonTests'
+        TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
         # This is for the venvTests to use, not needed if you don't run venv tests...
@@ -88,35 +149,35 @@ jobs:
       'Linux-Py3.7 Venv':
         VMImageName: 'ubuntu-16.04'
         PythonVersion: '3.7'
-        TestsToRun: 'venvTests, pythonIPythonTests'
+        TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.7 Venv':
         VMImageName: 'macos-10.13'
         PythonVersion: '3.7'
-        TestsToRun: 'venvTests, pythonIPythonTests'
+        TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Win-Py3.6 Venv':
         VMImageName: 'vs2017-win2016'
         PythonVersion: '3.6'
-        TestsToRun: 'venvTests, pythonIPythonTests'
+        TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Linux-Py3.6 Venv':
         VMImageName: 'ubuntu-16.04'
         PythonVersion: '3.6'
-        TestsToRun: 'venvTests, pythonIPythonTests'
+        TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
       'Mac-Py3.6 Venv':
         VMImageName: 'macos-10.13'
         PythonVersion: '3.6'
-        TestsToRun: 'venvTests, pythonIPythonTests'
+        TestsToRun: 'venvTests'
         NeedsPythonTestReqs: true
         NeedsIPythonReqs: true
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
@@ -267,3 +328,12 @@ jobs:
 
   steps:
     - template: templates/test_phases.yml
+
+- job: Upload
+  dependsOn:
+    - Build
+    - Test
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/upload.yml

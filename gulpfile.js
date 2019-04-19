@@ -282,7 +282,7 @@ function uploadExtension(uploadBlobName) {
     console.log(process.cwd());
     console.log(fs.existsSync(path.join(process.cwd(), 'ms-python-insiders.vsix')));
     console.log(fs.existsSync(path.join(process.cwd(), uploadBlobName)));
-    return gulp.src('python*.vsix')
+    return gulp.src('*python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
             account: process.env.AZURE_STORAGE_ACCOUNT,

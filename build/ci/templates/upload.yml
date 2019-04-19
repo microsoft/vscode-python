@@ -1,0 +1,36 @@
+steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+          buildType: "current"
+          artifactName: "VSIX"
+          downloadPath: "$(Build.SourcesDirectory)"
+      displayName: "Restore VSIX"
+
+    - task: CopyFiles@2
+      inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/VSIX"
+          targetFolder: $(Build.SourcesDirectory)
+      displayName: "Copy VSIX"
+      condition: succeeded()
+
+    - task: Gulp@0
+      displayName: "Upload Master VSIX to Blobstore"
+      env:
+          AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+          AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
+          AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+      inputs:
+          targets: "uploadDeveloperExtension"
+      condition: succeeded()
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+
+    - task: Gulp@0
+      displayName: "Upload Release VSIX to Blobstore"
+      env:
+          AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+          AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
+          AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+      inputs:
+          targets: "uploadReleaseExtension"
+      condition: succeeded()
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
