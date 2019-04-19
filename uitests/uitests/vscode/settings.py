@@ -6,6 +6,8 @@ import json
 import os
 import pathlib
 
+import uitests.tools
+
 
 def update_workspace_settings(context, settings={}):
     workspace_folder = context.options.workspace_folder
@@ -25,12 +27,10 @@ def remove_user_setting(context, setting):
     remove_setting(settings_json, setting)
 
 
+# For some reason this throws an error on Widows.
+@uitests.tools.retry(AssertionError)
 def _ensure_setttings_json(settings_json):
-    try:
-        # For some reason this throws an error on Widows.
-        os.makedirs(pathlib.Path(settings_json).parent, exist_ok=True)
-    except PermissionError:
-        pass
+    os.makedirs(pathlib.Path(settings_json).parent, exist_ok=True)
     if os.path.exists(settings_json):
         return
     with open(settings_json, "w") as file:
