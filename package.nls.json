@@ -241,7 +241,7 @@
     "DataScience.variableExplorerTypeColumn": "Type",
     "DataScience.variableExplorerSizeColumn": "Size",
     "DataScience.variableExplorerValueColumn": "Value",
-    "DataScience.showDataExplorerTooltip": "Show variable in data explorer.",
+    "DataScience.showDataExplorerTooltip": "Show variable in data viewer.",
     "DataScience.dataExplorerInvalidVariableFormat": "'{0}' is not an active variable.",
     "DataScience.jupyterGetVariablesExecutionError": "Failure during variable extraction:\r\n{0}",
     "DataScience.loadingMessage": "loading ...",

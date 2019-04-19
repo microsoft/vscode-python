@@ -92,6 +92,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                                 minHeight = {this.state.gridHeight}
                                 headerRowHeight = {this.state.fontSize + 9}
                                 rowHeight = {this.state.fontSize + 9}
+                                onRowDoubleClick = {this.rowDoubleClick}
                             />
                         </div>
                     </div>
@@ -154,6 +155,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         // Notify of the toggle, reverse it as the state is not updated yet
         this.props.variableExplorerToggled(!this.state.open);
+    }
+
+    private rowDoubleClick = (_rowIndex: number, row: IGridRow) => {
+        // On row double click, see if data explorer is supported and open it if it is
+        if (row.buttons && row.buttons.supportsDataExplorer !== undefined
+            && row.buttons.name && row.buttons.supportsDataExplorer) {
+            this.props.showDataExplorer(row.buttons.name);
+        }
     }
 
     private updateHeight = () => {

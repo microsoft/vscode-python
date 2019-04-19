@@ -72,6 +72,20 @@ export class WebPanel implements IWebPanel {
         }
     }
 
+    public get title(): string {
+        if (this.panel) {
+            return this.panel.title;
+        }
+
+        return '';
+    }
+
+    public set title(newTitle: string) {
+        if (this.panel) {
+            this.panel.title = newTitle;
+        }
+    }
+
     // tslint:disable-next-line:no-any
     private async load(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         if (this.panel) {
