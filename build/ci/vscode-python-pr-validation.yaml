@@ -22,7 +22,17 @@ variables:
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
 
 jobs:
+- job: Compile
+  variables:
+    build: false
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/build_phases.yml
+
 - job: Build
+  variables:
+    build: true
   pool:
     vmImage: "macos-10.13"
   steps:

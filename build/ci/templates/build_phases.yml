@@ -41,17 +41,18 @@ steps:
       displayName: "Compile and check for errors"
       inputs:
           targets: "prePublishNonBundle"
+      condition: and(succeeded(), eq(variables['Build'], 'false'))
 
     - bash: npx tslint ./src/**/*.ts{,x}
       displayName: "code hygiene"
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build'], 'false'))
 
     - bash: |
           python -m pip install -U pip
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       failOnStderr: true
       displayName: "pip install requirements"
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
 
     - bash: |
           npm install -g vsce
@@ -59,18 +60,18 @@ steps:
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
           npm run package
       displayName: "Build VSIX"
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
 
     - task: CopyFiles@2
       inputs:
           contents: "*.vsix"
           targetFolder: $(Build.ArtifactStagingDirectory)
       displayName: "Copy VSIX"
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
 
     - task: PublishBuildArtifacts@1
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           artifactName: VSIX
       displayName: "Publish VSIX to Arifacts"
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
