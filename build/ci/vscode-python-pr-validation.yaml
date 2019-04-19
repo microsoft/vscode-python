@@ -100,25 +100,28 @@ jobs:
   strategy:
     matrix:
       # Smoke tests on min and latest versions of Python.
-      "Mac-Py3.7 Smoke":
+      "Mac-Py3.7":
           PythonVersion: "3.7"
           VMImageName: "macos-10.13"
           Tags: "--tags=smoke"
 
-      "Win-Py3.7 Smoke":
+      "Win-Py3.7":
           PythonVersion: "3.7"
           VMImageName: 'vs2017-win2016'
           Tags: "--tags=smoke"
 
-      "Mac-Py2.7 Smoke":
+      "Mac-Py2.7":
           PythonVersion: "2.7"
           VMImageName: "macos-10.13"
           Tags: "--tags=smoke"
 
-      "Win-Py2.7 Smoke":
+      "Win-Py2.7":
           PythonVersion: "2.7"
           VMImageName: 'vs2017-win2016'
           Tags: "--tags=smoke"
+
+  pool:
+    vmImage: $(VMImageName)
 
   steps:
     - template: templates/uitest_phases.yml

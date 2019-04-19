@@ -6,7 +6,7 @@ Feature: Terminal
         And I select the default mac Interpreter
         Then a message with the text "You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter." is displayed
         And take a screenshot
-
+    @smoke
     Scenario: Execute File in Terminal
         Given a file named "run_in_terminal.py" is created with the following contents
             """

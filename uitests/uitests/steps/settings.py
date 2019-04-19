@@ -23,6 +23,12 @@ def given_workspace_setting_disabled(context, name):
     uitests.vscode.settings.update_workspace_settings(context, {name: False})
 
 
+@behave.given('the user setting "{name}" is disabled')
+def given_user_setting_disabled(context, name):
+    settings_json = os.path.join(context.options.user_dir, "User", "settings.json")
+    uitests.vscode.settings.update_settings(settings_json, {name: False})
+
+
 @behave.when('I update the workspace setting "{name}" with the value "{value}"')
 def given_workspace_setting_value(context, name, value):
     uitests.vscode.settings.update_workspace_settings(context, {name: value})

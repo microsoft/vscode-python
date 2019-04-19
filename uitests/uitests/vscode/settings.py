@@ -26,7 +26,11 @@ def remove_user_setting(context, setting):
 
 
 def _ensure_setttings_json(settings_json):
-    os.makedirs(pathlib.Path(settings_json).parent, exist_ok=True)
+    try:
+        # For some reason this throws an error on Widows.
+        os.makedirs(pathlib.Path(settings_json).parent, exist_ok=True)
+    except PermissionError:
+        pass
     if os.path.exists(settings_json):
         return
     with open(settings_json, "w") as file:

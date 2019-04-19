@@ -8,7 +8,9 @@
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
-            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
+            "args": [
+                "${file}"
+            ] // Additional args should be prefixed with a '--' first.
         },
         {
             "name": "Python: Current File",
@@ -196,23 +198,8 @@
                 "pretty",
                 "--tags=wip"
             ],
-            "debugStdLib": true,
-            "console": "none"
-        },
-        {
-            "name": "Behave",
-            "type": "python",
-            "request": "launch",
-            "module": "behave",
-            "console": "integratedTerminal",
-            "args": [
-                "uitests/uitests"
-            ],
-            "env": {
-                "PYTHONPATH": "./uitests"
-            },
-            "stopOnEntry": true,
-            "debugStdLib": true
+            "justMyCode": false,
+            "console": "internalConsole"
         }
     ],
     "compounds": [
