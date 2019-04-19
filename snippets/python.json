@@ -169,13 +169,14 @@
         "description": "Code snippet for an abstract class method"
     },
     "class": {
-        "prefix": "class",
-        "body": [
-            "class ${1:classname}(${2:object}):",
-            "\t${3:pass}"
-        ],
-        "description": "Code snippet for a class definition"
-    },
+		"prefix": "class",
+		"body": [
+			"class ${1:classname}(${2:object}):",
+			"\tdef __init__(self):",
+			"\t\tsuper(${1:classname}, self).__init__()",
+		],
+		"description": "Code snippet for a class definition"
+	},
     "lambda": {
         "prefix": "lambda",
         "body": [
@@ -240,4 +241,19 @@
         "body": "import pudb; pudb.set_trace()",
         "description": "Code snippet for pudb debug"
     },
+    "__magic__": {
+		"prefix": "__",
+		"body": [
+			"__${1:init}__",
+		],
+		"description": "Code snippet for Python magic methods"
+	},
+	"if __name__ == \"__main__\"": {
+		"prefix": "ifmain",
+		"body": [
+			"if __name__ == \"__main__\":",
+			"\t${1:main()}$0",
+		],
+		"description": "Code snippet for running code only if the current file was executed directly"
+	},
 }
