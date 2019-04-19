@@ -4,11 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -32,7 +30,6 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         @inject(ITestManagementService) private testService: ITestManagementService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -145,9 +142,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      */
     public getRootNodes(tests?: Tests) {
         if (tests && tests.rootTestFolders && tests.rootTestFolders.length === 1) {
-            const rootFolder = tests.rootTestFolders[0].name;
-            const testFiles = tests.testFiles.filter(file => this.fs.arePathsSame(path.dirname(file.fullPath), rootFolder));
-            return [...testFiles, ...tests.rootTestFolders[0].folders];
+            return [...tests.rootTestFolders[0].testFiles, ...tests.rootTestFolders[0].folders];
         }
         return tests ? tests.rootTestFolders : [];
     }
