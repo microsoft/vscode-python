@@ -22,11 +22,11 @@ export class Decorator implements IExtensionActivationService, IDisposable {
                 @inject(IConfigurationService) private configuration: IConfigurationService)
     {
         this.activeCellType = this.documentManager.createTextEditorDecorationType({
-            backgroundColor: new vscode.ThemeColor('sideBarSectionHeader.background'),
+            backgroundColor: new vscode.ThemeColor('peekViewEditor.background'),
             isWholeLine: true
         });
         this.cellSeparatorType = this.documentManager.createTextEditorDecorationType({
-            borderColor: new vscode.ThemeColor('sideBarSectionHeader.background'),
+            borderColor: new vscode.ThemeColor('peekViewEditor.background'),
             borderWidth: '1px 0px 0px 0px',
             borderStyle: 'solid',
             isWholeLine: true
