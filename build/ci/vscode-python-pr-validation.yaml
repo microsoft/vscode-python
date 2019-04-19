@@ -115,20 +115,20 @@ jobs:
           VMImageName: "macos-10.13"
           Tags: "--tags=smoke"
 
-      "Win-Py3.7":
-          PythonVersion: "3.7"
-          VMImageName: 'vs2017-win2016'
-          Tags: "--tags=smoke"
+    #   "Win-Py3.7":
+    #       PythonVersion: "3.7"
+    #       VMImageName: 'vs2017-win2016'
+    #       Tags: "--tags=smoke"
 
       "Mac-Py2.7":
           PythonVersion: "2.7"
           VMImageName: "macos-10.13"
           Tags: "--tags=smoke"
 
-      "Win-Py2.7":
-          PythonVersion: "2.7"
-          VMImageName: 'vs2017-win2016'
-          Tags: "--tags=smoke"
+    #   "Win-Py2.7":
+    #       PythonVersion: "2.7"
+    #       VMImageName: 'vs2017-win2016'
+    #       Tags: "--tags=smoke"
 
   pool:
     vmImage: $(VMImageName)
