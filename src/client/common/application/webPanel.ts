@@ -73,11 +73,7 @@ export class WebPanel implements IWebPanel {
     }
 
     public get title(): string {
-        if (this.panel) {
-            return this.panel.title;
-        }
-
-        return '';
+        return this.panel ? this.panel.title : '';
     }
 
     public set title(newTitle: string) {
