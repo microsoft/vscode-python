@@ -124,7 +124,6 @@ jobs:
   steps:
     - template: templates/uitest_phases.yml
 
-
 - job: Smoke
   dependsOn:
     - Build
