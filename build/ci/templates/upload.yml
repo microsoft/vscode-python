@@ -1,4 +1,37 @@
 steps:
+    - bash: |
+          printenv
+      displayName: "Show all env vars"
+      condition: eq(variables['system.debug'], 'true')
+
+    - task: NodeTool@0
+      displayName: "Use Node $(NodeVersion)"
+      inputs:
+          versionSpec: $(NodeVersion)
+
+    - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
+
+    - task: Npm@1
+      displayName: "npm ci"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: ci
+
+    - bash: |
+          echo AVAILABLE DEPENDENCY VERSIONS
+          echo Node Version = `node -v`
+          echo NPM Version = `npm -v`
+          echo Python Version = `python --version`
+          echo Gulp Version = `gulp --version`
+      condition: and(succeeded(), eq(variables['system.debug'], 'true'))
+      displayName: Show Dependency Versions
+
     - task: DownloadBuildArtifacts@0
       inputs:
           buildType: "current"
