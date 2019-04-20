@@ -14,7 +14,7 @@ Feature: Terminal
             """
         And the file "run_in_terminal.py" is open
         And a file named "log.log" does not exist
-        When I select the command "Python: Run Python File in Terminal"
+        # When I select the command "Python: Run Python File in Terminal"
         Then a file named "log.log" is created
         And take a screenshot
 
