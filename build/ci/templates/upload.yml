@@ -46,24 +46,38 @@ steps:
       displayName: "Copy VSIX"
       condition: succeeded()
 
-    - task: Gulp@0
-      displayName: "Upload Master VSIX to Blobstore"
-      env:
-          AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
-          AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
-          AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+    - task: CopyFiles@2
       inputs:
-          targets: "uploadDeveloperExtension"
+          contents: "*.vsix"
+          targetFolder: $(Build.ArtifactStagingDirectory)
+      displayName: "Copy to Release"
       condition: succeeded()
-    #   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
-    - task: Gulp@0
-      displayName: "Upload Release VSIX to Blobstore"
-      env:
-          AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
-          AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
-          AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+    - task: PublishBuildArtifacts@1
       inputs:
-          targets: "uploadReleaseExtension"
+          pathtoPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: Release
+      displayName: "Publish Release to Arifacts"
       condition: succeeded()
-    #   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
+
+    # - task: Gulp@0
+    #   displayName: "Upload Master VSIX to Blobstore"
+    #   env:
+    #       AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+    #       AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
+    #       AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+    #   inputs:
+    #       targets: "uploadDeveloperExtension"
+    #   condition: succeeded()
+    # #   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+
+    # - task: Gulp@0
+    #   displayName: "Upload Release VSIX to Blobstore"
+    #   env:
+    #       AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+    #       AZURE_STORAGE_ACCESS_KEY: $(AZURE_STORAGE_ACCESS_KEY)
+    #       AZURE_STORAGE_CONTAINER: $(AZURE_STORAGE_CONTAINER)
+    #   inputs:
+    #       targets: "uploadReleaseExtension"
+    #   condition: succeeded()
+    # #   condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
