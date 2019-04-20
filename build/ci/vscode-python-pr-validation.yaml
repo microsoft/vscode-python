@@ -34,13 +34,13 @@ jobs:
   steps:
     - template: templates/build_phases.yml
 
-- job: Build
-  variables:
-    Build: true
-  pool:
-    vmImage: "macos-10.13"
-  steps:
-    - template: templates/build_phases.yml
+# - job: Build
+#   variables:
+#     Build: true
+#   pool:
+#     vmImage: "macos-10.13"
+#   steps:
+#     - template: templates/build_phases.yml
 
 - job: TestUnit
 
