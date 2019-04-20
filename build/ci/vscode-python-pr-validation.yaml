@@ -118,6 +118,12 @@ jobs:
           PythonVersion: "3.7"
           VMImageName: "macos-10.13"
           Tags: "--tags=smokes"
+  pool:
+    vmImage: $(VMImageName)
+
+  steps:
+    - template: templates/uitest_phases.yml
+
 
 - job: Smoke
   dependsOn:
