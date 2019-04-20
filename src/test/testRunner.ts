@@ -75,6 +75,41 @@ export function configure(setupOptions: SetupOptions, coverageOpts?: { coverageC
     mocha = new Mocha(setupOptions);
     coverageOptions = coverageOpts;
 }
+/**
+ * Exits Mocha when Mocha itself has finished execution, regardless of
+ * what the tests or code under test is doing.
+ * @param {number} code - Exit code; typically # of failures
+ * @ignore
+ * @private
+ */
+const exitMocha = (code: number) => {
+    const clampedCode = Math.min(code, 255);
+    let draining = 0;
+
+    // Eagerly set the process's exit code in case stream.write doesn't
+    // execute its callback before the process terminates.
+    (process as any).exitCode = clampedCode;
+
+    // flush output for Node.js Windows pipe bug
+    // https://github.com/joyent/node/issues/6247 is just one bug example
+    // https://github.com/visionmedia/mocha/issues/333 has a good discussion
+    const done = () => {
+// tslint:disable-next-line: no-increment-decrement
+        if (!draining--) {
+            process.exit(clampedCode);
+        }
+    };
+
+    const streams = [process.stdout, process.stderr];
+
+    streams.forEach(stream => {
+        // submit empty write request and wait for completion
+        draining += 1;
+        stream.write('', done);
+    });
+
+    done();
+};
 
 export function run(testsRoot: string, callback: TestCallback): void {
     // Enable source map support.
@@ -126,7 +161,11 @@ export function run(testsRoot: string, callback: TestCallback): void {
             try {
                 files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
                 initializationScript()
-                    .then(() => mocha.run(failures => callback(undefined, failures)))
+                    .then(() => mocha.run(failures => {
+                        // Force exit, don't wait for process to die.
+                        // callback(undefined, failures);
+                        exitMocha(failures);
+                    }))
                     .catch(callback);
             } catch (error) {
                 return callback(error);
