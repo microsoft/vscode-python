@@ -108,6 +108,17 @@ jobs:
   steps:
     - template: templates/test_phases.yml
 
+- job: Smokes
+  dependsOn:
+    - Build
+  strategy:
+    matrix:
+      # Smoke tests on min and latest versions of Python.
+      "Mac-Py3.7":
+          PythonVersion: "3.7"
+          VMImageName: "macos-10.13"
+          Tags: "--tags=smokes"
+
 - job: Smoke
   dependsOn:
     - Build
