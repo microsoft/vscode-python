@@ -56,7 +56,7 @@ def reload(context):
     app_context = launch(context.options)
     context.driver = app_context.driver
     CONTEXT["driver"] = context.driver
-    clear_everything(app_context)
+    # clear_everything(app_context)
     return app_context
 
 

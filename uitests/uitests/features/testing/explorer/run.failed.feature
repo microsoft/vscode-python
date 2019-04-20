@@ -19,19 +19,18 @@ Feature: Test Explorer - Re-run Failed Tests
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node number 1 has a status of "Fail"
-        And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
-        And the node number 6 has a status of "Fail"
-        And the node number 11 has a status of "Fail"
-        And the node number 12 has a status of "Fail"
-        And the node number 14 has a status of "Fail"
-        And the node number 15 has a status of "Fail"
+        Then the node "test_one.py" has a status of "Fail"
+        And the node "TestFirstSuite" has a status of "Fail"
+        And the node "test_three_first_suite" has a status of "Fail"
+        And the node "test_two_first_suite" has a status of "Fail"
+        And the node "test_two.py" has a status of "Fail"
+        And the node "TestThirdSuite" has a status of "Fail"
+        And the node "test_three_third_suite" has a status of "Fail"
+        And the node "test_two_third_suite" has a status of "Fail"
         And 6 nodes have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
@@ -43,17 +42,8 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,2,3,4,5,6]
             """
         When I run failed tests
-        And I wait for 1 seconds
-        Then the stop icon is visible in the toolbar
-        And the node number 3 has a status of "Progress"
-        And the node number 5 has a status of "Progress"
-        And the node number 6 has a status of "Progress"
-        And the node number 12 has a status of "Progress"
-        And the node number 14 has a status of "Progress"
-        And the node number 15 has a status of "Progress"
-        And 6 nodes have a status of "Progress"
-        When I wait for tests to complete running
-        Then 15 nodes have a status of "Success"
+        And I wait for tests to complete running
+        Then 14 nodes have a status of "Success"
 
     Scenario: We are able to re-run a failed tests (pytest)
         Given the package "pytest" is installed
@@ -77,15 +67,14 @@ Feature: Test Explorer - Re-run Failed Tests
         And 15 nodes have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node number 1 has a status of "Fail"
-        And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
-        And the node number 6 has a status of "Fail"
-        And the node number 11 has a status of "Fail"
-        And the node number 12 has a status of "Fail"
-        And the node number 14 has a status of "Fail"
-        And the node number 15 has a status of "Fail"
+        Then the node "test_one.py" has a status of "Fail"
+        And the node "TestFirstSuite" has a status of "Fail"
+        And the node "test_three_first_suite" has a status of "Fail"
+        And the node "test_two_first_suite" has a status of "Fail"
+        And the node "test_two.py" has a status of "Fail"
+        And the node "TestThirdSuite" has a status of "Fail"
+        And the node "test_three_third_suite" has a status of "Fail"
+        And the node "test_two_third_suite" has a status of "Fail"
         And 6 nodes have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
@@ -97,16 +86,7 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,2,3,4,5,6]
             """
         When I run failed tests
-        And I wait for 1 seconds
-        Then the stop icon is visible in the toolbar
-        And the node number 3 has a status of "Progress"
-        And the node number 5 has a status of "Progress"
-        And the node number 6 has a status of "Progress"
-        And the node number 12 has a status of "Progress"
-        And the node number 14 has a status of "Progress"
-        And the node number 15 has a status of "Progress"
-        And 6 nodes have a status of "Progress"
-        When I wait for tests to complete running
+        And I wait for tests to complete running
         Then 15 nodes have a status of "Success"
 
     Scenario: We are able to re-run a failed tests (nose)
@@ -127,19 +107,18 @@ Feature: Test Explorer - Re-run Failed Tests
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node number 1 has a status of "Fail"
-        And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
-        And the node number 6 has a status of "Fail"
-        And the node number 11 has a status of "Fail"
-        And the node number 12 has a status of "Fail"
-        And the node number 14 has a status of "Fail"
-        And the node number 15 has a status of "Fail"
+        Then the node "tests/test_one.py" has a status of "Fail"
+        And the node "TestFirstSuite" has a status of "Fail"
+        And the node "test_three_first_suite" has a status of "Fail"
+        And the node "test_two_first_suite" has a status of "Fail"
+        And the node "tests/test_two.py" has a status of "Fail"
+        And the node "TestThirdSuite" has a status of "Fail"
+        And the node "test_three_third_suite" has a status of "Fail"
+        And the node "test_two_third_suite" has a status of "Fail"
         And 6 nodes have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
@@ -151,18 +130,8 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,2,3,4,5,6]
             """
         When I run failed tests
-        And I wait for 1 seconds
-        Then the stop icon is visible in the toolbar
-        And the node number 3 has a status of "Progress"
-        And the node number 5 has a status of "Progress"
-        And the node number 6 has a status of "Progress"
-        And the node number 12 has a status of "Progress"
-        And the node number 14 has a status of "Progress"
-        And the node number 15 has a status of "Progress"
-        And 6 nodes have a status of "Progress"
-        When I wait for tests to complete running
-        Then 15 nodes have a status of "Success"
-
+        And I wait for tests to complete running
+        Then 14 nodes have a status of "Success"
 
     Scenario: We are able to stop tests after re-running failed tests (unitest)
         Given the workspace setting "python.testing.pyTestEnabled" is disabled
@@ -181,24 +150,23 @@ Feature: Test Explorer - Re-run Failed Tests
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node number 1 has a status of "Fail"
-        And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
-        And the node number 6 has a status of "Fail"
-        And the node number 11 has a status of "Fail"
-        And the node number 12 has a status of "Fail"
-        And the node number 14 has a status of "Fail"
-        And the node number 15 has a status of "Fail"
+        Then the node "test_one.py" has a status of "Fail"
+        And the node "TestFirstSuite" has a status of "Fail"
+        And the node "test_three_first_suite" has a status of "Fail"
+        And the node "test_two_first_suite" has a status of "Fail"
+        And the node "test_two.py" has a status of "Fail"
+        And the node "TestThirdSuite" has a status of "Fail"
+        And the node "test_three_third_suite" has a status of "Fail"
+        And the node "test_two_third_suite" has a status of "Fail"
         And 6 nodes have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
             """
-            5
+            100
             """
         And a file named "tests/data.json" is created with the following contents
             """
@@ -207,20 +175,20 @@ Feature: Test Explorer - Re-run Failed Tests
         When I run failed tests
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
-        And the node number 3 has a status of "Progress"
-        And the node number 5 has a status of "Progress"
-        And the node number 6 has a status of "Progress"
-        And the node number 12 has a status of "Progress"
-        And the node number 14 has a status of "Progress"
-        And the node number 15 has a status of "Progress"
+        Then the node "TestFirstSuite" has a status of "Progress"
+        And the node "test_three_first_suite" has a status of "Progress"
+        And the node "test_two_first_suite" has a status of "Progress"
+        And the node "TestThirdSuite" has a status of "Progress"
+        And the node "test_three_third_suite" has a status of "Progress"
+        And the node "test_two_third_suite" has a status of "Progress"
         And 6 nodes have a status of "Progress"
         When I stop running tests
         And I wait for tests to complete running
         Then the stop icon is not visible in the toolbar
-        And the node number 5 has a status of "Unknown"
-        And the node number 6 has a status of "Unknown"
-        And the node number 14 has a status of "Unknown"
-        And the node number 15 has a status of "Unknown"
+        And the node "test_three_first_suite" has a status of "Unknown"
+        And the node "test_two_first_suite" has a status of "Unknown"
+        And the node "test_three_third_suite" has a status of "Unknown"
+        And the node "test_two_third_suite" has a status of "Unknown"
 
 
     Scenario: We are able to stop tests after re-running failed tests (pytest)
@@ -245,20 +213,19 @@ Feature: Test Explorer - Re-run Failed Tests
         And 15 nodes have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node number 1 has a status of "Fail"
-        And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
-        And the node number 6 has a status of "Fail"
-        And the node number 11 has a status of "Fail"
-        And the node number 12 has a status of "Fail"
-        And the node number 14 has a status of "Fail"
-        And the node number 15 has a status of "Fail"
+        Then the node "test_one.py" has a status of "Fail"
+        And the node "TestFirstSuite" has a status of "Fail"
+        And the node "test_three_first_suite" has a status of "Fail"
+        And the node "test_two_first_suite" has a status of "Fail"
+        And the node "test_two.py" has a status of "Fail"
+        And the node "TestThirdSuite" has a status of "Fail"
+        And the node "test_three_third_suite" has a status of "Fail"
+        And the node "test_two_third_suite" has a status of "Fail"
         And 6 nodes have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
             """
-            5
+            100
             """
         And a file named "tests/data.json" is created with the following contents
             """
@@ -267,21 +234,20 @@ Feature: Test Explorer - Re-run Failed Tests
         When I run failed tests
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
-        And the node number 3 has a status of "Progress"
-        And the node number 5 has a status of "Progress"
-        And the node number 6 has a status of "Progress"
-        And the node number 12 has a status of "Progress"
-        And the node number 14 has a status of "Progress"
-        And the node number 15 has a status of "Progress"
+        Then the node "TestFirstSuite" has a status of "Progress"
+        And the node "test_three_first_suite" has a status of "Progress"
+        And the node "test_two_first_suite" has a status of "Progress"
+        And the node "TestThirdSuite" has a status of "Progress"
+        And the node "test_three_third_suite" has a status of "Progress"
+        And the node "test_two_third_suite" has a status of "Progress"
         And 6 nodes have a status of "Progress"
         When I stop running tests
         And I wait for tests to complete running
         Then the stop icon is not visible in the toolbar
-        And the node number 5 has a status of "Unknown"
-        And the node number 6 has a status of "Unknown"
-        And the node number 14 has a status of "Unknown"
-        And the node number 15 has a status of "Unknown"
-
+        And the node "test_three_first_suite" has a status of "Unknown"
+        And the node "test_two_first_suite" has a status of "Unknown"
+        And the node "test_three_third_suite" has a status of "Unknown"
+        And the node "test_two_third_suite" has a status of "Unknown"
 
     Scenario: We are able to stop tests after re-running failed tests (nose)
         Given the package "nose" is installed
@@ -301,24 +267,23 @@ Feature: Test Explorer - Re-run Failed Tests
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node number 1 has a status of "Fail"
-        And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
-        And the node number 6 has a status of "Fail"
-        And the node number 11 has a status of "Fail"
-        And the node number 12 has a status of "Fail"
-        And the node number 14 has a status of "Fail"
-        And the node number 15 has a status of "Fail"
+        Then the node "tests/test_one.py" has a status of "Fail"
+        And the node "TestFirstSuite" has a status of "Fail"
+        And the node "test_three_first_suite" has a status of "Fail"
+        And the node "test_two_first_suite" has a status of "Fail"
+        And the node "tests/test_two.py" has a status of "Fail"
+        And the node "TestThirdSuite" has a status of "Fail"
+        And the node "test_three_third_suite" has a status of "Fail"
+        And the node "test_two_third_suite" has a status of "Fail"
         And 6 nodes have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
             """
-            5
+            100
             """
         And a file named "tests/data.json" is created with the following contents
             """
@@ -327,17 +292,17 @@ Feature: Test Explorer - Re-run Failed Tests
         When I run failed tests
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
-        And the node number 3 has a status of "Progress"
-        And the node number 5 has a status of "Progress"
-        And the node number 6 has a status of "Progress"
-        And the node number 12 has a status of "Progress"
-        And the node number 14 has a status of "Progress"
-        And the node number 15 has a status of "Progress"
+        Then the node "TestFirstSuite" has a status of "Progress"
+        And the node "test_three_first_suite" has a status of "Progress"
+        And the node "test_two_first_suite" has a status of "Progress"
+        And the node "TestThirdSuite" has a status of "Progress"
+        And the node "test_three_third_suite" has a status of "Progress"
+        And the node "test_two_third_suite" has a status of "Progress"
         And 6 nodes have a status of "Progress"
         When I stop running tests
         And I wait for tests to complete running
         Then the stop icon is not visible in the toolbar
-        And the node number 5 has a status of "Unknown"
-        And the node number 6 has a status of "Unknown"
-        And the node number 14 has a status of "Unknown"
-        And the node number 15 has a status of "Unknown"
+        And the node "test_three_first_suite" has a status of "Unknown"
+        And the node "test_two_first_suite" has a status of "Unknown"
+        And the node "test_three_third_suite" has a status of "Unknown"
+        And the node "test_two_third_suite" has a status of "Unknown"

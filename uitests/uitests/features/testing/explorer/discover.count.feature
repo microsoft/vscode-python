@@ -11,7 +11,7 @@ Feature: Test Explorer
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
+        Then there are 14 nodes in the tree
 
     Scenario: Explorer will be displayed when tests are discovered (pytest)
         Given the package "pytest" is installed
@@ -35,4 +35,4 @@ Feature: Test Explorer
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
+        Then there are 14 nodes in the tree

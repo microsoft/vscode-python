@@ -3,9 +3,11 @@
 
 import time
 
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
+import uitests.tools
 import uitests.vscode.core
 
 
@@ -72,6 +74,18 @@ def get_node(context, number):
         f"div[id='workbench.view.extension.test'] .monaco-tree-row:nth-child({number})"
     )
     return uitests.vscode.core.wait_for_elements(context.driver, selector)
+
+
+def get_node_number(context, text):
+    nodes = _get_node_labels(context)
+    return nodes.index(text) + 1
+
+
+@uitests.tools.retry(StaleElementReferenceException)
+def _get_node_labels(context):
+    selector = "div[id='workbench.view.extension.test'] .monaco-tree-row .monaco-icon-label .label-name span span"
+    elements = context.driver.find_elements_by_css_selector(selector)
+    return [element.text for element in elements]
 
 
 def _select_node(context, number):

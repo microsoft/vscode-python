@@ -15,8 +15,8 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
         When I run the test node number 5
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
@@ -25,7 +25,6 @@ Feature: Test Explorer Discovering icons and stop discovery
         When I wait for tests to complete running
         Then the node number 1 has a status of "Success"
         And the node number 2 has a status of "Success"
-        And the node number 3 has a status of "Success"
         And the node number 5 has a status of "Success"
         And 11 nodes have a status of "Unknown"
 
@@ -44,20 +43,19 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
-        When I run the test node number 5
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
+        When I run the test node number 4
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
-        And the node number 5 has a status of "Progress"
+        And the node number 4 has a status of "Progress"
         And 1 node has a status of "Progress"
         When I wait for tests to complete running
         Then the node number 1 has a status of "Success"
         And the node number 2 has a status of "Success"
         And the node number 3 has a status of "Success"
-        And the node number 5 has a status of "Success"
+        And the node number 4 has a status of "Success"
         And 11 nodes have a status of "Unknown"
-
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a success status (nose)
         Given the package "nose" is installed
@@ -73,8 +71,8 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
         When I run the test node number 5
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
@@ -83,7 +81,6 @@ Feature: Test Explorer Discovering icons and stop discovery
         When I wait for tests to complete running
         Then the node number 1 has a status of "Success"
         And the node number 2 has a status of "Success"
-        And the node number 3 has a status of "Success"
         And the node number 5 has a status of "Success"
         And 11 nodes have a status of "Unknown"
 
@@ -105,18 +102,17 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
-        When I run the test node number 5
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
+        When I run the test node number 4
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
-        And the node number 5 has a status of "Progress"
+        And the node number 4 has a status of "Progress"
         And 1 node has a status of "Progress"
         When I wait for tests to complete running
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
-        And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
+        And the node number 4 has a status of "Fail"
         And 11 nodes have a status of "Unknown"
 
     Scenario: When running tests, the nodes will have the progress icon and when completed will have a error status (pytest)
@@ -169,9 +165,9 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Unknown"
-        When I run the test node number 5
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Unknown"
+        When I run the test node number 4
         And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
         And the node number 5 has a status of "Progress"
@@ -180,7 +176,6 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the node number 1 has a status of "Fail"
         And the node number 2 has a status of "Fail"
         And the node number 3 has a status of "Fail"
-        And the node number 5 has a status of "Fail"
         And 11 nodes have a status of "Unknown"
 
     Scenario: When running tests, the nodes will have the progress icon and when stopped will have an unknown status (unitest)
@@ -192,8 +187,8 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Success"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Success"
         When the file "tests/test_running_delay" has the following content
             """
             5
@@ -206,9 +201,8 @@ Feature: Test Explorer Discovering icons and stop discovery
         When I stop running tests
         Then the node number 1 has a status of "Success"
         And the node number 2 has a status of "Success"
-        And the node number 3 has a status of "Success"
-        And the node number 5 has a status of "Unknown"
-        And 14 nodes have a status of "Success"
+        And the node number 5 has a status of "Success"
+        And 11 nodes have a status of "Unknown"
 
     Scenario: When running tests, the nodes will have the progress icon and when stopped will have an unknown status (pytest)
         Given the package "pytest" is installed
@@ -235,8 +229,8 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the node number 1 has a status of "Success"
         And the node number 2 has a status of "Success"
         And the node number 3 has a status of "Success"
-        And the node number 5 has a status of "Unknown"
-        And 14 nodes have a status of "Success"
+        And the node number 5 has a status of "Success"
+        And 11 nodes have a status of "Unknown"
 
     Scenario: When running tests, the nodes will have the progress icon and when stopped will have an unknown status (nose)
         Given the package "nose" is installed
@@ -248,8 +242,8 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
-        And 15 nodes have a status of "Success"
+        Then there are 14 nodes in the tree
+        And 14 nodes have a status of "Success"
         When the file "tests/test_running_delay" has the following content
             """
             5
@@ -262,6 +256,5 @@ Feature: Test Explorer Discovering icons and stop discovery
         When I stop running tests
         Then the node number 1 has a status of "Success"
         And the node number 2 has a status of "Success"
-        And the node number 3 has a status of "Success"
         And the node number 5 has a status of "Unknown"
-        And 14 nodes have a status of "Success"
+        And 11 nodes have a status of "Success"

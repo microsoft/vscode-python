@@ -31,14 +31,32 @@ def run_node(context, number):
     uitests.vscode.testing.click_node_action_item(context, number, "Run")
 
 
+@behave.when('I run the test node "{label}"')
+def run_node_by_name(context, label):
+    number = uitests.vscode.testing.get_node_number(context, label)
+    run_node(context, number)
+
+
 @behave.when("I debug the test node number {number:Number}")
 def debug_node(context, number):
     uitests.vscode.testing.click_node_action_item(context, number, "Debug")
 
 
+@behave.when('I debug the test node "{label}"')
+def debug_node_by_name(context, label):
+    number = uitests.vscode.testing.get_node_number(context, label)
+    debug_node(context, number)
+
+
 @behave.when("I navigate to the code associated with test node number {number:Number}")
 def navigate_node(context, number):
     uitests.vscode.testing.click_node_action_item(context, number, "Open")
+
+
+@behave.when('I navigate to the code associated with test node "{label}"')
+def navigate_node_by_name(context, label):
+    number = uitests.vscode.testing.get_node_number(context, label)
+    navigate_node(context, number)
 
 
 @behave.then("there are {count:Number} nodes in the tree")
@@ -69,6 +87,12 @@ def click_node(context, number):
     uitests.vscode.testing.click_node(context, number)
 
 
+@behave.when('I click node "{label}"')
+def click_node_by_name(context, label):
+    number = uitests.vscode.testing.get_node_number(context, label)
+    click_node(context, number)
+
+
 @behave.then("all of the test tree nodes have an unknown icon")
 def all_unknown(context):
     icons = uitests.vscode.testing.get_node_icons(context)
@@ -82,6 +106,13 @@ def node_status(context, number, status):
     assert node_status_icon_mapping.get(status.upper(), "") in icon.get_attribute(
         "style"
     )
+
+
+@behave.then('the node "{label}" has a status of "{status}"')
+@uitests.tools.retry(AssertionError)
+def node_status_by_name(context, label, status):
+    number = uitests.vscode.testing.get_node_number(context, label)
+    node_status(context, number, status)
 
     # icon = uitests.vscode.testing.get_node_icon(context, number)
     # start_time = time.time()
@@ -129,13 +160,13 @@ def stop_icon_not_visible(context):
 
 @behave.then("the run failed tests icon is visible in the toolbar")
 @uitests.tools.retry(AssertionError)
-def stop_icon_not_visible(context):
+def fun_failed_icon_visible(context):
     uitests.vscode.testing.wait_for_run_failed_icon(context)
 
 
 @behave.then("the run failed tests icon is not visible in the toolbar")
 @uitests.tools.retry(AssertionError)
-def stop_icon_not_visible(context):
+def fun_failed_icon_not_visible(context):
     uitests.vscode.testing.wait_for_run_failed_hidden(context)
 
 

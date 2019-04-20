@@ -11,7 +11,7 @@ Feature: Test Explorer Discovering icons and stop discovery
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the test tree nodes
-        Then there are 15 nodes in the tree
+        Then there are 14 nodes in the tree
         # Now, add a delay for the discovery of the tests
         Given a file named "tests/test_discovery_delay" is created with the following contents
             """
