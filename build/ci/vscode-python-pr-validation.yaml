@@ -119,7 +119,7 @@ jobs:
           PythonVersion: "2.7"
           VMImageName: "macos-10.13"
           Tags: "--tags=smoke"
-
+      # Terminal.
       "Mac-Py3.7 Terminal":
           PythonVersion: "3.7"
           VMImageName: "macos-10.13"
@@ -139,6 +139,26 @@ jobs:
           PythonVersion: "2.7"
           VMImageName: "macos-10.13"
           Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
+      # Testing
+      "Mac-Py3.7 Testing":
+          PythonVersion: "3.7"
+          VMImageName: "macos-10.13"
+          Tags: "--tags=test"
+
+      "Mac-Py3.6 Testing":
+          PythonVersion: "3.6"
+          VMImageName: "macos-10.13"
+          Tags: "--tags=test"
+
+      "Mac-Py3.5 Testing":
+          PythonVersion: "3.5"
+          VMImageName: "macos-10.13"
+          Tags: "--tags=test"
+
+      "Mac-Py2.7 Testing":
+          PythonVersion: "2.7"
+          VMImageName: "macos-10.13"
+          Tags: "--tags=test"
 
   pool:
     vmImage: $(VMImageName)
