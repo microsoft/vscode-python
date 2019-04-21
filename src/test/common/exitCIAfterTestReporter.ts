@@ -42,8 +42,10 @@ function notifyCompleted(hasFailures: boolean) {
         return;
     }
     try {
+        const exitCode = hasFailures ? 1 : 0;
+        console.log(`Notify server of test completion with code ${exitCode}`);
         // If there are failures, send a code of 1 else 0.
-        client.write(hasFailures ? '1' : '0');
+        client.write(exitCode.toString());
         client.end();
         console.log('Notified server of test completion');
     } catch (ex) {
