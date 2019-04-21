@@ -8,45 +8,30 @@
 // The hack is to force it to die when tests are done, if this doesn't work we've got a bigger problem on our hands.
 
 // tslint:disable:no-var-requires no-require-imports no-any no-console no-unnecessary-class no-default-export
+import * as fs from 'fs-extra';
+import * as net from 'net';
+import * as path from 'path';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 const log = require('why-is-node-running');
 const mochaTests: any = require('mocha');
 const { EVENT_RUN_BEGIN, EVENT_RUN_END } = mochaTests.Runner.constants;
 
-/**
- * Exits Mocha when Mocha itself has finished execution, regardless of
- * what the tests or code under test is doing.
- * @param {number} code - Exit code; typically # of failures
- * @ignore
- * @private
- */
-const exitMocha = (code: number) => {
-    const clampedCode = Math.min(code, 255);
-    let draining = 0;
-
-    // Eagerly set the process's exit code in case stream.write doesn't
-    // execute its callback before the process terminates.
-    (process as any).exitCode = clampedCode;
-
-    // flush output for Node.js Windows pipe bug
-    // https://github.com/joyent/node/issues/6247 is just one bug example
-    // https://github.com/visionmedia/mocha/issues/333 has a good discussion
-    const done = () => {
-        // tslint:disable-next-line: no-increment-decrement
-        if (!draining--) {
-            process.exit(clampedCode);
-        }
-    };
-
-    const streams = [process.stdout, process.stderr];
-
-    streams.forEach(stream => {
-        // submit empty write request and wait for completion
-        draining += 1;
-        stream.write('', done);
+async function notifyCompleted(hasFailures: boolean): Promise<void> {
+    const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
+    if (!(await fs.pathExists(portFile))) {
+        return;
+    }
+    const port = parseInt(await fs.readFile(portFile, 'utf-8'), 10);
+    return new Promise(resolve => {
+        const client = new net.Socket();
+        client.connect({ port }, () => {
+            // If there are failures, send a code of 1 else 0.
+            client.write(hasFailures ? '1' : 0);
+            client.destroy();
+            resolve();
+        });
     });
-
-    done();
-};
+}
 
 class ExitReporter {
     constructor(runner: any) {
@@ -56,11 +41,14 @@ class ExitReporter {
             .once(EVENT_RUN_BEGIN, () => {
                 console.info('Start Exit Reporter for Mocha.');
             })
-            .once(EVENT_RUN_END, () => {
+            .once(EVENT_RUN_END, async () => {
                 process.stdout.cork();
                 console.info('End Exit Reporter for Mocha.');
                 process.stdout.write('If process does not die in 30s, then log and kill.');
                 process.stdout.uncork();
+
+                await notifyCompleted(stats.failures > 0);
+
                 // NodeJs generally waits for pending timeouts, however the process running Mocha
                 // No idea why it times, out. Once again, this is a hack.
                 // Solution (i.e. hack), lets add a timeout with a delay of 30 seconds,
@@ -75,8 +63,6 @@ class ExitReporter {
                     } catch (ex) {
                         // Do nothing.
                     }
-                    // Lets not wait for the procecss to die gracefully, just kill it.
-                    exitMocha(stats.failures === 0 ? 0 : 1);
                     try {
                         // Lets just close VSC, hopefully that'll be sufficient (more graceful).
                         const vscode = require('vscode');
