@@ -23,8 +23,10 @@ function end(exitCode: number) {
     }
     if (proc) {
         try {
+            const procToKill = proc;
+            proc = undefined;
             console.log('Killing VSC');
-            proc.kill();
+            procToKill.kill();
         } catch {
             noop();
         }
@@ -32,14 +34,17 @@ function end(exitCode: number) {
     if (server) {
         server.close();
     }
+    // Exit with required code.
     process.exit(exitCode);
 }
 
 async function startSocketServer() {
     return new Promise(resolve => {
         server = createServer(socket => {
-            socket.on('data', data => {
-                const code = parseInt(data.toString('utf8').substring(0, 1), 10);
+            socket.on('data', buffer => {
+                const data = buffer.toString('utf8');
+                console.log(`Exit code from Tests is ${data}`);
+                const code = parseInt(data.substring(0, 1), 10);
                 end(code);
             });
         });
