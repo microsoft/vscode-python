@@ -23,13 +23,18 @@ async function notifyCompleted(hasFailures: boolean): Promise<void> {
     }
     const port = parseInt(await fs.readFile(portFile, 'utf-8'), 10);
     return new Promise(resolve => {
-        const client = new net.Socket();
-        client.connect({ port }, () => {
-            // If there are failures, send a code of 1 else 0.
-            client.write(hasFailures ? '1' : 0);
-            client.destroy();
+        try {
+            const client = new net.Socket();
+            client.connect({ port }, () => {
+                // If there are failures, send a code of 1 else 0.
+                client.write(hasFailures ? '1' : 0);
+                client.destroy();
+                resolve();
+            });
+        } catch {
+            console.error('Failed to connect to socket server to notify completion of tests');
             resolve();
-        });
+        }
     });
 }
 
@@ -47,7 +52,7 @@ class ExitReporter {
                 process.stdout.write('If process does not die in 30s, then log and kill.');
                 process.stdout.uncork();
 
-                await notifyCompleted(stats.failures > 0);
+                await notifyCompleted(stats.failures > 0).catch(ex => console.error('Error in notifying completion of tests', ex));
 
                 // NodeJs generally waits for pending timeouts, however the process running Mocha
                 // No idea why it times, out. Once again, this is a hack.
