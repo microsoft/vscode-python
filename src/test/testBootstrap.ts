@@ -65,7 +65,7 @@ async function start() {
     await startSocketServer();
     const options: SpawnOptions = { cwd: process.cwd(), env: process.env, detached: true, stdio: 'inherit' };
     proc = spawn(process.execPath, [testFile], options);
-    proc.on('close', end);
+    proc.once('close', end);
 }
 
 start().catch(ex => console.error(ex));

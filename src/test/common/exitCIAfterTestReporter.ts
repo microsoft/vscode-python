@@ -12,11 +12,13 @@ import * as fs from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-const log = require('why-is-node-running');
+import { noop } from '../core';
+
+let client: net.Socket | undefined;
 const mochaTests: any = require('mocha');
 const { EVENT_RUN_BEGIN, EVENT_RUN_END } = mochaTests.Runner.constants;
 
-async function notifyCompleted(hasFailures: boolean): Promise<void> {
+async function connectToServer() {
     const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
     if (!(await fs.pathExists(portFile))) {
         return;
@@ -24,11 +26,8 @@ async function notifyCompleted(hasFailures: boolean): Promise<void> {
     const port = parseInt(await fs.readFile(portFile, 'utf-8'), 10);
     return new Promise(resolve => {
         try {
-            const client = new net.Socket();
+            client = new net.Socket();
             client.connect({ port }, () => {
-                // If there are failures, send a code of 1 else 0.
-                client.write(hasFailures ? '1' : 0);
-                client.destroy();
                 resolve();
             });
         } catch {
@@ -37,46 +36,33 @@ async function notifyCompleted(hasFailures: boolean): Promise<void> {
         }
     });
 }
+function notifyCompleted(hasFailures: boolean) {
+    if (!client || client.destroyed || !client.writable) {
+        console.error('No client to write from');
+        return;
+    }
+    try {
+        // If there are failures, send a code of 1 else 0.
+        client.write(hasFailures ? '1' : '0');
+        client.end();
+        console.log('Notified server of test completion');
+    } catch (ex) {
+        console.error('Socket client error', ex);
+    }
+}
 
 class ExitReporter {
     constructor(runner: any) {
         console.log('Initialize Exit Reporter for Mocha (PVSC).');
+        connectToServer().catch(noop);
         const stats = runner.stats;
         runner
             .once(EVENT_RUN_BEGIN, () => {
                 console.info('Start Exit Reporter for Mocha.');
             })
             .once(EVENT_RUN_END, async () => {
-                process.stdout.cork();
+                notifyCompleted(stats.failures > 0);
                 console.info('End Exit Reporter for Mocha.');
-                process.stdout.write('If process does not die in 30s, then log and kill.');
-                process.stdout.uncork();
-
-                await notifyCompleted(stats.failures > 0).catch(ex => console.error('Error in notifying completion of tests', ex));
-
-                // NodeJs generally waits for pending timeouts, however the process running Mocha
-                // No idea why it times, out. Once again, this is a hack.
-                // Solution (i.e. hack), lets add a timeout with a delay of 30 seconds,
-                // & if this process doesn't die, lets kill it.
-                function die() {
-                    process.stdout.cork();
-                    console.info('Exiting from custom PVSC Mocha Reporter.');
-                    process.stdout.write('If process does not die in 30s, then log and kill.');
-                    process.stdout.uncork();
-                    try {
-                        log();
-                    } catch (ex) {
-                        // Do nothing.
-                    }
-                    try {
-                        // Lets just close VSC, hopefully that'll be sufficient (more graceful).
-                        const vscode = require('vscode');
-                        vscode.commands.executeCommand('workbench.action.closeWindow');
-                    } catch (ex) {
-                        // Do nothing.
-                    }
-                }
-                die();
             });
     }
 }
