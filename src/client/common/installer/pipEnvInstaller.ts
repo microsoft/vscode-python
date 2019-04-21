@@ -31,8 +31,12 @@ export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller
         return interpreters && interpreters.length > 0;
     }
     protected async getExecutionInfo(moduleName: string, _resource?: Uri): Promise<ExecutionInfo> {
+        const args = ['install', moduleName, '--dev'];
+        if (moduleName === 'black') {
+            args.push('--pre');
+        };
         return {
-            args: ['install', moduleName, '--dev'],
+            args: args,
             execPath: pipenvName
         };
     }
