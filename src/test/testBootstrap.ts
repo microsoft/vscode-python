@@ -8,14 +8,14 @@ import * as fs from 'fs-extra';
 import { createServer, Server } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
-import { noop } from './core';
+import { noop, sleep } from './core';
 
 // tslint:disable:no-console
 
 const testFile = process.argv[2];
 let proc: ChildProcess | undefined;
 let server: Server | undefined;
-function end(exitCode: number) {
+async function end(exitCode: number) {
     if (exitCode === 0) {
         console.log('Exiting without errors');
     } else {
@@ -26,6 +26,8 @@ function end(exitCode: number) {
             const procToKill = proc;
             proc = undefined;
             console.log('Killing VSC');
+            // Wait for the std buffers to get flushed before killing.
+            await sleep(5_000);
             procToKill.kill();
         } catch {
             noop();
@@ -45,7 +47,7 @@ async function startSocketServer() {
                 const data = buffer.toString('utf8');
                 console.log(`Exit code from Tests is ${data}`);
                 const code = parseInt(data.substring(0, 1), 10);
-                end(code);
+                end(code).catch(noop);
             });
         });
 
