@@ -1,8 +1,8 @@
-name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
+name: "$(Year:yyyy).$(Month).0.$(BuildID)-pr"
 
 trigger:
-  branches:
-    include: ["master", "release", "pysmoke"]
+    branches:
+        include: ["master", "release", "pysmoke"]
 
 # PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
@@ -19,472 +19,456 @@ trigger:
 
 # Variables that are available for the entire pipeline.
 variables:
-  PythonVersion: '3.7'
-  NodeVersion: '10.5.0'
-  NpmVersion: 'latest'
-  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
-  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
+    PythonVersion: "3.7"
+    NodeVersion: "10.5.0"
+    NpmVersion: "latest"
+    MOCHA_FILE: "$(Build.ArtifactStagingDirectory)/test-junit.xml" # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
+    MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
 
 jobs:
-- job: Compile
-  variables:
-    Build: false
-  pool:
-    vmImage: "macos-10.13"
-  steps:
-    - template: templates/build_phases.yml
+    - job: Compile
+      variables:
+          Build: false
+      pool:
+          vmImage: "macos-10.13"
+      steps:
+          - template: templates/build_phases.yml
 
-- job: Build
-  variables:
-    Build: true
-  pool:
-    vmImage: "macos-10.13"
-  steps:
-    - template: templates/build_phases.yml
+    - job: Build
+      variables:
+          Build: true
+      pool:
+          vmImage: "macos-10.13"
+      steps:
+          - template: templates/build_phases.yml
 
-- job: TestUnit
+    - job: TestUnit
 
-  strategy:
-    matrix:
-      # Each member of this list must contain these values:
-        # VMImageName: '[name]' - the VM image to run the tests on.
-        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
-      # Each member of this list may contain these values:
-        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
-        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-      'Win-Py3.7 Unit':
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools'
-        NeedsPythonTestReqs: true
-      'Win-Py2.7 Unit':
-        PythonVersion: '2.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonUnitTests'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Single Workspace':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py2.7 Unit+Single':
-        PythonVersion: '2.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Single Workspace':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py2.7 Unit+Single':
-        PythonVersion: '2.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Functional':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
+      strategy:
+          matrix:
+              # Each member of this list must contain these values:
+              # VMImageName: '[name]' - the VM image to run the tests on.
+              # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+              # Each member of this list may contain these values:
+              # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+              # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+              # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+              # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+              # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+              # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+              "Win-Py3.7 Unit":
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools"
+                  NeedsPythonTestReqs: true
+              "Win-Py2.7 Unit":
+                  PythonVersion: "2.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "pythonUnitTests"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.7 Unit":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testUnitTests, pythonUnitTests, pythonInternalTools"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.7 Single Workspace":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Mac-Py2.7 Unit+Single":
+                  PythonVersion: "2.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testUnitTests, pythonUnitTests, testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.7 Unit":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testUnitTests, pythonUnitTests, pythonInternalTools"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.7 Single Workspace":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py2.7 Unit+Single":
+                  PythonVersion: "2.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testUnitTests, pythonUnitTests, testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.7 Functional":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
 
-  pool:
-    vmImage: $(VMImageName)
+      pool:
+          vmImage: $(VMImageName)
 
-  steps:
-    - template: templates/test_phases.yml
+      steps:
+          - template: templates/test_phases.yml
 
-- job: Smokes
-  dependsOn:
-    - Build
-  strategy:
-    matrix:
-      # Smoke tests on min and latest versions of Python.
-      "Mac-Py3.7":
-          PythonVersion: "3.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=smokes"
-  pool:
-    vmImage: $(VMImageName)
+    - job: Smoke
+      dependsOn:
+          - Build
+      strategy:
+          matrix:
+              # Smoke tests on min and latest versions of Python.
+              "Mac-Py3.7":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=smoke"
 
-  steps:
-    - template: templates/uitest_phases.yml
+              "Mac-Py2.7":
+                  PythonVersion: "2.7"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=smoke"
+              # Terminal.
+              "Mac-Py3.7 Terminal":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
 
-- job: Smoke
-  dependsOn:
-    - Build
-  strategy:
-    matrix:
-      # Smoke tests on min and latest versions of Python.
-      "Mac-Py3.7":
-          PythonVersion: "3.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=smoke"
+              "Mac-Py3.6 Terminal":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
 
-      "Mac-Py2.7":
-          PythonVersion: "2.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=smoke"
-      # Terminal.
-      "Mac-Py3.7 Terminal":
-          PythonVersion: "3.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
+              "Mac-Py3.5 Terminal":
+                  PythonVersion: "3.5"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
 
-      "Mac-Py3.6 Terminal":
-          PythonVersion: "3.6"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
+              "Mac-Py2.7 Terminal":
+                  PythonVersion: "2.7"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
+              # Testing
+              "Mac-Py3.7 Testing":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=test"
 
-      "Mac-Py3.5 Terminal":
-          PythonVersion: "3.5"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
+              "Mac-Py3.6 Testing":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=test"
 
-      "Mac-Py2.7 Terminal":
-          PythonVersion: "2.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=terminal --tags=~pipenv --tags=~venv"
-      # Testing
-      "Mac-Py3.7 Testing":
-          PythonVersion: "3.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=test"
+              "Mac-Py3.5 Testing":
+                  PythonVersion: "3.5"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=test"
 
-      "Mac-Py3.6 Testing":
-          PythonVersion: "3.6"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=test"
+              "Mac-Py2.7 Testing":
+                  PythonVersion: "2.7"
+                  VMImageName: "macos-10.13"
+                  Tags: "--tags=test"
 
-      "Mac-Py3.5 Testing":
-          PythonVersion: "3.5"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=test"
+      pool:
+          vmImage: $(VMImageName)
 
-      "Mac-Py2.7 Testing":
-          PythonVersion: "2.7"
-          VMImageName: "macos-10.13"
-          Tags: "--tags=test"
+      steps:
+          - template: templates/uitest_phases.yml
 
-  pool:
-    vmImage: $(VMImageName)
+    - job: Test
+      # These are the tests that must pass no matter what for VSIX to be uploaded.
+      strategy:
+          matrix:
+              # Unit Tests
+              "Win-Py3.7 Unit":
+                  PythonVersion: "3.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testUnitTests, pythonUnitTests, pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Linux-Py3.7 Unit":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testUnitTests, pythonUnitTests, pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Mac-Py3.7 Unit":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testUnitTests, pythonUnitTests, pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Win-Py3.6 Unit":
+                  PythonVersion: "3.6"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "pythonUnitTests, pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Linux-Py3.6 Unit":
+                  PythonVersion: "3.6"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "pythonUnitTests, pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Mac-Py3.6 Unit":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "pythonUnitTests, pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              # IPython tests
+              "Win-Py3.7 IPython":
+                  PythonVersion: "3.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Linux-Py3.7 IPython":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Mac-Py3.7 IPython":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Win-Py3.6 IPython":
+                  PythonVersion: "3.6"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Linux-Py3.6 IPython":
+                  PythonVersion: "3.6"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+              "Mac-Py3.6 IPython":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "pythonIPythonTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
 
-  steps:
-    - template: templates/uitest_phases.yml
+      pool:
+          vmImage: $(VMImageName)
 
-- job: Test
-  # These are the tests that must pass no matter what for VSIX to be uploaded.
-  strategy:
-    matrix:
-      # Unit Tests
-      'Win-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Linux-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Mac-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Win-Py3.6 Unit':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonUnitTests, pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Linux-Py3.6 Unit':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'pythonUnitTests, pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Mac-Py3.6 Unit':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'pythonUnitTests, pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      # IPython tests
-      'Win-Py3.7 IPython':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Linux-Py3.7 IPython':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Mac-Py3.7 IPython':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Win-Py3.6 IPython':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Linux-Py3.6 IPython':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-      'Mac-Py3.6 IPython':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'pythonIPythonTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
+      steps:
+          - template: templates/test_phases.yml
 
-  pool:
-    vmImage: $(VMImageName)
+    - job: Test_Flaky
+      # Some of these are tests that are known to be flaky.
+      strategy:
+          matrix:
+              # Each member of this list must contain these values:
+              # VMImageName: '[name]' - the VM image to run the tests on.
+              # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+              # Each member of this list may contain these values:
+              # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+              # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+              # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
+              # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+              # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+              # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+              # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
 
-  steps:
-    - template: templates/test_phases.yml
+              "Win-Py3.7 Venv":
+                  VMImageName: "vs2017-win2016"
+                  PythonVersion: "3.7"
+                  TestsToRun: "venvTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+                  # This is for the venvTests to use, not needed if you don't run venv tests...
+                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
+              "Linux-Py3.7 Venv":
+                  VMImageName: "ubuntu-16.04"
+                  PythonVersion: "3.7"
+                  TestsToRun: "venvTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
+              "Mac-Py3.7 Venv":
+                  VMImageName: "macos-10.13"
+                  PythonVersion: "3.7"
+                  TestsToRun: "venvTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
+              "Win-Py3.6 Venv":
+                  VMImageName: "vs2017-win2016"
+                  PythonVersion: "3.6"
+                  TestsToRun: "venvTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
+              "Linux-Py3.6 Venv":
+                  VMImageName: "ubuntu-16.04"
+                  PythonVersion: "3.6"
+                  TestsToRun: "venvTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
+              "Mac-Py3.6 Venv":
+                  VMImageName: "macos-10.13"
+                  PythonVersion: "3.6"
+                  TestsToRun: "venvTests"
+                  NeedsPythonTestReqs: true
+                  NeedsIPythonReqs: true
+                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
 
-- job: Test_Flaky
-  # Some of these are tests that are known to be flaky.
-  strategy:
-    matrix:
-      # Each member of this list must contain these values:
-        # VMImageName: '[name]' - the VM image to run the tests on.
-        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
-      # Each member of this list may contain these values:
-        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
-        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-        # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
-        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+              # SingleWorkspace Tests
+              "Win-Py3.7 Single":
+                  PythonVersion: "3.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.7 Single":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.7 Single":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Win-Py3.6 Single":
+                  PythonVersion: "3.6"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.6 Single":
+                  PythonVersion: "3.6"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.6 Single":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testSingleWorkspace"
+                  NeedsPythonTestReqs: true
 
-      'Win-Py3.7 Venv':
-        VMImageName: 'vs2017-win2016'
-        PythonVersion: '3.7'
-        TestsToRun: 'venvTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-        # This is for the venvTests to use, not needed if you don't run venv tests...
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-      'Linux-Py3.7 Venv':
-        VMImageName: 'ubuntu-16.04'
-        PythonVersion: '3.7'
-        TestsToRun: 'venvTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-      'Mac-Py3.7 Venv':
-        VMImageName: 'macos-10.13'
-        PythonVersion: '3.7'
-        TestsToRun: 'venvTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-      'Win-Py3.6 Venv':
-        VMImageName: 'vs2017-win2016'
-        PythonVersion: '3.6'
-        TestsToRun: 'venvTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-      'Linux-Py3.6 Venv':
-        VMImageName: 'ubuntu-16.04'
-        PythonVersion: '3.6'
-        TestsToRun: 'venvTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-      'Mac-Py3.6 Venv':
-        VMImageName: 'macos-10.13'
-        PythonVersion: '3.6'
-        TestsToRun: 'venvTests'
-        NeedsPythonTestReqs: true
-        NeedsIPythonReqs: true
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+              # MultiWorkspace Tests
+              "Win-Py3.7 Multi":
+                  PythonVersion: "3.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testMultiWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.7 Multi":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testMultiWorkspace"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.7 Multi":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testMultiWorkspace"
+                  NeedsPythonTestReqs: true
+              "Win-Py3.6 Multi":
+                  PythonVersion: "3.6"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testMultiWorkspace"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.6 Multi":
+                  PythonVersion: "3.6"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testMultiWorkspace"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.6 Multi":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testMultiWorkspace"
+                  NeedsPythonTestReqs: true
 
-      # SingleWorkspace Tests
-      'Win-Py3.7 Single':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Single':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Single':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Win-Py3.6 Single':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.6 Single':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.6 Single':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
+              # Debugger integration Tests
+              "Win-Py3.7 Debugger":
+                  PythonVersion: "3.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testDebugger"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.7 Debugger":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testDebugger"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.7 Debugger":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testDebugger"
+                  NeedsPythonTestReqs: true
+              "Win-Py3.6 Debugger":
+                  PythonVersion: "3.6"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testDebugger"
+                  NeedsPythonTestReqs: true
+              "Linux-Py3.6 Debugger":
+                  PythonVersion: "3.6"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testDebugger"
+                  NeedsPythonTestReqs: true
+              "Mac-Py3.6 Debugger":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testDebugger"
+                  NeedsPythonTestReqs: true
 
-      # MultiWorkspace Tests
-      'Win-Py3.7 Multi':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Multi':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Multi':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-      'Win-Py3.6 Multi':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.6 Multi':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.6 Multi':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testMultiWorkspace'
-        NeedsPythonTestReqs: true
+              # Functional tests (not mocked Jupyter)
+              "Windows-Py3.7 Functional":
+                  PythonVersion: "3.7"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
+                  # This tells the functional tests to not mock out Jupyter...
+                  VSCODE_PYTHON_ROLLING: true
+              "Linux-Py3.7 Functional":
+                  PythonVersion: "3.7"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
+                  VSCODE_PYTHON_ROLLING: true
+              "Mac-Py3.7 Functional":
+                  PythonVersion: "3.7"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
+                  VSCODE_PYTHON_ROLLING: true
+              "Windows-Py3.6 Functional":
+                  PythonVersion: "3.6"
+                  VMImageName: "vs2017-win2016"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
+                  VSCODE_PYTHON_ROLLING: true
+              "Linux-Py3.6 Functional":
+                  PythonVersion: "3.6"
+                  VMImageName: "ubuntu-16.04"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
+                  VSCODE_PYTHON_ROLLING: true
+              "Mac-Py3.6 Functional":
+                  PythonVersion: "3.6"
+                  VMImageName: "macos-10.13"
+                  TestsToRun: "testfunctional"
+                  NeedsPythonTestReqs: true
+                  NeedsPythonFunctionalReqs: true
+                  VSCODE_PYTHON_ROLLING: true
 
-      # Debugger integration Tests
-      'Win-Py3.7 Debugger':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Debugger':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Debugger':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
-      'Win-Py3.6 Debugger':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.6 Debugger':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.6 Debugger':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
+      pool:
+          vmImage: $(VMImageName)
 
-      # Functional tests (not mocked Jupyter)
-      'Windows-Py3.7 Functional':
-        PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
-        # This tells the functional tests to not mock out Jupyter...
-        VSCODE_PYTHON_ROLLING: true
-      'Linux-Py3.7 Functional':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
-      'Mac-Py3.7 Functional':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
-      'Windows-Py3.6 Functional':
-        PythonVersion: '3.6'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
-      'Linux-Py3.6 Functional':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
-      'Mac-Py3.6 Functional':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
+      steps:
+          - template: templates/test_phases.yml
 
-  pool:
-    vmImage: $(VMImageName)
-
-  steps:
-    - template: templates/test_phases.yml
-
-- job: Upload
-  dependsOn:
-    - Compile
-    - Build
-    - Test
-    - Smoke
-  pool:
-    vmImage: "macos-10.13"
-  steps:
-    - template: templates/upload.yml
+    - job: Upload
+      dependsOn:
+          - Compile
+          - Build
+          - Test
+          - Smoke
+      pool:
+          vmImage: "macos-10.13"
+      steps:
+          - template: templates/upload.yml
