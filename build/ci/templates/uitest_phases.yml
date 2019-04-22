@@ -69,3 +69,5 @@ steps:
     - bash: npm run testSmoke
       displayName: "Run Smoke Tests"
       condition: succeeded()
+      env:
+        DISPLAY: :10
