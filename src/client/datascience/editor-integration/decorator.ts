@@ -76,7 +76,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
     private computeDecorations() {
         this.activeCellTop = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('peekView.border'),
-            borderWidth: '1px 1px 0px 1px',
+            borderWidth: '2px 0px 0px 0px',
             borderStyle: 'solid',
             isWholeLine: true
         });
@@ -88,7 +88,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
         });
         this.activeCellBottom = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('peekView.border'),
-            borderWidth: '0px 1px 1px 1px',
+            borderWidth: '0px 0px 1px 0px',
             borderStyle: 'solid',
             isWholeLine: true
         });
@@ -114,7 +114,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
                 const rangeBottom = currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
                 const rangeMiddle = currentRange.length > 0 && currentRange[0].start !== currentRange[0].end ? [new vscode.Range(currentRange[0].start.line + 1, 0, currentRange[0].end.line - 1, 0)] : [];
                 editor.setDecorations(this.activeCellTop, rangeTop);
-                editor.setDecorations(this.activeCellMiddle, rangeMiddle);
+                //editor.setDecorations(this.activeCellMiddle, rangeMiddle);
                 editor.setDecorations(this.activeCellBottom, rangeBottom);
 
                 // Find the start range for the rest
