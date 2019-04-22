@@ -52,12 +52,14 @@ async function startSocketServer() {
         });
 
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
+            const port = server!.address().port;
+            console.log(`Test server listening on port ${port}`);
             const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
             if (await fs.pathExists(portFile)) {
                 await fs.unlink(portFile);
             }
 
-            await fs.writeFile(portFile, server!.address().port.toString());
+            await fs.writeFile(portFile, port.toString());
             resolve();
         });
     });

@@ -24,10 +24,12 @@ async function connectToServer() {
         return;
     }
     const port = parseInt(await fs.readFile(portFile, 'utf-8'), 10);
+    console.log(`Need to connect to port ${port}`);
     return new Promise(resolve => {
         try {
             client = new net.Socket();
             client.connect({ port }, () => {
+                console.log(`Connected to port ${port}`);
                 resolve();
             });
         } catch {
