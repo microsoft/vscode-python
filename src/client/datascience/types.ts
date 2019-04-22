@@ -152,9 +152,9 @@ export const IHistoryCompletionProvider = Symbol('IHistoryCompletionProvider');
 
 export interface IHistoryCompletionProvider extends IDisposable {
     startup(resource?: Uri) : Promise<void>;
-    provideCompletionItems() : Promise<CompletionItem[]>;
+    provideCompletionItems(line: number, ch: number, token: CancellationToken) : Promise<CompletionItem[]>;
     addCell(code: string): Promise<void>;
-    editCell(newCode: string, oldCode: string): Promise<void>;
+    editCell(from: Position, to: Position, newCode: string, removedCode?: string): Promise<void>;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
