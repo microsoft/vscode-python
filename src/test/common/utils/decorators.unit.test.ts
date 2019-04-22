@@ -15,11 +15,11 @@ import { sleep } from '../../core';
 // tslint:disable:no-any max-func-body-length no-unnecessary-class
 suite('Common Utils - Decorators', () => {
 
-    setup(function () {
-        // This test is flakey. 
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
-    })
+    // setup(function () {
+    //     // This test is flakey.
+    //     // tslint:disable-next-line:no-invalid-this
+    //     this.skip();
+    // });
 
     teardown(() => {
         clearCache();
@@ -200,7 +200,7 @@ suite('Common Utils - Decorators', () => {
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
-    test('Debounce: one async call and ensure exceptions are re-thrown', async () => {
+    test('xDebounce: one async call and ensure exceptions are re-thrown', async () => {
         const wait = 100;
         // tslint:disable-next-line:max-classes-per-file
         class One extends Base {
