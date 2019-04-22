@@ -37,6 +37,12 @@ steps:
       condition: and(succeeded(), eq(variables['system.debug'], 'true'))
       displayName: Show Dependency Versions
 
+    - task: Gulp@0
+      displayName: "Compile"
+      inputs:
+          targets: "prePublishNonBundle"
+      condition: succeeded()
+
     # https://code.visualstudio.com/api/working-with-extensions/continuous-integration#azure-pipelines
     - bash: |
           set -e
