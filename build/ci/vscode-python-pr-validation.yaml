@@ -300,13 +300,14 @@ jobs:
                   NeedsPythonTestReqs: true
                   NeedsIPythonReqs: true
                   PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
-              "Linux-Py3.6 Venv":
-                  VMImageName: "ubuntu-16.04"
-                  PythonVersion: "3.6"
-                  TestsToRun: "venvTests"
-                  NeedsPythonTestReqs: true
-                  NeedsIPythonReqs: true
-                  PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
+                  # Flaky
+              #   "Linux-Py3.6 Venv":
+              #       VMImageName: "ubuntu-16.04"
+              #       PythonVersion: "3.6"
+              #       TestsToRun: "venvTests"
+              #       NeedsPythonTestReqs: true
+              #       NeedsIPythonReqs: true
+              #       PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
               "Mac-Py3.6 Venv":
                   VMImageName: "macos-10.13"
                   PythonVersion: "3.6"
