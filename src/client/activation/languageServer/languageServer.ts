@@ -20,10 +20,9 @@ import { ProgressReporting } from './progress';
 
 @injectable()
 export class LanguageServer implements ILanguageServer {
+    public languageClient: LanguageClient | undefined;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
-
-    private languageClient?: LanguageClient;
     private extensionLoadedArgs = new Set<{}>();
 
     constructor(
@@ -54,21 +53,25 @@ export class LanguageServer implements ILanguageServer {
     @traceDecorators.error('Failed to start language server')
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_ENABLED, undefined, true)
     public async start(resource: Resource, options: LanguageClientOptions): Promise<void> {
-        this.languageClient = await this.factory.createLanguageClient(resource, options);
-        this.disposables.push(this.languageClient!.start());
-        await this.serverReady();
-        const progressReporting = new ProgressReporting(this.languageClient!);
-        this.disposables.push(progressReporting);
+        if (!this.languageClient) {
+            this.languageClient = await this.factory.createLanguageClient(resource, options);
+            this.disposables.push(this.languageClient!.start());
+            await this.serverReady();
+            const progressReporting = new ProgressReporting(this.languageClient!);
+            this.disposables.push(progressReporting);
 
-        const settings = this.configurationService.getSettings(resource);
-        if (settings.downloadLanguageServer) {
-            this.languageClient.onTelemetry(telemetryEvent => {
-                const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-                sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
-            });
+            const settings = this.configurationService.getSettings(resource);
+            if (settings.downloadLanguageServer) {
+                this.languageClient.onTelemetry(telemetryEvent => {
+                    const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
+                });
+            }
+
+            await this.registerTestServices();
+        } else {
+            await this.startupCompleted.promise;
         }
-
-        await this.registerTestServices();
     }
     @traceDecorators.error('Failed to load Language Server extension')
     public loadExtension(args?: {}) {

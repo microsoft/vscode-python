@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor, CompletionItem, Uri } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -146,6 +146,15 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
+}
+
+export const IHistoryCompletionProvider = Symbol('IHistoryCompletionProvider');
+
+export interface IHistoryCompletionProvider extends IDisposable {
+    startup(resource?: Uri) : Promise<void>;
+    provideCompletionItems() : Promise<CompletionItem[]>;
+    addCell(code: string): Promise<void>;
+    editCell(newCode: string, oldCode: string): Promise<void>;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview

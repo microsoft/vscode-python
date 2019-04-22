@@ -108,7 +108,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                                 Enter: this.enter,
                                 'Shift-Enter': this.shiftEnter,
                                 Up: this.arrowUp,
-                                'Ctrl-Space': 'autocomplete'
+                                'Ctrl-Space': 'autocomplete',
                             },
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
@@ -116,7 +116,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                             readOnly: readOnly ? true : false,
                             lineWrapping: true,
                             hintOptions: { hint: this.provideHint }
-                            // onKeyEvent could be used to provide autocomplete on say '.' for key up
                         }
                     }
                     ref={this.updateCodeMirror}
@@ -313,8 +312,11 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return CodeMirror.Pass;
     }
 
-    private onChange = (_newValue: string, _change: CodeMirror.EditorChange) => {
+    private onChange = (_newValue: string, change: CodeMirror.EditorChange) => {
         this.setState({allowWatermark: false});
+        if (change.text.length === 1 && change.text[0] === '.' && this.codeMirror) {
+            this.codeMirror.execCommand('autocomplete');
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -331,5 +333,4 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
         return null;
     }
-
 }
