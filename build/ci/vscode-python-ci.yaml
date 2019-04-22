@@ -21,6 +21,56 @@ variables:
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
 
 jobs:
+- job: Compile
+  variables:
+    Build: false
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/build_phases.yml
+
+- job: Build
+  variables:
+    Build: true
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/build_phases.yml
+
+
+- job: 'Smoke'
+  dependsOn:
+    - Compile
+    - Build
+
+  strategy:
+    matrix:
+      'Linux-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Linux-Py2.7':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Mac-Py2.7':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+
+  pool:
+    vmImage: $(VMImageName)
+
+  steps:
+    - template: templates/uitest_phases.yml
 
 - job: 'CI'
 
