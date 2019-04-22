@@ -14,7 +14,6 @@ import { generateCellRanges } from '../cellFactory';
 export class Decorator implements IExtensionActivationService, IDisposable {
 
     private activeCellTop: vscode.TextEditorDecorationType | undefined;
-    private activeCellMiddle: vscode.TextEditorDecorationType | undefined;
     private activeCellBottom: vscode.TextEditorDecorationType | undefined;
     private cellSeparatorType: vscode.TextEditorDecorationType | undefined;
     private timer: NodeJS.Timer | undefined;
@@ -80,12 +79,6 @@ export class Decorator implements IExtensionActivationService, IDisposable {
             borderStyle: 'solid',
             isWholeLine: true
         });
-        this.activeCellMiddle = this.documentManager.createTextEditorDecorationType({
-            borderColor: new vscode.ThemeColor('peekView.border'),
-            borderWidth: '0px 1px 0px 1px',
-            borderStyle: 'solid',
-            isWholeLine: true
-        });
         this.activeCellBottom = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('peekView.border'),
             borderWidth: '0px 0px 1px 0px',
@@ -102,7 +95,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
 
     private update(editor: vscode.TextEditor | undefined) {
         if (editor && editor.document && editor.document.languageId === PYTHON_LANGUAGE &&
-            this.activeCellTop && this.cellSeparatorType && this.activeCellBottom && this.activeCellMiddle) {
+            this.activeCellTop && this.cellSeparatorType && this.activeCellBottom) {
             const settings = this.configuration.getSettings().datascience;
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
@@ -112,9 +105,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
                 const currentRange = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));
                 const rangeTop = currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
                 const rangeBottom = currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
-                const rangeMiddle = currentRange.length > 0 && currentRange[0].start !== currentRange[0].end ? [new vscode.Range(currentRange[0].start.line + 1, 0, currentRange[0].end.line - 1, 0)] : [];
                 editor.setDecorations(this.activeCellTop, rangeTop);
-                //editor.setDecorations(this.activeCellMiddle, rangeMiddle);
                 editor.setDecorations(this.activeCellBottom, rangeBottom);
 
                 // Find the start range for the rest
@@ -122,7 +113,6 @@ export class Decorator implements IExtensionActivationService, IDisposable {
                 editor.setDecorations(this.cellSeparatorType, startRanges);
             } else {
                 editor.setDecorations(this.activeCellTop, []);
-                editor.setDecorations(this.activeCellMiddle, []);
                 editor.setDecorations(this.activeCellBottom, []);
                 editor.setDecorations(this.cellSeparatorType, []);
             }
