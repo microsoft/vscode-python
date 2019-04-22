@@ -32,8 +32,20 @@ Final solution:
 */
 
 const testFile = process.argv[2];
+const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
+
 let proc: ChildProcess | undefined;
 let server: Server | undefined;
+
+async function deletePortFile() {
+    try {
+        if (await fs.pathExists(portFile)) {
+            await fs.unlink(portFile);
+        }
+    } catch {
+        noop();
+    }
+}
 async function end(exitCode: number) {
     if (exitCode === 0) {
         console.log('Exiting without errors');
@@ -45,6 +57,7 @@ async function end(exitCode: number) {
             const procToKill = proc;
             proc = undefined;
             console.log('Killing VSC');
+            await deletePortFile();
             // Wait for the std buffers to get flushed before killing.
             await sleep(5_000);
             procToKill.kill();
@@ -73,11 +86,7 @@ async function startSocketServer() {
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
             const port = server!.address().port;
             console.log(`Test server listening on port ${port}`);
-            const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
-            if (await fs.pathExists(portFile)) {
-                await fs.unlink(portFile);
-            }
-
+            await deletePortFile();
             await fs.writeFile(portFile, port.toString());
             resolve();
         });
