@@ -279,7 +279,7 @@ gulp.task('installPythonLibs', async () => {
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
-    return gulp.src('python*.vsix')
+    return gulp.src('*python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
             account: process.env.AZURE_STORAGE_ACCOUNT,
@@ -289,7 +289,7 @@ function uploadExtension(uploadBlobName) {
 }
 
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
-gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH}.vsix`));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
