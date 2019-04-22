@@ -19,7 +19,7 @@ async function end(exitCode: number) {
     if (exitCode === 0) {
         console.log('Exiting without errors');
     } else {
-        console.error('Existing with test failures');
+        console.error('Exiting with test failures');
     }
     if (proc) {
         try {
