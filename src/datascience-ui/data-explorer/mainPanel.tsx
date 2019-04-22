@@ -366,8 +366,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // or it will take too long
         const comparer = isStringColumn ?
             (a: any, b: any): number => {
-                const aVal = a[sortColumn] as string;
-                const bVal = b[sortColumn] as string;
+                const aVal = a[sortColumn].toString();
+                const bVal = b[sortColumn].toString();
                 const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
                 const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
                 const result = aStr > bStr ? -1 : 1;

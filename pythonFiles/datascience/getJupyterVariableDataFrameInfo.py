@@ -23,8 +23,9 @@ else:
     _VSCODE_columnTypes = []
     _VSCODE_columnNames = []
     if _VSCODE_targetVariable['type'] == 'list':
-        _VSCODE_columnTypes = ['string'] # Might be able to be more specific here?
-        _VSCODE_columnNames = ['_VSCode_JupyterValuesColumn']
+        _VSCODE_evalResult = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
+        _VSCODE_columnTypes = list(_VSCODE_evalResult.dtypes)
+        _VSCODE_columnNames = list(_VSCODE_evalResult)
     elif _VSCODE_targetVariable['type'] == 'Series':
         _VSCODE_evalResult = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
         _VSCODE_columnTypes = list(_VSCODE_evalResult.dtypes)
