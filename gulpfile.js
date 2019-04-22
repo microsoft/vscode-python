@@ -292,7 +292,7 @@ function uploadExtension(uploadBlobName) {
 }
 
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
-gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH}.vsix`));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
