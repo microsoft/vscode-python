@@ -86,7 +86,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
             isWholeLine: true
         });
         this.cellSeparatorType = this.documentManager.createTextEditorDecorationType({
-            borderColor: new vscode.ThemeColor('sideBarSectionHeader.background'),
+            borderColor: new vscode.ThemeColor('editor.lineHighlightBorder'),
             borderWidth: '1px 0px 0px 0px',
             borderStyle: 'solid',
             isWholeLine: true
