@@ -160,7 +160,8 @@ export namespace DataScience {
     export const pythonInteractiveCreateFailed = localize('DataScience.pythonInteractiveCreateFailed', 'Failure to create a \'Python Interactive\' window. Try reinstalling the Python extension.');
     export const jupyterGetVariablesExecutionError = localize('DataScience.jupyterGetVariablesExecutionError', 'Failure during variable extraction: \r\n{0}');
     export const loadingMessage = localize('DataScience.loadingMessage', 'loading ...');
-    export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'Fetching data ...');
+    export const fetchingDataViewer = localize('DataScience.fetchingDataViewer', 'Fetching data ...');
+    export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const pandasTooOldForViewingFormat = localize('DataScience.pandasTooOldForViewingFormat', 'Python package \'pandas\' is version {0}. Version 0.20 or greater is required for viewing data.');
     export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');
     export const valuesColumn = localize('DataScience.valuesColumn', 'values');

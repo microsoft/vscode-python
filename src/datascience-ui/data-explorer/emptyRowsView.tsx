@@ -7,22 +7,14 @@ import * as React from 'react';
 import { getLocString } from '../react-common/locReactSide';
 
 export interface IEmptyRowsProps {
-    total: number;
-    current: number;
 }
 
-export const EmptyRowsView = (props: IEmptyRowsProps) => {
-    const percent = props.current / props.total * 100;
-    const percentText = `${Math.round(percent)}%`;
-    const style: React.CSSProperties = {
-        width: percentText
-    };
-    const message = getLocString('DataScience.noRowsInDataViewer', 'Fetching data ...');
+export const EmptyRows = (_props: IEmptyRowsProps) => {
+    const message = getLocString('DataScience.noRowsInDataViewer', 'No rows match current filter');
 
     return (
-        <div className='progress-container'>
+        <div className='container'>
             {message}
-            <div className='progress-bar' style={style}>{percentText}</div>
         </div>
     );
 };

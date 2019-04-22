@@ -35,8 +35,7 @@ else:
         _VSCODE_columnTypes = list(_VSCODE_evalResult.dtypes)
         _VSCODE_columnNames = list(_VSCODE_evalResult)
     elif _VSCODE_targetVariable['type'] == 'ndarray':
-        _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
-        _VSCODE_evalResult = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
+        _VSCODE_evalResult = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
         _VSCODE_columnTypes = list(_VSCODE_evalResult.dtypes)
         _VSCODE_columnNames = list(_VSCODE_evalResult)
     elif _VSCODE_targetVariable['type'] == 'DataFrame':
