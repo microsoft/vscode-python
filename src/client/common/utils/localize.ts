@@ -251,6 +251,7 @@ export namespace DebugConfigStrings {
         };
         export const enterAppPathOrNamePath = {
             title: localize('debug.flaskEnterAppPathOrNamePathTitle'),
+            prompt: localize('debug.flaskEnterAppPathOrNamePathPrompt'),
             invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
         };
     }

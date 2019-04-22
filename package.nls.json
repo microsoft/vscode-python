@@ -200,7 +200,7 @@
     "debug.debugFlaskConfigurationLabel": "Flask",
     "debug.debugFlaskConfigurationDescription": "Launch and debug a Flask web application",
     "debug.flaskEnterAppPathOrNamePathTitle": "Debug Flask",
-    "debug.flaskEnterAppPathOrNamePathPrompt": "Enter path to application, e.g. 'app.py' or 'app'",
+    "debug.flaskEnterAppPathOrNamePathPrompt": "Enter the path to the application, e.g. 'app.py' or 'app'",
     "debug.flaskEnterAppPathOrNamePathInvalidNameError": "Enter a valid name",
     "debug.debugPyramidConfigurationLabel": "Pyramid",
     "debug.debugPyramidConfigurationDescription": "Web Application",
