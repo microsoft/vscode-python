@@ -66,8 +66,7 @@ steps:
       displayName: "Copy VSIX"
       condition: succeeded()
 
-    # Run the Smoke Tests.
     - bash: npm run testSmoke
       failOnStderr: true
-      displayName: "Download & Install UI Test Dependencies"
+      displayName: "Run Smoke Tests"
       condition: succeeded()
