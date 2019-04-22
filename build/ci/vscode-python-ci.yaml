@@ -40,7 +40,7 @@ jobs:
   pool:
     vmImage: "macos-10.13"
   steps:
-    - template: templates/build_phases.yml
+    - template: templates/build.yml
 
 - job: Build
   variables:
@@ -48,7 +48,7 @@ jobs:
   pool:
     vmImage: "macos-10.13"
   steps:
-    - template: templates/build_phases.yml
+    - template: templates/build.yml
 
 
 - job: 'Smoke'
