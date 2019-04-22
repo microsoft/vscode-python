@@ -67,6 +67,5 @@ steps:
       condition: succeeded()
 
     - bash: npm run testSmoke
-      failOnStderr: true
       displayName: "Run Smoke Tests"
       condition: succeeded()
