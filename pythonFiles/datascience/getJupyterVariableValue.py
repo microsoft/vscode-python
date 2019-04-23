@@ -9,10 +9,16 @@ _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
 
 # Find shape and count if available
 if (hasattr(_VSCODE_evalResult, 'shape')):
-    _VSCODE_targetVariable['shape'] = str(_VSCODE_evalResult.shape)
+    try:
+        _VSCODE_targetVariable['shape'] = str(_VSCODE_evalResult.shape)
+    except TypeError:
+        pass
 
 if (hasattr(_VSCODE_evalResult, '__len__')):
-    _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+    try:
+        _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+    except TypeError:
+        pass
 
 # Get the string of the eval result, truncate it as it could be far too long
 _VSCODE_targetValue = str(_VSCODE_evalResult)
