@@ -50,7 +50,6 @@ jobs:
   steps:
     - template: templates/build.yml
 
-
 # - job: 'Smoke'
 #   dependsOn:
 #     - Compile
