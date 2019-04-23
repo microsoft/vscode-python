@@ -11,12 +11,12 @@ import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
-
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
 import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
+import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // import { asyncDump } from '../common/asyncDump';
@@ -183,25 +183,23 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
-    // Flkay test https://github.com/Microsoft/vscode-python/issues/5430
-    // runMountedTest('np.array', async (wrapper) => {
-    //     await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-    //     const gotAllRows = getCompletedPromise();
-    //     const dv = await createDataViewer('x');
-    //     assert.ok(dv, 'DataViewer not created');
-    //     await gotAllRows;
+    runMountedTest('np.array', async (wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        const gotAllRows = getCompletedPromise();
+        const dv = await createDataViewer('x');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
 
-    //     verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-    // });
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+    });
 
-    // Flkay test https://github.com/Microsoft/vscode-python/issues/5430
-    // runMountedTest('Failure', async (_wrapper) => {
-    //     await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-    //     try {
-    //         await createDataViewer('unknown variable');
-    //         assert.fail('Exception should have been thrown');
-    //     } catch {
-    //         noop();
-    //     }
-    // });
+    runMountedTest('Failure', async (_wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        try {
+            await createDataViewer('unknown variable');
+            assert.fail('Exception should have been thrown');
+        } catch {
+            noop();
+        }
+    });
 });
