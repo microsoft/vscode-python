@@ -65,10 +65,22 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
     }
     public async prepareLanguageServerForNoICU(languageServerFolderPath: string): Promise<void> {
         const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        // tslint:disable-next-line:no-any
+        let content: any = {};
         if (await this.fs.fileExists(targetJsonFile)) {
-            return;
+            try {
+                content = JSON.parse(await this.fs.readFile(targetJsonFile));
+                if (content.runtimeOptions && content.runtimeOptions.configProperties &&
+                    content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
+                    return;
+                }
+            } catch {
+                // Do nothing.
+            }
         }
-        const json = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
-        await this.fs.writeFile(targetJsonFile, JSON.stringify(json));
+        content.runtimeOptions = content.runtimeOptions || {};
+        content.runtimeOptions.configProperties = content.runtimeOptions.configProperties || {};
+        content.runtimeOptions.configProperties['System.Globalization.Invariant'] = true;
+        await this.fs.writeFile(targetJsonFile, JSON.stringify(content));
     }
 }

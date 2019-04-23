@@ -167,21 +167,26 @@ suite('Language Server - Activator', () => {
         verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
         verify(fs.fileExists(targetJsonFile)).once();
     });
-    test('Do not download nor check if ICU config exists after downloading', async () => {
+    test('Download if contents of ICU config is not as expected', async () => {
         const languageServerFolder = 'Some folder name';
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
         const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const jsonContents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': false } } };
 
         when(settings.downloadLanguageServer).thenReturn(true);
         when(lsFolderService.getLanguageServerFolderName(undefined)).thenResolve(languageServerFolder);
-        when(fs.fileExists(mscorlib)).thenResolve(true);
+        when(fs.fileExists(mscorlib)).thenResolve(false);
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined)).thenResolve();
+        when(fs.fileExists(targetJsonFile)).thenResolve(true);
+        when(fs.readFile(targetJsonFile)).thenResolve(JSON.stringify(jsonContents));
 
         await activator.ensureLanguageServerIsAvailable(undefined);
 
         verify(lsFolderService.getLanguageServerFolderName(undefined)).once();
-        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).never();
-        verify(fs.fileExists(targetJsonFile)).never();
+        verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
+        verify(fs.fileExists(targetJsonFile)).once();
+        verify(fs.readFile(targetJsonFile)).once();
     });
     test('JSON file is created to ensure LS can start without ICU', async () => {
         const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
@@ -194,14 +199,30 @@ suite('Language Server - Activator', () => {
         verify(fs.fileExists(targetJsonFile)).atLeast(1);
         verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).once();
     });
-    test('JSON file is not created if it already exists', async () => {
+    test('JSON file is not created if it already exists with the right content', async () => {
         const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
         const contents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        const existingContents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
         when(fs.fileExists(targetJsonFile)).thenResolve(true);
+        when(fs.readFile(targetJsonFile)).thenResolve(JSON.stringify(existingContents));
 
         await activator.prepareLanguageServerForNoICU('some folder');
 
         verify(fs.fileExists(targetJsonFile)).atLeast(1);
         verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).never();
+        verify(fs.readFile(targetJsonFile)).once();
+    });
+    test('JSON file is created if it already exists but with the wrong file content', async () => {
+        const targetJsonFile = path.join('some folder', 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const contents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': true } } };
+        const existingContents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': false } } };
+        when(fs.fileExists(targetJsonFile)).thenResolve(true);
+        when(fs.readFile(targetJsonFile)).thenResolve(JSON.stringify(existingContents));
+
+        await activator.prepareLanguageServerForNoICU('some folder');
+
+        verify(fs.fileExists(targetJsonFile)).atLeast(1);
+        verify(fs.writeFile(targetJsonFile, JSON.stringify(contents))).once();
+        verify(fs.readFile(targetJsonFile)).once();
     });
 });
