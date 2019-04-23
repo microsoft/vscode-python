@@ -49,13 +49,15 @@ import numpy as np
 ls = list([10, 20, 30, 40])
 df = pd.DataFrame(ls)
 se = pd.Series(ls)
-np = np.array(ls)
+np1 = np.array(ls)
+np2 = np.array([[1, 2, 3], [4, 5, 6]])
 obj = {}
 ''')
     vars = get_variables(capsys)
     df = get_variable_value(vars, 'df', capsys)
     se = get_variable_value(vars, 'se', capsys)
-    np = get_variable_value(vars, 'np', capsys)
+    np = get_variable_value(vars, 'np1', capsys)
+    np2 = get_variable_value(vars, 'np2', capsys)
     ls = get_variable_value(vars, 'ls', capsys)
     obj = get_variable_value(vars, 'obj', capsys)
     assert df
@@ -65,8 +67,9 @@ obj = {}
     assert obj
     verify_dataframe_info(vars, 'df', capsys, True)
     verify_dataframe_info(vars, 'se', capsys, True)
-    verify_dataframe_info(vars, 'np', capsys, True)
+    verify_dataframe_info(vars, 'np1', capsys, True)
     verify_dataframe_info(vars, 'ls', capsys, True)
+    verify_dataframe_info(vars, 'np2', capsys, True)
     verify_dataframe_info(vars, 'obj', capsys, False)
 
 def verify_dataframe_info(vars, name, capsys, hasInfo):
@@ -96,6 +99,27 @@ def test_dataframe_rows(capsys):
     rows = get_data_frame_rows(info, 100, 200, capsys)
     assert rows
     assert rows['data'][0]['+h2'] == 'Fy3 W[pMT['
+    get_ipython().run_cell('''
+import pandas as pd
+import numpy as np
+ls = list([10, 20, 30, 40])
+df = pd.DataFrame(ls)
+se = pd.Series(ls)
+np1 = np.array(ls)
+np2 = np.array([[1, 2, 3], [4, 5, 6]])
+obj = {}
+''')
+    vars = get_variables(capsys)
+    np2 = get_variable_value(vars, 'np2', capsys)
+    assert np2
+    info = get_data_frame_info(vars, 'np2', capsys)
+    assert 'rowCount' in info
+    assert info['rowCount'] == 2
+    rows = get_data_frame_rows(info, 0, 2, capsys)
+    assert rows
+    assert rows['data'][0]
+
+
 
 
 

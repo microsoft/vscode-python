@@ -16,6 +16,7 @@ import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
@@ -25,7 +26,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
-import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 
 // tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');

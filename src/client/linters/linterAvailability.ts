@@ -8,13 +8,12 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
-import { traceError } from '../common/logger';
+import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IPersistentStateFactory, Product } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory } from '../common/types';
 import { Common, Linters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { PYLINT_CONFIG } from './constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_CONFIGURE_AVAILABLE_LINTER_PROMPT';
@@ -50,7 +49,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         }
 
         // Is the linter available in the current workspace?
-        if (await this.isLinterAvailable(linterInfo.product, resource)) {
+        if (await this.isLinterAvailable(linterInfo, resource)) {
 
             // great, it is - ask the user if they'd like to enable it.
             return this.promptToConfigureAvailableLinter(linterInfo);
@@ -96,18 +95,18 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @param linterProduct Linter to check in the current workspace environment.
      * @param resource Context information for workspace.
      */
-    public async isLinterAvailable(linterProduct: Product, resource?: Uri): Promise<boolean | undefined> {
+    @traceDecorators.error('Failed to discover if linter pylint is available')
+    public async isLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean | undefined> {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return false;
         }
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource)! : this.workspaceService.workspaceFolders![0];
-        const filePath = path.join(workspaceFolder.uri.fsPath, PYLINT_CONFIG);
-        return this.fs.fileExists(filePath)
-            .catch((reason) => {
-                // report and continue, assume the linter is unavailable.
-                traceError(`[WARNING]: Failed to discover if linter ${linterProduct} is installed.`, reason);
-                return false;
-            });
+        let isAvailable = false;
+        for (const configName of linterInfo.configFileNames) {
+            const configPath = path.join(workspaceFolder.uri.fsPath, configName);
+            isAvailable = isAvailable || await this.fs.fileExists(configPath);
+        }
+        return isAvailable;
     }
 
     /**

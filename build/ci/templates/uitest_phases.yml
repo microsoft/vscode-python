@@ -1,0 +1,73 @@
+steps:
+    - bash: |
+          printenv
+      displayName: "Show all env vars"
+      condition: eq(variables['system.debug'], 'true')
+
+    - task: NodeTool@0
+      displayName: "Use Node $(NodeVersion)"
+      inputs:
+          versionSpec: $(NodeVersion)
+
+    - task: UsePythonVersion@0
+      displayName: "Setup Python $(PythonVersion) for extension"
+      inputs:
+          versionSpec: $(PythonVersion)
+
+    - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
+
+    - task: Npm@1
+      displayName: "npm ci"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: ci
+
+    - bash: |
+          echo AVAILABLE DEPENDENCY VERSIONS
+          echo Node Version = `node -v`
+          echo NPM Version = `npm -v`
+          echo Python Version = `python --version`
+          echo Gulp Version = `gulp --version`
+      condition: and(succeeded(), eq(variables['system.debug'], 'true'))
+      displayName: Show Dependency Versions
+
+    - task: Gulp@0
+      displayName: "Compile"
+      inputs:
+          targets: "prePublishNonBundle"
+      condition: succeeded()
+
+    # https://code.visualstudio.com/api/working-with-extensions/continuous-integration#azure-pipelines
+    - bash: |
+          set -e
+          /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+          disown -ar
+      displayName: "Start xvfb"
+      condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), not(variables['SkipXvfb']))
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+          buildType: "current"
+          artifactName: "VSIX"
+          downloadPath: "$(Build.SourcesDirectory)"
+      displayName: "Restore VSIX"
+      condition: succeeded()
+
+    - task: CopyFiles@2
+      inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/VSIX"
+          targetFolder: $(Build.SourcesDirectory)
+      displayName: "Copy VSIX"
+      condition: succeeded()
+
+    - bash: npm run testSmoke
+      displayName: "Run Smoke Tests"
+      condition: succeeded()
+      env:
+        DISPLAY: :10

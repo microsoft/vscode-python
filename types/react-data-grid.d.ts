@@ -252,6 +252,7 @@ declare namespace AdazzleReactDataGrid {
          * @param row object behind the row
          */
         onRowClick?: (rowIdx: number, row: T) => void
+        onRowDoubleClick?: (rowIdx: number, row: T) => void
 
         /**
          * An event function called when a row is expanded with the toggle

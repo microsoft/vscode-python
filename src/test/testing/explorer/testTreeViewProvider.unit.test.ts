@@ -5,14 +5,12 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TreeItemCollapsibleState, Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Commands } from '../../../client/common/constants';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
@@ -708,7 +706,6 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
     });
     suite('Root Nodes', () => {
         let treeProvider: TestTreeViewProvider;
-        let fs: IFileSystem;
         setup(() => {
             const store = mock(TestCollectionStorageService);
             const managementService = mock(UnitTestManagementService);
@@ -716,15 +713,13 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
             when(store.onDidChange).thenReturn(noop as any);
             const workspace = mock(WorkspaceService);
             when(workspace.onDidChangeWorkspaceFolders).thenReturn(noop as any);
-            fs = mock(FileSystem);
-            when(fs.arePathsSame(anything(), anything())).thenCall((path1: string, path2: string) => path1 === path2);
             const commandManager = mock(CommandManager);
             treeProvider = new TestTreeViewProvider(instance(store), instance(managementService),
-                instance(workspace), instance(commandManager), instance(fs), []);
+                instance(workspace), instance(commandManager), []);
 
         });
         test('The root folder will not be displayed if there are no tests', async () => {
-            const children = await treeProvider.getRootNodes();
+            const children = treeProvider.getRootNodes();
 
             expect(children).to.deep.equal([]);
         });
@@ -745,7 +740,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 testFolders: [],
                 testSuites: []
             };
-            const children = await treeProvider.getRootNodes(tests);
+            const children = treeProvider.getRootNodes(tests);
 
             expect(children).to.deep.equal([]);
         });
@@ -803,7 +798,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 folders: [child1Folder],
                 name: rootFolderPath,
                 nameToRun: 'child',
-                testFiles: [],
+                testFiles: [file1, file2],
                 time: 0,
                 resource: Uri.file(__filename)
             };
@@ -815,7 +810,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 testFolders: [rootFolder, child1Folder, child2Folder],
                 testSuites: []
             };
-            const children = await treeProvider.getRootNodes(tests);
+            const children = treeProvider.getRootNodes(tests);
 
             expect(children).to.be.lengthOf(3);
             expect(children).to.deep.equal([file1, file2, child1Folder]);
@@ -886,7 +881,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 testFolders: [child3Folder, child1Folder, child2Folder],
                 testSuites: []
             };
-            const children = await treeProvider.getRootNodes(tests);
+            const children = treeProvider.getRootNodes(tests);
 
             expect(children).to.be.lengthOf(2);
             expect(children).to.deep.equal([child1Folder, child3Folder]);

@@ -51,6 +51,15 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             // Fill in our variable's beginning data
             this.variable = await this.prepVariable(variable);
 
+            // Create our new title with the variable name
+            let newTitle = `${localize.DataScience.dataExplorerTitle()} - ${variable.name}`;
+            const TRIM_LENGTH = 40;
+            if (newTitle.length > TRIM_LENGTH) {
+                newTitle = `${newTitle.substr(0, TRIM_LENGTH)}...`;
+            }
+
+            super.setTitle(newTitle);
+
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 

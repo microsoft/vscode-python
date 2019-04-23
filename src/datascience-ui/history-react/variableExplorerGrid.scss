@@ -13,6 +13,7 @@
 }
 
 #variable-explorer-data-grid .react-grid-Main {
+    font-family: var(--code-font-family);
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
     outline: none;

@@ -16,15 +16,14 @@ _VSCODE_endRow = min(_VSCode_JupyterEndRow, _VSCODE_targetVariable['rowCount'])
 # Assume we have a dataframe. If not, turn our eval result into a dataframe
 _VSCODE_df = _VSCODE_evalResult
 if (_VSCODE_targetVariable['type'] == 'list'):
-    _VSCODE_df = _VSCODE_pd.DataFrame({'_VSCode_JupyterValuesColumn':_VSCODE_evalResult})
+    _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
 elif (_VSCODE_targetVariable['type'] == 'Series'):
     _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
 elif _VSCODE_targetVariable['type'] == 'dict':
     _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
     _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
 elif _VSCODE_targetVariable['type'] == 'ndarray':
-    _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
-    _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
+    _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
 # If not a known type, then just let pandas handle it.
 elif not (hasattr(_VSCODE_df, 'iloc')):
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)

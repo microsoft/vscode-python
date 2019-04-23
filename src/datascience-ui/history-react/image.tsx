@@ -15,6 +15,7 @@ export enum ImageName {
     ExpandAll,
     GoToSourceCode,
     Interrupt,
+    OpenInNewWindow,
     PopIn,
     PopOut,
     Redo,
@@ -50,6 +51,11 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/Interrupt/Interrupt_16x_vscode.svg'),
             dark : require('./images/Interrupt/Interrupt_16x_vscode_dark.svg')
+        },
+    OpenInNewWindow:
+        {
+            light: require('./images/OpenInNewWindow/OpenInNewWindow_16x_vscode.svg'),
+            dark : require('./images/OpenInNewWindow/OpenInNewWindow_16x_vscode_dark.svg')
         },
     PopIn:
         {

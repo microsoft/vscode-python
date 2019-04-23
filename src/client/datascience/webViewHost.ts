@@ -87,6 +87,12 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    public setTitle(newTitle: string) {
+        if (!this.isDisposed && this.webPanel) {
+            this.webPanel.title = newTitle;
+        }
+    }
+
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {

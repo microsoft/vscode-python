@@ -10,7 +10,7 @@ import { CancellationToken, CompletionItem, CompletionItemKind, CompletionItemPr
 import { IExtensionActivationService } from '../../../../activation/types';
 import { ILanguageService } from '../../../../common/application/types';
 import { IDisposableRegistry, Resource } from '../../../../common/types';
-import { DebugConfigurationPrompts } from '../../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../../common/utils/localize';
 
 const configurationNodeName = 'configurations';
 enum JsonLanguages {
@@ -35,14 +35,14 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
             {
                 command: {
                     command: 'python.SelectAndInsertDebugConfiguration',
-                    title: DebugConfigurationPrompts.launchJsonConfigurationsCompletionDescription(),
+                    title: DebugConfigStrings.launchJsonCompletions.description(),
                     arguments: [document, position, token]
                 },
-                documentation: DebugConfigurationPrompts.launchJsonConfigurationsCompletionDescription(),
+                documentation: DebugConfigStrings.launchJsonCompletions.description(),
                 sortText: 'AAAA',
                 preselect: true,
                 kind: CompletionItemKind.Enum,
-                label: DebugConfigurationPrompts.launchJsonConfigurationsCompletionLabel(),
+                label: DebugConfigStrings.launchJsonCompletions.label(),
                 insertText: new SnippetString()
             }
         ];

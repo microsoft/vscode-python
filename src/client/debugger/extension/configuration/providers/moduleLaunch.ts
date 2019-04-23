@@ -4,7 +4,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -17,16 +17,16 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         let manuallyEnteredAValue: boolean | undefined;
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.module.label', 'Python: Module')(),
+            name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'enter-your-module-name'
+            module: DebugConfigStrings.module.snippet.default()
         };
         const selectedModule = await input.showInputBox({
-            title: DebugConfigurationPrompts.moduleEnterModuleTitle(),
-            value: config.module || 'enter-your-module-name',
-            prompt: DebugConfigurationPrompts.moduleEnterModulePrompt(),
-            validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigurationPrompts.moduleEnterModuleInvalidNameError())
+            title: DebugConfigStrings.module.enterModule.title(),
+            value: config.module || DebugConfigStrings.module.enterModule.default(),
+            prompt: DebugConfigStrings.module.enterModule.prompt(),
+            validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.module.enterModule.invalid())
         });
         if (selectedModule) {
             manuallyEnteredAValue = true;

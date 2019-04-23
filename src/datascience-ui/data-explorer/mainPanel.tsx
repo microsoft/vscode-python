@@ -21,7 +21,8 @@ import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
 import { CellFormatter } from './cellFormatter';
-import { EmptyRowsView } from './emptyRowsView';
+import { EmptyRows } from './emptyRowsView';
+import { ProgressBar } from './progressBar';
 import { generateTestData } from './testData';
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -118,7 +119,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentDidUpdate() {
         // Rebind our empty rows view to our new state.
-        this.emptyRows = EmptyRowsView.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount});
+        this.emptyRows = this.state.fetchedRowCount === this.state.actualRowCount ?
+            EmptyRows.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount}) :
+            ProgressBar.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount});
+
         this.getEmptyRows = (_props: any) => {
             return this.emptyRows ? this.emptyRows() : <div/>;
         };
@@ -362,8 +366,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // or it will take too long
         const comparer = isStringColumn ?
             (a: any, b: any): number => {
-                const aVal = a[sortColumn] as string;
-                const bVal = b[sortColumn] as string;
+                const aVal = a[sortColumn] ? a[sortColumn].toString() : '';
+                const bVal = b[sortColumn] ? b[sortColumn].toString() : '';
                 const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
                 const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
                 const result = aStr > bStr ? -1 : 1;

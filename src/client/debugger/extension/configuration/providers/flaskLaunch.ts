@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { WorkspaceFolder } from 'vscode';
 import { IFileSystem } from '../../../../common/platform/types';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -25,7 +25,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
         const application = await this.getApplicationPath(state.folder);
         let manuallyEnteredAValue: boolean | undefined;
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.flask.label', 'Python: Flask')(),
+            name: DebugConfigStrings.flask.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'flask',
@@ -44,10 +44,10 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
 
         if (!application) {
             const selectedApp = await input.showInputBox({
-                title: DebugConfigurationPrompts.flaskEnterAppPathOrNamePathTitle(),
+                title: DebugConfigStrings.flask.enterAppPathOrNamePath.title(),
                 value: 'app.py',
-                prompt: DebugConfigurationPrompts.debugFlaskConfigurationDescription(),
-                validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigurationPrompts.flaskEnterAppPathOrNamePathInvalidNameError())
+                prompt: DebugConfigStrings.flask.enterAppPathOrNamePath.prompt(),
+                validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.flask.enterAppPathOrNamePath.invalid())
             });
             if (selectedApp) {
                 manuallyEnteredAValue = true;

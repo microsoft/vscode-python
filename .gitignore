@@ -16,6 +16,7 @@ npm-debug.log
 coverage/
 .vscode-test/**
 **/.venv*/
+port.txt
 precommit.hook
 pythonFiles/experimental/ptvsd/**
 pythonFiles/lib/**
