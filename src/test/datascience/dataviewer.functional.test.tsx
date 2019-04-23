@@ -184,23 +184,25 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
-    runMountedTest('np.array', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-        const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('x');
-        assert.ok(dv, 'DataViewer not created');
-        await gotAllRows;
+    // Flkay test https://github.com/Microsoft/vscode-python/issues/5430
+    // runMountedTest('np.array', async (wrapper) => {
+    //     await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+    //     const gotAllRows = getCompletedPromise();
+    //     const dv = await createDataViewer('x');
+    //     assert.ok(dv, 'DataViewer not created');
+    //     await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-    });
+    //     verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+    // });
 
-    runMountedTest('Failure', async (_wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-        try {
-            await createDataViewer('unknown variable');
-            assert.fail('Exception should have been thrown');
-        } catch {
-            noop();
-        }
-    });
+    // Flkay test https://github.com/Microsoft/vscode-python/issues/5430
+    // runMountedTest('Failure', async (_wrapper) => {
+    //     await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+    //     try {
+    //         await createDataViewer('unknown variable');
+    //         assert.fail('Exception should have been thrown');
+    //     } catch {
+    //         noop();
+    //     }
+    // });
 });
