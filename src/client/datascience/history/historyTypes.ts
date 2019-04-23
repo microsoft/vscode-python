@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
@@ -35,6 +36,9 @@ export namespace HistoryMessages {
     export const GetVariableValueRequest = 'get_variable_value_request';
     export const GetVariableValueResponse = 'get_variable_value_response';
     export const VariableExplorerToggle = 'variable_explorer_toggle';
+    export const ProvideCompletionItemsRequest = 'provide_completion_items_request';
+    export const ProvideCompletionItemsResponse = 'provide_completion_items_response';
+    export const EditCell = 'edit_cell';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -68,6 +72,32 @@ export interface IRemoteAddCode extends IExecuteInfo {
 export interface ISubmitNewCell {
     code: string;
     id: string;
+}
+
+export interface IProvideCompletionItemsRequest {
+    line: number;
+    ch: number;
+    triggerKey: string;
+    id: string;
+}
+
+export interface IProvideCompletionItemsResponse {
+    items: string[];
+    line: number;
+    ch: number;
+    id: string;
+}
+
+export interface IPosition {
+    line: number;
+    ch: number;
+}
+
+export interface IEditCell {
+    from: IPosition;
+    to: IPosition;
+    newCode: string;
+    removedCode?: string;
 }
 
 // Map all messages to specific payloads
@@ -104,4 +134,7 @@ export class IHistoryMapping {
     public [HistoryMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
+    public [HistoryMessages.ProvideCompletionItemsRequest] : IProvideCompletionItemsRequest;
+    public [HistoryMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
+    public [HistoryMessages.EditCell] : IEditCell;
 }

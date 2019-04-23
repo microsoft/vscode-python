@@ -13,6 +13,7 @@ import JSONTree from 'react-json-tree';
 import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
+import { IProvideCompletionItemsResponse } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
@@ -42,6 +43,9 @@ interface ICellProps {
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
+    onCodeChange(fromLine: number, fromCh: number, toLine: number, toCh: number, text: string, removed?: string): void;
+    requestCompletionItems(line: number, ch: number, id: string) : Promise<IProvideCompletionItemsResponse>;
+
 }
 
 export interface ICellViewModel {
@@ -219,6 +223,8 @@ export class Cell extends React.Component<ICellProps> {
                         onSubmit={this.props.submitNewCode}
                         onChangeLineCount={this.onChangeLineCount}
                         ref={this.updateCodeRef}
+                        onChange={this.props.onCodeChange}
+                        requestCompletionItems={this.props.requestCompletionItems}
                         />
                 </div>
             );

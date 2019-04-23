@@ -16,16 +16,24 @@ import {
     Position,
     Range,
     TextDocument,
+    TextDocumentContentChangeEvent,
     TextLine,
-    Uri,
-    TextDocumentContentChangeEvent
+    Uri
 } from 'vscode';
-import { CompletionRequest, LanguageClient, DidOpenTextDocumentNotification, TextDocumentItem, DidChangeTextDocumentNotification, VersionedTextDocumentIdentifier } from 'vscode-languageclient';
+import {
+    CompletionRequest,
+    DidChangeTextDocumentNotification,
+    DidOpenTextDocumentNotification,
+    LanguageClient,
+    TextDocumentItem,
+    VersionedTextDocumentIdentifier
+} from 'vscode-languageclient';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { Identifiers } from '../constants';
 import { IHistoryCompletionProvider } from '../types';
 
 class HistoryLine implements TextLine {
@@ -71,7 +79,7 @@ class HistoryDocument implements TextDocument {
     private _uri : Uri;
     private _version : number = 0;
     private _lines: TextLine[] = [];
-    private _cells: string = '';
+    private _contents: string = '';
     private _editOffset: number = 0;
 
     constructor(fileName: string) {
@@ -123,12 +131,20 @@ class HistoryDocument implements TextDocument {
     public offsetAt(_position: Position): number {
         throw new Error('Method not implemented.');
     }
-    public positionAt(_offset: number): Position {
-        throw new Error('Method not implemented.');
+    public positionAt(offset: number): Position {
+        const before = this._contents.slice(0, offset);
+        const newLines = before.match(/\n/g);
+        const line = newLines ? newLines.length : 0;
+        const preCharacters = before.match(/(\n|^).*$/g);
+        return new Position(line, preCharacters ? preCharacters[0].length : 0);
     }
-    public getText(_range?: Range | undefined): string {
-        if (!_range) {
-            return this.getText(new Range(new Position(0, 0), new Position(this._lines.length, this._lines[this._lines.length-1])))
+    public getText(range?: Range | undefined): string {
+        if (!range) {
+            return this._contents;
+        } else {
+            const startOffset = this.convertToOffset(range.start);
+            const endOffset = this.convertToOffset(range.end);
+            return this._contents.substr(startOffset, endOffset - startOffset);
         }
     }
     public getWordRangeAtPosition(_position: Position, _regex?: RegExp | undefined): Range | undefined {
@@ -159,22 +175,56 @@ class HistoryDocument implements TextDocument {
     public addLines(code: string): TextDocumentContentChangeEvent[] {
         this._lines.splice(this._editOffset);
         const lastIndex = this._lines.length;
+        const oldEnd = this._editOffset;
         this._lines.concat(code.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i + lastIndex)));
         this._editOffset = this._lines.length;
+        this._contents += this._contents.length ? `\n${code}` : code;
+        return [
+            {
+                range: new Range(new Position(lastIndex, 0), new Position(this._lines.length, 0)),
+                rangeOffset: oldEnd,
+                rangeLength: code.length,
+                text: code
+            }
+        ];
     }
 
-    public editLines(from: Position, to: Position, newCode: string, removedCode?: string): TextDocumentContentChangeEvent[] {
-        const replacedRange = new Range(new Position(this._editOffset, 0))
-        this._lines.splice(this._editOffset);
-        this._lines.concat(newCode.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i + this._editOffset)));
+    public editLines(from: Position, to: Position, newCode: string, _removedCode?: string): TextDocumentContentChangeEvent[] {
+        // From and to are the offset from the beginning of a cell, not the offset of our document
+        const fromLine = from.line + this._editOffset;
+        const toLine = to.line + this._editOffset;
+
+        // Recreate our contents, and then recompute all of our lines
+        const fromOffset = this.convertToOffset(new Position(fromLine, from.character));
+        const toOffset = this.convertToOffset(new Position(toLine, to.character));
+        const before = this._contents.substr(fromOffset);
+        const after = this._contents.substr(toOffset);
+        this._contents = `${before}${newCode}${after}`;
+        this._lines  = this._contents.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i));
+
+        return [
+            {
+                range: new Range(new Position(fromLine, from.character), new Position(toLine, to.character)),
+                rangeOffset: fromOffset,
+                rangeLength: newCode.length,
+                text: newCode
+            }
+        ];
 
     }
 
     private createTextLine(line: string, index: number) : TextLine {
         return new HistoryLine(line, index);
     }
-}
 
+    private convertToOffset(pos: Position) : number {
+        // Combine the text length up to this position
+        const lenUpToPos = this._lines.filter(l => l.range.start.line <= pos.line).map(l => l.text.length + 1).reduce((p, c) => p + c);
+
+        // Add on the character
+        return lenUpToPos + pos.character;
+    }
+}
 
 @injectable()
 export class CompletionProvider implements IHistoryCompletionProvider {
@@ -206,7 +256,7 @@ export class CompletionProvider implements IHistoryCompletionProvider {
         let dummyFilePath = '';
         if (this.workspaceService.rootPath || resource) {
             const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
-            dummyFilePath = path.join(dir, `History_${uuid().replace('-', '')}`);
+            dummyFilePath = path.join(dir, `History_${uuid().replace(/-/g, '')}.py`);
         } else {
             this.temporaryFile = await this.fileSystem.createTemporaryFile('.py');
             dummyFilePath = this.temporaryFile.filePath;
@@ -229,7 +279,10 @@ export class CompletionProvider implements IHistoryCompletionProvider {
 
         return [];
     }
-    public async addCell(code: string): Promise<void> {
+    public async addCell(code: string, file: string): Promise<void> {
+        if (!this.languageClient) {
+            await this.startup(file === Identifiers.EmptyFileName ? undefined : Uri.file(file));
+        }
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
             changes = this.document.addLines(code);

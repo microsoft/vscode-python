@@ -5,7 +5,18 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor, CompletionItem, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CodeLens,
+    CodeLensProvider,
+    CompletionItem,
+    Disposable,
+    Event,
+    Position,
+    Range,
+    TextDocument,
+    TextEditor
+} from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -151,9 +162,8 @@ export interface IHistory extends Disposable {
 export const IHistoryCompletionProvider = Symbol('IHistoryCompletionProvider');
 
 export interface IHistoryCompletionProvider extends IDisposable {
-    startup(resource?: Uri) : Promise<void>;
     provideCompletionItems(line: number, ch: number, token: CancellationToken) : Promise<CompletionItem[]>;
-    addCell(code: string): Promise<void>;
+    addCell(code: string, file: string): Promise<void>;
     editCell(from: Position, to: Position, newCode: string, removedCode?: string): Promise<void>;
 }
 

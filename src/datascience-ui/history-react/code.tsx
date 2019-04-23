@@ -8,6 +8,7 @@ import 'codemirror/mode/python/python';
 import * as CodeMirror from 'codemirror';
 import * as React from 'react';
 import * as RCM from 'react-codemirror';
+import * as uuid from 'uuid/v4';
 
 // tslint:disable-next-line: no-require-imports no-var-requires
 require('codemirror/addon/hint/show-hint');
@@ -15,6 +16,7 @@ import 'codemirror/addon/hint/show-hint.css';
 
 import './code.css';
 
+import { IProvideCompletionItemsResponse } from '../../client/datascience/history/historyTypes';
 import { getLocString } from '../react-common/locReactSide';
 import { Cursor } from './cursor';
 import { InputHistory } from './inputHistory';
@@ -30,6 +32,8 @@ export interface ICodeProps {
     showWatermark: boolean;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
+    onChange(fromLine: number, fromCh: number, toLine: number, toCh: number, text: string, removed?: string): void;
+    requestCompletionItems(line: number, ch: number, id: string) : Promise<IProvideCompletionItemsResponse>;
 
 }
 
@@ -108,7 +112,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                                 Enter: this.enter,
                                 'Shift-Enter': this.shiftEnter,
                                 Up: this.arrowUp,
-                                'Ctrl-Space': 'autocomplete',
+                                'Ctrl-Space': 'autocomplete'
                             },
                             theme: `${this.props.codeTheme} default`,
                             mode: 'python',
@@ -314,8 +318,18 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private onChange = (_newValue: string, change: CodeMirror.EditorChange) => {
         this.setState({allowWatermark: false});
-        if (change.text.length === 1 && change.text[0] === '.' && this.codeMirror) {
+        if (change.text.length === 1 && change.text[0] === '.' && this.codeMirror && !this.props.readOnly) {
             this.codeMirror.execCommand('autocomplete');
+        }
+        // Pass this change onto any listeners
+        if (!this.props.readOnly) {
+            this.props.onChange(
+                change.from.line,
+                change.from.ch,
+                change.to.line,
+                change.to.ch,
+                change.text.join('\n'),
+                change.removed ? change.removed.join('\n') : undefined);
         }
     }
 
@@ -324,11 +338,15 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         const doc = instance.getDoc();
         const cursor = doc ? doc.getCursor() : undefined;
         if (cursor) {
-            return {
-                list: ['foo', 'bar', 'baz'],
-                from: cursor,
-                to: cursor
-            };
+            // Ask for a set of completion items
+            const completionItems = await this.props.requestCompletionItems(cursor.line, cursor.ch, uuid());
+            if (completionItems && completionItems.items && completionItems.line === cursor.line && completionItems.ch === cursor.ch) {
+                return {
+                    list: completionItems.items,
+                    from: cursor,
+                    to: cursor
+                };
+            }
         }
 
         return null;

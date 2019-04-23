@@ -21,7 +21,7 @@ import { ProgressReporting } from './progress';
 @injectable()
 export class LanguageServer implements ILanguageServer {
     public languageClient: LanguageClient | undefined;
-    private readonly startupCompleted: Deferred<void>;
+    private startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
     private extensionLoadedArgs = new Set<{}>();
 
@@ -47,6 +47,7 @@ export class LanguageServer implements ILanguageServer {
         }
         if (this.startupCompleted.completed) {
             this.startupCompleted.reject(new Error('Disposed Language Server'));
+            this.startupCompleted = createDeferred<void>();
         }
     }
 

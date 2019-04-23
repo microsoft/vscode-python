@@ -95,6 +95,10 @@ declare interface Promise<T> {
      * Catches task error and ignores them.
      */
     ignoreErrors(): void;
+    /**
+     * Catches task error and logs them.
+     */
+    logErrors(): void;
 }
 
 /**
@@ -103,6 +107,15 @@ declare interface Promise<T> {
 Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
     // tslint:disable-next-line:no-empty
     this.catch(() => { });
+};
+
+/**
+ * Explicitly tells that promise should be run asynchonously.
+ */
+Promise.prototype.logErrors = function <T>(this: Promise<T>) {
+    // tslint:disable-next-line: no-require-imports
+    const logger = require('./logger');
+    this.catch((e) => { logger.traceError(e); });
 };
 
 if (!String.prototype.format) {

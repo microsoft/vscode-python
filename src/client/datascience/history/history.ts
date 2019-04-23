@@ -8,7 +8,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
-import { Disposable } from 'vscode-jsonrpc';
+import { CancellationTokenSource, Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import {
@@ -39,6 +39,7 @@ import {
     IConnection,
     IDataViewerProvider,
     IHistory,
+    IHistoryCompletionProvider,
     IHistoryInfo,
     IHistoryProvider,
     IJupyterExecution,
@@ -53,7 +54,16 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { HistoryMessageListener } from './historyMessageListener';
-import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
+import {
+    HistoryMessages,
+    IAddedSysInfo,
+    IEditCell,
+    IGotoCode,
+    IHistoryMapping,
+    IProvideCompletionItemsRequest,
+    IRemoteAddCode,
+    ISubmitNewCell
+} from './historyTypes';
 
 export enum SysInfoReason {
     Start,
@@ -76,6 +86,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
+    private autoCompleteCancelSource: CancellationTokenSource | undefined;
 
     constructor(
         @inject(ILiveShareApi) private liveShare : ILiveShareApi,
@@ -96,7 +107,8 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
-        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
+        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
+        @inject(IHistoryCompletionProvider) private completionProvider: IHistoryCompletionProvider
         ) {
         super(
             configuration,
@@ -161,7 +173,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         return this.submitCode(code, file, line, undefined, editor);
     }
 
-    // tslint:disable-next-line: no-any no-empty cyclomatic-complexity
+    // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
     public onMessage(message: string, payload: any) {
         switch (message) {
             case HistoryMessages.GotoCodeCell:
@@ -238,6 +250,14 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
             case HistoryMessages.GetVariableValueRequest:
                 this.dispatchMessage(message, payload, this.requestVariableValue);
+                break;
+
+            case HistoryMessages.ProvideCompletionItemsRequest:
+                this.dispatchMessage(message, payload, this.provideCompletionItems);
+                break;
+
+            case HistoryMessages.EditCell:
+                this.dispatchMessage(message, payload, this.editCell);
                 break;
 
             default:
@@ -591,6 +611,9 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
                 traceInfo(`Finished execution for ${id}`);
+
+                // Add this to our completion provider so it can remember this code
+                await this.completionProvider.addCell(code, file);
             }
         } catch (err) {
             status.dispose();
@@ -988,5 +1011,25 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Log the state in our Telemetry
             sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
         }
+    }
+
+    private provideCompletionItems(request: IProvideCompletionItemsRequest) {
+        if (this.autoCompleteCancelSource) {
+            this.autoCompleteCancelSource.cancel();
+        }
+        this.autoCompleteCancelSource = new CancellationTokenSource();
+        this.completionProvider.provideCompletionItems(request.line, request.ch, this.autoCompleteCancelSource.token).then(items => {
+            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: items.map(i => i.insertText as string), line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
+        }).catch(_e => {
+            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: [], line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
+        });
+    }
+
+    private editCell(request: IEditCell) {
+        this.completionProvider.editCell(
+            new Position(request.from.line, request.from.ch),
+            new Position(request.to.line, request.to.ch),
+            request.newCode,
+            request.removedCode).ignoreErrors();
     }
 }

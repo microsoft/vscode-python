@@ -6,9 +6,14 @@ import './mainPanel.css';
 import { min } from 'lodash';
 import * as React from 'react';
 
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
+import {
+    HistoryMessages,
+    IHistoryMapping,
+    IProvideCompletionItemsResponse
+} from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
@@ -37,6 +42,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private styleInjectorRef: React.RefObject<StyleInjector>;
     private currentExecutionCount: number = 0;
     private postOffice: PostOffice = new PostOffice();
+    private currentCompletionItemsRequest: Deferred<IProvideCompletionItemsResponse> | undefined;
+    private currentCompletionItemsRequestId: string | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -173,6 +180,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.getVariableValueResponse(payload);
                 break;
 
+            case HistoryMessages.ProvideCompletionItemsResponse:
+                this.handleCompletionResponse(payload);
+                break;
+
             default:
                 break;
         }
@@ -246,7 +257,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             gotoCellCode: this.gotoCellCode,
             deleteCell: this.deleteCell,
             submitInput: this.submitInput,
-            skipNextScroll: this.state.skipNextScroll ? true : false
+            skipNextScroll: this.state.skipNextScroll ? true : false,
+            onCodeChange: this.codeChange,
+            requestCompletionItems: this.requestCompletionItems
         };
     }
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
@@ -809,4 +822,47 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
     }
+
+    private codeChange = (fromLine: number, fromCh: number, toLine: number, toCh: number, text: string, removed?: string) => {
+        // Pass this onto the completion provider running in the extension
+        this.sendMessage(HistoryMessages.EditCell,
+            {
+                from: {
+                    line: fromLine,
+                    ch: fromCh
+                },
+                to: {
+                    line: toLine,
+                    ch: toCh
+                },
+                newCode: text,
+                removedCode: removed
+            }
+        );
+    }
+
+    private requestCompletionItems = (line: number, ch: number, id: string) : Promise<IProvideCompletionItemsResponse> =>  {
+        if (this.currentCompletionItemsRequest && !this.currentCompletionItemsRequest.resolved && this.currentCompletionItemsRequestId) {
+            this.currentCompletionItemsRequest.resolve({ items: [], line, ch, id: this.currentCompletionItemsRequestId});
+        }
+        this.currentCompletionItemsRequest = createDeferred<IProvideCompletionItemsResponse>();
+        this.currentCompletionItemsRequestId = id;
+        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { line, ch, id, triggerKey: '' });
+        return this.currentCompletionItemsRequest.promise;
+    }
+
+    // Handle completion response
+    // tslint:disable-next-line:no-any
+    private handleCompletionResponse = (payload?: any) => {
+        if (payload) {
+            const response = payload as IProvideCompletionItemsResponse;
+
+            // Resolve our waiting promise if we have one
+            if (this.currentCompletionItemsRequest && !this.currentCompletionItemsRequest.resolved && response.id === this.currentCompletionItemsRequestId) {
+                this.currentCompletionItemsRequestId = undefined;
+                this.currentCompletionItemsRequest.resolve({ items: response.items, line: response.line, ch: response.ch, id: response.id });
+            }
+        }
+    }
+
 }

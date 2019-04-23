@@ -44,4 +44,8 @@ declare interface Promise<T> {
      * Catches task errors and ignores them.
      */
     ignoreErrors(): void;
+    /**
+     * Catches task errors and logs them
+     */
+    logErrors(): void;
 }

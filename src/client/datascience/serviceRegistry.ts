@@ -10,6 +10,7 @@ import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
+import { CompletionProvider } from './history/completionProvider';
 import { History } from './history/history';
 import { HistoryCommandListener } from './history/historycommandlistener';
 import { HistoryProvider } from './history/historyProvider';
@@ -31,6 +32,7 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IHistory,
+    IHistoryCompletionProvider,
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
@@ -63,4 +65,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
+    serviceManager.addSingleton<IHistoryCompletionProvider>(IHistoryCompletionProvider, CompletionProvider);
 }
