@@ -17,7 +17,6 @@ import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
 import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
-import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // import { asyncDump } from '../common/asyncDump';
