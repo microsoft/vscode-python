@@ -1026,7 +1026,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                     const bStr = b.insertText ? b.insertText.toString() : '';
                     return aStr.localeCompare(bStr);
                 } else {
-                    return a.kind - b.kind;
+                    return b.kind - a.kind; // Reverse sort kind
                 }
             }).map(i => i.insertText as string);
             this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: sorted, line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
