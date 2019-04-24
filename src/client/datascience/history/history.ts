@@ -1019,7 +1019,17 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
         this.autoCompleteCancelSource = new CancellationTokenSource();
         this.completionProvider.provideCompletionItems(request.line, request.ch, this.autoCompleteCancelSource.token).then(items => {
-            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: items.map(i => i.insertText as string), line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
+            // Sort the items by kind and insertText
+            const sorted = items.sort((a, b) => {
+                if (a.kind === b.kind || !a.kind || !b.kind) {
+                    const aStr = a.insertText ? a.insertText.toString() : '';
+                    const bStr = b.insertText ? b.insertText.toString() : '';
+                    return aStr.localeCompare(bStr);
+                } else {
+                    return a.kind - b.kind;
+                }
+            }).map(i => i.insertText as string);
+            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: sorted, line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
         }).catch(_e => {
             this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: [], line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
         });
