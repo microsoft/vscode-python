@@ -53,7 +53,7 @@
 - [ ] Generate the final `.vsix` file
 - [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
 - [ ] Upload the final `.vsix` file to the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-- [ ] Publish [documentation changes](https://github.com/microsoft/vscode-docs/pulls)
+- [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 - [ ] Publish the [blog](http://aka.ms/pythonblog) post
 - [ ] Create a [release](https://github.com/Microsoft/vscode-python/releases) on GitHub (which creates an appropriate git tag)
 - [ ] Determine if a hotfix is needed
@@ -64,5 +64,5 @@
 - [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 
 ## Clean up after _this_ release
-- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc) and close any that have no activity for over a month
+- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc+-label%3A%22data+science%22) and close any that have no activity for over a month
 - [ ] GDPR bookkeeping
