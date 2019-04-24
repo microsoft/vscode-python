@@ -173,12 +173,13 @@ class HistoryDocument implements TextDocument {
         };
     }
     public addLines(code: string): TextDocumentContentChangeEvent[] {
+        this._version += 1;
         const normalized = code.replace(/\r/g, '');
         this._lines.splice(this._editOffset);
         const lastIndex = this._lines.length;
-        this._lines = this._lines.concat(normalized.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i + lastIndex)));
-        this._editOffset = this._lines.length;
         this._contents += this._contents.length ? `\n${normalized}` : normalized;
+        this._lines = this.createLines(this._contents);
+        this._editOffset = this._lines.length;
         return [
             // tslint:disable-next-line: no-object-literal-type-assertion
             {
@@ -191,6 +192,7 @@ class HistoryDocument implements TextDocument {
     }
 
     public editLines(from: Position, to: Position, newCode: string, _removedCode?: string): TextDocumentContentChangeEvent[] {
+        this._version += 1;
         // From and to are the offset from the beginning of a cell, not the offset of our document
         const fromLine = from.line + this._editOffset;
         const toLine = to.line + this._editOffset;
@@ -201,7 +203,7 @@ class HistoryDocument implements TextDocument {
         const before = this._contents.substr(0, fromOffset);
         const after = this._contents.substr(toOffset);
         this._contents = `${before}${newCode}${after}`;
-        this._lines  = this._contents.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i));
+        this._lines  = this.createLines(this._contents);
 
         return [
             // tslint:disable-next-line: no-object-literal-type-assertion
@@ -219,13 +221,22 @@ class HistoryDocument implements TextDocument {
         return new Position(line + this._editOffset, ch);
     }
 
+    private createLines(contents: string) : TextLine[] {
+        let split = contents.splitLines({trim: false, removeEmptyEntries: false});
+        // Skip an empty last line if there is one.
+        if (split && split.length > 0 && split[split.length - 1].length === 0) {
+            split = split.slice(0, split.length - 1);
+        }
+        return split.map((s, i) => this.createTextLine(s, i));
+    }
+
     private createTextLine(line: string, index: number) : TextLine {
         return new HistoryLine(line, index);
     }
 
     private convertToOffset(pos: Position) : number {
         // Combine the text length up to this position
-        const lenUpToPos = this._lines.filter(l => l.range.start.line < pos.line).map(l => l.range.end.character).reduce((p, c) => p + c);
+        const lenUpToPos = this._lines.filter(l => l.range.start.line < pos.line).map(l => l.rangeIncludingLineBreak.end.character).reduce((p, c) => p + c);
 
         // Add on the character
         return lenUpToPos + pos.character;
