@@ -318,9 +318,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private onChange = (_newValue: string, change: CodeMirror.EditorChange) => {
         this.setState({allowWatermark: false});
-        if (change.text.length === 1 && change.text[0] === '.' && this.codeMirror && !this.props.readOnly) {
-            this.codeMirror.execCommand('autocomplete');
-        }
         // Pass this change onto any listeners
         if (!this.props.readOnly) {
             this.props.onChange(
@@ -330,6 +327,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                 change.to.ch,
                 change.text.join('\n'),
                 change.removed ? change.removed.join('\n') : undefined);
+        }
+        if (change.text.length === 1 && change.text[0] === '.' && this.codeMirror && !this.props.readOnly) {
+            this.codeMirror.execCommand('autocomplete');
         }
     }
 

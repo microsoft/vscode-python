@@ -84,7 +84,7 @@ export class JupyterSession implements IJupyterSession {
                 this.session.kernel.status !== 'idle' &&
                 (Date.now() - startTime < timeout)) {
                 traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
-                await sleep(10);
+                await sleep(100);
             }
 
             // If we didn't make it out in ten seconds, indicate an error

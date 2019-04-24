@@ -159,7 +159,7 @@ class HistoryDocument implements TextDocument {
 
     public get textDocumentItem() : TextDocumentItem {
         return {
-            uri : this.fileName,
+            uri : this._uri.toString(),
             languageId: this.languageId,
             version: this.version,
             text: this.getText()
@@ -168,24 +168,25 @@ class HistoryDocument implements TextDocument {
 
     public get textDocumentId() : VersionedTextDocumentIdentifier {
         return {
-            uri: this.fileName,
+            uri: this._uri.toString(),
             version: this.version
         };
     }
     public addLines(code: string): TextDocumentContentChangeEvent[] {
+        const normalized = code.replace(/\r/g, '');
         this._lines.splice(this._editOffset);
         const lastIndex = this._lines.length;
-        const oldEnd = this._editOffset;
-        this._lines.concat(code.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i + lastIndex)));
+        this._lines = this._lines.concat(normalized.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i + lastIndex)));
         this._editOffset = this._lines.length;
-        this._contents += this._contents.length ? `\n${code}` : code;
+        this._contents += this._contents.length ? `\n${normalized}` : normalized;
         return [
+            // tslint:disable-next-line: no-object-literal-type-assertion
             {
-                range: new Range(new Position(lastIndex, 0), new Position(this._lines.length, 0)),
-                rangeOffset: oldEnd,
-                rangeLength: code.length,
-                text: code
-            }
+                range: this.createSerializableRange(new Position(lastIndex, 0), new Position(this._lines.length, 0)),
+                // Range offset not passed by the editor so don't use it.
+                rangeLength: normalized.length,
+                text: normalized
+            } as TextDocumentContentChangeEvent
         ];
     }
 
@@ -197,20 +198,25 @@ class HistoryDocument implements TextDocument {
         // Recreate our contents, and then recompute all of our lines
         const fromOffset = this.convertToOffset(new Position(fromLine, from.character));
         const toOffset = this.convertToOffset(new Position(toLine, to.character));
-        const before = this._contents.substr(fromOffset);
+        const before = this._contents.substr(0, fromOffset);
         const after = this._contents.substr(toOffset);
         this._contents = `${before}${newCode}${after}`;
         this._lines  = this._contents.splitLines({trim: false, removeEmptyEntries: false}).map((c, i) => this.createTextLine(c, i));
 
         return [
+            // tslint:disable-next-line: no-object-literal-type-assertion
             {
-                range: new Range(new Position(fromLine, from.character), new Position(toLine, to.character)),
-                rangeOffset: fromOffset,
-                rangeLength: newCode.length,
+                range: this.createSerializableRange(new Position(fromLine, from.character), new Position(toLine, to.character)),
+                // Range offset not passed by the editor so don't use it.
+                rangeLength: toOffset - fromOffset,
                 text: newCode
-            }
+            } as TextDocumentContentChangeEvent
         ];
 
+    }
+
+    public convertToDocumentPosition(line: number, ch: number) : Position {
+        return new Position(line + this._editOffset, ch);
     }
 
     private createTextLine(line: string, index: number) : TextLine {
@@ -219,10 +225,24 @@ class HistoryDocument implements TextDocument {
 
     private convertToOffset(pos: Position) : number {
         // Combine the text length up to this position
-        const lenUpToPos = this._lines.filter(l => l.range.start.line <= pos.line).map(l => l.text.length + 1).reduce((p, c) => p + c);
+        const lenUpToPos = this._lines.filter(l => l.range.start.line < pos.line).map(l => l.range.end.character).reduce((p, c) => p + c);
 
         // Add on the character
         return lenUpToPos + pos.character;
+    }
+
+    private createSerializableRange(start: Position, end: Position) : Range {
+        const result = {
+            start: {
+                line: start.line,
+                character: start.character
+            },
+            end: {
+                line: end.line,
+                character: end.character
+            }
+        };
+        return result as Range;
     }
 }
 
@@ -266,9 +286,10 @@ export class CompletionProvider implements IHistoryCompletionProvider {
 
     public async provideCompletionItems(line: number, ch: number, cancellationToken: CancellationToken) : Promise<CompletionItem[]> {
         if (this.languageClient && this.document) {
-            const position = new Position(line, ch); // Need to add on last line here
+            const position = this.document.convertToDocumentPosition(line, ch);
             const context: CompletionContext = {
-                triggerKind: CompletionTriggerKind.TriggerCharacter
+                triggerKind: CompletionTriggerKind.TriggerCharacter,
+                triggerCharacter: '.'
             };
             const result = await this.languageClient.sendRequest(
                 CompletionRequest.type,
