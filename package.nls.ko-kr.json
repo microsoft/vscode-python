@@ -23,5 +23,5 @@
 	"python.snippet.launch.django.label": "Python: Django",
 	"python.snippet.launch.flask.label": "Python: Flask",
 	"python.snippet.launch.pyramid.label": "Python: Pyramid 응용 프로그램",
-	"python.snippet.launch.attach.label": "Python: 연결",
+	"python.snippet.launch.attach.label": "Python: 연결"
 }
