@@ -23,5 +23,5 @@
 	"python.snippet.launch.django.label": "Python: Django",
 	"python.snippet.launch.flask.label": "Python: Flask",
 	"python.snippet.launch.pyramid.label": "Python: Pyramid アプリケーション",
-	"python.snippet.launch.attach.label": "Python: アタッチ",
+	"python.snippet.launch.attach.label": "Python: アタッチ"
 }

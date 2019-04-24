@@ -28,5 +28,5 @@
     "python.snippet.launch.flask.label": "Python：Flask",
     "python.snippet.launch.pyramid.label": "Python：Pyramid 程式",
     "python.snippet.launch.attach.label": "Python：附加",
-    "python.command.python.discoverTests.title": "探索 Unit 測試項目",
+    "python.command.python.discoverTests.title": "探索 Unit 測試項目"
 }

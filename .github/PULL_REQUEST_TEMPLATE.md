@@ -7,6 +7,7 @@ For #
 - [ ] Pull request represents a single change (i.e. not fixing disparate/unrelated things in a single PR)
 - [ ] Title summarizes what is changing
 - [ ] Has a [news entry](https://github.com/Microsoft/vscode-python/tree/master/news) file (remember to thank yourself!)
+- [ ] Appropriate comments and documentation strings in the code
 - [ ] Has sufficient logging.
 - [ ] Has telemetry for enhancements.
 - [ ] Unit tests & system/integration tests are added/updated
