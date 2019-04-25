@@ -38,32 +38,6 @@
     margin-bottom: 10px;
 }
 
-.code-area .monaco-editor
-{ 
-    overflow: hidden;
-}
-
-.code-area .monaco-editor .slider 
-{ 
-    margin: 0; 
-}
-
-.code-area .monaco-editor .parameter-hints-widget {
-    border: 0px;
-  }
-  .code-area .monaco-editor .parameter-hints-widget .signature {
-    padding: 0px;
-  }
-  .code-area .monaco-editor .suggest-widget {
-    border: 0px;
-  }
-  .code-area .monaco-editor.vs-dark .suggest-widget {
-    border: 0px;
-  }
-  .code-area .monaco-editor .rename-box {
-    top: 0;
-  }
-
 .code-watermark {
     position: absolute;
     top: 0;
@@ -71,4 +45,9 @@
     z-index: 500;
     font-style: italic;
     color: var(--override-watermark-color, var(--vscode-pickerGroup-border));
+}
+
+.measure-width-div {
+    width: 100%;
+    visibility: none;
 }

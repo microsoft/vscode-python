@@ -3,7 +3,8 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 const configFileName = 'tsconfig.datascience-ui.json';
 
@@ -33,6 +34,9 @@ module.exports = [
                 { from: './**/*.css', to: '.' },
                 { from: './**/*theme*.json', to: '.' }
             ], { context: 'src' }),
+            new MonacoWebpackPlugin({
+                languages: ['python']
+            })
         ],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
