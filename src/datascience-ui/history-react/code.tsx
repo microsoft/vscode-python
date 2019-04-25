@@ -152,7 +152,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.subscriptions.push(editor.onCompositionStart(this.compositionStart));
         this.subscriptions.push(editor.onDidFocusEditorWidget(this.focusEditorWidget));
 
-        // Setup our context menu to show up outside. Need this for autocomplete too
+        // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
         this.subscriptions.push(editor.onContextMenu((e) => {
             if (this.state.editor) {
                 const domNode = this.state.editor.getDomNode();
