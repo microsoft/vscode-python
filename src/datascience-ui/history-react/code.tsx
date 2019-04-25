@@ -9,6 +9,7 @@ import MonacoEditor from 'react-monaco-editor';
 import { IProvideCompletionItemsResponse } from '../../client/datascience/history/historyTypes';
 import { InputHistory } from './inputHistory';
 
+import '../../../node_modules/monaco-editor/esm/vs/basic-languages/python/python.js';
 import './code.css';
 
 const LINE_HEIGHT = 18;
@@ -98,7 +99,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             overviewRulerLanes: 0,
             hideCursorInOverviewRuler: true,
             folding: false,
-            readOnly: readOnly
+            readOnly: readOnly,
+            lineDecorationsWidth: 0
         };
 
         return (
