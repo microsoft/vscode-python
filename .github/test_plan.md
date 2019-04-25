@@ -381,6 +381,25 @@ def test_failure():
     1. Verify the output from what you added
 - [ ] Verify dark and light main themes
     1. Repeat the `Start and connect to local server` and `Verify basic outputs` steps using `Default Dark+` and `Default Light+` themes
+- [ ] Verify Variable Explorer
+    1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
+    1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
+    1. Check that variables have expected values. They will be truncated for longer items
+    1. Sort the list ascending and descending by Type. Also sort the list ascending and descenting by Count. Values like (X, Y) use the first X value for Count sort ordering
+    1. Check that list, Series, ndarray, and DataFrame types have a button to "Show variable in data viewer" on the right
+    1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
+- [ ] Verify Data Explorer
+    1. From the listed types in the Variable explorer open up the Data Viewer by clicking the button or double clicking the row
+    1. Inspect the data in the Data Viewer for the expected values
+      [ ] Verify Sorting and Filtering
+        1. Open up the myDataFrame item
+        1. Sort the name column ascending and descending
+        1. Sort one of the numerical columns ascending and descending
+        1. Click the Filter Rows button
+        1. In the name filter box input 'a' to filter to just name with an a in them
+        1. In one of the numerical columns input a number 1 - 9 to filter to just that column
+    1. Open the myList variable in the explorer
+    1. Make sure that you can scroll all the way to the end of the entries
 
 #### P1 Test Scenarios
 - [ ] Connect to a `remote` server
