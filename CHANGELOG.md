@@ -1,5 +1,13 @@
 # Changelog
 
+## 2019.4.1 (24 April 2019)
+
+### Fixes
+
+1. Remove trailing commas in JSON files.
+   (thanks [Romain](https://github.com/quarthex))
+   ([#5437](https://github.com/Microsoft/vscode-python/issues/5437))
+
 ## 2019.4.0 (23 April 2019)
 
 ### Enhancements
@@ -58,6 +66,14 @@
    ([#5219](https://github.com/Microsoft/vscode-python/issues/5219))
 1. Add telemetry for variable explorer and turn on by default.
    ([#5337](https://github.com/Microsoft/vscode-python/issues/5337))
+1. Show a message when no variables are defined
+   ([#5228](https://github.com/Microsoft/vscode-python/issues/5228))
+1. Variable explorer UI fixes via PM / designer
+   ([#5274](https://github.com/Microsoft/vscode-python/issues/5274))
+1. Allow column sorting in variable explorer
+   ([#5281](https://github.com/Microsoft/vscode-python/issues/5281))
+1. Swap getsizeof size value for something more sensible in the variable explorer
+   ([#5368](https://github.com/Microsoft/vscode-python/issues/5368))
 
 ### Fixes
 
@@ -110,6 +126,16 @@
    ([#5333](https://github.com/Microsoft/vscode-python/issues/5333))
 1. Fix dataviewer header column alignment.
    ([#5351](https://github.com/Microsoft/vscode-python/issues/5351))
+1. Make background cell color useable in all themes.
+   ([#5236](https://github.com/Microsoft/vscode-python/issues/5236))
+1. Filtered rows shows 'fetching' instead of No rows.
+   ([#5278](https://github.com/Microsoft/vscode-python/issues/5278))
+1. Multi-dimensional arrays don't open in the data viewer.
+   ([#5395](https://github.com/Microsoft/vscode-python/issues/5395))
+1. Fix sorting of lists with numbers and missing entries.
+   ([#5414](https://github.com/Microsoft/vscode-python/issues/5414))
+1. Fix error with bad len() values in variable explorer
+   ([#5420](https://github.com/Microsoft/vscode-python/issues/5420))
 1. Update ptvsd to [4.2.8](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.8).
     * Path mapping bug fixes.
     * Fix for hang when using debug console.
@@ -184,6 +210,10 @@
    ([#5213](https://github.com/Microsoft/vscode-python/issues/5213))
 1. Fix failing variable explorer test.
    ([#5348](https://github.com/Microsoft/vscode-python/issues/5348))
+1. Reliably end test tasks in Azure Pipelines.
+   ([#5129](https://github.com/Microsoft/vscode-python/issues/5129))
+1. Deprecate [travis](https://travis-ci.org/) in favor of [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
+   ([#4024](https://github.com/Microsoft/vscode-python/issues/4024))
 
 ### Thanks
 
