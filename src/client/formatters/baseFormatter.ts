@@ -1,12 +1,12 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { isNotInstalledError } from '../common/helpers';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { IInstaller, IOutputChannel, Product } from '../common/types';
+import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
@@ -77,7 +77,11 @@ export abstract class BaseFormatter {
                 this.deleteTempFile(document.fileName, tempFile).ignoreErrors();
                 return edits;
             });
-        vscode.window.setStatusBarMessage(`Formatting with ${this.Id}`, promise);
+
+        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        const disposable = appShell.setStatusBarMessage(`Formatting with ${this.Id}`, promise);
+        disposableRegistry.push(disposable);
         return promise;
     }
 
