@@ -25,8 +25,8 @@
 }
 
 .collapseInputLabel {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     font-family: var(--vscode-editor-font-family);
     font-weight: var(--vscode-editor-font-weight);
     margin: 3px;

@@ -138,8 +138,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         const terminal = this.workspaceService.getConfiguration('terminal');
         const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
         const workbench = this.workspaceService.getConfiguration('workbench');
-        const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
-        const theme = ignoreTheme || !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
+        const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {

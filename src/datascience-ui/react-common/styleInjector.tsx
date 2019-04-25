@@ -6,6 +6,7 @@ import * as React from 'react';
 import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/constants';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
+import { getSettings } from './settingsReactSide';
 import { detectBaseTheme } from './themeDetector';
 
 export interface IStyleInjectorProps {
@@ -112,7 +113,8 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     }
 
     private computeKnownDark() : boolean {
-        const baseTheme = detectBaseTheme();
+        const ignore = getSettings && getSettings().ignoreVscodeTheme ? true : false;
+        const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
         return baseTheme !== 'vscode-light';
     }
 }

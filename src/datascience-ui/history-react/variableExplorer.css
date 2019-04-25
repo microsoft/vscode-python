@@ -1,6 +1,7 @@
 .variable-explorer {
     margin: 5px;
-    background-color: var(--vscode-editor-background);
+    background: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
 }
 
 #variable-explorer-data-grid {

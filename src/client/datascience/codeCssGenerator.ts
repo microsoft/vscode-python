@@ -20,7 +20,7 @@ const LightTheme = 'light';
 // are ignoring themes.
 //tslint:disable:no-multiline-string object-literal-key-quotes
 const DefaultCssVars: { [key: string] : string } = {
-    LightTheme : `
+    'light' : `
     :root {
         --override-widget-background: #f3f3f3;
         --override-foreground: #000000;
@@ -29,9 +29,11 @@ const DefaultCssVars: { [key: string] : string } = {
         --override-watermark-color: #cccedb;
         --override-tabs-background: #f3f3f3;
         --override-progress-background: #0066bf;
+        --override-badge-background: #c4c4c4;
+        --override-lineHighlightBorder: #eeeeee;
     }
 `,
-    DarkTheme : `
+    'dark' : `
     :root {
         --override-widget-background: #1e1e1e;
         --override-foreground: #d4d4d4;
@@ -40,6 +42,8 @@ const DefaultCssVars: { [key: string] : string } = {
         --override-watermark-color: #3f3f46;
         --override-tabs-background: #252526;
         --override-progress-background: #0066bf;
+        --override-badge-background: #4d4d4d;
+        --override-lineHighlightBorder: #282828;
     }
 `
 };
