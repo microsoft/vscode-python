@@ -459,6 +459,12 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             if (this.jupyterServer) {
                 await this.jupyterServer.restartKernel(this.generateDataScienceExtraSettings().jupyterInterruptTimeout);
                 await this.addSysInfo(SysInfoReason.Restart);
+
+                // Compute if dark or not.
+                const knownDark = await this.isDark();
+
+                // Before we run any cells, update the dark setting
+                await this.jupyterServer.setMatplotLibStyle(knownDark);
             }
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
