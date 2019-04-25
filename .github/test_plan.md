@@ -413,6 +413,9 @@ def test_failure():
     1. Switch back and forth between a 'light' and a 'dark' theme
     1. Check that the cell switches colors
     1. Check that the buttons on the top change to their appropriate 'light' or 'dark' versions
+    1. Enable the 'ignoreVscodeTheme' setting
+    1. Close the Python Interactive window and reopen it. The theme in just the 'Python Interactive' window should be light
+    1. Switch to a dark theme. Make sure the interactive window remains in the light theme.
 - [ ] Verify code lenses
     1. Check that `Run Cell` `Run Above` and `Run Below` all do the correct thing
 - [ ] Verify context menu navigation commands
