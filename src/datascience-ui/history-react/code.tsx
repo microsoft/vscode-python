@@ -9,6 +9,8 @@ import MonacoEditor from 'react-monaco-editor';
 import { IProvideCompletionItemsResponse } from '../../client/datascience/history/historyTypes';
 import { InputHistory } from './inputHistory';
 
+// This next line is necessary to get webpack to load the python language settings. Otherwise
+// it will fail to do so dynamically at run time.
 import '../../../node_modules/monaco-editor/esm/vs/basic-languages/python/python.js';
 import './code.css';
 
