@@ -228,7 +228,7 @@ def _parse_item(item, _normcase, _pathsep):
             testfunc = '.'.join(suites) + '.' + funcname
         else:
             testfunc = funcname
-    elif kind == 'doctest':
+    else:
         testfunc = None
         funcname = None
 
@@ -397,7 +397,7 @@ def _get_item_kind(item):
         return 'function', False
     elif itemtype == 'TestCaseFunction':
         return 'function', True
-    elif item.hasattr('function'):
+    elif hasattr(item, 'function'):
         return 'function', False
     else:
         return None, False
