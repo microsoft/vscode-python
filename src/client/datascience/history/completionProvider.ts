@@ -4,14 +4,11 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
-    CompletionContext,
-    CompletionItem,
-    CompletionList,
-    CompletionTriggerKind,
     EndOfLine,
     Position,
     Range,
@@ -26,7 +23,9 @@ import {
     DidOpenTextDocumentNotification,
     LanguageClient,
     TextDocumentItem,
-    VersionedTextDocumentIdentifier
+    VersionedTextDocumentIdentifier,
+    CompletionItem,
+    CompletionList
 } from 'vscode-languageclient';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../activation/types';
@@ -191,28 +190,28 @@ class HistoryDocument implements TextDocument {
         ];
     }
 
-    public editLines(from: Position, to: Position, newCode: string, _removedCode?: string): TextDocumentContentChangeEvent[] {
+    public editLines(_editorChanges: monacoEditor.editor.IModelContentChange[]): TextDocumentContentChangeEvent[] {
         this._version += 1;
         // From and to are the offset from the beginning of a cell, not the offset of our document
-        const fromLine = from.line + this._editOffset;
-        const toLine = to.line + this._editOffset;
+        // const fromLine = from.line + this._editOffset;
+        // const toLine = to.line + this._editOffset;
 
-        // Recreate our contents, and then recompute all of our lines
-        const fromOffset = this.convertToOffset(new Position(fromLine, from.character));
-        const toOffset = this.convertToOffset(new Position(toLine, to.character));
-        const before = this._contents.substr(0, fromOffset);
-        const after = this._contents.substr(toOffset);
-        this._contents = `${before}${newCode}${after}`;
-        this._lines  = this.createLines(this._contents);
+        // // Recreate our contents, and then recompute all of our lines
+        // const fromOffset = this.convertToOffset(new Position(fromLine, from.character));
+        // const toOffset = this.convertToOffset(new Position(toLine, to.character));
+        // const before = this._contents.substr(0, fromOffset);
+        // const after = this._contents.substr(toOffset);
+        // this._contents = `${before}${newCode}${after}`;
+        // this._lines  = this.createLines(this._contents);
 
         return [
             // tslint:disable-next-line: no-object-literal-type-assertion
-            {
-                range: this.createSerializableRange(new Position(fromLine, from.character), new Position(toLine, to.character)),
-                // Range offset not passed by the editor so don't use it.
-                rangeLength: toOffset - fromOffset,
-                text: newCode
-            } as TextDocumentContentChangeEvent
+            // {
+            //     range: this.createSerializableRange(new Position(fromLine, from.character), new Position(toLine, to.character)),
+            //     // Range offset not passed by the editor so don't use it.
+            //     rangeLength: toOffset - fromOffset,
+            //     text: newCode
+            // } as TextDocumentContentChangeEvent
         ];
 
     }
@@ -295,21 +294,20 @@ export class CompletionProvider implements IHistoryCompletionProvider {
         this.document = new HistoryDocument(dummyFilePath);
     }
 
-    public async provideCompletionItems(line: number, ch: number, cancellationToken: CancellationToken) : Promise<CompletionItem[]> {
+    public async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
         if (this.languageClient && this.document) {
-            const position = this.document.convertToDocumentPosition(line, ch);
-            const context: CompletionContext = {
-                triggerKind: CompletionTriggerKind.TriggerCharacter,
-                triggerCharacter: '.'
-            };
+            const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
             const result = await this.languageClient.sendRequest(
                 CompletionRequest.type,
-                this.languageClient.code2ProtocolConverter.asCompletionParams(this.document, position, context),
-                cancellationToken) as CompletionList;
-            return result ? result.items : [];
+                this.languageClient.code2ProtocolConverter.asCompletionParams(this.document, docPos, context),
+                token);
+            return this.convertToMonacoCompletionList(result);
         }
 
-        return [];
+        return {
+            suggestions: [],
+            incomplete: true
+        };
     }
     public async addCell(code: string, file: string): Promise<void> {
         if (!this.languageClient) {
@@ -330,10 +328,10 @@ export class CompletionProvider implements IHistoryCompletionProvider {
             }
         }
     }
-    public async editCell(from: Position, to: Position, newCode: string, removedCode?: string): Promise<void> {
+    public async editCell(editorChanges: monacoEditor.editor.IModelContentChange[]): Promise<void> {
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
-            changes = this.document.editLines(from, to, newCode, removedCode);
+            changes = this.document.editLines(editorChanges);
         }
 
         // Broadcast an update to the language server
@@ -345,5 +343,34 @@ export class CompletionProvider implements IHistoryCompletionProvider {
                 return this.languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
             }
         }
+    }
+
+    private convertToMonacoCompletionItem(item: CompletionItem) : monacoEditor.languages.CompletionItem {
+        // They should be pretty much identical? Except for ranges.
+        // tslint:disable-next-line: no-any
+        return (item as any) as monacoEditor.languages.CompletionItem;
+    }
+
+    private convertToMonacoCompletionList(result: CompletionList | CompletionItem[] | null) : monacoEditor.languages.CompletionList {
+        if (result) {
+            if (result.hasOwnProperty('isIncomplete')) {
+                const list = result as CompletionList;
+                return {
+                    suggestions: list.items.map(this.convertToMonacoCompletionItem),
+                    incomplete: list.isIncomplete
+                };
+            } else {
+                const array = result as CompletionItem[];
+                return {
+                    suggestions: array.map(this.convertToMonacoCompletionItem),
+                    incomplete: false
+                };
+            }
+        }
+
+        return {
+            suggestions: [],
+            incomplete: true
+        };
     }
 }

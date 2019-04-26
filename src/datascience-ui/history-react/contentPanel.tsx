@@ -3,8 +3,8 @@
 'use strict';
 import './contentPanel.css';
 
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
-import { IProvideCompletionItemsResponse } from '../../client/datascience/history/historyTypes';
 import { noop } from '../../test/core';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -24,8 +24,7 @@ export interface IContentPanelProps {
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
     submitInput(code: string): void;
-    onCodeChange(fromLine: number, fromCh: number, toLine: number, toCh: number, text: string, removed?: string): void;
-    requestCompletionItems(line: number, ch: number, id: string) : Promise<IProvideCompletionItemsResponse>;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[]): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -84,7 +83,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     gotoCode={() => this.props.gotoCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
                     onCodeChange={this.props.onCodeChange}
-                    requestCompletionItems={this.props.requestCompletionItems}
                     />
             </ErrorBoundary>
         );

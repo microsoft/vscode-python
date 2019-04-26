@@ -6,7 +6,6 @@ import * as React from 'react';
 // tslint:disable-next-line: import-name
 import MonacoEditor from 'react-monaco-editor';
 
-import { IProvideCompletionItemsResponse } from '../../client/datascience/history/historyTypes';
 import { InputHistory } from './inputHistory';
 
 // This next line is necessary to get webpack to load the python language settings. Otherwise
@@ -27,9 +26,7 @@ export interface ICodeProps {
     showWatermark: boolean;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
-    onChange(fromLine: number, fromCh: number, toLine: number, toCh: number, text: string, removed?: string): void;
-    requestCompletionItems(line: number, ch: number, id: string) : Promise<IProvideCompletionItemsResponse>;
-
+    onChange(changes: monacoEditor.editor.IModelContentChange[]): void;
 }
 
 interface ICodeState {
@@ -176,6 +173,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         if (e.changes.length) {
             this.windowResized();
         }
+        this.props.onChange(e.changes);
     }
 
     private compositionStart = () => {

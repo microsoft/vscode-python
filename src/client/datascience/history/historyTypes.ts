@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
@@ -75,17 +76,12 @@ export interface ISubmitNewCell {
 }
 
 export interface IProvideCompletionItemsRequest {
-    line: number;
-    ch: number;
-    triggerKey: string;
-    id: string;
+    position: monacoEditor.Position;
+    context: monacoEditor.languages.CompletionContext;
 }
 
 export interface IProvideCompletionItemsResponse {
-    items: string[];
-    line: number;
-    ch: number;
-    id: string;
+    list: monacoEditor.languages.CompletionList;
 }
 
 export interface IPosition {
@@ -94,10 +90,7 @@ export interface IPosition {
 }
 
 export interface IEditCell {
-    from: IPosition;
-    to: IPosition;
-    newCode: string;
-    removedCode?: string;
+    changes: monacoEditor.editor.IModelContentChange[];
 }
 
 // Map all messages to specific payloads

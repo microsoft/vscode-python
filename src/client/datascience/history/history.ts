@@ -1018,28 +1018,14 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             this.autoCompleteCancelSource.cancel();
         }
         this.autoCompleteCancelSource = new CancellationTokenSource();
-        this.completionProvider.provideCompletionItems(request.line, request.ch, this.autoCompleteCancelSource.token).then(items => {
-            // Sort the items by kind and insertText
-            const sorted = items.sort((a, b) => {
-                if (a.kind === b.kind || !a.kind || !b.kind) {
-                    const aStr = a.insertText ? a.insertText.toString() : '';
-                    const bStr = b.insertText ? b.insertText.toString() : '';
-                    return aStr.localeCompare(bStr);
-                } else {
-                    return b.kind - a.kind; // Reverse sort kind
-                }
-            }).map(i => i.insertText as string);
-            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: sorted, line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
+        this.completionProvider.provideCompletionItems(request.position, request.context, this.autoCompleteCancelSource.token).then(list => {
+            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {list}).ignoreErrors();
         }).catch(_e => {
-            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {items: [], line: request.line, ch: request.ch, id: request.id}).ignoreErrors();
+            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }}).ignoreErrors();
         });
     }
 
     private editCell(request: IEditCell) {
-        this.completionProvider.editCell(
-            new Position(request.from.line, request.from.ch),
-            new Position(request.to.line, request.to.ch),
-            request.newCode,
-            request.removedCode).ignoreErrors();
+        this.completionProvider.editCell(request.changes).ignoreErrors();
     }
 }

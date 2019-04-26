@@ -4,15 +4,14 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Observable } from 'rxjs/Observable';
 import {
     CancellationToken,
     CodeLens,
     CodeLensProvider,
-    CompletionItem,
     Disposable,
     Event,
-    Position,
     Range,
     TextDocument,
     TextEditor
@@ -161,10 +160,23 @@ export interface IHistory extends Disposable {
 
 export const IHistoryCompletionProvider = Symbol('IHistoryCompletionProvider');
 
+/**
+ * Provides completion for the editor in the History window
+ */
 export interface IHistoryCompletionProvider extends IDisposable {
-    provideCompletionItems(line: number, ch: number, token: CancellationToken) : Promise<CompletionItem[]>;
+    /**
+     * Gets a list of completion items for the editor
+     * @param position
+     * @param context
+     * @param token
+     */
+    provideCompletionItems(
+        position: monacoEditor.Position,
+        context: monacoEditor.languages.CompletionContext,
+        token: CancellationToken
+    ) : Promise<monacoEditor.languages.CompletionList>;
     addCell(code: string, file: string): Promise<void>;
-    editCell(from: Position, to: Position, newCode: string, removedCode?: string): Promise<void>;
+    editCell(changes: monacoEditor.editor.IModelContentChange[]): Promise<void>;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
