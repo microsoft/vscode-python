@@ -26,6 +26,7 @@ export interface IMainPanelState {
     rootStyle?: string;
     theme?: string;
     forceDark?: boolean;
+    monacoTheme?: string;
 }
 
 // tslint:disable-next-line: no-multiline-string

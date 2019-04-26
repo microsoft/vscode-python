@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IS_WINDOWS } from '../common/platform/constants';
 
@@ -175,6 +175,8 @@ export namespace LiveShareCommands {
 export namespace CssMessages {
     export const GetCssRequest = 'get_css_request';
     export const GetCssResponse = 'get_css_response';
+    export const GetMonacoThemeRequest = 'get_monaco_theme_request';
+    export const GetMonacoThemeResponse = 'get_monaco_theme_response';
 }
 
 export namespace SharedMessages {
@@ -186,8 +188,16 @@ export interface IGetCssRequest {
     isDark: boolean;
 }
 
+export interface IGetMonacoThemeRequest {
+    isDark: boolean;
+}
+
 export interface IGetCssResponse {
     css: string;
     theme: string;
     knownDark?: boolean;
+}
+
+export interface IGetMonacoThemeResponse {
+    theme: monacoEditor.editor.IStandaloneThemeData;
 }

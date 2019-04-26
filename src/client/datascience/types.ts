@@ -247,6 +247,7 @@ export interface ISysInfo extends nbformat.IBaseCell {
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
+    generateMonacoTheme(isDark: boolean, theme: string) : Promise<JSONObject>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');

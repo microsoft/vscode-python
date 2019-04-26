@@ -294,7 +294,8 @@ export class CompletionProvider implements IHistoryListener {
     }
 
     public dispose() {
-        this.languageServer.dispose();
+        // Actually don't dispose here. The extension does this elsewhere.
+        // this.languageServer.dispose();
     }
 
     public get postMessage(): Event<{message: string; payload: any}> {

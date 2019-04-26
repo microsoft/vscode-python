@@ -108,7 +108,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} postOffice={this.postOffice} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
+                <StyleInjector
+                    expectingDark={baseTheme !== 'vscode-light'}
+                    postOffice={this.postOffice}
+                    darkChanged={this.darkChanged}
+                    monacoThemeChanged={this.monacoThemeChanged}
+                    ref={this.styleInjectorRef} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
             </div>
@@ -227,6 +232,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private monacoThemeChanged = (theme: string) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    monacoTheme: theme
+                }
+            );
+        }
+    }
+
     private computeBaseTheme(): string {
         // If we're ignoring, always light
         if (getSettings && getSettings().ignoreVscodeTheme) {
@@ -256,7 +273,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             deleteCell: this.deleteCell,
             submitInput: this.submitInput,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            onCodeChange: this.codeChange
+            onCodeChange: this.codeChange,
+            monacoTheme: this.state.monacoTheme
         };
     }
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {

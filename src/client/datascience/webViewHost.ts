@@ -10,7 +10,7 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { CssMessages, DefaultTheme, IGetCssRequest, SharedMessages } from './constants';
+import { CssMessages, DefaultTheme, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './constants';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
@@ -104,6 +104,10 @@ export class WebViewHost<IMapping> implements IDisposable {
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
                 break;
 
+            case CssMessages.GetMonacoThemeRequest:
+                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
+                break;
+
             default:
                 break;
         }
@@ -175,6 +179,18 @@ export class WebViewHost<IMapping> implements IDisposable {
         const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
+    }
+
+    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest) : Promise<void> {
+        if (!this.themeIsDarkPromise.resolved) {
+            this.themeIsDarkPromise.resolve(request.isDark);
+        } else {
+            this.themeIsDarkPromise = createDeferred<boolean>();
+            this.themeIsDarkPromise.resolve(request.isDark);
+        }
+        const settings = this.generateDataScienceExtraSettings();
+        const monacoTheme = await this.cssGenerator.generateMonacoTheme(request.isDark, settings.extraSettings.theme);
+        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
     // tslint:disable-next-line:no-any

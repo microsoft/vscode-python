@@ -39,6 +39,7 @@ interface ICellProps {
     history: InputHistory | undefined;
     showWatermark: boolean;
     errorBackgroundColor: string;
+    monacoTheme: string | undefined;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -221,6 +222,7 @@ export class Cell extends React.Component<ICellProps> {
                         onChangeLineCount={this.onChangeLineCount}
                         ref={this.updateCodeRef}
                         onChange={this.props.onCodeChange}
+                        monacoTheme={this.props.monacoTheme}
                         />
                 </div>
             );

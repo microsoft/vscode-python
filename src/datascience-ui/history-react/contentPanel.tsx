@@ -20,6 +20,7 @@ export interface IContentPanelProps {
     codeTheme: string;
     submittedText: boolean;
     skipNextScroll: boolean;
+    monacoTheme: string | undefined;
     saveEditCellRef(ref: Cell | null): void;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
@@ -83,6 +84,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     gotoCode={() => this.props.gotoCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
                     onCodeChange={this.props.onCodeChange}
+                    monacoTheme={this.props.monacoTheme}
                     />
             </ErrorBoundary>
         );

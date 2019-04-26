@@ -24,6 +24,7 @@ export interface ICodeProps {
     history: InputHistory | undefined;
     cursorType: string;
     showWatermark: boolean;
+    monacoTheme: string | undefined;
     onSubmit(code: string): void;
     onChangeLineCount(lineCount: number) : void;
     onChange(changes: monacoEditor.editor.IModelContentChange[]): void;
@@ -106,7 +107,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             <div className={classes} ref={this.containerRef}>
                 <MonacoEditor
                     value={this.props.code}
-                    theme='vs'
+                    theme={this.props.monacoTheme ? this.props.monacoTheme : 'vs'}
                     language='python'
                     editorDidMount={this.editorDidMount}
                     options={options}
