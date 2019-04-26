@@ -120,6 +120,6 @@ suite('Module Installer - Poetry', () => {
 
         const info = await poetryInstaller.getExecutionInfo('something', uri);
 
-        assert.deepEqual(info, { args: ['add', 'something'], execPath: 'poetry path' });
+        assert.deepEqual(info, { args: ['add', '--dev', 'something'], execPath: 'poetry path' });
     });
 });
