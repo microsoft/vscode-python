@@ -234,7 +234,8 @@ class HistoryDocument implements TextDocument {
     }
 
     public convertToDocumentPosition(line: number, ch: number) : Position {
-        return new Position(line + this._editOffset, ch);
+        // Monaco is 1 based, and we need to add in our cell offset.
+        return new Position(line - 1 + this._editOffset, ch - 1);
     }
 
     private createLines(contents: string) : TextLine[] {
