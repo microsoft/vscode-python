@@ -4,7 +4,6 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Observable } from 'rxjs/Observable';
 import {
     CancellationToken,
@@ -158,25 +157,24 @@ export interface IHistory extends Disposable {
     exportCells(): void;
 }
 
-export const IHistoryCompletionProvider = Symbol('IHistoryCompletionProvider');
+export const IHistoryListener = Symbol('IHistoryListener');
 
 /**
- * Provides completion for the editor in the History window
+ * Listens to history messages to provide extra functionality
  */
-export interface IHistoryCompletionProvider extends IDisposable {
+export interface IHistoryListener extends IDisposable {
     /**
-     * Gets a list of completion items for the editor
-     * @param position
-     * @param context
-     * @param token
+     * Fires this event when posting a response message
      */
-    provideCompletionItems(
-        position: monacoEditor.Position,
-        context: monacoEditor.languages.CompletionContext,
-        token: CancellationToken
-    ) : Promise<monacoEditor.languages.CompletionList>;
-    addCell(code: string, file: string): Promise<void>;
-    editCell(changes: monacoEditor.editor.IModelContentChange[]): Promise<void>;
+    // tslint:disable-next-line: no-any
+    postMessage: Event<{message: string; payload: any}>;
+    /**
+     * Handles messages that the history window receives
+     * @param message message type
+     * @param payload message payload
+     */
+    // tslint:disable-next-line: no-any
+    onMessage(message: string, payload?: any): void;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview

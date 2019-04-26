@@ -32,7 +32,7 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IHistory,
-    IHistoryCompletionProvider,
+    IHistoryListener,
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
@@ -65,5 +65,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
-    serviceManager.addSingleton<IHistoryCompletionProvider>(IHistoryCompletionProvider, CompletionProvider);
+    serviceManager.addSingleton<IHistoryListener>(IHistoryListener, CompletionProvider);
 }

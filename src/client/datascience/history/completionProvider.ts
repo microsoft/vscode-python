@@ -9,7 +9,10 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
+    CancellationTokenSource,
     EndOfLine,
+    Event,
+    EventEmitter,
     Position,
     Range,
     TextDocument,
@@ -18,14 +21,14 @@ import {
     Uri
 } from 'vscode';
 import {
+    CompletionItem,
+    CompletionList,
     CompletionRequest,
     DidChangeTextDocumentNotification,
     DidOpenTextDocumentNotification,
     LanguageClient,
     TextDocumentItem,
-    VersionedTextDocumentIdentifier,
-    CompletionItem,
-    CompletionList
+    VersionedTextDocumentIdentifier
 } from 'vscode-languageclient';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../activation/types';
@@ -33,7 +36,15 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { Identifiers } from '../constants';
-import { IHistoryCompletionProvider } from '../types';
+import { IHistoryListener } from '../types';
+import {
+    HistoryMessages,
+    ICancelCompletionItemsRequest,
+    IEditCell,
+    IHistoryMapping,
+    IProvideCompletionItemsRequest,
+    IRemoteAddCode
+} from './historyTypes';
 
 class HistoryLine implements TextLine {
 
@@ -190,30 +201,36 @@ class HistoryDocument implements TextDocument {
         ];
     }
 
-    public editLines(_editorChanges: monacoEditor.editor.IModelContentChange[]): TextDocumentContentChangeEvent[] {
+    public editLines(editorChanges: monacoEditor.editor.IModelContentChange[]): TextDocumentContentChangeEvent[] {
         this._version += 1;
-        // From and to are the offset from the beginning of a cell, not the offset of our document
-        // const fromLine = from.line + this._editOffset;
-        // const toLine = to.line + this._editOffset;
 
-        // // Recreate our contents, and then recompute all of our lines
-        // const fromOffset = this.convertToOffset(new Position(fromLine, from.character));
-        // const toOffset = this.convertToOffset(new Position(toLine, to.character));
-        // const before = this._contents.substr(0, fromOffset);
-        // const after = this._contents.substr(toOffset);
-        // this._contents = `${before}${newCode}${after}`;
-        // this._lines  = this.createLines(this._contents);
+        // Convert the range to local (and remove 1 based)
+        if (editorChanges && editorChanges.length) {
+            const fromLine = editorChanges[0].range.startLineNumber - 1 + this._editOffset;
+            const toLine = editorChanges[0].range.endLineNumber - 1 + this._editOffset;
+            const fromChar = editorChanges[0].range.startColumn - 1;
+            const toChar = editorChanges[0].range.endColumn - 1;
 
-        return [
-            // tslint:disable-next-line: no-object-literal-type-assertion
-            // {
-            //     range: this.createSerializableRange(new Position(fromLine, from.character), new Position(toLine, to.character)),
-            //     // Range offset not passed by the editor so don't use it.
-            //     rangeLength: toOffset - fromOffset,
-            //     text: newCode
-            // } as TextDocumentContentChangeEvent
-        ];
+            // Recreate our contents, and then recompute all of our lines
+            const fromOffset = this.convertToOffset(new Position(fromLine, fromChar));
+            const toOffset = this.convertToOffset(new Position(toLine, toChar));
+            const before = this._contents.substr(0, fromOffset);
+            const after = this._contents.substr(toOffset);
+            this._contents = `${before}${editorChanges[0].text}${after}`;
+            this._lines = this.createLines(this._contents);
 
+            return [
+                // tslint:disable-next-line: no-object-literal-type-assertion
+                {
+                     range: this.createSerializableRange(new Position(fromLine, fromChar), new Position(toLine, toChar)),
+                     // Range offset not passed by the editor so don't use it.
+                     rangeLength: toOffset - fromOffset,
+                     text: editorChanges[0].text
+                } as TextDocumentContentChangeEvent
+            ];
+        }
+
+        return [];
     }
 
     public convertToDocumentPosition(line: number, ch: number) : Position {
@@ -256,13 +273,16 @@ class HistoryDocument implements TextDocument {
     }
 }
 
+// tslint:disable:no-any
 @injectable()
-export class CompletionProvider implements IHistoryCompletionProvider {
+export class CompletionProvider implements IHistoryListener {
 
     private languageClient : LanguageClient | undefined;
     private document: HistoryDocument | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private sentOpenDocument : boolean = false;
+    private postEmitter: EventEmitter<{message: string; payload: any}> = new EventEmitter<{message: string; payload: any}>();
+    private cancellationSources : { [key: string] : CancellationTokenSource } = {};
 
     constructor(
         @inject(ILanguageServer) private languageServer: ILanguageServer,
@@ -276,7 +296,61 @@ export class CompletionProvider implements IHistoryCompletionProvider {
         this.languageServer.dispose();
     }
 
-    public async startup(resource?: Uri) : Promise<void> {
+    public get postMessage(): Event<{message: string; payload: any}> {
+        return this.postEmitter.event;
+    }
+
+    public onMessage(message: string, payload?: any) {
+        switch (message) {
+            case HistoryMessages.CancelCompletionItemsRequest:
+                this.dispatchMessage(message, payload, this.handleCompletionItemsCancel);
+                break;
+
+            case HistoryMessages.ProvideCompletionItemsRequest:
+                this.dispatchMessage(message, payload, this.handleCompletionItemsRequest);
+                break;
+
+            case HistoryMessages.EditCell:
+                this.dispatchMessage(message, payload, this.editCell);
+                break;
+
+            case HistoryMessages.RemoteAddCode: // Might want to rethink this. Seems weird.
+                this.dispatchMessage(message, payload, this.addCell);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
+        const args = payload as M[T];
+        handler.bind(this)(args);
+    }
+
+    private postResponse<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : void {
+        this.postEmitter.fire({message: type.toString(), payload});
+    }
+
+    private handleCompletionItemsCancel(request: ICancelCompletionItemsRequest) {
+        const cancelSource = this.cancellationSources[request.id];
+        if (cancelSource) {
+            cancelSource.cancel();
+            cancelSource.dispose();
+        }
+    }
+
+    private handleCompletionItemsRequest(request: IProvideCompletionItemsRequest) {
+        const cancelSource = new CancellationTokenSource();
+        this.cancellationSources[request.id] = cancelSource;
+        this.provideCompletionItems(request.position, request.context, cancelSource.token).then(list => {
+             this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, id: request.id});
+        }).catch(_e => {
+            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }, id: request.id});
+        });
+    }
+
+    private async startup(resource?: Uri) : Promise<void> {
         // Save our language client. We'll use this to talk to the language server
         const options = await this.analysisOptions!.getAnalysisOptions();
         await this.languageServer.start(resource, options);
@@ -294,7 +368,7 @@ export class CompletionProvider implements IHistoryCompletionProvider {
         this.document = new HistoryDocument(dummyFilePath);
     }
 
-    public async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+    private async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
         if (this.languageClient && this.document) {
             const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
             const result = await this.languageClient.sendRequest(
@@ -309,13 +383,13 @@ export class CompletionProvider implements IHistoryCompletionProvider {
             incomplete: true
         };
     }
-    public async addCell(code: string, file: string): Promise<void> {
+    private async addCell(request: IRemoteAddCode): Promise<void> {
         if (!this.languageClient) {
-            await this.startup(file === Identifiers.EmptyFileName ? undefined : Uri.file(file));
+            await this.startup(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
         }
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
-            changes = this.document.addLines(code);
+            changes = this.document.addLines(request.code);
         }
 
         // Broadcast an update to the language server
@@ -328,10 +402,13 @@ export class CompletionProvider implements IHistoryCompletionProvider {
             }
         }
     }
-    public async editCell(editorChanges: monacoEditor.editor.IModelContentChange[]): Promise<void> {
+    private async editCell(request: IEditCell): Promise<void> {
+        if (!this.languageClient) {
+            await this.startup(undefined);
+        }
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
-            changes = this.document.editLines(editorChanges);
+            changes = this.document.editLines(request.changes);
         }
 
         // Broadcast an update to the language server

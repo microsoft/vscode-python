@@ -173,7 +173,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         if (e.changes.length) {
             this.windowResized();
         }
-        this.props.onChange(e.changes);
+        if (!this.props.readOnly) {
+            this.props.onChange(e.changes);
+        }
     }
 
     private compositionStart = () => {

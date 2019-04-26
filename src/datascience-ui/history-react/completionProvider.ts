@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-
+import * as uuid from 'uuid/v4';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import {
@@ -13,7 +13,7 @@ import {
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 export class CompletionProvider implements monacoEditor.languages.CompletionItemProvider, IDisposable, IMessageHandler {
-    public triggerCharacters?: string[] | undefined;
+    public triggerCharacters?: string[] | undefined = ['.'];
     private currentCompletionItemsRequest: Deferred<monacoEditor.languages.CompletionList> | undefined;
     private currentCompletionDisposable: monacoEditor.IDisposable | undefined;
     private registerDisposable: monacoEditor.IDisposable;
@@ -30,12 +30,14 @@ export class CompletionProvider implements monacoEditor.languages.CompletionItem
         token: monacoEditor.CancellationToken): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionList> {
 
         // Emit a new request
+        const id = uuid();
         const request = createDeferred<monacoEditor.languages.CompletionList>();
         this.registerDisposable = token.onCancellationRequested(() => {
             request.resolve();
+            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { id });
         });
         this.currentCompletionItemsRequest = request;
-        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { position, context });
+        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { position, context, id });
 
         return request.promise;
     }

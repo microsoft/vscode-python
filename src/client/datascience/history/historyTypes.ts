@@ -38,6 +38,7 @@ export namespace HistoryMessages {
     export const GetVariableValueResponse = 'get_variable_value_response';
     export const VariableExplorerToggle = 'variable_explorer_toggle';
     export const ProvideCompletionItemsRequest = 'provide_completion_items_request';
+    export const CancelCompletionItemsRequest = 'cancel_completion_items_request';
     export const ProvideCompletionItemsResponse = 'provide_completion_items_response';
     export const EditCell = 'edit_cell';
 }
@@ -78,10 +79,16 @@ export interface ISubmitNewCell {
 export interface IProvideCompletionItemsRequest {
     position: monacoEditor.Position;
     context: monacoEditor.languages.CompletionContext;
+    id: string;
+}
+
+export interface ICancelCompletionItemsRequest {
+    id: string;
 }
 
 export interface IProvideCompletionItemsResponse {
     list: monacoEditor.languages.CompletionList;
+    id: string;
 }
 
 export interface IPosition {
@@ -128,6 +135,7 @@ export class IHistoryMapping {
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
     public [HistoryMessages.ProvideCompletionItemsRequest] : IProvideCompletionItemsRequest;
+    public [HistoryMessages.CancelCompletionItemsRequest] : ICancelCompletionItemsRequest;
     public [HistoryMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
     public [HistoryMessages.EditCell] : IEditCell;
 }

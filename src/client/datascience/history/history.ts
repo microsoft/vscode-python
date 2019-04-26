@@ -4,11 +4,11 @@
 import '../../common/extensions';
 
 import * as fs from 'fs-extra';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
-import { CancellationTokenSource, Disposable } from 'vscode-jsonrpc';
+import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import {
@@ -39,8 +39,8 @@ import {
     IConnection,
     IDataViewerProvider,
     IHistory,
-    IHistoryCompletionProvider,
     IHistoryInfo,
+    IHistoryListener,
     IHistoryProvider,
     IJupyterExecution,
     IJupyterVariable,
@@ -54,16 +54,7 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { HistoryMessageListener } from './historyMessageListener';
-import {
-    HistoryMessages,
-    IAddedSysInfo,
-    IEditCell,
-    IGotoCode,
-    IHistoryMapping,
-    IProvideCompletionItemsRequest,
-    IRemoteAddCode,
-    ISubmitNewCell
-} from './historyTypes';
+import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
 
 export enum SysInfoReason {
     Start,
@@ -86,9 +77,9 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
-    private autoCompleteCancelSource: CancellationTokenSource | undefined;
 
     constructor(
+        @multiInject(IHistoryListener) private readonly listeners: IHistoryListener[],
         @inject(ILiveShareApi) private liveShare : ILiveShareApi,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -107,8 +98,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
-        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
-        @inject(IHistoryCompletionProvider) private completionProvider: IHistoryCompletionProvider
+        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
         ) {
         super(
             configuration,
@@ -140,6 +130,9 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
         // Load on a background thread.
         this.loadPromise = this.load();
+
+        // For each listener sign up for their post events
+        this.listeners.forEach(l => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
     }
 
     public get ready() : Promise<void> {
@@ -252,16 +245,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 this.dispatchMessage(message, payload, this.requestVariableValue);
                 break;
 
-            case HistoryMessages.ProvideCompletionItemsRequest:
-                this.dispatchMessage(message, payload, this.provideCompletionItems);
-                break;
-
-            case HistoryMessages.EditCell:
-                this.dispatchMessage(message, payload, this.editCell);
-                break;
-
             default:
                 break;
+        }
+
+        // Let our listeners handle the message too
+        if (this.listeners) {
+            this.listeners.forEach(l => l.onMessage(message, payload));
         }
 
         // Pass onto our base class.
@@ -286,6 +276,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         super.dispose();
         if (!this.disposed) {
             this.disposed = true;
+            this.listeners.forEach(l => l.dispose());
             if (this.interpreterChangedDisposable) {
                 this.interpreterChangedDisposable.dispose();
             }
@@ -611,9 +602,6 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
                 traceInfo(`Finished execution for ${id}`);
-
-                // Add this to our completion provider so it can remember this code
-                await this.completionProvider.addCell(code, file);
             }
         } catch (err) {
             status.dispose();
@@ -1011,21 +999,5 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Log the state in our Telemetry
             sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
         }
-    }
-
-    private provideCompletionItems(request: IProvideCompletionItemsRequest) {
-        if (this.autoCompleteCancelSource) {
-            this.autoCompleteCancelSource.cancel();
-        }
-        this.autoCompleteCancelSource = new CancellationTokenSource();
-        this.completionProvider.provideCompletionItems(request.position, request.context, this.autoCompleteCancelSource.token).then(list => {
-            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {list}).ignoreErrors();
-        }).catch(_e => {
-            this.postMessage(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }}).ignoreErrors();
-        });
-    }
-
-    private editCell(request: IEditCell) {
-        this.completionProvider.editCell(request.changes).ignoreErrors();
     }
 }
