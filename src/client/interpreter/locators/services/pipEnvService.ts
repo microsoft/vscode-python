@@ -98,6 +98,25 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             return;
         }
         try {
+            // call pipenv --version just to see if pipenv is in the PATH
+            const version = await this.invokePipenv('--version', cwd);
+            if (version === undefined) {
+                const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                appShell.showWarningMessage(
+                    `Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`
+                );
+                return;
+            }
+            // The --py command will fail if the virtual environment has not been setup yet.
+            // so call pipenv --venv to check for the virtual environment first.
+            const venv = await this.invokePipenv('--venv', cwd);
+            if (venv === undefined) {
+                const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                appShell.showWarningMessage(
+                    'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.'
+                );
+                return;
+            }
             const pythonPath = await this.invokePipenv('--py', cwd);
             return pythonPath && (await this.fs.fileExists(pythonPath)) ? pythonPath : undefined;
             // tslint:disable-next-line:no-empty
@@ -106,11 +125,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             if (ignoreErrors) {
                 return;
             }
-            const errorMessage = error.message || error;
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            appShell.showWarningMessage(
-                `Workspace contains pipfile but attempt to run 'pipenv --py' failed with ${errorMessage}. Make sure pipenv is on the PATH.`
-            );
         }
     }
     private async checkIfPipFileExists(cwd: string): Promise<boolean> {
@@ -152,11 +166,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             this.logger.logWarning('Error in invoking PipEnv', error);
             this.logger.logWarning(
                 `Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`
-            );
-            const errorMessage = error.message || error;
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            appShell.showWarningMessage(
-                `Workspace contains pipfile but attempt to run 'pipenv --venv' failed with '${errorMessage}'. Make sure pipenv is on the PATH.`
             );
         }
     }
