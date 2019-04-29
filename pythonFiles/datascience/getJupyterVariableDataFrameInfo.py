@@ -51,15 +51,14 @@ else:
         del _VSCODE_json_row
     else:
         _VSCODE_columnNames = list(_VSCODE_df)
-    _VSCODE_indexColumn = _VSCODE_df.index.name
+
+    # Compute the index column. It may have been renamed
+    _VSCODE_indexColumn = _VSCODE_df.index.name if _VSCODE_df.index.name else 'index'
     _VSCODE_columnTypes = list(_VSCODE_df.dtypes)
     del _VSCODE_df
 
     # Make sure the index column exists
-    if not _VSCODE_indexColumn:
-        _VSCODE_columnNames.insert(0, 'index')
-        _VSCODE_columnTypes.insert(0, 'int64')
-    elif _VSCODE_indexColumn not in _VSCODE_columnNames:
+    if _VSCODE_indexColumn not in _VSCODE_columnNames:
         _VSCODE_columnNames.insert(0, _VSCODE_indexColumn)
         _VSCODE_columnTypes.insert(0, 'int64')
 
@@ -81,7 +80,7 @@ else:
 
     # Save this in our target
     _VSCODE_targetVariable['columns'] = _VSCODE_columns
-    _VSCODE_targetVariable['index_column'] = _VSCODE_indexColumn
+    _VSCODE_targetVariable['indexColumn'] = _VSCODE_indexColumn
     del _VSCODE_columns
     del _VSCODE_indexColumn
 

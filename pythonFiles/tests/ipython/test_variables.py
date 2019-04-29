@@ -52,6 +52,15 @@ se = pd.Series(ls)
 np1 = np.array(ls)
 np2 = np.array([[1, 2, 3], [4, 5, 6]])
 obj = {}
+col = pd.Series(data=np.random.random_sample((7,))*100)
+dfInit = {}
+idx = pd.date_range('2007-01-01', periods=7, freq='M')
+for i in range(30):
+     dfInit[i] = col
+dfInit['idx'] = idx
+df2 = pd.DataFrame(dfInit).set_index('idx')
+df3 = df2.iloc[:, [0,1]]
+se2 = df2.loc[df2.index[0], :]
 ''')
     vars = get_variables(capsys)
     df = get_variable_value(vars, 'df', capsys)
@@ -60,17 +69,23 @@ obj = {}
     np2 = get_variable_value(vars, 'np2', capsys)
     ls = get_variable_value(vars, 'ls', capsys)
     obj = get_variable_value(vars, 'obj', capsys)
+    df3 = get_variable_value(vars, 'df3', capsys)
+    se2 = get_variable_value(vars, 'se2', capsys)
     assert df
     assert se
     assert np
     assert ls
     assert obj
+    assert df3
+    assert se2
     verify_dataframe_info(vars, 'df', capsys, True)
     verify_dataframe_info(vars, 'se', capsys, True)
     verify_dataframe_info(vars, 'np1', capsys, True)
     verify_dataframe_info(vars, 'ls', capsys, True)
     verify_dataframe_info(vars, 'np2', capsys, True)
     verify_dataframe_info(vars, 'obj', capsys, False)
+    verify_dataframe_info(vars, 'df3', capsys, True)
+    verify_dataframe_info(vars, 'se2', capsys, True)
 
 def verify_dataframe_info(vars, name, capsys, hasInfo):
     info = get_data_frame_info(vars, name, capsys)
@@ -79,6 +94,7 @@ def verify_dataframe_info(vars, name, capsys, hasInfo):
     assert len(info['columns']) > 0 if hasInfo else True
     assert 'rowCount' in info
     assert info['rowCount'] > 0 if hasInfo else info['rowCount'] == 0
+    assert info['indexColumn'] if hasInfo else True
 
 @pytest.mark.skipif(not haveIPython,
                     reason="Can't run variable tests without IPython console")
