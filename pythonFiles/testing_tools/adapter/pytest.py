@@ -40,13 +40,13 @@ def discover(pytestargs=None, hidestdio=False,
         # No tests were discovered.
         pass
     elif ec != 0:
-        if stdio:
-            print(stdio.getvalue())
+        if hidestdio:
+            print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
-        if stdio:
-            print(stdio.getvalue())
+        if hidestdio:
+            print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception('pytest discovery did not start')
     return (
