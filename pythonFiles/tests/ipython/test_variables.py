@@ -51,6 +51,7 @@ df = pd.DataFrame(ls)
 se = pd.Series(ls)
 np1 = np.array(ls)
 np2 = np.array([[1, 2, 3], [4, 5, 6]])
+dict1 = {'Name': 'Zara', 'Age': 7, 'Class': 'First'}
 obj = {}
 col = pd.Series(data=np.random.random_sample((7,))*100)
 dfInit = {}
@@ -71,6 +72,7 @@ se2 = df2.loc[df2.index[0], :]
     obj = get_variable_value(vars, 'obj', capsys)
     df3 = get_variable_value(vars, 'df3', capsys)
     se2 = get_variable_value(vars, 'se2', capsys)
+    dict1 = get_variable_value(vars, 'dict1', capsys)
     assert df
     assert se
     assert np
@@ -78,6 +80,7 @@ se2 = df2.loc[df2.index[0], :]
     assert obj
     assert df3
     assert se2
+    assert dict1
     verify_dataframe_info(vars, 'df', 'index', capsys, True)
     verify_dataframe_info(vars, 'se', 'index', capsys, True)
     verify_dataframe_info(vars, 'np1', 'index', capsys, True)
@@ -87,6 +90,7 @@ se2 = df2.loc[df2.index[0], :]
     verify_dataframe_info(vars, 'df3', 'idx', capsys, True)
     verify_dataframe_info(vars, 'se2', 'index', capsys, True)
     verify_dataframe_info(vars, 'df2', 'idx', capsys, True)
+    verify_dataframe_info(vars, 'dict1', 'index', capsys, True)
 
 def verify_dataframe_info(vars, name, indexColumn, capsys, hasInfo):
     info = get_data_frame_info(vars, name, capsys)

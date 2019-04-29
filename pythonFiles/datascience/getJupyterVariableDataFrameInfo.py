@@ -21,20 +21,26 @@ else:
     _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
 
     # Figure out shape if not already there. Use the shape to compute the row count
-    if (hasattr(_VSCODE_evalResult, "shape")):
-        _VSCODE_targetVariable['rowCount'] = _VSCODE_evalResult.shape[0]
-    elif _VSCODE_targetVariable['type'] == 'list':
-        _VSCODE_targetVariable['rowCount'] = len(_VSCODE_evalResult)
-    else:
-        _VSCODE_targetVariable['rowCount'] = 0
+    if (hasattr(_VSCODE_evalResult, 'shape')):
+        try:
+            # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
+            if isinstance(_VSCODE_evalResult.shape, tuple):
+                _VSCODE_targetVariable['rowCount'] = _VSCODE_evalResult.shape[0]
+        except TypeError:
+            _VSCODE_targetVariable['rowCount'] = 0
+    elif (hasattr(_VSCODE_evalResult, '__len__')):
+        try:
+            _VSCODE_targetVariable['rowCount'] = len(_VSCODE_evalResult)
+        except TypeError:
+            _VSCODE_targetVariable['rowCount'] = 0
 
     # Turn the eval result into a df
     _VSCODE_df = _VSCODE_evalResult
-    if _VSCODE_targetVariable['type'] == 'list':
+    if isinstance(_VSCODE_evalResult, list):
         _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
-    elif _VSCODE_targetVariable['type'] == 'Series':
+    elif isinstance(_VSCODE_evalResult, _VSCODE_pd.Series):
         _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
-    elif _VSCODE_targetVariable['type'] == 'dict':
+    elif isinstance(_VSCODE_evalResult, dict):
         _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
         _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
     elif _VSCODE_targetVariable['type'] == 'ndarray':
@@ -44,11 +50,14 @@ else:
     # the column names and types from the json so we match what we'll fetch when
     # we ask for all of the rows
     if _VSCODE_targetVariable['rowCount']:
-        _VSCODE_row = _VSCODE_df.iloc[0:1]
-        _VSCODE_json_row = _VSCODE_pd_json.to_json(None, _VSCODE_row, date_format='iso')
-        _VSCODE_columnNames = list(_VSCODE_json.loads(_VSCODE_json_row))
-        del _VSCODE_row
-        del _VSCODE_json_row
+        try:
+            _VSCODE_row = _VSCODE_df.iloc[0:1]
+            _VSCODE_json_row = _VSCODE_pd_json.to_json(None, _VSCODE_row, date_format='iso')
+            _VSCODE_columnNames = list(_VSCODE_json.loads(_VSCODE_json_row))
+            del _VSCODE_row
+            del _VSCODE_json_row
+        except:
+            _VSCODE_columnNames = list(_VSCODE_df)
     else:
         _VSCODE_columnNames = list(_VSCODE_df)
 
@@ -88,3 +97,8 @@ else:
     # Transform this back into a string
     print(_VSCODE_json.dumps(_VSCODE_targetVariable))
     del _VSCODE_targetVariable
+
+    # Cleanup imports
+    del _VSCODE_json
+    del _VSCODE_pd
+    del _VSCODE_pd_json
