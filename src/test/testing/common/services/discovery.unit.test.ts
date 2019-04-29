@@ -11,6 +11,8 @@ import { CancellationTokenSource, Uri } from 'vscode';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { ExecutionFactoryCreateWithEnvironmentOptions, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../../client/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
+import { ServiceContainer } from '../../../../client/ioc/container';
+import { IServiceContainer } from '../../../../client/ioc/types';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
 import { TestsDiscoveryService } from '../../../../client/testing/common/services/discovery';
 import { DiscoveredTests, ITestDiscoveredTestParser } from '../../../../client/testing/common/services/types';
@@ -19,13 +21,15 @@ import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable:no-unnecessary-override no-any
 suite('Unit Tests - Common Discovery', () => {
+    let serviceContainer: IServiceContainer;
     let discovery: TestsDiscoveryService;
     let executionFactory: IPythonExecutionFactory;
     let parser: ITestDiscoveredTestParser;
     setup(() => {
+        serviceContainer = mock(ServiceContainer);
         executionFactory = mock(PythonExecutionFactory);
         parser = mock(TestDiscoveredTestParser);
-        discovery = new TestsDiscoveryService(instance(executionFactory), instance(parser));
+        discovery = new TestsDiscoveryService(serviceContainer, instance(executionFactory), instance(parser));
     });
     test('Use parser to parse results', async () => {
         const options: TestDiscoveryOptions = {

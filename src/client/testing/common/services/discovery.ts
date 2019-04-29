@@ -5,11 +5,15 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { OutputChannel } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { ExecutionFactoryCreateWithEnvironmentOptions, ExecutionResult, IPythonExecutionFactory, SpawnOptions } from '../../../common/process/types';
+import { IOutputChannel } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { IServiceContainer } from '../../../ioc/types';
 import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { TEST_OUTPUT_CHANNEL } from '../constants';
 import { ITestDiscoveryService, TestDiscoveryOptions, Tests } from '../types';
 import { DiscoveredTests, ITestDiscoveredTestParser } from './types';
 
@@ -17,8 +21,11 @@ const DISCOVERY_FILE = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_too
 
 @injectable()
 export class TestsDiscoveryService implements ITestDiscoveryService {
-    constructor(@inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
-        @inject(ITestDiscoveredTestParser) private readonly parser: ITestDiscoveredTestParser) { }
+    constructor(
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
+        @inject(ITestDiscoveredTestParser) private readonly parser: ITestDiscoveredTestParser
+    ) { }
     @captureTelemetry(EventName.UNITTEST_DISCOVER_WITH_PYCODE, undefined, true)
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         let output: ExecutionResult<string> | undefined;
@@ -45,6 +52,9 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
             cwd: options.cwd,
             throwOnStdErr: true
         };
-        return execService.exec([DISCOVERY_FILE, ...options.args], spawnOptions);
+        const argv = [DISCOVERY_FILE, ...options.args];
+        const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
+        outputChannel.appendLine(`python ${argv.join(' ')}`);
+        return execService.exec(argv, spawnOptions);
     }
 }

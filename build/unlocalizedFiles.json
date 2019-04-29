@@ -19,6 +19,7 @@
     "src/client/terminals/codeExecution/helper.ts",
     "src/client/testing/common/debugLauncher.ts",
     "src/client/testing/common/managers/baseTestManager.ts",
+    "src/client/testing/common/services/discovery.ts",
     "src/client/testing/configuration.ts",
     "src/client/testing/display/main.ts",
     "src/client/testing/main.ts",
