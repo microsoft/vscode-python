@@ -7,12 +7,10 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { deepEqual, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationTokenSource, OutputChannel, Uri, ViewColumn } from 'vscode';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { ExecutionFactoryCreateWithEnvironmentOptions, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../../client/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { ServiceContainer } from '../../../../client/ioc/container';
-import { IServiceContainer } from '../../../../client/ioc/types';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
 import { TestsDiscoveryService } from '../../../../client/testing/common/services/discovery';
 import { DiscoveredTests, ITestDiscoveredTestParser } from '../../../../client/testing/common/services/types';
@@ -21,15 +19,16 @@ import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable:no-unnecessary-override no-any
 suite('Unit Tests - Common Discovery', () => {
-    let serviceContainer: IServiceContainer;
+    let output: OutputChannel;
     let discovery: TestsDiscoveryService;
     let executionFactory: IPythonExecutionFactory;
     let parser: ITestDiscoveredTestParser;
     setup(() => {
-        serviceContainer = mock(ServiceContainer);
+        // tslint:disable-next-line:no-use-before-declare
+        output = mock(StubOutput);
         executionFactory = mock(PythonExecutionFactory);
         parser = mock(TestDiscoveredTestParser);
-        discovery = new TestsDiscoveryService(serviceContainer, instance(executionFactory), instance(parser));
+        discovery = new TestsDiscoveryService(instance(executionFactory), instance(parser), instance(output));
     });
     test('Use parser to parse results', async () => {
         const options: TestDiscoveryOptions = {
@@ -77,3 +76,17 @@ suite('Unit Tests - Common Discovery', () => {
         assert.deepEqual(result, executionResult);
     });
 });
+
+// tslint:disable:no-empty
+
+//class StubOutput implements OutputChannel {
+class StubOutput {
+    constructor(public name: string) {}
+    public append(_value: string) {}
+    public appendLine(_value: string) {}
+    public clear() {}
+    //public show(_preserveFocus?: boolean) {}
+    public show(_column?: ViewColumn | boolean, _preserveFocus?: boolean) {}
+    public hide() {}
+    public dispose() {}
+}

@@ -3,14 +3,13 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { ExecutionFactoryCreateWithEnvironmentOptions, ExecutionResult, IPythonExecutionFactory, SpawnOptions } from '../../../common/process/types';
 import { IOutputChannel } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { IServiceContainer } from '../../../ioc/types';
 import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { TEST_OUTPUT_CHANNEL } from '../constants';
@@ -22,9 +21,9 @@ const DISCOVERY_FILE = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_too
 @injectable()
 export class TestsDiscoveryService implements ITestDiscoveryService {
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
-        @inject(ITestDiscoveredTestParser) private readonly parser: ITestDiscoveredTestParser
+        @inject(ITestDiscoveredTestParser) private readonly parser: ITestDiscoveredTestParser,
+        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private readonly outChannel: OutputChannel
     ) { }
     @captureTelemetry(EventName.UNITTEST_DISCOVER_WITH_PYCODE, undefined, true)
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
@@ -53,8 +52,7 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
             throwOnStdErr: true
         };
         const argv = [DISCOVERY_FILE, ...options.args];
-        const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        outputChannel.appendLine(`python ${argv.join(' ')}`);
+        this.outChannel.appendLine(`python ${argv.join(' ')}`);
         return execService.exec(argv, spawnOptions);
     }
 }
