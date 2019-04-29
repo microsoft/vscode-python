@@ -34,13 +34,14 @@ def run_adapter(cmd, tool, *cliargs):
 
 def _run_adapter(cmd, tool, *cliargs, **kwargs):
     hidestdio = kwargs.pop('hidestdio', True)
-    assert not kwargs
-    kwds = {}
+    assert not kwargs or tuple(kwargs) == ('stderr',)
+    kwds = kwargs
     argv = [sys.executable, SCRIPT, cmd, tool, '--'] + list(cliargs)
     if not hidestdio:
         argv.insert(4, '--no-hide-stdio')
         kwds['stderr'] = subprocess.STDOUT
     argv.append('--cache-clear')
+    #argv.append('--spam')
     print('running {!r}'.format(' '.join(arg.rpartition(CWD + '/')[-1] for arg in argv)))
     return subprocess.check_output(argv,
                                    universal_newlines=True,
@@ -230,6 +231,29 @@ class PytestTests(unittest.TestCase):
         #    'parents': [],
         #    'tests': [],
         #    }])
+
+    def test_discover_bad_args(self):
+        projroot, testroot = resolve_testroot('simple')
+
+        with self.assertRaises(subprocess.CalledProcessError) as cm:
+            _run_adapter('discover', 'pytest',
+                         '--spam',
+                         '--rootdir', projroot,
+                         testroot,
+                         stderr=subprocess.STDOUT,
+                         )
+        self.assertIn('(exit code 4)', cm.exception.output)
+
+    def test_discover_syntax_error(self):
+        projroot, testroot = resolve_testroot('syntax-error')
+
+        with self.assertRaises(subprocess.CalledProcessError) as cm:
+            _run_adapter('discover', 'pytest',
+                         '--rootdir', projroot,
+                         testroot,
+                         stderr=subprocess.STDOUT,
+                         )
+        self.assertIn('(exit code 2)', cm.exception.output)
 
 
 COMPLEX = {
