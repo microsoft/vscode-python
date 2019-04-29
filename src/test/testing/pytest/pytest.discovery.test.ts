@@ -167,7 +167,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         Find
 
         `);
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -203,7 +203,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         ============================= 27 tests deselected ==============================
         ======================== 27 deselected in 0.05 seconds =========================
         `);
-        await updateSetting('unitTest.pyTestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -252,7 +252,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
         ========================= no tests ran in 0.04 seconds =========================
         `);
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -282,7 +282,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
         ========================= no tests ran in 0.02 seconds =========================
         `);
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, unitTestTestFilesCwdPath);
 

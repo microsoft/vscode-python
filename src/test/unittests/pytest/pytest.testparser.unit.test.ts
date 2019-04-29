@@ -17,7 +17,7 @@ import {
 } from '../../../client/testing/common/types';
 import { TestsParser as PyTestsParser } from '../../../client/testing/pytest/services/parserService';
 import { getOSType } from '../../common';
-import { PytestDataPlatformType, pytestScenarioData } from './pytest_unittest_parser_data';
+import { PytestDataPlatformType, pytestScenarioData } from '../../testing/pytest/pytest_unittest_parser_data';
 
 use(chaipromise);
 

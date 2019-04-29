@@ -51,7 +51,7 @@ import { TestsParser as NoseTestTestsParser } from '../../client/testing/nosetes
 import { TestManager as PyTestTestManager } from '../../client/testing/pytest/main';
 import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/testing/pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from '../../client/testing/pytest/services/parserService';
-import { IUnitTestDiagnosticService } from '../../client/testing/types';
+import { ITestDiagnosticService } from '../../client/testing/types';
 import { TestManager as UnitTestTestManager } from '../../client/testing/unittest/main';
 import {
     TestDiscoveryService as UnitTestTestDiscoveryService
