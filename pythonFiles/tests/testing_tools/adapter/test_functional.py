@@ -28,12 +28,8 @@ def resolve_testroot(name):
 def run_adapter(cmd, tool, *cliargs):
     try:
         return _run_adapter(cmd, tool, *cliargs)
-    except subprocess.CalledProcessError:
-        # Re-run pytest but print out stdout & stderr this time
-        try:
-            return _run_adapter(cmd, tool, *cliargs, hidestdio=False)
-        except subprocess.CalledProcessError as exc:
-            print(exc.output)
+    except subprocess.CalledProcessError as exc:
+        print(exc.output)
 
 
 def _run_adapter(cmd, tool, *cliargs, **kwargs):
