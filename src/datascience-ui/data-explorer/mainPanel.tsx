@@ -20,7 +20,7 @@ import {
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
-import { CellFormatter } from './cellFormatter';
+import { CellFormatter, ICellFormatterMetaData } from './cellFormatter';
 import { EmptyRows } from './emptyRowsView';
 import { ProgressBar } from './progressBar';
 import { generateTestData } from './testData';
@@ -56,6 +56,7 @@ interface IMainPanelState {
     gridHeight: number;
     sortDirection: string;
     sortColumn: string | number;
+    indexColumn: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -81,7 +82,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filters: {},
                 gridHeight:  100,
                 sortColumn: 'index',
-                sortDirection: 'NONE'
+                sortDirection: 'NONE',
+                indexColumn: 'index'
             };
         } else {
             this.state = {
@@ -93,7 +95,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filters: {},
                 gridHeight: 100,
                 sortColumn: 'index',
-                sortDirection: 'NONE'
+                sortDirection: 'NONE',
+                indexColumn: 'index'
             };
         }
     }
@@ -194,6 +197,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
                 const initialRows: JSONArray = [];
                 const paddedRows = this.padRows(initialRows, totalRowCount);
+                const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
 
                 this.setState(
                     {
@@ -201,7 +205,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         actualGridRows: paddedRows,
                         currentGridRows: paddedRows,
                         actualRowCount: totalRowCount,
-                        fetchedRowCount: initialRows.length
+                        fetchedRowCount: initialRows.length,
+                        indexColumn: indexColumn
                     }
                 );
 
@@ -303,14 +308,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [];
     }
 
-    private getRowMetaData(_row: object, column?: AdazzleReactDataGrid.Column<object>): any {
+    private getRowMetaData(row: any, column?: AdazzleReactDataGrid.Column<object>): ICellFormatterMetaData {
+        let columnValue = '';
+        let columnType = 'string';
         if (column) {
             const obj = column as any;
             if (obj.type) {
-                return obj.type.toString();
+                columnType = obj.type.toString();
+                columnValue = row[obj.name];
             }
         }
-        return '';
+        return {
+            columnType,
+            columnValue
+        };
     }
 
     private updateDimensions = () => {
@@ -354,7 +365,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Default to the index column
         if (sortDirection === 'NONE') {
-            sortColumn = 'index';
+            sortColumn = this.state.indexColumn;
             sortDirection = 'ASC';
         }
 

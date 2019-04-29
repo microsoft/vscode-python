@@ -271,6 +271,7 @@ export interface IJupyterVariable {
     truncated: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
+    indexColumn?: string;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
