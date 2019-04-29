@@ -1,6 +1,13 @@
 # Changelog
 
-## 2019.4.1 (24 April 2019)
+## 2019.4.2 (29 April 2019)
+
+### Fixes
+
+1. Revert discovery of `pytest` tests to use the approach of scraping the output.
+   ([#5458](https://github.com/Microsoft/vscode-python/issues/5458))
+
+## 2019.4.11987 (24 April 2019)
 
 ### Fixes
 
@@ -8,7 +15,7 @@
    (thanks [Romain](https://github.com/quarthex))
    ([#5437](https://github.com/Microsoft/vscode-python/issues/5437))
 
-## 2019.4.0 (23 April 2019)
+## 2019.4.11881 (23 April 2019)
 
 ### Enhancements
 
