@@ -10,12 +10,12 @@ import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { TestsHelper } from '../../../client/unittests/common/testUtils';
-import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
+import { TestsHelper } from '../../../client/testing/common/testUtils';
+import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
 import {
     FlattenedTestFunction, SubtestParent, TestDiscoveryOptions, Tests
-} from '../../../client/unittests/common/types';
-import { TestsParser as PyTestsParser } from '../../../client/unittests/pytest/services/parserService';
+} from '../../../client/testing/common/types';
+import { TestsParser as PyTestsParser } from '../../../client/testing/pytest/services/parserService';
 import { getOSType } from '../../common';
 import { PytestDataPlatformType, pytestScenarioData } from './pytest_unittest_parser_data';
 

@@ -11,13 +11,13 @@ import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { CancellationToken } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PYTEST_PROVIDER } from '../../../client/unittests/common/constants';
+import { PYTEST_PROVIDER } from '../../../client/testing/common/constants';
 import {
     ITestDiscoveryService, ITestRunner, ITestsHelper,
     ITestsParser, Options, TestDiscoveryOptions, Tests
-} from '../../../client/unittests/common/types';
-import { TestDiscoveryService } from '../../../client/unittests/pytest/services/discoveryService';
-import { IArgumentsService, TestFilter } from '../../../client/unittests/types';
+} from '../../../client/testing/common/types';
+import { TestDiscoveryService } from '../../../client/testing/pytest/services/discoveryService';
+import { IArgumentsService, TestFilter } from '../../../client/testing/types';
 
 use(chaipromise);
 

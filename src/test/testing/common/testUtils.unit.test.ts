@@ -10,7 +10,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import {
     getChildren, getParent, getTestFile, getTestFolder, getTestFunction,
     getTestSuite, getTestType
-} from '../../../client/unittests/common/testUtils';
+} from '../../../client/testing/common/testUtils';
 import {
     FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile,
     TestFolder, TestFunction, Tests, TestSuite, TestType
