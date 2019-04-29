@@ -39,3 +39,6 @@ del _VSCODE_endRow
 del _VSCODE_startRow
 del _VSCODE_rows
 del _VSCODE_result
+del _VSCODE_json
+del _VSCODE_pd
+del _VSCODE_pd_json
