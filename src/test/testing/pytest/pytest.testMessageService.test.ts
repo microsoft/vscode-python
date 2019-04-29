@@ -9,20 +9,20 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as typeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { Product } from '../../../client/common/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
-import { TestDiscoveredTestParser } from '../../../client/testing/common/services/discoveredTestParser';
-import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
-import { DiscoveredTests } from '../../../client/testing/common/services/types';
-import { ITestVisitor, PassCalculationFormulae, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
-import { XUnitParser } from '../../../client/testing/common/xUnitParser';
-import { TestMessageService } from '../../../client/testing/pytest/services/testMessageService';
-import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../../client/testing/types';
+import { TestResultsService } from '../../../client/unittests/common/services/testResultsService';
+import { TestsHelper } from '../../../client/unittests/common/testUtils';
+import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
+import { ITestVisitor, PassCalculationFormulae, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/unittests/common/types';
+import { XUnitParser } from '../../../client/unittests/common/xUnitParser';
+import { TestsParser as PyTestsParser } from '../../../client/unittests/pytest/services/parserService';
+import { TestMessageService } from '../../../client/unittests/pytest/services/testMessageService';
+import { ILocationStackFrameDetails, IPythonUnitTestMessage, PythonUnitTestMessageSeverity } from '../../../client/unittests/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { UnitTestIocContainer } from '../serviceRegistry';
@@ -126,21 +126,21 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const outChannel = typeMoq.Mock.ofType<vscode.OutputChannel>();
                 const cancelToken = typeMoq.Mock.ofType<vscode.CancellationToken>();
                 cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
+                const wsFolder = typeMoq.Mock.ofType<vscode.Uri>();
                 const options: TestDiscoveryOptions = {
                     args: [],
                     cwd: UNITTEST_TEST_FILES_PATH,
                     ignoreCache: true,
                     outChannel: outChannel.object,
                     token: cancelToken.object,
-                    workspaceFolder: vscode.Uri.file(__dirname)
+                    workspaceFolder: wsFolder.object
                 };
                 // Setup the parser.
-                const workspaceService = ioc.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-                const parser = new TestDiscoveredTestParser(workspaceService);
-                const discoveryOutput = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8').replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH)).replace(/\\/g, '/');
-                const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
-                options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
-                const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
+                const testFlattener: TestFlatteningVisitor = new TestFlatteningVisitor();
+                const testHlp: TestsHelper = new TestsHelper(testFlattener, ioc.serviceContainer);
+                const parser = new PyTestsParser(testHlp);
+                const discoveryOutput = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8').replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, PYTEST_RESULTS_PATH);
+                const parsedTests: Tests = parser.parse(discoveryOutput, options);
                 const xUnitParser = new XUnitParser();
                 await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput), PassCalculationFormulae.pytest);
                 const testResultsService = new TestResultsService(testVisitor.object);
