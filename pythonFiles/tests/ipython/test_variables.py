@@ -78,23 +78,26 @@ se2 = df2.loc[df2.index[0], :]
     assert obj
     assert df3
     assert se2
-    verify_dataframe_info(vars, 'df', capsys, True)
-    verify_dataframe_info(vars, 'se', capsys, True)
-    verify_dataframe_info(vars, 'np1', capsys, True)
-    verify_dataframe_info(vars, 'ls', capsys, True)
-    verify_dataframe_info(vars, 'np2', capsys, True)
-    verify_dataframe_info(vars, 'obj', capsys, False)
-    verify_dataframe_info(vars, 'df3', capsys, True)
-    verify_dataframe_info(vars, 'se2', capsys, True)
+    verify_dataframe_info(vars, 'df', 'index', capsys, True)
+    verify_dataframe_info(vars, 'se', 'index', capsys, True)
+    verify_dataframe_info(vars, 'np1', 'index', capsys, True)
+    verify_dataframe_info(vars, 'ls', 'index', capsys, True)
+    verify_dataframe_info(vars, 'np2', 'index', capsys, True)
+    verify_dataframe_info(vars, 'obj', 'index', capsys, False)
+    verify_dataframe_info(vars, 'df3', 'idx', capsys, True)
+    verify_dataframe_info(vars, 'se2', 'index', capsys, True)
+    verify_dataframe_info(vars, 'df2', 'idx', capsys, True)
 
-def verify_dataframe_info(vars, name, capsys, hasInfo):
+def verify_dataframe_info(vars, name, indexColumn, capsys, hasInfo):
     info = get_data_frame_info(vars, name, capsys)
     assert info
     assert 'columns' in info
     assert len(info['columns']) > 0 if hasInfo else True
     assert 'rowCount' in info
-    assert info['rowCount'] > 0 if hasInfo else info['rowCount'] == 0
-    assert info['indexColumn'] if hasInfo else True
+    if hasInfo:
+        assert info['rowCount'] > 0
+        assert info['indexColumn']
+        assert info['indexColumn'] == indexColumn
 
 @pytest.mark.skipif(not haveIPython,
                     reason="Can't run variable tests without IPython console")
