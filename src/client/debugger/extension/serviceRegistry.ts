@@ -3,11 +3,14 @@
 
 'use strict';
 
+import { IExtensionActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebuggerBanner } from './banner';
 import { ConfigurationProviderUtils } from './configuration/configurationProviderUtils';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
+import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
+import { LaunchJsonUpdaterService } from './configuration/launch.json/updaterService';
 import { DjangoLaunchDebugConfigurationProvider } from './configuration/providers/djangoLaunch';
 import { FileLaunchDebugConfigurationProvider } from './configuration/providers/fileLaunch';
 import { FlaskLaunchDebugConfigurationProvider } from './configuration/providers/flaskLaunch';
@@ -24,6 +27,8 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/
 import { DebugConfigurationType, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonCompletionProvider);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonUpdaterService);
     serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
     serviceManager.addSingleton<IConfigurationProviderUtils>(IConfigurationProviderUtils, ConfigurationProviderUtils);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);

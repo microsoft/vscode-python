@@ -7,6 +7,7 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
+import { traceInfo } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -22,7 +23,7 @@ import {
 } from '../../types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
-import { ILiveShareParticipant, IServerResponse } from './types';
+import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
 
 export class GuestJupyterServer
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
@@ -97,6 +98,10 @@ export class GuestJupyterServer
         return Promise.resolve();
     }
 
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        // Guest can't change the style. Maybe output a warning here?
+    }
+
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
         this.waitForService().then(s => {
@@ -104,7 +109,7 @@ export class GuestJupyterServer
                 s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
             }
         }).ignoreErrors();
-        return this.responseQueue.waitForObservable(code, file, line, id);
+        return this.responseQueue.waitForObservable(code, id);
     }
 
     public async restartKernel(): Promise<void> {
@@ -156,6 +161,8 @@ export class GuestJupyterServer
     }
 
     public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+        await super.onAttach(api);
+
         if (api) {
             const service = await this.waitForService();
 
@@ -176,6 +183,8 @@ export class GuestJupyterServer
     }
 
     private onServerResponse = (args: Object) => {
+        const er = args as IExecuteObservableResponse;
+        traceInfo(`Guest serverResponse ${er.pos} ${er.id}`);
         // Args should be of type ServerResponse. Stick in our queue if so.
         if (args.hasOwnProperty('type')) {
             this.responseQueue.push(args as IServerResponse);

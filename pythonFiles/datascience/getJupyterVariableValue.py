@@ -8,11 +8,22 @@ _VSCODE_targetVariable = _VSCODE_json.loads('_VSCode_JupyterTestValue')
 _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
 
 # Find shape and count if available
-if _VSCODE_targetVariable['type'] in ['ndarray','DataFrame','Series']:
-    _VSCODE_targetVariable['shape'] = str(_VSCODE_evalResult.shape)
+if (hasattr(_VSCODE_evalResult, 'shape')):
+    try:
+        # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
+        if isinstance(_VSCODE_evalResult.shape, tuple):
+            _VSCODE_shapeStr = str(_VSCODE_evalResult.shape)
+            if len(_VSCODE_shapeStr) >= 3 and _VSCODE_shapeStr[0] == '(' and _VSCODE_shapeStr[-1] == ')' and ',' in _VSCODE_shapeStr:
+                _VSCODE_targetVariable['shape'] = _VSCODE_shapeStr
+            del _VSCODE_shapeStr
+    except TypeError:
+        pass
 
-if _VSCODE_targetVariable['type'] in ['tuple', 'str', 'dict', 'list', 'set', 'ndarray','DataFrame','Series']:
-    _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+if (hasattr(_VSCODE_evalResult, '__len__')):
+    try:
+        _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+    except TypeError:
+        pass
 
 # Get the string of the eval result, truncate it as it could be far too long
 _VSCODE_targetValue = str(_VSCODE_evalResult)
@@ -23,3 +34,10 @@ else:
     _VSCODE_targetVariable['value'] = _VSCODE_targetValue
 
 print(_VSCODE_json.dumps(_VSCODE_targetVariable))
+
+# Cleanup
+del _VSCODE_max_len
+del _VSCODE_json
+del _VSCODE_targetVariable
+del _VSCODE_evalResult
+del _VSCODE_targetValue

@@ -185,7 +185,7 @@ export class JediProxy implements Disposable {
             }
         }
         if (this.timer) {
-            this.timer.unref();
+            clearTimeout(this.timer);
         }
         this.killProcess();
     }
@@ -255,7 +255,7 @@ export class JediProxy implements Disposable {
 
         await this.checkJediMemoryFootprintImpl();
         if (this.timer) {
-            this.timer.unref();
+            clearTimeout(this.timer);
         }
         this.timer = setTimeout(() => this.checkJediMemoryFootprint(), 15 * 1000);
     }

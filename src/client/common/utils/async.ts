@@ -3,9 +3,9 @@
 
 'use strict';
 
-export async function sleep(timeout: number) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, timeout);
+export async function sleep(timeout: number) : Promise<number> {
+    return new Promise<number>((resolve) => {
+        setTimeout(() => resolve(timeout), timeout);
     });
 }
 

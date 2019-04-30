@@ -9,7 +9,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -46,7 +46,6 @@ export interface INotebookServerLaunchInfo
     currentInterpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
-    usingDarkTheme: boolean;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
 }
@@ -57,14 +56,15 @@ export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
-    restartKernel() : Promise<void>;
-    waitForIdle() : Promise<void>;
+    restartKernel(timeoutInMs: number) : Promise<void>;
+    waitForIdle(timeoutInMs: number) : Promise<void>;
     shutdown() : Promise<void>;
     interruptKernel(timeoutInMs: number) : Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     getConnectionInfo(): IConnection | undefined;
     getSysInfo() : Promise<ICell | undefined>;
+    setMatplotLibStyle(useDark: boolean) : Promise<void>;
 }
 
 export interface INotebookServerOptions {
@@ -93,9 +93,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;
-    restart() : Promise<void>;
-    interrupt() : Promise<void>;
-    waitForIdle() : Promise<void>;
+    restart(timeout: number) : Promise<void>;
+    interrupt(timeout: number) : Promise<void>;
+    waitForIdle(timeout: number) : Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined;
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
@@ -136,12 +136,13 @@ export interface IHistory extends Disposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
     // tslint:disable-next-line:no-any
-    postMessage(type: string, payload?: any): void;
+    startProgress(): void;
+    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
-    interruptKernel(): void;
-    restartKernel(): void;
+    interruptKernel(): Promise<void>;
+    restartKernel(): Promise<void>;
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
@@ -216,7 +217,7 @@ export interface ISysInfo extends nbformat.IBaseCell {
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
-    generateThemeCss() : Promise<string>;
+    generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
@@ -251,6 +252,7 @@ export interface IJupyterCommandFactory {
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
+        theme: string;
     };
 }
 
@@ -260,14 +262,16 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
 export interface IJupyterVariable {
     name: string;
     value: string | undefined;
+    executionCount?: number;
+    supportsDataExplorer: boolean;
     type: string;
     size: number;
     shape: string;
     count: number;
     truncated: boolean;
-    expensive: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
+    indexColumn?: string;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
@@ -278,13 +282,19 @@ export interface IJupyterVariables {
     getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
 }
 
-export const IDataExplorerProvider = Symbol('IDataExplorerProvider');
-export interface IDataExplorerProvider {
-    create(variable: string) : Promise<IDataExplorer>;
+// Wrapper to hold an execution count for our variable requests
+export interface IJupyterVariablesResponse {
+    executionCount: number;
+    variables: IJupyterVariable[];
+}
+
+export const IDataViewerProvider = Symbol('IDataViewerProvider');
+export interface IDataViewerProvider {
+    create(variable: string) : Promise<IDataViewer>;
     getPandasVersion() : Promise<{major: number; minor: number; build: number} | undefined>;
 }
-export const IDataExplorer = Symbol('IDataExplorer');
+export const IDataViewer = Symbol('IDataViewer');
 
-export interface IDataExplorer extends IAsyncDisposable {
-    show(variable: IJupyterVariable) : Promise<void>;
+export interface IDataViewer extends IDisposable {
+    showVariable(variable: IJupyterVariable) : Promise<void>;
 }

@@ -8,7 +8,7 @@
 - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
    - [ ] Create a new section for this release
    - [ ] Copy over the "Thanks" section from the previous release and make sure it's up-to-date
-   - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final | code-insiders -`)
+   - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
    - [ ] Touch up news entries
    - [ ] Add any relevant news entries for ptvsd and the language server if they were updated
 - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
@@ -27,6 +27,7 @@
 - [ ] GDPR bookkeeping
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
+- [ ] Ask CTI to test the release candidate
 
 
 # Final (Tuesday, XXX XX)
@@ -52,7 +53,7 @@
 - [ ] Generate the final `.vsix` file
 - [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
 - [ ] Upload the final `.vsix` file to the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-- [ ] Publish [documentation changes](https://github.com/microsoft/vscode-docs/pulls)
+- [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 - [ ] Publish the [blog](http://aka.ms/pythonblog) post
 - [ ] Create a [release](https://github.com/Microsoft/vscode-python/releases) on GitHub (which creates an appropriate git tag)
 - [ ] Determine if a hotfix is needed
@@ -63,5 +64,5 @@
 - [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 
 ## Clean up after _this_ release
-- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc) and close any that have no activity for over a month
+- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc+-label%3A%22data+science%22) and close any that have no activity for over a month
 - [ ] GDPR bookkeeping

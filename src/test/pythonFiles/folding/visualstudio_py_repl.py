@@ -71,6 +71,10 @@ except NameError:
 
 DEBUG = os.environ.get('DEBUG_REPL') is not None
 
+PY_ROOT = os.path.normcase(__file__)
+while os.path.basename(PY_ROOT) != 'pythonFiles':
+    PY_ROOT = os.path.dirname(PY_ROOT)
+
 __all__ = ['ReplBackend', 'BasicReplBackend', 'BACKEND']
 
 def _debug_write(out):
@@ -349,6 +353,10 @@ class ReplBackend(object):
         port = read_int(self.conn)
         id = read_string(self.conn)
         debug_options = visualstudio_py_debugger.parse_debug_options(read_string(self.conn))
+        debug_options.setdefault('rules', []).append({
+            'path': PY_ROOT,
+            'include': False,
+            })
         self.attach_process(port, id, debug_options)
 
     _COMMANDS = {
@@ -380,7 +388,6 @@ class ReplBackend(object):
         from os import path
         sys.path.append(path.dirname(__file__))
         import visualstudio_py_debugger
-        visualstudio_py_debugger.DONT_DEBUG.append(path.normcase(__file__))
         new_thread = visualstudio_py_debugger.new_thread()
         sys.settrace(new_thread.trace_func)
         visualstudio_py_debugger.intercept_threads(True)

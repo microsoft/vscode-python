@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.4.0-alpha",
-    "languageServerVersion": "0.2.31",
+    "version": "2019.5.0-dev",
+    "languageServerVersion": "0.2.62",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -18,30 +18,13 @@
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
     "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
-    "badges": [
-        {
-            "url": "https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI?branchName=master",
-            "href": "https://vscode-python.visualstudio.com/VSCode-Python/VSCode-Python%20Team/_build/index?context=allDefinitions&path=&definitionId=9",
-            "description": "Continuous integration (VSTS)"
-        },
-        {
-            "url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
-            "href": "https://travis-ci.org/Microsoft/vscode-python",
-            "description": "Continuous integration (Travis)"
-        },
-        {
-            "url": "https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg",
-            "href": "https://codecov.io/gh/Microsoft/vscode-python",
-            "description": "Test coverage"
-        }
-    ],
     "icon": "icon.png",
     "galleryBanner": {
         "color": "#1e415e",
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.31.0"
+        "vscode": "^1.33.0"
     },
     "keywords": [
         "python",
@@ -277,8 +260,8 @@
                 }
             },
             {
-                "command": "python.stopUnitTests",
-                "title": "%python.command.python.stopUnitTests.title%",
+                "command": "python.stopTests",
+                "title": "%python.command.python.stopTests.title%",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/stop.svg",
@@ -328,6 +311,16 @@
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcurrentcellandallbelow.palette",
+                "title": "%python.command.python.datascience.runcurrentcellandallbelow.palette.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runallcellsabove.palette",
+                "title": "%python.command.python.datascience.runallcellsabove.palette.title%",
                 "category": "Python"
             },
             {
@@ -573,7 +566,7 @@
                     "when": "config.noExists"
                 },
                 {
-                    "command": "python.stopUnitTests",
+                    "command": "python.stopTests",
                     "category": "Python",
                     "when": "config.noExists"
                 },
@@ -598,6 +591,18 @@
                 {
                     "command": "python.datascience.runcurrentcelladvance",
                     "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runcurrentcellandallbelow.palette",
+                    "title": "%python.command.python.datascience.runcurrentcellandallbelow.palette.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runallcellsabove.palette",
+                    "title": "%python.command.python.datascience.runallcellsabove.palette.title%",
                     "category": "Python",
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
@@ -689,6 +694,16 @@
                     "title": "%python.command.python.datascience.exportoutputasnotebook.title%",
                     "category": "Python",
                     "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runcellandallbelow",
+                    "category": "Python",
+                    "when": "config.noExists"
+                },
+                {
+                    "command": "python.datascience.runallcellsabove",
+                    "category": "Python",
+                    "when": "config.noExists"
                 }
             ],
             "view/title": [
@@ -703,7 +718,7 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "python.stopUnitTests",
+                    "command": "python.stopTests",
                     "when": "view == python_tests && busyTests",
                     "group": "navigation@1"
                 },
@@ -808,180 +823,7 @@
                 "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
                 "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
-                "configurationSnippets": [
-                    {
-                        "label": "Python: Terminal (integrated)",
-                        "description": "%python.snippet.launch.terminal.description%",
-                        "body": {
-                            "name": "Python: Terminal (integrated)",
-                            "type": "python",
-                            "request": "launch",
-                            "program": "^\"\\${file}\"",
-                            "console": "integratedTerminal"
-                        }
-                    },
-                    {
-                        "label": "Python: Terminal (external)",
-                        "description": "%python.snippet.launch.externalTerminal.description%",
-                        "body": {
-                            "name": "Python: Terminal (external)",
-                            "type": "python",
-                            "request": "launch",
-                            "program": "^\"\\${file}\"",
-                            "console": "externalTerminal"
-                        }
-                    },
-                    {
-                        "label": "Python: Module",
-                        "description": "%python.snippet.launch.module.description%",
-                        "body": {
-                            "name": "Python: Module",
-                            "type": "python",
-                            "request": "launch",
-                            "module": "enter-your-module-name-here",
-                            "console": "integratedTerminal"
-                        }
-                    },
-                    {
-                        "label": "Python: Django",
-                        "description": "%python.snippet.launch.django.description%",
-                        "body": {
-                            "name": "Django",
-                            "type": "python",
-                            "request": "launch",
-                            "program": "^\"\\${workspaceFolder}/manage.py\"",
-                            "args": [
-                                "runserver",
-                                "--noreload",
-                                "--nothreading"
-                            ],
-                            "django": true
-                        }
-                    },
-                    {
-                        "label": "Python: Flask",
-                        "description": "%python.snippet.launch.flask.description%",
-                        "body": {
-                            "name": "Flask",
-                            "type": "python",
-                            "request": "launch",
-                            "module": "flask",
-                            "env": {
-                                "FLASK_APP": "app.py",
-                                "FLASK_ENV": "development",
-                                "FLASK_DEBUG": "0"
-                            },
-                            "args": [
-                                "run",
-                                "--no-debugger",
-                                "--no-reload"
-                            ],
-                            "jinja": true
-                        }
-                    },
-                    {
-                        "label": "Python: Gevent",
-                        "description": "%python.snippet.launch.gevent.description%",
-                        "body": {
-                            "name": "Gevent",
-                            "type": "python",
-                            "request": "launch",
-                            "program": "^\"\\${file}\"",
-                            "gevent": true
-                        }
-                    },
-                    {
-                        "label": "Python: PySpark",
-                        "description": "%python.snippet.launch.pyspark.description%",
-                        "body": {
-                            "name": "PySpark",
-                            "type": "python",
-                            "request": "launch",
-                            "osx": {
-                                "pythonPath": "^\"\\${env:SPARK_HOME}/bin/spark-submit\""
-                            },
-                            "windows": {
-                                "pythonPath": "^\"\\${env:SPARK_HOME}/bin/spark-submit.cmd\""
-                            },
-                            "linux": {
-                                "pythonPath": "^\"\\${env:SPARK_HOME}/bin/spark-submit\""
-                            },
-                            "program": "^\"\\${file}\""
-                        }
-                    },
-                    {
-                        "label": "Python: Watson",
-                        "description": "%python.snippet.launch.watson.description%",
-                        "body": {
-                            "name": "Watson",
-                            "type": "python",
-                            "request": "launch",
-                            "program": "^\"\\${workspaceFolder}/console.py\"",
-                            "args": [
-                                "dev",
-                                "runserver",
-                                "--noreload=True"
-                            ],
-                            "jinja": true
-                        }
-                    },
-                    {
-                        "label": "Python: Scrapy",
-                        "description": "%python.snippet.launch.scrapy.description%",
-                        "body": {
-                            "name": "Scrapy",
-                            "type": "python",
-                            "request": "launch",
-                            "module": "scrapy",
-                            "args": [
-                                "crawl",
-                                "specs",
-                                "-o",
-                                "bikes.json"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "Python: Pyramid",
-                        "description": "%python.snippet.launch.pyramid.description%",
-                        "body": {
-                            "name": "Pyramid",
-                            "type": "python",
-                            "request": "launch",
-                            "args": [
-                                "^\"\\${workspaceFolder}/development.ini\""
-                            ],
-                            "pyramid": true,
-                            "jinja": true
-                        }
-                    },
-                    {
-                        "label": "Python: Remote Attach",
-                        "description": "%python.snippet.launch.attach.description%",
-                        "body": {
-                            "name": "Attach (Remote Debug)",
-                            "type": "python",
-                            "request": "attach",
-                            "port": 5678,
-                            "host": "localhost",
-                            "pathMappings": [
-                                {
-                                    "localRoot": "${workspaceFolder}",
-                                    "remoteRoot": "."
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "label": "Python: Unit Tests",
-                        "description": "%python.snippet.launch.unitTests.description%",
-                        "body": {
-                            "name": "Unit Tests",
-                            "type": "python",
-                            "request": "test"
-                        }
-                    }
-                ],
+                "configurationSnippets": [],
                 "configurationAttributes": {
                     "launch": {
                         "properties": {
@@ -1016,11 +858,11 @@
                             "showReturnValue": {
                                 "type": "boolean",
                                 "description": "Show return value of functions when stepping.",
-                                "default": false
+                                "default": true
                             },
                             "console": {
                                 "enum": [
-                                    "none",
+                                    "internalConsole",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
@@ -1062,10 +904,10 @@
                                 "description": "Redirect output.",
                                 "default": true
                             },
-                            "debugStdLib": {
+                            "justMyCode": {
                                 "type": "boolean",
-                                "description": "Debug standard library code.",
-                                "default": false
+                                "description": "Debug only user-written code.",
+                                "default": true
                             },
                             "gevent": {
                                 "type": "boolean",
@@ -1118,7 +960,7 @@
                             "showReturnValue": {
                                 "type": "boolean",
                                 "description": "Show return value of functions when stepping.",
-                                "default": false
+                                "default": true
                             },
                             "console": {
                                 "enum": [
@@ -1149,10 +991,10 @@
                                 "description": "Redirect output.",
                                 "default": true
                             },
-                            "debugStdLib": {
+                            "justMyCode": {
                                 "type": "boolean",
-                                "description": "Debug standard library code.",
-                                "default": false
+                                "description": "Debug only user-written code.",
+                                "default": true
                             }
                         }
                     },
@@ -1206,10 +1048,10 @@
                                 "description": "Redirect output.",
                                 "default": true
                             },
-                            "debugStdLib": {
+                            "justMyCode": {
                                 "type": "boolean",
-                                "description": "Debug standard library code.",
-                                "default": false
+                                "description": "Debug only user-written code.",
+                                "default": true
                             },
                             "django": {
                                 "type": "boolean",
@@ -1229,6 +1071,11 @@
                                 "type": "boolean",
                                 "description": "Whether to enable Sub Process debugging",
                                 "default": false
+                            },
+                            "showReturnValue": {
+                                "type": "boolean",
+                                "description": "Show return value of functions when stepping.",
+                                "default": true
                             }
                         }
                     }
@@ -1242,7 +1089,7 @@
                 "python.diagnostics.sourceMapsEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable source map support for meaningful strack traces in error logs.",
+                    "description": "Enable source map support for meaningful stack traces in error logs.",
                     "scope": "application"
                 },
                 "python.autoComplete.addBrackets": {
@@ -1300,6 +1147,12 @@
                     "type": "number",
                     "default": 60000,
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterLaunchRetries": {
+                    "type": "number",
+                    "default": 3,
+                    "description": "Number of times to attempt to connect to the Jupyter Notebook",
                     "scope": "resource"
                 },
                 "python.dataScience.jupyterServerURI": {
@@ -1375,8 +1228,14 @@
                 },
                 "python.dataScience.showJupyterVariableExplorer": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Show the variable explorer in the Python Interactive window. (experimental)",
+                    "default": true,
+                    "description": "Show the variable explorer in the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.variableExplorerExclude": {
+                    "type": "string",
+                    "default": "module;function;builtin_function_or_method",
+                    "description": "Types to exclude from showing in the Python Interactive variable explorer",
                     "scope": "resource"
                 },
                 "python.dataScience.codeRegularExpression": {
@@ -1401,6 +1260,24 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Don't use the VS Code theme in the Python Interactive window (requires reload of VS Code). This forces the Python Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
+                    "scope": "resource"
+                },
+                "python.dataScience.liveShareConnectionTimeout": {
+                    "type": "number",
+                    "default": 1000,
+                    "description": "Amount of time to wait for guest connections to verify they have the Python extension installed.",
+                    "scope": "application"
+                },
+                "python.dataScience.decorateCells": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Draw a highlight behind the currently active cell.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableCellCodeLens": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables code lens for 'cells' in a python file.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -1980,19 +1857,19 @@
                     "description": "Python launch arguments to use when executing a file in the terminal.",
                     "scope": "resource"
                 },
-                "python.unitTest.cwd": {
+                "python.testing.cwd": {
                     "type": "string",
                     "default": null,
                     "description": "Optional working directory for unit tests.",
                     "scope": "resource"
                 },
-                "python.unitTest.debugPort": {
+                "python.testing.debugPort": {
                     "type": "number",
                     "default": 3000,
-                    "description": "Port number used for debugging of unittests.",
+                    "description": "Port number used for debugging of tests.",
                     "scope": "resource"
                 },
-                "python.unitTest.nosetestArgs": {
+                "python.testing.nosetestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
@@ -2001,25 +1878,25 @@
                     },
                     "scope": "resource"
                 },
-                "python.unitTest.nosetestsEnabled": {
+                "python.testing.nosetestsEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using nosetests.",
                     "scope": "resource"
                 },
-                "python.unitTest.nosetestPath": {
+                "python.testing.nosetestPath": {
                     "type": "string",
                     "default": "nosetests",
                     "description": "Path to nosetests, you can use a custom version of nosetests by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
-                "python.unitTest.promptToConfigure": {
+                "python.testing.promptToConfigure": {
                     "type": "boolean",
                     "default": true,
                     "description": "Prompt to configure a test framework if potential tests directories are discovered.",
                     "scope": "resource"
                 },
-                "python.unitTest.pyTestArgs": {
+                "python.testing.pyTestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
@@ -2028,19 +1905,19 @@
                     },
                     "scope": "resource"
                 },
-                "python.unitTest.pyTestEnabled": {
+                "python.testing.pyTestEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using pytest.",
                     "scope": "resource"
                 },
-                "python.unitTest.pyTestPath": {
+                "python.testing.pyTestPath": {
                     "type": "string",
                     "default": "pytest",
                     "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
-                "python.unitTest.unittestArgs": {
+                "python.testing.unittestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [
@@ -2055,13 +1932,13 @@
                     },
                     "scope": "resource"
                 },
-                "python.unitTest.unittestEnabled": {
+                "python.testing.unittestEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using unittest.",
                     "scope": "resource"
                 },
-                "python.unitTest.autoTestDiscoverOnSaveEnabled": {
+                "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable auto run test discovery when saving a unit test file.",
@@ -2232,7 +2109,7 @@
         }
     },
     "scripts": {
-        "package": "gulp clean && gulp prePublishBundle && vsce package",
+        "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
@@ -2241,13 +2118,13 @@
         "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --require source-map-support/register --opts ./build/.mocha.unittests.opts",
-        "test:unittests:cover": "nyc --nycrc-path ./build/.nycrc npm run test:unittests",
+        "test:unittests:cover": "npm run test:unittests",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
-        "test:functional:cover": "nyc --nycrc-path ./build/.nycrc npm run test:functional",
-        "testDebugger": "node ./out/test/debuggerTest.js",
-        "testSingleWorkspace": "node ./out/test/standardTest.js",
-        "testMultiWorkspace": "node ./out/test/multiRootTest.js",
-        "testPerformance": "node ./out/test/performanceTest.js",
+        "test:functional:cover": "npm run test:functional",
+        "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
+        "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
+        "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
@@ -2270,6 +2147,7 @@
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
+        "jsonc-parser": "^2.0.3",
         "line-by-line": "^0.1.6",
         "lodash": "^4.17.11",
         "md5": "^2.2.1",
@@ -2311,7 +2189,8 @@
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^3.2.3",
+        "@nteract/transform-plotly": "^5.0.0",
+        "@nteract/plotly": "^1.47.1",
         "@nteract/transforms": "^4.4.4",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
@@ -2333,7 +2212,7 @@
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
-        "@types/mocha": "^2.2.48",
+        "@types/mocha": "^5.2.6",
         "@types/node": "9.4.7",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
@@ -2397,6 +2276,8 @@
         "mocha-junit-reporter": "^1.17.0",
         "mocha-multi-reporters": "^1.1.7",
         "node-has-native-dependencies": "^1.0.2",
+        "node-html-parser": "^1.1.13",
+        "node-sass": "^4.11.0",
         "nyc": "^13.3.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
@@ -2410,6 +2291,7 @@
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "rewiremock": "^3.13.0",
+        "sass-loader": "^7.1.0",
         "shortid": "^2.2.8",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",
@@ -2422,10 +2304,11 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.2.2",
+        "typescript": "^3.4.3",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
+        "vsce": "^1.59.0",
         "vscode": "^1.1.30",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",
@@ -2435,6 +2318,7 @@
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
         "why-is-node-running": "^2.0.3",
+        "wtfnode": "^0.8.0",
         "yargs": "^12.0.2"
     },
     "__metadata": {

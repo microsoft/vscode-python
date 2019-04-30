@@ -87,6 +87,14 @@ module.exports = [
                             options: {}
                         }
                     ]
+                },
+                {
+                    test: /\.scss$/,
+                    use: [
+                        'style-loader',
+                        'css-loader',
+                        'sass-loader'
+                    ]
                 }
             ]
         }

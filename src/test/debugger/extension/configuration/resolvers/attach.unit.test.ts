@@ -23,7 +23,7 @@ getNamesAndValues(OSType).forEach(os => {
     if (os.value === OSType.Unknown) {
         return;
     }
-    suite(`Debugging - Config Resolver attach, OS = ${os.name}`, () => {
+    suite(`xDebugging - Config Resolver attach, OS = ${os.name}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
@@ -38,6 +38,7 @@ getNamesAndValues(OSType).forEach(os => {
         } else {
             debugOptionsAvailable.push(DebugOptions.UnixClient);
         }
+        debugOptionsAvailable.push(DebugOptions.ShowReturnValue);
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -248,6 +249,69 @@ getNamesAndValues(OSType).forEach(os => {
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach' } as any as DebugConfiguration);
 
             expect(debugConfig).to.have.property('debugOptions').to.be.deep.equal(expectedDebugOptions);
+        });
+
+        const testsForJustMyCode =
+            [
+                {
+                    justMyCode: false,
+                    debugStdLib: true,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: false,
+                    debugStdLib: false,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: false,
+                    debugStdLib: undefined,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: true,
+                    debugStdLib: false,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: true,
+                    debugStdLib: true,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: true,
+                    debugStdLib: undefined,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: undefined,
+                    debugStdLib: false,
+                    expectedResult: true
+                },
+                {
+                    justMyCode: undefined,
+                    debugStdLib: true,
+                    expectedResult: false
+                },
+                {
+                    justMyCode: undefined,
+                    debugStdLib: undefined,
+                    expectedResult: true
+                }
+            ];
+        test('Ensure justMyCode property is correctly derived from debugStdLib', async () => {
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+
+            const debugOptions = debugOptionsAvailable.slice().concat(DebugOptions.Jinja, DebugOptions.Sudo);
+
+            testsForJustMyCode.forEach(async testParams => {
+                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', justMyCode: testParams.justMyCode, debugStdLib: testParams.debugStdLib } as any as DebugConfiguration);
+                expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
+            });
         });
     });
 });

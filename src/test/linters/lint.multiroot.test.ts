@@ -7,9 +7,9 @@ import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, IOutputChannel, Product, ProductType } from '../../client/common/types';
 import { ILinter, ILinterManager } from '../../client/linters/types';
-import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
+import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 // tslint:disable:max-func-body-length no-invalid-this
 

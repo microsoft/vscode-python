@@ -13,7 +13,7 @@ import { SortImportsEditingProvider } from '../../client/providers/importSortPro
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 const sortingPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'sorting');
 const fileToFormatWithoutConfig = path.join(sortingPath, 'noconfig', 'before.py');

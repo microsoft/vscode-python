@@ -64,10 +64,10 @@ export async function closeActiveWindows(): Promise<void> {
         }, 15000);
         vscode.commands.executeCommand('workbench.action.closeAllEditors')
             .then(() => {
-                timer.unref();
+                clearTimeout(timer);
                 resolve();
             }, ex => {
-                timer.unref();
+                clearTimeout(timer);
                 reject(ex);
             });
     });

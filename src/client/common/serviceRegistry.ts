@@ -10,6 +10,7 @@ import { CommandManager } from './application/commandManager';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
+import { LanguageService } from './application/languageService';
 import { TerminalManager } from './application/terminalManager';
 import {
     IApplicationEnvironment,
@@ -17,6 +18,7 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
+    ILanguageService,
     ILiveShareApi,
     ITerminalManager,
     IWorkspaceService
@@ -91,6 +93,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+    serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);

@@ -123,6 +123,7 @@ SPAM='hello ${WHO}'
 
 #### Language server
 
+- [ ] LS is downloaded using HTTP (no SSL) when the "http.proxyStrictSSL" setting is false
 - [ ] Installing [`requests`](https://pypi.org/project/requests/) in virtual environment is detected
     - [ ] Import of `requests` without package installed is flagged as unresolved
     - [ ] Create a virtual environment
@@ -297,6 +298,8 @@ class FailingTests(unittest.TestCase):
     - [ ] `Run Test` works
     - [ ] `Debug Test` works
     - [ ] Module/suite setup methods are also run (run the `test_setup` method to verify)
+- [ ] while debugging tests, an uncaught exception in a test does not
+      cause ptvsd to raise SystemExit
 
 #### [`pytest`](https://code.visualstudio.com/docs/python/unit-testing#_pytest-configuration-settings)
 ```python
@@ -378,6 +381,25 @@ def test_failure():
     1. Verify the output from what you added
 - [ ] Verify dark and light main themes
     1. Repeat the `Start and connect to local server` and `Verify basic outputs` steps using `Default Dark+` and `Default Light+` themes
+- [ ] Verify Variable Explorer
+    1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
+    1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
+    1. Check that variables have expected values. They will be truncated for longer items
+    1. Sort the list ascending and descending by Type. Also sort the list ascending and descenting by Count. Values like (X, Y) use the first X value for Count sort ordering
+    1. Check that list, Series, ndarray, and DataFrame types have a button to "Show variable in data viewer" on the right
+    1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
+- [ ] Verify Data Explorer
+    1. From the listed types in the Variable explorer open up the Data Viewer by clicking the button or double clicking the row
+    1. Inspect the data in the Data Viewer for the expected values
+      [ ] Verify Sorting and Filtering
+        1. Open up the myDataFrame item
+        1. Sort the name column ascending and descending
+        1. Sort one of the numerical columns ascending and descending
+        1. Click the Filter Rows button
+        1. In the name filter box input 'a' to filter to just name with an a in them
+        1. In one of the numerical columns input a number 1 - 9 to filter to just that column
+    1. Open the myList variable in the explorer
+    1. Make sure that you can scroll all the way to the end of the entries
 
 #### P1 Test Scenarios
 - [ ] Connect to a `remote` server
@@ -402,6 +424,17 @@ def test_failure():
         1. The progress bar should be interrupted and you should see a KeyboardInterrupt error message in the output
         1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
         1. Use the expand all input and collapse all input commands to collapse all cell inputs
+- [ ] Verify theming works
+    1. Start Python Interactive window
+    1. Add a cell with some comments
+    1. Switch VS Code theme to something else
+    1. Check that the cell you just added updates the comment color
+    1. Switch back and forth between a 'light' and a 'dark' theme
+    1. Check that the cell switches colors
+    1. Check that the buttons on the top change to their appropriate 'light' or 'dark' versions
+    1. Enable the 'ignoreVscodeTheme' setting
+    1. Close the Python Interactive window and reopen it. The theme in just the 'Python Interactive' window should be light
+    1. Switch to a dark theme. Make sure the interactive window remains in the light theme.
 - [ ] Verify code lenses
     1. Check that `Run Cell` `Run Above` and `Run Below` all do the correct thing
 - [ ] Verify context menu navigation commands

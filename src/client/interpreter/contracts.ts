@@ -88,7 +88,7 @@ export interface IInterpreterService {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
-    refresh(resource: Uri | undefined): Promise<void>;
+    refresh(resource: Resource): Promise<void>;
     initialize(): void;
     getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string>;
 }
@@ -125,12 +125,12 @@ export interface IInterpreterLocatorHelper {
 
 export const IInterpreterWatcher = Symbol('IInterpreterWatcher');
 export interface IInterpreterWatcher {
-    onDidCreate: Event<void>;
+    onDidCreate: Event<Resource>;
 }
 
 export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');
 export interface IInterpreterWatcherBuilder {
-    getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher>;
+    getWorkspaceVirtualEnvInterpreterWatcher(resource: Resource): Promise<IInterpreterWatcher>;
 }
 
 export const InterpreterLocatorProgressHandler = Symbol('InterpreterLocatorProgressHandler');

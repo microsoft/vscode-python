@@ -1,11 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { injectable } from 'inversify';
+import {
+    DecorationRenderOptions,
+    Event,
+    TextDocument,
+    TextDocumentChangeEvent,
+    TextDocumentShowOptions,
+    TextEditor,
+    TextEditorDecorationType,
+    TextEditorOptionsChangeEvent,
+    TextEditorSelectionChangeEvent,
+    TextEditorViewColumnChangeEvent,
+    Uri,
+    ViewColumn,
+    window,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
+
+import { IDocumentManager } from './types';
 
 // tslint:disable:no-any unified-signatures
-
-import { injectable } from 'inversify';
-import { Event, TextDocument, TextDocumentShowOptions, TextEditor, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
-import { IDocumentManager } from './types';
 
 @injectable()
 export class DocumentManager implements IDocumentManager {
@@ -20,6 +36,9 @@ export class DocumentManager implements IDocumentManager {
     }
     public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
         return window.onDidChangeActiveTextEditor;
+    }
+    public get onDidChangeTextDocument() : Event<TextDocumentChangeEvent> {
+        return workspace.onDidChangeTextDocument;
     }
     public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
         return window.onDidChangeVisibleTextEditors;
@@ -56,5 +75,8 @@ export class DocumentManager implements IDocumentManager {
     }
     public applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
         return workspace.applyEdit(edit);
+    }
+    public createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType {
+        return window.createTextEditorDecorationType(options);
     }
 }

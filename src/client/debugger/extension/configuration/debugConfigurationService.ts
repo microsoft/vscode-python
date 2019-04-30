@@ -7,8 +7,8 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, QuickPickItem, WorkspaceFolder } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
-import { DebugConfigurationPrompts } from '../../../common/utils/localize';
-import { IMultiStepInput, InputStep, IQuickPickParameters } from '../../../common/utils/multiStepInput';
+import { DebugConfigStrings } from '../../../common/utils/localize';
+import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../../../common/utils/multiStepInput';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
@@ -21,8 +21,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
     constructor(@inject(IDebugConfigurationResolver) @named('attach') private readonly attachResolver: IDebugConfigurationResolver<AttachRequestArguments>,
         @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
         @inject(IDebugConfigurationProviderFactory) private readonly providerFactory: IDebugConfigurationProviderFactory,
-        // tslint:disable-next-line:no-unused-variable
-        // @inject(IMultiStepInputFactory) private readonly _multiStepFactory: IMultiStepInputFactory,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem) {
     }
     public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[] | undefined> {
@@ -30,8 +29,8 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         const state = { config, folder, token };
 
         // Disabled until configuration issues are addressed by VS Code. See #4007
-        // const multiStep = this.multiStepFactory.create<DebugConfigurationState>();
-        // await multiStep.run((input, s) => this.pickDebugConfiguration(input, s), state);
+        const multiStep = this.multiStepFactory.create<DebugConfigurationState>();
+        await multiStep.run((input, s) => this.pickDebugConfiguration(input, s), state);
 
         if (Object.keys(state.config).length === 0) {
             return this.getDefaultDebugConfig();
@@ -45,6 +44,12 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         } else if (debugConfiguration.request === 'test') {
             throw Error('Please use the command \'Python: Debug Unit Tests\'');
         } else {
+            if (Object.keys(debugConfiguration).length === 0) {
+                const configs = await this.provideDebugConfigurations(folder, token);
+                if (Array.isArray(configs) && configs.length === 1) {
+                    debugConfiguration = configs[0];
+                }
+            }
             return this.launchResolver.resolveDebugConfiguration(folder, debugConfiguration as LaunchRequestArguments, token);
         }
     }
@@ -54,20 +59,42 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         const jsonStr = await this.fs.readFile(jsFilePath);
         return JSON.parse(jsonStr) as DebugConfiguration[];
     }
-    protected async  pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
+    protected async  pickDebugConfiguration(
+        input: IMultiStepInput<DebugConfigurationState>,
+        state: DebugConfigurationState
+    ): Promise<InputStep<DebugConfigurationState> | void> {
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
-            { label: DebugConfigurationPrompts.debugFileConfigurationLabel(), type: DebugConfigurationType.launchFile, description: DebugConfigurationPrompts.debugFileConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugModuleConfigurationLabel(), type: DebugConfigurationType.launchModule, description: DebugConfigurationPrompts.debugModuleConfigurationDescription() },
-            { label: DebugConfigurationPrompts.remoteAttachConfigurationLabel(), type: DebugConfigurationType.remoteAttach, description: DebugConfigurationPrompts.remoteAttachConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugDjangoConfigurationLabel(), type: DebugConfigurationType.launchDjango, description: DebugConfigurationPrompts.debugDjangoConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugFlaskConfigurationLabel(), type: DebugConfigurationType.launchFlask, description: DebugConfigurationPrompts.debugFlaskConfigurationDescription() },
-            { label: DebugConfigurationPrompts.debugPyramidConfigurationLabel(), type: DebugConfigurationType.launchPyramid, description: DebugConfigurationPrompts.debugPyramidConfigurationDescription() }
+            {
+                label: DebugConfigStrings.file.selectConfiguration.label(),
+                type: DebugConfigurationType.launchFile,
+                description: DebugConfigStrings.file.selectConfiguration.description()
+            }, {
+                label: DebugConfigStrings.module.selectConfiguration.label(),
+                type: DebugConfigurationType.launchModule,
+                description: DebugConfigStrings.module.selectConfiguration.description()
+            }, {
+                label: DebugConfigStrings.attach.selectConfiguration.label(),
+                type: DebugConfigurationType.remoteAttach,
+                description: DebugConfigStrings.attach.selectConfiguration.description()
+            }, {
+                label: DebugConfigStrings.django.selectConfiguration.label(),
+                type: DebugConfigurationType.launchDjango,
+                description: DebugConfigStrings.django.selectConfiguration.description()
+            }, {
+                label: DebugConfigStrings.flask.selectConfiguration.label(),
+                type: DebugConfigurationType.launchFlask,
+                description: DebugConfigStrings.flask.selectConfiguration.description()
+            }, {
+                label: DebugConfigStrings.pyramid.selectConfiguration.label(),
+                type: DebugConfigurationType.launchPyramid,
+                description: DebugConfigStrings.pyramid.selectConfiguration.description()
+            }
         ];
         state.config = {};
         const pick = await input.showQuickPick<DebugConfigurationQuickPickItem, IQuickPickParameters<DebugConfigurationQuickPickItem>>({
-            title: DebugConfigurationPrompts.selectConfigurationTitle(),
-            placeholder: DebugConfigurationPrompts.selectConfigurationPlaceholder(),
+            title: DebugConfigStrings.selectConfiguration.title(),
+            placeholder: DebugConfigStrings.selectConfiguration.placeholder(),
             activeItem: items[0],
             items: items
         });

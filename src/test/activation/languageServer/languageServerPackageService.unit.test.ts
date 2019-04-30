@@ -20,7 +20,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
 const downloadBaseFileName = 'Python-Language-Server';
 
-suite('Languagex', () => {
+suite('Language', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
     let lsPackageService: LanguageServerPackageService;
@@ -85,7 +85,7 @@ suite('Languagex', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget.object);
 
         repo
-            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
         nuget
@@ -93,7 +93,7 @@ suite('Languagex', () => {
             .returns(() => true)
             .verifiable(typeMoq.Times.atLeastOnce());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion();
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
 
         repo.verifyAll();
         nuget.verifyAll();
@@ -117,11 +117,11 @@ suite('Languagex', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo
-            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion();
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
 
         repo.verifyAll();
         expect(info).to.deep.equal(expectedPackage);
@@ -142,11 +142,11 @@ suite('Languagex', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo
-            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion();
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
 
         repo.verifyAll();
         const expectedPackage: NugetPackage = {

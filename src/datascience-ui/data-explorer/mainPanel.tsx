@@ -8,9 +8,9 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Data, Toolbar } from 'react-data-grid-addons';
 
 import {
-    DataExplorerMessages,
-    DataExplorerRowStates,
-    IDataExplorerMapping,
+    DataViewerMessages,
+    DataViewerRowStates,
+    IDataViewerMapping,
     IGetRowsResponse,
     MaxStringCompare,
     RowFetchAllLimit,
@@ -19,8 +19,10 @@ import {
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { CellFormatter } from './cellFormatter';
-import { EmptyRowsView } from './emptyRowsView';
+import { StyleInjector } from '../react-common/styleInjector';
+import { CellFormatter, ICellFormatterMetaData } from './cellFormatter';
+import { EmptyRows } from './emptyRowsView';
+import { ProgressBar } from './progressBar';
 import { generateTestData } from './testData';
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -39,6 +41,8 @@ const defaultColumnProperties = {
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
+    forceHeight?: number;
+    baseTheme: string;
 }
 
 //tslint:disable:no-any
@@ -52,15 +56,15 @@ interface IMainPanelState {
     gridHeight: number;
     sortDirection: string;
     sortColumn: string | number;
+    indexColumn: string;
 }
 
-class DataExplorerPostOffice extends PostOffice<IDataExplorerMapping> { }
-
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
-    private postOffice: DataExplorerPostOffice | undefined;
     private container: HTMLDivElement | null = null;
     private emptyRows: (() => JSX.Element) | undefined;
     private getEmptyRows: ((props: any) => JSX.Element) | undefined;
+    private sentDone = false;
+    private postOffice: PostOffice = new PostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -76,9 +80,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 actualRowCount: data.rows.length + 100,
                 fetchedRowCount: data.rows.length,
                 filters: {},
-                gridHeight: 100,
+                gridHeight:  100,
                 sortColumn: 'index',
-                sortDirection: 'NONE'
+                sortDirection: 'NONE',
+                indexColumn: 'index'
             };
         } else {
             this.state = {
@@ -90,9 +95,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filters: {},
                 gridHeight: 100,
                 sortColumn: 'index',
-                sortDirection: 'NONE'
+                sortDirection: 'NONE',
+                indexColumn: 'index'
             };
         }
+    }
+
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        this.postOffice.addHandler(this);
+
+        // Tell the dataviewer code we have started.
+        this.postOffice.sendMessage<IDataViewerMapping, 'started'>(DataViewerMessages.Started);
     }
 
     public componentDidMount() {
@@ -102,39 +116,50 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillUnmount() {
         window.removeEventListener('resize', this.updateDimensions);
+        this.postOffice.removeHandler(this);
+        this.postOffice.dispose();
     }
 
     public componentDidUpdate() {
         // Rebind our empty rows view to our new state.
-        this.emptyRows = EmptyRowsView.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount});
+        this.emptyRows = this.state.fetchedRowCount === this.state.actualRowCount ?
+            EmptyRows.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount}) :
+            ProgressBar.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount});
+
         this.getEmptyRows = (_props: any) => {
             return this.emptyRows ? this.emptyRows() : <div/>;
         };
     }
     public render = () => {
+        // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
+        // can guarantee our render will run before somebody checks our rendered output.
+        if (this.state.actualRowCount && this.state.actualRowCount === this.state.fetchedRowCount && !this.sentDone) {
+            this.sentDone = true;
+            this.sendMessage(DataViewerMessages.CompletedData);
+        }
 
         return (
-            <div className='background'>
-                <div className='main-panel' ref={this.updateContainer}>
-                    <DataExplorerPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
-                    {this.container && this.renderGrid()}
+                <div className='background'>
+                    <div className='main-panel' ref={this.updateContainer}>
+                        <StyleInjector expectingDark={this.props.baseTheme !== 'vscode-light'} postOffice={this.postOffice} />
+                        {this.container && this.renderGrid()}
+                    </div>
                 </div>
-            </div>
         );
     }
 
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case DataExplorerMessages.InitializeData:
+            case DataViewerMessages.InitializeData:
                 this.initializeData(payload);
                 break;
 
-            case DataExplorerMessages.GetAllRowsResponse:
+            case DataViewerMessages.GetAllRowsResponse:
                 this.handleGetAllRowsResponse(payload as JSONObject);
                 break;
 
-            case DataExplorerMessages.GetRowsResponse:
+            case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
@@ -172,6 +197,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
                 const initialRows: JSONArray = [];
                 const paddedRows = this.padRows(initialRows, totalRowCount);
+                const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
 
                 this.setState(
                     {
@@ -179,7 +205,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         actualGridRows: paddedRows,
                         currentGridRows: paddedRows,
                         actualRowCount: totalRowCount,
-                        fetchedRowCount: initialRows.length
+                        fetchedRowCount: initialRows.length,
+                        indexColumn: indexColumn
                     }
                 );
 
@@ -197,7 +224,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getAllRows() {
-        this.sendMessage(DataExplorerMessages.GetAllRowsRequest);
+        this.sendMessage(DataViewerMessages.GetAllRowsRequest);
     }
 
     private getRowsInChunks(startIndex: number, endIndex: number) {
@@ -205,7 +232,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         let chunkEnd = startIndex + Math.min(RowFetchSizeFirst, endIndex);
         let chunkStart = startIndex;
         while (chunkStart < endIndex) {
-            this.sendMessage(DataExplorerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
             chunkStart = chunkEnd;
             chunkEnd = Math.min(chunkEnd + RowFetchSizeSubsequent, endIndex);
         }
@@ -258,7 +285,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private padRows(initialRows: any[], wantedCount: number) : any[] {
         if (wantedCount > initialRows.length) {
-            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataExplorerRowStates.Fetching);
+            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataViewerRowStates.Fetching);
             return [...initialRows, ...fetching];
         }
         return initialRows;
@@ -268,9 +295,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (variable.columns) {
             return variable.columns.map((c: {key: string; type: string}, i: number) => {
                 return {
-                    ...c,
+                    type: c.type,
+                    key: c.key.toString(),
                     index: i,
-                    name: c.key,
+                    name: c.key.toString(),
                     ...defaultColumnProperties,
                     formatter: CellFormatter,
                     getRowMetaData: this.getRowMetaData.bind(this)
@@ -280,20 +308,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [];
     }
 
-    private getRowMetaData(_row: object, column?: AdazzleReactDataGrid.Column<object>): any {
+    private getRowMetaData(row: any, column?: AdazzleReactDataGrid.Column<object>): ICellFormatterMetaData {
+        let columnValue = '';
+        let columnType = 'string';
         if (column) {
             const obj = column as any;
             if (obj.type) {
-                return obj.type.toString();
+                columnType = obj.type.toString();
+                columnValue = row[obj.name];
             }
         }
-        return '';
+        return {
+            columnType,
+            columnValue
+        };
     }
 
     private updateDimensions = () => {
         if (this.container) {
             const height = this.container.offsetHeight;
-            this.setState({ gridHeight: height - 100 });
+            this.setState({ gridHeight: this.props.forceHeight ? this.props.forceHeight : height - 100 });
         }
     }
 
@@ -314,17 +348,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (this.state.fetchedRowCount === this.state.actualRowCount);
     }
 
-    private updatePostOffice = (postOffice: DataExplorerPostOffice) => {
-        if (this.postOffice !== postOffice) {
-            this.postOffice = postOffice;
-            this.sendMessage(DataExplorerMessages.Started);
-        }
-    }
-
-    private sendMessage<M extends IDataExplorerMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        if (this.postOffice) {
-            this.postOffice.sendMessage(type, payload);
-        }
+    private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getColumnType(name: string | number) : string | undefined {
@@ -340,7 +365,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Default to the index column
         if (sortDirection === 'NONE') {
-            sortColumn = 'index';
+            sortColumn = this.state.indexColumn;
             sortDirection = 'ASC';
         }
 
@@ -352,8 +377,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // or it will take too long
         const comparer = isStringColumn ?
             (a: any, b: any): number => {
-                const aVal = a[sortColumn] as string;
-                const bVal = b[sortColumn] as string;
+                const aVal = a[sortColumn] ? a[sortColumn].toString() : '';
+                const bVal = b[sortColumn] ? b[sortColumn].toString() : '';
                 const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
                 const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
                 const result = aStr > bStr ? -1 : 1;

@@ -40,6 +40,11 @@ export function initialize() {
         if (request === 'vscode-extension-telemetry') {
             return { default: vscMockTelemetryReporter };
         }
+        // scss files need to be in import statements to be converted to css
+        // But we don't want to try to load them in the mock vscode
+        if (/\.scss$/.test(request)) {
+            return;
+        }
         return originalLoad.apply(this, arguments);
     };
 }

@@ -128,6 +128,7 @@ suite('History command listener', async () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: '',
             changeDirOnImportExport: true,
@@ -141,6 +142,8 @@ suite('History command listener', async () => {
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };

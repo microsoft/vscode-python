@@ -8,7 +8,7 @@ import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { getExtensionSettings, isPythonVersion } from '../common';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 

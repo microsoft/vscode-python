@@ -8,7 +8,7 @@ import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService, parseCondaInfo } from '../../client/interpreter/locators/services/condaEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');

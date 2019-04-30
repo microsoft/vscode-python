@@ -11,7 +11,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { FileSystem } from '../../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../../client/common/platform/types';
-import { localize } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { MultiStepInput } from '../../../../../client/common/utils/multiStepInput';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { FlaskLaunchDebugConfigurationProvider } from '../../../../../client/debugger/extension/configuration/providers/flaskLaunch';
@@ -60,7 +60,7 @@ suite('Debugging - Configuration Provider Flask', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.flask.label', 'Python: Flask')(),
+            name: DebugConfigStrings.flask.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'flask',
@@ -89,7 +89,7 @@ suite('Debugging - Configuration Provider Flask', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.flask.label', 'Python: Flask')(),
+            name: DebugConfigStrings.flask.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'flask',
@@ -118,7 +118,7 @@ suite('Debugging - Configuration Provider Flask', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.flask.label', 'Python: Flask')(),
+            name: DebugConfigStrings.flask.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             module: 'flask',

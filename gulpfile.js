@@ -122,7 +122,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix', 'c
 
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
-        throw new Error('Native dependencies deteced');
+        done(new Error('Native dependencies deteced'));
     }
     done();
 });
@@ -209,7 +209,7 @@ async function buildWebPack(webpackConfigName, args) {
         .filter(item => item.startsWith('WARNING in '))
         .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
     const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
-    if (errors){
+    if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
@@ -279,7 +279,7 @@ gulp.task('installPythonLibs', async () => {
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
-    return gulp.src('python*.vsix')
+    return gulp.src('*python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
             account: process.env.AZURE_STORAGE_ACCOUNT,
@@ -289,7 +289,7 @@ function uploadExtension(uploadBlobName) {
 }
 
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
-gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH}.vsix`));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {

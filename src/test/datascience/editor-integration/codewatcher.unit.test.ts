@@ -54,6 +54,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -67,8 +68,11 @@ suite('DataScience Code Watcher Unit Tests', () => {
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            enableCellCodeLens: true
         };
 
         // Setup the service container to return code watchers

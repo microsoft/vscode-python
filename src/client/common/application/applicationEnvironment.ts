@@ -3,12 +3,33 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import * as vscode from 'vscode';
+import { IPlatformService } from '../platform/types';
+import { ICurrentProcess, IPathUtils } from '../types';
+import { OSType } from '../utils/platform';
 import { IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
+    constructor(@inject(IPlatformService) private readonly platform: IPlatformService,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(ICurrentProcess) private readonly process: ICurrentProcess) { }
+
+    public get userSettingsFile(): string | undefined {
+        const vscodeFolderName = vscode.env.appName.indexOf('Insider') > 0 ? 'Code - Insiders' : 'Code';
+        switch (this.platform.osType) {
+            case OSType.OSX:
+                return path.join(this.pathUtils.home, 'Library', 'Application Support', vscodeFolderName, 'User', 'settings.json');
+            case OSType.Linux:
+                return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'settings.json');
+            case OSType.Windows:
+                return this.process.env.APPDATA ? path.join(this.process.env.APPDATA, vscodeFolderName, 'User', 'settings.json') : undefined;
+            default:
+                return;
+        }
+    }
     public get appName(): string {
         return vscode.env.appName;
     }

@@ -2,33 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount, ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as React from 'react';
-import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, ViewColumn } from 'vscode';
+import { Disposable, TextDocument, TextEditor } from 'vscode';
 
-import {
-    IApplicationShell,
-    IDocumentManager,
-    IWebPanel,
-    IWebPanelMessageListener,
-    IWebPanelProvider,
-    WebPanelMessage
-} from '../../client/common/application/types';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { EditorContexts } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
@@ -43,91 +30,24 @@ import {
     findButton,
     getCellResults,
     getLastOutputCell,
-    getMainPanel,
     initialDataScienceSettings,
+    runMountedTest,
     srcDirectory,
     toggleCellExpansion,
     updateDataScienceSettings,
     verifyHtmlOnCell,
     verifyLastCellInputState
 } from './historyTestHelpers';
-import { SupportedCommands } from './mockJupyterManager';
-import { blurWindow, waitForUpdate } from './reactHelpers';
+import { waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('History output tests', () => {
+suite('DataScience History output tests', () => {
     const disposables: Disposable[] = [];
-    let jupyterExecution: IJupyterExecution;
-    let webPanelProvider: TypeMoq.IMock<IWebPanelProvider>;
-    let webPanel: TypeMoq.IMock<IWebPanel>;
-    let historyProvider: IHistoryProvider;
-    let webPanelListener: IWebPanelMessageListener;
-    let globalAcquireVsCodeApi: () => IVsCodeApi;
     let ioc: DataScienceIocContainer;
-    let webPanelMessagePromise: Deferred<void> | undefined;
 
-    const workingPython: PythonInterpreter = {
-        path: '/foo/bar/python.exe',
-        version: new SemVer('3.6.6-final'),
-        sysVersion: '1.0.0.0',
-        sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-    };
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-
-        if (ioc.mockJupyter) {
-            ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all);
-        }
-
-        webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
-        webPanel = TypeMoq.Mock.ofType<IWebPanel>();
-
-        ioc.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
-
-        // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
-            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
-                // Keep track of the current listener. It listens to messages through the vscode api
-                webPanelListener = listener;
-
-                // Return our dummy web panel
-                return webPanel.object;
-        });
-        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
-            window.postMessage(m, '*');
-        }); // See JSDOM valid target origins
-        webPanel.setup(p => p.show(true));
-
-        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        historyProvider = ioc.serviceManager.get<IHistoryProvider>(IHistoryProvider);
-
-        // Setup a global for the acquireVsCodeApi so that the React PostOffice can find it
-        globalAcquireVsCodeApi = (): IVsCodeApi => {
-            return {
-                // tslint:disable-next-line:no-any
-                postMessage: (msg: any) => {
-                    if (webPanelListener) {
-                        webPanelListener.onMessage(msg.type, msg.payload);
-                    }
-                    if (webPanelMessagePromise) {
-                        webPanelMessagePromise.resolve();
-                    }
-                },
-                // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {
-
-                },
-                // tslint:disable-next-line:no-any no-empty
-                getState: () => {
-                    return {};
-                }
-            };
-        };
-        // tslint:disable-next-line:no-string-literal
-        (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
     });
 
     teardown(async () => {
@@ -142,10 +62,14 @@ suite('History output tests', () => {
             }
         }
         await ioc.dispose();
-        delete (global as any).ascquireVsCodeApi;
     });
 
+    // suiteTeardown(() => {
+    //     asyncDump();
+    // });
+
     async function getOrCreateHistory(): Promise<IHistory> {
+        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
         const result = await historyProvider.getOrCreateActive();
 
         // During testing the MainPanel sends the init message before our history is created.
@@ -156,42 +80,18 @@ suite('History output tests', () => {
         return result;
     }
 
-    // tslint:disable-next-line:no-any
-    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
-        test(name, async () => {
-            addMockData(ioc, 'a=1\na', 1);
-            if (await jupyterExecution.isNotebookSupported()) {
-                // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
-                const wrapper = mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
-                getMainPanel(wrapper);
-                try {
-                    await testFunc(wrapper);
-                } finally {
-                    // Blur window focus so we don't have editors polling
-                    blurWindow();
-
-                    // Make sure to unmount the wrapper or it will interfere with other tests
-                    wrapper.unmount();
-                }
-            } else {
-                // tslint:disable-next-line:no-console
-                console.log(`${name} skipped, no Jupyter installed.`);
-            }
-        });
-    }
-
     async function waitForMessageResponse(action: () => void): Promise<void> {
-        webPanelMessagePromise = createDeferred();
+        ioc.wrapperCreatedPromise  = createDeferred<boolean>();
         action();
-        await webPanelMessagePromise.promise;
-        webPanelMessagePromise = undefined;
+        await ioc.wrapperCreatedPromise.promise;
+        ioc.wrapperCreatedPromise = undefined;
     }
 
     runMountedTest('Simple text', async (wrapper) => {
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Hide inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
@@ -206,7 +106,7 @@ suite('History output tests', () => {
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.First);
         verifyHtmlOnCell(wrapper, undefined, CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Show inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
@@ -215,14 +115,14 @@ suite('History output tests', () => {
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Expand inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Expanded);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
@@ -240,7 +140,7 @@ suite('History output tests', () => {
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Hide / show cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
@@ -259,7 +159,7 @@ suite('History output tests', () => {
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Mime Types', async (wrapper) => {
         const badPanda = `import pandas as pd
@@ -312,7 +212,7 @@ for _ in range(50):
 
         await addCode(getOrCreateHistory, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {
         const history = await getOrCreateHistory();
@@ -353,7 +253,7 @@ for _ in range(50):
         });
 
         assert.equal(afterUndo.length, 3, `Undo should put cells back`);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Click buttons', async (wrapper) => {
         // Goto source should cause the visible editor to be picked as long as its filename matches
@@ -429,7 +329,7 @@ for _ in range(50):
             return Promise.resolve();
         });
         assert.equal(afterDelete.length, 2, `Delete should remove a cell`);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Export', async (wrapper) => {
         // Export should cause the export dialog to come up. Remap appshell so we can check
@@ -473,25 +373,20 @@ for _ in range(50):
         await Promise.race([sleep(10), response]);
         assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
 
-    });
+    }, () => { return ioc; });
 
-    test('Dispose test', async () => {
+    runMountedTest('Dispose test', async () => {
         // tslint:disable-next-line:no-any
-        if (await jupyterExecution.isNotebookSupported()) {
-            const history = await getOrCreateHistory();
-            await history.show(); // Have to wait for the load to finish
-            await history.dispose();
-            // tslint:disable-next-line:no-any
-            const h2 = await getOrCreateHistory();
-            // Check equal and then dispose so the test goes away
-            const equal = Object.is(history, h2);
-            await h2.show();
-            assert.ok(!equal, 'Disposing is not removing the active history');
-        } else {
-            // tslint:disable-next-line:no-console
-            console.log('History test skipped, no Jupyter installed');
-        }
-    });
+        const history = await getOrCreateHistory();
+        await history.show(); // Have to wait for the load to finish
+        await history.dispose();
+        // tslint:disable-next-line:no-any
+        const h2 = await getOrCreateHistory();
+        // Check equal and then dispose so the test goes away
+        const equal = Object.is(history, h2);
+        await h2.show();
+        assert.ok(!equal, 'Disposing is not removing the active history');
+    }, () => { return ioc; });
 
     runMountedTest('Editor Context', async (wrapper) => {
         // Verify we can send different commands to the UI and it will respond
@@ -535,25 +430,25 @@ for _ in range(50):
 
         // Now send an undo command. This should change the state, so use our waitForInfo promise instead
         resetWaiting();
-        history.postMessage(HistoryMessages.Undo);
+        history.undoCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo as sysinfo is ignored');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
         resetWaiting();
-        history.postMessage(HistoryMessages.Redo);
+        history.redoCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after redo');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after redo');
 
         resetWaiting();
-        history.postMessage(HistoryMessages.DeleteAllCells);
+        history.removeAllCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Simple input', async (wrapper) => {
         // Create a history so that it listens to the results.
@@ -563,7 +458,7 @@ for _ in range(50):
         // Then enter some code.
         await enterInput(wrapper, 'a=1\na');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
-    });
+    }, () => { return ioc; });
 
     runMountedTest('Multiple input', async (wrapper) => {
         // Create a history so that it listens to the results.
@@ -595,5 +490,39 @@ for _ in range(50):
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
         verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
-    });
+    }, () => { return ioc; });
+
+    runMountedTest('Restart with session failure', async (wrapper) => {
+        // Prime the pump
+        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+        // Then something that could possibly timeout
+        addContinuousMockData(ioc, 'import time\r\ntime.sleep(1000)', (_c) => {
+            return Promise.resolve({ result: '', haveMore: true});
+        });
+
+        // Then get our mock session and force it to not restart ever.
+        if (ioc.mockJupyter) {
+            const currentSession = ioc.mockJupyter.getCurrentSession();
+            if (currentSession) {
+                currentSession.prolongRestarts();
+            }
+        }
+
+        // Then try executing our long running cell and restarting in the middle
+        const history = await getOrCreateHistory();
+        const executed = createDeferred();
+        // We have to wait until the execute goes through before we reset.
+        history.onExecutedCode(() => executed.resolve());
+        const added = history.addCode('import time\r\ntime.sleep(1000)', 'foo', 0);
+        await executed.promise;
+        await history.restartKernel();
+        await added;
+
+        // Now see if our wrapper still works. History should have force a restart
+        await history.addCode('a=1\na', 'foo', 0);
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+
+    }, () => { return ioc; });
 });

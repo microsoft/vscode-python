@@ -15,7 +15,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
-import { CommandSource } from '../../unittests/common/constants';
+import { CommandSource } from '../../testing/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import {
@@ -101,9 +101,11 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     // tslint:disable:no-any
-    private listenForErrors(promise: () => Promise<any>) : Promise<any> {
+    private async listenForErrors(promise: () => Promise<any>) : Promise<any> {
+        let result: any;
         try {
-            return promise();
+            result = await promise();
+            return result;
         } catch (err) {
             if (!(err instanceof CancellationError)) {
                 if (err.message) {
@@ -117,7 +119,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                 this.logger.logInformation('Canceled');
             }
         }
-        return Promise.resolve();
+        return result;
     }
 
     private showInformationMessage(message: string, question?: string) : Thenable<string | undefined> {

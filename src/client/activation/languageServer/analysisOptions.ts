@@ -5,12 +5,12 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument } from 'vscode';
-import { LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
+import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument, WorkspaceFolder } from 'vscode';
+import { DocumentFilter, DocumentSelector, LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -29,7 +29,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_PROPOSE_LS) private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: OutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
@@ -38,7 +38,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     public async initialize(resource: Resource) {
         this.resource = resource;
-        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
 
         let disposable = this.workspace.onDidChangeConfiguration(this.onSettingsChangedHandler, this);
         this.disposables.push(disposable);
@@ -103,17 +103,10 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
         const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
-        const documentSelector = [
-            { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
-        ];
-        if (workspaceFolder) {
-            // tslint:disable-next-line:no-any
-            (documentSelector[0] as any).pattern = `${workspaceFolder.uri.fsPath}/**/*`;
-        }
-        // Options to control the language client
+        const documentSelector = this.getDocumentSelector(workspaceFolder);
+        // Options to control the language client.
         return {
-            // Register the server for Python documents
+            // Register the server for Python documents.
             documentSelector,
             workspaceFolder,
             synchronize: {
@@ -147,6 +140,18 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 }
             }
         };
+    }
+    protected getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
+        const documentSelector: DocumentFilter[] = [
+            { scheme: 'file', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+        // Set the document selector only when in a multi-root workspace scenario.
+        if (workspaceFolder && Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders!.length > 1) {
+            // tslint:disable-next-line:no-any
+            documentSelector[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+        }
+        return documentSelector;
     }
     protected getExcludedFiles(): string[] {
         const list: string[] = ['**/Lib/**', '**/site-packages/**'];

@@ -28,6 +28,7 @@ interface ICommonDebugArguments {
     gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
+    justMyCode?: boolean;
     logToFile?: boolean;
     debugOptions?: DebugOptions[];
     port?: number;
@@ -75,4 +76,4 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
 // tslint:disable-next-line:interface-name
 export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
 
-export type ConsoleType = 'none' | 'integratedTerminal' | 'externalTerminal';
+export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';

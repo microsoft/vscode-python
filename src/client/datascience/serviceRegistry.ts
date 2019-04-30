@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { IExtensionActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
-import { DataExplorer } from './data-viewing/dataExplorer';
-import { DataExplorerProvider } from './data-viewing/dataExplorerProvider';
+import { DataViewer } from './data-viewing/dataViewer';
+import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
+import { Decorator } from './editor-integration/decorator';
 import { History } from './history/history';
 import { HistoryCommandListener } from './history/historycommandlistener';
 import { HistoryProvider } from './history/historyProvider';
@@ -23,11 +25,11 @@ import { ThemeFinder } from './themeFinder';
 import {
     ICodeCssGenerator,
     ICodeWatcher,
-    IDataExplorer,
-    IDataExplorerProvider,
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
+    IDataViewer,
+    IDataViewerProvider,
     IHistory,
     IHistoryProvider,
     IJupyterCommandFactory,
@@ -58,6 +60,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
-    serviceManager.addSingleton<IDataExplorerProvider>(IDataExplorerProvider, DataExplorerProvider);
-    serviceManager.add<IDataExplorer>(IDataExplorer, DataExplorer);
+    serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
+    serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
 }

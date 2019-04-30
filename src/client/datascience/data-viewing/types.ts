@@ -3,6 +3,7 @@
 'use strict';
 import { JSONObject } from '@phosphor/coreutils';
 
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { IJupyterVariable } from '../types';
 
 export const RowFetchAllLimit = 1000;
@@ -10,19 +11,20 @@ export const RowFetchSizeFirst = 100;
 export const RowFetchSizeSubsequent = 1000;
 export const MaxStringCompare = 200;
 
-export namespace DataExplorerRowStates {
+export namespace DataViewerRowStates {
     export const Fetching = 'fetching';
     export const Skipped = 'skipped';
 }
 
-export namespace DataExplorerMessages {
-    export const Started = 'started';
-    export const UpdateSettings = 'update_settings';
+export namespace DataViewerMessages {
+    export const Started = SharedMessages.Started;
+    export const UpdateSettings = SharedMessages.UpdateSettings;
     export const InitializeData = 'init';
     export const GetAllRowsRequest = 'get_all_rows_request';
     export const GetAllRowsResponse = 'get_all_rows_response';
     export const GetRowsRequest = 'get_rows_request';
     export const GetRowsResponse = 'get_rows_response';
+    export const CompletedData = 'complete';
 }
 
 export interface IGetRowsRequest {
@@ -37,12 +39,15 @@ export interface IGetRowsResponse {
 }
 
 // Map all messages to specific payloads
-export class IDataExplorerMapping {
-    public [DataExplorerMessages.Started]: never | undefined;
-    public [DataExplorerMessages.UpdateSettings]: string;
-    public [DataExplorerMessages.InitializeData]: IJupyterVariable;
-    public [DataExplorerMessages.GetAllRowsRequest]: never | undefined;
-    public [DataExplorerMessages.GetAllRowsResponse]: JSONObject;
-    public [DataExplorerMessages.GetRowsRequest]: IGetRowsRequest;
-    public [DataExplorerMessages.GetRowsResponse]: IGetRowsResponse;
+export class IDataViewerMapping {
+    public [DataViewerMessages.Started]: never | undefined;
+    public [DataViewerMessages.UpdateSettings]: string;
+    public [DataViewerMessages.InitializeData]: IJupyterVariable;
+    public [DataViewerMessages.GetAllRowsRequest]: never | undefined;
+    public [DataViewerMessages.GetAllRowsResponse]: JSONObject;
+    public [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
+    public [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
+    public [DataViewerMessages.CompletedData]: never | undefined;
+    public [CssMessages.GetCssRequest] : IGetCssRequest;
+    public [CssMessages.GetCssResponse] : IGetCssResponse;
 }

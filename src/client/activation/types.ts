@@ -17,6 +17,14 @@ export interface IExtensionActivationManager extends IDisposable {
 }
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
+/**
+ * Classes implementing this interface will have their `activate` methods
+ * invoked during the actiavtion of the extension.
+ * This is a great hook for extension activation code, i.e. you don't need to modify
+ * the `extension.ts` file to invoke some code when extension gets activated.
+ * @export
+ * @interface IExtensionActivationService
+ */
 export interface IExtensionActivationService {
     activate(resource: Resource): Promise<void>;
 }
@@ -41,22 +49,21 @@ export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 
 export interface ILanguageServerFolderService {
-    getLanguageServerFolderName(): Promise<string>;
-    getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
+    getLanguageServerFolderName(resource: Resource): Promise<string>;
+    getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-    getDownloadInfo(): Promise<NugetPackage>;
-    downloadLanguageServer(destinationFolder: string): Promise<void>;
+    downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void>;
 }
 
 export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
 export interface ILanguageServerPackageService {
     getNugetPackageName(): string;
-    getLatestNugetPackageVersion(): Promise<NugetPackage>;
+    getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage>;
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 

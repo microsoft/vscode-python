@@ -8,10 +8,11 @@ import * as vscode from 'vscode';
 import {
     IApplicationShell, IDocumentManager, IWorkspaceService
 } from '../../client/common/application/types';
+import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
-    IConfigurationService, IInstaller, ILintingSettings,
-    IPythonSettings, Product
+    GLOBAL_MEMENTO, IConfigurationService, IInstaller,
+    ILintingSettings, IMemento, IPersistentStateFactory, IPythonSettings, Product, WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
@@ -26,6 +27,7 @@ import {
 import { LinterProvider } from '../../client/providers/linterProvider';
 import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { MockMemento } from '../mocks/mementos';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
@@ -86,6 +88,9 @@ suite('Linting - Provider', () => {
         serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
+        serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
         lm = new LinterManager(serviceContainer, workspaceService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();

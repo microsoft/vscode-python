@@ -152,7 +152,7 @@ export interface IPythonSettings {
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
-    readonly unitTest: IUnitTestSettings;
+    readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
@@ -170,7 +170,7 @@ export interface ISortImportSettings {
     readonly args: string[];
 }
 
-export interface IUnitTestSettings {
+export interface ITestingSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
     readonly nosetestsEnabled: boolean;
@@ -287,6 +287,7 @@ export interface IDataScienceSettings {
     enabled: boolean;
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
+    jupyterLaunchRetries: number;
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;
@@ -303,6 +304,10 @@ export interface IDataScienceSettings {
     errorBackgroundColor: string;
     ignoreVscodeTheme?: boolean;
     showJupyterVariableExplorer?: boolean;
+    variableExplorerExclude?: string;
+    liveShareConnectionTimeout?: number;
+    decorateCells?: boolean;
+    enableCellCodeLens?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

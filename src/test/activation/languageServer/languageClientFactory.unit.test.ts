@@ -83,7 +83,8 @@ suite('Language Server - LanguageClient Factory', () => {
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const languageServerFolder = 'some folder name';
         const engineDllName = 'xyz.dll';
-        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything()))
+            .thenResolve(languageServerFolder);
         when(platformData.engineExecutableName).thenReturn(engineDllName);
 
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
@@ -105,7 +106,7 @@ suite('Language Server - LanguageClient Factory', () => {
 
         const client = await factory.createLanguageClient(uri, options, { FOO: 'bar' });
 
-        verify(lsFolderService.getLanguageServerFolderName()).once();
+        verify(lsFolderService.getLanguageServerFolderName(anything())).once();
         verify(platformData.engineExecutableName).atLeast(1);
         verify(platformData.engineDllName).never();
         verify(platformData.platformName).never();
@@ -119,7 +120,7 @@ suite('Language Server - LanguageClient Factory', () => {
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const languageServerFolder = 'some folder name';
         const engineDllName = 'xyz.dll';
-        when(lsFolderService.getLanguageServerFolderName()).thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything())).thenResolve(languageServerFolder);
         when(platformData.engineDllName).thenReturn(engineDllName);
 
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
@@ -141,7 +142,7 @@ suite('Language Server - LanguageClient Factory', () => {
 
         const client = await factory.createLanguageClient(uri, options, { FOO: 'bar' });
 
-        verify(lsFolderService.getLanguageServerFolderName()).once();
+        verify(lsFolderService.getLanguageServerFolderName(anything())).once();
         verify(platformData.engineExecutableName).never();
         verify(platformData.engineDllName).once();
         verify(platformData.platformName).never();

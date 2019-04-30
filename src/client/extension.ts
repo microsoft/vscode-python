@@ -100,10 +100,10 @@ import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry, IImportTracker } from './telemetry/types';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
-import { ITestContextService } from './unittests/common/types';
-import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './unittests/navigation/types';
-import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
+import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
+import { ITestContextService } from './testing/common/types';
+import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
+import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
@@ -195,7 +195,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         ]
     });
 
-    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'none') {
+    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));

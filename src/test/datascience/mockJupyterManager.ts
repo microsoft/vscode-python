@@ -17,7 +17,8 @@ import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, Outpu
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
-import { concatMultilineString, stripComments } from '../../client/datascience/common';
+import { concatMultilineString } from '../../client/datascience/common';
+import { Identifiers } from '../../client/datascience/constants';
 import {
     ICell,
     IConnection,
@@ -61,6 +62,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private sessionTimeout: number | undefined;
     private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs : {name: string; dir: string}[] = [];
+    private currentSession: MockJupyterSession | undefined;
 
     constructor(serviceManager: IServiceManager) {
         // Save async registry. Need to stick servers created into it
@@ -97,8 +99,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.kernelSpecs.push({name: '0e8519db-0895-416c-96df-fa80131ecea0', dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'});
 
         // Setup our default cells that happen for everything
-        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt');
-        this.addCell('%matplotlib inline\r\nimport matplotlib.pyplot as plt\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')');
+        this.addCell(`import matplotlib${os.EOL}%matplotlib inline${os.EOL}${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)`);
+        this.addCell('matplotlib.style.use(\'dark_background\')');
+        this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');
@@ -107,6 +110,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public makeActive(interpreter: PythonInterpreter) {
         this.activeInterpreter = interpreter;
+    }
+
+    public getCurrentSession() : MockJupyterSession | undefined {
+        return this.currentSession;
     }
 
     public setProcessDelay(timeout: number | undefined) {
@@ -185,7 +192,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
         const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
         cells.forEach(c => {
-            const key = concatMultilineString(stripComments(c.data.source)).replace(LineFeedRegEx, '');
+            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
@@ -217,10 +224,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {
                 await sleep(localTimeout);
-                return new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
+                return this.createNewSession();
             }, cancelToken);
         } else {
-            return Promise.resolve(new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay));
+            return Promise.resolve(this.createNewSession());
         }
     }
 
@@ -230,6 +237,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     private onConfigChanged = () => {
         this.changedInterpreterEvent.fire();
+    }
+
+    private createNewSession() : MockJupyterSession {
+        this.currentSession = new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
+        return this.currentSession;
     }
 
     private createStreamResult(str: string) : nbformat.IStream {

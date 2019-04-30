@@ -3,11 +3,14 @@
 'use strict';
 import * as TypeMoq from 'typemoq';
 import {
+    DecorationRenderOptions,
     Event,
     EventEmitter,
     TextDocument,
+    TextDocumentChangeEvent,
     TextDocumentShowOptions,
     TextEditor,
+    TextEditorDecorationType,
     TextEditorOptionsChangeEvent,
     TextEditorSelectionChangeEvent,
     TextEditorViewColumnChangeEvent,
@@ -42,8 +45,12 @@ export class MockDocumentManager implements IDocumentManager {
     private didChangeTextEditorViewColumnEmitter = new EventEmitter<TextEditorViewColumnChangeEvent>();
     private didCloseEmitter = new EventEmitter<TextDocument>();
     private didSaveEmitter = new EventEmitter<TextDocument>();
+    private didChangeTextDocumentEmitter = new EventEmitter<TextDocumentChangeEvent>();
     public get onDidChangeActiveTextEditor(): Event<TextEditor> {
         return this.didChangeEmitter.event;
+    }
+    public get onDidChangeTextDocument(): Event<TextDocumentChangeEvent> {
+        return this.didChangeTextDocumentEmitter.event;
     }
     public get onDidOpenTextDocument(): Event<TextDocument> {
         return this.didOpenEmitter.event;
@@ -87,6 +94,10 @@ export class MockDocumentManager implements IDocumentManager {
         const mockDoc = createDocument(code, file, 1, TypeMoq.Times.atMost(100), true);
         mockDoc.setup((x: any) => x.then).returns(() => undefined);
         this.textDocuments.push(mockDoc.object);
+    }
+
+    public createTextEditorDecorationType(_options: DecorationRenderOptions) : TextEditorDecorationType {
+        throw new Error('Method not implemented');
     }
 
     private get lastDocument() : TextDocument {

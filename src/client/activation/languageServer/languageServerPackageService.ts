@@ -10,7 +10,9 @@ import { PVSC_EXTENSION_ID } from '../../common/constants';
 import { traceDecorators, traceVerbose } from '../../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../../common/nuget/types';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../../common/types';
+import {
+    IConfigurationService, IExtensions, LanguageServerDownloadChannels, Resource
+} from '../../common/types';
 import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { ILanguageServerPackageService, PlatformName } from '../types';
@@ -46,12 +48,12 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
     }
 
     @traceDecorators.verbose('Get latest language server nuget package version')
-    public async getLatestNugetPackageVersion(): Promise<NugetPackage> {
+    public async getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage> {
         const downloadChannel = this.getLanguageServerDownloadChannel();
         const nugetRepo = this.serviceContainer.get<INugetRepository>(INugetRepository, downloadChannel);
         const packageName = this.getNugetPackageName();
         traceVerbose(`Listing packages for ${downloadChannel} for ${packageName}`);
-        const packages = await nugetRepo.getPackages(packageName);
+        const packages = await nugetRepo.getPackages(packageName, resource);
 
         return this.getValidPackage(packages);
     }

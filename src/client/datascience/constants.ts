@@ -11,6 +11,8 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
+    export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';
     export const RunToLine = 'python.datascience.runtoline';
     export const RunFromLine = 'python.datascience.runfromline';
     export const RunCell = 'python.datascience.runcell';
@@ -48,7 +50,15 @@ export namespace RegExpValues {
     export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
     export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
+    // instead.
+    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)' ;
+    export interface IUrlPatternGroupType {
+        LOCAL: string | undefined;
+        PREFIX: string | undefined;
+        REST: string | undefined;
+        IP: string | undefined;
+    }
     export const HttpPattern = /https?:\/\//;
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
@@ -92,10 +102,14 @@ export enum Telemetry {
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
-    ShowDataExplorer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
+    DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
+    ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
-    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD'
+    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
+    DataScienceSettings = 'DATASCIENCE.SETTINGS',
+    VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
+    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT'
  }
 
 export namespace HelpLinks {
@@ -114,6 +128,7 @@ export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const HistoryPurpose = 'history';
+    export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
 }
 
 export namespace JupyterCommands {
@@ -130,6 +145,7 @@ export namespace LiveShare {
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const HistoryProviderService = 'historyProviderService';
+    export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
     export const ResponseLifetime = 15000;
     export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
@@ -153,4 +169,25 @@ export namespace LiveShareCommands {
     export const historyCreate = 'historyCreate';
     export const historyCreateSync = 'historyCreateSync';
     export const disposeServer = 'disposeServer';
+    export const guestCheck = 'guestCheck';
+}
+
+export namespace CssMessages {
+    export const GetCssRequest = 'get_css_request';
+    export const GetCssResponse = 'get_css_response';
+}
+
+export namespace SharedMessages {
+    export const UpdateSettings = 'update_settings';
+    export const Started = 'started';
+}
+
+export interface IGetCssRequest {
+    isDark: boolean;
+}
+
+export interface IGetCssResponse {
+    css: string;
+    theme: string;
+    knownDark?: boolean;
 }

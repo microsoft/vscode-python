@@ -56,7 +56,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     }
     public dispose() {
         if (this.timeOut) {
-            this.timeOut.unref();
+            clearTimeout(this.timeOut);
             this.timeOut = undefined;
         }
     }

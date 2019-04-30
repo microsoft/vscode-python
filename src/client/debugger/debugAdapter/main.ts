@@ -136,7 +136,7 @@ export class PythonDebugger extends DebugSession {
 
             try {
                 await this.debugServer!.client;
-                timeout.unref();
+                clearTimeout(timeout);
                 if (!rejected) {
                     resolve();
                 }

@@ -56,7 +56,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
         let firstNonMarkdown = -1;
         parseForComments(split, (_s, _i) => noop(), (s, i) => {
             // Make sure there's actually some code.
-            if (s && s.length > 0) {
+            if (s && s.length > 0 && firstNonMarkdown === -1) {
                 firstNonMarkdown = splitMarkdown ? i : -1;
             }
         });

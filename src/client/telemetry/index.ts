@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 // tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
+import { JSONObject } from '@phosphor/coreutils';
 import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
@@ -9,6 +10,7 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
+import { LinterId } from '../linters/types';
 import { EventName } from './constants';
 import {
     CodeExecutionTelemetry,
@@ -260,6 +262,7 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER]: DebuggerTelemetry;
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
+    [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     [EventName.DEFINITION]: never | undefined;
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
@@ -272,9 +275,9 @@ export interface IEventNamePropertyMapping {
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
-    [EventName.KNOWN_IMPORT_FROM_FILE]: { import: string };
-    [EventName.KNOWN_IMPORT_FROM_EXECUTION]: { import: string };
+    [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
+    [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;
     [EventName.PYTHON_INTERPRETER]: PythonInterpreterTelemetry;
@@ -283,6 +286,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: InterpreterActivation;
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
+    [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
+    [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     [EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME]: { success: boolean };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
@@ -300,12 +305,14 @@ export interface IEventNamePropertyMapping {
     [EventName.REFERENCE]: never | undefined;
     [EventName.REPL]: never | undefined;
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
+    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: { tool: LinterId; action: 'enable' | 'ignore' | 'disablePrompt' | undefined };
     [EventName.SIGNATURE]: never | undefined;
     [EventName.SYMBOL]: never | undefined;
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
     [EventName.UNITTEST_CONFIGURING]: TestConfiguringTelemetry;
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
+    [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
@@ -319,8 +326,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
@@ -348,11 +357,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
-    [Telemetry.ShowDataExplorer]: {rows: number | undefined};
+    [Telemetry.ShowDataViewer]: { rows: number | undefined };
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [Telemetry.VariableExplorerToggled]: { open: boolean };
+    [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
     [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };

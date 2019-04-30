@@ -31,7 +31,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from './../initialize';
 
 chai_use(chaiAsPromised);

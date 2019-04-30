@@ -23,7 +23,7 @@ import { getNamesAndValues } from '../../client/common/utils/enum';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length

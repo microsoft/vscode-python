@@ -3,11 +3,11 @@
 
 'use strict';
 
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { CommandSource } from '../../unittests/common/constants';
-import { TestFunction, TestsToRun } from '../../unittests/common/types';
-import { TestDataItem, TestWorkspaceFolder } from '../../unittests/types';
+import { CommandSource } from '../../testing/common/constants';
+import { TestFunction, TestsToRun } from '../../testing/common/types';
+import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
 import { Commands } from '../constants';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
@@ -18,7 +18,6 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
-    ['python.debugger.replaceExperimental']: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
@@ -63,6 +62,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['setContext']: [string, boolean];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
+    ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
@@ -97,6 +97,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCell]: [string, number, number, number, number];
     [DSCommands.RunAllCellsAbove]: [string, number, number];
     [DSCommands.RunCellAndAllBelow]: [string, number, number];
+    [DSCommands.RunAllCellsAbovePalette]: [];
+    [DSCommands.RunCellAndAllBelowPalette]: [];
     [DSCommands.RunToLine]: [string, number, number];
     [DSCommands.RunFromLine]: [string, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];

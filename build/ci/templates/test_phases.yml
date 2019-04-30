@@ -71,6 +71,14 @@ steps:
       verbose: true
       customCommand: 'install -g npm@$(NpmVersion)'
 
+  # On Mac, the command `node` doesn't always point to the current node version.
+  - script: |
+        export NODE_PATH=`which node`
+        echo $NODE_PATH
+        echo '##vso[task.setvariable variable=NODE_PATH]'$NODE_PATH
+    displayName: "Setup NODE_PATH for extension"
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
   # Install node_modules.
   # Example command line (windows pwsh):
   # > npm ci
@@ -102,14 +110,6 @@ steps:
     inputs:
       targets: 'prePublishNonBundle'
 
-  # Make sure the project compiles (with strict checks enabled).
-  # Example command line (windows pwsh):
-  # > npx tsc -p ./
-  - bash: |
-      npx tsc -p ./
-    displayName: 'make sure project compiles'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
-
   # Run tslint on the project source to ensure that the added code adheres
   # to the # code standards we are trying to maintain.
   # Example command line (windows pwsh):
@@ -120,14 +120,6 @@ steps:
     displayName: 'code hygiene'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
 
-  # Enable test coverage reporting for all subsequent tests (typescript-based)
-  #
-  # Example command line (windows pwsh):
-  # > npm run cover:enable
-  - bash: |
-      npm run cover:enable
-    displayName: 'Enable coverage reporting'
-
   # Run the typescript unit tests.
   #
   # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
@@ -135,7 +127,7 @@ steps:
   # Example command line (windows pwsh):
   # > npm run test:unittests
   - bash: |
-      npm run test:unittests:cover
+      npm run test:unittests
     displayName: 'run test:unittest'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
@@ -180,6 +172,21 @@ steps:
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
+  # Install the requirements for ipython tests.
+  #
+  # This task will only run if variable `NeedsIPythonReqs` is true.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install numpy
+  # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
+  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  - bash: |
+      python -m pip install -U pip
+      python -m pip install numpy
+      python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+    displayName: 'pip install ipython requirements'
+    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
+
   # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
   # will be uploaded after all tests are complete.
   #
@@ -202,6 +209,31 @@ steps:
       testResultsFiles: 'python-tests-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
       testRunTitle: 'pythonUnitTests-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
+
+  # Run the Python IPython tests in our codebase. Produces a JUnit-style log file that
+  # will be uploaded after all tests are complete.
+  #
+  # This task only runs if the string 'pythonIPythonTests' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -m -U pip
+  # > python -m pip install -U -r build/test-requirements.txt
+  # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
+  - bash: |
+      python -m IPython pythonFiles/tests/run_all.py -- --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
+    displayName: 'Python ipython tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
+
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish IPython test results'
+    condition: contains(variables['TestsToRun'], 'pythonIPythonTests')
+    inputs:
+      testResultsFiles: 'ipython-tests-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'pythonIPythonTests-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 

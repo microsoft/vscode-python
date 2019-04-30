@@ -9,16 +9,16 @@ import * as React from 'react';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
+import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
+import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
+import { ContentPanel, IContentPanelProps } from './contentPanel';
+import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { VariableExplorer } from './variableExplorer';
-
-import { ContentPanel, IContentPanelProps } from './contentPanel';
-import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -27,25 +27,23 @@ export interface IMainPanelProps {
     codeTheme: string;
 }
 
-class HistoryPostOffice extends PostOffice<IHistoryMapping> {}
-
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
-    private bottom: HTMLDivElement | undefined;
     private updateCount = 0;
     private renderCount = 0;
-    private sentStartup = false;
-    private postOffice: HistoryPostOffice | undefined;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
+    private styleInjectorRef: React.RefObject<StyleInjector>;
+    private currentExecutionCount: number = 0;
+    private postOffice: PostOffice = new PostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24};
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24 };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
@@ -59,19 +57,32 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Create the ref to hold our variable explorer
         this.variableExplorerRef = React.createRef<VariableExplorer>();
+
+        // Create the ref to hold our style injector
+        this.styleInjectorRef = React.createRef<StyleInjector>();
     }
 
-    public componentDidMount() {
-        this.scrollToBottom();
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        this.postOffice.addHandler(this);
+
+        // Tell the history code we have started.
+        this.postOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
     }
 
     public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
-        this.scrollToBottom();
-
         // If in test mode, update our outputs
         if (this.props.testMode) {
             this.updateCount = this.updateCount + 1;
         }
+    }
+
+    public componentWillUnmount() {
+        // Remove ourselves as a handler for the post office
+        this.postOffice.removeHandler(this);
+
+        // Get rid of our post office
+        this.postOffice.dispose();
     }
 
     public render() {
@@ -81,17 +92,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.renderCount = this.renderCount + 1;
         }
 
-        const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
+        const baseTheme = this.computeBaseTheme();
 
         const headerProps = this.getHeaderProps(baseTheme);
         const contentProps = this.getContentProps(baseTheme);
 
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <HistoryPostOffice messageHandlers={[this]} ref={this.updatePostOffice} />
+                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} postOffice={this.postOffice} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
                 <HeaderPanel {...headerProps} />
                 <ContentPanel {...contentProps} />
-                <div ref={this.updateBottom}/>
             </div>
         );
     }
@@ -196,6 +206,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({contentTop: newHeight});
     }
 
+    private darkChanged = (newDark: boolean) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    forceDark: newDark
+                }
+            );
+        }
+    }
+
+    private computeBaseTheme(): string {
+        // If we're ignoring, always light
+        if (getSettings && getSettings().ignoreVscodeTheme) {
+            return 'vscode-light';
+        }
+
+        // Otherwise see if the style injector has figured out
+        // the theme is dark or not
+        if (this.state.forceDark !== undefined) {
+            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
+        }
+
+        return this.props.baseTheme;
+    }
+
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
@@ -208,10 +245,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             saveEditCellRef: this.saveEditCellRef,
             gotoCellCode: this.gotoCellCode,
             deleteCell: this.deleteCell,
-            submitInput: this.submitInput
+            submitInput: this.submitInput,
+            skipNextScroll: this.state.skipNextScroll ? true : false
         };
     }
-
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
        return {
         addMarkdown: this.addMarkdown,
@@ -225,7 +262,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         redo: this.redo,
         clearAll: this.clearAll,
         skipDefault: this.props.skipDefault,
-        showDataExplorer: this.showDataExplorer,
+        showDataExplorer: this.showDataViewer,
         testMode: this.props.testMode,
         variableExplorerRef: this.variableExplorerRef,
         canCollapseAll: this.canCollapseAll(),
@@ -234,6 +271,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         canUndo: this.canUndo(),
         canRedo: this.canRedo(),
         refreshVariables: this.refreshVariables,
+        variableExplorerToggled: this.variableExplorerToggled,
         onHeightChange: this.onHeaderHeightChange,
         baseTheme: baseTheme
        };
@@ -271,14 +309,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataExplorer = () => {
-        this.sendMessage(HistoryMessages.ShowDataExplorer, 'df');
+    private showDataViewer = (targetVariable: string) => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        if (this.postOffice) {
-            this.postOffice.sendMessage(type, payload);
-        }
+        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {
@@ -447,36 +483,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.Export, cellContents);
     }
 
-    private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll && !this.props.testMode) {
-            // Delay this until we are about to render. React hasn't setup the size of the bottom element
-            // yet so we need to delay. 10ms looks good from a user point of view
-            setTimeout(() => {
-                if (this.bottom) {
-                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
-                }
-            }, 100);
-        }
-    }
-
-    private updateBottom = (newBottom: HTMLDivElement) => {
-        if (newBottom !== this.bottom) {
-            this.bottom = newBottom;
-        }
-    }
-
     private updateSelf = (r: HTMLDivElement) => {
         this.mainPanel = r;
-    }
-
-    private updatePostOffice = (postOffice: HistoryPostOffice) => {
-        if (this.postOffice !== postOffice) {
-            this.postOffice = postOffice;
-            if (!this.sentStartup) {
-                this.sentStartup = true;
-                this.postOffice.sendMessage(HistoryMessages.Started);
-            }
-        }
     }
 
     // tslint:disable-next-line:no-any
@@ -668,8 +676,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
 
+        // After the cell is finished update our current execution count
+        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
+
         // When a cell is finished refresh our variables
-        if (getSettings && getSettings().showJupyterVariableExplorer) {
+        // Use the ref here to maintain var explorer independence
+        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
             this.refreshVariables();
         }
     }
@@ -694,9 +706,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
+    // Check our list of cell vms to see what our current execution count is
+    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
         const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
+        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
+    }
+
+    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
+        return this.getCurrentExecutionCount(cellVMs) + 1;
     }
 
     private submitInput = (code: string) => {
@@ -746,9 +763,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private variableExplorerToggled = (open: boolean) => {
+        this.sendMessage(HistoryMessages.VariableExplorerToggle, open);
+    }
+
     // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
-        this.sendMessage(HistoryMessages.GetVariablesRequest);
+        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
     }
 
     // Find the display value for one specific variable
@@ -762,8 +783,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variable = payload as IJupyterVariable;
 
-            if (this.variableExplorerRef.current) {
-                this.variableExplorerRef.current.newVariableData(variable);
+            // Only send the updated variable data if we are on the same execution count as when we requsted it
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariableData(variable);
+                }
             }
         }
     }
@@ -772,14 +796,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     private getVariablesResponse = (payload?: any) => {
         if (payload) {
-            const variables = payload as IJupyterVariable[];
+            const variablesResponse = payload as IJupyterVariablesResponse;
 
-            if (this.variableExplorerRef.current) {
-                this.variableExplorerRef.current.newVariablesData(variables);
+            // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
+            if (variablesResponse.executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariablesData(variablesResponse.variables);
+                }
+
+                // Now put out a request for all of the sub values for the variables
+                variablesResponse.variables.forEach(this.refreshVariable);
             }
-
-            // Now put out a request for all of the sub values for the variables
-            variables.forEach(this.refreshVariable);
         }
     }
 }

@@ -12,7 +12,7 @@ import { CondaService } from '../../client/interpreter/locators/services/condaSe
 import { extractMethod } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { getExtensionSettings } from '../common';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 

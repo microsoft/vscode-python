@@ -7,7 +7,6 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { SemVer } from 'semver';
 import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
@@ -19,10 +18,9 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
 import {
     CellState,
     IConnection,
@@ -36,37 +34,20 @@ import {
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
-import { ClassType } from '../../client/ioc/types';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { SupportedCommands } from './mockJupyterManager';
-import { MockJupyterSession } from './mockJupyterSession';
-
-interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
-
-}
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
-suite('Jupyter notebook tests', () => {
+suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
-
-    const workingPython: PythonInterpreter = {
-        path: '/foo/bar/python.exe',
-        version: new SemVer('3.6.6-final'),
-        sysVersion: '1.0.0.0',
-        sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
-    };
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -193,12 +174,9 @@ suite('Jupyter notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>, notebookProc?: ChildProcess) {
+    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess) {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
-            if (ioc.mockJupyter) {
-                ioc.mockJupyter.addInterpreter(workingPython, SupportedCommands.all, undefined, notebookProc);
-            }
             if (await jupyterExecution.isNotebookSupported()) {
                 return func();
             } else {
@@ -404,17 +382,22 @@ suite('Jupyter notebook tests', () => {
 
         // In unit tests we have to wait for status idle before restarting. Unit tests
         // seem to be timing out if the restart throws any exceptions (even if they're caught)
-        await server!.waitForIdle();
+        await server!.waitForIdle(10000);
 
         console.log('Restarting kernel');
+        try {
+            await server!.restartKernel(10000);
 
-        await server!.restartKernel();
+            console.log('Waiting for idle');
+            await server!.waitForIdle(10000);
 
-        console.log('Waiting for idle');
-        await server!.waitForIdle();
+            console.log('Verifying restart');
+            await verifyError(server, 'a', `name 'a' is not defined`);
 
-        console.log('Verifying restart');
-        await verifyError(server, 'a', `name 'a' is not defined`);
+        } catch (exc) {
+            assert.ok(exc instanceof JupyterKernelPromiseFailedError, 'Restarting did not timeout correctly');
+        }
+
     });
 
     class TaggedCancellationTokenSource extends CancellationTokenSource {
@@ -678,10 +661,10 @@ df.head()`,
             },
             {
                 // Important to test as multiline cell magics only work if they are the first item in the cell
+                // Doesn't work with a comment though.
                 markdownRegEx: undefined,
                 code:
-                    `#%% Cell Comment
-%%bash
+                    `%%bash
 echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
@@ -773,36 +756,6 @@ plt.show()`,
             assert.ok(server, 'Never connected to a default server with a bad default config');
 
             await verifySimple(server, `a=1${os.EOL}a`, 1);
-        }
-    });
-
-    async function getNotebookSession(server: INotebookServer | undefined): Promise<MockJupyterSession | undefined> {
-        if (server) {
-            // This is kinda fragile. It reliese on impl details to get to the session. Might
-            // just expose it?
-            const innerServerFactory = (server as any).serverFactory as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
-            const innerServer = await innerServerFactory.get();
-            assert.ok(innerServer, 'Cannot find the inner server');
-            return (innerServer as any).session as MockJupyterSession;
-        }
-    }
-
-    runTest('Theme modifies execution', async () => {
-        if (ioc.mockJupyter) {
-            let server = await createNotebookServer(true, false, false);
-            let session = await getNotebookSession(server);
-            const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
-            const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
-
-            assert.ok(session!.getExecutes().indexOf(light) >= 0, 'light not found');
-            assert.ok(session!.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
-            await server!.dispose();
-
-            server = await createNotebookServer(true, false, true);
-            session = await getNotebookSession(server);
-            assert.ok(session!.getExecutes().indexOf(dark) >= 0, 'dark not found');
-            assert.ok(session!.getExecutes().indexOf(light) < 0, 'light found when not allowed');
-            await server!.dispose();
         }
     });
 

@@ -6,11 +6,11 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IOutputChannel } from '../../common/types';
+import { IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -33,17 +33,28 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ILanguageServerFolderService) private readonly lsFolderService: ILanguageServerFolderService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
     }
 
-    public async getDownloadInfo() {
-        return this.lsFolderService.getLatestLanguageServerVersion().then(item => item!);
+    public async getDownloadInfo(resource: Resource) {
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource)
+            .then(item => item!);
+
+        let uri = info.uri;
+        if (uri.startsWith('https:')) {
+            const cfg = this.workspace.getConfiguration('http', resource);
+            if (!cfg.get<boolean>('proxyStrictSSL', true)) {
+                // tslint:disable-next-line:no-http-string
+                uri = uri.replace(/^https:/, 'http:');
+            }
+        }
+
+        return [uri, info.version.raw];
     }
-    public async downloadLanguageServer(destinationFolder: string): Promise<void> {
-        const downloadInfo = await this.getDownloadInfo();
-        const downloadUri = downloadInfo.uri;
-        const lsVersion = downloadInfo.version.raw;
+    public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
+        const [downloadUri, lsVersion] = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;
         let localTempFilePath = '';
@@ -54,14 +65,16 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(LanguageService.downloadFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
-            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload()).ignoreErrors();
+            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload())
+                .ignoreErrors();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' }, err);
             throw new Error(err);
         } finally {
+            const usedSSL = downloadUri.startsWith('https:');
             sendTelemetryEvent(
                 EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED,
                 timer.elapsedTime,
-                { success, lsVersion }
+                { success, lsVersion, usedSSL }
             );
         }
 
@@ -72,7 +85,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(LanguageService.extractionFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
-            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract()).ignoreErrors();
+            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract())
+                .ignoreErrors();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' }, err);
             throw new Error(err);
         } finally {

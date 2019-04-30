@@ -24,7 +24,7 @@ suite('Run without Debugging', () => {
             this.skip();
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage_nodebug${this.currentTest.title}`);
+        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage_nodebug${this.currentTest!.title}`);
         debugClient = await createDebugAdapter(coverageDirectory);
     });
     teardown(async () => {
@@ -36,7 +36,7 @@ suite('Run without Debugging', () => {
         } catch (ex) { }
         await sleep(1000);
     });
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = true): LaunchRequestArguments {
         // tslint:disable-next-line:no-unnecessary-local-variable
         return {
             program: path.join(debugFilesPath, pythonFile),

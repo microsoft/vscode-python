@@ -34,6 +34,7 @@ function load() {
         loadedSettings = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -49,8 +50,11 @@ function load() {
             sendSelectionToInteractiveWindow: false,
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             extraSettings: {
-                terminalCursor: 'block'
+                terminalCursor: 'block',
+                theme: 'Default Dark+'
             }
         };
     }

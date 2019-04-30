@@ -4,21 +4,27 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
-import { traceError } from '../common/logger';
-import { IConfigurationService, IInstaller, Product } from '../common/types';
-import { Linters } from '../common/utils/localize';
+import { traceDecorators } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
+import { IConfigurationService, IPersistentStateFactory } from '../common/types';
+import { Common, Linters } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
+const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_CONFIGURE_AVAILABLE_LINTER_PROMPT';
 @injectable()
 export class AvailableLinterActivator implements IAvailableLinterActivator {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IInstaller) private installer: IInstaller,
-        @inject(IWorkspaceService) private workspaceConfig: IWorkspaceService,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
     ) { }
 
     /**
@@ -43,7 +49,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         }
 
         // Is the linter available in the current workspace?
-        if (await this.isLinterAvailable(linterInfo.product, resource)) {
+        if (await this.isLinterAvailable(linterInfo, resource)) {
 
             // great, it is - ask the user if they'd like to enable it.
             return this.promptToConfigureAvailableLinter(linterInfo);
@@ -60,29 +66,25 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if the user requested a configuration change, false otherwise.
      */
     public async promptToConfigureAvailableLinter(linterInfo: ILinterInfo): Promise<boolean> {
-        type ConfigureLinterMessage = {
-            enabled: boolean;
-            title: string;
-        };
-
-        const optButtons: ConfigureLinterMessage[] = [
-            {
-                title: `Enable ${linterInfo.id}`,
-                enabled: true
-            },
-            {
-                title: `Disable ${linterInfo.id}`,
-                enabled: false
-            }
+        const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayPromptStateKey, true);
+        if (!notificationPromptEnabled.value) {
+            return false;
+        }
+        const optButtons = [
+            Linters.enableLinter().format(linterInfo.id),
+            Common.notNow(),
+            Common.doNotShowAgain()
         ];
 
-        // tslint:disable-next-line:messages-must-be-localized
-        const pick = await this.appShell.showInformationMessage(Linters.installedButNotEnabled().format(linterInfo.id), ...optButtons);
-        if (pick) {
-            await linterInfo.enableAsync(pick.enabled);
+        const telemetrySelections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
+        const pick = await this.appShell.showInformationMessage(Linters.enablePylint().format(linterInfo.id), ...optButtons);
+        sendTelemetryEvent(EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT, undefined, { tool: linterInfo.id, action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined });
+        if (pick === optButtons[0]) {
+            await linterInfo.enableAsync(true);
             return true;
+        } else if (pick === optButtons[2]) {
+            await notificationPromptEnabled.updateValue(false);
         }
-
         return false;
     }
 
@@ -93,13 +95,18 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @param linterProduct Linter to check in the current workspace environment.
      * @param resource Context information for workspace.
      */
-    public async isLinterAvailable(linterProduct: Product, resource?: Uri): Promise<boolean | undefined> {
-        return this.installer.isInstalled(linterProduct, resource)
-            .catch((reason) => {
-                // report and continue, assume the linter is unavailable.
-                traceError(`[WARNING]: Failed to discover if linter ${linterProduct} is installed.`, reason);
-                return false;
-            });
+    @traceDecorators.error('Failed to discover if linter pylint is available')
+    public async isLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean | undefined> {
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return false;
+        }
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource)! : this.workspaceService.workspaceFolders![0];
+        let isAvailable = false;
+        for (const configName of linterInfo.configFileNames) {
+            const configPath = path.join(workspaceFolder.uri.fsPath, configName);
+            isAvailable = isAvailable || await this.fs.fileExists(configPath);
+        }
+        return isAvailable;
     }
 
     /**
@@ -111,7 +118,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if the linter has not been configured at the user, workspace, or workspace-folder scope. false otherwise.
      */
     public isLinterUsingDefaultConfiguration(linterInfo: ILinterInfo, resource?: Uri): boolean {
-        const ws = this.workspaceConfig.getConfiguration('python.linting', resource);
+        const ws = this.workspaceService.getConfiguration('python.linting', resource);
         const pe = ws!.inspect(linterInfo.enabledSettingName);
         return (pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined);
     }
