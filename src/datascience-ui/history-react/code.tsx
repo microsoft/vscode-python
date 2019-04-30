@@ -43,6 +43,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     private measureWidthRef: React.RefObject<HTMLDivElement>;
     private resizeTimer?: number;
     private subscriptions: monacoEditor.IDisposable[] = [];
+    private lastCleanVersionId: number = 0;
 
     constructor(prop: ICodeProps) {
         super(prop);
@@ -224,6 +225,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             // Shift enter was hit
             e.stopPropagation();
             window.setTimeout(this.submitContent, 0);
+        } else if (e.keyCode === monacoEditor.KeyCode.UpArrow) {
+            this.arrowUp(e);
+        } else if (e.keyCode === monacoEditor.KeyCode.DownArrow) {
+            this.arrowDown(e);
         }
     }
 
@@ -235,8 +240,62 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private submitContent = () => {
-        if (this.state.model) {
-            this.props.onSubmit(this.state.model.getLinesContent().join('\n'));
+        let content = this.getContents();
+        if (content) {
+            // Remove empty lines off the end
+            let endPos = content.length - 1;
+            while (endPos >= 0 && content[endPos] === '\n') {
+                endPos -= 1;
+            }
+            content = content.slice(0, endPos + 1);
+
+            // Send to the input history too if necessary
+            if (this.props.history) {
+                this.props.history.add(content, this.state.model!.getVersionId() > this.lastCleanVersionId);
+            }
+
+            this.props.onSubmit(content);
         }
     }
+
+    private getContents() : string {
+        if (this.state.model) {
+            return this.state.model.getValue().replace(/\r/g, '');
+        }
+        return '';
+    }
+
+    private arrowUp(e: monacoEditor.IKeyboardEvent) {
+        if (this.state.editor && this.state.model) {
+            const cursor = this.state.editor.getPosition();
+            if (cursor && cursor.lineNumber === 1 && this.props.history) {
+                const currentValue = this.getContents();
+                const newValue = this.props.history.completeUp(currentValue);
+                if (newValue !== currentValue) {
+                    this.state.model.setValue(newValue);
+                    this.lastCleanVersionId = this.state.model.getVersionId();
+                    this.state.editor.setPosition({lineNumber: 1, column: 1});
+                    e.stopPropagation();
+                }
+            }
+        }
+    }
+
+    private arrowDown(e: monacoEditor.IKeyboardEvent) {
+        if (this.state.editor && this.state.model) {
+            const cursor = this.state.editor.getPosition();
+            if (cursor && cursor.lineNumber === this.state.model.getLineCount() && this.props.history) {
+                const currentValue = this.getContents();
+                const newValue = this.props.history.completeDown(currentValue);
+                if (newValue !== currentValue) {
+                    this.state.model.setValue(newValue);
+                    this.lastCleanVersionId = this.state.model.getVersionId();
+                    const lastLine = this.state.model.getLineCount();
+                    this.state.editor.setPosition({lineNumber: lastLine, column: this.state.model.getLineLength(lastLine) + 1});
+                    e.stopPropagation();
+                }
+            }
+        }
+    }
+
 }
