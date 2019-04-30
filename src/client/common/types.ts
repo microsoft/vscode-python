@@ -287,6 +287,7 @@ export interface IDataScienceSettings {
     enabled: boolean;
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
+    jupyterLaunchRetries: number;
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;

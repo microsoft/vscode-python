@@ -51,6 +51,7 @@ suite('Theme colors', () => {
         settings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',

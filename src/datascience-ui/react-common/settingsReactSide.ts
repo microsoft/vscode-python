@@ -34,6 +34,7 @@ function load() {
         loadedSettings = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',

@@ -1149,6 +1149,12 @@
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
                     "scope": "resource"
                 },
+                "python.dataScience.jupyterLaunchRetries": {
+                    "type": "number",
+                    "default": 3,
+                    "description": "Number of times to attempt to connect to the Jupyter Notebook",
+                    "scope": "resource"
+                },
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",

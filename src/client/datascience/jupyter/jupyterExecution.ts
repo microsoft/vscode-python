@@ -135,9 +135,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const interpreter = await this.interpreterService.getActiveInterpreter();
 
-            // Try to connect to our jupyter process. Give it at most 2 tries.
+            // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
-            while (tryCount < 2) {
+            const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
+            while (tryCount < maxTries) {
                 try {
                     // Start or connect to the process
                     startInfo = await this.startOrConnect(options, cancelToken);
@@ -167,7 +168,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         traceInfo('Killing server because of error');
                         await result.dispose();
                     }
-                    if (err instanceof JupyterWaitForIdleError && tryCount < 2) {
+                    if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
