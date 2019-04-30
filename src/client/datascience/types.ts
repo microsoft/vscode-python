@@ -253,6 +253,7 @@ export interface ICodeCssGenerator {
 export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string) : Promise<string | undefined>;
+    findTmLanguage(language: string) : Promise<string | undefined>;
     isThemeDark(themeName: string) : Promise<boolean | undefined>;
 }
 

@@ -41,6 +41,10 @@ export namespace HistoryMessages {
     export const CancelCompletionItemsRequest = 'cancel_completion_items_request';
     export const ProvideCompletionItemsResponse = 'provide_completion_items_response';
     export const EditCell = 'edit_cell';
+    export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
+    export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
+    export const LoadTmLanguageRequest = 'load_tmlanguage_request';
+    export const LoadTmLanguageResponse = 'load_tmlanguage_response';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -138,4 +142,8 @@ export class IHistoryMapping {
     public [HistoryMessages.CancelCompletionItemsRequest] : ICancelCompletionItemsRequest;
     public [HistoryMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
     public [HistoryMessages.EditCell] : IEditCell;
+    public [HistoryMessages.LoadOnigasmAssemblyRequest]: never | undefined;
+    public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;
+    public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
+    public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
 }

@@ -20,7 +20,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -243,6 +243,14 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
             case HistoryMessages.GetVariableValueRequest:
                 this.dispatchMessage(message, payload, this.requestVariableValue);
+                break;
+
+            case HistoryMessages.LoadTmLanguageRequest:
+                this.dispatchMessage(message, payload, this.requestTmLanguage);
+                break;
+
+            case HistoryMessages.LoadOnigasmAssemblyRequest:
+                this.dispatchMessage(message, payload, this.requestOnigasm);
                 break;
 
             default:
@@ -998,6 +1006,26 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
             // Log the state in our Telemetry
             sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
+        }
+    }
+
+    private requestTmLanguage = () => {
+        // Get the contents of the appropriate tmLanguage file.
+        this.themeFinder.findTmLanguage(PYTHON_LANGUAGE).then(s => {
+            this.postMessage(HistoryMessages.LoadTmLanguageResponse, s).ignoreErrors();
+        }).catch(_e => {
+            this.postMessage(HistoryMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
+        });
+    }
+
+    private requestOnigasm = async () : Promise<void> => {
+        // This should just be in node_modules
+        const filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+        if (await this.fileSystem.fileExists(filePath)) {
+            const contents = await fs.readFile(filePath);
+            this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+        } else {
+            this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
         }
     }
 }

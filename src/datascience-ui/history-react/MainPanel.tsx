@@ -7,6 +7,7 @@ import { min } from 'lodash';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
@@ -20,6 +21,7 @@ import { ContentPanel, IContentPanelProps } from './contentPanel';
 import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
+import { initializeTokenizer } from './tokenizer';
 import { VariableExplorer } from './variableExplorer';
 
 export interface IMainPanelProps {
@@ -40,6 +42,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private currentExecutionCount: number = 0;
     private postOffice: PostOffice = new PostOffice();
     private completionProvider: CompletionProvider;
+    private onigasmPromise: Deferred<ArrayBuffer> | undefined;
+    private tmlangugePromise: Deferred<string> | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -66,6 +70,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Setup the completion provider for monaco. We only need one
         this.completionProvider = new CompletionProvider(this.postOffice);
+
+        // Setup the tokenizer for monaco
+        initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
     }
 
     public componentWillMount() {
@@ -100,12 +107,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
         }
-
         const baseTheme = this.computeBaseTheme();
-
-        const headerProps = this.getHeaderProps(baseTheme);
-        const contentProps = this.getContentProps(baseTheme);
-
         return (
             <div id='main-panel' ref={this.updateSelf}>
                 <StyleInjector
@@ -114,8 +116,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                <HeaderPanel {...headerProps} />
-                <ContentPanel {...contentProps} />
+                {this.renderInnerContent(baseTheme)}
             </div>
         );
     }
@@ -187,6 +188,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.getVariableValueResponse(payload);
                 break;
 
+            case HistoryMessages.LoadOnigasmAssemblyResponse:
+                this.handleOnigasmResponse(payload);
+                break;
+
+            case HistoryMessages.LoadTmLanguageResponse:
+                this.handleTmLanguageResponse(payload);
+                break;
+
             default:
                 break;
         }
@@ -214,6 +223,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     };
     //     this.addCell(cell);
     // }
+
+    private renderInnerContent(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded && !this.props.testMode) {
+            return null;
+        }
+
+        // Otherwise render our cells and variable explorer.
+        const headerProps = this.getHeaderProps(baseTheme);
+        const contentProps = this.getContentProps(baseTheme);
+
+        return (
+            <div id='inner-content'>
+                <HeaderPanel {...headerProps} />
+                <ContentPanel {...contentProps} />
+            </div>
+        );
+    }
 
     // Called by the header control when size changes (such as expanding variables)
     private onHeaderHeightChange = (newHeight: number) => {
@@ -841,5 +869,47 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private codeChange = (changes: monacoEditor.editor.IModelContentChange[]) => {
         // Pass this onto the completion provider running in the extension
         this.sendMessage(HistoryMessages.EditCell, { changes });
+    }
+
+    // tslint:disable-next-line: no-any
+    private tokenizerLoaded = (_e?: any) => {
+        this.setState({ tokenizerLoaded: true });
+    }
+
+    private loadOnigasm = () : Promise<ArrayBuffer> => {
+        if (!this.onigasmPromise) {
+            this.onigasmPromise = createDeferred<ArrayBuffer>();
+            // Send our load onigasm request
+            this.sendMessage(HistoryMessages.LoadOnigasmAssemblyRequest);
+        }
+        return this.onigasmPromise.promise;
+    }
+
+    private loadTmlanguage = () : Promise<string> => {
+        if (!this.tmlangugePromise) {
+            this.tmlangugePromise = createDeferred<string>();
+            // Send our load onigasm request
+            this.sendMessage(HistoryMessages.LoadTmLanguageRequest);
+        }
+        return this.tmlangugePromise.promise;
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleOnigasmResponse(payload: any) {
+        if (payload && this.onigasmPromise) {
+            const typedArray = new Uint8Array(payload.data);
+            this.onigasmPromise.resolve(typedArray.buffer);
+        } else if (this.onigasmPromise) {
+            this.onigasmPromise.resolve(undefined);
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleTmLanguageResponse(payload: any) {
+        if (payload && this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(payload.toString());
+        } else if (this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(undefined);
+        }
     }
 }

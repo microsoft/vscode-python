@@ -35,7 +35,7 @@ module.exports = [
                 { from: './**/*theme*.json', to: '.' }
             ], { context: 'src' }),
             new MonacoWebpackPlugin({
-                languages: ['python']
+                languages: [] // force to empty so onigasm will be used
             })
         ],
         resolve: {

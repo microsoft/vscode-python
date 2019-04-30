@@ -8,9 +8,6 @@ import MonacoEditor from 'react-monaco-editor';
 
 import { InputHistory } from './inputHistory';
 
-// This next line is necessary to get webpack to load the python language settings. Otherwise
-// it will fail to do so dynamically at run time.
-import '../../../node_modules/monaco-editor/esm/vs/basic-languages/python/python.js';
 import './code.css';
 
 const LINE_HEIGHT = 18;
@@ -149,6 +146,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
         this.subscriptions.push(editor.onCompositionStart(this.compositionStart));
         this.subscriptions.push(editor.onDidFocusEditorWidget(this.focusEditorWidget));
+        this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
+        this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
 
         // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
         this.subscriptions.push(editor.onContextMenu((e) => {
@@ -214,5 +213,26 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             clearTimeout(this.resizeTimer);
         }
         this.resizeTimer = window.setTimeout(this.updateEditorSize, 0);
+    }
+
+    private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.shiftKey && e.keyCode === monacoEditor.KeyCode.Enter && this.state.model && this.state.editor) {
+            // Shift enter was hit
+            e.stopPropagation();
+            window.setTimeout(this.submitContent, 0);
+        }
+    }
+
+    private onKeyUp = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.shiftKey && e.keyCode === monacoEditor.KeyCode.Enter) {
+            // Shift enter was hit
+            e.stopPropagation();
+        }
+    }
+
+    private submitContent = () => {
+        if (this.state.model) {
+            this.props.onSubmit(this.state.model.getLinesContent().join('\n'));
+        }
     }
 }

@@ -214,19 +214,40 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         };
         // If we have token colors enumerate them and add them into the rules
         if (args.tokenColors && args.tokenColors.length) {
+            const tokenSet = new Set<string>();
             args.tokenColors.forEach((t: any) => {
                 const scopes = this.getScopes(t);
                 const settings = t && t.settings ? t.settings : undefined;
                 if (scopes && settings) {
                     scopes.forEach(s => {
-                        result.rules.push({
-                            token: s ? s.toString() : '', // This shouldn't happen, but checking for linter's sake.
-                            foreground: settings.foreground,
-                            background: settings.background,
-                            fontStyle: settings.fontStyle
-                        });
+                        const token = s ? s.toString() : '';
+                        if (!tokenSet.has(token)) {
+                            tokenSet.add(token);
+                            result.rules.push({
+                                token,
+                                foreground: settings.foreground,
+                                background: settings.background,
+                                fontStyle: settings.fontStyle
+                            });
+
+                            // Special case some items. punctuation.definition.comment doesn't seem to
+                            // be listed anywhere. Add it manually when we find a 'comment'
+                            // tslint:disable-next-line: possible-timing-attack
+                            if (token === 'comment') {
+                                result.rules.push({
+                                    token: 'punctuation.definition.comment',
+                                    foreground: settings.foreground,
+                                    background: settings.background,
+                                    fontStyle: settings.fontStyle
+                                });
+                            }
+                        }
                     });
                 }
+            });
+
+            result.rules = result.rules.sort((a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
+                return a.token.localeCompare(b.token);
             });
         } else {
             // Otherwise use our default values.

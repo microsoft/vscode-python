@@ -29,7 +29,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private configService: IConfigurationService,
         @unmanaged() private provider: IWebPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
-        @unmanaged() private themeFinder: IThemeFinder,
+        @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() private workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
         @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
