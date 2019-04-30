@@ -130,3 +130,9 @@ export interface IPlatformData {
     readonly engineDllName: string;
     readonly engineExecutableName: string;
 }
+
+export const IExperimentsManager = Symbol('IExperimentsManager');
+export interface IExperimentsManager {
+    initialize(): Promise<void>;
+    inExperiment(experimentName: string): Promise<boolean>;
+}

@@ -15,7 +15,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
+import { IExperimentsManager, IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -33,7 +33,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private resource!: Resource;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory) {
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -48,7 +49,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public async activate(resource: Resource): Promise<void> {
-        let jedi = this.useJedi();
+        let jedi = await this.useJedi();
         if (!jedi) {
             if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
                 return;
@@ -140,7 +141,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
             return;
         }
-        const jedi = this.useJedi();
+        const jedi = await this.useJedi();
         if (this.currentActivator && this.currentActivator.jedi === jedi) {
             return;
         }
@@ -153,10 +154,13 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
     }
-    private useJedi(): boolean {
+    private async useJedi(): Promise<boolean> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const enabled = configurationService.getSettings(this.resource).jediEnabled;
         this.trackLangaugeServerSwitch(enabled).ignoreErrors();
+        if (await this.experiments.inExperiment('LS - enabled')) {
+            return false;
+        }
         return enabled;
     }
     private getWorkspacePathKey(resource: Resource): string {

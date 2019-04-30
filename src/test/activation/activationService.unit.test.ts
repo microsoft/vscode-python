@@ -12,6 +12,7 @@ import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
     FolderVersionPair,
+    IExperimentsManager,
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerFolderService,
@@ -38,6 +39,7 @@ suite('Activation - ActivationService', () => {
             let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
             let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
             let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
+            let experiments: TypeMoq.IMock<IExperimentsManager>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -48,6 +50,7 @@ suite('Activation - ActivationService', () => {
                 state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
                 const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+                experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
                 const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
                 const folderVer: FolderVersionPair = {
                     path: '',
@@ -136,14 +139,14 @@ suite('Activation - ActivationService', () => {
             test('LS is supported', async () => {
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 await testActivation(activationService, activator, true);
             });
             test('LS is not supported', async () => {
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 await testActivation(activationService, activator, false);
             });
@@ -151,14 +154,14 @@ suite('Activation - ActivationService', () => {
             test('Activatory must be activated', async () => {
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 await testActivation(activationService, activator);
             });
             test('Activatory must be deactivated', async () => {
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 await testActivation(activationService, activator);
 
@@ -180,7 +183,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -217,7 +220,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -253,7 +256,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -288,7 +291,7 @@ suite('Activation - ActivationService', () => {
 
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 workspaceService.verifyAll();
                 await testActivation(activationService, activator);
@@ -318,7 +321,7 @@ suite('Activation - ActivationService', () => {
                 state.setup(s => s.value).returns(() => undefined).verifiable(TypeMoq.Times.once());
                 state.setup(s => s.updateValue(TypeMoq.It.isValue(true))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                 await activationService.trackLangaugeServerSwitch(true);
 
                 state.verifyAll();
@@ -328,7 +331,7 @@ suite('Activation - ActivationService', () => {
                 state.setup(s => s.value).returns(() => true).verifiable(TypeMoq.Times.once());
                 state.setup(s => s.updateValue(TypeMoq.It.isValue(false))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                 await activationService.trackLangaugeServerSwitch(false);
 
                 state.verify(s => s.updateValue(TypeMoq.It.isValue(false)), TypeMoq.Times.once());
@@ -338,7 +341,7 @@ suite('Activation - ActivationService', () => {
                 state.setup(s => s.value).returns(() => false).verifiable(TypeMoq.Times.once());
                 state.setup(s => s.updateValue(TypeMoq.It.isValue(true))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
-                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                 await activationService.trackLangaugeServerSwitch(true);
 
                 state.verify(s => s.updateValue(TypeMoq.It.isValue(true)), TypeMoq.Times.once());
@@ -348,7 +351,7 @@ suite('Activation - ActivationService', () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     const activatorDotNet = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activatorJedi = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                     const diagnostics: IDiagnostic[] = [];
                     lsNotSupportedDiagnosticService
                         .setup(l => l.diagnose(undefined))
@@ -427,7 +430,7 @@ suite('Activation - ActivationService', () => {
                         .callback(cb => (workspaceFoldersChangedHandler = cb))
                         .returns(() => TypeMoq.Mock.ofType<IDisposable>().object)
                         .verifiable(TypeMoq.Times.once());
-                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                     workspaceService.verifyAll();
                     expect(workspaceFoldersChangedHandler).not.to.be.equal(undefined, 'Handler not set');
                     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
@@ -469,7 +472,7 @@ suite('Activation - ActivationService', () => {
                 test('Jedi is only activated once', async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object);
+                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
                     serviceContainer
