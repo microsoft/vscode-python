@@ -1,7 +1,6 @@
 #content-panel-div {
     height: 100%;
     overflow: auto;
-    box-sizing: border-box;
 }
 
 #cell-table {

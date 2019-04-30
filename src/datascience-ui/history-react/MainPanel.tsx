@@ -8,10 +8,12 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
+import { ErrorBoundary } from '../react-common/errorBoundary';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -50,16 +52,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24 };
+        this.state = {
+            cellVMs: [],
+            busy: true,
+            undoStack: [],
+            redoStack : [],
+            submittedText: false,
+            history: new InputHistory(),
+            contentTop: 24,
+            editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined
+        };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
             this.state = generateTestState(this.inputBlockToggled);
-        }
-
-        // Add a single empty cell if it's supported
-        if (getSettings && getSettings().allowInput) {
-            this.state.cellVMs.push(createEditableCellVM(1));
         }
 
         // Create the ref to hold our variable explorer
@@ -71,8 +77,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Setup the completion provider for monaco. We only need one
         this.completionProvider = new CompletionProvider(this.postOffice);
 
-        // Setup the tokenizer for monaco
-        initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+        // Setup the tokenizer for monaco if running inside of vscode
+        if (this.props.skipDefault) {
+            initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+        }
     }
 
     public componentWillMount() {
@@ -107,7 +115,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
         }
+
         const baseTheme = this.computeBaseTheme();
+
         return (
             <div id='main-panel' ref={this.updateSelf}>
                 <StyleInjector
@@ -116,7 +126,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                {this.renderInnerContent(baseTheme)}
+                {this.renderHeaderPanel(baseTheme)}
+                {this.renderContentPanel(baseTheme)}
+                {this.renderEditPanel(baseTheme)}
             </div>
         );
     }
@@ -224,21 +236,70 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
-    private renderInnerContent(baseTheme: string) {
+    private renderHeaderPanel(baseTheme: string) {
+        const headerProps = this.getHeaderProps(baseTheme);
+        return (
+            <div className='main-panel-header'>
+                <div className='main-panel-cell'>
+                    <HeaderPanel {...headerProps} />
+                </div>
+            </div>
+        );
+    }
+
+    private renderContentPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.state.tokenizerLoaded && !this.props.testMode) {
             return null;
         }
 
-        // Otherwise render our cells and variable explorer.
-        const headerProps = this.getHeaderProps(baseTheme);
+        // Otherwise render our cells.
         const contentProps = this.getContentProps(baseTheme);
+        return (
+            <div className='main-panel-content'>
+                <div className='main-panel-cell'>
+                    <ContentPanel {...contentProps} />
+                </div>
+            </div>
+        );
+    }
+
+    private renderEditPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+            return null;
+        }
+
+        const maxOutputSize = getSettings().maxOutputSize;
+        const errorBackgroundColor = getSettings().errorBackgroundColor;
+        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
+        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
 
         return (
-            <div id='inner-content'>
-                <HeaderPanel {...headerProps} />
-                <ContentPanel {...contentProps} />
+            <div className='main-panel-footer'>
+                <div className='main-panel-cell edit-panel'>
+                <ErrorBoundary>
+                    <Cell
+                        history={this.state.history}
+                        maxTextSize={maxTextSize}
+                        autoFocus={document.hasFocus()}
+                        testMode={this.props.testMode}
+                        cellVM={this.state.editCellVM}
+                        submitNewCode={this.submitInput}
+                        baseTheme={baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        showWatermark={!this.state.submittedText}
+                        errorBackgroundColor={actualErrorBackgroundColor}
+                        ref={this.saveEditCellRef}
+                        gotoCode={noop}
+                        delete={noop}
+                        onCodeChange={this.codeChange}
+                        monacoTheme={this.state.monacoTheme}
+                    />
+                </ErrorBoundary>
+            </div>
             </div>
         );
     }
@@ -296,12 +357,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
-            saveEditCellRef: this.saveEditCellRef,
             gotoCellCode: this.gotoCellCode,
             deleteCell: this.deleteCell,
-            submitInput: this.submitInput,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            onCodeChange: this.codeChange,
             monacoTheme: this.state.monacoTheme
         };
     }
@@ -557,19 +615,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
-                let newList : ICellViewModel[] = [];
-
-                // Insert before the edit cell if we have one
-                const editCell = this.getEditCell();
-                if (editCell) {
-                    newList = [...this.state.cellVMs.filter(c => !c.editable), cellVM, editCell];
-
-                    // Update execution count on the last cell
-                    editCell.cell.data.execution_count = this.getInputExecutionCount(newList);
-                } else {
-                    newList = [...this.state.cellVMs, cellVM];
-                }
-
+                const newList = [...this.state.cellVMs, cellVM];
                 this.setState({
                     cellVMs: newList,
                     undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
@@ -584,12 +630,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getEditCell() : ICellViewModel | undefined {
-        const editCells = this.state.cellVMs.filter(c => c.editable);
-        if (editCells && editCells.length === 1) {
-            return editCells[0];
-        }
-
-        return undefined;
+        return this.state.editCellVM;
     }
 
     private inputBlockToggled = (id: string) => {
@@ -776,9 +817,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
         let editCell = this.getEditCell();
         if (editCell) {
-            // Save a copy of the ones without edits.
-            const withoutEdits = this.state.cellVMs.filter(c => !c.editable);
-
             // Change this editable cell to not editable.
             editCell.cell.state = CellState.executing;
             editCell.cell.data.source = code;
@@ -805,7 +843,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
-                cellVMs: [...withoutEdits, editCell, createEditableCellVM(this.getInputExecutionCount(withoutEdits))],
+                cellVMs: [...this.state.cellVMs, editCell],
+                editCellVM: createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs)),
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,

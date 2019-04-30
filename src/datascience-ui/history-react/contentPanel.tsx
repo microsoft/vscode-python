@@ -3,8 +3,8 @@
 'use strict';
 import './contentPanel.css';
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+
 import { noop } from '../../test/core';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -21,11 +21,8 @@ export interface IContentPanelProps {
     submittedText: boolean;
     skipNextScroll: boolean;
     monacoTheme: string | undefined;
-    saveEditCellRef(ref: Cell | null): void;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
-    submitInput(code: string): void;
-    onCodeChange(changes: monacoEditor.editor.IModelContentChange[]): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -70,20 +67,19 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
-                    history={cellVM.editable ? this.props.history : undefined}
+                    history={undefined}
                     maxTextSize={maxTextSize}
-                    autoFocus={document.hasFocus()}
+                    autoFocus={false}
                     testMode={this.props.testMode}
                     cellVM={cellVM}
-                    submitNewCode={this.props.submitInput}
+                    submitNewCode={noop}
                     baseTheme={baseTheme}
                     codeTheme={this.props.codeTheme}
-                    showWatermark={!this.props.submittedText}
+                    showWatermark={false}
                     errorBackgroundColor={actualErrorBackgroundColor}
-                    ref={(r) => cellVM.editable ? this.props.saveEditCellRef(r) : noop()}
                     gotoCode={() => this.props.gotoCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
-                    onCodeChange={this.props.onCodeChange}
+                    onCodeChange={noop}
                     monacoTheme={this.props.monacoTheme}
                     />
             </ErrorBoundary>

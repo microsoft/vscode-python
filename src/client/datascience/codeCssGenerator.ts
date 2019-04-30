@@ -245,6 +245,17 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                                     fontStyle: settings.fontStyle
                                 });
                             }
+
+                            // Same for string
+                            // tslint:disable-next-line: possible-timing-attack
+                            if (token === 'string') {
+                                result.rules.push({
+                                    token: 'punctuation.definition.string',
+                                    foreground: settings.foreground,
+                                    background: settings.background,
+                                    fontStyle: settings.fontStyle
+                                });
+                            }
                         }
                     });
                 }

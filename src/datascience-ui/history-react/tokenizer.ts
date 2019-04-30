@@ -19,6 +19,49 @@ export async function initializeTokenizer(
             extensions: ['.py']
         });
 
+        // Setup the configuration so that auto indent and other things work. Onigasm is just going to setup the tokenizer
+        monacoEditor.languages.setLanguageConfiguration(
+            PYTHON_LANGUAGE,
+            {
+                comments: {
+                    lineComment: '#',
+                    blockComment: ['\'\'\'', '\'\'\'']
+                },
+                brackets: [
+                    ['{', '}'],
+                    ['[', ']'],
+                    ['(', ')']
+                ],
+                autoClosingPairs: [
+                    { open: '{', close: '}' },
+                    { open: '[', close: ']' },
+                    { open: '(', close: ')' },
+                    { open: '"', close: '"', notIn: ['string'] },
+                    { open: '\'', close: '\'', notIn: ['string', 'comment'] }
+                ],
+                surroundingPairs: [
+                    { open: '{', close: '}' },
+                    { open: '[', close: ']' },
+                    { open: '(', close: ')' },
+                    { open: '"', close: '"' },
+                    { open: '\'', close: '\'' }
+                ],
+                onEnterRules: [
+                    {
+                        beforeText: new RegExp('^\\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\\s*$'),
+                        action: { indentAction: monacoEditor.languages.IndentAction.Indent }
+                    }
+                ],
+                folding: {
+                    offSide: true,
+                    markers: {
+                        start: new RegExp('^\\s*#region\\b'),
+                        end: new RegExp('^\\s*#endregion\\b')
+                    }
+                }
+            }
+        );
+
         // Load the web assembly
         const blob = await getOnigasm();
         await loadWASM(blob);

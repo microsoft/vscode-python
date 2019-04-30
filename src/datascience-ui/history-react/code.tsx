@@ -72,6 +72,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     public componentDidUpdate = () => {
         this.updateEditorSize();
+        if (this.props.autoFocus && this.state.editor && !this.props.readOnly) {
+            this.state.editor.focus();
+        }
     }
 
     public render() {
@@ -91,6 +94,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             lineNumbers: 'off',
             renderLineHighlight: 'none',
             highlightActiveIndentGuide: false,
+            autoIndent: true,
             renderIndentGuides: false,
             overviewRulerBorder: false,
             overviewRulerLanes: 0,
