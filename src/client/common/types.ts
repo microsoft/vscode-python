@@ -409,6 +409,11 @@ export interface IAsyncDisposable {
     dispose(): Promise<void>;
 }
 
+export const ICryptoUtils = Symbol('ICryptoUtils');
+export interface ICryptoUtils {
+    createHash(algorithm: string, data: string, encoding: string, hashFormat: 'number' | 'string'): Promise<number | string | Buffer>;
+}
+
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;

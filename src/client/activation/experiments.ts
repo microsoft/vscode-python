@@ -5,11 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../test/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { traceDecorators, traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IPersistentStateFactory } from '../common/types';
+import { ICryptoUtils, IPersistentStateFactory } from '../common/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExperimentsManager, IHttpClient } from './types';
@@ -25,7 +26,8 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient
+        @inject(IHttpClient) private readonly httpClient: IHttpClient,
+        @inject(ICryptoUtils) private readonly crypto: ICryptoUtils
     ) { }
 
     public async initialize() {
@@ -48,15 +50,17 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
         await IsFileValid.updateValue(true);
+        this.experiments.forEach(experiment => sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, experiment));
     }
 
     public async inExperiment(experimentName: string): Promise<boolean> {
-        for (const experiment of this.experiments) {
-            if (experiment.name === experimentName) {
-                return true;
-            }
+        const experimentNames = this.experiments.map(experiment => experiment.name);
+        const index = experimentNames.indexOf(experimentName);
+        if (index < 0) {
+            return false;
         }
-        return false;
+        const hash = await this.crypto.createHash('sha512', `${vscode.env.machineId}+${this.experiments[index].salt}`, 'hex', 'number') as number;
+        return hash % 100 >= this.experiments[index].min && hash % 100 < this.experiments[index].max;
     }
 
     @traceDecorators.error('Failed to download experiments file')

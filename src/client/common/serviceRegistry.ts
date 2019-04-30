@@ -26,6 +26,7 @@ import {
 import { WorkspaceService } from './application/workspace';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
+import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { ProductInstaller } from './installer/productInstaller';
@@ -60,6 +61,7 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
+    ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
     IExtensions,
@@ -101,6 +103,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
     serviceManager.addSingleton<ITerminalActivationHandler>(ITerminalActivationHandler, PowershellTerminalActivationFailedHandler);
     serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
+    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
