@@ -11,7 +11,12 @@ import { getLocString } from '../react-common/locReactSide';
 interface ICellFormatterProps {
     value: string | number | object | boolean;
     row: JSONObject | string;
-    dependentValues: string | undefined;
+    dependentValues: ICellFormatterMetaData | undefined;
+}
+
+export interface ICellFormatterMetaData {
+    columnType: string;
+    columnValue: string | number | object | boolean;
 }
 
 export class CellFormatter extends React.Component<ICellFormatterProps> {
@@ -29,7 +34,7 @@ export class CellFormatter extends React.Component<ICellFormatterProps> {
 
         // Render based on type
         if (this.props.dependentValues && this.props.value !== null) {
-            switch (this.props.dependentValues) {
+            switch (this.props.dependentValues.columnType) {
                 case 'bool':
                     return this.renderBool(this.props.value as boolean);
                     break;

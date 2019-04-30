@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os.path
 import sys
@@ -33,15 +33,21 @@ def discover(pytestargs=None, hidestdio=False,
     pytestargs = _adjust_pytest_args(pytestargs)
     # We use this helper rather than "-pno:terminal" due to possible
     # platform-dependent issues.
-    with util.hide_stdio() if hidestdio else util.noop_cm():
+    with (util.hide_stdio() if hidestdio else util.noop_cm()) as stdio:
         ec = _pytest_main(pytestargs, [_plugin])
     # See: https://docs.pytest.org/en/latest/usage.html#possible-exit-codes
     if ec == 5:
         # No tests were discovered.
         pass
     elif ec != 0:
+        if hidestdio:
+            print(stdio.getvalue(), file=sys.stderr)
+            sys.stdout.flush()
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
+        if hidestdio:
+            print(stdio.getvalue(), file=sys.stderr)
+            sys.stdout.flush()
         raise Exception('pytest discovery did not start')
     return (
             _plugin._tests.parents,

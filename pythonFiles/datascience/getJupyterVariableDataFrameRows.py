@@ -15,11 +15,11 @@ _VSCODE_endRow = min(_VSCode_JupyterEndRow, _VSCODE_targetVariable['rowCount'])
 
 # Assume we have a dataframe. If not, turn our eval result into a dataframe
 _VSCODE_df = _VSCODE_evalResult
-if (_VSCODE_targetVariable['type'] == 'list'):
+if isinstance(_VSCODE_evalResult, list):
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
-elif (_VSCODE_targetVariable['type'] == 'Series'):
+elif isinstance(_VSCODE_evalResult, _VSCODE_pd.Series):
     _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
-elif _VSCODE_targetVariable['type'] == 'dict':
+elif isinstance(_VSCODE_evalResult, dict):
     _VSCODE_evalResult = _VSCODE_pd.Series(_VSCODE_evalResult)
     _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
 elif _VSCODE_targetVariable['type'] == 'ndarray':
@@ -39,3 +39,6 @@ del _VSCODE_endRow
 del _VSCODE_startRow
 del _VSCODE_rows
 del _VSCODE_result
+del _VSCODE_json
+del _VSCODE_pd
+del _VSCODE_pd_json

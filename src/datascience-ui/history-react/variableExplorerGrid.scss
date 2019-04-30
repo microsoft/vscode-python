@@ -14,65 +14,65 @@
 
 #variable-explorer-data-grid .react-grid-Main {
     font-family: var(--code-font-family);
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     outline: none;
 }
 
 #variable-explorer-data-grid .react-grid-Grid {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     border-style: none;
 }
 
 #variable-explorer-data-grid .react-grid-Canvas {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
 }
 
 #variable-explorer-data-grid .react-grid-Header {
-    background-color: var(--vscode-notifications-background);
+    background-color: var(--override-tabs-background, var(--vscode-notifications-background));
 }
 
 #variable-explorer-data-grid .react-grid-HeaderCell {
-    background-color: var(--vscode-editor-lineHighlightBorder);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--override-lineHighlightBorder, var(--vscode-editor-lineHighlightBorder));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     border-style: solid;
-    border-color: var(--vscode-badge-background);
+    border-color: var(--override-badge-background, var(--vscode-badge-background));
     padding: 2px;
 }
 
 
 #variable-explorer-data-grid .react-grid-Row--even {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-badge-background);
-    border-bottom-color: var(--vscode-badge-background);
+    background-color: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    border-right-color: var(--override-badge-background, var(--vscode-badge-background));
+    border-bottom-color: var(--override-badge-background, var(--vscode-badge-background));
 }
 
 #variable-explorer-data-grid .react-grid-Row--odd {
-    background-color: var(--vscode-editor-lineHighlightBorder);
-    color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-badge-background);
-    border-bottom-color: var(--vscode-badge-background);
+    background-color: var(--override-lineHighlightBorder, var(--vscode-editor-lineHighlightBorder));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    border-right-color: var(--override-badge-background, var(--vscode-badge-background));
+    border-bottom-color: var(--override-badge-background, var(--vscode-badge-background));
 }
 
 #variable-explorer-data-grid .react-grid-Cell {
     background-color: transparent;
-    color: var(--vscode-editor-foreground);
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     border-style: none;
 }
 
 #variable-explorer-data-grid .react-grid-Cell:hover {
-    background-color: var(--vscode-editor-selectionBackground);
+    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
 #variable-explorer-data-grid .react-grid-Row:hover {
-    background-color: var(--vscode-editor-selectionBackground);
+    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
 #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
-    background-color: var(--vscode-editor-selectionBackground);
+    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
 #variable-explorer-data-grid .rdg-selected {
