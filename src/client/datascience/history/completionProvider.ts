@@ -35,6 +35,7 @@ import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../activatio
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
 import { IHistoryListener } from '../types';
 import {
@@ -278,7 +279,7 @@ class HistoryDocument implements TextDocument {
 @injectable()
 export class CompletionProvider implements IHistoryListener {
 
-    private languageClient : LanguageClient | undefined;
+    private languageClientPromise : Deferred<LanguageClient> | undefined;
     private document: HistoryDocument | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private sentOpenDocument : boolean = false;
@@ -352,11 +353,24 @@ export class CompletionProvider implements IHistoryListener {
         });
     }
 
+    private getLanguageClient(file?: Uri) : Promise<LanguageClient> {
+        if (!this.languageClientPromise) {
+            this.languageClientPromise = createDeferred<LanguageClient>();
+            this.startup(file)
+                .then(() => {
+                    this.languageClientPromise!.resolve(this.languageServer.languageClient);
+                })
+                .catch((e: any) => {
+                    this.languageClientPromise!.reject(e);
+                });
+        }
+        return this.languageClientPromise.promise;
+    }
+
     private async startup(resource?: Uri) : Promise<void> {
         // Save our language client. We'll use this to talk to the language server
         const options = await this.analysisOptions!.getAnalysisOptions();
         await this.languageServer.start(resource, options);
-        this.languageClient = this.languageServer.languageClient;
 
         // Create our dummy document. Compute a file path for it.
         let dummyFilePath = '';
@@ -371,11 +385,12 @@ export class CompletionProvider implements IHistoryListener {
     }
 
     private async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
-        if (this.languageClient && this.document) {
+        const languageClient = await this.getLanguageClient();
+        if (languageClient && this.document) {
             const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
-            const result = await this.languageClient.sendRequest(
+            const result = await languageClient.sendRequest(
                 CompletionRequest.type,
-                this.languageClient.code2ProtocolConverter.asCompletionParams(this.document, docPos, context),
+                languageClient.code2ProtocolConverter.asCompletionParams(this.document, docPos, context),
                 token);
             return this.convertToMonacoCompletionList(result);
         }
@@ -386,40 +401,36 @@ export class CompletionProvider implements IHistoryListener {
         };
     }
     private async addCell(request: IRemoteAddCode): Promise<void> {
-        if (!this.languageClient) {
-            await this.startup(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
-        }
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
             changes = this.document.addLines(request.code);
         }
 
         // Broadcast an update to the language server
-        if (this.languageClient && this.document) {
+        const languageClient = await this.getLanguageClient(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
+        if (languageClient && this.document) {
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;
-                return this.languageClient.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
+                return languageClient.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
             } else {
-                return this.languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
+                return languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
             }
         }
     }
     private async editCell(request: IEditCell): Promise<void> {
-        if (!this.languageClient) {
-            await this.startup(undefined);
-        }
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
             changes = this.document.editLines(request.changes);
         }
 
         // Broadcast an update to the language server
-        if (this.languageClient && this.document) {
+        const languageClient = await this.getLanguageClient();
+        if (languageClient && this.document) {
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;
-                return this.languageClient.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
+                return languageClient.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
             } else {
-                return this.languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
+                return languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
             }
         }
     }

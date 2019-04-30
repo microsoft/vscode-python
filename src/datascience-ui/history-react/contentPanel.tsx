@@ -40,14 +40,8 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public render() {
-        const newContentTop = `${this.props.contentTop.toString()}px solid transparent`;
-
-        const newBorderStyle: React.CSSProperties = {
-            borderTop: newContentTop
-        };
-
         return(
-            <div id='content-panel-div' style={newBorderStyle}>
+            <div id='content-panel-div'>
                 <div id='cell-table'>
                     <div id='cell-table-body'>
                         {this.renderCells()}
