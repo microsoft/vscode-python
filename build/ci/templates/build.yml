@@ -57,7 +57,20 @@ steps:
     - bash: |
           npm install -g vsce
           npm run clean
+      displayName: "Install vsce & Clean"
+      condition: and(succeeded(), eq(variables['Build'], 'true'))
+
+    - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+      displayName: "Update dev Version"
+      condition: and(succeeded(), eq(variables['Build'], 'true'), eq(variables['Build.SourceBranchName'], 'master'))
+
+    - bash: |
+          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
+      displayName: "Update release Version"
+      condition: and(succeeded(), eq(variables['Build'], 'true'), eq(variables['Build.SourceBranchName'], 'release'))
+
+    - bash: |
           npm run package
       displayName: "Build VSIX"
       condition: and(succeeded(), eq(variables['Build'], 'true'))
