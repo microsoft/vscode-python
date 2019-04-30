@@ -254,7 +254,7 @@ class HistoryDocument implements TextDocument {
 
     private convertToOffset(pos: Position) : number {
         // Combine the text length up to this position
-        const lenUpToPos = this._lines.filter(l => l.range.start.line < pos.line).map(l => l.rangeIncludingLineBreak.end.character).reduce((p, c) => p + c);
+        const lenUpToPos = this._lines.filter(l => l.range.start.line < pos.line).map(l => l.rangeIncludingLineBreak.end.character).reduce((p, c) => p + c, 0);
 
         // Add on the character
         return lenUpToPos + pos.character;
