@@ -308,6 +308,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',

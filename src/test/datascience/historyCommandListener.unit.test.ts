@@ -128,6 +128,7 @@ suite('History command listener', async () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: '',
             changeDirOnImportExport: true,

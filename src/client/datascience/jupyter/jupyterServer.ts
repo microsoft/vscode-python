@@ -173,7 +173,8 @@ export class JupyterServerBase implements INotebookServer {
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle ${this.id}`);
-            await this.session.waitForIdle(Number.MAX_SAFE_INTEGER);
+            const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
+            await this.session.waitForIdle(idleTimeout);
 
             traceInfo(`Performing initial setup ${this.id}`);
             // Run our initial setup and plot magics
