@@ -10,12 +10,12 @@ import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IExperimentsManager, IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
+import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -49,7 +49,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public async activate(resource: Resource): Promise<void> {
-        let jedi = await this.useJedi();
+        let jedi = this.useJedi();
         if (!jedi) {
             if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
                 return;
@@ -141,7 +141,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
             return;
         }
-        const jedi = await this.useJedi();
+        const jedi = this.useJedi();
         if (this.currentActivator && this.currentActivator.jedi === jedi) {
             return;
         }
@@ -154,11 +154,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
     }
-    private async useJedi(): Promise<boolean> {
+    private useJedi(): boolean {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const enabled = configurationService.getSettings(this.resource).jediEnabled;
         this.trackLangaugeServerSwitch(enabled).ignoreErrors();
-        if (await this.experiments.inExperiment('LS - enabled')) {
+        if (this.experiments.inExperiment('LS - enabled')) {
             return false;
         }
         return enabled;

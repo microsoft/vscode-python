@@ -12,7 +12,6 @@ import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
     FolderVersionPair,
-    IExperimentsManager,
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerFolderService,
@@ -22,7 +21,7 @@ import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diag
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable:no-any

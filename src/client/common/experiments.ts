@@ -6,13 +6,11 @@
 // tslint:disable:no-any
 
 import { inject, injectable } from 'inversify';
-import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
-import { traceDecorators, traceError } from '../common/logger';
-import { ICryptoUtils, IPersistentStateFactory } from '../common/types';
-import { swallowExceptions } from '../common/utils/decorators';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { IExperimentsManager, IHttpClient } from './types';
+import { Uri } from 'vscode';
+import { IHttpClient } from '../activation/types';
+import { IApplicationEnvironment, IWorkspaceService } from './application/types';
+import { traceDecorators, traceError } from './logger';
+import { ICryptoUtils, IExperimentsManager, IPersistentStateFactory } from './types';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
@@ -29,7 +27,12 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment
     ) { }
 
-    public async initialize() {
+    public async activate(_resource: Uri): Promise<void> {
+        this.initializeInBackground().ignoreErrors();
+    }
+
+    @traceDecorators.error('Failed to initialize experiments')
+    public async initializeInBackground() {
         if (this.isTelemetryDisabled()) {
             return;
         }
@@ -38,19 +41,22 @@ export class ExperimentsManager implements IExperimentsManager {
             this.experiments = experimentStorage.value;
             return;
         }
-        await this.downloadExperiments();
+        try {
+            await this.downloadExperiments();
+        } catch {
+            return;
+        }
         await experimentStorage.updateValue(this.experiments);
-        this.experiments.forEach(experiment => sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, experiment));
     }
 
-    public async inExperiment(experimentName: string): Promise<boolean> {
+    public inExperiment(experimentName: string): boolean {
         try {
             const experimentNames = this.experiments.map(experiment => experiment.name);
             const index = experimentNames.indexOf(experimentName);
             if (index < 0) {
                 return false;
             }
-            const hash = await this.crypto.createHash(`${this.appEnvironment.machineId}+${this.experiments[index].salt}`, 'hex', 'number') as number;
+            const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${this.experiments[index].salt}`, 'hex', 'number');
             return hash % 100 >= this.experiments[index].min && hash % 100 < this.experiments[index].max;
         } catch (ex) {
             traceError('Failed to check if user is in experiment', ex);
@@ -58,7 +64,6 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
-    @swallowExceptions('Download experiments')
     @traceDecorators.error('Failed to download experiments')
     protected async downloadExperiments() {
         this.experiments = await this.httpClient.getJSONC(configUri, { allowTrailingComma: true, disallowComments: false });

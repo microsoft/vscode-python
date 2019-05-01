@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { HexBase64Latin1Encoding } from 'crypto';
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { IExtensionActivationService } from '../activation/types';
 import { CommandsWithoutArgs } from './application/commands';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
@@ -409,12 +411,22 @@ export interface IAsyncDisposable {
     dispose(): Promise<void>;
 }
 
+export interface IHashFormat {
+    'number': number;
+    'string': string;
+}
+
 export const ICryptoUtils = Symbol('ICryptoUtils');
 export interface ICryptoUtils {
-    createHash(data: string, encoding: string, hashFormat: 'number' | 'string'): Promise<number | string>;
+    createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
+}
+
+export const IExperimentsManager = Symbol('IExperimentsManager');
+export interface IExperimentsManager extends IExtensionActivationService {
+    inExperiment(experimentName: string): boolean;
 }

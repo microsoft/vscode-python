@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IHttpClient } from '../activation/types';
+import { IExtensionActivationService, IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -28,6 +28,7 @@ import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
+import { ExperimentsManager } from './experiments';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { ProductInstaller } from './installer/productInstaller';
 import { LiveShareApi } from './liveshare/liveshare';
@@ -64,6 +65,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
+    IExperimentsManager,
     IExtensions,
     IFeatureDeprecationManager,
     IInstaller,
@@ -104,6 +106,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalActivationHandler>(ITerminalActivationHandler, PowershellTerminalActivationFailedHandler);
     serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExperimentsManager);
+    serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(

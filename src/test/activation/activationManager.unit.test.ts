@@ -9,7 +9,7 @@ import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { IExperimentsManager, IExtensionActivationService } from '../../client/activation/types';
+import { IExtensionActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -42,7 +42,6 @@ suite('Activation - ActivationManager', () => {
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
     let interpreterService: IInterpreterService;
     let documentManager: typemoq.IMock<IDocumentManager>;
-    let experiments: typemoq.IMock<IExperimentsManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     setup(() => {
@@ -51,7 +50,6 @@ suite('Activation - ActivationManager', () => {
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
         interpreterService = mock(InterpreterService);
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
-        experiments = typemoq.Mock.ofType<IExperimentsManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
@@ -60,8 +58,7 @@ suite('Activation - ActivationManager', () => {
             instance(interpreterService),
             autoSelection.object,
             appDiagnostics.object,
-            instance(workspaceService),
-            experiments.object
+            instance(workspaceService)
         );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {

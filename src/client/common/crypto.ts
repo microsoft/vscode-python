@@ -5,12 +5,11 @@
 import { injectable } from 'inversify';
 
 import { createHash, HexBase64Latin1Encoding } from 'crypto';
-import { ICryptoUtils } from './types';
+import { ICryptoUtils, IHashFormat } from './types';
 
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-
-    public async createHash(data: string, encoding: HexBase64Latin1Encoding, hashFormat: 'number' | 'string'): Promise<number | string> {
+    public createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E] {
         const hash = createHash('sha512').update(data).digest(encoding);
         return hashFormat === 'number' ? +hash : hash;
     }

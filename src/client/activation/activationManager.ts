@@ -8,11 +8,11 @@ import { TextDocument, workspace } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
-import { traceDecorators, traceError } from '../common/logger';
+import { traceDecorators } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IExperimentsManager, IExtensionActivationManager, IExtensionActivationService } from './types';
+import { IExtensionActivationManager, IExtensionActivationService } from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -25,8 +25,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) { }
 
     public dispose() {
@@ -59,11 +58,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
     protected async initialize() {
-        try {
-            await this.experiments.initialize();
-        } catch {
-            traceError('Initializing experiments failed');
-        }
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
     }
