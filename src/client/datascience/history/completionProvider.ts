@@ -34,6 +34,7 @@ import {
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
@@ -54,9 +55,13 @@ class HistoryLine implements TextLine {
     private _firstNonWhitespaceIndex : number | undefined;
     private _isEmpty : boolean | undefined;
 
-    constructor(private _contents: string, private _line: number) {
+    constructor(private _contents: string, private _line: number, private _offset: number) {
         this._range = new Range(new Position(_line, 0), new Position(_line, _contents.length));
         this._rangeWithLineBreak = new Range(this.range.start, new Position(_line, _contents.length + 1));
+    }
+
+    public get offset() : number {
+        return this._offset;
     }
     public get lineNumber(): number {
         return this._line;
@@ -89,9 +94,10 @@ class HistoryDocument implements TextDocument {
 
     private _uri : Uri;
     private _version : number = 0;
-    private _lines: TextLine[] = [];
+    private _lines: HistoryLine[] = [];
     private _contents: string = '';
     private _editOffset: number = 0;
+    private _firstEdit: boolean = true;
 
     constructor(fileName: string) {
         // The file passed in is the base Uri for where we're basing this
@@ -186,19 +192,22 @@ class HistoryDocument implements TextDocument {
     public addLines(code: string): TextDocumentContentChangeEvent[] {
         this._version += 1;
         const normalized = code.replace(/\r/g, '');
-        this._lines.splice(this._editOffset);
-        const lastIndex = this._lines.length;
-        this._contents += this._contents.length ? `\n${normalized}` : normalized;
-        this._lines = this.createLines(this._contents);
-        this._editOffset = this._lines.length;
+        const newCode = this._contents.length ? `\n${normalized}` : normalized;
+        const fromOffset = this._firstEdit ? this._editOffset : this._editOffset - 1;
+        const before = this._contents.substr(0, fromOffset);
+        const after = this._contents.substr(fromOffset);
+        const fromPosition = this.computePosition(fromOffset);
+        this._contents = `${before}${newCode}${after}`;
+        this._lines = this.createLines();
+        this._editOffset += newCode.length;
+
         return [
-            // tslint:disable-next-line: no-object-literal-type-assertion
             {
-                range: this.createSerializableRange(new Position(lastIndex, 0), new Position(this._lines.length, 0)),
-                // Range offset not passed by the editor so don't use it.
-                rangeLength: normalized.length,
-                text: normalized
-            } as TextDocumentContentChangeEvent
+                range: this.createSerializableRange(fromPosition, fromPosition),
+                rangeOffset: fromOffset,
+                rangeLength: 0, // Adds are always zero
+                text: newCode
+            }
         ];
     }
 
@@ -207,28 +216,48 @@ class HistoryDocument implements TextDocument {
 
         // Convert the range to local (and remove 1 based)
         if (editorChanges && editorChanges.length) {
-            const fromLine = editorChanges[0].range.startLineNumber - 1 + this._editOffset;
-            const toLine = editorChanges[0].range.endLineNumber - 1 + this._editOffset;
-            const fromChar = editorChanges[0].range.startColumn - 1;
-            const toChar = editorChanges[0].range.endColumn - 1;
+            const normalized = editorChanges[0].text.replace(/\r/g, '');
 
-            // Recreate our contents, and then recompute all of our lines
-            const fromOffset = this.convertToOffset(new Position(fromLine, fromChar));
-            const toOffset = this.convertToOffset(new Position(toLine, toChar));
-            const before = this._contents.substr(0, fromOffset);
-            const after = this._contents.substr(toOffset);
-            this._contents = `${before}${editorChanges[0].text}${after}`;
-            this._lines = this.createLines(this._contents);
+            // Special case. If this is our first edit, update our edit offset and
+            // add a newline on the front of whatever was typed.
+            if (this._firstEdit) {
+                this._firstEdit = false;
+                const fromOffset = this._editOffset;
+                const newText = `\n${normalized}`;
+                this._editOffset += 1;
+                this._contents += newText;
+                this._lines = this.createLines();
+                return [
+                    {
+                        range: this.createSerializableRange(this.computePosition(fromOffset), this.computePosition(fromOffset + newText.length)),
+                        rangeOffset: fromOffset,
+                        rangeLength: editorChanges[0].rangeLength,
+                        text: newText
+                    }
+                ];
+            } else {
+                // Otherwise offset by the editOffset
+                const editPos = this.computePosition(this._editOffset);
+                const from = new Position(editPos.line + editorChanges[0].range.startLineNumber - 1, editorChanges[0].range.startColumn - 1);
+                const to = new Position(editPos.line + editorChanges[0].range.endLineNumber - 1, editorChanges[0].range.endColumn - 1);
+                const fromOffset = this.convertToOffset(from);
+                const toOffset = this.convertToOffset(to);
 
-            return [
-                // tslint:disable-next-line: no-object-literal-type-assertion
-                {
-                     range: this.createSerializableRange(new Position(fromLine, fromChar), new Position(toLine, toChar)),
-                     // Range offset not passed by the editor so don't use it.
-                     rangeLength: toOffset - fromOffset,
-                     text: editorChanges[0].text
-                } as TextDocumentContentChangeEvent
-            ];
+                // Recreate our contents, and then recompute all of our lines
+                const before = this._contents.substr(0, fromOffset);
+                const after = this._contents.substr(toOffset);
+                this._contents = `${before}${normalized}${after}`;
+                this._lines = this.createLines();
+
+                return [
+                    {
+                         range: this.createSerializableRange(from, to),
+                         rangeOffset: fromOffset,
+                         rangeLength: toOffset - fromOffset,
+                         text: normalized
+                    }
+                ];
+            }
         }
 
         return [];
@@ -236,29 +265,43 @@ class HistoryDocument implements TextDocument {
 
     public convertToDocumentPosition(line: number, ch: number) : Position {
         // Monaco is 1 based, and we need to add in our cell offset.
-        return new Position(line - 1 + this._editOffset, ch - 1);
+        const editLine = this.computePosition(this._editOffset);
+        const docLine = line - 1 + editLine.line;
+        const docCh = ch - 1;
+        return new Position(docLine, docCh);
     }
 
-    private createLines(contents: string) : TextLine[] {
-        // Remove empty lines off the end
-        let endPos = contents.length - 1;
-        while (endPos >= 0 && contents[endPos] === '\n') {
-            endPos -= 1;
+    private computePosition(offset: number) : Position {
+        let line = 0;
+        let ch = 0;
+        while (line + 1 < this._lines.length && this._lines[line + 1].offset <= offset) {
+            line += 1;
         }
-        const split = contents.slice(0, endPos).splitLines({trim: false, removeEmptyEntries: false});
-        return split.map((s, i) => this.createTextLine(s, i));
+        if (line < this._lines.length) {
+            ch = offset - this._lines[line].offset;
+        }
+        return new Position(line, ch);
     }
 
-    private createTextLine(line: string, index: number) : TextLine {
-        return new HistoryLine(line, index);
+    private createLines() : HistoryLine[] {
+        const split = this._contents.splitLines({trim: false, removeEmptyEntries: false});
+        let prevLine: HistoryLine | undefined;
+        return split.map((s, i) => {
+            const nextLine = this.createTextLine(s, i, prevLine);
+            prevLine = nextLine;
+            return nextLine;
+        });
+    }
+
+    private createTextLine(line: string, index: number, prevLine: HistoryLine | undefined) : HistoryLine {
+        return new HistoryLine(line, index, prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0);
     }
 
     private convertToOffset(pos: Position) : number {
-        // Combine the text length up to this position
-        const lenUpToPos = this._lines.filter(l => l.range.start.line < pos.line).map(l => l.rangeIncludingLineBreak.end.character).reduce((p, c) => p + c, 0);
-
-        // Add on the character
-        return lenUpToPos + pos.character;
+        if (pos.line < this._lines.length) {
+            return this._lines[pos.line].offset + pos.character;
+        }
+        return this._contents.length;
     }
 
     private createSerializableRange(start: Position, end: Position) : Range {
@@ -402,13 +445,16 @@ export class CompletionProvider implements IHistoryListener {
         };
     }
     private async addCell(request: IRemoteAddCode): Promise<void> {
+        traceInfo(`history completionProvider - addCell : ${JSON.stringify(request)}`);
+
+        // Broadcast an update to the language server
+        const languageClient = await this.getLanguageClient(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
+
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
             changes = this.document.addLines(request.code);
         }
 
-        // Broadcast an update to the language server
-        const languageClient = await this.getLanguageClient(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
         if (languageClient && this.document) {
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;
@@ -419,13 +465,17 @@ export class CompletionProvider implements IHistoryListener {
         }
     }
     private async editCell(request: IEditCell): Promise<void> {
+        traceInfo(`history completionProvider - editCell : ${JSON.stringify(request)}`);
+
+        // Need the language client first. It will create the document on startup
+        const languageClient = await this.getLanguageClient();
+
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
             changes = this.document.editLines(request.changes);
         }
 
         // Broadcast an update to the language server
-        const languageClient = await this.getLanguageClient();
         if (languageClient && this.document) {
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;

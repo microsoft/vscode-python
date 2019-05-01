@@ -50,8 +50,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     ...this.props.options
                 });
 
+            // Force the editor to behave like a unix editor as
+            // all of our code is assuming that.
+            const model = editor.getModel();
+            if (model) {
+                model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
+            }
+
             // Save the editor and the model in our state.
-            this.setState({ editor, model: editor.getModel() });
+            this.setState({ editor, model });
             if (this.props.theme) {
                 monacoEditor.editor.setTheme(this.props.theme);
             }

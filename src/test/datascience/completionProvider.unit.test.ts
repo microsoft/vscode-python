@@ -2,8 +2,16 @@
 // Licensed under the MIT License.
 'use strict';
 import { expect } from 'chai';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, DiagnosticCollection, Disposable, Event, OutputChannel, TextDocument } from 'vscode';
+import {
+    CancellationToken,
+    DiagnosticCollection,
+    Disposable,
+    Event,
+    OutputChannel,
+    TextDocumentContentChangeEvent
+} from 'vscode';
 import {
     Code2ProtocolConverter,
     DynamicFeature,
@@ -26,8 +34,9 @@ import {
     RPCMessageType,
     StateChangeEvent,
     StaticFeature,
+    TextDocumentItem,
     Trace,
-    TextDocumentItem
+    VersionedTextDocumentIdentifier
 } from 'vscode-languageclient';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
@@ -44,6 +53,7 @@ import { noop } from '../core';
 class MockLanguageClient extends LanguageClient {
     private notificationPromise : Deferred<void> | undefined;
     private contents : string = '';
+    private versionId: number | null = 0;
 
     public waitForNotification() : Promise<void> {
         this.notificationPromise = createDeferred();
@@ -53,6 +63,10 @@ class MockLanguageClient extends LanguageClient {
     // Returns the current contents of the document being built by the completion provider calls
     public getDocumentContents() : string {
         return this.contents;
+    }
+
+    public getVersionId() : number | null {
+        return this.versionId;
     }
 
     public stop(): Thenable<void> {
@@ -87,6 +101,16 @@ class MockLanguageClient extends LanguageClient {
                 const item = params.textDocument as TextDocumentItem;
                 if (item) {
                     this.contents = item.text;
+                    this.versionId = item.version;
+                }
+                break;
+
+            case 'textDocument/didChange':
+                const id = params.textDocument as VersionedTextDocumentIdentifier;
+                const changes = params.contentChanges as TextDocumentContentChangeEvent[];
+                if (id && changes) {
+                    this.applyChanges(changes);
+                    this.versionId = id.version;
                 }
                 break;
 
@@ -173,8 +197,17 @@ class MockLanguageClient extends LanguageClient {
     protected registerBuiltinFeatures(): void {
         noop();
     }
+
+    private applyChanges(changes: TextDocumentContentChangeEvent[]) {
+        changes.forEach(c => {
+            const before = this.contents.substr(0, c.rangeOffset);
+            const after = this.contents.substr(c.rangeOffset + c.rangeLength);
+            this.contents = `${before}${c.text}${after}`;
+        });
+    }
 }
 
+// tslint:disable-next-line: max-func-body-length
 suite('DataScience CompletionProvider Unit Tests', () => {
     let completionProvider: IHistoryListener;
     let languageServer: TypeMoq.IMock<ILanguageServer>;
@@ -207,8 +240,126 @@ suite('DataScience CompletionProvider Unit Tests', () => {
         return sendMessage(HistoryMessages.RemoteAddCode, { code, file: 'foo.py', line: 0, id: '1', originator: '1'});
     }
 
+    function addCode(code: string, line: number, pos: number, offset: number) : Promise<void> {
+        if (!line || !pos) {
+            throw new Error('Invalid line or position data');
+        }
+        const change: monacoEditor.editor.IModelContentChange = {
+            range: {
+                startLineNumber: line,
+                startColumn: pos,
+                endLineNumber: line,
+                endColumn: pos
+            },
+            rangeOffset: offset,
+            rangeLength: 0,
+            text: code
+        };
+        return sendMessage(HistoryMessages.EditCell, { changes: [change]});
+    }
+
+    function removeCode(line: number, startPos: number, endPos: number, length: number) : Promise<void> {
+        if (!line || !startPos || !endPos) {
+            throw new Error('Invalid line or position data');
+        }
+        const change: monacoEditor.editor.IModelContentChange = {
+            range: {
+                startLineNumber: line,
+                startColumn: startPos,
+                endLineNumber: line,
+                endColumn: endPos
+            },
+            rangeOffset: startPos,
+            rangeLength: length,
+            text: ''
+        };
+        return sendMessage(HistoryMessages.EditCell, { changes: [change]});
+    }
+
     test('Add a single cell', async () => {
+        await addCell('import sys\n\n');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n\n', 'Document not set');
+    });
+
+    test('Add two cells', async () => {
         await addCell('import sys');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys', 'Document not set after double');
+    });
+
+    test('Add a cell and edit', async () => {
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('i', 1, 1, 0);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\ni', 'Document not set after edit');
+        await addCode('m', 1, 2, 1);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nim', 'Document not set after edit');
+        await addCode('\n', 1, 3, 2);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nim\n', 'Document not set after edit');
+    });
+
+    test('Add a cell and remove', async () => {
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('i', 1, 1, 0);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\ni', 'Document not set after edit');
+        await removeCode(1, 1, 2, 1);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set after edit');
+        await addCode('\n', 1, 1, 0);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n\n', 'Document not set after edit');
+    });
+
+    test('Remove a section in the middle', async () => {
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('import os', 1, 1, 0);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport os', 'Document not set after edit');
+        await removeCode(1, 4, 7, 4);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimp os', 'Document not set after edit');
+    });
+
+    test('Remove a bunch in a row', async () => {
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('p', 1, 1, 0);
+        await addCode('r', 1, 2, 1);
+        await addCode('i', 1, 3, 2);
+        await addCode('n', 1, 4, 3);
+        await addCode('t', 1, 5, 4);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nprint', 'Document not set after edit');
+        await removeCode(1, 5, 6, 1);
+        await removeCode(1, 4, 5, 1);
+        await removeCode(1, 3, 4, 1);
+        await removeCode(1, 2, 3, 1);
+        await removeCode(1, 1, 2, 1);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set after edit');
+    });
+    test('Remove from a line', async () => {
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('s', 1, 1, 0);
+        await addCode('y', 1, 2, 1);
+        await addCode('s', 1, 3, 2);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
+        await addCode('\n', 1, 4, 3);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys\n', 'Document not set after edit');
+        await addCode('s', 2, 1, 3);
+        await addCode('y', 2, 2, 4);
+        await addCode('s', 2, 3, 5);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys\nsys', 'Document not set after edit');
+        await removeCode(1, 3, 4, 1);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsy\nsys', 'Document not set after edit');
+    });
+
+    test('Add cell after adding code', async () => {
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('s', 1, 1, 0);
+        await addCode('y', 1, 2, 1);
+        await addCode('s', 1, 3, 2);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
+        await addCell('import sys');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a second cell broken');
     });
 });
