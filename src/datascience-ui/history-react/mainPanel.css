@@ -22,7 +22,7 @@ body, html {
 }
 
 .invisible {
-    visibility: hidden;
+    visibility: hidden; 
 }
 
 .edit-panel {

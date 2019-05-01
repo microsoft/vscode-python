@@ -1,0 +1,9 @@
+.measure-width-div {
+    width: 100%;
+    visibility: none;
+}
+
+.monaco-editor-outer-container .mtk1 {
+    /* For some reason the monaco editor refuses to update this style no matter the theme. It's always black */
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+}

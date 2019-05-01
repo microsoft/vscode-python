@@ -3,14 +3,11 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
-// tslint:disable-next-line: import-name
-import MonacoEditor from 'react-monaco-editor';
 
+import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
 
 import './code.css';
-
-const LINE_HEIGHT = 18;
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -39,40 +36,19 @@ interface ICodeState {
 }
 
 export class Code extends React.Component<ICodeProps, ICodeState> {
-    private containerRef: React.RefObject<HTMLDivElement>;
-    private measureWidthRef: React.RefObject<HTMLDivElement>;
-    private resizeTimer?: number;
     private subscriptions: monacoEditor.IDisposable[] = [];
     private lastCleanVersionId: number = 0;
 
     constructor(prop: ICodeProps) {
         super(prop);
         this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: '', allowWatermark: true, editor: undefined, model: null};
-        this.containerRef = React.createRef<HTMLDivElement>();
-        this.measureWidthRef = React.createRef<HTMLDivElement>();
-    }
-
-    public componentDidMount = () => {
-        if (window) {
-            window.addEventListener('resize', this.windowResized);
-        }
-        this.updateEditorSize();
     }
 
     public componentWillUnmount = () => {
-        if (this.resizeTimer) {
-            window.clearTimeout(this.resizeTimer);
-        }
-
-        if (window) {
-            window.removeEventListener('resize', this.windowResized);
-        }
-
         this.subscriptions.forEach(d => d.dispose());
     }
 
     public componentDidUpdate = () => {
-        this.updateEditorSize();
         if (this.props.autoFocus && this.state.editor && !this.props.readOnly) {
             this.state.editor.focus();
         }
@@ -106,15 +82,14 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         };
 
         return (
-            <div className={classes} ref={this.containerRef}>
+            <div className={classes}>
                 <MonacoEditor
                     value={this.props.code}
                     theme={this.props.monacoTheme ? this.props.monacoTheme : 'vs'}
                     language='python'
-                    editorDidMount={this.editorDidMount}
+                    editorMounted={this.editorDidMount}
                     options={options}
                 />
-                <div className={'measure-width-div'} ref={this.measureWidthRef}/>
             </div>
         );
     }
@@ -141,89 +116,22 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // Listen for model changes
         this.subscriptions.push(editor.onDidChangeModelContent(this.modelChanged));
 
-        // do the initial set of the height (wait a bit)
-        this.windowResized();
-
-        // on each edit recompute height (wait a bit)
-        this.subscriptions.push(editor.onDidChangeModelDecorations(() => {
-            this.windowResized();
-        }));
-
-        this.subscriptions.push(editor.onCompositionStart(this.compositionStart));
-        this.subscriptions.push(editor.onDidFocusEditorWidget(this.focusEditorWidget));
+        // List for key up/down events.
         this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
         this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
-
-        // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
-        this.subscriptions.push(editor.onContextMenu((e) => {
-            if (this.state.editor) {
-                const domNode = this.state.editor.getDomNode();
-                const contextMenuElement = domNode ? domNode.querySelector('.monaco-menu-container') as HTMLElement : null;
-                if (contextMenuElement) {
-                  const posY = (e.event.posy + contextMenuElement.clientHeight) > window.outerHeight
-                    ? e.event.posy - contextMenuElement.clientHeight
-                    : e.event.posy;
-                  const posX = (e.event.posx + contextMenuElement.clientWidth) > window.outerWidth
-                    ? e.event.posx - contextMenuElement.clientWidth
-                    : e.event.posx;
-                  contextMenuElement.style.position = 'fixed';
-                  contextMenuElement.style.top =  `${Math.max(0, Math.floor(posY))}px`;
-                  contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
-                }
-            }
-          }));
     }
 
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
-        if (e.changes.length) {
-            this.windowResized();
-        }
         if (!this.props.readOnly) {
             this.props.onChange(e.changes);
         }
-    }
-
-    private compositionStart = () => {
-        window.console.log('comp start');
-    }
-
-    private focusEditorWidget = () => {
-        window.console.log('editor widget focus');
-    }
-
-    private updateEditorSize = () => {
-        if (this.measureWidthRef.current &&
-            this.measureWidthRef.current.clientWidth &&
-            this.containerRef.current &&
-            this.state.editor &&
-            this.state.model) {
-            const editorDomNode = this.state.editor.getDomNode();
-            if (!editorDomNode) { return; }
-            const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
-            const lineHeight = container.firstChild
-                ? (container.firstChild as HTMLElement).offsetHeight
-                : LINE_HEIGHT;
-            const currLineCount = this.state.model.getLineCount();
-            const height = (currLineCount * lineHeight) + 3; // Fudge factor
-            const width = this.measureWidthRef.current.clientWidth - this.containerRef.current.offsetLeft - 2;
-
-            // For some reason this is flashing. Need to debug the editor code to see if
-            // it draws more than once. Or if we can have React turn off DOM updates
-            this.state.editor.layout({ width: width, height: height });
-        }
-    }
-
-    private windowResized = () => {
-        if (this.resizeTimer) {
-            clearTimeout(this.resizeTimer);
-        }
-        this.resizeTimer = window.setTimeout(this.updateEditorSize, 0);
     }
 
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
         if (e.shiftKey && e.keyCode === monacoEditor.KeyCode.Enter && this.state.model && this.state.editor) {
             // Shift enter was hit
             e.stopPropagation();
+            e.preventDefault();
             window.setTimeout(this.submitContent, 0);
         } else if (e.keyCode === monacoEditor.KeyCode.UpArrow) {
             this.arrowUp(e);
@@ -236,6 +144,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         if (e.shiftKey && e.keyCode === monacoEditor.KeyCode.Enter) {
             // Shift enter was hit
             e.stopPropagation();
+            e.preventDefault();
         }
     }
 
@@ -254,6 +163,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                 this.props.history.add(content, this.state.model!.getVersionId() > this.lastCleanVersionId);
             }
 
+            // Clear our current contents since we submitted
+            this.state.model!.setValue('');
+
+            // Send to jupyter
             this.props.onSubmit(content);
         }
     }
