@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { parse, ParseOptions } from 'jsonc-parser';
 import * as requestTypes from 'request';
 import { IHttpClient } from '../../activation/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -34,6 +35,21 @@ export class HttpClient implements IHttpClient {
                     return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
                 }
                 resolve(JSON.parse(body) as T);
+            });
+        });
+    }
+    public async getJSONC<T>(uri: string, options?: ParseOptions | undefined): Promise<T> {
+        // tslint:disable-next-line:no-require-imports
+        const request = require('request') as typeof requestTypes;
+        return new Promise<T>((resolve, reject) => {
+            request(uri, this.requestOptions, (ex, response, body) => {
+                if (ex) {
+                    return reject(ex);
+                }
+                if (response.statusCode !== 200) {
+                    return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
+                }
+                resolve(parse(body, [], options) as T);
             });
         });
     }

@@ -411,7 +411,7 @@ export interface IAsyncDisposable {
 
 export const ICryptoUtils = Symbol('ICryptoUtils');
 export interface ICryptoUtils {
-    createHash(algorithm: string, data: string, encoding: string, hashFormat: 'number' | 'string'): Promise<number | string | Buffer>;
+    createHash(data: string, encoding: string, hashFormat: 'number' | 'string'): Promise<number | string>;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

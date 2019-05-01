@@ -10,8 +10,8 @@ import { ICryptoUtils } from './types';
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
 
-    public async createHash(algorithm: string, data: string, encoding: HexBase64Latin1Encoding, hashFormat: 'number' | 'string'): Promise<number | string | Buffer> {
-        const hash = createHash(algorithm).update(data).digest(encoding);
+    public async createHash(data: string, encoding: HexBase64Latin1Encoding, hashFormat: 'number' | 'string'): Promise<number | string> {
+        const hash = createHash('sha512').update(data).digest(encoding);
         return hashFormat === 'number' ? +hash : hash;
     }
 }

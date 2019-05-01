@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { ParseOptions } from 'jsonc-parser';
 import { Request as RequestResult } from 'request';
 import { SemVer } from 'semver';
 import { Event } from 'vscode';
@@ -43,6 +44,7 @@ export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
     downloadFile(uri: string): Promise<RequestResult>;
     getJSON<T>(uri: string): Promise<T>;
+    getJSONC<T>(uri: string, options?: ParseOptions | undefined): Promise<T>;
 }
 
 export type FolderVersionPair = { path: string; version: SemVer };
