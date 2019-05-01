@@ -240,11 +240,12 @@ class HistoryDocument implements TextDocument {
     }
 
     private createLines(contents: string) : TextLine[] {
-        let split = contents.splitLines({trim: false, removeEmptyEntries: false});
-        // Skip an empty last line if there is one.
-        if (split && split.length > 0 && split[split.length - 1].length === 0) {
-            split = split.slice(0, split.length - 1);
+        // Remove empty lines off the end
+        let endPos = contents.length - 1;
+        while (endPos >= 0 && contents[endPos] === '\n') {
+            endPos -= 1;
         }
+        const split = contents.slice(0, endPos).splitLines({trim: false, removeEmptyEntries: false});
         return split.map((s, i) => this.createTextLine(s, i));
     }
 
