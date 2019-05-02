@@ -20,12 +20,13 @@ import { PersistentStateFactory } from '../../client/common/persistentState';
 import { ICryptoUtils, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 
 // tslint:disable-next-line: max-func-body-length
-suite('xA/B experiments', () => {
+suite('A/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
     let appEnvironment: IApplicationEnvironment;
     let persistentStateFactory: IPersistentStateFactory;
+    let experimentStorage: TypeMoq.IMock<IPersistentState<any>>;
     let expManager: ExperimentsManager;
     setup(() => {
         workspaceService = mock(WorkspaceService);
@@ -33,91 +34,107 @@ suite('xA/B experiments', () => {
         crypto = mock(CryptoUtils);
         appEnvironment = mock(ApplicationEnvironment);
         persistentStateFactory = mock(PersistentStateFactory);
+        experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment));
     });
 
-    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
-        const settings = { globalValue: false };
+    async function testInitialization(
+        settings: { globalValue?: boolean } = {},
+        downloadError: boolean = false
+    ) {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
         workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
+        if (downloadError) {
+            when(httpClient.getJSONC(anything(), anything())).thenReject(new Error('Kaboom'));
+        } else {
+            when(httpClient.getJSONC(anything(), anything())).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
+        }
 
         await expManager.initializeInBackground();
 
         verify(workspaceService.getConfiguration('telemetry', anything())).once();
         workspaceConfig.verifyAll();
+        experimentStorage.verifyAll();
+    }
+
+    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
+        await testInitialization({ globalValue: false });
         verify(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).never();
     });
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
-        const settings = {};
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-        when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
-        experimentStorage.setup(n => n.value).returns(() => [{ name: 'exp', salt: 'salt', min: 90, max: 100 }]).verifiable(TypeMoq.Times.exactly(2));
-        when(httpClient.getJSONC(anything(), { allowTrailingComma: true, disallowComments: false })).thenResolve([{ name: 'exp', salt: 'salt', min: 90, max: 100 }]);
+        experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]).verifiable(TypeMoq.Times.exactly(2));
 
-        await expManager.initializeInBackground();
+        await testInitialization();
 
-        verify(workspaceService.getConfiguration('telemetry', anything())).once();
-        workspaceConfig.verifyAll();
-        verify(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).once();
-        experimentStorage.verifyAll();
-        verify(httpClient.getJSONC(anything(), { allowTrailingComma: true, disallowComments: false })).never();
+        verify(httpClient.getJSONC(anything(), anything())).never();
     });
 
     test('Initializing experiments downloads and stores the experiments if storage does not contain experiments', async () => {
-        const settings = {};
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-        when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
         experimentStorage.setup(n => n.value).returns(() => undefined).verifiable(TypeMoq.Times.once());
-        when(httpClient.getJSONC(anything(), anything())).thenResolve([{ name: 'exp', salt: 'salt', min: 90, max: 100 }]);
-        experimentStorage.setup(n => n.updateValue([{ name: 'exp', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+        experimentStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
 
-        await expManager.initializeInBackground();
+        await testInitialization();
 
-        verify(workspaceService.getConfiguration('telemetry', anything())).once();
-        workspaceConfig.verifyAll();
-        verify(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).once();
-        experimentStorage.verifyAll();
         verify(httpClient.getJSONC(anything(), anything())).once();
     });
 
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
-        const settings = {};
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-        when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
         experimentStorage.setup(n => n.value).returns(() => undefined).verifiable(TypeMoq.Times.once());
-        when(httpClient.getJSONC(anything(), anything())).thenReject(new Error('Kaboom'));
         experimentStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
-        await expManager.initializeInBackground();
+        await testInitialization({}, true);
 
-        verify(workspaceService.getConfiguration('telemetry', anything())).once();
-        workspaceConfig.verifyAll();
-        verify(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).once();
-        experimentStorage.verifyAll();
         verify(httpClient.getJSONC(anything(), anything())).once();
     });
-    const testsForisEnabled =
+
+    const testsForInExperiment =
+        [
+            {
+                testName: 'If experiment\'s name is not in experiment list, user is not in experiment',
+                experimentName: 'imaginary experiment',
+                hash: 223,
+                expectedResult: false
+            },
+            {
+                testName: 'If experiment\'s name is in experiment list and hash modulo output is in range, user is in experiment',
+                experimentName: 'experiment1',
+                hash: 1181,
+                expectedResult: true
+            },
+            {
+                testName: 'If experiment\'s name is in experiment list and hash modulo is less than min, user is not in experiment',
+                experimentName: 'experiment1',
+                hash: 967,
+                expectedResult: false
+            },
+            {
+                testName: 'If experiment\'s name is in experiment list and hash modulo is more than max, user is not in experiment',
+                experimentName: 'experiment1',
+                hash: 3297,
+                expectedResult: false
+            }
+        ];
+
+    testsForInExperiment.forEach(testParams => {
+        test(testParams.testName, async () => {
+            experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.exactly(2));
+
+            await testInitialization();
+
+            when(appEnvironment.machineId).thenReturn('101');
+            when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+
+            verify(httpClient.getJSONC(anything(), anything())).never();
+            expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
+        });
+    });
+
+    const testsForisTelemetryDisabled =
         [
             {
                 testName: 'Returns true when workspaceFolder setting is false',
@@ -142,7 +159,7 @@ suite('xA/B experiments', () => {
         ];
 
     suite('Function isTelemetryDisabled()', () => {
-        testsForisEnabled.forEach(testParams => {
+        testsForisTelemetryDisabled.forEach(testParams => {
             test(testParams.testName, async () => {
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
