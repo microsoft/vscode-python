@@ -87,26 +87,28 @@ export interface ISubmitNewCell {
 export interface IProvideCompletionItemsRequest {
     position: monacoEditor.Position;
     context: monacoEditor.languages.CompletionContext;
-    id: string;
+    requestId: string;
+    cellId: string;
 }
 
 export interface IProvideHoverRequest {
     position: monacoEditor.Position;
-    id: string;
+    requestId: string;
+    cellId: string;
 }
 
 export interface ICancelIntellisenseRequest {
-    id: string;
+    requestId: string;
 }
 
 export interface IProvideCompletionItemsResponse {
     list: monacoEditor.languages.CompletionList;
-    id: string;
+    requestId: string;
 }
 
 export interface IProvideHoverResponse {
     hover: monacoEditor.languages.Hover;
-    id: string;
+    requestId: string;
 }
 
 export interface IPosition {

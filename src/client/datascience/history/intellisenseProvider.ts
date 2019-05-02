@@ -32,15 +32,13 @@ import { Identifiers } from '../constants';
 import { IHistoryListener } from '../types';
 import {
     HistoryMessages,
+    IAddCell,
     ICancelIntellisenseRequest,
     IEditCell,
     IHistoryMapping,
     IProvideCompletionItemsRequest,
-    IProvideHoverRequest,
-    IRemoteAddCode,
-    IAddCell
+    IProvideHoverRequest
 } from './historyTypes';
-import { string } from 'prop-types';
 
 class HistoryLine implements TextLine {
 
@@ -81,7 +79,12 @@ class HistoryLine implements TextLine {
         }
         return this._isEmpty;
     }
+}
 
+interface ICellRange {
+    id: string;
+    start: number;
+    end: number;
 }
 
 class HistoryDocument implements TextDocument {
@@ -90,9 +93,7 @@ class HistoryDocument implements TextDocument {
     private _version : number = 0;
     private _lines: HistoryLine[] = [];
     private _contents: string = '';
-    private _editOffset: number = 0;
-    private _firstEdit: boolean = true;
-    private _cellRanges: Map<string, {startOffset: number; endOffset: number}> = new Map<string, {startOffset: number; endOffset: number}>();
+    private _cellRanges: ICellRange[] = [];
 
     constructor(fileName: string) {
         // The file passed in is the base Uri for where we're basing this
@@ -100,6 +101,9 @@ class HistoryDocument implements TextDocument {
         //
         // What about liveshare?
         this._uri = Uri.file(fileName);
+
+        // We should start our edit offset at 0. Each cell should end with a '/n'
+        this._cellRanges.push({id: Identifiers.EditCellId, start: 0, end: 0});
     }
 
     public get uri(): Uri {
@@ -185,106 +189,60 @@ class HistoryDocument implements TextDocument {
         };
     }
     public addCell(code: string, id: string): TextDocumentContentChangeEvent[] {
+        // This should only happen once for each cell.
         this._version += 1;
 
         // Get rid of windows line endings. We're normalizing on linux
         const normalized = code.replace(/\r/g, '');
 
-        // This might a collapse/expand for an existing cell or it
-        // might be new lines.
-        const cellRange = this._cellRanges.get(id);
-        if (!cellRange) {
-            // First time. This is an add. It's at the end of current code
+        // This item should go just before the edit cell
 
-            // Make sure to put a newline between this code and the previous code
-            const newCode = this._contents.length ? `\n${normalized}` : normalized;
+        // Make sure to put a newline between this code and the next code
+        const newCode = `${normalized}\n`;
 
-            // We should start before the newline for the edit offset (if an edit has happened)
-            const fromOffset = this._firstEdit ? this._editOffset : this._editOffset - 1;
+        // We should start just before the last cell.
+        const fromOffset = this._cellRanges[this._cellRanges.length - 1].start;
 
-            // Split our text between the edit text and the cells above
-            const before = this._contents.substr(0, fromOffset);
-            const after = this._contents.substr(fromOffset);
-            const fromPosition = this.computePosition(fromOffset);
+        // Split our text between the edit text and the cells above
+        const before = this._contents.substr(0, fromOffset);
+        const after = this._contents.substr(fromOffset);
+        const fromPosition = this.computePosition(fromOffset);
 
-            // Save the range for this cell ()
-            this._cellRanges.set(id, { startOffset: fromOffset, endOffset: fromOffset + newCode.length });
+        // Save the range for this cell ()
+        this._cellRanges.splice(this._cellRanges.length - 1, 0, { id, start: fromOffset, end: fromOffset + newCode.length });
 
-            // Update our entire contents and recompute our lines
-            this._contents = `${before}${newCode}${after}`;
-            this._lines = this.createLines();
-            this._editOffset += newCode.length;
+        // Update our entire contents and recompute our lines
+        this._contents = `${before}${newCode}${after}`;
+        this._lines = this.createLines();
+        this._cellRanges[this._cellRanges.length - 1].start += newCode.length;
+        this._cellRanges[this._cellRanges.length - 1].end += newCode.length;
 
-            return [
-                {
-                    range: this.createSerializableRange(fromPosition, fromPosition),
-                    rangeOffset: fromOffset,
-                    rangeLength: 0, // Adds are always zero
-                    text: newCode
-                }
-            ];
-        } else {
-            // Make sure to put a newline between this code and the previous code
-            const newCode = cellRange.startOffset !== 0 ? `\n${normalized}` : normalized;
-
-            // This cell already exists. Replace the whole thing 
-            const before = this._contents.substr(0, cellRange.startOffset);
-            const after = this._contents.substr(cellRange.endOffset);
-            const oldLength = cellRange.endOffset - cellRange.startOffset;
-            const fromPosition = this.computePosition(cellRange.startOffset);
-            const toPosition = this.computePosition(cellRange.endOffset);
-
-            // Update our entire contents and recompute our lines
-            this._contents = `${before}${newCode}${after}`;
-            this._lines = this.createLines();
-            this._editOffset += newCode.length - oldLength;
-
-            // Cell range is different now.
-            this._cellRanges.set(id, {
-                startOffset: cellRange.startOffset,
-                endOffset: cellRange.startOffset + newCode.length
-            });
-
-            return [
-                {
-                    range: this.createSerializableRange(fromPosition, toPosition),
-                    rangeOffset: cellRange.startOffset,
-                    rangeLength: cellRange.endOffset - cellRange.startOffset,
-                    text: newCode
-                }
-            ];
-
-        }
-
+        return [
+            {
+                range: this.createSerializableRange(fromPosition, fromPosition),
+                rangeOffset: fromOffset,
+                rangeLength: 0, // Adds are always zero
+                text: newCode
+            }
+        ];
     }
 
-    public edit(editorChanges: monacoEditor.editor.IModelContentChange[], _id: string): TextDocumentContentChangeEvent[] {
+    public edit(editorChanges: monacoEditor.editor.IModelContentChange[], id: string): TextDocumentContentChangeEvent[] {
         this._version += 1;
 
         // Convert the range to local (and remove 1 based)
         if (editorChanges && editorChanges.length) {
             const normalized = editorChanges[0].text.replace(/\r/g, '');
 
-            // Special case. If this is our first edit, update our edit offset and
-            // add a newline on the front of whatever was typed.
-            if (this._firstEdit) {
-                this._firstEdit = false;
-                const fromOffset = this._editOffset;
-                const newText = `\n${normalized}`;
-                this._editOffset += 1;
-                this._contents += newText;
-                this._lines = this.createLines();
-                return [
-                    {
-                        range: this.createSerializableRange(this.computePosition(fromOffset), this.computePosition(fromOffset + newText.length)),
-                        rangeOffset: fromOffset,
-                        rangeLength: editorChanges[0].rangeLength,
-                        text: newText
-                    }
-                ];
-            } else {
-                // Otherwise offset by the editOffset
-                const editPos = this.computePosition(this._editOffset);
+            // The monaco Editor doesn't know about the hidden '\n' we have between the cells. We have
+            // to account for this in our length computations.
+            const normalizedLength = id === Identifiers.EditCellId ? normalized.length : normalized.length + 1;
+
+            // Figure out which cell we're editing.
+            const cellIndex = this._cellRanges.findIndex(c => c.id === id);
+            if (cellIndex >= 0) {
+                // Line/column are within this cell. Use its offset to compute the real position
+                const editPos = this.computePosition(this._cellRanges[cellIndex].start);
                 const from = new Position(editPos.line + editorChanges[0].range.startLineNumber - 1, editorChanges[0].range.startColumn - 1);
                 const to = new Position(editPos.line + editorChanges[0].range.endLineNumber - 1, editorChanges[0].range.endColumn - 1);
                 const fromOffset = this.convertToOffset(from);
@@ -296,6 +254,16 @@ class HistoryDocument implements TextDocument {
                 this._contents = `${before}${normalized}${after}`;
                 this._lines = this.createLines();
 
+                // Update ranges after this. All should move by the diff in length, although the current one
+                // should stay at the same start point.
+                const lengthDiff = normalizedLength - (this._cellRanges[cellIndex].end - this._cellRanges[cellIndex].start);
+                for (let i = cellIndex; i < this._cellRanges.length; i += 1) {
+                    if (i !== cellIndex) {
+                        this._cellRanges[i].start += lengthDiff;
+                    }
+                    this._cellRanges[i].end += lengthDiff;
+                }
+
                 return [
                     {
                          range: this.createSerializableRange(from, to),
@@ -304,18 +272,26 @@ class HistoryDocument implements TextDocument {
                          text: normalized
                     }
                 ];
+
             }
         }
 
         return [];
     }
 
-    public convertToDocumentPosition(line: number, ch: number) : Position {
+    public convertToDocumentPosition(id: string, line: number, ch: number) : Position {
         // Monaco is 1 based, and we need to add in our cell offset.
-        const editLine = this.computePosition(this._editOffset);
-        const docLine = line - 1 + editLine.line;
-        const docCh = ch - 1;
-        return new Position(docLine, docCh);
+        const cellIndex = this._cellRanges.findIndex(c => c.id === id);
+        if (cellIndex >= 0) {
+            // Line/column are within this cell. Use its offset to compute the real position
+            const editLine = this.computePosition(this._cellRanges[cellIndex].start);
+            const docLine = line - 1 + editLine.line;
+            const docCh = ch - 1;
+            return new Position(docLine, docCh);
+        }
+
+        // We can't find a cell that matches. Just remove the 1 based
+        return new Position(line - 1, ch - 1);
     }
 
     private computePosition(offset: number) : Position {
@@ -440,31 +416,31 @@ export class IntellisenseProvider implements IHistoryListener {
     }
 
     private handleCancel(request: ICancelIntellisenseRequest) {
-        const cancelSource = this.cancellationSources.get(request.id);
+        const cancelSource = this.cancellationSources.get(request.requestId);
         if (cancelSource) {
             cancelSource.cancel();
             cancelSource.dispose();
-            this.cancellationSources.delete(request.id);
+            this.cancellationSources.delete(request.requestId);
         }
     }
 
     private handleCompletionItemsRequest(request: IProvideCompletionItemsRequest) {
         const cancelSource = new CancellationTokenSource();
-        this.cancellationSources.set(request.id, cancelSource);
-        this.provideCompletionItems(request.position, request.context, cancelSource.token).then(list => {
-             this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, id: request.id});
+        this.cancellationSources.set(request.requestId, cancelSource);
+        this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token).then(list => {
+             this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, requestId: request.requestId});
         }).catch(_e => {
-            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }, id: request.id});
+            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }, requestId: request.requestId});
         });
     }
 
     private handleHoverRequest(request: IProvideHoverRequest) {
         const cancelSource = new CancellationTokenSource();
-        this.cancellationSources.set(request.id, cancelSource);
-        this.provideHover(request.position, cancelSource.token).then(hover => {
-             this.postResponse(HistoryMessages.ProvideHoverResponse, {hover, id: request.id});
+        this.cancellationSources.set(request.requestId, cancelSource);
+        this.provideHover(request.position, request.cellId, cancelSource.token).then(hover => {
+             this.postResponse(HistoryMessages.ProvideHoverResponse, {hover, requestId: request.requestId});
         }).catch(_e => {
-            this.postResponse(HistoryMessages.ProvideHoverResponse, {hover: { contents: [] }, id: request.id});
+            this.postResponse(HistoryMessages.ProvideHoverResponse, {hover: { contents: [] }, requestId: request.requestId});
         });
     }
 
@@ -499,10 +475,10 @@ export class IntellisenseProvider implements IHistoryListener {
         this.document = new HistoryDocument(dummyFilePath);
     }
 
-    private async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+    private async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
         const languageClient = await this.getLanguageClient();
         if (languageClient && this.document) {
-            const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
+            const docPos = this.document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.CompletionRequest.type,
                 languageClient.code2ProtocolConverter.asCompletionParams(this.document, docPos, context),
@@ -515,10 +491,10 @@ export class IntellisenseProvider implements IHistoryListener {
             incomplete: true
         };
     }
-    private async provideHover(position: monacoEditor.Position, token: CancellationToken) : Promise<monacoEditor.languages.Hover> {
+    private async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.Hover> {
         const languageClient = await this.getLanguageClient();
         if (languageClient && this.document) {
-            const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
+            const docPos = this.document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.HoverRequest.type,
                 languageClient.code2ProtocolConverter.asTextDocumentPositionParams(this.document, docPos),

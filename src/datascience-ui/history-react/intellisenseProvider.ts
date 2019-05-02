@@ -23,7 +23,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
     private registerDisposables: monacoEditor.IDisposable[] = [];
-    constructor(private postOffice: PostOffice) {
+    constructor(private postOffice: PostOffice, private getCellId: (modelId: string) => string) {
         // Register a completion provider
         this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
@@ -31,41 +31,41 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     }
 
     public provideCompletionItems(
-        _model: monacoEditor.editor.ITextModel,
+        model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         context: monacoEditor.languages.CompletionContext,
         token: monacoEditor.CancellationToken): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionList> {
 
         // Emit a new request
-        const id = uuid();
+        const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.CompletionList>();
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { id });
+            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { requestId });
         });
 
-        this.completionRequests.set(id, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { position, context, id });
+        this.completionRequests.set(requestId, { promise, cancelDisposable });
+        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
 
         return promise.promise;
     }
 
     public provideHover(
-        _model: monacoEditor.editor.ITextModel,
+        model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         token: monacoEditor.CancellationToken) : monacoEditor.languages.ProviderResult<monacoEditor.languages.Hover> {
         // Emit a new request
-        const id = uuid();
+        const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.Hover>();
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { id });
+            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { requestId });
         });
 
-        this.hoverRequests.set(id, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideHoverRequest, { position, id });
+        this.hoverRequests.set(requestId, { promise, cancelDisposable });
+        this.sendMessage(HistoryMessages.ProvideHoverRequest, { position, requestId, cellId: this.getCellId(model.id) });
 
         return promise.promise;
     }
@@ -107,7 +107,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
             const response = payload as IProvideCompletionItemsResponse;
 
             // Resolve our waiting promise if we have one
-            const waiting = this.completionRequests.get(response.id);
+            const waiting = this.completionRequests.get(response.requestId);
             if (waiting) {
                 waiting.promise.resolve(response.list);
             }
@@ -120,7 +120,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
             const response = payload as IProvideHoverResponse;
 
             // Resolve our waiting promise if we have one
-            const waiting = this.hoverRequests.get(response.id);
+            const waiting = this.hoverRequests.get(response.requestId);
             if (waiting) {
                 waiting.promise.resolve(response.hover);
             }

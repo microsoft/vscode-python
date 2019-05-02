@@ -43,11 +43,11 @@ import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/ac
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { IntellisenseProvider } from '../../client/datascience/history/intellisenseProvider';
 import { IHistoryListener } from '../../client/datascience/types';
 import { noop } from '../core';
-import { Identifiers } from '../../client/datascience/constants';
 
 // tslint:disable:no-any unified-signatures
 
@@ -241,6 +241,22 @@ suite('DataScience Intellisense Unit Tests', () => {
         return sendMessage(HistoryMessages.AddCell, { text: code, file: 'foo.py', id });
     }
 
+    function updateCell(newCode: string, oldCode: string, id: string) : Promise<void> {
+        const oldSplit = oldCode.split('\n');
+        const change: monacoEditor.editor.IModelContentChange = {
+            range: {
+                startLineNumber: 1,
+                startColumn: 1,
+                endLineNumber: oldSplit.length,
+                endColumn: oldSplit[oldSplit.length - 1].length + 1
+            },
+            rangeOffset: 0,
+            rangeLength: oldCode.length,
+            text: newCode
+        };
+        return sendMessage(HistoryMessages.EditCell, { changes: [change], id});
+    }
+
     function addCode(code: string, line: number, pos: number, offset: number) : Promise<void> {
         if (!line || !pos) {
             throw new Error('Invalid line or position data');
@@ -279,19 +295,19 @@ suite('DataScience Intellisense Unit Tests', () => {
 
     test('Add a single cell', async () => {
         await addCell('import sys\n\n', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n\n', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n\n\n', 'Document not set');
     });
 
     test('Add two cells', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCell('import sys', '2');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys', 'Document not set after double');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\n', 'Document not set after double');
     });
 
     test('Add a cell and edit', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('i', 1, 1, 0);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\ni', 'Document not set after edit');
         await addCode('m', 1, 2, 1);
@@ -302,7 +318,7 @@ suite('DataScience Intellisense Unit Tests', () => {
 
     test('Add a cell and remove', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('i', 1, 1, 0);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\ni', 'Document not set after edit');
         await removeCode(1, 1, 2, 1);
@@ -313,7 +329,7 @@ suite('DataScience Intellisense Unit Tests', () => {
 
     test('Remove a section in the middle', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('import os', 1, 1, 0);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport os', 'Document not set after edit');
         await removeCode(1, 4, 7, 4);
@@ -322,7 +338,7 @@ suite('DataScience Intellisense Unit Tests', () => {
 
     test('Remove a bunch in a row', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('p', 1, 1, 0);
         await addCode('r', 1, 2, 1);
         await addCode('i', 1, 3, 2);
@@ -338,7 +354,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     });
     test('Remove from a line', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('s', 1, 1, 0);
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
@@ -355,7 +371,7 @@ suite('DataScience Intellisense Unit Tests', () => {
 
     test('Add cell after adding code', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('s', 1, 1, 0);
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
@@ -364,16 +380,25 @@ suite('DataScience Intellisense Unit Tests', () => {
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a second cell broken');
     });
 
+    test('Collapse expand cell', async () => {
+        await addCell('import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
+        await updateCell('import sys\nsys.version_info', 'import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\n', 'Readding a cell broken');
+        await updateCell('import sys', 'import sys\nsys.version_info', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Collapsing a cell broken');
+    });
+
     test('Collapse expand cell after adding code', async () => {
         await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await addCode('s', 1, 1, 0);
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
-        await addCell('import sys\nsys.version_info', '1');
+        await updateCell('import sys\nsys.version_info', 'import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\nsys', 'Readding a cell broken');
-        await addCell('import sys', '1');
+        await updateCell('import sys', 'import sys\nsys.version_info', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Collapsing a cell broken');
     });
 });

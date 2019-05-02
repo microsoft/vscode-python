@@ -3,7 +3,6 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';

@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './mainPanel.css';
-
 import { min } from 'lodash';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import * as uuid from 'uuid/v4';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
+import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -25,6 +25,8 @@ import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { initializeTokenizer } from './tokenizer';
 import { VariableExplorer } from './variableExplorer';
+
+import './mainPanel.css';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -46,6 +48,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;
+    private monacoIdToCellId: Map<string, string> = new Map<string, string>();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -75,7 +78,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.styleInjectorRef = React.createRef<StyleInjector>();
 
         // Setup the completion provider for monaco. We only need one
-        this.intellisenseProvider = new IntellisenseProvider(this.postOffice);
+        this.intellisenseProvider = new IntellisenseProvider(this.postOffice, this.getCellId);
 
         // Setup the tokenizer for monaco if running inside of vscode
         if (this.props.skipDefault) {
@@ -295,7 +298,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         delete={noop}
-                        onCodeCreated={noop}
+                        onCodeCreated={this.editableCodeCreated}
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}
                     />
@@ -362,8 +365,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             deleteCell: this.deleteCell,
             skipNextScroll: this.state.skipNextScroll ? true : false,
             monacoTheme: this.state.monacoTheme,
-            onCodeCreated: this.codeCreated,
-            onCodeChange: this.codeChange,
+            onCodeCreated: this.readOnlyCodeCreated,
+            onCodeChange: this.codeChange
         };
     }
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
@@ -839,6 +842,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
             editCell = this.alterCellVM(editCell, true, !collapseInputs);
 
+            // Generate a new id (as the edit cell always has the same one)
+            editCell.cell.id = uuid();
+
             // Indicate this is direct input so that we don't hide it if the user has
             // hide all inputs turned on.
             editCell.directInput = true;
@@ -908,14 +914,32 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string) => {
+    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, _modelId: string) => {
         // Pass this onto the completion provider running in the extension
         this.sendMessage(HistoryMessages.EditCell, { changes, id });
     }
 
-    private codeCreated = (text: string, file: string, id: string) => {
+    private readOnlyCodeCreated = (text: string, file: string, id: string, monacoId: string) => {
         // Pass this onto the completion provider running in the extension
         this.sendMessage(HistoryMessages.AddCell, { text, file, id });
+
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private editableCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private getCellId = (monacoId: string) : string => {
+        const result = this.monacoIdToCellId.get(monacoId);
+        if (result) {
+            return result;
+        }
+
+        // Just assume it's the edit cell if not found.
+        return Identifiers.EditCellId;
     }
 
     // tslint:disable-next-line: no-any

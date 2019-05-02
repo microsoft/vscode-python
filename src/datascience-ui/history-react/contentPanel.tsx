@@ -24,8 +24,8 @@ export interface IContentPanelProps {
     monacoTheme: string | undefined;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
-    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], id: string): void;
-    onCodeCreated(code: string, file: string, id: string): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
+    onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {

@@ -10,7 +10,6 @@ import { InputHistory } from './inputHistory';
 import './code.css';
 
 export interface ICodeProps {
-    id: string;
     autoFocus: boolean;
     code : string;
     codeTheme: string;
@@ -21,8 +20,8 @@ export interface ICodeProps {
     showWatermark: boolean;
     monacoTheme: string | undefined;
     onSubmit(code: string): void;
-    onCreated(code: string, id: string): void;
-    onChange(changes: monacoEditor.editor.IModelContentChange[], id: string): void;
+    onCreated(code: string, modelId: string): void;
+    onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
 }
 
 interface ICodeState {
@@ -112,6 +111,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
         // Update our state
+        const model = editor.getModel();
         this.setState({ editor, model: editor.getModel() });
 
         // Listen for model changes
@@ -122,12 +122,12 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
 
         // Indicate we're ready
-        this.props.onCreated(this.props.code, this.props.id);
+        this.props.onCreated(this.props.code, model!.id);
     }
 
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
-        if (this.state.model && !this.props.readOnly) {
-            this.props.onChange(e.changes, this.props.id);
+        if (this.state.model) {
+            this.props.onChange(e.changes, this.state.model.id);
         }
     }
 

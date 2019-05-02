@@ -43,8 +43,8 @@ interface ICellProps {
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
-    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], id: string): void;
-    onCodeCreated(code: string, file: string, id: string): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
+    onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
 }
 
 export interface ICellViewModel {
@@ -222,10 +222,9 @@ export class Cell extends React.Component<ICellProps> {
                         showWatermark={this.props.showWatermark}
                         onSubmit={this.props.submitNewCode}
                         ref={this.updateCodeRef}
-                        onChange={this.props.onCodeChange}
+                        onChange={this.onCodeChange}
                         onCreated={this.onCodeCreated}
                         monacoTheme={this.props.monacoTheme}
-                        id={this.props.cellVM.cell.id}
                         />
                 </div>
             );
@@ -234,8 +233,12 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
-    private onCodeCreated = (code: string, id: string) => {
-        this.props.onCodeCreated(code, this.props.cellVM.cell.file, id);
+    private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], modelId: string) => {
+        this.props.onCodeChange(changes, this.props.cellVM.cell.id, modelId);
+    }
+
+    private onCodeCreated = (code: string, modelId: string) => {
+        this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
     }
 
     private getCursorType = () : string => {
