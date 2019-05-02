@@ -94,7 +94,7 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
                 outputs: [],
                 source: ''
             },
-            id: uuid(),
+            id: Identifiers.EditCellId,
             file: Identifiers.EmptyFileName,
             line: 0,
             state: CellState.editing

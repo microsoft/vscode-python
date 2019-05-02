@@ -40,6 +40,10 @@ export namespace HistoryMessages {
     export const ProvideCompletionItemsRequest = 'provide_completion_items_request';
     export const CancelCompletionItemsRequest = 'cancel_completion_items_request';
     export const ProvideCompletionItemsResponse = 'provide_completion_items_response';
+    export const ProvideHoverRequest = 'provide_hover_request';
+    export const CancelHoverRequest = 'cancel_hover_request';
+    export const ProvideHoverResponse = 'provide_hover_response';
+    export const AddCell = 'add_cell';
     export const EditCell = 'edit_cell';
     export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
@@ -86,12 +90,22 @@ export interface IProvideCompletionItemsRequest {
     id: string;
 }
 
-export interface ICancelCompletionItemsRequest {
+export interface IProvideHoverRequest {
+    position: monacoEditor.Position;
+    id: string;
+}
+
+export interface ICancelIntellisenseRequest {
     id: string;
 }
 
 export interface IProvideCompletionItemsResponse {
     list: monacoEditor.languages.CompletionList;
+    id: string;
+}
+
+export interface IProvideHoverResponse {
+    hover: monacoEditor.languages.Hover;
     id: string;
 }
 
@@ -102,6 +116,13 @@ export interface IPosition {
 
 export interface IEditCell {
     changes: monacoEditor.editor.IModelContentChange[];
+    id: string;
+}
+
+export interface IAddCell {
+    text: string;
+    file: string;
+    id: string;
 }
 
 // Map all messages to specific payloads
@@ -139,8 +160,12 @@ export class IHistoryMapping {
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
     public [HistoryMessages.ProvideCompletionItemsRequest] : IProvideCompletionItemsRequest;
-    public [HistoryMessages.CancelCompletionItemsRequest] : ICancelCompletionItemsRequest;
+    public [HistoryMessages.CancelCompletionItemsRequest] : ICancelIntellisenseRequest;
     public [HistoryMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
+    public [HistoryMessages.ProvideHoverRequest] : IProvideHoverRequest;
+    public [HistoryMessages.CancelHoverRequest] : ICancelIntellisenseRequest;
+    public [HistoryMessages.ProvideHoverResponse] : IProvideHoverResponse;
+    public [HistoryMessages.AddCell] : IAddCell;
     public [HistoryMessages.EditCell] : IEditCell;
     public [HistoryMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;

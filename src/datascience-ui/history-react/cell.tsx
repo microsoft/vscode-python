@@ -43,7 +43,8 @@ interface ICellProps {
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
-    onCodeChange(changes: monacoEditor.editor.IModelContentChange[]): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], id: string): void;
+    onCodeCreated(code: string, file: string, id: string): void;
 }
 
 export interface ICellViewModel {
@@ -220,16 +221,21 @@ export class Cell extends React.Component<ICellProps> {
                         readOnly={!this.props.cellVM.editable}
                         showWatermark={this.props.showWatermark}
                         onSubmit={this.props.submitNewCode}
-                        onChangeLineCount={this.onChangeLineCount}
                         ref={this.updateCodeRef}
                         onChange={this.props.onCodeChange}
+                        onCreated={this.onCodeCreated}
                         monacoTheme={this.props.monacoTheme}
+                        id={this.props.cellVM.cell.id}
                         />
                 </div>
             );
         } else {
             return null;
         }
+    }
+
+    private onCodeCreated = (code: string, id: string) => {
+        this.props.onCodeCreated(code, this.props.cellVM.cell.file, id);
     }
 
     private getCursorType = () : string => {
@@ -448,9 +454,5 @@ export class Cell extends React.Component<ICellProps> {
         }
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
-    }
-
-    private onChangeLineCount = (_lineCount: number) => {
-        // Ignored for now. Might use this to update the . next to the code lines
     }
 }

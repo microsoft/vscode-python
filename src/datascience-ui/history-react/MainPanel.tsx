@@ -18,10 +18,10 @@ import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
-import { CompletionProvider } from './completionProvider';
 import { ContentPanel, IContentPanelProps } from './contentPanel';
 import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
+import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { initializeTokenizer } from './tokenizer';
 import { VariableExplorer } from './variableExplorer';
@@ -43,7 +43,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private styleInjectorRef: React.RefObject<StyleInjector>;
     private currentExecutionCount: number = 0;
     private postOffice: PostOffice = new PostOffice();
-    private completionProvider: CompletionProvider;
+    private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;
 
@@ -75,7 +75,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.styleInjectorRef = React.createRef<StyleInjector>();
 
         // Setup the completion provider for monaco. We only need one
-        this.completionProvider = new CompletionProvider(this.postOffice);
+        this.intellisenseProvider = new IntellisenseProvider(this.postOffice);
 
         // Setup the tokenizer for monaco if running inside of vscode
         if (this.props.skipDefault) {
@@ -103,7 +103,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.removeHandler(this);
 
         // Get rid of our completion provider
-        this.completionProvider.dispose();
+        this.intellisenseProvider.dispose();
 
         // Get rid of our post office
         this.postOffice.dispose();
@@ -295,6 +295,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         delete={noop}
+                        onCodeCreated={noop}
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}
                     />
@@ -360,7 +361,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             gotoCellCode: this.gotoCellCode,
             deleteCell: this.deleteCell,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            monacoTheme: this.state.monacoTheme
+            monacoTheme: this.state.monacoTheme,
+            onCodeCreated: this.codeCreated,
+            onCodeChange: this.codeChange,
         };
     }
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
@@ -905,9 +908,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private codeChange = (changes: monacoEditor.editor.IModelContentChange[]) => {
+    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string) => {
         // Pass this onto the completion provider running in the extension
-        this.sendMessage(HistoryMessages.EditCell, { changes });
+        this.sendMessage(HistoryMessages.EditCell, { changes, id });
+    }
+
+    private codeCreated = (text: string, file: string, id: string) => {
+        // Pass this onto the completion provider running in the extension
+        this.sendMessage(HistoryMessages.AddCell, { text, file, id });
     }
 
     // tslint:disable-next-line: no-any

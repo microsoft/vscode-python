@@ -43,10 +43,11 @@ import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/ac
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { CompletionProvider } from '../../client/datascience/history/completionProvider';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
+import { IntellisenseProvider } from '../../client/datascience/history/intellisenseProvider';
 import { IHistoryListener } from '../../client/datascience/types';
 import { noop } from '../core';
+import { Identifiers } from '../../client/datascience/constants';
 
 // tslint:disable:no-any unified-signatures
 
@@ -208,8 +209,8 @@ class MockLanguageClient extends LanguageClient {
 }
 
 // tslint:disable-next-line: max-func-body-length
-suite('DataScience CompletionProvider Unit Tests', () => {
-    let completionProvider: IHistoryListener;
+suite('DataScience Intellisense Unit Tests', () => {
+    let intellisenseProvider: IHistoryListener;
     let languageServer: TypeMoq.IMock<ILanguageServer>;
     let analysisOptions: TypeMoq.IMock<ILanguageServerAnalysisOptions>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -227,17 +228,17 @@ suite('DataScience CompletionProvider Unit Tests', () => {
         analysisOptions.setup(a => a.getAnalysisOptions()).returns(() => Promise.resolve({}));
         languageServer.setup(l => l.languageClient).returns(() => languageClient);
 
-        completionProvider = new CompletionProvider(languageServer.object, analysisOptions.object, workspaceService.object, fileSystem.object);
+        intellisenseProvider = new IntellisenseProvider(languageServer.object, analysisOptions.object, workspaceService.object, fileSystem.object);
     });
 
     function sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
         const result = languageClient.waitForNotification();
-        completionProvider.onMessage(type.toString(), payload);
+        intellisenseProvider.onMessage(type.toString(), payload);
         return result;
     }
 
-    function addCell(code: string) : Promise<void> {
-        return sendMessage(HistoryMessages.RemoteAddCode, { code, file: 'foo.py', line: 0, id: '1', originator: '1'});
+    function addCell(code: string, id: string) : Promise<void> {
+        return sendMessage(HistoryMessages.AddCell, { text: code, file: 'foo.py', id });
     }
 
     function addCode(code: string, line: number, pos: number, offset: number) : Promise<void> {
@@ -255,7 +256,7 @@ suite('DataScience CompletionProvider Unit Tests', () => {
             rangeLength: 0,
             text: code
         };
-        return sendMessage(HistoryMessages.EditCell, { changes: [change]});
+        return sendMessage(HistoryMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
     }
 
     function removeCode(line: number, startPos: number, endPos: number, length: number) : Promise<void> {
@@ -273,23 +274,23 @@ suite('DataScience CompletionProvider Unit Tests', () => {
             rangeLength: length,
             text: ''
         };
-        return sendMessage(HistoryMessages.EditCell, { changes: [change]});
+        return sendMessage(HistoryMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
     }
 
     test('Add a single cell', async () => {
-        await addCell('import sys\n\n');
+        await addCell('import sys\n\n', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\n\n', 'Document not set');
     });
 
     test('Add two cells', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
-        await addCell('import sys');
+        await addCell('import sys', '2');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys', 'Document not set after double');
     });
 
     test('Add a cell and edit', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
         await addCode('i', 1, 1, 0);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\ni', 'Document not set after edit');
@@ -300,7 +301,7 @@ suite('DataScience CompletionProvider Unit Tests', () => {
     });
 
     test('Add a cell and remove', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
         await addCode('i', 1, 1, 0);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\ni', 'Document not set after edit');
@@ -311,7 +312,7 @@ suite('DataScience CompletionProvider Unit Tests', () => {
     });
 
     test('Remove a section in the middle', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
         await addCode('import os', 1, 1, 0);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport os', 'Document not set after edit');
@@ -320,7 +321,7 @@ suite('DataScience CompletionProvider Unit Tests', () => {
     });
 
     test('Remove a bunch in a row', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
         await addCode('p', 1, 1, 0);
         await addCode('r', 1, 2, 1);
@@ -336,7 +337,7 @@ suite('DataScience CompletionProvider Unit Tests', () => {
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set after edit');
     });
     test('Remove from a line', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
         await addCode('s', 1, 1, 0);
         await addCode('y', 1, 2, 1);
@@ -353,13 +354,26 @@ suite('DataScience CompletionProvider Unit Tests', () => {
     });
 
     test('Add cell after adding code', async () => {
-        await addCell('import sys');
+        await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
         await addCode('s', 1, 1, 0);
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
-        await addCell('import sys');
+        await addCell('import sys', '2');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a second cell broken');
+    });
+
+    test('Collapse expand cell after adding code', async () => {
+        await addCell('import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys', 'Document not set');
+        await addCode('s', 1, 1, 0);
+        await addCode('y', 1, 2, 1);
+        await addCode('s', 1, 3, 2);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
+        await addCell('import sys\nsys.version_info', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\nsys', 'Readding a cell broken');
+        await addCell('import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Collapsing a cell broken');
     });
 });

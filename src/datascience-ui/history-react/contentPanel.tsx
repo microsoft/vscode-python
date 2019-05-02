@@ -3,6 +3,7 @@
 'use strict';
 import './contentPanel.css';
 
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { noop } from '../../test/core';
@@ -23,6 +24,8 @@ export interface IContentPanelProps {
     monacoTheme: string | undefined;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], id: string): void;
+    onCodeCreated(code: string, file: string, id: string): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -73,7 +76,8 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     errorBackgroundColor={actualErrorBackgroundColor}
                     gotoCode={() => this.props.gotoCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
-                    onCodeChange={noop}
+                    onCodeChange={this.props.onCodeChange}
+                    onCodeCreated={this.props.onCodeCreated}
                     monacoTheme={this.props.monacoTheme}
                     />
             </ErrorBoundary>

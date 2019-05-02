@@ -20,16 +20,7 @@ import {
     TextLine,
     Uri
 } from 'vscode';
-import {
-    CompletionItem,
-    CompletionList,
-    CompletionRequest,
-    DidChangeTextDocumentNotification,
-    DidOpenTextDocumentNotification,
-    LanguageClient,
-    TextDocumentItem,
-    VersionedTextDocumentIdentifier
-} from 'vscode-languageclient';
+import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -41,12 +32,15 @@ import { Identifiers } from '../constants';
 import { IHistoryListener } from '../types';
 import {
     HistoryMessages,
-    ICancelCompletionItemsRequest,
+    ICancelIntellisenseRequest,
     IEditCell,
     IHistoryMapping,
     IProvideCompletionItemsRequest,
-    IRemoteAddCode
+    IProvideHoverRequest,
+    IRemoteAddCode,
+    IAddCell
 } from './historyTypes';
+import { string } from 'prop-types';
 
 class HistoryLine implements TextLine {
 
@@ -98,6 +92,7 @@ class HistoryDocument implements TextDocument {
     private _contents: string = '';
     private _editOffset: number = 0;
     private _firstEdit: boolean = true;
+    private _cellRanges: Map<string, {startOffset: number; endOffset: number}> = new Map<string, {startOffset: number; endOffset: number}>();
 
     constructor(fileName: string) {
         // The file passed in is the base Uri for where we're basing this
@@ -174,7 +169,7 @@ class HistoryDocument implements TextDocument {
         return position;
     }
 
-    public get textDocumentItem() : TextDocumentItem {
+    public get textDocumentItem() : vscodeLanguageClient.TextDocumentItem {
         return {
             uri : this._uri.toString(),
             languageId: this.languageId,
@@ -183,35 +178,87 @@ class HistoryDocument implements TextDocument {
         };
     }
 
-    public get textDocumentId() : VersionedTextDocumentIdentifier {
+    public get textDocumentId() : vscodeLanguageClient.VersionedTextDocumentIdentifier {
         return {
             uri: this._uri.toString(),
             version: this.version
         };
     }
-    public addLines(code: string): TextDocumentContentChangeEvent[] {
+    public addCell(code: string, id: string): TextDocumentContentChangeEvent[] {
         this._version += 1;
-        const normalized = code.replace(/\r/g, '');
-        const newCode = this._contents.length ? `\n${normalized}` : normalized;
-        const fromOffset = this._firstEdit ? this._editOffset : this._editOffset - 1;
-        const before = this._contents.substr(0, fromOffset);
-        const after = this._contents.substr(fromOffset);
-        const fromPosition = this.computePosition(fromOffset);
-        this._contents = `${before}${newCode}${after}`;
-        this._lines = this.createLines();
-        this._editOffset += newCode.length;
 
-        return [
-            {
-                range: this.createSerializableRange(fromPosition, fromPosition),
-                rangeOffset: fromOffset,
-                rangeLength: 0, // Adds are always zero
-                text: newCode
-            }
-        ];
+        // Get rid of windows line endings. We're normalizing on linux
+        const normalized = code.replace(/\r/g, '');
+
+        // This might a collapse/expand for an existing cell or it
+        // might be new lines.
+        const cellRange = this._cellRanges.get(id);
+        if (!cellRange) {
+            // First time. This is an add. It's at the end of current code
+
+            // Make sure to put a newline between this code and the previous code
+            const newCode = this._contents.length ? `\n${normalized}` : normalized;
+
+            // We should start before the newline for the edit offset (if an edit has happened)
+            const fromOffset = this._firstEdit ? this._editOffset : this._editOffset - 1;
+
+            // Split our text between the edit text and the cells above
+            const before = this._contents.substr(0, fromOffset);
+            const after = this._contents.substr(fromOffset);
+            const fromPosition = this.computePosition(fromOffset);
+
+            // Save the range for this cell ()
+            this._cellRanges.set(id, { startOffset: fromOffset, endOffset: fromOffset + newCode.length });
+
+            // Update our entire contents and recompute our lines
+            this._contents = `${before}${newCode}${after}`;
+            this._lines = this.createLines();
+            this._editOffset += newCode.length;
+
+            return [
+                {
+                    range: this.createSerializableRange(fromPosition, fromPosition),
+                    rangeOffset: fromOffset,
+                    rangeLength: 0, // Adds are always zero
+                    text: newCode
+                }
+            ];
+        } else {
+            // Make sure to put a newline between this code and the previous code
+            const newCode = cellRange.startOffset !== 0 ? `\n${normalized}` : normalized;
+
+            // This cell already exists. Replace the whole thing 
+            const before = this._contents.substr(0, cellRange.startOffset);
+            const after = this._contents.substr(cellRange.endOffset);
+            const oldLength = cellRange.endOffset - cellRange.startOffset;
+            const fromPosition = this.computePosition(cellRange.startOffset);
+            const toPosition = this.computePosition(cellRange.endOffset);
+
+            // Update our entire contents and recompute our lines
+            this._contents = `${before}${newCode}${after}`;
+            this._lines = this.createLines();
+            this._editOffset += newCode.length - oldLength;
+
+            // Cell range is different now.
+            this._cellRanges.set(id, {
+                startOffset: cellRange.startOffset,
+                endOffset: cellRange.startOffset + newCode.length
+            });
+
+            return [
+                {
+                    range: this.createSerializableRange(fromPosition, toPosition),
+                    rangeOffset: cellRange.startOffset,
+                    rangeLength: cellRange.endOffset - cellRange.startOffset,
+                    text: newCode
+                }
+            ];
+
+        }
+
     }
 
-    public editLines(editorChanges: monacoEditor.editor.IModelContentChange[]): TextDocumentContentChangeEvent[] {
+    public edit(editorChanges: monacoEditor.editor.IModelContentChange[], _id: string): TextDocumentContentChangeEvent[] {
         this._version += 1;
 
         // Convert the range to local (and remove 1 based)
@@ -321,14 +368,14 @@ class HistoryDocument implements TextDocument {
 
 // tslint:disable:no-any
 @injectable()
-export class CompletionProvider implements IHistoryListener {
+export class IntellisenseProvider implements IHistoryListener {
 
-    private languageClientPromise : Deferred<LanguageClient> | undefined;
+    private languageClientPromise : Deferred<vscodeLanguageClient.LanguageClient> | undefined;
     private document: HistoryDocument | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private sentOpenDocument : boolean = false;
     private postEmitter: EventEmitter<{message: string; payload: any}> = new EventEmitter<{message: string; payload: any}>();
-    private cancellationSources : { [key: string] : CancellationTokenSource } = {};
+    private cancellationSources : Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
 
     constructor(
         @inject(ILanguageServer) private languageServer: ILanguageServer,
@@ -350,18 +397,23 @@ export class CompletionProvider implements IHistoryListener {
     public onMessage(message: string, payload?: any) {
         switch (message) {
             case HistoryMessages.CancelCompletionItemsRequest:
-                this.dispatchMessage(message, payload, this.handleCompletionItemsCancel);
+            case HistoryMessages.CancelHoverRequest:
+                this.dispatchMessage(message, payload, this.handleCancel);
                 break;
 
             case HistoryMessages.ProvideCompletionItemsRequest:
                 this.dispatchMessage(message, payload, this.handleCompletionItemsRequest);
                 break;
 
+            case HistoryMessages.ProvideHoverRequest:
+                this.dispatchMessage(message, payload, this.handleHoverRequest);
+                break;
+
             case HistoryMessages.EditCell:
                 this.dispatchMessage(message, payload, this.editCell);
                 break;
 
-            case HistoryMessages.RemoteAddCode: // Might want to rethink this. Seems weird.
+            case HistoryMessages.AddCell: // Might want to rethink this. Seems weird.
                 this.dispatchMessage(message, payload, this.addCell);
                 break;
 
@@ -376,20 +428,29 @@ export class CompletionProvider implements IHistoryListener {
     }
 
     private postResponse<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : void {
+        const response = payload as any;
+        if (response && response.id) {
+            const cancelSource = this.cancellationSources.get(response.id);
+            if (cancelSource) {
+                cancelSource.dispose();
+                this.cancellationSources.delete(response.id);
+            }
+        }
         this.postEmitter.fire({message: type.toString(), payload});
     }
 
-    private handleCompletionItemsCancel(request: ICancelCompletionItemsRequest) {
-        const cancelSource = this.cancellationSources[request.id];
+    private handleCancel(request: ICancelIntellisenseRequest) {
+        const cancelSource = this.cancellationSources.get(request.id);
         if (cancelSource) {
             cancelSource.cancel();
             cancelSource.dispose();
+            this.cancellationSources.delete(request.id);
         }
     }
 
     private handleCompletionItemsRequest(request: IProvideCompletionItemsRequest) {
         const cancelSource = new CancellationTokenSource();
-        this.cancellationSources[request.id] = cancelSource;
+        this.cancellationSources.set(request.id, cancelSource);
         this.provideCompletionItems(request.position, request.context, cancelSource.token).then(list => {
              this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, id: request.id});
         }).catch(_e => {
@@ -397,9 +458,19 @@ export class CompletionProvider implements IHistoryListener {
         });
     }
 
-    private getLanguageClient(file?: Uri) : Promise<LanguageClient> {
+    private handleHoverRequest(request: IProvideHoverRequest) {
+        const cancelSource = new CancellationTokenSource();
+        this.cancellationSources.set(request.id, cancelSource);
+        this.provideHover(request.position, cancelSource.token).then(hover => {
+             this.postResponse(HistoryMessages.ProvideHoverResponse, {hover, id: request.id});
+        }).catch(_e => {
+            this.postResponse(HistoryMessages.ProvideHoverResponse, {hover: { contents: [] }, id: request.id});
+        });
+    }
+
+    private getLanguageClient(file?: Uri) : Promise<vscodeLanguageClient.LanguageClient> {
         if (!this.languageClientPromise) {
-            this.languageClientPromise = createDeferred<LanguageClient>();
+            this.languageClientPromise = createDeferred<vscodeLanguageClient.LanguageClient>();
             this.startup(file)
                 .then(() => {
                     this.languageClientPromise!.resolve(this.languageServer.languageClient);
@@ -433,7 +504,7 @@ export class CompletionProvider implements IHistoryListener {
         if (languageClient && this.document) {
             const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
             const result = await languageClient.sendRequest(
-                CompletionRequest.type,
+                vscodeLanguageClient.CompletionRequest.type,
                 languageClient.code2ProtocolConverter.asCompletionParams(this.document, docPos, context),
                 token);
             return this.convertToMonacoCompletionList(result);
@@ -444,7 +515,22 @@ export class CompletionProvider implements IHistoryListener {
             incomplete: true
         };
     }
-    private async addCell(request: IRemoteAddCode): Promise<void> {
+    private async provideHover(position: monacoEditor.Position, token: CancellationToken) : Promise<monacoEditor.languages.Hover> {
+        const languageClient = await this.getLanguageClient();
+        if (languageClient && this.document) {
+            const docPos = this.document.convertToDocumentPosition(position.lineNumber, position.column);
+            const result = await languageClient.sendRequest(
+                vscodeLanguageClient.HoverRequest.type,
+                languageClient.code2ProtocolConverter.asTextDocumentPositionParams(this.document, docPos),
+                token);
+            return this.convertToMonacoHover(result);
+        }
+
+        return {
+            contents: []
+        };
+    }
+    private async addCell(request: IAddCell): Promise<void> {
         traceInfo(`history completionProvider - addCell : ${JSON.stringify(request)}`);
 
         // Broadcast an update to the language server
@@ -452,15 +538,15 @@ export class CompletionProvider implements IHistoryListener {
 
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
-            changes = this.document.addLines(request.code);
+            changes = this.document.addCell(request.text, request.id);
         }
 
         if (languageClient && this.document) {
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;
-                return languageClient.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
+                return languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
             } else {
-                return languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
+                return languageClient.sendNotification(vscodeLanguageClient.DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
             }
         }
     }
@@ -472,36 +558,47 @@ export class CompletionProvider implements IHistoryListener {
 
         let changes: TextDocumentContentChangeEvent[] = [];
         if (this.document) {
-            changes = this.document.editLines(request.changes);
+            changes = this.document.edit(request.changes, request.id);
         }
 
         // Broadcast an update to the language server
         if (languageClient && this.document) {
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;
-                return languageClient.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
+                return languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type, { textDocument: this.document.textDocumentItem });
             } else {
-                return languageClient.sendNotification(DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
+                return languageClient.sendNotification(vscodeLanguageClient.DidChangeTextDocumentNotification.type, { textDocument: this.document.textDocumentId, contentChanges: changes });
             }
         }
     }
 
-    private convertToMonacoCompletionItem(item: CompletionItem) : monacoEditor.languages.CompletionItem {
+    private convertToMonacoRange(range: vscodeLanguageClient.Range | undefined) : monacoEditor.IRange | undefined {
+        if (range) {
+            return {
+                startLineNumber: range.start.line + 1,
+                startColumn: range.start.character + 1,
+                endLineNumber: range.end.line + 1,
+                endColumn: range.end.character + 1
+            };
+        }
+    }
+
+    private convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem) : monacoEditor.languages.CompletionItem {
         // They should be pretty much identical? Except for ranges.
         // tslint:disable-next-line: no-any
         return (item as any) as monacoEditor.languages.CompletionItem;
     }
 
-    private convertToMonacoCompletionList(result: CompletionList | CompletionItem[] | null) : monacoEditor.languages.CompletionList {
+    private convertToMonacoCompletionList(result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | null) : monacoEditor.languages.CompletionList {
         if (result) {
             if (result.hasOwnProperty('isIncomplete')) {
-                const list = result as CompletionList;
+                const list = result as vscodeLanguageClient.CompletionList;
                 return {
                     suggestions: list.items.map(this.convertToMonacoCompletionItem),
                     incomplete: list.isIncomplete
                 };
             } else {
-                const array = result as CompletionItem[];
+                const array = result as vscodeLanguageClient.CompletionItem[];
                 return {
                     suggestions: array.map(this.convertToMonacoCompletionItem),
                     incomplete: false
@@ -512,6 +609,48 @@ export class CompletionProvider implements IHistoryListener {
         return {
             suggestions: [],
             incomplete: true
+        };
+    }
+
+    private convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[]) : monacoEditor.IMarkdownString[] {
+        if (strings.hasOwnProperty('kind')) {
+            const content = strings as vscodeLanguageClient.MarkupContent;
+            return [
+                {
+                    value: content.value
+                }
+            ];
+        } else if (strings.hasOwnProperty('value')) {
+            const content = strings as any;
+            return [
+                {
+                    value: content.value
+                }
+            ];
+        } else if (typeof strings === 'string') {
+            return [
+                {
+                    value: strings.toString()
+                }
+            ];
+        } else if (Array.isArray(strings)) {
+            const array = strings as vscodeLanguageClient.MarkedString[];
+            return array.map(a => this.convertToMonacoMarkdown(a)[0]);
+        }
+
+        return [];
+    }
+
+    private convertToMonacoHover(result: vscodeLanguageClient.Hover | null) : monacoEditor.languages.Hover {
+        if (result) {
+            return {
+                contents: this.convertToMonacoMarkdown(result.contents),
+                range: this.convertToMonacoRange(result.range)
+            };
+        }
+
+        return {
+            contents: []
         };
     }
 }

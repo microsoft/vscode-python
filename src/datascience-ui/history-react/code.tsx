@@ -10,6 +10,7 @@ import { InputHistory } from './inputHistory';
 import './code.css';
 
 export interface ICodeProps {
+    id: string;
     autoFocus: boolean;
     code : string;
     codeTheme: string;
@@ -20,8 +21,8 @@ export interface ICodeProps {
     showWatermark: boolean;
     monacoTheme: string | undefined;
     onSubmit(code: string): void;
-    onChangeLineCount(lineCount: number) : void;
-    onChange(changes: monacoEditor.editor.IModelContentChange[]): void;
+    onCreated(code: string, id: string): void;
+    onChange(changes: monacoEditor.editor.IModelContentChange[], id: string): void;
 }
 
 interface ICodeState {
@@ -119,11 +120,14 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // List for key up/down events.
         this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
         this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
+
+        // Indicate we're ready
+        this.props.onCreated(this.props.code, this.props.id);
     }
 
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
-        if (!this.props.readOnly) {
-            this.props.onChange(e.changes);
+        if (this.state.model && !this.props.readOnly) {
+            this.props.onChange(e.changes, this.props.id);
         }
     }
 
