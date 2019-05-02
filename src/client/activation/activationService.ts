@@ -114,10 +114,20 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_SWITCHED, undefined, { change: message });
         }
     }
-    @swallowExceptions('Check if user is using default jediEnabled setting')
+
     public isJediUsingDefaultConfiguration(resource?: Uri): boolean {
         const settings = this.workspaceService.getConfiguration('python', resource)!.inspect<boolean>('jediEnabled')!;
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
+    }
+
+    public useJedi(): boolean {
+        if (this.experiments.inExperiment('LS - enabled') && this.isJediUsingDefaultConfiguration()) {
+            return false;
+        }
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const enabled = configurationService.getSettings(this.resource).jediEnabled;
+        this.trackLangaugeServerSwitch(enabled).ignoreErrors();
+        return enabled;
     }
 
     protected onWorkspaceFoldersChanged() {
@@ -159,15 +169,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
-    }
-    private useJedi(): boolean {
-        if (this.experiments.inExperiment('LS - enabled') && this.isJediUsingDefaultConfiguration()) {
-            return false;
-        }
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const enabled = configurationService.getSettings(this.resource).jediEnabled;
-        this.trackLangaugeServerSwitch(enabled).ignoreErrors();
-        return enabled;
     }
     private getWorkspacePathKey(resource: Resource): string {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);

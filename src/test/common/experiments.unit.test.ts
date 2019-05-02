@@ -117,6 +117,13 @@ suite('A/B experiments', () => {
                 experimentName: 'experiment1',
                 hash: 3297,
                 expectedResult: false
+            },
+            {
+                testName: 'If checking if user is in experiment fails with error',
+                experimentName: 'experiment1',
+                hash: 1181,
+                expectedResult: false,
+                error: true
             }
         ];
 
@@ -127,7 +134,11 @@ suite('A/B experiments', () => {
             await testInitialization();
 
             when(appEnvironment.machineId).thenReturn('101');
-            when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+            if (testParams.error) {
+                when(crypto.createHash(anything(), 'hex', 'number')).thenThrow(new Error('Kaboom'));
+            } else {
+                when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+            }
 
             verify(httpClient.getJSONC(anything(), anything())).never();
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
