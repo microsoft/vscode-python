@@ -67,7 +67,7 @@ suite('A/B experiments', () => {
     });
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
-        experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]).verifiable(TypeMoq.Times.exactly(2));
+        experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]).verifiable(TypeMoq.Times.once());
 
         await testInitialization();
 
@@ -94,6 +94,13 @@ suite('A/B experiments', () => {
 
     const testsForInExperiment =
         [
+            {
+                testName: 'If experiment list is already populated, do not use storage',
+                experimentName: 'imaginary experiment',
+                hash: 223,
+                expectedResult: false,
+                experimentListPopulated: true
+            },
             {
                 testName: 'If experiment\'s name is not in experiment list, user is not in experiment',
                 experimentName: 'imaginary experiment',
@@ -129,9 +136,17 @@ suite('A/B experiments', () => {
 
     testsForInExperiment.forEach(testParams => {
         test(testParams.testName, async () => {
-            experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.exactly(2));
+            if (testParams.experimentListPopulated) {
+                experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.once());
 
-            await testInitialization();
+                await testInitialization();
+                experimentStorage.reset();
+
+                experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.never());
+            } else {
+                when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
+                experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.once());
+            }
 
             when(appEnvironment.machineId).thenReturn('101');
             if (testParams.error) {
@@ -142,6 +157,7 @@ suite('A/B experiments', () => {
 
             verify(httpClient.getJSONC(anything(), anything())).never();
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
+            experimentStorage.verifyAll();
         });
     });
 

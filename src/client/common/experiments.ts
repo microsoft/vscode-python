@@ -39,8 +39,9 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
         const experimentStorage = this.persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any, EXPIRY_DURATION_MS);
-        if (experimentStorage.value) {
-            this.experiments = experimentStorage.value;
+        const experimentStorageValue = experimentStorage.value;
+        if (experimentStorageValue) {
+            this.experiments = experimentStorageValue;
             return;
         }
         try {
@@ -53,6 +54,11 @@ export class ExperimentsManager implements IExperimentsManager {
 
     public inExperiment(experimentName: string): boolean {
         try {
+            const experimentStorage = this.persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any, EXPIRY_DURATION_MS);
+            if (this.experiments.length === 0) {
+                const experimentStorageValue = experimentStorage.value;
+                this.experiments = experimentStorageValue ? experimentStorageValue : [];
+            }
             const experimentNames = this.experiments.map(experiment => experiment.name);
             const index = experimentNames.indexOf(experimentName);
             if (index < 0) {

@@ -34,7 +34,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager) {
+        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -121,7 +121,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public useJedi(): boolean {
-        if (this.experiments.inExperiment('LS - enabled') && this.isJediUsingDefaultConfiguration()) {
+        if (this.abExperiments.inExperiment('LS - enabled') && this.isJediUsingDefaultConfiguration()) {
             return false;
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
