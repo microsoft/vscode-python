@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { IHttpClient } from '../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
 import { traceDecorators, traceError } from './logger';
-import { ICryptoUtils, IExperimentsManager, IPersistentStateFactory } from './types';
+import { ICryptoUtils, IExperimentsManager, IPersistentStateFactory, Resource } from './types';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
@@ -19,6 +19,7 @@ const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/envir
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
     private experiments: { name: string; salt: string; min: number; max: number }[] = [];
+    private resource: Resource;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -27,7 +28,8 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment
     ) { }
 
-    public async activate(_resource: Uri): Promise<void> {
+    public async activate(resource: Uri): Promise<void> {
+        this.resource = resource;
         this.initializeInBackground().ignoreErrors();
     }
 
@@ -64,13 +66,13 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
-    @traceDecorators.error('Failed to download experiments')
-    protected async downloadExperiments() {
-        this.experiments = await this.httpClient.getJSONC(configUri, { allowTrailingComma: true, disallowComments: false });
+    public isTelemetryDisabled(): boolean {
+        const settings = this.workspaceService.getConfiguration('telemetry', this.resource)!.inspect<boolean>('enableTelemetry')!;
+        return (settings.workspaceFolderValue === false || settings.workspaceValue === false || settings.globalValue === false) ? true : false;
     }
 
-    protected isTelemetryDisabled(): boolean {
-        const settings = this.workspaceService.getConfiguration('telemetry')!.inspect<boolean>('enableTelemetry')!;
-        return (settings.workspaceFolderValue === false || settings.workspaceValue === false || settings.globalValue === false) ? true : false;
+    @traceDecorators.error('Failed to download experiments')
+    private async downloadExperiments() {
+        this.experiments = await this.httpClient.getJSONC(configUri, { allowTrailingComma: true, disallowComments: false });
     }
 }
