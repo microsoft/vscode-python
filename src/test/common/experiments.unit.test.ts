@@ -125,18 +125,18 @@ suite('xA/B experiments', () => {
                 expectedResult: true
             },
             {
-                testName: 'Returns true when workspace setting is false',
+                testName: 'Returns true when workspace setting is false and workspace folder setting is not true',
                 settings: { workspaceValue: false },
                 expectedResult: true
             },
             {
-                testName: 'Returns true when global setting is false',
+                testName: 'Returns true when global setting is false, and workspace & workspace folder setting is not true',
                 settings: { globalValue: false },
                 expectedResult: true
             },
             {
-                testName: 'Returns false otherwise',
-                settings: {},
+                testName: 'Returns true otherwise',
+                settings: { workspaceValue: true, globalValue: false },
                 expectedResult: false
             }
         ];

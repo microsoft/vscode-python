@@ -68,7 +68,9 @@ export class ExperimentsManager implements IExperimentsManager {
 
     public isTelemetryDisabled(): boolean {
         const settings = this.workspaceService.getConfiguration('telemetry', this.resource)!.inspect<boolean>('enableTelemetry')!;
-        return (settings.workspaceFolderValue === false || settings.workspaceValue === false || settings.globalValue === false) ? true : false;
+        return (settings.workspaceFolderValue === false ||
+            (settings.workspaceFolderValue !== true && settings.workspaceValue === false) ||
+            (settings.workspaceFolderValue !== true && settings.workspaceValue !== true && settings.globalValue === false)) ? true : false;
     }
 
     @traceDecorators.error('Failed to download experiments')
