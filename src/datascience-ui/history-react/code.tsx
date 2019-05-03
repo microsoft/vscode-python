@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
+import { getLocString } from '../react-common/locReactSide';
 import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
 
 import './code.css';
-import { getLocString } from '../react-common/locReactSide';
 
 export interface ICodeProps {
     autoFocus: boolean;
