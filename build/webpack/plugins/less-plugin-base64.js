@@ -37,7 +37,15 @@ class Base64Visitor {
     }
 
 }
-
+/*
+* This was originally used to perform less on uris and turn them into base64 encoded so they can be loaded into 
+* a webpack html. There's one caveat though. Less and webpack don't play well together. It runs the less at the root dir.
+* This means in order to use this in a less file, you need to qualify the urls as if they come from the root dir. 
+* Example:
+* url("./foo.svg") 
+* becomes
+* url("./src/datascience-ui/history-react/images/foo.svg")
+*/
 class Base64Plugin {
     constructor() {
     }

@@ -7,8 +7,6 @@ import * as React from 'react';
 import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
 
-import './images/Suggest/suggest.less';
-
 import './code.css';
 
 export interface ICodeProps {
