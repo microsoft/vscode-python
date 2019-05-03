@@ -5,6 +5,7 @@ const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const Base64LessPlugin = require('./build/webpack/plugins/less-plugin-base64.js')
 
 const configFileName = 'tsconfig.datascience-ui.json';
 
@@ -98,6 +99,25 @@ module.exports = [
                         'style-loader',
                         'css-loader',
                         'sass-loader'
+                    ]
+                },
+                {
+                    test: /\.less$/,
+                    use: [
+                        {
+                            loader: 'style-loader',
+                        },
+                        {
+                            loader: 'css-loader',
+                        },
+                        {
+                            loader: 'less-loader',
+                            options: {
+                                env: "development",
+                                relativeUrls: false,
+                                plugins: [new Base64LessPlugin()]
+                            }
+                        }
                     ]
                 }
             ]

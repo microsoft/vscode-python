@@ -77,6 +77,7 @@ interface IApplyThemeArgs {
     baseColors?: JSONObject | null;
     fontFamily: string;
     fontSize: number;
+    isDark: boolean;
     defaultStyle: string | undefined;
 }
 
@@ -112,6 +113,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             const editor = this.workspaceService.getConfiguration('editor', undefined);
             const fontFamily = editor ? editor.get<string>('fontFamily', 'Consolas, \'Courier New\', monospace') : 'Consolas, \'Courier New\', monospace';
             const fontSize = editor ? editor.get<number>('fontSize', 14) : 14;
+            const isDarkUpdated = ignoreTheme ? false : isDark;
 
             // Then we have to find where the theme resources are loaded from
             if (theme) {
@@ -122,11 +124,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 // The tokens object then contains the necessary data to generate our css
                 if (tokenColors && fontFamily && fontSize) {
                     this.logger.logInformation('Using colors to generate CSS ...');
-                    result = applier({ tokenColors, baseColors, fontFamily, fontSize, defaultStyle: ignoreTheme ? LightTheme : undefined });
+                    result = applier({ tokenColors, baseColors, fontFamily, fontSize, isDark: isDarkUpdated, defaultStyle: ignoreTheme ? LightTheme : undefined });
                 } else if (tokenColors === null && fontFamily && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
                     const style = isDark ? DarkTheme : LightTheme ;
-                    result = applier({ fontFamily, fontSize, defaultStyle: style});
+                    result = applier({ fontFamily, fontSize, isDark: isDarkUpdated, defaultStyle: style});
                 }
             }
         } catch (err) {
@@ -211,7 +213,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     // https://github.com/Microsoft/vscode/blob/master/src/vs/editor/standalone/common/themes.ts#L13
     private generateMonacoThemeObject(args: IApplyThemeArgs) : monacoEditor.editor.IStandaloneThemeData {
         const result: monacoEditor.editor.IStandaloneThemeData = {
-            base: 'vs',
+            base: args.isDark ? 'vs-dark' : 'vs',
             inherit: false,
             rules: [],
             colors: {}
