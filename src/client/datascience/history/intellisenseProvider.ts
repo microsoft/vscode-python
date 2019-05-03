@@ -353,6 +353,92 @@ export class IntellisenseProvider implements IHistoryListener {
     private postEmitter: EventEmitter<{message: string; payload: any}> = new EventEmitter<{message: string; payload: any}>();
     private cancellationSources : Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
 
+    // See the comment on convertCompletionItemKind below
+    // Here's the monaco enum:
+    // Method = 0,
+    // Function = 1,
+    // Constructor = 2,
+    // Field = 3,
+    // Variable = 4,
+    // Class = 5,
+    // Struct = 6,
+    // Interface = 7,
+    // Module = 8,
+    // Property = 9,
+    // Event = 10,
+    // Operator = 11,
+    // Unit = 12,
+    // Value = 13,
+    // Constant = 14,
+    // Enum = 15,
+    // EnumMember = 16,
+    // Keyword = 17,
+    // Text = 18,
+    // Color = 19,
+    // File = 20,
+    // Reference = 21,
+    // Customcolor = 22,
+    // Folder = 23,
+    // TypeParameter = 24,
+    // Snippet = 25
+    //
+    // Here's the vscode enum
+    // const Text: 1;
+    // const Method: 2;
+    // const Function: 3;
+    // const Constructor: 4;
+    // const Field: 5;
+    // const Variable: 6;
+    // const Class: 7;
+    // const Interface: 8;
+    // const Module: 9;
+    // const Property: 10;
+    // const Unit: 11;
+    // const Value: 12;
+    // const Enum: 13;
+    // const Keyword: 14;
+    // const Snippet: 15;
+    // const Color: 16;
+    // const File: 17;
+    // const Reference: 18;
+    // const Folder: 19;
+    // const EnumMember: 20;
+    // const Constant: 21;
+    // const Struct: 22;
+    // const Event: 23;
+    // const Operator: 24;
+    // const TypeParameter: 25;
+
+    // Left side is the vscode value.
+    private mapCompletionItemKind : Map<number, number> = new Map<number, number>([
+        [0, 9],  // No value for zero in vscode
+        [1, 18], // Text
+        [2, 0],  // Method
+        [3, 1],  // Function
+        [4, 2],  // Constructor
+        [5, 3],  // Field
+        [6, 4],  // Variable
+        [7, 5],  // Class
+        [8, 7],  // Interface
+        [9, 8],  // Module
+        [10, 9], // Property
+        [11, 12], // Unit
+        [12, 13], // Value
+        [13, 15], // Enum
+        [14, 17], // Keyword
+        [15, 25], // Snippet
+        [16, 19], // Color
+        [17, 20], // File
+        [18, 21], // Reference
+        [19, 23], // Folder
+        [20, 16], // EnumMember
+        [21, 14], // Constant
+        [22, 6], // Struct
+        [23, 10], // Event
+        [24, 11], // Operator
+        [25, 24]  // TypeParameter
+    ]);
+
     constructor(
         @inject(ILanguageServer) private languageServer: ILanguageServer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
@@ -559,10 +645,26 @@ export class IntellisenseProvider implements IHistoryListener {
         }
     }
 
-    private convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem) : monacoEditor.languages.CompletionItem {
+    // Something very fishy. If the monacoEditor.languages.CompletionItemKind is included here, we get this error on startup
+    // Activating extension `ms-python.python` failed:  Unexpected token {
+    // extensionHostProcess.js:457
+    // Here is the error stack:  f:\vscode-python\node_modules\monaco-editor\esm\vs\editor\editor.api.js:5
+    // import { EDITOR_DEFAULTS } from './common/config/editorOptions.js';
+    // Instead just use a map
+    private convertToMonacoCompletionItemKind(kind?: number): number {
+        const value = kind ? this.mapCompletionItemKind.get(kind) : 9; // Property is 9
+        if (value) {
+            return value;
+        }
+        return 9; // Property
+    }
+
+    private convertToMonacoCompletionItem = (item: vscodeLanguageClient.CompletionItem) : monacoEditor.languages.CompletionItem => {
         // They should be pretty much identical? Except for ranges.
-        // tslint:disable-next-line: no-any
-        return (item as any) as monacoEditor.languages.CompletionItem;
+        // tslint:disable-next-line: no-object-literal-type-assertion
+        const result = {...item} as monacoEditor.languages.CompletionItem;
+        result.kind = this.convertToMonacoCompletionItemKind(item.kind);
+        return result;
     }
 
     private convertToMonacoCompletionList(result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | null) : monacoEditor.languages.CompletionList {
