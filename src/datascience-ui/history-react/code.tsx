@@ -8,6 +8,7 @@ import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
 
 import './code.css';
+import { getLocString } from '../react-common/locReactSide';
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -56,6 +57,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     public render() {
         const readOnly = this.props.readOnly;
+        const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         const options: monacoEditor.editor.IEditorConstructionOptions = {
             minimap: {
@@ -90,6 +92,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     editorMounted={this.editorDidMount}
                     options={options}
                 />
+                <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>
         );
     }
@@ -107,6 +110,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         if (this.state.editor && !readOnly) {
             this.state.editor.focus();
         }
+    }
+
+    private getWatermarkString = () : string => {
+        return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
     }
 
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
@@ -128,6 +135,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
         if (this.state.model) {
             this.props.onChange(e.changes, this.state.model.id);
+        }
+        if (!this.props.readOnly) {
+            this.setState({allowWatermark: false});
         }
     }
 
