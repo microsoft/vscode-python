@@ -1,6 +1,7 @@
 .measure-width-div {
-    width: 100%;
-    visibility: none;
+    width: 100vw;
+	visibility: hidden;
+	position: absolute;
 }
 
 .monaco-editor-outer-container .mtk1 {

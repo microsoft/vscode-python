@@ -129,9 +129,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                {this.renderHeaderPanel(baseTheme)}
-                {this.renderContentPanel(baseTheme)}
-                {this.renderEditPanel(baseTheme)}
+                <div className='main-panel-header'>
+                    <div className='main-panel-inner'>
+                        {this.renderHeaderPanel(baseTheme)}
+                    </div>
+                </div>
+                <div className='main-panel-content'>
+                    <div className='main-panel-inner'>
+                        <div className='main-panel-scrollable'>
+                            {this.renderContentPanel(baseTheme)}
+                        </div>
+                    </div>
+                </div>
+                <div className='main-panel-footer'>
+                    <div className='main-panel-inner'>
+                        {this.renderFooterPanel(baseTheme)}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -241,13 +255,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private renderHeaderPanel(baseTheme: string) {
         const headerProps = this.getHeaderProps(baseTheme);
-        return (
-            <div className='main-panel-header'>
-                <div className='main-panel-cell'>
-                    <HeaderPanel {...headerProps} />
-                </div>
-            </div>
-        );
+        return <HeaderPanel {...headerProps} />;
     }
 
     private renderContentPanel(baseTheme: string) {
@@ -259,16 +267,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Otherwise render our cells.
         const contentProps = this.getContentProps(baseTheme);
-        return (
-            <div className='main-panel-content'>
-                <div className='main-panel-cell'>
-                    <ContentPanel {...contentProps} />
-                </div>
-            </div>
-        );
+        return <ContentPanel {...contentProps} />;
     }
 
-    private renderEditPanel(baseTheme: string) {
+    private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
@@ -281,8 +283,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
 
         return (
-            <div className='main-panel-footer'>
-                <div className='main-panel-cell edit-panel'>
+            <div className='edit-panel'>
                 <ErrorBoundary>
                     <Cell
                         history={this.state.history}
@@ -303,7 +304,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         monacoTheme={this.state.monacoTheme}
                     />
                 </ErrorBoundary>
-            </div>
             </div>
         );
     }

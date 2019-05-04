@@ -130,8 +130,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     public render() {
         return (
-            <div className='monaco-editor-outer-container'>
-                <div className='monaco-editor-container' ref={this.containerRef}/>
+            <div className='monaco-editor-outer-container' ref={this.containerRef}>
+                <div className='monaco-editor-container'/>
                 <div className='measure-width-div' ref={this.measureWidthRef}/>
             </div>
         );
@@ -148,6 +148,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.measureWidthRef.current &&
             this.measureWidthRef.current.clientWidth &&
             this.containerRef.current &&
+            this.containerRef.current.parentElement &&
             this.state.editor &&
             this.state.model) {
             const editorDomNode = this.state.editor.getDomNode();
@@ -158,7 +159,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 : LINE_HEIGHT;
             const currLineCount = this.state.model.getLineCount();
             const height = (currLineCount * lineHeight) + 3; // Fudge factor
-            const width = this.measureWidthRef.current.clientWidth - this.containerRef.current.offsetLeft - 2;
+            const width = this.measureWidthRef.current.clientWidth - this.containerRef.current.parentElement.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
             // For some reason this is flashing. Need to debug the editor code to see if
             // it draws more than once. Or if we can have React turn off DOM updates

@@ -1,6 +1,6 @@
 body, html {
     height: 100%;
-    overflow: hidden;
+    margin: 0;
 }
 
 #root {
@@ -34,15 +34,23 @@ body, html {
     border-top-width: 1px;
 }
 
-.main-panel-header, .main-panel-footer, .main-panel-content {
+.main-panel-header, .main-panel-content, .main-panel-footer {
     display: table-row;
 }
 
-.main-panel-cell {
+.main-panel-inner {
     display: table-cell;
 }
 
-.main-panel-content {
+.main-panel-content .main-panel-inner {
     height: 100%;
     position: relative;
+}
+
+.main-panel-scrollable {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0; bottom: 0;
+    overflow-y: auto;
+    overflow-x: none;
 }
