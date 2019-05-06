@@ -24,6 +24,7 @@
     "base16",
     "bintrees",
     "bootstrap",
+    "bootstrap-less",
     "character-entities-legacy",
     "character-reference-invalid",
     "classnames",

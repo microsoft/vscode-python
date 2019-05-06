@@ -88,12 +88,13 @@ module.exports = [
                         }
                     ]
                 },
+                { test: /\.(png|woff|woff2|eot|ttf)$/, loader: 'url-loader?limit=100000' },
                 {
-                    test: /\.scss$/,
+                    test: /\.less$/,
                     use: [
                         'style-loader',
                         'css-loader',
-                        'sass-loader'
+                        'less-loader'
                     ]
                 }
             ]
