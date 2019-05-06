@@ -9,20 +9,21 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { Identifiers } from '../../constants';
+import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
 class IntellisenseLine implements TextLine {
 
-    private _range : Range;
+    private _range: Range;
     private _rangeWithLineBreak: Range;
-    private _firstNonWhitespaceIndex : number | undefined;
-    private _isEmpty : boolean | undefined;
+    private _firstNonWhitespaceIndex: number | undefined;
+    private _isEmpty: boolean | undefined;
 
     constructor(private _contents: string, private _line: number, private _offset: number) {
         this._range = new Range(new Position(_line, 0), new Position(_line, _contents.length));
         this._rangeWithLineBreak = new Range(this.range.start, new Position(_line, _contents.length + 1));
     }
 
-    public get offset() : number {
+    public get offset(): number {
         return this._offset;
     }
     public get lineNumber(): number {
@@ -59,8 +60,8 @@ interface ICellRange {
 
 export class IntellisenseDocument implements TextDocument {
 
-    private _uri : Uri;
-    private _version : number = 0;
+    private _uri: Uri;
+    private _version: number = 0;
     private _lines: IntellisenseLine[] = [];
     private _contents: string = '';
     private _cellRanges: ICellRange[] = [];
@@ -73,7 +74,7 @@ export class IntellisenseDocument implements TextDocument {
         this._uri = Uri.file(fileName);
 
         // We should start our edit offset at 0. Each cell should end with a '/n'
-        this._cellRanges.push({id: Identifiers.EditCellId, start: 0, end: 0});
+        this._cellRanges.push({ id: Identifiers.EditCellId, start: 0, end: 0 });
     }
 
     public get uri(): Uri {
@@ -133,8 +134,28 @@ export class IntellisenseDocument implements TextDocument {
             return this._contents.substr(startOffset, endOffset - startOffset);
         }
     }
-    public getWordRangeAtPosition(_position: Position, _regex?: RegExp | undefined): Range | undefined {
-        throw new Error('Method not implemented.');
+    public getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined {
+        if (!regexp) {
+            // use default when custom-regexp isn't provided
+            regexp = DefaultWordPattern;
+
+        } else if (regExpLeadsToEndlessLoop(regexp)) {
+            // use default when custom-regexp is bad
+            console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
+            regexp = DefaultWordPattern;
+        }
+
+        const wordAtText = getWordAtText(
+            position.character + 1,
+            ensureValidWordDefinition(regexp),
+            this._lines[position.line].text,
+            0
+        );
+
+        if (wordAtText) {
+            return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
+        }
+        return undefined;
     }
     public validateRange(range: Range): Range {
         return range;
@@ -143,16 +164,16 @@ export class IntellisenseDocument implements TextDocument {
         return position;
     }
 
-    public get textDocumentItem() : vscodeLanguageClient.TextDocumentItem {
+    public get textDocumentItem(): vscodeLanguageClient.TextDocumentItem {
         return {
-            uri : this._uri.toString(),
+            uri: this._uri.toString(),
             languageId: this.languageId,
             version: this.version,
             text: this.getText()
         };
     }
 
-    public get textDocumentId() : vscodeLanguageClient.VersionedTextDocumentIdentifier {
+    public get textDocumentId(): vscodeLanguageClient.VersionedTextDocumentIdentifier {
         return {
             uri: this._uri.toString(),
             version: this.version
@@ -236,10 +257,10 @@ export class IntellisenseDocument implements TextDocument {
 
                 return [
                     {
-                         range: this.createSerializableRange(from, to),
-                         rangeOffset: fromOffset,
-                         rangeLength: toOffset - fromOffset,
-                         text: normalized
+                        range: this.createSerializableRange(from, to),
+                        rangeOffset: fromOffset,
+                        rangeLength: toOffset - fromOffset,
+                        text: normalized
                     }
                 ];
 
@@ -249,7 +270,7 @@ export class IntellisenseDocument implements TextDocument {
         return [];
     }
 
-    public convertToDocumentPosition(id: string, line: number, ch: number) : Position {
+    public convertToDocumentPosition(id: string, line: number, ch: number): Position {
         // Monaco is 1 based, and we need to add in our cell offset.
         const cellIndex = this._cellRanges.findIndex(c => c.id === id);
         if (cellIndex >= 0) {
@@ -264,7 +285,7 @@ export class IntellisenseDocument implements TextDocument {
         return new Position(line - 1, ch - 1);
     }
 
-    private computePosition(offset: number) : Position {
+    private computePosition(offset: number): Position {
         let line = 0;
         let ch = 0;
         while (line + 1 < this._lines.length && this._lines[line + 1].offset <= offset) {
@@ -276,8 +297,8 @@ export class IntellisenseDocument implements TextDocument {
         return new Position(line, ch);
     }
 
-    private createLines() : IntellisenseLine[] {
-        const split = this._contents.splitLines({trim: false, removeEmptyEntries: false});
+    private createLines(): IntellisenseLine[] {
+        const split = this._contents.splitLines({ trim: false, removeEmptyEntries: false });
         let prevLine: IntellisenseLine | undefined;
         return split.map((s, i) => {
             const nextLine = this.createTextLine(s, i, prevLine);
@@ -286,18 +307,18 @@ export class IntellisenseDocument implements TextDocument {
         });
     }
 
-    private createTextLine(line: string, index: number, prevLine: IntellisenseLine | undefined) : IntellisenseLine {
+    private createTextLine(line: string, index: number, prevLine: IntellisenseLine | undefined): IntellisenseLine {
         return new IntellisenseLine(line, index, prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0);
     }
 
-    private convertToOffset(pos: Position) : number {
+    private convertToOffset(pos: Position): number {
         if (pos.line < this._lines.length) {
             return this._lines[pos.line].offset + pos.character;
         }
         return this._contents.length;
     }
 
-    private createSerializableRange(start: Position, end: Position) : Range {
+    private createSerializableRange(start: Position, end: Position): Range {
         const result = {
             start: {
                 line: start.line,

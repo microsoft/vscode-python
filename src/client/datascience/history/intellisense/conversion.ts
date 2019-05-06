@@ -118,26 +118,36 @@ function convertToMonacoCompletionItemKind(kind?: number): number {
     return 9; // Property
 }
 
-function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem) : monacoEditor.languages.CompletionItem {
+function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean) : monacoEditor.languages.CompletionItem {
     // They should be pretty much identical? Except for ranges.
     // tslint:disable-next-line: no-object-literal-type-assertion
     const result = {...item} as monacoEditor.languages.CompletionItem;
-    result.kind = convertToMonacoCompletionItemKind(item.kind);
+    if (requiresKindConversion) {
+        result.kind = convertToMonacoCompletionItemKind(item.kind);
+    }
+
+    // Make sure we have insert text, otherwise the monaco editor will crash on trying to hit tab or enter on the text
+    if (!result.insertText && result.label) {
+        result.insertText = result.label;
+    }
+
     return result;
 }
 
-export function convertToMonacoCompletionList(result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null) : monacoEditor.languages.CompletionList {
+export function convertToMonacoCompletionList(
+    result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null,
+    requiresKindConversion: boolean) : monacoEditor.languages.CompletionList {
     if (result) {
         if (result.hasOwnProperty('isIncomplete')) {
             const list = result as vscodeLanguageClient.CompletionList;
             return {
-                suggestions: list.items.map(convertToMonacoCompletionItem),
+                suggestions: list.items.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
                 incomplete: list.isIncomplete
             };
         } else {
             const array = result as vscodeLanguageClient.CompletionItem[];
             return {
-                suggestions: array.map(convertToMonacoCompletionItem),
+                suggestions: array.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
                 incomplete: false
             };
         }
