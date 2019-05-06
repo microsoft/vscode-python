@@ -41,13 +41,16 @@ import {
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
+import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
+import { IConfigurationService } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { IntellisenseProvider } from '../../client/datascience/history/intellisenseProvider';
+import { DotNetIntellisenseProvider } from '../../client/datascience/history/intellisense/dotNetIntellisenseProvider';
 import { IHistoryListener } from '../../client/datascience/types';
 import { noop } from '../core';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 // tslint:disable:no-any unified-signatures
 
@@ -214,7 +217,14 @@ suite('DataScience Intellisense Unit Tests', () => {
     let languageServer: TypeMoq.IMock<ILanguageServer>;
     let analysisOptions: TypeMoq.IMock<ILanguageServerAnalysisOptions>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
+    const pythonSettings = new class extends PythonSettings {
+        public fireChangeEvent() {
+            this.changed.fire();
+        }
+    }(undefined, new MockAutoSelectionService());
+
     const languageClient = new MockLanguageClient(
         'mockLanguageClient', { module: 'dummy' }, {});
 
@@ -222,13 +232,16 @@ suite('DataScience Intellisense Unit Tests', () => {
         languageServer = TypeMoq.Mock.ofType<ILanguageServer>();
         analysisOptions = TypeMoq.Mock.ofType<ILanguageServerAnalysisOptions>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        configService = TypeMoq.Mock.ofType<IConfigurationService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
 
+        pythonSettings.jediEnabled = false;
         languageServer.setup(l => l.start(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
         analysisOptions.setup(a => a.getAnalysisOptions()).returns(() => Promise.resolve({}));
         languageServer.setup(l => l.languageClient).returns(() => languageClient);
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
 
-        intellisenseProvider = new IntellisenseProvider(languageServer.object, analysisOptions.object, workspaceService.object, fileSystem.object);
+        intellisenseProvider = new DotNetIntellisenseProvider(languageServer.object, analysisOptions.object, workspaceService.object, configService.object, fileSystem.object);
     });
 
     function sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
