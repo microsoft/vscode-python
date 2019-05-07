@@ -93,31 +93,13 @@ module.exports = [
                         }
                     ]
                 },
-                {
-                    test: /\.scss$/,
-                    use: [
-                        'style-loader',
-                        'css-loader',
-                        'sass-loader'
-                    ]
-                },
+                { test: /\.(png|woff|woff2|eot|ttf)$/, loader: 'url-loader?limit=100000' },
                 {
                     test: /\.less$/,
                     use: [
-                        {
-                            loader: 'style-loader',
-                        },
-                        {
-                            loader: 'css-loader',
-                        },
-                        {
-                            loader: 'less-loader',
-                            options: {
-                                env: "development",
-                                relativeUrls: false,
-                                plugins: [new Base64LessPlugin()]
-                            }
-                        }
+                        'style-loader',
+                        'css-loader',
+                        'less-loader'
                     ]
                 }
             ]

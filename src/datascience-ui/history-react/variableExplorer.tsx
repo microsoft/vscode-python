@@ -16,7 +16,7 @@ import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 
 import * as AdazzleReactDataGrid from 'react-data-grid';
 
-import './variableExplorerGrid.scss';
+import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
     baseTheme: string;
