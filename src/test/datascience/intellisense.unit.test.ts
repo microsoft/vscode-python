@@ -240,6 +240,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         analysisOptions.setup(a => a.getAnalysisOptions()).returns(() => Promise.resolve({}));
         languageServer.setup(l => l.languageClient).returns(() => languageClient);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
+        workspaceService.setup(w => w.rootPath).returns(() => '/foo/bar');
 
         intellisenseProvider = new DotNetIntellisenseProvider(languageServer.object, analysisOptions.object, workspaceService.object, configService.object, fileSystem.object);
     });
@@ -304,6 +305,14 @@ suite('DataScience Intellisense Unit Tests', () => {
             text: ''
         };
         return sendMessage(HistoryMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
+    }
+
+    function removeCell(id: string) : Promise<void> {
+        return sendMessage(HistoryMessages.RemoveCell, { id });
+    }
+
+    function removeAllCells() : Promise<void> {
+        return sendMessage(HistoryMessages.DeleteAllCells);
     }
 
     test('Add a single cell', async () => {
@@ -400,6 +409,8 @@ suite('DataScience Intellisense Unit Tests', () => {
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\n', 'Readding a cell broken');
         await updateCell('import sys', 'import sys\nsys.version_info', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Collapsing a cell broken');
+        await updateCell('import sys', 'import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Updating a cell broken');
     });
 
     test('Collapse expand cell after adding code', async () => {
@@ -413,5 +424,39 @@ suite('DataScience Intellisense Unit Tests', () => {
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\nsys', 'Readding a cell broken');
         await updateCell('import sys', 'import sys\nsys.version_info', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Collapsing a cell broken');
+        await updateCell('import sys', 'import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Updating a cell broken');
+    });
+
+    test('Add a cell and remove it', async () => {
+        await addCell('import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
+        await addCode('s', 1, 1, 0);
+        await addCode('y', 1, 2, 1);
+        await addCode('s', 1, 3, 2);
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
+        await removeCell('1');
+        expect(languageClient.getDocumentContents()).to.be.eq('sys', 'Removing a cell broken');
+        await addCell('import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Adding a cell broken');
+        await addCell('import bar', '2');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport bar\nsys', 'Adding a cell broken');
+        await removeCell('1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import bar\nsys', 'Removing a cell broken');
+    });
+
+    test('Add a bunch of cells and remove them', async () => {
+        await addCode('s', 1, 1, 0);
+        await addCode('y', 1, 2, 1);
+        await addCode('s', 1, 3, 2);
+        expect(languageClient.getDocumentContents()).to.be.eq('sys', 'Document not set after edit');
+        await addCell('import sys', '1');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set');
+        await addCell('import foo', '2');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport foo\nsys', 'Document not set');
+        await addCell('import bar', '3');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nsys', 'Document not set');
+        await removeAllCells();
+        expect(languageClient.getDocumentContents()).to.be.eq('sys', 'Removing all cells broken');
     });
 });

@@ -10,6 +10,7 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { Identifiers } from '../../constants';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
+import { traceInfo } from '../../../common/logger';
 
 class IntellisenseLine implements TextLine {
 
@@ -119,11 +120,15 @@ export class IntellisenseDocument implements TextDocument {
         return this.convertToOffset(position);
     }
     public positionAt(offset: number): Position {
-        const before = this._contents.slice(0, offset);
-        const newLines = before.match(/\n/g);
-        const line = newLines ? newLines.length : 0;
-        const preCharacters = before.match(/(\n|^).*$/g);
-        return new Position(line, preCharacters ? preCharacters[0].length : 0);
+        let line = 0;
+        let ch = 0;
+        while (line + 1 < this._lines.length && this._lines[line + 1].offset <= offset) {
+            line += 1;
+        }
+        if (line < this._lines.length) {
+            ch = offset - this._lines[line].offset;
+        }
+        return new Position(line, ch);
     }
     public getText(range?: Range | undefined): string {
         if (!range) {
@@ -197,7 +202,7 @@ export class IntellisenseDocument implements TextDocument {
         // Split our text between the edit text and the cells above
         const before = this._contents.substr(0, fromOffset);
         const after = this._contents.substr(fromOffset);
-        const fromPosition = this.computePosition(fromOffset);
+        const fromPosition = this.positionAt(fromOffset);
 
         // Save the range for this cell ()
         this._cellRanges.splice(this._cellRanges.length - 1, 0, { id, start: fromOffset, end: fromOffset + newCode.length });
@@ -218,6 +223,53 @@ export class IntellisenseDocument implements TextDocument {
         ];
     }
 
+    public removeCell(id: string): TextDocumentContentChangeEvent[] {
+        const cellIndex = this._cellRanges.findIndex(c => c.id === id);
+        if (cellIndex >= 0) {
+            this._version += 1;
+
+            // Compute the range for this cell.
+            const from = this.positionAt(this._cellRanges[cellIndex].start);
+            const to = this.positionAt(this._cellRanges[cellIndex].end);
+
+            // Remove the entire range.
+            const result = this.removeRange('', from, to, cellIndex);
+
+            // Remove the cell
+            this._cellRanges.splice(cellIndex, 1);
+
+            return result;
+        }
+
+        return [];
+    }
+
+    public removeAllCells(): TextDocumentContentChangeEvent[] {
+        // Remove everything up to the edit cell
+        if (this._cellRanges.length > 1) {
+            this._version += 1;
+
+            // Compute the offset for the edit cell
+            const toOffset = this._cellRanges[this._cellRanges.length - 1].start;
+            const from = this.positionAt(0);
+            const to = this.positionAt(toOffset);
+
+            // Remove the entire range.
+            const result = this.removeRange('', from, to, 0);
+
+            // Update our cell range
+            this._cellRanges = [ {
+                id: Identifiers.EditCellId,
+                start: 0,
+                end: this._cellRanges[this._cellRanges.length - 1].end - toOffset
+            }];
+
+            return result;
+        }
+
+        return [];
+    }
+
     public edit(editorChanges: monacoEditor.editor.IModelContentChange[], id: string): TextDocumentContentChangeEvent[] {
         this._version += 1;
 
@@ -225,45 +277,20 @@ export class IntellisenseDocument implements TextDocument {
         if (editorChanges && editorChanges.length) {
             const normalized = editorChanges[0].text.replace(/\r/g, '');
 
-            // The monaco Editor doesn't know about the hidden '\n' we have between the cells. We have
-            // to account for this in our length computations.
-            const normalizedLength = id === Identifiers.EditCellId ? normalized.length : normalized.length + 1;
+            if (id !== Identifiers.EditCellId) {
+                traceInfo('Editing non edit cell..');
+            }
 
             // Figure out which cell we're editing.
             const cellIndex = this._cellRanges.findIndex(c => c.id === id);
             if (cellIndex >= 0) {
                 // Line/column are within this cell. Use its offset to compute the real position
-                const editPos = this.computePosition(this._cellRanges[cellIndex].start);
+                const editPos = this.positionAt(this._cellRanges[cellIndex].start);
                 const from = new Position(editPos.line + editorChanges[0].range.startLineNumber - 1, editorChanges[0].range.startColumn - 1);
                 const to = new Position(editPos.line + editorChanges[0].range.endLineNumber - 1, editorChanges[0].range.endColumn - 1);
-                const fromOffset = this.convertToOffset(from);
-                const toOffset = this.convertToOffset(to);
 
-                // Recreate our contents, and then recompute all of our lines
-                const before = this._contents.substr(0, fromOffset);
-                const after = this._contents.substr(toOffset);
-                this._contents = `${before}${normalized}${after}`;
-                this._lines = this.createLines();
-
-                // Update ranges after this. All should move by the diff in length, although the current one
-                // should stay at the same start point.
-                const lengthDiff = normalizedLength - (this._cellRanges[cellIndex].end - this._cellRanges[cellIndex].start);
-                for (let i = cellIndex; i < this._cellRanges.length; i += 1) {
-                    if (i !== cellIndex) {
-                        this._cellRanges[i].start += lengthDiff;
-                    }
-                    this._cellRanges[i].end += lengthDiff;
-                }
-
-                return [
-                    {
-                        range: this.createSerializableRange(from, to),
-                        rangeOffset: fromOffset,
-                        rangeLength: toOffset - fromOffset,
-                        text: normalized
-                    }
-                ];
-
+                // Remove this range from the contents and return the change.
+                return this.removeRange(normalized, from, to, cellIndex);
             }
         }
 
@@ -275,7 +302,7 @@ export class IntellisenseDocument implements TextDocument {
         const cellIndex = this._cellRanges.findIndex(c => c.id === id);
         if (cellIndex >= 0) {
             // Line/column are within this cell. Use its offset to compute the real position
-            const editLine = this.computePosition(this._cellRanges[cellIndex].start);
+            const editLine = this.positionAt(this._cellRanges[cellIndex].start);
             const docLine = line - 1 + editLine.line;
             const docCh = ch - 1;
             return new Position(docLine, docCh);
@@ -285,16 +312,34 @@ export class IntellisenseDocument implements TextDocument {
         return new Position(line - 1, ch - 1);
     }
 
-    private computePosition(offset: number): Position {
-        let line = 0;
-        let ch = 0;
-        while (line + 1 < this._lines.length && this._lines[line + 1].offset <= offset) {
-            line += 1;
+    private removeRange(newText: string, from: Position, to: Position, cellIndex: number) : TextDocumentContentChangeEvent[] {
+        const fromOffset = this.convertToOffset(from);
+        const toOffset = this.convertToOffset(to);
+
+        // Recreate our contents, and then recompute all of our lines
+        const before = this._contents.substr(0, fromOffset);
+        const after = this._contents.substr(toOffset);
+        this._contents = `${before}${newText}${after}`;
+        this._lines = this.createLines();
+
+        // Update ranges after this. All should move by the diff in length, although the current one
+        // should stay at the same start point.
+        const lengthDiff = newText.length - (toOffset - fromOffset);
+        for (let i = cellIndex; i < this._cellRanges.length; i += 1) {
+            if (i !== cellIndex) {
+                this._cellRanges[i].start += lengthDiff;
+            }
+            this._cellRanges[i].end += lengthDiff;
         }
-        if (line < this._lines.length) {
-            ch = offset - this._lines[line].offset;
-        }
-        return new Position(line, ch);
+
+        return [
+            {
+                range: this.createSerializableRange(from, to),
+                rangeOffset: fromOffset,
+                rangeLength: toOffset - fromOffset,
+                text: newText
+            }
+        ];
     }
 
     private createLines(): IntellisenseLine[] {

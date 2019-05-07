@@ -28,7 +28,8 @@ import {
     IEditCell,
     IHistoryMapping,
     IProvideCompletionItemsRequest,
-    IProvideHoverRequest
+    IProvideHoverRequest,
+    IRemoveCell
 } from '.././historyTypes';
 import { IntellisenseDocument } from './intellisenseDocument';
 
@@ -84,6 +85,14 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
             case HistoryMessages.AddCell:
                 this.dispatchMessage(message, payload, this.addCell);
+                break;
+
+            case HistoryMessages.RemoveCell:
+                this.dispatchMessage(message, payload, this.removeCell);
+                break;
+
+            case HistoryMessages.DeleteAllCells:
+                this.dispatchMessage(message, payload, this.removeAllCells);
                 break;
 
             default:
@@ -185,4 +194,21 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         }
     }
 
+    private async removeCell(request: IRemoveCell): Promise<void> {
+        // First get the document
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.removeCell(request.id);
+            return this.handleChanges(undefined, document, changes);
+        }
+    }
+
+    private async removeAllCells(): Promise<void> {
+        // First get the document
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.removeAllCells();
+            return this.handleChanges(undefined, document, changes);
+        }
+    }
 }

@@ -66,6 +66,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
-    serviceManager.addSingleton<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
-    serviceManager.addSingleton<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
+    serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
+    serviceManager.add<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
 }

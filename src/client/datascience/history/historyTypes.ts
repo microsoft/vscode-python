@@ -45,6 +45,7 @@ export namespace HistoryMessages {
     export const ProvideHoverResponse = 'provide_hover_response';
     export const AddCell = 'add_cell';
     export const EditCell = 'edit_cell';
+    export const RemoveCell = 'remove_cell';
     export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
@@ -127,6 +128,10 @@ export interface IAddCell {
     id: string;
 }
 
+export interface IRemoveCell {
+    id: string;
+}
+
 // Map all messages to specific payloads
 export class IHistoryMapping {
     public [HistoryMessages.StartCell]: ICell;
@@ -169,6 +174,7 @@ export class IHistoryMapping {
     public [HistoryMessages.ProvideHoverResponse] : IProvideHoverResponse;
     public [HistoryMessages.AddCell] : IAddCell;
     public [HistoryMessages.EditCell] : IEditCell;
+    public [HistoryMessages.RemoveCell] : IRemoveCell;
     public [HistoryMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;
     public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;

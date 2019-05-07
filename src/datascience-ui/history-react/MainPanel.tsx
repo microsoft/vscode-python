@@ -511,6 +511,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private deleteCell = (index: number) => {
         this.sendMessage(HistoryMessages.DeleteCell);
+        const cellVM = this.state.cellVMs[index];
+        if (cellVM) {
+            this.sendMessage(HistoryMessages.RemoveCell, {id: cellVM.cell.id});
+        }
 
         // Update our state
         this.setState({
@@ -538,12 +542,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private clearAllSilent = () => {
-        // Make sure the edit cell doesn't go away
-        const editCell = this.getEditCell();
-
         // Update our state
         this.setState({
-            cellVMs: editCell ? [editCell] : [],
+            cellVMs: [],
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
             busy: false // No more progress on delete all
