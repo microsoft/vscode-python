@@ -252,17 +252,17 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
 
     // First we have to type the code into the input box
 
-    // Find the last cell. It should have a CodeMirror object. We need to search
-    // through its DOM to find the actual codemirror textarea to send input to
+    // Find the last cell. It should have a monacoEditor object. We need to search
+    // through its DOM to find the actual textarea to send input to
     // (we can't actually find it with the enzyme wrappers because they only search
-    //  React accessible nodes and the codemirror html is not react)
+    //  React accessible nodes and the monaco html is not react)
     const cells = wrapper.find('Cell');
     const lastCell = cells.last();
-    const rcm = lastCell.find('div.ReactCodeMirror');
-    const rcmDom = rcm.getDOMNode();
-    assert.ok(rcmDom, 'rcm DOM object not found');
-    const textArea = rcmDom!.querySelector('.CodeMirror')!.querySelector('textarea');
-    assert.ok(textArea!, 'Cannot find the textarea inside the code mirror');
+    const ec = lastCell.find('div.monaco-editor');
+    const ecDom = ec.getDOMNode();
+    assert.ok(ecDom, 'rcm DOM object not found');
+    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
+    assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
     // Now simulate entering all of the keys

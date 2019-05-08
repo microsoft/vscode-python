@@ -2187,9 +2187,13 @@
         "xml2js": "^0.4.19"
     },
     "devDependencies": {
-        "@babel/core": "^7.1.0",
+        "@babel/cli": "^7.4.4",
+        "@babel/core": "^7.4.4",
+        "@babel/plugin-transform-runtime": "^7.4.4",
+        "@babel/polyfill": "^7.4.4",
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
+        "@babel/register": "^7.4.4",
         "@nteract/plotly": "^1.47.1",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",

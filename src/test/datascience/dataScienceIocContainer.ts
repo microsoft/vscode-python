@@ -21,6 +21,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
+import { ILanguageServer } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -192,6 +193,7 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
+import { MockLanguageServer } from './mockLanguageServer';
 import { MockLiveShareApi } from './mockLiveShare';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 
@@ -288,6 +290,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+        this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {

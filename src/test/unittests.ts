@@ -38,3 +38,7 @@ const Module = require('module');
 // parts of the browser here.
 setUpDomEnvironment();
 initialize();
+
+// We need to babel transpile some modules. Monaco-editor is not in commonJS format so imports
+// can't be loaded.
+require('@babel/register')({ plugins: ['@babel/transform-modules-commonjs'], only: [ /monaco-editor/ ] });
