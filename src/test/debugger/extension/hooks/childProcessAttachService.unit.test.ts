@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { DebugSession, Uri, WorkspaceFolder } from 'vscode';
+import { Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { DebugService } from '../../../../client/common/application/debugService';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
@@ -38,11 +38,10 @@ suite('Debug - Attach to Child Process', () => {
                 command: 'request'
             }
         };
-        const parentDebugSession = { id: 'id' };
+        const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(debugService.activeDebugSession).thenReturn(parentDebugSession as DebugSession);
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(true as any);
-        await service.attach(data);
+        await service.attach(data, session);
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
     });
@@ -69,12 +68,12 @@ suite('Debug - Attach to Child Process', () => {
             }
         };
 
+        const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(debugService.activeDebugSession).thenReturn(undefined);
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(false as any);
         when(shell.showErrorMessage(anything())).thenResolve();
 
-        await service.attach(data);
+        await service.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
@@ -108,12 +107,12 @@ suite('Debug - Attach to Child Process', () => {
             }
         };
 
+        const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn([wkspace1, rightWorkspaceFolder, wkspace2]);
-        when(debugService.activeDebugSession).thenReturn(undefined);
         when(debugService.startDebugging(rightWorkspaceFolder, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data);
+        await service.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(rightWorkspaceFolder, anything(), anything())).once();
@@ -147,12 +146,12 @@ suite('Debug - Attach to Child Process', () => {
             }
         };
 
+        const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn([wkspace1, wkspace2]);
-        when(debugService.activeDebugSession).thenReturn(undefined);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data);
+        await service.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
@@ -187,17 +186,18 @@ suite('Debug - Attach to Child Process', () => {
         debugConfig.port = data.port;
         debugConfig.name = `Child Process ${data.processId}`;
         debugConfig.request = 'attach';
+        const session: any = {};
 
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(debugService.activeDebugSession).thenReturn(undefined);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data);
+        await service.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
-        const [, secondArg] = capture(debugService.startDebugging).last();
+        const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
+        expect(thirdArg).to.deep.equal(session);
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Validate debug config when parent/root parent was attached', async () => {
@@ -230,18 +230,18 @@ suite('Debug - Attach to Child Process', () => {
         debugConfig.port = data.port;
         debugConfig.name = `Child Process ${data.processId}`;
         debugConfig.request = 'attach';
+        const session: any = {};
 
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(debugService.activeDebugSession).thenReturn(undefined);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
-        // when(debugService.startDebugging(undefined, debugConfig)).thenResolve(true as any);
 
-        await service.attach(data);
+        await service.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
-        const [, secondArg] = capture(debugService.startDebugging).last();
+        const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
+        expect(thirdArg).to.deep.equal(session);
         verify(shell.showErrorMessage(anything())).never();
     });
 });
