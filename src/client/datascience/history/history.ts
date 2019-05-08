@@ -22,7 +22,7 @@ import {
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -1017,6 +1017,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
     private requestTmLanguage = () => {
         // Get the contents of the appropriate tmLanguage file.
+        traceInfo('Request for tmlanguage file.');
         this.themeFinder.findTmLanguage(PYTHON_LANGUAGE).then(s => {
             this.postMessage(HistoryMessages.LoadTmLanguageResponse, s).ignoreErrors();
         }).catch(_e => {
@@ -1025,13 +1026,23 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     private requestOnigasm = async () : Promise<void> => {
-        // This should just be in node_modules
-        const filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+        // Look for the file next or our current file (this is where it's installed in the vsix)
+        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+        traceInfo(`Request for onigasm file at ${filePath}`);
         if (await this.fileSystem.fileExists(filePath)) {
             const contents = await fs.readFile(filePath);
             this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
         } else {
-            this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+            // During development it's actually in the node_modules folder
+            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+            traceInfo(`Backup request for onigasm file at ${filePath}`);
+            if (await this.fileSystem.fileExists(filePath)) {
+                const contents = await fs.readFile(filePath);
+                this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+            } else {
+                traceWarning('Onigasm file not found. Colorization will not be available.');
+                this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+            }
         }
     }
 }

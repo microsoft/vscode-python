@@ -41,6 +41,10 @@ const config = {
         // 'find' the calling extension.
         new copyWebpackPlugin([
             { from: './package.json', to: '.' }
+        ]),
+        // onigasm requires our onigasm.wasm to be in node_modules
+        new copyWebpackPlugin([
+            { from: './node_modules/onigasm/lib/onigasm.wasm', to: './node_modules/onigasm/lib/onigasm.wasm' }
         ])
     ],
     resolve: {
