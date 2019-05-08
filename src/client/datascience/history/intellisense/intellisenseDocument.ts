@@ -8,9 +8,9 @@ import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEven
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { traceInfo } from '../../../common/logger';
 import { Identifiers } from '../../constants';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
-import { traceInfo } from '../../../common/logger';
 
 class IntellisenseLine implements TextLine {
 

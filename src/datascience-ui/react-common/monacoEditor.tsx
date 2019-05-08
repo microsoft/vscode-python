@@ -5,6 +5,7 @@
 
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import { IDisposable } from '../../client/common/types';
 
 import './monacoEditor.css';
 
@@ -14,6 +15,7 @@ export interface IMonacoEditorProps {
     language: string;
     value: string;
     theme?: string;
+    outermostParentClass: string;
     options: monacoEditor.editor.IEditorConstructionOptions;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
 }
@@ -29,7 +31,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private containerRef: React.RefObject<HTMLDivElement>;
     private measureWidthRef: React.RefObject<HTMLDivElement>;
     private resizeTimer?: number;
+    private leaveTimer?: number;
     private subscriptions: monacoEditor.IDisposable[] = [];
+    private widgetParent: HTMLDivElement | undefined;
+    private outermostParent: HTMLElement | null = null;
+    private enteredHover: boolean = false;
+    private lastOffsetLeft: number | undefined;
+    private lastOffsetTop: number | undefined;
     constructor(props: IMonacoEditorProps) {
         super(props);
         this.state = { editor: undefined, model: null };
@@ -42,6 +50,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             window.addEventListener('resize', this.windowResized);
         }
         if (this.containerRef.current) {
+            // Compute our outermost parent
+            let outerParent = this.containerRef.current.parentElement;
+            while (outerParent && !outerParent.classList.contains(this.props.outermostParentClass)) {
+                outerParent = outerParent.parentElement;
+            }
+            this.outermostParent = outerParent;
+            if (this.outermostParent) {
+                this.outermostParent.addEventListener('mouseleave', this.outermostParentLeave);
+            }
+
             // Create the editor
             const editor = monacoEditor.editor.create(this.containerRef.current,
                 {
@@ -90,6 +108,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 }
             }));
 
+            // Make sure our suggest and hover windows show up on top of other stuff
+            this.updateWidgetParent(editor);
+
             // Tell our parent the editor is ready to use
             this.props.editorMounted(editor);
         }
@@ -102,6 +123,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
         if (window) {
             window.removeEventListener('resize', this.windowResized);
+        }
+
+        if (this.outermostParent) {
+            this.outermostParent.removeEventListener('mouseleave', this.outermostParentLeave);
+            this.outermostParent = null;
+        }
+        if (this.widgetParent) {
+            this.widgetParent.remove();
         }
 
         if (this.state.editor) {
@@ -144,6 +173,29 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         this.resizeTimer = window.setTimeout(this.updateEditorSize, 0);
     }
 
+    private startUpdateWidgetPosition = () => {
+        this.updateWidgetPosition();
+    }
+
+    private updateWidgetPosition(width?: number) {
+        if (this.state.editor && this.widgetParent) {
+            // Position should be at the top of the editor.
+            const editorDomNode = this.state.editor.getDomNode();
+            if (editorDomNode) {
+                const rect = editorDomNode.getBoundingClientRect();
+                if (rect &&
+                    (rect.left !== this.lastOffsetLeft || rect.top !== this.lastOffsetTop)) {
+                    this.lastOffsetLeft = rect.left;
+                    this.lastOffsetTop = rect.top;
+
+                    this.widgetParent.setAttribute(
+                        'style',
+                        `position: absolute; left: ${rect.left}px; top: ${rect.top}px; width:${width ? width : rect.width}px`);
+                }
+            }
+        }
+    }
+
     private updateEditorSize = () => {
         if (this.measureWidthRef.current &&
             this.measureWidthRef.current.clientWidth &&
@@ -164,7 +216,107 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // For some reason this is flashing. Need to debug the editor code to see if
             // it draws more than once. Or if we can have React turn off DOM updates
             this.state.editor.layout({ width: width, height: height });
+
+            // Also need to update our widget positions
+            this.updateWidgetPosition(width);
         }
     }
 
+    private onHoverLeave = () => {
+        // If the hover is active, make sure to hide it.
+        if (this.state.editor && this.widgetParent) {
+            this.enteredHover = false;
+            // tslint:disable-next-line: no-any
+            const hover = this.state.editor.getContribution('editor.contrib.hover') as any;
+            if (hover._hideWidgets) {
+                hover._hideWidgets();
+            }
+        }
+    }
+
+    private onHoverEnter = () => {
+        if (this.state.editor && this.widgetParent) {
+            // If we enter the hover, indicate it so we don't leave
+            this.enteredHover = true;
+        }
+    }
+
+    private outermostParentLeave = () => {
+        // Have to bounce this because the leave for the cell is the
+        // enter for the hover
+        if (this.leaveTimer) {
+            clearTimeout(this.leaveTimer);
+        }
+        this.leaveTimer = window.setTimeout(this.outermostParentLeaveBounced, 0);
+    }
+
+    private outermostParentLeaveBounced = () => {
+        if (this.state.editor && !this.enteredHover) {
+            // If we haven't already entered hover, then act like it shuts down
+            this.onHoverLeave();
+        }
+    }
+
+    private updateWidgetParent(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        // Reparent the hover widgets. They cannot be inside anything that has overflow hidden or scrolling or they won't show
+        // up overtop of anything. Warning, this is a big hack. If the class name changes or the logic
+        // for figuring out the position of hover widgets changes, this won't work anymore.
+        // appendChild on a DOM node moves it, but doesn't clone it.
+        // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
+        const editorNode = editor.getDomNode();
+        if (editorNode) {
+            const elements = editorNode.getElementsByClassName('overflowingContentWidgets');
+            if (elements && elements.length) {
+                const contentWidgets = elements[0] as HTMLDivElement;
+                if (contentWidgets) {
+                    // Go up to the document.
+                    const document = contentWidgets.getRootNode() as HTMLDocument;
+
+                    // His first child with the id 'root' should be where we want to parent our overflow widgets
+                    if (document) {
+                        const root = document.getElementById('root');
+                        if (root) {
+                            // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.
+                            this.widgetParent = document.createElement('div', {});
+                            this.widgetParent.setAttribute('class', `${editorNode.className} monaco-editor-pretend-parent`);
+
+                            // We also need to make sure its position follows the editor around on the screen.
+                            const rect = editorNode.getBoundingClientRect();
+                            if (rect) {
+                                this.lastOffsetLeft = rect.left;
+                                this.lastOffsetTop = rect.top;
+                                this.widgetParent.setAttribute(
+                                    'style',
+                                    `position: absolute; left: ${rect.left}px; top: ${rect.top}px`);
+                            }
+
+                            root.appendChild(this.widgetParent);
+                            this.widgetParent.appendChild(contentWidgets);
+
+                            // Listen for changes so we can update the position dynamically
+                            editorNode.addEventListener('mouseenter', this.startUpdateWidgetPosition);
+
+                            // We also need to trick the editor into thinking mousing over the hover does not
+                            // mean the mouse has left the editor.
+                            // tslint:disable-next-line: no-any
+                            const hover = editor.getContribution('editor.contrib.hover') as any;
+                            if (hover._toUnhook && hover._toUnhook.length === 8 && hover.contentWidget) {
+                                // This should mean our 5th element is the event handler for mouse leave. Remove it.
+                                const array = hover._toUnhook as IDisposable[];
+                                array[5].dispose();
+                                array.splice(5, 1);
+
+                                // Instead listen to mouse leave for our hover widget
+                                const hoverWidget = this.widgetParent.getElementsByClassName('monaco-editor-hover')[0] as HTMLElement;
+                                if (hoverWidget) {
+                                    hoverWidget.addEventListener('mouseenter', this.onHoverEnter);
+                                    hoverWidget.addEventListener('mouseleave', this.onHoverLeave);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

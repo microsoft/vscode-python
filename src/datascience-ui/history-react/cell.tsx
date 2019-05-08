@@ -224,6 +224,7 @@ export class Cell extends React.Component<ICellProps> {
                         ref={this.updateCodeRef}
                         onChange={this.onCodeChange}
                         onCreated={this.onCodeCreated}
+                        outermostParentClass='cell-wrapper'
                         monacoTheme={this.props.monacoTheme}
                         />
                 </div>

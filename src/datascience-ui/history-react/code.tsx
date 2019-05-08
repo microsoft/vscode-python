@@ -21,6 +21,7 @@ export interface ICodeProps {
     cursorType: string;
     showWatermark: boolean;
     monacoTheme: string | undefined;
+    outermostParentClass: string;
     onSubmit(code: string): void;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
@@ -88,6 +89,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             <div className={classes}>
                 <MonacoEditor
                     value={this.props.code}
+                    outermostParentClass={this.props.outermostParentClass}
                     theme={this.props.monacoTheme ? this.props.monacoTheme : 'vs'}
                     language='python'
                     editorMounted={this.editorDidMount}
