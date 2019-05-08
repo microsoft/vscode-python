@@ -95,6 +95,10 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
                 this.dispatchMessage(message, payload, this.removeAllCells);
                 break;
 
+            case HistoryMessages.RestartKernel:
+                this.dispatchMessage(message, payload, this.restartKernel);
+                break;
+
             default:
                 break;
         }
@@ -194,17 +198,20 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         }
     }
 
-    private async removeCell(request: IRemoveCell): Promise<void> {
-        // First get the document
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.removeCell(request.id);
-            return this.handleChanges(undefined, document, changes);
-        }
+    private removeCell(_request: IRemoveCell): Promise<void> {
+        // Skip this request. The logic here being that
+        // a user can remove a cell from the UI, but it's still loaded into the Jupyter kernel.
+        return Promise.resolve();
     }
 
-    private async removeAllCells(): Promise<void> {
-        // First get the document
+    private removeAllCells(): Promise<void> {
+        // Skip this request. The logic here being that
+        // a user can remove a cell from the UI, but it's still loaded into the Jupyter kernel.
+        return Promise.resolve();
+    }
+
+    private async restartKernel(): Promise<void> {
+        // This is the one that acts like a reset
         const document = await this.getDocument();
         if (document) {
             const changes = document.removeAllCells();

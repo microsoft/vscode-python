@@ -8,7 +8,6 @@ import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEven
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { traceInfo } from '../../../common/logger';
 import { Identifiers } from '../../constants';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
@@ -276,10 +275,6 @@ export class IntellisenseDocument implements TextDocument {
         // Convert the range to local (and remove 1 based)
         if (editorChanges && editorChanges.length) {
             const normalized = editorChanges[0].text.replace(/\r/g, '');
-
-            if (id !== Identifiers.EditCellId) {
-                traceInfo('Editing non edit cell..');
-            }
 
             // Figure out which cell we're editing.
             const cellIndex = this._cellRanges.findIndex(c => c.id === id);

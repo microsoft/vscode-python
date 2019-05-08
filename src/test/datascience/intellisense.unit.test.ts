@@ -308,11 +308,13 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function removeCell(id: string) : Promise<void> {
-        return sendMessage(HistoryMessages.RemoveCell, { id });
+        sendMessage(HistoryMessages.RemoveCell, { id }).ignoreErrors();
+        return Promise.resolve();
     }
 
     function removeAllCells() : Promise<void> {
-        return sendMessage(HistoryMessages.DeleteAllCells);
+        sendMessage(HistoryMessages.DeleteAllCells).ignoreErrors();
+        return Promise.resolve();
     }
 
     test('Add a single cell', async () => {
@@ -436,13 +438,13 @@ suite('DataScience Intellisense Unit Tests', () => {
         await addCode('s', 1, 3, 2);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
         await removeCell('1');
-        expect(languageClient.getDocumentContents()).to.be.eq('sys', 'Removing a cell broken');
-        await addCell('import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Adding a cell broken');
-        await addCell('import bar', '2');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport bar\nsys', 'Adding a cell broken');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Removing a cell broken');
+        await addCell('import sys', '2');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a cell broken');
+        await addCell('import bar', '3');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Adding a cell broken');
         await removeCell('1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import bar\nsys', 'Removing a cell broken');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Removing a cell broken');
     });
 
     test('Add a bunch of cells and remove them', async () => {
@@ -457,6 +459,8 @@ suite('DataScience Intellisense Unit Tests', () => {
         await addCell('import bar', '3');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nsys', 'Document not set');
         await removeAllCells();
-        expect(languageClient.getDocumentContents()).to.be.eq('sys', 'Removing all cells broken');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nsys', 'Removing all cells broken');
+        await addCell('import baz', '3');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nimport baz\nsys', 'Document not set');
     });
 });

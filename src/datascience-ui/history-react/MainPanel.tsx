@@ -915,9 +915,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, _modelId: string) => {
-        // Pass this onto the completion provider running in the extension
-        this.sendMessage(HistoryMessages.EditCell, { changes, id });
+    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
+        // If the model id doesn't match, skip sending this edit. This happens
+        // when a cell is reused after deleting another
+        const expectedCellId = this.monacoIdToCellId.get(modelId);
+        if (expectedCellId !== id) {
+            // A cell has been reused. Update our mapping
+            this.monacoIdToCellId.set(modelId, id);
+        } else {
+            // Just a normal edit. Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.EditCell, { changes, id });
+        }
     }
 
     private readOnlyCodeCreated = (text: string, file: string, id: string, monacoId: string) => {
