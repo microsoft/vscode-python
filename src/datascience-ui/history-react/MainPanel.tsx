@@ -82,7 +82,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Setup the tokenizer for monaco if running inside of vscode
         if (this.props.skipDefault) {
-            initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+            if (this.props.testMode) {
+                // Running a test, skip the tokenizer. We want the UI to display synchronously
+                this.state = {tokenizerLoaded: true, ...this.state};
+            } else {
+                initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+            }
         }
     }
 

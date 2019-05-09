@@ -224,8 +224,15 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
             event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown });
             domNode.dispatchEvent(event);
 
-            // Dispatch an input event so we update the textarea
+            // Update our value. This will reset selection to zero.
             domNode.value = domNode.value + key;
+
+            // Tell the dom node its selection start has changed. Monaco
+            // reads this to determine where the character went.
+            domNode.selectionEnd = domNode.value.length;
+            domNode.selectionStart = domNode.value.length;
+
+            // Dispatch an input event so we update the textarea
             domNode.dispatchEvent(createInputEvent());
         }
     }
@@ -258,9 +265,9 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
     //  React accessible nodes and the monaco html is not react)
     const cells = wrapper.find('Cell');
     const lastCell = cells.last();
-    const ec = lastCell.find('div.monaco-editor');
-    const ecDom = ec.getDOMNode();
-    assert.ok(ecDom, 'rcm DOM object not found');
+    const editorControl = lastCell.find('MonacoEditor');
+    const ecDom = editorControl.getDOMNode();
+    assert.ok(ecDom, 'ec DOM object not found');
     const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();

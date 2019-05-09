@@ -970,7 +970,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private requestVariables = async (requestExecutionCount: number): Promise<void> => {
+    private async requestVariables(requestExecutionCount: number): Promise<void> {
         // Request our new list of variables
         const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
         const variablesResponse: IJupyterVariablesResponse = {executionCount: requestExecutionCount, variables: vars };
@@ -995,7 +995,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     // tslint:disable-next-line: no-any
-    private requestVariableValue = async (payload?: any): Promise<void> => {
+    private async requestVariableValue(payload?: any): Promise<void> {
         if (payload) {
             const targetVar = payload as IJupyterVariable;
             // Request our variable value
@@ -1015,7 +1015,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private requestTmLanguage = () => {
+    private requestTmLanguage() {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         this.themeFinder.findTmLanguage(PYTHON_LANGUAGE).then(s => {
@@ -1025,24 +1025,30 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         });
     }
 
-    private requestOnigasm = async () : Promise<void> => {
+    private async requestOnigasm() : Promise<void> {
         // Look for the file next or our current file (this is where it's installed in the vsix)
         let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
         traceInfo(`Request for onigasm file at ${filePath}`);
-        if (await this.fileSystem.fileExists(filePath)) {
-            const contents = await fs.readFile(filePath);
-            this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-        } else {
-            // During development it's actually in the node_modules folder
-            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-            traceInfo(`Backup request for onigasm file at ${filePath}`);
+        if (this.fileSystem) {
             if (await this.fileSystem.fileExists(filePath)) {
                 const contents = await fs.readFile(filePath);
                 this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
-                traceWarning('Onigasm file not found. Colorization will not be available.');
-                this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+                // During development it's actually in the node_modules folder
+                filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+                traceInfo(`Backup request for onigasm file at ${filePath}`);
+                if (await this.fileSystem.fileExists(filePath)) {
+                    const contents = await fs.readFile(filePath);
+                    this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+                } else {
+                    traceWarning('Onigasm file not found. Colorization will not be available.');
+                    this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+                }
             }
+        } else {
+            // This happens during testing. Onigasm not needed as we're not testing colorization.
+            traceWarning('File system not found. Colorization will not be available.');
+            this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
         }
     }
 }

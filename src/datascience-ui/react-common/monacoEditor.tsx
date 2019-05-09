@@ -21,7 +21,7 @@ export interface IMonacoEditorProps {
 }
 
 interface IMonacoEditorState {
-    editor?:  monacoEditor.editor.IStandaloneCodeEditor;
+    editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
 }
 
@@ -133,10 +133,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.widgetParent.remove();
         }
 
+        this.subscriptions.forEach(d => d.dispose());
         if (this.state.editor) {
             this.state.editor.dispose();
         }
-        this.subscriptions.forEach(d => d.dispose());
     }
 
     public componentDidUpdate(prevProps: IMonacoEditorProps) {
@@ -160,8 +160,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     public render() {
         return (
             <div className='monaco-editor-outer-container' ref={this.containerRef}>
-                <div className='monaco-editor-container'/>
-                <div className='measure-width-div' ref={this.measureWidthRef}/>
+                <div className='monaco-editor-container' />
+                <div className='measure-width-div' ref={this.measureWidthRef} />
             </div>
         );
     }
@@ -265,57 +265,65 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
         const editorNode = editor.getDomNode();
         if (editorNode) {
-            const elements = editorNode.getElementsByClassName('overflowingContentWidgets');
-            if (elements && elements.length) {
-                const contentWidgets = elements[0] as HTMLDivElement;
-                if (contentWidgets) {
-                    // Go up to the document.
-                    const document = contentWidgets.getRootNode() as HTMLDocument;
+            try {
+                const elements = editorNode.getElementsByClassName('overflowingContentWidgets');
+                if (elements && elements.length) {
+                    const contentWidgets = elements[0] as HTMLDivElement;
+                    if (contentWidgets) {
+                        // Go up to the document.
+                        const document = contentWidgets.getRootNode() as HTMLDocument;
 
-                    // His first child with the id 'root' should be where we want to parent our overflow widgets
-                    if (document) {
-                        const root = document.getElementById('root');
-                        if (root) {
-                            // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.
-                            this.widgetParent = document.createElement('div', {});
-                            this.widgetParent.setAttribute('class', `${editorNode.className} monaco-editor-pretend-parent`);
+                        // His first child with the id 'root' should be where we want to parent our overflow widgets
+                        if (document) {
+                            const root = document.getElementById('root');
+                            if (root) {
+                                // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.
+                                this.widgetParent = document.createElement('div', {});
+                                this.widgetParent.setAttribute('class', `${editorNode.className} monaco-editor-pretend-parent`);
 
-                            // We also need to make sure its position follows the editor around on the screen.
-                            const rect = editorNode.getBoundingClientRect();
-                            if (rect) {
-                                this.lastOffsetLeft = rect.left;
-                                this.lastOffsetTop = rect.top;
-                                this.widgetParent.setAttribute(
-                                    'style',
-                                    `position: absolute; left: ${rect.left}px; top: ${rect.top}px`);
-                            }
+                                // We also need to make sure its position follows the editor around on the screen.
+                                const rect = editorNode.getBoundingClientRect();
+                                if (rect) {
+                                    this.lastOffsetLeft = rect.left;
+                                    this.lastOffsetTop = rect.top;
+                                    this.widgetParent.setAttribute(
+                                        'style',
+                                        `position: absolute; left: ${rect.left}px; top: ${rect.top}px`);
+                                }
 
-                            root.appendChild(this.widgetParent);
-                            this.widgetParent.appendChild(contentWidgets);
+                                root.appendChild(this.widgetParent);
+                                this.widgetParent.appendChild(contentWidgets);
 
-                            // Listen for changes so we can update the position dynamically
-                            editorNode.addEventListener('mouseenter', this.startUpdateWidgetPosition);
+                                // Listen for changes so we can update the position dynamically
+                                editorNode.addEventListener('mouseenter', this.startUpdateWidgetPosition);
 
-                            // We also need to trick the editor into thinking mousing over the hover does not
-                            // mean the mouse has left the editor.
-                            // tslint:disable-next-line: no-any
-                            const hover = editor.getContribution('editor.contrib.hover') as any;
-                            if (hover._toUnhook && hover._toUnhook.length === 8 && hover.contentWidget) {
-                                // This should mean our 5th element is the event handler for mouse leave. Remove it.
-                                const array = hover._toUnhook as IDisposable[];
-                                array[5].dispose();
-                                array.splice(5, 1);
+                                // We also need to trick the editor into thinking mousing over the hover does not
+                                // mean the mouse has left the editor.
+                                // tslint:disable-next-line: no-any
+                                const hover = editor.getContribution('editor.contrib.hover') as any;
+                                if (hover._toUnhook && hover._toUnhook.length === 8 && hover.contentWidget) {
+                                    // This should mean our 5th element is the event handler for mouse leave. Remove it.
+                                    const array = hover._toUnhook as IDisposable[];
+                                    array[5].dispose();
+                                    array.splice(5, 1);
 
-                                // Instead listen to mouse leave for our hover widget
-                                const hoverWidget = this.widgetParent.getElementsByClassName('monaco-editor-hover')[0] as HTMLElement;
-                                if (hoverWidget) {
-                                    hoverWidget.addEventListener('mouseenter', this.onHoverEnter);
-                                    hoverWidget.addEventListener('mouseleave', this.onHoverLeave);
+                                    // Instead listen to mouse leave for our hover widget
+                                    const hoverWidget = this.widgetParent.getElementsByClassName('monaco-editor-hover')[0] as HTMLElement;
+                                    if (hoverWidget) {
+                                        hoverWidget.addEventListener('mouseenter', this.onHoverEnter);
+                                        hoverWidget.addEventListener('mouseleave', this.onHoverLeave);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } catch (e) {
+                // If something fails, then the hover will just work inside the main frame
+                window.console.warn(`Error moving editor widgets: ${e}`);
+
+                // Make sure we don't try moving it around.
+                this.widgetParent = undefined;
             }
         }
     }

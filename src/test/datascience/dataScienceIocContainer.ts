@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILanguageServer } from '../../client/activation/types';
+import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -90,6 +90,7 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { History } from '../../client/datascience/history/history';
 import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
 import { HistoryProvider } from '../../client/datascience/history/historyProvider';
+import { DotNetIntellisenseProvider } from '../../client/datascience/history/intellisense/dotNetIntellisenseProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -107,6 +108,7 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IHistory,
+    IHistoryListener,
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
@@ -194,6 +196,7 @@ import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockLanguageServer } from './mockLanguageServer';
+import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLiveShareApi } from './mockLiveShare';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 
@@ -291,6 +294,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
+        this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
+        this.serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
