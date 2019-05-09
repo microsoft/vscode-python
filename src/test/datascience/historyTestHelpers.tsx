@@ -16,7 +16,7 @@ import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { blurWindow, createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -39,15 +39,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountWebView(ioc, <MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
-            try {
-                await testFunc(wrapper);
-            } finally {
-                // Blur window focus so we don't have editors polling
-                blurWindow();
-
-                // Make sure to unmount the wrapper or it will interfere with other tests
-                wrapper.unmount();
-            }
+            await testFunc(wrapper);
         } else {
             // tslint:disable-next-line:no-console
             console.log(`${name} skipped, no Jupyter installed.`);

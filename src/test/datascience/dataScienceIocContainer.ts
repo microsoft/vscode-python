@@ -77,7 +77,7 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from '../../client/common/types';
-import { Deferred } from '../../client/common/utils/async';
+import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -251,6 +251,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.wrapper && this.wrapper.length) {
             this.wrapper.unmount();
             this.wrapper = undefined;
+        }
+
+        // Bounce this so that our editor has time to shutdown
+        await sleep(10);
+
+        // Clear out the monaco global services. Some of these services are preventing shutdown.
+        // tslint:disable: no-require-imports
+        const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
+        if (services.StaticServices) {
+            const keys = Object.keys(services.StaticServices);
+            keys.forEach(k => {
+                const service = services.StaticServices[k] as any;
+                if (service && service._value && service._value.dispose) {
+                    if (typeof service._value.dispose === 'function') {
+                        service._value.dispose();
+                    }
+                }
+            });
+        }
+
+        // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
+        const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
+        if (config.getCSSBasedConfiguration) {
+            config.getCSSBasedConfiguration().dispose();
         }
     }
 

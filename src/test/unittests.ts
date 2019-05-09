@@ -34,6 +34,21 @@ const Module = require('module');
     };
 })();
 
+// Special case for the node_modules\monaco-editor\esm\vs\editor\browser\config\configuration.js. It doesn't
+// export the function we need to dispose of the timer it's set. So force it to.
+const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
+const _oldLoader = require.extensions['.js'];
+// tslint:disable-next-line:no-function-expression
+require.extensions['.js'] = function(mod: any, filename) {
+    if (configurationRegex.test(filename)) {
+        let content = require('fs').readFileSync(filename, 'utf8');
+        content += 'export function getCSSBasedConfiguration() { return CSSBasedConfiguration.INSTANCE; };\n';
+        mod._compile(content, filename);
+    } else {
+        _oldLoader(mod, filename);
+    }
+};
+
 // nteract/transforms-full expects to run in the browser so we have to fake
 // parts of the browser here.
 setUpDomEnvironment();
