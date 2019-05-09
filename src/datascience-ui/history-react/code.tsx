@@ -76,6 +76,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             renderLineHighlight: 'none',
             highlightActiveIndentGuide: false,
             autoIndent: true,
+            autoClosingBrackets: this.props.testMode ? 'never' : 'languageDefined',
+            autoClosingQuotes: this.props.testMode ? 'never' : 'languageDefined',
             renderIndentGuides: false,
             overviewRulerBorder: false,
             overviewRulerLanes: 0,
@@ -88,6 +90,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return (
             <div className={classes}>
                 <MonacoEditor
+                    testMode={this.props.testMode}
                     value={this.props.code}
                     outermostParentClass={this.props.outermostParentClass}
                     theme={this.props.monacoTheme ? this.props.monacoTheme : 'vs'}

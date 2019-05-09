@@ -17,6 +17,7 @@ export interface IMonacoEditorProps {
     theme?: string;
     outermostParentClass: string;
     options: monacoEditor.editor.IEditorConstructionOptions;
+    testMode?: boolean;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
 }
 
@@ -320,7 +321,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 }
             } catch (e) {
                 // If something fails, then the hover will just work inside the main frame
-                window.console.warn(`Error moving editor widgets: ${e}`);
+                if (!this.props.testMode) {
+                    window.console.warn(`Error moving editor widgets: ${e}`);
+                }
 
                 // Make sure we don't try moving it around.
                 this.widgetParent = undefined;
