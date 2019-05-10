@@ -247,15 +247,20 @@ function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, te
     simulateKey(textArea, key);
 }
 
+export function getEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : ReactWrapper<any, Readonly<{}>, React.Component> {
+    // Find the last cell. It should have a monacoEditor object
+    const cells = wrapper.find('Cell');
+    const lastCell = cells.last();
+    return lastCell.find('MonacoEditor');
+}
+
 export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string) : HTMLTextAreaElement | null {
 
     // Find the last cell. It should have a monacoEditor object. We need to search
     // through its DOM to find the actual textarea to send input to
     // (we can't actually find it with the enzyme wrappers because they only search
     //  React accessible nodes and the monaco html is not react)
-    const cells = wrapper.find('Cell');
-    const lastCell = cells.last();
-    const editorControl = lastCell.find('MonacoEditor');
+    const editorControl = getEditor(wrapper);
     const ecDom = editorControl.getDOMNode();
     assert.ok(ecDom, 'ec DOM object not found');
     const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');

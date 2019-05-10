@@ -5,14 +5,18 @@ import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import { Disposable } from 'vscode';
 
+import { ILanguageServer } from '../../client/activation/types';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { runMountedTest, typeCode } from './historyTestHelpers';
-import { ILanguageServer } from '../../client/activation/types';
-import { MockLanguageServer } from './mockLanguageServer';
+import { getEditor, runMountedTest, typeCode } from './historyTestHelpers';
 import { MockLanguageClient } from './mockLanguageClient';
+import { MockLanguageServer } from './mockLanguageServer';
+import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
+import { createDeferred } from '../../client/common/utils/async';
+import { IDisposable } from 'monaco-editor';
+import { noop } from '../core';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -56,14 +60,43 @@ suite('DataScience Intellisense tests', () => {
         return result;
     }
 
-    function verifyIntellisenseVisible(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+    function verifyIntellisenseVisible(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
         assert.ok(wrapper);
+        const editor = getEditor(wrapper);
+        assert.ok(editor);
+        const domNode = editor.getDOMNode();
+        assert.ok(domNode);
+        const node = domNode!.querySelector('.monaco-list-row .label-name .highlight') as HTMLElement;
+        assert.ok(node);
+        assert.equal(node!.innerHTML, expectedSpan, 'Intellisense row not matching')
     }
 
-    function getCompletionRequestPromise() : Promise<void> {
-        const languageServer = ioc.get<ILanguageServer>(ILanguageServer) as MockLanguageServer;
-        const languageClient = languageServer.languageClient as MockLanguageClient;
-        return languageClient.waitForRequest();
+    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
+        const editorEnzyme = getEditor(wrapper);
+        const reactEditor = editorEnzyme.instance() as MonacoEditor;
+        const editor = reactEditor.state.editor;
+        if (editor) {
+            // The suggest controller has a suggest model on it. It has an event
+            // that fires when the suggest controller is opened.
+            const suggest = editor.getContribution('editor.contrib.suggestController') as any;
+            if (suggest && suggest._model) {
+                const promise = createDeferred<void>();
+                const disposable = suggest._model.onDidSuggest(() => {
+                    promise.resolve();
+                });
+                return {
+                    disposable,
+                    promise: promise.promise
+                }
+            }
+        }
+
+        return {
+            disposable: {
+                dispose: noop
+            },
+            promise: Promise.resolve()
+        };
     }
 
     runMountedTest('Simple autocomplete', async (wrapper) => {
@@ -72,9 +105,9 @@ suite('DataScience Intellisense tests', () => {
         await history.show();
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
-        const requestPromise = getCompletionRequestPromise();
+        const suggestion = waitForSuggestion(wrapper);
         typeCode(wrapper, 'print');
-        await requestPromise;
-        verifyIntellisenseVisible(wrapper);
+        await suggestion.promise;
+        verifyIntellisenseVisible(wrapper, 'print');
     }, () => { return ioc; });
 });

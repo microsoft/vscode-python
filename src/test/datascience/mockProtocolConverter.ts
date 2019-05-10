@@ -89,7 +89,7 @@ export class MockProtocolConverter implements Code2ProtocolConverter {
     public asTextEdit(_edit: code.TextEdit): proto.TextEdit {
         throw new Error('Method not implemented.');
     }
-    public asReferenceParams(_textDocument: code.TextDocument, _position: code.Position, _options: { includeDeclaration: boolean; }): proto.ReferenceParams {
+    public asReferenceParams(_textDocument: code.TextDocument, _position: code.Position, _options: { includeDeclaration: boolean }): proto.ReferenceParams {
         throw new Error('Method not implemented.');
     }
     public asCodeActionContext(_context: code.CodeActionContext): proto.CodeActionContext {
