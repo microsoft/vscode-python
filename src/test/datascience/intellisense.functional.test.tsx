@@ -3,20 +3,17 @@
 'use strict';
 import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
+import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
-import { ILanguageServer } from '../../client/activation/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
+import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
+import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getEditor, runMountedTest, typeCode } from './historyTestHelpers';
-import { MockLanguageClient } from './mockLanguageClient';
-import { MockLanguageServer } from './mockLanguageServer';
-import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
-import { createDeferred } from '../../client/common/utils/async';
-import { IDisposable } from 'monaco-editor';
-import { noop } from '../core';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -68,7 +65,7 @@ suite('DataScience Intellisense tests', () => {
         assert.ok(domNode);
         const node = domNode!.querySelector('.monaco-list-row .label-name .highlight') as HTMLElement;
         assert.ok(node);
-        assert.equal(node!.innerHTML, expectedSpan, 'Intellisense row not matching')
+        assert.equal(node!.innerHTML, expectedSpan, 'Intellisense row not matching');
     }
 
     function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
@@ -87,7 +84,7 @@ suite('DataScience Intellisense tests', () => {
                 return {
                     disposable,
                     promise: promise.promise
-                }
+                };
             }
         }
 
