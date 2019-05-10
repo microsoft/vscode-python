@@ -309,7 +309,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         if (tokenColors && tokenColors.length > 0) {
             // This theme may include others. If so we need to combine the two together
             const include = theme ? theme.include : undefined;
-            if (include && include !== null) {
+            if (include) {
                 const includePath = path.join(path.dirname(themeFile), include.toString());
                 const includedColors = await this.readTokenColors(includePath);
                 return this.mergeColors(tokenColors, includedColors);
@@ -335,7 +335,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // This theme may include others. If so we need to combine the two together
         const include = theme ? theme.include : undefined;
-        if (include && include !== null) {
+        if (include) {
             const includePath = path.join(path.dirname(themeFile), include.toString());
             const includedColors = await this.readBaseColors(includePath);
             return this.mergeBaseColors(colors, includedColors);
