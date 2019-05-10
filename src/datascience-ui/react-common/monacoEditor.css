@@ -9,6 +9,11 @@
     color: var(--override-foreground, var(--vscode-editor-foreground));
 }
 
+.monaco-editor .mtk1 {
+    /* For some reason the monaco editor refuses to update this style no matter the theme. It's always black */
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
 /* Bunch of styles copied from vscode. Handles the hover window */
 
  .monaco-editor-hover {
