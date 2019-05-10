@@ -57,5 +57,5 @@ export type ChildProcessLaunchData = {
 
 export const IChildProcessAttachService = Symbol('IChildProcessAttachService');
 export interface IChildProcessAttachService {
-    attach(data: ChildProcessLaunchData): Promise<void>;
+    attach(data: ChildProcessLaunchData, parentSession: DebugSession): Promise<void>;
 }

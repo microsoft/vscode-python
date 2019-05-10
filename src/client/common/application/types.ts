@@ -774,7 +774,7 @@ export interface IDebugService {
      * @param nameOrConfiguration Either the name of a debug or compound configuration or a [DebugConfiguration](#DebugConfiguration) object.
      * @return A thenable that resolves when debugging could be successfully started.
      */
-    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration): Thenable<boolean>;
+    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, parentSession?: DebugSession): Thenable<boolean>;
 
     /**
      * Add breakpoints.

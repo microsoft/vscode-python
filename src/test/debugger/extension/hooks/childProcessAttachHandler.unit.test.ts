@@ -5,7 +5,8 @@
 
 // tslint:disable:no-any
 
-import { instance, mock, verify, when } from 'ts-mockito';
+import { expect } from 'chai';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ChildProcessAttachEventHandler } from '../../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../../client/debugger/extension/hooks/childProcessAttachService';
 import { PTVSDEvents } from '../../../../client/debugger/extension/hooks/constants';
@@ -15,15 +16,17 @@ suite('Debug - Child Process', () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
-        await handler.handleCustomEvent({ event: 'abc', body, session: {} as any });
-        verify(attachService.attach(body)).never();
+        const session: any = {};
+        await handler.handleCustomEvent({ event: 'abc', body, session });
+        verify(attachService.attach(body, session)).never();
     });
     test('Do not attach to child process if event is invalid', async () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
-        await handler.handleCustomEvent({ event: PTVSDEvents.ChildProcessLaunched, body, session: {} as any });
-        verify(attachService.attach(body)).once();
+        const session: any = {};
+        await handler.handleCustomEvent({ event: PTVSDEvents.ChildProcessLaunched, body, session });
+        verify(attachService.attach(body, session)).once();
     });
     test('Exceptions are not bubbled up if data is invalid', async () => {
         const attachService = mock(ChildProcessAttachService);
@@ -34,8 +37,11 @@ suite('Debug - Child Process', () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
-        when(attachService.attach(body)).thenThrow(new Error('Kaboom'));
+        const session: any = {};
+        when(attachService.attach(body, session)).thenThrow(new Error('Kaboom'));
         await handler.handleCustomEvent({ event: PTVSDEvents.ChildProcessLaunched, body, session: {} as any });
-        verify(attachService.attach(body)).once();
+        verify(attachService.attach(body, anything())).once();
+        const [, secondArg] = capture(attachService.attach).last();
+        expect(secondArg).to.deep.equal(session);
     });
 });
