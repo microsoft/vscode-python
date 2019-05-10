@@ -225,7 +225,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
 
     protected async notifyifEnvPythonPathChanged(): Promise<void> {
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        const envPythonPath = vars.PYTHONPATH;
+        const envPythonPath = vars.PYTHONPATH || '';
 
         if (this.envPythonPath !== envPythonPath) {
             this.didChange.fire();
