@@ -9,7 +9,10 @@ import { HistoryMessageListener } from '../../client/datascience/history/history
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { enterInput, runMountedTest } from './historyTestHelpers';
+import { runMountedTest, typeCode } from './historyTestHelpers';
+import { ILanguageServer } from '../../client/activation/types';
+import { MockLanguageServer } from './mockLanguageServer';
+import { MockLanguageClient } from './mockLanguageClient';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -18,6 +21,8 @@ suite('DataScience Intellisense tests', () => {
 
     setup(() => {
         ioc = new DataScienceIocContainer();
+        // For this test, jedi is turned off so we use our mock language server
+        ioc.changeJediEnabled(false);
         ioc.registerDataScienceTypes();
     });
 
@@ -55,13 +60,21 @@ suite('DataScience Intellisense tests', () => {
         assert.ok(wrapper);
     }
 
+    function getCompletionRequestPromise() : Promise<void> {
+        const languageServer = ioc.get<ILanguageServer>(ILanguageServer) as MockLanguageServer;
+        const languageClient = languageServer.languageClient as MockLanguageClient;
+        return languageClient.waitForRequest();
+    }
+
     runMountedTest('Simple autocomplete', async (wrapper) => {
         // Create a history so that it listens to the results.
         const history = await getOrCreateHistory();
         await history.show();
 
-        // Then enter some code.
-        await enterInput(wrapper, 'print');
+        // Then enter some code. Don't submit, we're just testing that autocomplete appears
+        const requestPromise = getCompletionRequestPromise();
+        typeCode(wrapper, 'print');
+        await requestPromise;
         verifyIntellisenseVisible(wrapper);
     }, () => { return ioc; });
 });

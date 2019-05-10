@@ -23,7 +23,7 @@ import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
-import { initializeTokenizer } from './tokenizer';
+import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 import { VariableExplorer } from './variableExplorer';
 
 import './mainPanel.css';
@@ -85,6 +85,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (this.props.testMode) {
                 // Running a test, skip the tokenizer. We want the UI to display synchronously
                 this.state = {tokenizerLoaded: true, ...this.state};
+
+                // However we still need to register python as a language
+                registerMonacoLanguage();
             } else {
                 initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
             }

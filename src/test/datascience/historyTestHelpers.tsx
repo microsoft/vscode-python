@@ -247,9 +247,7 @@ function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, te
     simulateKey(textArea, key);
 }
 
-export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-
-    // First we have to type the code into the input box
+export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string) : HTMLTextAreaElement | null {
 
     // Find the last cell. It should have a monacoEditor object. We need to search
     // through its DOM to find the actual textarea to send input to
@@ -268,6 +266,14 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
     for (let i = 0; i < code.length; i += 1) {
         enterKey(wrapper, textArea!, code.charAt(i));
     }
+
+    return textArea;
+}
+
+export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+
+    // First we have to type the code into the input box
+    const textArea = typeCode(wrapper, code);
 
     // Now simulate a shift enter. This should cause a new cell to be added
     await submitInput(wrapper, textArea!);

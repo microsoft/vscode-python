@@ -14,6 +14,9 @@ export class MockLanguageServer implements ILanguageServer {
     private mockLanguageClient: MockLanguageClient | undefined;
 
     public get languageClient(): LanguageClient | undefined {
+        if (!this.mockLanguageClient) {
+            this.mockLanguageClient = new MockLanguageClient('mockLanguageClient', { module: 'dummy' }, {});
+        }
         return this.mockLanguageClient;
     }
 

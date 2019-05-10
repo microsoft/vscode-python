@@ -38,16 +38,24 @@ import {
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../core';
+import { MockProtocolConverter } from './mockProtocolConverter';
 
 // tslint:disable:no-any unified-signatures
 export class MockLanguageClient extends LanguageClient {
     private notificationPromise : Deferred<void> | undefined;
+    private requestPromise : Deferred<void> | undefined;
     private contents : string = '';
     private versionId: number | null = 0;
+    private converter: MockProtocolConverter = new MockProtocolConverter();
 
     public waitForNotification() : Promise<void> {
         this.notificationPromise = createDeferred();
         return this.notificationPromise.promise;
+    }
+
+    public waitForRequest() : Promise<void> {
+        this.requestPromise = createDeferred();
+        return this.requestPromise.promise;
     }
 
     // Returns the current contents of the document being built by the completion provider calls
@@ -73,7 +81,11 @@ export class MockLanguageClient extends LanguageClient {
     public sendRequest<R>(method: string, token?: CancellationToken | undefined): Thenable<R>;
     public sendRequest<R>(method: string, param: any, token?: CancellationToken | undefined): Thenable<R>;
     public sendRequest(_method: any, _param?: any, _token?: any) : Thenable<any> {
-        throw new Error('Method not implemented.');
+        if (!this.requestPromise) {
+            this.requestPromise = createDeferred();
+        }
+        this.requestPromise.resolve();
+        return this.requestPromise.promise;
     }
     public onRequest<R, E, RO>(type: RequestType0<R, E, RO>, handler: RequestHandler0<R, E>): void;
     public onRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, handler: RequestHandler<P, R, E>): void;
@@ -127,7 +139,7 @@ export class MockLanguageClient extends LanguageClient {
         throw new Error('Method not implemented.');
     }
     public get code2ProtocolConverter(): Code2ProtocolConverter {
-        throw new Error('Method not implemented.');
+        return this.converter;
     }
     public get onTelemetry(): Event<any> {
         throw new Error('Method not implemented.');

@@ -595,6 +595,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners.push(callback);
     }
 
+    public changeJediEnabled(enabled: boolean) {
+        this.pythonSettings.jediEnabled = enabled;
+    }
+
     private findPythonPath(): string {
         try {
             const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
