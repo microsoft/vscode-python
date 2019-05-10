@@ -2224,7 +2224,6 @@
         "@types/node": "9.4.7",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
-        "@types/react-codemirror": "^1.0.2",
         "@types/react-dom": "^16.0.8",
         "@types/react-json-tree": "^0.6.8",
         "@types/request": "^2.47.0",
