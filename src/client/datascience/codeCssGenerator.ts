@@ -270,6 +270,18 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             // Otherwise use our default values.
             result.base = args.defaultStyle === DarkTheme ? 'vs-dark' :  'vs';
             result.inherit = true;
+
+            if (args.defaultStyle) {
+                // Special case. We need rules for the comment beginning and the string beginning
+                result.rules.push({
+                    token: 'punctuation.definition.comment',
+                    foreground: DefaultColors[`${args.defaultStyle}.comment`]
+                });
+                result.rules.push({
+                    token: 'punctuation.definition.string',
+                    foreground: DefaultColors[`${args.defaultStyle}.string`]
+                });
+            }
         }
         // If we have base colors enumerate them and add them to the colors
         if (args.baseColors) {
