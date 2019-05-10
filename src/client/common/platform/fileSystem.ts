@@ -81,7 +81,6 @@ export class FileSystem implements IFileSystem {
                                 }
                                 // tslint:disable-next-line:no-empty
                             } catch (ex) { }
-                            return undefined;
                         })
                     ))
                     .filter(dir => dir !== undefined) as string[];
