@@ -13,7 +13,7 @@ export type LocalDebugOptions = { port: number; host: string; customDebugger?: b
 export type RemoteDebugOptions = LocalDebugOptions & { waitUntilDebuggerAttaches: boolean };
 
 export interface IDebugLauncherScriptProvider<T> {
-    getLauncherArgs(options: T, script?: string): string[];
+    getLauncherArgs(options: T): string[];
 }
 
 export interface ILocalDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<LocalDebugOptions> {
