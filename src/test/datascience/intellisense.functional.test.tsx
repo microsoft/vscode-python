@@ -105,6 +105,7 @@ suite('DataScience Intellisense tests', () => {
         const suggestion = waitForSuggestion(wrapper);
         typeCode(wrapper, 'print');
         await suggestion.promise;
+        suggestion.disposable.dispose();
         verifyIntellisenseVisible(wrapper, 'print');
     }, () => { return ioc; });
 });
