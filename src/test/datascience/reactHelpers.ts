@@ -9,6 +9,7 @@ import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
 
 // tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
+// tslint:disable: no-require-imports
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
     public restore(): void {
@@ -316,7 +317,9 @@ export function setUpDomEnvironment() {
             _oldLoader(mod, filename);
         }
     };
+}
 
+export function setupTranspile() {
     // Some special work for getting the monaco editor to work.
     // We need to babel transpile some modules. Monaco-editor is not in commonJS format so imports
     // can't be loaded.
