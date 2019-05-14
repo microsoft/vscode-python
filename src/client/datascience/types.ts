@@ -285,6 +285,21 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
         terminalCursor: string;
         theme: string;
     };
+    intellisenseOptions: {
+        quickSuggestions: {
+            other: boolean;
+            comments: boolean;
+            strings: boolean;
+        };
+        acceptSuggestionOnEnter: boolean | 'on' | 'smart' | 'off';
+        quickSuggestionsDelay: number;
+        suggestOnTriggerCharacters: boolean;
+        tabCompletion: boolean | 'on' | 'off' | 'onlySnippets';
+        suggestLocalityBonus: boolean;
+        suggestSelection: 'first' | 'recentlyUsed' | 'recentlyUsedByPrefix';
+        wordBasedSuggestions: boolean;
+        parameterHintsEnabled: boolean;
+    };
 }
 
 // Get variables from the currently running active Jupyter server

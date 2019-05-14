@@ -142,12 +142,28 @@ export class WebViewHost<IMapping> implements IDisposable {
         const terminal = this.workspaceService.getConfiguration('terminal');
         const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
         const workbench = this.workspaceService.getConfiguration('workbench');
+        const editor = this.workspaceService.getConfiguration('editor');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {
                 terminalCursor: terminalCursor,
                 theme: theme
+            },
+            intellisenseOptions: {
+                quickSuggestions: {
+                    other: editor.get('quickSuggestions.other', true),
+                    comments: editor.get('quickSuggestions.comments', false),
+                    strings: editor.get('quickSuggestions.strings', false)
+                },
+                acceptSuggestionOnEnter: editor.get('acceptSuggestionOnEnter', 'on'),
+                quickSuggestionsDelay: editor.get('quickSuggestionsDelay', 10),
+                suggestOnTriggerCharacters: editor.get('suggestOnTriggerCharacters', true),
+                tabCompletion: editor.get('tabCompletion', 'on'),
+                suggestLocalityBonus: editor.get('suggest.localityBonus', true),
+                suggestSelection: editor.get('suggestSelection', 'recentlyUsed'),
+                wordBasedSuggestions: editor.get('wordBasedSuggestions', true),
+                parameterHintsEnabled: editor.get('parameterHints.enabled', true)
             }
         };
     }

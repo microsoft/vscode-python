@@ -16,7 +16,7 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { Identifiers } from '../../constants';
 import { IHistoryListener } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
-import { convertToMonacoCompletionList, convertToMonacoHover } from './conversion';
+import { convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
@@ -80,6 +80,24 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
 
         return {
             contents: []
+        };
+    }
+    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp> {
+        const languageClient = await this.getLanguageClient();
+        const document = await this.getDocument();
+        if (languageClient && document) {
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            const result = await languageClient.sendRequest(
+                vscodeLanguageClient.SignatureHelpRequest.type,
+                languageClient.code2ProtocolConverter.asTextDocumentPositionParams(document, docPos),
+                token);
+            return convertToMonacoSignatureHelp(result);
+        }
+
+        return {
+            signatures: [],
+            activeParameter: 0,
+            activeSignature: 0
         };
     }
 

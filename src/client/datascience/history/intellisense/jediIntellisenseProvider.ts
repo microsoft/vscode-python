@@ -14,9 +14,10 @@ import { IServiceManager } from '../../../ioc/types';
 import { JediFactory } from '../../../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../../../providers/completionProvider';
 import { PythonHoverProvider } from '../../../providers/hoverProvider';
+import { PythonSignatureProvider } from '../../../providers/signatureProvider';
 import { IHistoryListener } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
-import { convertToMonacoCompletionList, convertToMonacoHover } from './conversion';
+import { convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
@@ -26,6 +27,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
     private active: boolean = false;
     private pythonHoverProvider : PythonHoverProvider | undefined;
     private pythonCompletionItemProvider : PythonCompletionItemProvider | undefined;
+    private pythonSignatureHelpProvider : PythonSignatureProvider | undefined;
     private jediFactory: JediFactory;
     private readonly context: IExtensionContext;
 
@@ -53,6 +55,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         if (this.active) {
             this.pythonHoverProvider = new PythonHoverProvider(this.jediFactory);
             this.pythonCompletionItemProvider = new PythonCompletionItemProvider(this.jediFactory, this.serviceManager);
+            this.pythonSignatureHelpProvider = new PythonSignatureProvider(this.jediFactory);
         }
     }
 
@@ -86,6 +89,20 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
 
         return {
             contents: []
+        };
+    }
+    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp> {
+        const document = await this.getDocument();
+        if (this.pythonSignatureHelpProvider && document) {
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            const result = await this.pythonSignatureHelpProvider.provideSignatureHelp(document, docPos, token);
+            return convertToMonacoSignatureHelp(result);
+        }
+
+        return {
+            signatures: [],
+            activeParameter: 0,
+            activeSignature: 0
         };
     }
 
