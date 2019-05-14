@@ -138,13 +138,14 @@ export function convertToMonacoCompletionList(
     result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null,
     requiresKindConversion: boolean) : monacoEditor.languages.CompletionList {
     if (result) {
-        if (result.hasOwnProperty('isIncomplete')) {
+        if (result.hasOwnProperty('items')) {
             const list = result as vscodeLanguageClient.CompletionList;
             return {
                 suggestions: list.items.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
                 incomplete: list.isIncomplete
             };
         } else {
+            // Must be one of the two array types since there's no items property.
             const array = result as vscodeLanguageClient.CompletionItem[];
             return {
                 suggestions: array.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
