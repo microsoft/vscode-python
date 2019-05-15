@@ -114,7 +114,6 @@ def parse_item(item, _normcase, _pathsep):
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
     # Figure out the func, suites, and subs.
-    print(vars(item))
     (nodeid, fileid, suiteids, suites, funcid, basename, parameterized
      ) = _parse_node_id(item.nodeid, kind, _pathsep, _normcase)
     if kind == 'function':
@@ -133,7 +132,7 @@ def parse_item(item, _normcase, _pathsep):
         funcname = None
 
     # Figure out the file.
-    relfile = _normcase(fileid)
+    relfile = fileid
     fspath = str(item.fspath)
     if not _normcase(fspath).endswith(relfile[1:]):
         print(fspath)
@@ -144,7 +143,7 @@ def parse_item(item, _normcase, _pathsep):
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
             print(item.nodeid)
-            print(fullname, suites, testfunc)
+            print(fullname, suites, testfunc, parameterized)
             # TODO: What to do?
             raise NotImplementedError
     elif kind == 'doctest':
@@ -234,58 +233,81 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
 
 def _parse_node_id(nodeid, kind, _pathsep, _normcase):
     """Return the components of the given node ID, in heirarchical order."""
-    nodeid = _normalize_node_id(nodeid, _pathsep)
-
-    fileid, _, remainder = nodeid.partition('::')
-    if not fileid or not remainder:
-        # TODO: Is fileid really required?
-        print(nodeid)
-        # TODO: Unexpected!  What to do?
-        raise NotImplementedError
-    fileid = _normcase(fileid)
-    nodeid = fileid + '::' + remainder
-
-    parameterized = ''
-    funcid = None
-    if kind == 'function':
-        if nodeid.endswith(']'):
-            funcid, sep, parameterized = nodeid.partition('[')
-            if not sep:
-                print(nodeid)
-                # TODO: Unexpected!  What to do?
-                raise NotImplementedError
-            parameterized = sep + parameterized
-        else:
-            funcid = nodeid
-        parentid, _, name = funcid.rpartition('::')
-        if not parentid or not name:
-            print(parentid, name)
-            # TODO: What to do?  We expect at least a filename and a function
-            raise NotImplementedError
+    nodes = iter(_iter_nodes(nodeid, kind, _pathsep, _normcase))
+    nodeid, name, kind = next(nodes)
+    if kind == 'subtest':
+        funcid, name, _ = next(nodes)
+        parameterized = nodeid[len(funcid):]
     else:
-        # We require a fileid, so this won't fail.
-        parentid, name = nodeid.split('::')
+        funcid = nodeid
+        parameterized = ''
 
     suites = []
     suiteids = []
-    while '::' in parentid:
-        fullid = parentid
-        parentid, _, suitename = fullid.rpartition('::')
-        suiteids.insert(0, fullid)
-        suites.insert(0, suitename)
-    if parentid != fileid:
-        print(nodeid)
-        print(parentid, fileid)
+    for parentid, pname, kind in nodes:
+        if kind == 'file':
+            fileid = parentid
+            break
+        suites.insert(0, pname)
+        suiteids.insert(0, parentid)
 
     return nodeid, fileid, suiteids, suites, funcid, name, parameterized
 
 
-def _normalize_node_id(nodeid, _pathsep):
+def _iter_nodes(nodeid, kind, _pathsep, _normcase):
+    """Yield (nodeid, name, kind) for the given node ID and its parents."""
+    nodeid = _normalize_node_id(nodeid, kind, _pathsep, _normcase)
+
+    if kind == 'function' and nodeid.endswith(']'):
+        funcid, sep, parameterized = nodeid.partition('[')
+        if not sep:
+            print(nodeid)
+            raise NotImplementedError
+        yield (nodeid, sep + parameterized, 'subtest')
+        nodeid = funcid
+
+    parentid, _, name = nodeid.rpartition('::')
+    if not parentid:
+        if kind is None:
+            # TODO: Is this really possible with plugins?
+            yield (nodeid, name, kind)
+            return
+        # TODO: What to do?  We expect at least a filename and a name.
+        print(nodeid)
+        raise NotImplementedError
+    yield (nodeid, name, kind)
+
+    # Extract the suites.
+    while '::' in parentid:
+        suiteid = parentid
+        parentid, _, name = parentid.rpartition('::')
+        yield (suiteid, name, 'suite')
+
+    # Extract the file and folders.
+    fileid = parentid
+    parentid, _, filename = fileid.rpartition(_pathsep)
+    yield (fileid, filename, 'file')
+    # We're guaranteed at least one (the test root).
+    while _pathsep in parentid:
+        folderid = parentid
+        parentid, _, foldername = folderid.rpartition(_pathsep)
+        yield (folderid, foldername, 'folder')
+    testroot = None  # TODO: For now we fill it in later, if needed.
+    yield (parentid, testroot, 'folder')
+
+
+def _normalize_node_id(nodeid, kind, _pathsep, _normcase):
     """Return the canonical form for the given node ID."""
     while '::()::' in nodeid:
         nodeid = nodeid.replace('::()::', '::')
-    if _pathsep not in nodeid:
-        _pathsep = '/'
+    if kind is None:
+        return nodeid
+
+    fileid, sep, remainder = nodeid.partition('::')
+    if sep:
+        # pytest works fine even if we normalize the filename.
+        nodeid = _normcase(fileid) + sep + remainder
+
     if nodeid.startswith(_pathsep):
         print(nodeid)
         raise NotImplementedError
