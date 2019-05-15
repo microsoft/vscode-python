@@ -1,58 +1,114 @@
 // tslint:disable:no-console no-any
 import { injectable } from 'inversify';
 
+import * as util from 'util';
+import { createLogger, format, transports } from 'winston';
 import { sendTelemetryEvent } from '../telemetry';
 import { isTestExecution } from './constants';
 import { ILogger, LogLevel } from './types';
 
-const PREFIX = 'Python Extension: ';
+const enableLogging = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING;
+
+const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
+    return `${label} ${timestamp} ${level}: ${message}`;
+});
+
+const consoleFormat = format.combine(
+    format.label({ label: 'Python Extension:' }),
+    format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss'
+    }),
+    consoleFormatter
+);
+
+const logger = createLogger({
+    transports: [
+        new transports.Console({ format: consoleFormat })
+    ]
+});
+
+const logLevelMap = {
+    [LogLevel.Error]: 'error',
+    [LogLevel.Information]: 'info',
+    [LogLevel.Warning]: 'warn'
+};
+
+function log(logLevel: LogLevel, ...args: any[]) {
+    const message = util.format(args[0], ...args.slice(1));
+    logger.log(logLevelMap[logLevel], message);
+}
+export function initialize() {
+    if (process.env.VSC_PYTHON_LOG_FILE) {
+        // We'd like to ensure we capture all errors into a text file.
+        const fileFormatter = format.printf(({ level, message, timestamp }) => {
+            // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
+            return `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${timestamp}: ${message}`;
+        });
+        const fileFormat = format.combine(
+            format.timestamp({
+                format: 'YYYY-MM-DD HH:mm:ss'
+            }),
+            fileFormatter
+        );
+
+        logger.transports.push(new transports.File({
+            format: fileFormat,
+            filename: process.env.VSC_PYTHON_LOG_FILE,
+            handleExceptions: true
+        }));
+    }
+
+    // Lets hijack all console messages only when on CI.
+    if (enableLogging && process.env.TF_BUILD) {
+        // tslint:disable-next-line: no-function-expression
+        console.log = function () {
+            log(LogLevel.Information, ...arguments);
+        };
+        // tslint:disable-next-line: no-function-expression
+        console.info = function () {
+            log(LogLevel.Information, ...arguments);
+        };
+        // tslint:disable-next-line: no-function-expression
+        console.warn = function () {
+            log(LogLevel.Warning, ...arguments);
+        };
+        // tslint:disable-next-line: no-function-expression
+        console.error = function () {
+            log(LogLevel.Error, ...arguments);
+        };
+        // tslint:disable-next-line: no-function-expression
+        console.debug = function () {
+            log(LogLevel.Information, ...arguments);
+        };
+    }
+
+    if (!enableLogging){
+        logger.clear();
+    }
+}
 
 @injectable()
 export class Logger implements ILogger {
-    private skipLogging = false;
-    constructor() {
-        if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING) {
-            this.skipLogging = true;
-        }
+    // tslint:disable-next-line:no-any
+    public static error(...args: any[]) {
+        new Logger().logError(...args);
     }
     // tslint:disable-next-line:no-any
-    public static error(title: string = '', message: any) {
-        new Logger().logError(`${title}, ${message}`);
+    public static warn(...args: any[]) {
+        new Logger().logWarning(...args);
     }
     // tslint:disable-next-line:no-any
-    public static warn(title: string = '', message: any = '') {
-        new Logger().logWarning(`${title}, ${message}`);
+    public static verbose(...args: any[]) {
+        new Logger().logInformation(...args);
     }
-    // tslint:disable-next-line:no-any
-    public static verbose(title: string = '') {
-        new Logger().logInformation(title);
+    public logError(...args: any[]) {
+        log(LogLevel.Error, ...args);
     }
-    public logError(message: string, ex?: Error) {
-        if (!this.skipLogging) {
-            if (ex) {
-                console.error(`${PREFIX}${message}`, ex);
-            } else {
-                console.error(`${PREFIX}${message}`);
-            }
-        }
+    public logWarning(...args: any[]) {
+        log(LogLevel.Warning, ...args);
     }
-    public logWarning(message: string, ex?: Error) {
-        if (!this.skipLogging) {
-            if (ex) {
-                console.warn(`${PREFIX}${message}`, ex);
-            } else {
-                console.warn(`${PREFIX}${message}`);
-            }
-        }
-    }
-    public logInformation(message: string, ex?: Error) {
-        if (!this.skipLogging) {
-            if (ex) {
-                console.info(`${PREFIX}${message}`, ex);
-            } else {
-                console.info(`${PREFIX}${message}`);
-            }
-        }
+    public logInformation(...args: any[]) {
+        log(LogLevel.Information, ...args);
     }
 }
 
@@ -104,18 +160,20 @@ function returnValueToLogString(returnValue: any): string {
     }
 }
 
-export function traceVerbose(message: string) {
-    new Logger().logInformation(message);
-}
-export function traceError(message: string, ex?: Error) {
-    new Logger().logError(message, ex);
-}
-export function traceInfo(message: string) {
-    new Logger().logInformation(message);
+export function traceVerbose(...args: any[]) {
+    log(LogLevel.Information, ...args);
 }
 
-export function traceWarning(message: string) {
-    new Logger().logWarning(message);
+export function traceError(...args: any[]) {
+    log(LogLevel.Error, ...args);
+}
+
+export function traceInfo(...args: any[]) {
+    log(LogLevel.Information, ...args);
+}
+
+export function traceWarning(...args: any[]) {
+    log(LogLevel.Warning, ...args);
 }
 
 export namespace traceDecorators {
@@ -160,10 +218,10 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                     messagesToLog.push(returnValueToLogString(returnValue));
                 }
                 if (ex) {
-                    new Logger().logError(messagesToLog.join(', '), ex);
+                    log(LogLevel.Error, messagesToLog.join(', '), ex);
                     sendTelemetryEvent('ERROR' as any, undefined, undefined, ex);
                 } else {
-                    new Logger().logInformation(messagesToLog.join(', '));
+                    log(LogLevel.Information, messagesToLog.join(', '));
                 }
             }
             try {

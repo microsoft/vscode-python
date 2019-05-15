@@ -10,6 +10,8 @@ if ((Reflect as any).metadata === undefined) {
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));
+import { initialize as initializeLogger } from './common/logger';
+initializeLogger();
 
 const durations: Record<string, number> = {};
 import { StopWatch } from './common/utils/stopWatch';
