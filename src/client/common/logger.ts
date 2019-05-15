@@ -84,10 +84,6 @@ export function initialize() {
             log(LogLevel.Information, ...arguments);
         };
     }
-
-    if (!enableLogging) {
-        logger.clear();
-    }
 }
 
 @injectable()
@@ -105,13 +101,19 @@ export class Logger implements ILogger {
         new Logger().logInformation(...args);
     }
     public logError(...args: any[]) {
-        log(LogLevel.Error, ...args);
+        if (enableLogging) {
+            log(LogLevel.Error, ...args);
+        }
     }
     public logWarning(...args: any[]) {
-        log(LogLevel.Warning, ...args);
+        if (enableLogging) {
+            log(LogLevel.Warning, ...args);
+        }
     }
     public logInformation(...args: any[]) {
-        log(LogLevel.Information, ...args);
+        if (enableLogging) {
+            log(LogLevel.Information, ...args);
+        }
     }
 }
 
