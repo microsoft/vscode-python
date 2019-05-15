@@ -1,8 +1,9 @@
 // tslint:disable:no-console no-any
 import { injectable } from 'inversify';
-
+import * as path from 'path';
 import * as util from 'util';
 import { createLogger, format, transports } from 'winston';
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { isTestExecution } from './constants';
 import { ILogger, LogLevel } from './types';
@@ -51,9 +52,11 @@ export function initialize() {
             fileFormatter
         );
 
+        const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE) ? process.env.VSC_PYTHON_LOG_FILE :
+            path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
         logger.transports.push(new transports.File({
             format: fileFormat,
-            filename: process.env.VSC_PYTHON_LOG_FILE,
+            filename: logFilePath,
             handleExceptions: true
         }));
     }
@@ -82,7 +85,7 @@ export function initialize() {
         };
     }
 
-    if (!enableLogging){
+    if (!enableLogging) {
         logger.clear();
     }
 }
