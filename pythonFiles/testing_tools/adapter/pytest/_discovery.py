@@ -8,20 +8,8 @@ import sys
 
 import pytest
 
-from . import util
-from .errors import UnsupportedCommandError
-from .info import TestInfo, TestPath, ParentInfo
-
-
-def add_cli_subparser(cmd, name, parent):
-    """Add a new subparser to the given parent and add args to it."""
-    parser = parent.add_parser(name)
-    if cmd == 'discover':
-        # For now we don't have any tool-specific CLI options to add.
-        pass
-    else:
-        raise UnsupportedCommandError(cmd)
-    return parser
+from .. import util
+from ..info import TestInfo, TestPath, ParentInfo
 
 
 def discover(pytestargs=None, hidestdio=False,
