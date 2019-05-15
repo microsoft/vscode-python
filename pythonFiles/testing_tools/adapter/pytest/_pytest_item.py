@@ -226,10 +226,7 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
 
 def _parse_node_id(nodeid, kind, _pathsep, _normcase):
     """Return the components of the given node ID, in heirarchical order."""
-    if not nodeid.startswith('.' + _pathsep):
-        nodeid = '.' + _pathsep + nodeid
-    while '::()::' in nodeid:
-        nodeid = nodeid.replace('::()::', '::')
+    nodeid = _normalize_node_id(nodeid, _pathsep)
 
     fileid, _, remainder = nodeid.partition('::')
     if not fileid or not remainder:
@@ -277,6 +274,20 @@ def _parse_node_id(nodeid, kind, _pathsep, _normcase):
         print(parentid, fileid)
 
     return nodeid, fileid, suiteids, suites, funcid, name, parameterized
+
+
+def _normalize_node_id(nodeid, _pathsep):
+    """Return the canonical form for the given node ID."""
+    while '::()::' in nodeid:
+        nodeid = nodeid.replace('::()::', '::')
+    if _pathsep not in nodeid:
+        _pathsep = '/'
+    if nodeid.startswith(_pathsep):
+        print(nodeid)
+        raise NotImplementedError
+    if not nodeid.startswith('.' + _pathsep):
+        nodeid = '.' + _pathsep + nodeid
+    return nodeid
 
 
 def _get_item_kind(item):
