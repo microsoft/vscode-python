@@ -86,6 +86,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             folding: false,
             readOnly: readOnly,
             lineDecorationsWidth: 0,
+            contextmenu: false,
             ...this.props.editorOptions
         };
 
