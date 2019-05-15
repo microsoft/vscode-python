@@ -40,11 +40,6 @@ def discover(pytestargs=None, hidestdio=False,
         raise Exception('pytest discovery did not start')
     return (
             _plugin._tests.parents,
-            #[p._replace(
-            #    id=p.id.lstrip('.' + os.path.sep),
-            #    parentid=p.parentid.lstrip('.' + os.path.sep),
-            #    )
-            # for p in _plugin._tests.parents],
             list(_plugin._tests),
             )
 
