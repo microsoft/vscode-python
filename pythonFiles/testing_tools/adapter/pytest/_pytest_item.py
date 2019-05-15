@@ -113,53 +113,40 @@ def parse_item(item, _normcase, _pathsep):
     """
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
-    # Figure out the func, suites, and subs.
-    (nodeid, fileid, suiteids, suites, funcid, basename, parameterized
+    (nodeid, parents, fileid, testfunc, parameterized
      ) = _parse_node_id(item.nodeid, kind, _pathsep, _normcase)
-    if kind == 'function':
-        funcname = basename
-        # Note: funcname does not necessarily match item.function.__name__.
-        # This can result from importing a test function from another module.
-        if suites:
-            testfunc = '.'.join(suites) + '.' + funcname
-        else:
-            testfunc = funcname
-    elif kind == 'doctest':
-        testfunc = None
-        funcname = None
-    else:
-        testfunc = None
-        funcname = None
+    # Note: testfunc does not necessarily match item.function.__name__.
+    # This can result from importing a test function from another module.
 
     # Figure out the file.
     relfile = fileid
-    fspath = str(item.fspath)
-    if not _normcase(fspath).endswith(relfile[1:]):
-        print(fspath)
+    fspath = _normcase(str(item.fspath))
+    if not fspath.endswith(relfile[1:]):
+        print(fspath, fileid)
         print(relfile)
         raise NotImplementedError
-    testroot = str(item.fspath)[:-len(relfile) + 1]
+    testroot = fspath[:-len(relfile) + 1]
     location, fullname = _get_location(item, relfile, _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
             print(item.nodeid)
-            print(fullname, suites, testfunc, parameterized)
+            print(fullname, testfunc, parameterized)
             # TODO: What to do?
             raise NotImplementedError
     elif kind == 'doctest':
-        if testfunc and fullname != testfunc + parameterized:
+        if (testfunc and fullname != testfunc and
+                fullname != '[doctest] ' + testfunc):
             print(item.nodeid)
             print(fullname, testfunc)
             # TODO: What to do?
             raise NotImplementedError
+        testfunc = None
 
     # Sort out the parent.
-    if parameterized:
-        parentid = funcid
-    elif suites:
-        parentid = suiteids[-1]
+    if parents:
+        parentid, _, _ = parents[0]
     else:
-        parentid = fileid
+        parentid = None
 
     # Sort out markers.
     #  See: https://docs.pytest.org/en/latest/reference.html#marks
@@ -189,7 +176,8 @@ def parse_item(item, _normcase, _pathsep):
         markers=sorted(markers) if markers else None,
         parentid=parentid,
         )
-    return test, suiteids
+    suiteids = reversed([nid for nid, _, kind in parents if kind == 'suite'])
+    return test, list(suiteids)
 
 
 def _get_location(item, relfile, _normcase, _pathsep):
@@ -231,27 +219,51 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
     return srcfile, lineno
 
 
-def _parse_node_id(nodeid, kind, _pathsep, _normcase):
+def _parse_node_id(testid, kind, _pathsep, _normcase):
     """Return the components of the given node ID, in heirarchical order."""
-    nodes = iter(_iter_nodes(nodeid, kind, _pathsep, _normcase))
-    nodeid, name, kind = next(nodes)
-    if kind == 'subtest':
-        funcid, name, _ = next(nodes)
-        parameterized = nodeid[len(funcid):]
-    else:
-        funcid = nodeid
-        parameterized = ''
+    nodes = iter(_iter_nodes(testid, kind, _pathsep, _normcase))
 
-    suites = []
-    suiteids = []
-    for parentid, pname, kind in nodes:
+    testid, name, kind = next(nodes)
+    parents = []
+    parameterized = None
+    if kind == 'doctest':
+        parents = list(nodes)
+        fileid, _, _ = parents[0]
+        return testid, parents, fileid, name, parameterized
+    elif kind is None:
+        fullname = None
+    else:
+        if kind == 'subtest':
+            node = next(nodes)
+            parents.append(node)
+            funcid, funcname, _ = node
+            parameterized = testid[len(funcid):]
+        elif kind == 'function':
+            funcname = name
+        else:
+            print(testid, kind)
+            raise NotImplementedError
+        fullname = funcname
+
+    for node in nodes:
+        parents.append(node)
+        parentid, name, kind = node
         if kind == 'file':
             fileid = parentid
             break
-        suites.insert(0, pname)
-        suiteids.insert(0, parentid)
+        elif fullname is None:
+            # We don't guess how to interpret the node ID for these tests.
+            continue
+        elif kind == 'suite':
+            fullname = name + '.' + fullname
+        else:
+            print(testid, node)
+            raise NotImplementedError
+    else:
+        fileid = None
+    parents.extend(nodes) # Add the rest in as-is.
 
-    return nodeid, fileid, suiteids, suites, funcid, name, parameterized
+    return testid, parents, fileid, fullname, parameterized or ''
 
 
 def _iter_nodes(nodeid, kind, _pathsep, _normcase):
