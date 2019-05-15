@@ -202,7 +202,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         // Get the document and then pass onto the sub class
         const document = await this.getDocument(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
         if (document) {
-            const changes = document.addCell(request.text, request.id);
+            const changes = document.addCell(request.fullText, request.currentText, request.id);
             return this.handleChanges(request.file, document, changes);
         }
     }

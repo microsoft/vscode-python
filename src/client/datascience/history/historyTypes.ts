@@ -138,7 +138,8 @@ export interface IEditCell {
 }
 
 export interface IAddCell {
-    text: string;
+    fullText: string;
+    currentText: string;
     file: string;
     id: string;
 }

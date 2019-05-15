@@ -60,7 +60,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function addCell(code: string, id: string) : Promise<void> {
-        return sendMessage(HistoryMessages.AddCell, { text: code, file: 'foo.py', id });
+        return sendMessage(HistoryMessages.AddCell, { fullText: code, currentText: code, file: 'foo.py', id });
     }
 
     function updateCell(newCode: string, oldCode: string, id: string) : Promise<void> {

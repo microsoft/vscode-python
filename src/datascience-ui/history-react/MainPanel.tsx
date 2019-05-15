@@ -971,9 +971,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private readOnlyCodeCreated = (text: string, file: string, id: string, monacoId: string) => {
-        // Pass this onto the completion provider running in the extension
-        this.sendMessage(HistoryMessages.AddCell, { text, file, id });
+    private readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
+        const cell = this.state.cellVMs.find(c => c.cell.id === id);
+        if (cell) {
+            // Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.AddCell, {
+                fullText: extractInputText(cell.cell, getSettings()),
+                currentText: cell.inputBlockText,
+                file,
+                id
+            });
+        }
 
         // Save in our map of monaco id to cell id
         this.monacoIdToCellId.set(monacoId, id);
