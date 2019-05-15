@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, ViewColumn } from 'vscode';
+import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { traceInfo } from '../common/logger';
@@ -152,24 +152,31 @@ export class WebViewHost<IMapping> implements IDisposable {
             },
             intellisenseOptions: {
                 quickSuggestions: {
-                    other: editor.get('quickSuggestions.other', true),
-                    comments: editor.get('quickSuggestions.comments', false),
-                    strings: editor.get('quickSuggestions.strings', false)
+                    other: this.getValue(editor, 'quickSuggestions.other', true),
+                    comments: this.getValue(editor, 'quickSuggestions.comments', false),
+                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
                 },
-                acceptSuggestionOnEnter: editor.get('acceptSuggestionOnEnter', 'on'),
-                quickSuggestionsDelay: editor.get('quickSuggestionsDelay', 10),
-                suggestOnTriggerCharacters: editor.get('suggestOnTriggerCharacters', true),
-                tabCompletion: editor.get('tabCompletion', 'on'),
-                suggestLocalityBonus: editor.get('suggest.localityBonus', true),
-                suggestSelection: editor.get('suggestSelection', 'recentlyUsed'),
-                wordBasedSuggestions: editor.get('wordBasedSuggestions', true),
-                parameterHintsEnabled: editor.get('parameterHints.enabled', true)
+                acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
+                quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
+                suggestOnTriggerCharacters: this.getValue(editor, 'suggestOnTriggerCharacters', true),
+                tabCompletion: this.getValue(editor, 'tabCompletion', 'on'),
+                suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
+                suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
+                wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
+                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
             }
         };
     }
 
     protected isDark() : Promise<boolean> {
         return this.themeIsDarkPromise.promise;
+    }
+
+    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T) : T {
+        if (workspaceConfig) {
+            return workspaceConfig.get(section, defaultValue);
+        }
+        return defaultValue;
     }
 
     private onViewStateChanged = (webPanel: IWebPanel) => {
