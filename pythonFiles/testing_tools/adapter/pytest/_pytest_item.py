@@ -95,6 +95,10 @@ from __future__ import absolute_import, print_function
 
 import sys
 
+import pytest
+import _pytest.doctest
+import _pytest.unittest
+
 from ..info import TestInfo, TestPath
 
 
@@ -110,6 +114,7 @@ def parse_item(item, _normcase, _pathsep):
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
     # Figure out the func, suites, and subs.
+    print(vars(item))
     (nodeid, fileid, suiteids, suites, funcid, basename, parameterized
      ) = _parse_node_id(item.nodeid, kind, _pathsep, _normcase)
     if kind == 'function':
@@ -121,6 +126,9 @@ def parse_item(item, _normcase, _pathsep):
         else:
             testfunc = funcname
     elif kind == 'doctest':
+        testfunc = None
+        funcname = None
+    else:
         testfunc = None
         funcname = None
 
@@ -230,23 +238,16 @@ def _parse_node_id(nodeid, kind, _pathsep, _normcase):
 
     fileid, _, remainder = nodeid.partition('::')
     if not fileid or not remainder:
+        # TODO: Is fileid really required?
         print(nodeid)
         # TODO: Unexpected!  What to do?
         raise NotImplementedError
     fileid = _normcase(fileid)
     nodeid = fileid + '::' + remainder
 
-    if kind == 'doctest':
-        try:
-            parentid, name = nodeid.split('::')
-        except ValueError:
-            print(nodeid)
-            # TODO: Unexpected!  What to do?
-            raise NotImplementedError
-        funcid = None
-        parameterized = ''
-    else:
-        parameterized = ''
+    parameterized = ''
+    funcid = None
+    if kind == 'function':
         if nodeid.endswith(']'):
             funcid, sep, parameterized = nodeid.partition('[')
             if not sep:
@@ -261,6 +262,9 @@ def _parse_node_id(nodeid, kind, _pathsep, _normcase):
             print(parentid, name)
             # TODO: What to do?  We expect at least a filename and a function
             raise NotImplementedError
+    else:
+        # We require a fileid, so this won't fail.
+        parentid, name = nodeid.split('::')
 
     suites = []
     suiteids = []
@@ -292,18 +296,12 @@ def _normalize_node_id(nodeid, _pathsep):
 
 def _get_item_kind(item):
     """Return (kind, isunittest) for the given item."""
-    try:
-        itemtype = item.kind
-    except AttributeError:
-        itemtype = item.__class__.__name__
-
-    if itemtype == 'DoctestItem':
+    if isinstance(item, _pytest.doctest.DoctestItem):
         return 'doctest', False
-    elif itemtype == 'Function':
-        return 'function', False
-    elif itemtype == 'TestCaseFunction':
+    elif isinstance(item, _pytest.unittest.TestCaseFunction):
         return 'function', True
-    elif item.hasattr('function'):
+    elif isinstance(item, pytest.Function):
+        # TODO: maybe return "method", "subtest", etc.?
         return 'function', False
     else:
         return None, False

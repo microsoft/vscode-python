@@ -12,12 +12,14 @@ import os.path
 import sys
 import unittest
 
+import pytest
+import _pytest.doctest
+
 from ....util import Stub, StubProxy
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.pytest._discovery import (
         discover, TestCollector, DiscoveredTests
         )
-import pytest
 
 
 class StubPyTest(StubProxy):
@@ -92,8 +94,6 @@ class FakeMarker(object):
 
 class StubPytestItem(StubProxy):
 
-    kind = 'Function'
-
     _debugging = False
     _hasfunc = True
 
@@ -110,6 +110,9 @@ class StubPytestItem(StubProxy):
         if 'own_markers' not in attrs:
             self.own_markers = ()
 
+    def __repr__(self):
+        return object.__repr__(self)
+
     def __getattr__(self, name):
         if not self._debugging:
             self.add_call(name + ' (attr)', None, None)
@@ -119,6 +122,29 @@ class StubPytestItem(StubProxy):
         def func(*args, **kwargs):
             self.add_call(name, args or None, kwargs or None)
         return func
+
+
+class StubSubtypedItem(StubPytestItem):
+
+    def __init__(self, *args, **kwargs):
+        super(StubSubtypedItem, self).__init__(*args, **kwargs)
+        if 'nodeid' in self.__dict__:
+            self._nodeid = self.__dict__.pop('nodeid')
+
+    @property
+    def location(self):
+        return self.__dict__.get('location')
+
+
+class StubFunctionItem(StubSubtypedItem, pytest.Function):
+
+    @property
+    def function(self):
+        return self.__dict__.get('function')
+
+
+class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
+    pass
 
 
 class StubPytestSession(StubProxy):
@@ -281,7 +307,7 @@ class CollectorTests(unittest.TestCase):
         relfileid2 = os.path.join('.', relfile2)
 
         collector.pytest_collection_modifyitems(session, config, [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid='test_spam.py::SpamTests::test_one',
                 name='test_one',
@@ -289,7 +315,7 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, 'test_spam.py'),
                 function=FakeFunc('test_one'),
                 ),
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid='test_spam.py::SpamTests::test_other',
                 name='test_other',
@@ -297,7 +323,7 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, 'test_spam.py'),
                 function=FakeFunc('test_other'),
                 ),
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid='test_spam.py::test_all',
                 name='test_all',
@@ -305,7 +331,7 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, 'test_spam.py'),
                 function=FakeFunc('test_all'),
                 ),
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid='test_spam.py::test_each[10-10]',
                 name='test_each[10-10]',
@@ -313,7 +339,7 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, 'test_spam.py'),
                 function=FakeFunc('test_each'),
                 ),
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile2 + '::All::BasicTests::test_first',
                 name='test_first',
@@ -321,7 +347,7 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, relfile2),
                 function=FakeFunc('test_first'),
                 ),
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile2 + '::All::BasicTests::test_each[1+2-3]',
                 name='test_each[1+2-3]',
@@ -452,7 +478,7 @@ class CollectorTests(unittest.TestCase):
         relfile = 'x/y/z/test_eggs.py'.replace('/', os.path.sep)
         relfileid = os.path.join('.', relfile)
         session.items = [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::test_spam',
                 name='test_spam',
@@ -496,38 +522,34 @@ class CollectorTests(unittest.TestCase):
         relfile = 'x/y/z/test_eggs.py'.replace('/', os.path.sep)
         relfileid = os.path.join('.', relfile)
         session.items = [
-            StubPytestItem(
+            StubDoctestItem(
                 stub,
                 nodeid=doctestfile + '::test_doctest.txt',
                 name='test_doctest.txt',
                 location=(doctestfile, 0, '[doctest] test_doctest.txt'),
                 fspath=os.path.join(testroot, doctestfile),
-                kind='DoctestItem',
                 ),
             # With --doctest-modules
-            StubPytestItem(
+            StubDoctestItem(
                 stub,
                 nodeid=relfile + '::test_eggs',
                 name='test_eggs',
                 location=(relfile, 0, '[doctest] test_eggs'),
                 fspath=os.path.join(testroot, relfile),
-                kind='DoctestItem',
                 ),
-            StubPytestItem(
+            StubDoctestItem(
                 stub,
                 nodeid=relfile + '::test_eggs.TestSpam',
                 name='test_eggs.TestSpam',
                 location=(relfile, 12, '[doctest] test_eggs.TestSpam'),
                 fspath=os.path.join(testroot, relfile),
-                kind='DoctestItem',
                 ),
-            StubPytestItem(
+            StubDoctestItem(
                 stub,
                 nodeid=relfile + '::test_eggs.TestSpam.TestEggs',
                 name='test_eggs.TestSpam.TestEggs',
                 location=(relfile, 27, '[doctest] test_eggs.TestSpam.TestEggs'),
                 fspath=os.path.join(testroot, relfile),
-                kind='DoctestItem',
                 ),
             ]
         collector = TestCollector(tests=discovered)
@@ -607,7 +629,7 @@ class CollectorTests(unittest.TestCase):
         relfile = 'x/y/z/test_eggs.py'.replace('/', os.path.sep)
         relfileid = os.path.join('.', relfile)
         session.items = [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::test_spam[a-[b]-c]',
                 name='test_spam[a-[b]-c]',
@@ -649,7 +671,7 @@ class CollectorTests(unittest.TestCase):
         relfile = 'x/y/z/test_eggs.py'.replace('/', os.path.sep)
         relfileid = os.path.join('.', relfile)
         session.items = [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::Ham::Eggs::test_spam',
                 name='test_spam',
@@ -694,7 +716,7 @@ class CollectorTests(unittest.TestCase):
         testroot = r'c:\a\b\c'
         relfile = r'X\Y\Z\test_eggs.py'
         session.items = [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid='X/Y/Z/test_eggs.py::SpamTests::test_spam',
                 name='test_spam',
@@ -742,7 +764,7 @@ class CollectorTests(unittest.TestCase):
         relfile = 'x/y/z/test_eggs.py'.replace('/', os.path.sep)
         relfileid = os.path.join('.', relfile)
         session.items = [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::()::()::test_spam',
                 name='test_spam',
@@ -787,7 +809,7 @@ class CollectorTests(unittest.TestCase):
         relfileid = os.path.join('.', relfile)
         srcfile = 'x/y/z/_extern.py'.replace('/', os.path.sep)
         session.items = [
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::test_spam',
                 name='test_spam',
@@ -795,7 +817,7 @@ class CollectorTests(unittest.TestCase):
                 fspath=os.path.join(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
-            StubPytestItem(
+            StubFunctionItem(
                 stub,
                 nodeid=relfile + '::test_ham',
                 name='test_ham',
