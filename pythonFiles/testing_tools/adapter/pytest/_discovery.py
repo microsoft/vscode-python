@@ -74,8 +74,9 @@ class TestCollector(object):
         self._started = True
         self._tests.reset()
         for item in items:
-            test, suiteids = parse_item(item, self.NORMCASE, self.PATHSEP)
-            self._tests.add_test(test, suiteids)
+            test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
+            suiteids = reversed([nid for nid, _, kind in parents if kind == 'suite'])
+            self._tests.add_test(test, list(suiteids))
 
     # This hook is not specified in the docs, so we also provide
     # the "modifyitems" hook just in case.
@@ -88,8 +89,9 @@ class TestCollector(object):
             return
         self._tests.reset()
         for item in items:
-            test, suiteids = parse_item(item, self.NORMCASE, self.PATHSEP)
-            self._tests.add_test(test, suiteids)
+            test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
+            suiteids = reversed([nid for nid, _, kind in parents if kind == 'suite'])
+            self._tests.add_test(test, list(suiteids))
 
 
 class DiscoveredTests(object):

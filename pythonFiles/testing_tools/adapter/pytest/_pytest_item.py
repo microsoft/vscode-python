@@ -176,8 +176,7 @@ def parse_item(item, _normcase, _pathsep):
         markers=sorted(markers) if markers else None,
         parentid=parentid,
         )
-    suiteids = reversed([nid for nid, _, kind in parents if kind == 'suite'])
-    return test, list(suiteids)
+    return test, parents
 
 
 def _get_location(item, relfile, _normcase, _pathsep):
