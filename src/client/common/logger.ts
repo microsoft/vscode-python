@@ -8,7 +8,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { isTestExecution } from './constants';
 import { ILogger, LogLevel } from './types';
 
-const enableLogging = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING;
+const enableLogging = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING || process.env.VSC_PYTHON_LOG_FILE;
 
 const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
     return `${label} ${timestamp} ${level}: ${message}`;
