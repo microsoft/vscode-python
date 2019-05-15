@@ -21,8 +21,8 @@ interface IRequestData<T> {
 
 export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
     public triggerCharacters?: string[] | undefined = ['.'];
-    public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string>;
-    public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string>;
+    public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
+    public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
     private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
     private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelp>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelp>>();
