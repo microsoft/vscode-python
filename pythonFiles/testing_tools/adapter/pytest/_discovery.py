@@ -45,6 +45,7 @@ def discover(pytestargs=None, hidestdio=False,
 
 
 def _adjust_pytest_args(pytestargs):
+    """Return a corrected copy of the given pytest CLI args."""
     pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
     pytestargs.insert(0, '--collect-only')
@@ -92,6 +93,7 @@ class TestCollector(object):
 
 
 class DiscoveredTests(object):
+    """A container for the discovered tests and their parents."""
 
     def __init__(self):
         self.reset()
@@ -107,10 +109,12 @@ class DiscoveredTests(object):
         return sorted(self._parents.values(), key=lambda v: (v.root or v.name, v.id))
 
     def reset(self):
+        """Clear out any previously discovered tests."""
         self._parents = {}
         self._tests = []
 
     def add_test(self, test, suiteids):
+        """Add the given test and its parents."""
         parentid = self._ensure_parent(test.path, test.parentid, suiteids)
         test = test._replace(parentid=parentid)
         if not test.id.startswith('.' + os.path.sep):

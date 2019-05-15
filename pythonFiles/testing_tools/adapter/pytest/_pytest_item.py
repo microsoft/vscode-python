@@ -1,5 +1,95 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+"""
+During "collection", pytest finds all the tests it supports.  These are
+called "items".  The process is top-down, mostly tracing down through
+the file system.  Aside from its own machinery, pytest supports hooks
+that find tests.  Effectively, pytest starts with a set of "collectors";
+objects that can provide a list of tests and sub-collectors.  All
+collectors in the resulting tree are visited and the tests aggregated.
+For the most part, each test's (and collector's) parent is identified
+as the collector that collected it.
+
+Collectors and items are collectively identified as "nodes".  The pytest
+API relies on collector and item objects providing specific methods and
+attributes.  In addition to corresponding base classes, pytest provides
+a number of concrete impementations.
+
+The following are the known pytest node types:
+
+  Node
+      Collector
+          FSCollector
+              Session (the top-level collector)
+              File
+                  Module
+                      Package
+                      DoctestTextfile
+                      DoctestModule
+          PyCollector
+              (Module)
+                  (...)
+              Class
+                  UnitTestCase
+              Instance
+      Item
+          Function
+              TestCaseFunction
+          DoctestItem
+
+Here are the unique attrs for those classes:
+
+  Node
+      name
+      nodeid (readonly)
+      config
+      session
+      (parent) - the parent node
+      (fspath) - the file from which the node was collected
+      ----
+      own_marksers - explicit markers (e.g. with @pytest.mark())
+      keywords
+      extra_keyword_matches
+
+  Item
+      location - where the actual test source code is: (relfspath, lno, fullname)
+      user_properties
+
+  PyCollector
+      module
+      class
+      instance
+      obj
+
+  Function
+      module
+      class
+      instance
+      obj
+      function
+      (callspec)
+      (fixturenames)
+      funcargs
+      originalname - w/o decorations, e.g. [...] for parameterized
+
+  DoctestItem
+      dtest
+      obj
+
+When parsing an item, we make use of the following attributes:
+
+* name
+* nodeid
+* __class__
+    + __name__
+* fspath
+* location
+* function
+    + __name__
+    + __code__
+    + __closure__
+* own_markers
+"""
 
 from __future__ import absolute_import, print_function
 
@@ -9,15 +99,13 @@ from ..info import TestInfo, TestPath
 
 
 def parse_item(item, _normcase, _pathsep):
-    """
-    (pytest.Collector)
-        pytest.Session
-        pytest.Package
-        pytest.Module
-        pytest.Class
-        (pytest.File)
-    (pytest.Item)
-        pytest.Function
+    """Return (TestInfo, [suite ID]) for the given item.
+
+    The suite IDs, if any, are in parent order with the item's direct
+    parent at the beginning.  The parent of the last suite ID (or of
+    the test if there are no suites) is the file ID, which corresponds
+    to TestInfo.path.
+
     """
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
@@ -98,6 +186,7 @@ def parse_item(item, _normcase, _pathsep):
 
 
 def _get_location(item, relfile, _normcase, _pathsep):
+    """Return (loc str, fullname) for the given item."""
     srcfile, lineno, fullname = item.location
     srcfile = _normcase(srcfile)
     if srcfile in (relfile, relfile[len(_pathsep) + 1:]):
@@ -116,6 +205,7 @@ def _get_location(item, relfile, _normcase, _pathsep):
 
 
 def _find_location(srcfile, lineno, relfile, func, _pathsep):
+    """Return (filename, lno) for the given location info."""
     if sys.version_info > (3,):
         return srcfile, lineno
     if (_pathsep + 'unittest' + _pathsep + 'case.py') not in srcfile:
@@ -135,6 +225,7 @@ def _find_location(srcfile, lineno, relfile, func, _pathsep):
 
 
 def _parse_node_id(nodeid, kind, _pathsep, _normcase):
+    """Return the components of the given node ID, in heirarchical order."""
     if not nodeid.startswith('.' + _pathsep):
         nodeid = '.' + _pathsep + nodeid
     while '::()::' in nodeid:
