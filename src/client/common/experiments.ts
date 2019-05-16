@@ -5,12 +5,15 @@
 
 // tslint:disable:no-any
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IHttpClient } from '../activation/types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
+import { STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
-import { ICryptoUtils, IExperimentsManager, IPersistentStateFactory, Resource } from './types';
+import { ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentStateFactory, Resource } from './types';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
@@ -25,7 +28,8 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
-        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) { }
 
     public async activate(resource: Uri): Promise<void> {
@@ -65,11 +69,17 @@ export class ExperimentsManager implements IExperimentsManager {
                 return false;
             }
             const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${this.experiments[index].salt}`, 'hex', 'number');
-            return hash % 100 >= this.experiments[index].min && hash % 100 < this.experiments[index].max;
+            const inExp = hash % 100 >= this.experiments[index].min && hash % 100 < this.experiments[index].max;
+            if (inExp) {
+                sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
+                // tslint:disable-next-line:messages-must-be-localized
+                this.output.appendLine(`User belongs to experiment group, ${experimentName}`);
+                return true;
+            }
         } catch (ex) {
             traceError('Failed to check if user is in experiment', ex);
-            return false;
         }
+        return false;
     }
 
     public isTelemetryDisabled(): boolean {

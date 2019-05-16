@@ -17,7 +17,7 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
-import { ICryptoUtils, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { ICryptoUtils, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('A/B experiments', () => {
@@ -27,6 +27,7 @@ suite('A/B experiments', () => {
     let appEnvironment: IApplicationEnvironment;
     let persistentStateFactory: IPersistentStateFactory;
     let experimentStorage: TypeMoq.IMock<IPersistentState<any>>;
+    let output: TypeMoq.IMock<IOutputChannel>;
     let expManager: ExperimentsManager;
     setup(() => {
         workspaceService = mock(WorkspaceService);
@@ -35,7 +36,8 @@ suite('A/B experiments', () => {
         appEnvironment = mock(ApplicationEnvironment);
         persistentStateFactory = mock(PersistentStateFactory);
         experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment));
+        output = TypeMoq.Mock.ofType<IOutputChannel>();
+        expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object);
     });
 
     async function testInitialization(
@@ -155,6 +157,7 @@ suite('A/B experiments', () => {
                 when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
             }
 
+            output.setup(o => o.appendLine(TypeMoq.It.isAny()));
             verify(httpClient.getJSONC(anything(), anything())).never();
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
             experimentStorage.verifyAll();
