@@ -1006,7 +1006,8 @@ class DiscoveredTestsTests(unittest.TestCase):
                 ),
             ]
         allparents= [
-            [(relfileid, relfile, 'file'),
+            [(relfileid + '::test_each', 'test_each', 'function'),
+             (relfileid, relfile, 'file'),
              ('.', testroot, 'folder'),
              ],
             [(relfileid + '::All::BasicTests', 'BasicTests', 'suite'),
@@ -1090,7 +1091,8 @@ class DiscoveredTestsTests(unittest.TestCase):
                 ),
             ]
         allparents= [
-            [(relfileid, relfile, 'file'),
+            [(relfileid + '::test_each', 'test_each', 'function'),
+             (relfileid, relfile, 'file'),
              ('.', testroot, 'folder'),
              ],
             [(relfileid + '::All::BasicTests', 'BasicTests', 'suite'),
@@ -1168,24 +1170,29 @@ class DiscoveredTestsTests(unittest.TestCase):
 
     def test_add_test_simple(self):
         testroot = fix_path('/a/b/c')
+        relfile = 'test_spam.py'
+        relfileid = os.path.join('.', relfile)
         test = TestInfo(
-            id='test_spam.py::test_spam',
+            id=relfile + '::test_spam',
             name='test_spam',
             path=TestPath(
                 root=testroot,
-                relfile='test_spam.py',
+                relfile=relfile,
                 func='test_spam',
                 ),
-            source='{}:{}'.format('test_spam.py', 11),
+            source='{}:{}'.format(relfile, 11),
             markers=[],
-            parentid='test_spam.py',
+            parentid=relfile,
             )
         expected = test._replace(id=os.path.join('.', test.id),
-                                 parentid=os.path.join('.', test.parentid))
+                                 parentid=relfileid)
         discovered = DiscoveredTests()
 
         before = list(discovered), discovered.parents
-        discovered.add_test(test, [])
+        discovered.add_test(test, [
+            (relfile, relfile, 'file'),
+            ('.', testroot, 'folder'),
+            ])
         after = list(discovered), discovered.parents
 
         self.maxDiff = None
@@ -1197,9 +1204,9 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot,
                 ),
             ParentInfo(
-                id=os.path.join('.', 'test_spam.py'),
+                id=relfileid,
                 kind='file',
-                name='test_spam.py',
+                name=relfile,
                 root=testroot,
                 parentid='.',
                 ),
@@ -1389,10 +1396,35 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=relfile,
                 ),
             ]
+        allparents = [
+                [(doctestfile, 'test_doctest.txt', 'file'),
+                 (fix_path('./x'), 'x', 'folder'),
+                 ('.', testroot, 'folder'),
+                 ],
+                [(relfile, 'test_eggs.py', 'file'),
+                 (fix_path('./x/y/z'), 'z', 'folder'),
+                 (fix_path('./x/y'), 'y', 'folder'),
+                 (fix_path('./x'), 'x', 'folder'),
+                 ('.', testroot, 'folder'),
+                 ],
+                [(relfile, 'test_eggs.py', 'file'),
+                 (fix_path('./x/y/z'), 'z', 'folder'),
+                 (fix_path('./x/y'), 'y', 'folder'),
+                 (fix_path('./x'), 'x', 'folder'),
+                 ('.', testroot, 'folder'),
+                 ],
+                [(relfile, 'test_eggs.py', 'file'),
+                 (fix_path('./x/y/z'), 'z', 'folder'),
+                 (fix_path('./x/y'), 'y', 'folder'),
+                 (fix_path('./x'), 'x', 'folder'),
+                 ('.', testroot, 'folder'),
+                 ],
+                ]
+
         discovered = DiscoveredTests()
 
-        for test in alltests:
-            discovered.add_test(test, [])
+        for test, parents in zip(alltests, allparents):
+            discovered.add_test(test, parents)
         tests = list(discovered)
         parents = discovered.parents
 

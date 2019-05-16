@@ -115,86 +115,33 @@ class DiscoveredTests(object):
 
     def add_test(self, test, parents):
         """Add the given test and its parents."""
-        parents = list(parents)
-        suiteids = list(reversed([nid for nid, _, kind in parents if kind == 'suite']))
-        parentid = self._ensure_parent(test.path, test.parentid, suiteids)
+        parentid = self._ensure_parent(test.path, parents)
+        # Updating the parent ID and the test ID aren't necessary if the
+        # provided test and parents (from the test collector) are
+        # properly generated.  However, we play it safe here.
         test = test._replace(parentid=parentid)
         if not test.id.startswith('.' + os.path.sep):
             test = test._replace(id=os.path.join('.', test.id))
         self._tests.append(test)
 
-    def _ensure_parent(self, path, parentid, suiteids):
-        if not parentid.startswith('.' + os.path.sep):
-            parentid = os.path.join('.', parentid)
-        fileid = self._ensure_file(path.root, path.relfile)
+    def _ensure_parent(self, path, parents):
         rootdir = path.root
 
-        if not path.func:
-            return parentid
-
-        fullsuite, _, funcname = path.func.rpartition('.')
-        suiteid = self._ensure_suites(fullsuite, rootdir, fileid, suiteids)
-        parent = suiteid if suiteid else fileid
-
-        if path.sub:
-            if (rootdir, parentid) not in self._parents:
-                funcinfo = ParentInfo(parentid, 'function', funcname,
-                                      rootdir, parent)
-                self._parents[(rootdir, parentid)] = funcinfo
-        elif parent != parentid:
-            print(parent, parentid)
-            # TODO: What to do?
-            raise NotImplementedError
-        return parentid
-
-    def _ensure_file(self, rootdir, relfile):
-        if (rootdir, '.') not in self._parents:
-            self._parents[(rootdir, '.')] = ParentInfo('.', 'folder', rootdir)
-        if relfile.startswith('.' + os.path.sep):
-            fileid = relfile
-        else:
-            fileid = relfile = os.path.join('.', relfile)
-
-        if (rootdir, fileid) not in self._parents:
-            folderid, filebase = os.path.split(fileid)
-            fileinfo = ParentInfo(fileid, 'file', filebase, rootdir, folderid)
-            self._parents[(rootdir, fileid)] = fileinfo
-
-            while folderid != '.' and (rootdir, folderid) not in self._parents:
-                parentid, name = os.path.split(folderid)
-                folderinfo = ParentInfo(folderid, 'folder', name, rootdir, parentid)
-                self._parents[(rootdir, folderid)] = folderinfo
-                folderid = parentid
-        return relfile
-
-    def _ensure_suites(self, fullsuite, rootdir, fileid, suiteids):
-        if not fullsuite:
-            if suiteids:
-                print(suiteids)
-                # TODO: What to do?
-                raise NotImplementedError
-            return None
-        if len(suiteids) != fullsuite.count('.') + 1:
-            print(suiteids, fullsuite)
-            # TODO: What to do?
-            raise NotImplementedError
-
-        suiteid = suiteids.pop()
-        if not suiteid.startswith('.' + os.path.sep):
-            suiteid = os.path.join('.', suiteid)
-        final = suiteid
-        while '.' in fullsuite and (rootdir, suiteid) not in self._parents:
-            parentid = suiteids.pop()
-            if not parentid.startswith('.' + os.path.sep):
+        _parents = iter(parents)
+        nodeid, name, kind = next(_parents)
+        # As in add_test(), the node ID *should* already be correct.
+        if nodeid != '.' and not nodeid.startswith('.' + os.path.sep):
+            nodeid = os.path.join('.', nodeid)
+        _parentid = nodeid
+        for parentid, parentname, parentkind in _parents:
+            # As in add_test(), the parent ID *should* already be correct.
+            if parentid != '.' and not parentid.startswith('.' + os.path.sep):
                 parentid = os.path.join('.', parentid)
-            fullsuite, _, name = fullsuite.rpartition('.')
-            suiteinfo = ParentInfo(suiteid, 'suite', name, rootdir, parentid)
-            self._parents[(rootdir, suiteid)] = suiteinfo
+            info = ParentInfo(nodeid, kind, name, rootdir, parentid)
+            self._parents[(rootdir, nodeid)] = info
+            nodeid, name, kind = parentid, parentname, parentkind
+        assert nodeid == '.'
+        info = ParentInfo(nodeid, kind, name=rootdir)
+        self._parents[(rootdir, nodeid)] = info
 
-            suiteid = parentid
-        else:
-            name = fullsuite
-            suiteinfo = ParentInfo(suiteid, 'suite', name, rootdir, fileid)
-            if (rootdir, suiteid) not in self._parents:
-                self._parents[(rootdir, suiteid)] = suiteinfo
-        return final
+        return _parentid
