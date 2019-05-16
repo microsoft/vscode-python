@@ -93,6 +93,36 @@ const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [25, 24]  // TypeParameter
 ]);
 
+const mapJupyterKind: Map<string, number> = new Map<string, number>([
+    ['method', 0],
+    ['function', 1],
+    ['constructor', 2],
+    ['field', 3],
+    ['variable', 4],
+    ['class', 5],
+    ['struct', 6],
+    ['interface', 7],
+    ['module', 8],
+    ['property', 9],
+    ['event', 10],
+    ['operator', 11],
+    ['unit', 12],
+    ['value', 13],
+    ['constant', 14],
+    ['enum', 15],
+    ['enumMember', 16],
+    ['keyword', 17],
+    ['text', 18],
+    ['color', 19],
+    ['file', 20],
+    ['reference', 21],
+    ['customcolor', 22],
+    ['folder', 23],
+    ['typeParameter', 24],
+    ['snippet', 25],
+    ['<unknown>', 25]
+]);
+
 function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined) : monacoEditor.IRange | undefined {
     if (range) {
         return {
@@ -169,7 +199,7 @@ function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | v
             }
         ];
     } else if (strings.hasOwnProperty('value')) {
-// tslint:disable-next-line: no-any
+        // tslint:disable-next-line: no-any
         const content = strings as any;
         return [
             {
@@ -201,4 +231,26 @@ export function convertToMonacoHover(result: vscodeLanguageClient.Hover | vscode
     return {
         contents: []
     };
+}
+
+// tslint:disable-next-line: no-any
+export function convertStringsToSuggestions(strings: ReadonlyArray<string>, range: monacoEditor.IRange, metadata: any) : monacoEditor.languages.CompletionItem [] {
+    // Try to compute kind from the metadata.
+    let kinds: number[];
+    if (metadata && metadata._jupyter_types_experimental) {
+        // tslint:disable-next-line: no-any
+        kinds = metadata._jupyter_types_experimental.map((e: any) => {
+            const result = mapJupyterKind.get(e.type);
+            return result ? result : 3;
+        });
+    }
+
+    return strings.map((s: string, i: number) => {
+        return {
+            label: s,
+            insertText: s,
+            kind: kinds ? kinds[i] : 3, // Note: importing the monacoEditor.languages.CompletionItemKind causes a failure in loading the extension. So we use numbers.
+            range
+        };
+    });
 }

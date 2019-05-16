@@ -12,7 +12,7 @@ import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
+import { CancellationToken, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -36,7 +36,15 @@ import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../client/datascience/types';
+import {
+    ICell,
+    IConnection,
+    IJupyterKernelSpec,
+    INotebookCompletion,
+    INotebookServer,
+    INotebookServerLaunchInfo,
+    InterruptResult
+} from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -70,6 +78,10 @@ class MockJupyterServer implements INotebookServer {
         throw new Error('Method not implemented');
     }
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
+        throw new Error('Method not implemented');
+    }
+
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
         throw new Error('Method not implemented');
     }
     public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {

@@ -59,12 +59,22 @@ export interface INotebookServerLaunchInfo
     purpose: string | undefined; // Purpose this server is for
 }
 
+export interface INotebookCompletion {
+    matches: ReadonlyArray<string>;
+    cursor: {
+        start: number;
+        end: number;
+    };
+    metadata: {};
+}
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
+    getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number) : Promise<void>;
     waitForIdle(timeoutInMs: number) : Promise<void>;
     shutdown() : Promise<void>;
@@ -106,6 +116,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     interrupt(timeout: number) : Promise<void>;
     waitForIdle(timeout: number) : Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined;
+    requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager {

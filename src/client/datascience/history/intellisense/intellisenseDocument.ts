@@ -196,7 +196,7 @@ export class IntellisenseDocument implements TextDocument {
         const newCode = `${normalized}\n`;
 
         // We should start just before the last cell.
-        const fromOffset = this._cellRanges[this._cellRanges.length - 1].start;
+        const fromOffset = this.getEditCellOffset();
 
         // Split our text between the edit text and the cells above
         const before = this._contents.substr(0, fromOffset);
@@ -305,6 +305,14 @@ export class IntellisenseDocument implements TextDocument {
 
         // We can't find a cell that matches. Just remove the 1 based
         return new Position(line - 1, ch - 1);
+    }
+
+    public getEditCellContent() {
+        return this._contents.substr(this.getEditCellOffset());
+    }
+
+    public getEditCellOffset() {
+        return this._cellRanges[this._cellRanges.length - 1].start;
     }
 
     private removeRange(newText: string, from: Position, to: Position, cellIndex: number) : TextDocumentContentChangeEvent[] {

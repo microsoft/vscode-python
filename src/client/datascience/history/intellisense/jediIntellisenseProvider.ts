@@ -14,7 +14,7 @@ import { IServiceManager } from '../../../ioc/types';
 import { JediFactory } from '../../../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../../../providers/completionProvider';
 import { PythonHoverProvider } from '../../../providers/hoverProvider';
-import { IHistoryListener } from '../../types';
+import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
 import { convertToMonacoCompletionList, convertToMonacoHover } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
@@ -34,9 +34,11 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) fileSystem: IFileSystem
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
+        @inject(IHistoryProvider) historyProvider: IHistoryProvider
     ) {
-        super(workspaceService, fileSystem);
+        super(workspaceService, fileSystem, jupyterExecution, historyProvider);
 
         this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
         this.jediFactory = new JediFactory(this.context.asAbsolutePath('.'), this.serviceManager);

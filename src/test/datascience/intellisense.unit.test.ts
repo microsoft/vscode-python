@@ -13,7 +13,7 @@ import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { DotNetIntellisenseProvider } from '../../client/datascience/history/intellisense/dotNetIntellisenseProvider';
-import { IHistoryListener } from '../../client/datascience/types';
+import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
 
@@ -27,6 +27,8 @@ suite('DataScience Intellisense Unit Tests', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
+    let historyProvider: TypeMoq.IMock<IHistoryProvider>;
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -42,6 +44,8 @@ suite('DataScience Intellisense Unit Tests', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
+        historyProvider = TypeMoq.Mock.ofType<IHistoryProvider>();
 
         pythonSettings.jediEnabled = false;
         languageServer.setup(l => l.start(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
@@ -50,7 +54,14 @@ suite('DataScience Intellisense Unit Tests', () => {
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
         workspaceService.setup(w => w.rootPath).returns(() => '/foo/bar');
 
-        intellisenseProvider = new DotNetIntellisenseProvider(languageServer.object, analysisOptions.object, workspaceService.object, configService.object, fileSystem.object);
+        intellisenseProvider = new DotNetIntellisenseProvider(
+            languageServer.object,
+            analysisOptions.object,
+            workspaceService.object,
+            configService.object,
+            fileSystem.object,
+            jupyterExecution.object,
+            historyProvider.object);
     });
 
     function sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {

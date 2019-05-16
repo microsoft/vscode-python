@@ -17,10 +17,12 @@ import {
 } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
+import { CancellationError } from '../../../common/cancellation';
+import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { Identifiers } from '../../constants';
-import { IHistoryListener } from '../../types';
+import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
 import {
     HistoryMessages,
     IAddCell,
@@ -31,6 +33,7 @@ import {
     IProvideHoverRequest,
     IRemoveCell
 } from '.././historyTypes';
+import { convertStringsToSuggestions } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
@@ -44,7 +47,9 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
     constructor(
         @unmanaged() private workspaceService: IWorkspaceService,
-        @unmanaged() private fileSystem: IFileSystem
+        @unmanaged() private fileSystem: IFileSystem,
+        @unmanaged() private jupyterExecution: IJupyterExecution,
+        @unmanaged() private historyProvider: IHistoryProvider
     ) {
     }
 
@@ -161,10 +166,18 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
     }
 
     private handleCompletionItemsRequest(request: IProvideCompletionItemsRequest) {
+        // Create a cancellation source. We'll use this for our sub class request and a jupyter one
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token).then(list => {
-             this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, requestId: request.requestId});
+
+        // Combine all of the results together.
+        const results = Promise.all(
+            [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
+             this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)]);
+
+        results.then(combined => {
+            const list = this.combineCompletions(combined);
+            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, requestId: request.requestId});
         }).catch(_e => {
             this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }, requestId: request.requestId});
         });
@@ -178,6 +191,72 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         }).catch(_e => {
             this.postResponse(HistoryMessages.ProvideHoverResponse, {hover: { contents: [] }, requestId: request.requestId});
         });
+    }
+
+    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+        try {
+            const activeServer = await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions());
+            const document = await this.getDocument();
+            if (activeServer && document) {
+                const code = document.getEditCellContent();
+                const lines = code.splitLines({trim: false, removeEmptyEntries: false});
+                const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
+                    if (i < position.lineNumber - 1) {
+                        return a + c.length + 1;
+                    } else if (i === position.lineNumber - 1) {
+                        return a + position.column - 1;
+                    } else {
+                        return a;
+                    }
+                }, 0);
+                const jupyterResults = await activeServer.getCompletion(code, offsetInCode, cancelToken);
+                if (jupyterResults && jupyterResults.matches) {
+                    const baseOffset = document.getEditCellOffset();
+                    const basePosition = document.positionAt(baseOffset);
+                    const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
+                    const endPosition = document.positionAt(jupyterResults.cursor.end  + baseOffset);
+                    const range: monacoEditor.IRange = {
+                        startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
+                        startColumn: startPosition.character + 1,
+                        endLineNumber: endPosition.line + 1 - basePosition.line,
+                        endColumn: endPosition.character + 1
+                    };
+                    return {
+                        suggestions: convertStringsToSuggestions(jupyterResults.matches, range, jupyterResults.metadata),
+                        incomplete: false
+                    };
+                }
+            }
+        } catch (e) {
+            if (!(e instanceof CancellationError)) {
+                traceWarning(e);
+            }
+        }
+
+        return {
+            suggestions: [],
+            incomplete: false
+        };
+
+    }
+
+    private combineCompletions(list: monacoEditor.languages.CompletionList[]) : monacoEditor.languages.CompletionList {
+        // Note to self. We're eliminating duplicates ourselves. The alternative would be to
+        // have more than one intellisense provider at the monaco editor level and return jupyter
+        // results independently. Maybe we switch to this when jupyter resides on the react side.
+        const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<string, monacoEditor.languages.CompletionItem>();
+        list.forEach(c => {
+            c.suggestions.forEach(s => {
+                if (!uniqueSuggestions.has(s.insertText)) {
+                    uniqueSuggestions.set(s.insertText, s);
+                }
+            });
+        });
+
+        return {
+            suggestions: Array.from(uniqueSuggestions.values()),
+            incomplete: false
+        };
     }
 
     private async addCell(request: IAddCell): Promise<void> {

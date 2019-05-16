@@ -14,7 +14,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { Identifiers } from '../../constants';
-import { IHistoryListener } from '../../types';
+import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
 import { convertToMonacoCompletionList, convertToMonacoHover } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
@@ -32,9 +32,11 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) fileSystem: IFileSystem
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
+        @inject(IHistoryProvider) historyProvider: IHistoryProvider
     ) {
-        super(workspaceService, fileSystem);
+        super(workspaceService, fileSystem, jupyterExecution, historyProvider);
 
         // Make sure we're active. We still listen to messages for adding and editing cells,
         // but we don't actually return any data.

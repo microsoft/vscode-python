@@ -75,6 +75,10 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
+    public requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        return Promise.resolve(undefined);
+    }
+
     public dispose(): Promise<void> {
         return sleep(10);
     }
