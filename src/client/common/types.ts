@@ -54,9 +54,12 @@ export enum LogLevel {
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
-    logError(message: string, error?: Error): void;
-    logWarning(message: string, error?: Error): void;
-    logInformation(message: string, error?: Error): void;
+    // tslint:disable-next-line: no-any
+    logError(...args: any[]): void;
+    // tslint:disable-next-line: no-any
+    logWarning(...args: any[]): void;
+    // tslint:disable-next-line: no-any
+    logInformation(...args: any[]): void;
 }
 
 export enum InstallerResponse {

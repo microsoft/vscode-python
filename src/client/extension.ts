@@ -10,8 +10,8 @@ if ((Reflect as any).metadata === undefined) {
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));
-import { initialize as initializeLogger, traceError } from './common/logger';
-initializeLogger();
+// Initialize the logger first.
+require('./common/logger');
 
 const durations: Record<string, number> = {};
 import { StopWatch } from './common/utils/stopWatch';
@@ -44,6 +44,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/
 import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
