@@ -11,7 +11,7 @@
 import * as fs from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { noop } from '../core';
 
 let client: net.Socket | undefined;
@@ -19,7 +19,7 @@ const mochaTests: any = require('mocha');
 const { EVENT_RUN_BEGIN, EVENT_RUN_END } = mochaTests.Runner.constants;
 
 async function connectToServer() {
-    const portFile = path.join(EXTENSION_ROOT_DIR, 'port.txt');
+    const portFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'port.txt');
     if (!(await fs.pathExists(portFile))) {
         return;
     }
