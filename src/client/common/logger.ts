@@ -55,10 +55,6 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
  *   This is optional (generally done when running tests on CI).
  */
 function initializeConsoleLogger() {
-    if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING){
-        // Do not log to console if running tests on CI and we're not asked to do so.
-        return;
-    }
     const logMethods = {
         log: Symbol.for('log'),
         info: Symbol.for('info'),
@@ -77,8 +73,8 @@ function initializeConsoleLogger() {
         fn(message);
     }
 
-    // Hijack `console.log`.
-    if (process.env.VSC_PYTHON_FORCE_LOGGING) {
+    // Hijack `console.log` when running tests on CI.
+    if (process.env.VSC_PYTHON_LOG_FILE && process.env.TF_BUILD) {
         /*
         What we're doing here is monkey patching the console.log so we can send everything sent to console window into our logs.
         This is only required when we're directly writing to `console.log` or not using our `winston logger`.
@@ -122,6 +118,11 @@ function initializeConsoleLogger() {
             logToConsole('debug', ...args);
             logToFile(LogLevel.Information, ...args);
         };
+    }
+
+    if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING){
+        // Do not log to console if running tests on CI and we're not asked to do so.
+        return;
     }
 
     // Rest of this stuff is just to instantiate the console logger.
