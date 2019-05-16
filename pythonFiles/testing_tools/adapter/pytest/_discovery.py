@@ -75,8 +75,7 @@ class TestCollector(object):
         self._tests.reset()
         for item in items:
             test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
-            suiteids = reversed([nid for nid, _, kind in parents if kind == 'suite'])
-            self._tests.add_test(test, list(suiteids))
+            self._tests.add_test(test, parents)
 
     # This hook is not specified in the docs, so we also provide
     # the "modifyitems" hook just in case.
@@ -90,8 +89,7 @@ class TestCollector(object):
         self._tests.reset()
         for item in items:
             test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
-            suiteids = reversed([nid for nid, _, kind in parents if kind == 'suite'])
-            self._tests.add_test(test, list(suiteids))
+            self._tests.add_test(test, parents)
 
 
 class DiscoveredTests(object):
@@ -115,8 +113,10 @@ class DiscoveredTests(object):
         self._parents = {}
         self._tests = []
 
-    def add_test(self, test, suiteids):
+    def add_test(self, test, parents):
         """Add the given test and its parents."""
+        parents = list(parents)
+        suiteids = list(reversed([nid for nid, _, kind in parents if kind == 'suite']))
         parentid = self._ensure_parent(test.path, test.parentid, suiteids)
         test = test._replace(parentid=parentid)
         if not test.id.startswith('.' + os.path.sep):
@@ -175,7 +175,7 @@ class DiscoveredTests(object):
                 raise NotImplementedError
             return None
         if len(suiteids) != fullsuite.count('.') + 1:
-            print(suiteids)
+            print(suiteids, fullsuite)
             # TODO: What to do?
             raise NotImplementedError
 

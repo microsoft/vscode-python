@@ -176,6 +176,8 @@ def parse_item(item, _normcase, _pathsep):
         markers=sorted(markers) if markers else None,
         parentid=parentid,
         )
+    if parents and parents[-1] == ('.', None, 'folder'):  # This should always be true?
+        parents[-1] = ('.', testroot, 'folder')
     return test, parents
 
 

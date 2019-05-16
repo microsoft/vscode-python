@@ -80,8 +80,8 @@ class StubDiscoveredTests(StubProxy):
     def reset(self):
         self.add_call('reset', None, None)
 
-    def add_test(self, test, suiteids):
-        self.add_call('add_test', None, {'test': test, 'suiteids': suiteids})
+    def add_test(self, test, parents):
+        self.add_call('add_test', None, {'test': test, 'parents': parents})
 
 
 class FakeFunc(object):
@@ -375,7 +375,11 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[relfile1 + '::SpamTests'],
+                parents=[
+                    (relfile1 + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfile1, 'test_spam.py', 'file'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfile1 + '::SpamTests::test_one',
                     name='test_one',
@@ -391,7 +395,11 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[relfile1 + '::SpamTests'],
+                parents=[
+                    (relfile1 + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfile1, 'test_spam.py', 'file'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfile1 + '::SpamTests::test_other',
                     name='test_other',
@@ -407,7 +415,10 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (relfile1, 'test_spam.py', 'file'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfile1 + '::test_all',
                     name='test_all',
@@ -423,7 +434,11 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (relfile1 + '::test_each', 'test_each', 'function'),
+                    (relfile1, 'test_spam.py', 'file'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfile1 + '::test_each[10-10]',
                     name='test_each[10-10]',
@@ -439,8 +454,15 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[relfileid2 + '::All',
-                          relfileid2 + '::All::BasicTests'],
+                parents=[
+                    (relfileid2 + '::All::BasicTests', 'BasicTests', 'suite'),
+                    (relfileid2 + '::All', 'All', 'suite'),
+                    (relfileid2, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid2 + '::All::BasicTests::test_first',
                     name='test_first',
@@ -456,8 +478,16 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[relfileid2 + '::All',
-                          relfileid2 + '::All::BasicTests'],
+                parents=[
+                    (relfileid2 + '::All::BasicTests::test_each', 'test_each', 'function'),
+                    (relfileid2 + '::All::BasicTests', 'BasicTests', 'suite'),
+                    (relfileid2 + '::All', 'All', 'suite'),
+                    (relfileid2, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid2 + '::All::BasicTests::test_each[1+2-3]',
                     name='test_each[1+2-3]',
@@ -499,7 +529,14 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[relfileid + '::SpamTests'],
+                parents=[
+                    (relfileid + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::SpamTests::test_spam',
                     name='test_spam',
@@ -564,7 +601,11 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (doctestfileid, 'test_doctest.txt', 'file'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=doctestfileid + '::test_doctest.txt',
                     name='test_doctest.txt',
@@ -579,7 +620,13 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::test_eggs',
                     name='test_eggs',
@@ -594,7 +641,13 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::test_eggs.TestSpam',
                     name='test_eggs.TestSpam',
@@ -609,7 +662,13 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::test_eggs.TestSpam.TestEggs',
                     name='test_eggs.TestSpam.TestEggs',
@@ -650,7 +709,15 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[relfileid + '::SpamTests'],
+                parents=[
+                    (relfileid + '::SpamTests::test_spam', 'test_spam', 'function'),
+                    (relfileid + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::SpamTests::test_spam[a-[b]-c]',
                     name='test_spam[a-[b]-c]',
@@ -692,10 +759,15 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[
-                    relfileid + '::SpamTests',
-                    relfileid + '::SpamTests::Ham',
-                    relfileid + '::SpamTests::Ham::Eggs',
+                parents=[
+                    (relfileid + '::SpamTests::Ham::Eggs', 'Eggs', 'suite'),
+                    (relfileid + '::SpamTests::Ham', 'Ham', 'suite'),
+                    (relfileid + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
                     id=relfileid + '::SpamTests::Ham::Eggs::test_spam',
@@ -743,7 +815,14 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[r'.\x\y\z\test_eggs.py::SpamTests'],
+                parents=[
+                    (r'.\x\y\z\test_eggs.py::SpamTests', 'SpamTests', 'suite'),
+                    (r'.\x\y\z\test_eggs.py', 'test_eggs.py', 'file'),
+                    (r'.\x\y\z', 'z', 'folder'),
+                    (r'.\x\y', 'y', 'folder'),
+                    (r'.\x', 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=r'.\x\y\z\test_eggs.py::SpamTests::test_spam',
                     name='test_spam',
@@ -785,7 +864,14 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[relfileid + '::SpamTests'],
+                parents=[
+                    (relfileid + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::SpamTests::test_spam',
                     name='test_spam',
@@ -838,7 +924,14 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(stub.calls, [
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
-                suiteids=[relfileid + '::SpamTests'],
+                parents=[
+                    (relfileid + '::SpamTests', 'SpamTests', 'suite'),
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::SpamTests::test_spam',
                     name='test_spam',
@@ -854,7 +947,13 @@ class CollectorTests(unittest.TestCase):
                     ),
                 )),
             ('discovered.add_test', None, dict(
-                suiteids=[],
+                parents=[
+                    (relfileid, 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
                 test=TestInfo(
                     id=relfileid + '::test_ham',
                     name='test_ham',
@@ -906,18 +1005,22 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=relfile + '::All::BasicTests',
                 ),
             ]
-        allsuiteids = [
-            [],
-            [relfile + '::All',
-             relfile + '::All::BasicTests',
+        allparents= [
+            [(relfileid, relfile, 'file'),
+             ('.', testroot, 'folder'),
+             ],
+            [(relfileid + '::All::BasicTests', 'BasicTests', 'suite'),
+             (relfileid + '::All', 'All', 'suite'),
+             (relfileid, relfile, 'file'),
+             ('.', testroot, 'folder'),
              ],
             ]
         expected = [test._replace(id=os.path.join('.', test.id),
                                   parentid=os.path.join('.', test.parentid))
                     for test in tests]
         discovered = DiscoveredTests()
-        for test, suiteids in zip(tests, allsuiteids):
-            discovered.add_test(test, suiteids)
+        for test, parents in zip(tests, allparents):
+            discovered.add_test(test, parents)
         size = len(discovered)
         items = [discovered[0], discovered[1]]
         snapshot = list(discovered)
@@ -932,7 +1035,7 @@ class DiscoveredTestsTests(unittest.TestCase):
         discovered = DiscoveredTests()
         discovered.add_test(
             TestInfo(
-                id='test_spam.py::test_each',
+                id='./test_spam.py::test_each',
                 name='test_each',
                 path=TestPath(
                     root=testroot,
@@ -941,9 +1044,11 @@ class DiscoveredTestsTests(unittest.TestCase):
                     ),
                 source='{}:{}'.format('test_spam.py', 11),
                 markers=[],
-                parentid='test_spam.py',
+                parentid='./test_spam.py',
                 ),
-            [])
+            [('./test_spam.py', 'test_spam.py', 'file'),
+             ('.', testroot, 'folder'),
+             ])
 
         before = len(discovered), len(discovered.parents)
         discovered.reset()
@@ -984,15 +1089,22 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=relfile + '::All::BasicTests',
                 ),
             ]
-        allsuiteids = [
-            [],
-            [relfile + '::All',
-             relfile + '::All::BasicTests',
+        allparents= [
+            [(relfileid, relfile, 'file'),
+             ('.', testroot, 'folder'),
+             ],
+            [(relfileid + '::All::BasicTests', 'BasicTests', 'suite'),
+             (relfileid + '::All', 'All', 'suite'),
+             (relfileid, 'test_spam.py', 'file'),
+             (fix_path('./x/y/z'), 'z', 'folder'),
+             (fix_path('./x/y'), 'y', 'folder'),
+             (fix_path('./x'), 'x', 'folder'),
+             ('.', testroot, 'folder'),
              ],
             ]
         discovered = DiscoveredTests()
-        for test, suiteids in zip(tests, allsuiteids):
-            discovered.add_test(test, suiteids)
+        for test, parents in zip(tests, allparents):
+            discovered.add_test(test, parents)
 
         parents = discovered.parents
 
@@ -1112,8 +1224,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=relfile1,
                 ),
             ]
-        allsuiteids = [
-            [],
+        allparents = [
+            [(relfileid1, 'test_spam.py', 'file'),
+             ('.', testroot1, 'folder'),
+             ],
             ]
         # the second root
         testroot2 = fix_path('/x/y/z')
@@ -1133,14 +1247,17 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=relfile2 + '::BasicTests',
                 ),
             ])
-        allsuiteids.extend([
-            [relfile2 + '::BasicTests',
+        allparents.extend([
+            [(relfileid2 + '::BasicTests', 'BasicTests', 'suite'),
+             (relfileid2, 'test_eggs.py', 'file'),
+             (fix_path('./w'), 'w', 'folder'),
+             ('.', testroot2, 'folder'),
              ],
             ])
 
         discovered = DiscoveredTests()
-        for test, suiteids in zip(alltests, allsuiteids):
-            discovered.add_test(test, suiteids)
+        for test, parents in zip(alltests, allparents):
+            discovered.add_test(test, parents)
         tests = list(discovered)
         parents = discovered.parents
 
@@ -1356,18 +1473,22 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=relfile + '::TestOuter::TestInner',
                 ),
             ]
-        allsuiteids = [
-            [relfile + '::TestOuter',
-             relfile + '::TestOuter::TestInner',
+        allparents= [
+            [(relfile + '::TestOuter::TestInner', 'TestInner', 'suite'),
+             (relfile + '::TestOuter', 'TestOuter', 'suite'),
+             (relfile, 'test_eggs.py', 'file'),
+             ('.', testroot, 'folder'),
              ],
-            [relfile + '::TestOuter',
-             relfile + '::TestOuter::TestInner',
+            [(relfile + '::TestOuter::TestInner', 'TestInner', 'suite'),
+             (relfile + '::TestOuter', 'TestOuter', 'suite'),
+             (relfile, 'test_eggs.py', 'file'),
+             ('.', testroot, 'folder'),
              ],
             ]
 
         discovered = DiscoveredTests()
-        for test, suiteids in zip(alltests, allsuiteids):
-            discovered.add_test(test, suiteids)
+        for test, parents in zip(alltests, allparents):
+            discovered.add_test(test, parents)
         tests = list(discovered)
         parents = discovered.parents
 
