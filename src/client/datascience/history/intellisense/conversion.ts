@@ -249,6 +249,7 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
         return {
             label: s,
             insertText: s,
+            sortText: s,
             kind: kinds ? kinds[i] : 3, // Note: importing the monacoEditor.languages.CompletionItemKind causes a failure in loading the extension. So we use numbers.
             range
         };

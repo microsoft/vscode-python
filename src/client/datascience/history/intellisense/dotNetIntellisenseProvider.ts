@@ -89,14 +89,19 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         // Then see if we can talk to our language client
         if (this.active && document) {
 
+            // Cache our document state as it may change after we get our language client. Async call may allow a change to
+            // come in before we send the first doc open.
+            const docItem = document.textDocumentItem;
+            const docItemId = document.textDocumentId;
+
             // Broadcast an update to the language server
             const languageClient = await this.getLanguageClient(originalFile === Identifiers.EmptyFileName || originalFile === undefined ? undefined : Uri.file(originalFile));
 
             if (!this.sentOpenDocument) {
                 this.sentOpenDocument = true;
-                return languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type, { textDocument: document.textDocumentItem });
+                return languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type, { textDocument: docItem });
             } else {
-                return languageClient.sendNotification(vscodeLanguageClient.DidChangeTextDocumentNotification.type, { textDocument: document.textDocumentId, contentChanges: changes });
+                return languageClient.sendNotification(vscodeLanguageClient.DidChangeTextDocumentNotification.type, { textDocument: docItemId, contentChanges: changes });
             }
         }
     }
