@@ -25,8 +25,8 @@ const logLevelMap = {
 };
 
 function log(logLevel: LogLevel, ...args: any[]) {
-    const message = util.format(args[0], ...args.slice(1));
     if (consoleLogger.transports.length > 0){
+        const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
         consoleLogger.log(logLevelMap[logLevel], message);
     }
     logToFile(logLevel, ...args);
@@ -35,7 +35,7 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
     if (fileLogger.transports.length === 0){
         return;
     }
-    const message = util.format(args[0], ...args.slice(1));
+    const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
     fileLogger.log(logLevelMap[logLevel], message);
 }
 
@@ -67,10 +67,9 @@ function initializeConsoleLogger() {
         if (['info', 'error', 'warn', 'log', 'debug'].indexOf(stream) === -1) {
             stream = 'log';
         }
-        const message = args.length === 0 ? '' : (args.length === 1 ? args[0] : util.format(args[0], ...args.slice(1)));
         // Further below we monkeypatch the console.log, etc methods.
         const fn = (console as any)[logMethods[stream]] || console[stream] || console.log;
-        fn(message);
+        fn(...args);
     }
 
     // Hijack `console.log` when running tests on CI.
