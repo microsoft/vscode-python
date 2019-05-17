@@ -71,7 +71,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function addCell(code: string, id: string) : Promise<void> {
-        return sendMessage(HistoryMessages.AddCell, { text: code, file: 'foo.py', id });
+        return sendMessage(HistoryMessages.AddCell, { fullText: code, currentText: code, file: 'foo.py', id });
     }
 
     function updateCell(newCode: string, oldCode: string, id: string) : Promise<void> {
@@ -227,7 +227,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         await addCell('import sys', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Document not set');
         await updateCell('import sys\nsys.version_info', 'import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\n', 'Readding a cell broken');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Readding a cell broken');
         await updateCell('import sys', 'import sys\nsys.version_info', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\n', 'Collapsing a cell broken');
         await updateCell('import sys', 'import sys', '1');
@@ -242,7 +242,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         await addCode('s', 1, 3, 2);
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
         await updateCell('import sys\nsys.version_info', 'import sys', '1');
-        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys.version_info\nsys', 'Readding a cell broken');
+        expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Readding a cell broken');
         await updateCell('import sys', 'import sys\nsys.version_info', '1');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nsys', 'Collapsing a cell broken');
         await updateCell('import sys', 'import sys', '1');

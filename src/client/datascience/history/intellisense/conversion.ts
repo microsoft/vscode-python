@@ -255,3 +255,16 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
         };
     });
 }
+
+export function convertToMonacoSignatureHelp(
+    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null) : monacoEditor.languages.SignatureHelp {
+    if (result) {
+        return result as monacoEditor.languages.SignatureHelp;
+    }
+
+    return {
+        signatures: [],
+        activeParameter: 0,
+        activeSignature: 0
+    };
+}

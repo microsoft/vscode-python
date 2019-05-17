@@ -22,6 +22,7 @@ export interface IContentPanelProps {
     submittedText: boolean;
     skipNextScroll: boolean;
     monacoTheme: string | undefined;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
@@ -64,6 +65,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    editorOptions={this.props.editorOptions}
                     history={undefined}
                     maxTextSize={maxTextSize}
                     autoFocus={false}

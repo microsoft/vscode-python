@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, ViewColumn } from 'vscode';
+import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { traceInfo } from '../common/logger';
@@ -142,18 +142,41 @@ export class WebViewHost<IMapping> implements IDisposable {
         const terminal = this.workspaceService.getConfiguration('terminal');
         const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
         const workbench = this.workspaceService.getConfiguration('workbench');
+        const editor = this.workspaceService.getConfiguration('editor');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {
                 terminalCursor: terminalCursor,
                 theme: theme
+            },
+            intellisenseOptions: {
+                quickSuggestions: {
+                    other: this.getValue(editor, 'quickSuggestions.other', true),
+                    comments: this.getValue(editor, 'quickSuggestions.comments', false),
+                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
+                },
+                acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
+                quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
+                suggestOnTriggerCharacters: this.getValue(editor, 'suggestOnTriggerCharacters', true),
+                tabCompletion: this.getValue(editor, 'tabCompletion', 'on'),
+                suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
+                suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
+                wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
+                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
             }
         };
     }
 
     protected isDark() : Promise<boolean> {
         return this.themeIsDarkPromise.promise;
+    }
+
+    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T) : T {
+        if (workspaceConfig) {
+            return workspaceConfig.get(section, defaultValue);
+        }
+        return defaultValue;
     }
 
     private onViewStateChanged = (webPanel: IWebPanel) => {

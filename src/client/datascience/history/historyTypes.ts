@@ -43,6 +43,9 @@ export namespace HistoryMessages {
     export const ProvideHoverRequest = 'provide_hover_request';
     export const CancelHoverRequest = 'cancel_hover_request';
     export const ProvideHoverResponse = 'provide_hover_response';
+    export const ProvideSignatureHelpRequest = 'provide_signature_help_request';
+    export const CancelSignatureHelpRequest = 'cancel_signature_help_request';
+    export const ProvideSignatureHelpResponse = 'provide_signature_help_response';
     export const AddCell = 'add_cell';
     export const EditCell = 'edit_cell';
     export const RemoveCell = 'remove_cell';
@@ -98,6 +101,13 @@ export interface IProvideHoverRequest {
     cellId: string;
 }
 
+export interface IProvideSignatureHelpRequest {
+    position: monacoEditor.Position;
+    context: monacoEditor.languages.SignatureHelpContext;
+    requestId: string;
+    cellId: string;
+}
+
 export interface ICancelIntellisenseRequest {
     requestId: string;
 }
@@ -112,6 +122,11 @@ export interface IProvideHoverResponse {
     requestId: string;
 }
 
+export interface IProvideSignatureHelpResponse {
+    signatureHelp: monacoEditor.languages.SignatureHelp;
+    requestId: string;
+}
+
 export interface IPosition {
     line: number;
     ch: number;
@@ -123,7 +138,8 @@ export interface IEditCell {
 }
 
 export interface IAddCell {
-    text: string;
+    fullText: string;
+    currentText: string;
     file: string;
     id: string;
 }
@@ -172,6 +188,9 @@ export class IHistoryMapping {
     public [HistoryMessages.ProvideHoverRequest] : IProvideHoverRequest;
     public [HistoryMessages.CancelHoverRequest] : ICancelIntellisenseRequest;
     public [HistoryMessages.ProvideHoverResponse] : IProvideHoverResponse;
+    public [HistoryMessages.ProvideSignatureHelpRequest] : IProvideSignatureHelpRequest;
+    public [HistoryMessages.CancelSignatureHelpRequest] : ICancelIntellisenseRequest;
+    public [HistoryMessages.ProvideSignatureHelpResponse] : IProvideSignatureHelpResponse;
     public [HistoryMessages.AddCell] : IAddCell;
     public [HistoryMessages.EditCell] : IEditCell;
     public [HistoryMessages.RemoveCell] : IRemoveCell;

@@ -40,6 +40,7 @@ interface ICellProps {
     showWatermark: boolean;
     errorBackgroundColor: string;
     monacoTheme: string | undefined;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -212,6 +213,7 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className='cell-input'>
                     <Code
+                        editorOptions={this.props.editorOptions}
                         cursorType={this.getCursorType()}
                         history={this.props.history}
                         autoFocus={this.props.autoFocus}

@@ -63,7 +63,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             submittedText: false,
             history: new InputHistory(),
             contentTop: 24,
-            editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined
+            editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
+            editorOptions: this.computeEditorOptions()
         };
 
         // Add test state if necessary
@@ -294,6 +295,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             <div className='edit-panel'>
                 <ErrorBoundary>
                     <Cell
+                        editorOptions={this.state.editorOptions}
                         history={this.state.history}
                         maxTextSize={maxTextSize}
                         autoFocus={document.hasFocus()}
@@ -314,6 +316,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 </ErrorBoundary>
             </div>
         );
+    }
+
+    private computeEditorOptions() : monacoEditor.editor.IEditorOptions {
+        const intellisenseOptions = getSettings().intellisenseOptions;
+        if (intellisenseOptions) {
+            return {
+                quickSuggestions: {
+                    other: intellisenseOptions.quickSuggestions.other,
+                    comments: intellisenseOptions.quickSuggestions.comments,
+                    strings: intellisenseOptions.quickSuggestions.strings
+                },
+                acceptSuggestionOnEnter: intellisenseOptions.acceptSuggestionOnEnter,
+                quickSuggestionsDelay: intellisenseOptions.quickSuggestionsDelay,
+                suggestOnTriggerCharacters: intellisenseOptions.suggestOnTriggerCharacters,
+                tabCompletion: intellisenseOptions.tabCompletion,
+                suggest: {
+                    localityBonus: intellisenseOptions.suggestLocalityBonus
+                },
+                suggestSelection: intellisenseOptions.suggestSelection,
+                wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
+                parameterHints: {
+                    enabled: intellisenseOptions.parameterHintsEnabled
+                }
+            };
+        }
+
+        return {};
     }
 
     // Called by the header control when size changes (such as expanding variables)
@@ -362,6 +391,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
+            editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
             contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
@@ -430,6 +460,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             // If our settings change updated show inputs we need to fix up our cells
             const showInputs = getSettings().showCellInputCode;
+
+            // Also save the editor options. Intellisense options may have changed.
+            this.setState({
+                editorOptions: this.computeEditorOptions()
+            });
 
             if (prevShowInputs !== showInputs) {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
@@ -936,9 +971,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private readOnlyCodeCreated = (text: string, file: string, id: string, monacoId: string) => {
-        // Pass this onto the completion provider running in the extension
-        this.sendMessage(HistoryMessages.AddCell, { text, file, id });
+    private readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
+        const cell = this.state.cellVMs.find(c => c.cell.id === id);
+        if (cell) {
+            // Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.AddCell, {
+                fullText: extractInputText(cell.cell, getSettings()),
+                currentText: cell.inputBlockText,
+                file,
+                id
+            });
+        }
 
         // Save in our map of monaco id to cell id
         this.monacoIdToCellId.set(monacoId, id);

@@ -9,7 +9,8 @@ import {
     HistoryMessages,
     IHistoryMapping,
     IProvideCompletionItemsResponse,
-    IProvideHoverResponse
+    IProvideHoverResponse,
+    IProvideSignatureHelpResponse
 } from '../../client/datascience/history/historyTypes';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
@@ -18,15 +19,19 @@ interface IRequestData<T> {
     cancelDisposable: monacoEditor.IDisposable;
 }
 
-export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, IDisposable, IMessageHandler {
+export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
     public triggerCharacters?: string[] | undefined = ['.'];
+    public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
+    public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
     private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
+    private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelp>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelp>>();
     private registerDisposables: monacoEditor.IDisposable[] = [];
     constructor(private postOffice: PostOffice, private getCellId: (modelId: string) => string) {
         // Register a completion provider
         this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
+        this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider('python', this));
         this.postOffice.addHandler(this);
     }
 
@@ -70,6 +75,26 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         return promise.promise;
     }
 
+    public provideSignatureHelp(
+        model: monacoEditor.editor.ITextModel,
+        position: monacoEditor.Position,
+        token: monacoEditor.CancellationToken,
+        context: monacoEditor.languages.SignatureHelpContext): monacoEditor.languages.ProviderResult<monacoEditor.languages.SignatureHelp> {
+        // Emit a new request
+        const requestId = uuid();
+        const promise = createDeferred<monacoEditor.languages.SignatureHelp>();
+
+        const cancelDisposable = token.onCancellationRequested(() => {
+            promise.resolve();
+            this.sendMessage(HistoryMessages.CancelSignatureHelpRequest, { requestId });
+        });
+
+        this.signatureHelpRequests.set(requestId, { promise, cancelDisposable });
+        this.sendMessage(HistoryMessages.ProvideSignatureHelpRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+
+        return promise.promise;
+    }
+
     public dispose() {
         this.registerDisposables.forEach(r => r.dispose());
         this.completionRequests.forEach(r => r.promise.resolve());
@@ -91,6 +116,10 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
 
             case HistoryMessages.ProvideHoverResponse:
                 this.handleHoverResponse(payload);
+                return true;
+
+            case HistoryMessages.ProvideSignatureHelpResponse:
+                this.handleSignatureHelpResponse(payload);
                 return true;
 
             default:
@@ -123,6 +152,20 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
             const waiting = this.hoverRequests.get(response.requestId);
             if (waiting) {
                 waiting.promise.resolve(response.hover);
+            }
+        }
+    }
+
+    // Handle hover response
+    // tslint:disable-next-line:no-any
+    private handleSignatureHelpResponse = (payload?: any) => {
+        if (payload) {
+            const response = payload as IProvideSignatureHelpResponse;
+
+            // Resolve our waiting promise if we have one
+            const waiting = this.signatureHelpRequests.get(response.requestId);
+            if (waiting) {
+                waiting.promise.resolve(response.signatureHelp);
             }
         }
     }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
@@ -28,6 +29,7 @@ export interface IMainPanelState {
     forceDark?: boolean;
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
+    editorOptions: monacoEditor.editor.IEditorOptions;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -56,7 +58,8 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         history: new InputHistory(),
         contentTop: 24,
         rootStyle: darkStyle,
-        tokenizerLoaded: true
+        tokenizerLoaded: true,
+        editorOptions: {}
     };
 }
 
