@@ -12,15 +12,16 @@ import { IApplicationEnvironment, IWorkspaceService } from './application/types'
 import { STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, Resource } from './types';
+import { Experiments } from './utils/localize';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
-type Experiments = { name: string; salt: string; min: number; max: number }[];
+type AB_Experiments = { name: string; salt: string; min: number; max: number }[];
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
-    private experimentStorage: IPersistentState<Experiments | undefined>;
+    private experimentStorage: IPersistentState<AB_Experiments | undefined>;
     private activatedWorkspaces = new Map<string, boolean>();
     private resource: Resource;
     constructor(
@@ -31,7 +32,7 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
-        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<Experiments | undefined>(experimentStorageKey, undefined, EXPIRY_DURATION_MS);
+        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<AB_Experiments | undefined>(experimentStorageKey, undefined, EXPIRY_DURATION_MS);
     }
 
     public async activate(resource: Uri): Promise<void> {
@@ -48,7 +49,7 @@ export class ExperimentsManager implements IExperimentsManager {
         if (this.isTelemetryDisabled() || this.experimentStorage.value) {
             return;
         }
-        const downloadedExperiments = await this.httpClient.getJSONC<Experiments>(configUri);
+        const downloadedExperiments = await this.httpClient.getJSONC<AB_Experiments>(configUri);
         await this.experimentStorage.updateValue(downloadedExperiments);
     }
 
@@ -63,7 +64,7 @@ export class ExperimentsManager implements IExperimentsManager {
             if (inExp) {
                 sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
                 // tslint:disable-next-line:messages-must-be-localized
-                this.output.appendLine(`User belongs to experiment group, ${experimentName}`);
+                this.output.appendLine(Experiments.inGroup().format(experimentName));
                 return true;
             }
         } catch (ex) {

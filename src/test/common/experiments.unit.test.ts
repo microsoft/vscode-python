@@ -56,7 +56,10 @@ suite('A/B experiments', () => {
             when(httpClient.getJSONC(anything())).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
         }
 
-        await expManager.initializeInBackground();
+        try {
+            await expManager.initializeInBackground();
+            // tslint:disable-next-line:no-empty
+        } catch { }
 
         verify(workspaceService.getConfiguration('telemetry', anything())).once();
         workspaceConfig.verifyAll();
@@ -64,8 +67,9 @@ suite('A/B experiments', () => {
     }
 
     test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
+        experimentStorage.setup(n => n.value).returns(() => undefined).verifiable(TypeMoq.Times.never());
+
         await testInitialization({ globalValue: false });
-        verify(httpClient.getJSONC(anything())).never();
     });
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
