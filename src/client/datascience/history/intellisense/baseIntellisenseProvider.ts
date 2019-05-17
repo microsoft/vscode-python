@@ -187,7 +187,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
             const list = this.combineCompletions(combined);
             this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, requestId: request.requestId});
         }).catch(_e => {
-            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: true }, requestId: request.requestId});
+            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: false }, requestId: request.requestId});
         });
     }
 

@@ -186,7 +186,7 @@ export function convertToMonacoCompletionList(
 
     return {
         suggestions: [],
-        incomplete: true
+        incomplete: false
     };
 }
 

@@ -78,7 +78,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
 
         return {
             suggestions: [],
-            incomplete: true
+            incomplete: false
         };
     }
     protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.Hover> {
