@@ -118,15 +118,19 @@ suite('DataScience Intellisense tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Jupyter autocomplete', async (wrapper) => {
-        // Create a history so that it listens to the results.
-        const history = await getOrCreateHistory();
-        await history.show();
+        if (ioc.mockJupyter) {
+            // This test only works when mocking.
 
-        // Then enter some code. Don't submit, we're just testing that autocomplete appears
-        const suggestion = waitForSuggestion(wrapper);
-        typeCode(wrapper, 'print');
-        await suggestion.promise;
-        suggestion.disposable.dispose();
-        verifyIntellisenseVisible(wrapper, 'printly');
+            // Create a history so that it listens to the results.
+            const history = await getOrCreateHistory();
+            await history.show();
+
+            // Then enter some code. Don't submit, we're just testing that autocomplete appears
+            const suggestion = waitForSuggestion(wrapper);
+            typeCode(wrapper, 'print');
+            await suggestion.promise;
+            suggestion.disposable.dispose();
+            verifyIntellisenseVisible(wrapper, 'printly');
+        }
     }, () => { return ioc; });
 });
