@@ -241,7 +241,7 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
         // tslint:disable-next-line: no-any
         kinds = metadata._jupyter_types_experimental.map((e: any) => {
             const result = mapJupyterKind.get(e.type);
-            return result ? result : 3;
+            return result ? result : 3; // If not found use Field = 3
         });
     }
 
