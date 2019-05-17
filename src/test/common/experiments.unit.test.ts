@@ -37,6 +37,7 @@ suite('A/B experiments', () => {
         persistentStateFactory = mock(PersistentStateFactory);
         experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
+        when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
         expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object);
     });
 
@@ -49,11 +50,10 @@ suite('A/B experiments', () => {
         workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
-        when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
         if (downloadError) {
-            when(httpClient.getJSONC(anything(), anything())).thenReject(new Error('Kaboom'));
+            when(httpClient.getJSONC(anything())).thenReject(new Error('Kaboom'));
         } else {
-            when(httpClient.getJSONC(anything(), anything())).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
+            when(httpClient.getJSONC(anything())).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
         }
 
         await expManager.initializeInBackground();
@@ -65,7 +65,7 @@ suite('A/B experiments', () => {
 
     test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
         await testInitialization({ globalValue: false });
-        verify(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).never();
+        verify(httpClient.getJSONC(anything())).never();
     });
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
@@ -73,7 +73,7 @@ suite('A/B experiments', () => {
 
         await testInitialization();
 
-        verify(httpClient.getJSONC(anything(), anything())).never();
+        verify(httpClient.getJSONC(anything())).never();
     });
 
     test('Initializing experiments downloads and stores the experiments if storage does not contain experiments', async () => {
@@ -82,7 +82,7 @@ suite('A/B experiments', () => {
 
         await testInitialization();
 
-        verify(httpClient.getJSONC(anything(), anything())).once();
+        verify(httpClient.getJSONC(anything())).once();
     });
 
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
@@ -91,18 +91,11 @@ suite('A/B experiments', () => {
 
         await testInitialization({}, true);
 
-        verify(httpClient.getJSONC(anything(), anything())).once();
+        verify(httpClient.getJSONC(anything())).once();
     });
 
     const testsForInExperiment =
         [
-            {
-                testName: 'If experiment list is already populated, do not use storage',
-                experimentName: 'imaginary experiment',
-                hash: 223,
-                expectedResult: false,
-                experimentListPopulated: true
-            },
             {
                 testName: 'If experiment\'s name is not in experiment list, user is not in experiment',
                 experimentName: 'imaginary experiment',
@@ -138,18 +131,7 @@ suite('A/B experiments', () => {
 
     testsForInExperiment.forEach(testParams => {
         test(testParams.testName, async () => {
-            if (testParams.experimentListPopulated) {
-                experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.once());
-
-                await testInitialization();
-                experimentStorage.reset();
-
-                experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.never());
-            } else {
-                when(persistentStateFactory.createGlobalPersistentState(anything(), undefined as any, anything())).thenReturn(experimentStorage.object);
-                experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]).verifiable(TypeMoq.Times.once());
-            }
-
+            experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]);
             when(appEnvironment.machineId).thenReturn('101');
             if (testParams.error) {
                 when(crypto.createHash(anything(), 'hex', 'number')).thenThrow(new Error('Kaboom'));
@@ -158,9 +140,8 @@ suite('A/B experiments', () => {
             }
 
             output.setup(o => o.appendLine(TypeMoq.It.isAny()));
-            verify(httpClient.getJSONC(anything(), anything())).never();
+            verify(httpClient.getJSONC(anything())).never();
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
-            experimentStorage.verifyAll();
         });
     });
 

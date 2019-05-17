@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:no-any
-
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IHttpClient } from '../activation/types';
@@ -13,15 +11,17 @@ import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
 import { STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
-import { ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentStateFactory, Resource } from './types';
+import { ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, Resource } from './types';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
+type Experiments = { name: string; salt: string; min: number; max: number }[];
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
-    private experiments: { name: string; salt: string; min: number; max: number }[] = [];
+    private experimentStorage: IPersistentState<Experiments | undefined>;
+    private activatedWorkspaces = new Map<string, boolean>();
     private resource: Resource;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -30,46 +30,36 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
-    ) { }
+    ) {
+        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<Experiments | undefined>(experimentStorageKey, undefined, EXPIRY_DURATION_MS);
+    }
 
     public async activate(resource: Uri): Promise<void> {
+        if (this.activatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
+            return;
+        }
+        this.activatedWorkspaces.set(this.getWorkspacePathKey(resource), true);
         this.resource = resource;
         this.initializeInBackground().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to initialize experiments')
     public async initializeInBackground() {
-        if (this.isTelemetryDisabled()) {
+        if (this.isTelemetryDisabled() || this.experimentStorage.value) {
             return;
         }
-        const experimentStorage = this.persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any, EXPIRY_DURATION_MS);
-        const experimentStorageValue = experimentStorage.value;
-        if (experimentStorageValue) {
-            this.experiments = experimentStorageValue;
-            return;
-        }
-        try {
-            await this.downloadExperiments();
-        } catch {
-            return;
-        }
-        await experimentStorage.updateValue(this.experiments);
+        const downloadedExperiments = await this.httpClient.getJSONC<Experiments>(configUri);
+        await this.experimentStorage.updateValue(downloadedExperiments);
     }
 
     public inExperiment(experimentName: string): boolean {
         try {
-            const experimentStorage = this.persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any, EXPIRY_DURATION_MS);
-            if (this.experiments.length === 0) {
-                const experimentStorageValue = experimentStorage.value;
-                this.experiments = experimentStorageValue ? experimentStorageValue : [];
-            }
-            const experimentNames = this.experiments.map(experiment => experiment.name);
-            const index = experimentNames.indexOf(experimentName);
-            if (index < 0) {
+            const experiments = this.experimentStorage.value ? this.experimentStorage.value : [];
+            const experiment = experiments.find(exp => exp.name === experimentName);
+            if (!experiment) {
                 return false;
             }
-            const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${this.experiments[index].salt}`, 'hex', 'number');
-            const inExp = hash % 100 >= this.experiments[index].min && hash % 100 < this.experiments[index].max;
+            const inExp = this.isUserInRange(experiment.min, experiment.max, experiment.salt);
             if (inExp) {
                 sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
                 // tslint:disable-next-line:messages-must-be-localized
@@ -83,14 +73,18 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     public isTelemetryDisabled(): boolean {
-        const settings = this.workspaceService.getConfiguration('telemetry', this.resource)!.inspect<boolean>('enableTelemetry')!;
+        const settings = this.workspaceService.getConfiguration('telemetry', this.resource).inspect<boolean>('enableTelemetry')!;
         return (settings.workspaceFolderValue === false ||
             (settings.workspaceFolderValue !== true && settings.workspaceValue === false) ||
             (settings.workspaceFolderValue !== true && settings.workspaceValue !== true && settings.globalValue === false)) ? true : false;
     }
 
-    @traceDecorators.error('Failed to download experiments')
-    private async downloadExperiments() {
-        this.experiments = await this.httpClient.getJSONC(configUri, { allowTrailingComma: true, disallowComments: false });
+    private isUserInRange(min: number, max: number, salt: string) {
+        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
+        return hash % 100 >= min && hash % 100 < max;
+    }
+
+    private getWorkspacePathKey(resource: Resource): string {
+        return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
     }
 }

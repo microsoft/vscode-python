@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse, ParseOptions } from 'jsonc-parser';
+import { parse } from 'jsonc-parser';
 import * as requestTypes from 'request';
 import { IHttpClient } from '../../activation/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -38,7 +38,7 @@ export class HttpClient implements IHttpClient {
             });
         });
     }
-    public async getJSONC<T>(uri: string, options?: ParseOptions | undefined): Promise<T> {
+    public async getJSONC<T>(uri: string): Promise<T> {
         // tslint:disable-next-line:no-require-imports
         const request = require('request') as typeof requestTypes;
         return new Promise<T>((resolve, reject) => {
@@ -49,7 +49,12 @@ export class HttpClient implements IHttpClient {
                 if (response.statusCode !== 200) {
                     return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
                 }
-                resolve(parse(body, [], options) as T);
+                try {
+                    const content = parse(body, [], { allowTrailingComma: true, disallowComments: false });
+                    resolve(content);
+                } catch (ex) {
+                    return reject(ex);
+                }
             });
         });
     }
