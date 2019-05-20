@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { isPythonVersion } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
-import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
@@ -149,7 +149,7 @@ suite('Autocomplete Base Tests', function () {
         vscode.workspace.openTextDocument(fileOne).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(30, 4);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
@@ -164,7 +164,7 @@ suite('Autocomplete Base Tests', function () {
         vscode.workspace.openTextDocument(fileEncoding).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(25, 4);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
@@ -185,7 +185,7 @@ suite('Autocomplete Base Tests', function () {
         vscode.workspace.openTextDocument(fileEncodingUsed).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(_editor => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(1, 5);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);

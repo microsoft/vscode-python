@@ -57,7 +57,7 @@ suite('PlatformService', () => {
 
     test('is64bit', async () => {
         // tslint:disable-next-line:no-require-imports
-        const arch = require('arch') as typeof import('arch');
+        const arch = require('arch');
 
         const hostReports64Bit = arch() === 'x64';
         const svc = new PlatformService();

@@ -47,6 +47,10 @@ async def handle_index(module, raw_path, config_projects, cached_projects, overr
     projects.update(valid_cache_entries)
     failures = await module.fill_in_licenses(requested_projects)
     projects.update(requested_projects)
+    # Check if a project which is stale by version is actually unneeded.
+    for stale_project in stale.keys():
+        if stale_project in projects:
+            stale[stale_project].error = config.UnneededEntry(stale_project)
     return projects, stale, failures
 
 
@@ -75,14 +79,16 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
         projects.update(found_projects)
         stale.update(found_stale)
         failures.update(found_failures)
-    for name in stale:
-        print("STALE in config file:", name)
+    if stale:
+        print("STALE ", end="")
+        print("*" * 20)
+        for name, details in stale.items():
+            print(details.error)
     if failures:
+        print("FAILURES ", end="")
         print("*" * 20)  # Make failure stand out more.
         for name, details in failures.items():
-            print(
-                f"FAILED for {name} {details.version} @ {details.url}: {details.error}"
-            )
+            print(f"{name!r} {details.version} @ {details.url}: {details.error}")
             print(textwrap.dedent(f"""
             [[project]]
             name = "{name}"
@@ -93,10 +99,13 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
             XXX
             \"\"\"
             """))
+        print()
         print(f"Could not find a license for {len(failures)} projects")
+    if stale or failures:
         sys.exit(1)
-    with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
-        file.write(tpnfile.generate_tpn(config_data, projects))
+    else:
+        with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
+            file.write(tpnfile.generate_tpn(config_data, projects))
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -31,7 +31,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         let manuallyEnteredAValue: boolean | undefined;
         const defaultProgram = `${workspaceFolderToken}${this.pathUtils.separator}manage.py`;
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.django.label', 'Python: Django')(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: program || defaultProgram,
@@ -44,9 +44,9 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         };
         if (!program) {
             const selectedProgram = await input.showInputBox({
-                title: DebugConfigurationPrompts.djangoEnterManagePyPathTitle(),
+                title: DebugConfigStrings.django.enterManagePyPath.title(),
                 value: defaultProgram,
-                prompt: DebugConfigurationPrompts.djangoEnterManagePyPathPrompt(),
+                prompt: DebugConfigStrings.django.enterManagePyPath.prompt(),
                 validate: value => this.validateManagePy(state.folder, defaultProgram, value)
             });
             if (selectedProgram) {
@@ -59,7 +59,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         Object.assign(state.config, config);
     }
     public async validateManagePy(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {
-        const error = DebugConfigurationPrompts.djangoEnterManagePyPathInvalidFilePathError();
+        const error = DebugConfigStrings.django.enterManagePyPath.invalid();
         if (!selected || selected.trim().length === 0) {
             return error;
         }

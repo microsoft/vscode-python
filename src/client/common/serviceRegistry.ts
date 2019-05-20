@@ -2,12 +2,15 @@
 // Licensed under the MIT License.
 import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
+import { ImportTracker } from '../telemetry/importTracker';
+import { IImportTracker } from '../telemetry/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
+import { LanguageService } from './application/languageService';
 import { TerminalManager } from './application/terminalManager';
 import {
     IApplicationEnvironment,
@@ -15,6 +18,7 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
+    ILanguageService,
     ILiveShareApi,
     ITerminalManager,
     IWorkspaceService
@@ -89,6 +93,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+    serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
@@ -112,4 +117,5 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
+    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
 }

@@ -22,6 +22,7 @@ export class WebPanel implements IWebPanel {
     private rootPath: string;
 
     constructor(
+        viewColumn: ViewColumn,
         serviceContainer: IServiceContainer,
         listener: IWebPanelMessageListener,
         title: string,
@@ -35,7 +36,7 @@ export class WebPanel implements IWebPanel {
         this.panel = window.createWebviewPanel(
             title.toLowerCase().replace(' ', ''),
             title,
-            {viewColumn: ViewColumn.Two, preserveFocus: true},
+            {viewColumn , preserveFocus: true},
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -44,10 +45,16 @@ export class WebPanel implements IWebPanel {
         this.loadPromise = this.load(mainScriptPath, embeddedCss, settings);
     }
 
-    public async show() {
+    public async show(preserveFocus: boolean) {
         await this.loadPromise;
         if (this.panel) {
-            this.panel.reveal(this.panel.viewColumn, true);
+            this.panel.reveal(this.panel.viewColumn, preserveFocus);
+        }
+    }
+
+    public close() {
+        if (this.panel) {
+            this.panel.dispose();
         }
     }
 
@@ -55,9 +62,23 @@ export class WebPanel implements IWebPanel {
         return this.panel ? this.panel.visible : false;
     }
 
+    public isActive() : boolean {
+        return this.panel ? this.panel.active : false;
+    }
+
     public postMessage(message: WebPanelMessage) {
         if (this.panel && this.panel.webview) {
             this.panel.webview.postMessage(message);
+        }
+    }
+
+    public get title(): string {
+        return this.panel ? this.panel.title : '';
+    }
+
+    public set title(newTitle: string) {
+        if (this.panel) {
+            this.panel.title = newTitle;
         }
     }
 
@@ -80,6 +101,14 @@ export class WebPanel implements IWebPanel {
                     // Pass the message onto our listener
                     this.listener.onMessage(message.type, message.payload);
                 }));
+
+                this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
+                    // Pass the state change onto our listener
+                    this.listener.onChangeViewState(this);
+                }));
+
+                // Set initial state
+                this.listener.onChangeViewState(this);
             } else {
                 // Indicate that we can't load the file path
                 const badPanelString = localize.DataScience.badWebPanelFormatString();
@@ -94,7 +123,7 @@ export class WebPanel implements IWebPanel {
         const uriPath = Uri.file(mainScriptPath);
         const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
         const uri = uriPath.with({ scheme: 'vscode-resource' });
-        const locDatabase = JSON.stringify(localize.getCollection());
+        const locDatabase = localize.getCollectionJSON();
         const style = embeddedCss ? embeddedCss : '';
         const settingsString = settings ? JSON.stringify(settings) : '{}';
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { setTimeout } from 'timers';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { IConfigurationService } from '../common/types';
@@ -25,7 +24,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
     private formatterMadeChanges = false;
     private saving = false;
 
-    public constructor(context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
+    public constructor(_context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
         const yapfFormatter = new YapfFormatter(serviceContainer);
         const autoPep8 = new AutoPep8Formatter(serviceContainer);
         const black = new BlackFormatter(serviceContainer);

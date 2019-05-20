@@ -9,7 +9,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
-import { DebugConfigurationPrompts, localize } from '../../../../common/utils/localize';
+import { DebugConfigStrings } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -32,7 +32,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         let manuallyEnteredAValue: boolean | undefined;
 
         const config: Partial<LaunchRequestArguments> = {
-            name: localize('python.snippet.launch.pyramid.label', 'Python: Pyramid Application')(),
+            name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             args: [
@@ -44,9 +44,9 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
 
         if (!iniPath) {
             const selectedIniPath = await input.showInputBox({
-                title: DebugConfigurationPrompts.pyramidEnterDevelopmentIniPathTitle(),
+                title: DebugConfigStrings.pyramid.enterDevelopmentIniPath.title(),
                 value: defaultIni,
-                prompt: DebugConfigurationPrompts.pyramidEnterDevelopmentIniPathPrompt(),
+                prompt: DebugConfigStrings.pyramid.enterDevelopmentIniPath.prompt(),
                 validate: value => this.validateIniPath(state ? state.folder : undefined, defaultIni, value)
             });
             if (selectedIniPath) {
@@ -62,7 +62,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         if (!folder) {
             return;
         }
-        const error = DebugConfigurationPrompts.pyramidEnterDevelopmentIniPathInvalidFilePathError();
+        const error = DebugConfigStrings.pyramid.enterDevelopmentIniPath.invalid();
         if (!selected || selected.trim().length === 0) {
             return error;
         }

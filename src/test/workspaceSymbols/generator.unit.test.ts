@@ -73,7 +73,7 @@ suite('Workspace Symbols Generator', () => {
         when(fs.directoryExists(anything())).thenResolve(true);
         const observable = {
             out: {
-                subscribe: (cb: (out: Output<string>) => void, errorCb: any, done: Function) => {
+                subscribe: (cb: (out: Output<string>) => void, _errorCb: any, done: Function) => {
                     cb({ source: 'stderr', out: 'KABOOM' });
                     done();
                 }
@@ -96,7 +96,7 @@ suite('Workspace Symbols Generator', () => {
         when(fs.directoryExists(anything())).thenResolve(true);
         const observable = {
             out: {
-                subscribe: (cb: (out: Output<string>) => void, errorCb: any, done: Function) => {
+                subscribe: (cb: (out: Output<string>) => void, _errorCb: any, done: Function) => {
                     cb({ source: 'stdout', out: '' });
                     done();
                 }

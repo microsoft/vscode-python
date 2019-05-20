@@ -10,6 +10,7 @@ import * as glob from 'glob';
 import * as istanbul from 'istanbul';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import * as process from 'process';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
 import { IS_SMOKE_TEST } from './constants';
@@ -43,14 +44,14 @@ type TestCallback = (error?: Error, failures?: number) => void;
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function(): number[] {
+    tty.getWindowSize = function (): number[] {
         return [80, 75];
     };
 }
 
 let mocha = new Mocha(<any>{
     ui: 'tdd',
-    useColors: true
+    colors: true
 });
 
 export type SetupOptions = MochaSetupOptions & {
@@ -69,6 +70,8 @@ export function configure(setupOptions: SetupOptions, coverageOpts?: { coverageC
     if (setupOptions.testFilesSuffix) {
         testFilesGlob = setupOptions.testFilesSuffix;
     }
+    // Force Mocha to exit.
+    (setupOptions as any).exit = true;
     mocha = new Mocha(setupOptions);
     coverageOptions = coverageOpts;
 }
@@ -103,9 +106,14 @@ export function run(testsRoot: string, callback: TestCallback): void {
      * @returns
      */
     function initializationScript() {
-        const ex = new Error('Failed to initialize extension for tests');
-        const failed = new Promise((_, reject) => setTimeout(() => reject(ex), 60_000));
-        return Promise.race([initialize(), failed]);
+        const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
+        let timer: NodeJS.Timer | undefined;
+        const failed = new Promise((_, reject) => {
+            timer = setTimeout(() => reject(ex), 120_000);
+        });
+        const promise = Promise.race([initialize(), failed]);
+        promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
+        return promise;
     }
     // Run the tests.
     glob(
@@ -240,7 +248,7 @@ class CoverageRunner {
                 // When instrumenting the code, istanbul will give each FunctionDeclaration a value of 1 in coverState.s,
                 // presumably to compensate for function hoisting. We need to reset this, as the function was not hoisted,
                 // as it was never loaded.
-                Object.keys(this.instrumenter.coverState.s).forEach(key => (this.instrumenter.coverState.s[key] = 0));
+                Object.keys(this.instrumenter.coverState.s).forEach(key => ((this.instrumenter.coverState.s as any)[key] = 0));
 
                 coverage[file] = this.instrumenter.coverState;
             });
@@ -252,7 +260,7 @@ class CoverageRunner {
         fs.writeFileSync(coverageFile, JSON.stringify(coverage), 'utf8');
 
         const remappedCollector: istanbul.Collector = remapIstanbul.remap(coverage, {
-            warn: warning => {
+            warn: (warning: any) => {
                 // We expect some warnings as any JS file without a typescript mapping will cause this.
                 // By default, we'll skip printing these to the console as it clutters it up.
                 if (this.options.verbose) {

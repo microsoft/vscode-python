@@ -3,17 +3,12 @@
 
 'use strict';
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as util from './util';
 
-export const ExtensionRootDir = path.join(__dirname, '..');
+export const ExtensionRootDir = util.ExtensionRootDir;
 
-const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
-function getListOfExcludedFiles() {
-    const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString()) as string[];
-    return files.map(file => path.join(ExtensionRootDir, file.replace(/\//g, path.sep)));
-}
-
-export const filesNotToCheck: string[] = getListOfExcludedFiles();
+// This is a list of files that existed before MS got the extension.
+export const existingFiles: string[] = util.getListOfFiles('existingFiles.json');
+export const contributedFiles: string[] = util.getListOfFiles('contributedFiles.json');
 
 export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;

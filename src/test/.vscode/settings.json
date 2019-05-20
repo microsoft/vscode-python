@@ -2,9 +2,9 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": false,
     "python.workspaceSymbols.enabled": false,
-    "python.unitTest.nosetestArgs": [],
-    "python.unitTest.pyTestArgs": [],
-    "python.unitTest.unittestArgs": [
+    "python.testing.nosetestArgs": [],
+    "python.testing.pyTestArgs": [],
+    "python.testing.unittestArgs": [
         "-s=./tests",
         "-p=test_*.py"
     ],

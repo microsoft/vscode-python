@@ -31,7 +31,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
             this.skip();
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
-        debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
+        debugClient = new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
         debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
         await debugClient.start();
     });
@@ -44,7 +44,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
         } catch (ex) { }
     });
 
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, port?: number, host?: string, showReturnValue: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, port?: number, host?: string, showReturnValue: boolean = true): LaunchRequestArguments {
         return {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,

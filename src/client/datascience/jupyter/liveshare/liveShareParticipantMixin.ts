@@ -14,7 +14,7 @@ import { waitForGuestService, waitForHostService } from './utils';
 // tslint:disable:no-any
 
 export class LiveShareParticipantDefault implements IAsyncDisposable {
-    constructor(...rest: any[]) {
+    constructor(..._rest: any[]) {
         noop();
     }
 
@@ -69,6 +69,7 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
         private actualRole = vsls.Role.None;
         private wantedRole = expectedRole;
         private servicePromise: Promise<S | undefined> | undefined;
+        private serviceFullName: string | undefined;
 
         constructor(...rest: any[]) {
             super(...rest);
@@ -89,16 +90,24 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             return this.actualRole;
         }
 
-        public async onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void> {
+        public async onPeerChange(_ev: vsls.PeersChangeEvent) : Promise<void> {
             noop();
         }
 
-        public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+        public async onAttach(_api: vsls.LiveShare | null) : Promise<void> {
             noop();
         }
 
-        public async onDetach(api: vsls.LiveShare | null) : Promise<void> {
-            noop();
+        public waitForServiceName() : Promise<string> {
+            // Default is just to return the server name
+            return Promise.resolve(serviceName);
+        }
+
+        public onDetach(api: vsls.LiveShare | null) : Promise<void> {
+            if (api && this.serviceFullName && api.session && api.session.role === vsls.Role.Host) {
+                return api.unshareService(this.serviceFullName);
+            }
+            return Promise.resolve();
         }
 
         public async onSessionChange(api: vsls.LiveShare | null) : Promise<void> {
@@ -123,7 +132,8 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             if (!api || (api.session.role !== this.wantedRole)) {
                 this.servicePromise = Promise.resolve(undefined);
             } else {
-                this.servicePromise = serviceWaiter(api, serviceName);
+                this.serviceFullName = await this.waitForServiceName();
+                this.servicePromise = serviceWaiter(api, this.serviceFullName);
             }
 
             return this.servicePromise;

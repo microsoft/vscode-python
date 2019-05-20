@@ -24,13 +24,16 @@ export const nodeModulesToExternalize = [
     'request',
     'request-progress',
     'source-map-support',
-    'file-matcher',
     'diff-match-patch',
     'sudo-prompt',
     'node-stream-zip',
     'xml2js',
-    'vsls/vscode'
+    'vsls/vscode',
 ];
+
+export const nodeModulesToReplacePaths = [
+    ...nodeModulesToExternalize
+]
 
 export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies' | 'datascience-ui') {
     const plugins = [];

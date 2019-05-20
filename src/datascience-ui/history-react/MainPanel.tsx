@@ -1,26 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './mainPanel.css';
-
 import { min } from 'lodash';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import * as uuid from 'uuid/v4';
 
+import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages, HistoryNonLiveShareMessages } from '../../client/datascience/constants';
-import { CellState, ICell, IHistoryInfo } from '../../client/datascience/types';
+import { Identifiers } from '../../client/datascience/constants';
+import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
+import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { Progress } from '../react-common/progress';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
+import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
-import { CellButton } from './cellButton';
-import { Image, ImageName } from './image';
+import { ContentPanel, IContentPanelProps } from './contentPanel';
+import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
+import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
-import { MenuBar } from './menuBar';
+import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
+import { VariableExplorer } from './variableExplorer';
+
+import './mainPanel.css';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -31,41 +37,88 @@ export interface IMainPanelProps {
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
-    private bottom: HTMLDivElement | undefined;
     private updateCount = 0;
     private renderCount = 0;
-    private sentStartup = false;
+    private editCellRef: Cell | null = null;
+    private mainPanel: HTMLDivElement | null = null;
+    private variableExplorerRef: React.RefObject<VariableExplorer>;
+    private styleInjectorRef: React.RefObject<StyleInjector>;
+    private currentExecutionCount: number = 0;
+    private postOffice: PostOffice = new PostOffice();
+    private intellisenseProvider: IntellisenseProvider;
+    private onigasmPromise: Deferred<ArrayBuffer> | undefined;
+    private tmlangugePromise: Deferred<string> | undefined;
+    private monacoIdToCellId: Map<string, string> = new Map<string, string>();
 
     // tslint:disable-next-line:max-func-body-length
-    constructor(props: IMainPanelProps, state: IMainPanelState) {
+    constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory()};
+        this.state = {
+            cellVMs: [],
+            busy: true,
+            undoStack: [],
+            redoStack : [],
+            submittedText: false,
+            history: new InputHistory(),
+            contentTop: 24,
+            editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
+            editorOptions: this.computeEditorOptions()
+        };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
             this.state = generateTestState(this.inputBlockToggled);
         }
 
-        // Add a single empty cell if it's supported
-        if (getSettings && getSettings().allowInput) {
-            this.state.cellVMs.push(createEditableCellVM(1));
+        // Create the ref to hold our variable explorer
+        this.variableExplorerRef = React.createRef<VariableExplorer>();
+
+        // Create the ref to hold our style injector
+        this.styleInjectorRef = React.createRef<StyleInjector>();
+
+        // Setup the completion provider for monaco. We only need one
+        this.intellisenseProvider = new IntellisenseProvider(this.postOffice, this.getCellId);
+
+        // Setup the tokenizer for monaco if running inside of vscode
+        if (this.props.skipDefault) {
+            if (this.props.testMode) {
+                // Running a test, skip the tokenizer. We want the UI to display synchronously
+                this.state = {tokenizerLoaded: true, ...this.state};
+
+                // However we still need to register python as a language
+                registerMonacoLanguage();
+            } else {
+                initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+            }
         }
-
     }
 
-    public componentDidMount() {
-        this.scrollToBottom();
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        this.postOffice.addHandler(this);
+
+        // Tell the history code we have started.
+        this.postOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
     }
 
-    public componentDidUpdate(prevProps: Readonly<IMainPanelProps>, prevState: Readonly<IMainPanelState>, snapshot?: {}) {
-        this.scrollToBottom();
-
+    public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
         // If in test mode, update our outputs
         if (this.props.testMode) {
             this.updateCount = this.updateCount + 1;
         }
+    }
+
+    public componentWillUnmount() {
+        // Remove ourselves as a handler for the post office
+        this.postOffice.removeHandler(this);
+
+        // Get rid of our completion provider
+        this.intellisenseProvider.dispose();
+
+        // Get rid of our post office
+        this.postOffice.dispose();
     }
 
     public render() {
@@ -75,52 +128,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.renderCount = this.renderCount + 1;
         }
 
-        // If haven't sent our startup message, send it now.
-        if (!this.sentStartup) {
-            this.sentStartup = true;
-            PostOffice.sendMessage({type: HistoryNonLiveShareMessages.Started});
-        }
-
-        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
+        const baseTheme = this.computeBaseTheme();
 
         return (
-            <div className='main-panel'>
-                <PostOffice messageHandlers={[this]} />
-                <MenuBar baseTheme={this.props.baseTheme} stylePosition='top-fixed'>
-                    {this.renderExtraButtons()}
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.CollapseAll}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.expandAll} disabled={!this.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.ExpandAll}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.SaveAs}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Restart}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Interrupt}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Undo}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Redo}/>
-                    </CellButton>
-                    <CellButton baseTheme={this.props.baseTheme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
-                        <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
-                    </CellButton>
-                </MenuBar>
-                <div className='top-spacing'/>
-                {progressBar}
-                <div className='cell-table'>
-                    <div className='cell-table-body'>
-                        {this.renderCells()}
+            <div id='main-panel' ref={this.updateSelf}>
+                <StyleInjector
+                    expectingDark={baseTheme !== 'vscode-light'}
+                    postOffice={this.postOffice}
+                    darkChanged={this.darkChanged}
+                    monacoThemeChanged={this.monacoThemeChanged}
+                    ref={this.styleInjectorRef} />
+                <div className='main-panel-header'>
+                    <div className='main-panel-inner'>
+                        {this.renderHeaderPanel(baseTheme)}
                     </div>
                 </div>
-                <div ref={this.updateBottom}/>
+                <div className='main-panel-content'>
+                    <div className='main-panel-inner'>
+                        <div className='main-panel-scrollable'>
+                            {this.renderContentPanel(baseTheme)}
+                        </div>
+                    </div>
+                </div>
+                <div className='main-panel-footer'>
+                    <div className='main-panel-inner'>
+                        {this.renderFooterPanel(baseTheme)}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -180,11 +214,242 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.updateSettings(payload);
                 break;
 
+            case HistoryMessages.Activate:
+                this.activate();
+                break;
+
+            case HistoryMessages.GetVariablesResponse:
+                this.getVariablesResponse(payload);
+                break;
+
+            case HistoryMessages.GetVariableValueResponse:
+                this.getVariableValueResponse(payload);
+                break;
+
+            case HistoryMessages.LoadOnigasmAssemblyResponse:
+                this.handleOnigasmResponse(payload);
+                break;
+
+            case HistoryMessages.LoadTmLanguageResponse:
+                this.handleTmLanguageResponse(payload);
+                break;
+
             default:
                 break;
         }
 
         return false;
+    }
+
+    // Uncomment this to use for debugging messages. Add a call to this to stick in dummy sys info messages.
+    // private addDebugMessageCell(message: string) {
+    //     const cell: ICell = {
+    //         id: '0',
+    //         file: '',
+    //         line: 0,
+    //         state: CellState.finished,
+    //         data: {
+    //             cell_type: 'sys_info',
+    //             version: '0.0.0.0',
+    //             notebook_version: '0',
+    //             path: '',
+    //             message: message,
+    //             connection: '',
+    //             source: '',
+    //             metadata: {}
+    //         }
+    //     };
+    //     this.addCell(cell);
+    // }
+
+    private renderHeaderPanel(baseTheme: string) {
+        const headerProps = this.getHeaderProps(baseTheme);
+        return <HeaderPanel {...headerProps} />;
+    }
+
+    private renderContentPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded && !this.props.testMode) {
+            return null;
+        }
+
+        // Otherwise render our cells.
+        const contentProps = this.getContentProps(baseTheme);
+        return <ContentPanel {...contentProps} />;
+    }
+
+    private renderFooterPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+            return null;
+        }
+
+        const maxOutputSize = getSettings().maxOutputSize;
+        const errorBackgroundColor = getSettings().errorBackgroundColor;
+        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
+        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+
+        return (
+            <div className='edit-panel'>
+                <ErrorBoundary>
+                    <Cell
+                        editorOptions={this.state.editorOptions}
+                        history={this.state.history}
+                        maxTextSize={maxTextSize}
+                        autoFocus={document.hasFocus()}
+                        testMode={this.props.testMode}
+                        cellVM={this.state.editCellVM}
+                        submitNewCode={this.submitInput}
+                        baseTheme={baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        showWatermark={!this.state.submittedText}
+                        errorBackgroundColor={actualErrorBackgroundColor}
+                        ref={this.saveEditCellRef}
+                        gotoCode={noop}
+                        delete={noop}
+                        onCodeCreated={this.editableCodeCreated}
+                        onCodeChange={this.codeChange}
+                        monacoTheme={this.state.monacoTheme}
+                    />
+                </ErrorBoundary>
+            </div>
+        );
+    }
+
+    private computeEditorOptions() : monacoEditor.editor.IEditorOptions {
+        const intellisenseOptions = getSettings().intellisenseOptions;
+        if (intellisenseOptions) {
+            return {
+                quickSuggestions: {
+                    other: intellisenseOptions.quickSuggestions.other,
+                    comments: intellisenseOptions.quickSuggestions.comments,
+                    strings: intellisenseOptions.quickSuggestions.strings
+                },
+                acceptSuggestionOnEnter: intellisenseOptions.acceptSuggestionOnEnter,
+                quickSuggestionsDelay: intellisenseOptions.quickSuggestionsDelay,
+                suggestOnTriggerCharacters: intellisenseOptions.suggestOnTriggerCharacters,
+                tabCompletion: intellisenseOptions.tabCompletion,
+                suggest: {
+                    localityBonus: intellisenseOptions.suggestLocalityBonus
+                },
+                suggestSelection: intellisenseOptions.suggestSelection,
+                wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
+                parameterHints: {
+                    enabled: intellisenseOptions.parameterHintsEnabled
+                }
+            };
+        }
+
+        return {};
+    }
+
+    // Called by the header control when size changes (such as expanding variables)
+    private onHeaderHeightChange = (newHeight: number) => {
+        this.setState({contentTop: newHeight});
+    }
+
+    private darkChanged = (newDark: boolean) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    forceDark: newDark
+                }
+            );
+        }
+    }
+
+    private monacoThemeChanged = (theme: string) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    monacoTheme: theme
+                }
+            );
+        }
+    }
+
+    private computeBaseTheme(): string {
+        // If we're ignoring, always light
+        if (getSettings && getSettings().ignoreVscodeTheme) {
+            return 'vscode-light';
+        }
+
+        // Otherwise see if the style injector has figured out
+        // the theme is dark or not
+        if (this.state.forceDark !== undefined) {
+            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
+        }
+
+        return this.props.baseTheme;
+    }
+
+    private getContentProps = (baseTheme: string): IContentPanelProps => {
+        return {
+            editorOptions: this.state.editorOptions,
+            baseTheme: baseTheme,
+            contentTop: this.state.contentTop,
+            cellVMs: this.state.cellVMs,
+            history: this.state.history,
+            testMode: this.props.testMode,
+            codeTheme: this.props.codeTheme,
+            submittedText: this.state.submittedText,
+            gotoCellCode: this.gotoCellCode,
+            deleteCell: this.deleteCell,
+            skipNextScroll: this.state.skipNextScroll ? true : false,
+            monacoTheme: this.state.monacoTheme,
+            onCodeCreated: this.readOnlyCodeCreated,
+            onCodeChange: this.codeChange
+        };
+    }
+    private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
+       return {
+        addMarkdown: this.addMarkdown,
+        busy: this.state.busy,
+        collapseAll: this.collapseAll,
+        expandAll: this.expandAll,
+        export: this.export,
+        restartKernel: this.restartKernel,
+        interruptKernel: this.interruptKernel,
+        undo: this.undo,
+        redo: this.redo,
+        clearAll: this.clearAll,
+        skipDefault: this.props.skipDefault,
+        showDataExplorer: this.showDataViewer,
+        testMode: this.props.testMode,
+        variableExplorerRef: this.variableExplorerRef,
+        canCollapseAll: this.canCollapseAll(),
+        canExpandAll: this.canExpandAll(),
+        canExport: this.canExport(),
+        canUndo: this.canUndo(),
+        canRedo: this.canRedo(),
+        refreshVariables: this.refreshVariables,
+        variableExplorerToggled: this.variableExplorerToggled,
+        onHeightChange: this.onHeaderHeightChange,
+        baseTheme: baseTheme
+       };
+    }
+
+    private activate() {
+        // Make sure the input cell gets focus
+        if (getSettings && getSettings().allowInput) {
+            // Delay this so that we make sure the outer frame has focus first.
+            setTimeout(() => {
+                // First we have to give ourselves focus (so that focus actually ends up in the code cell)
+                if (this.mainPanel) {
+                    this.mainPanel.focus({preventScroll: true});
+                }
+
+                if (this.editCellRef) {
+                    this.editCellRef.giveFocus();
+                }
+            }, 100);
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -196,10 +461,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // If our settings change updated show inputs we need to fix up our cells
             const showInputs = getSettings().showCellInputCode;
 
+            // Also save the editor options. Intellisense options may have changed.
+            this.setState({
+                editorOptions: this.computeEditorOptions()
+            });
+
             if (prevShowInputs !== showInputs) {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
         }
+    }
+
+    private showDataViewer = (targetVariable: string) => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
+    }
+
+    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {
@@ -208,36 +486,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return cellVM.cell;
         });
 
-        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload: { contents: cells }});
+        this.sendMessage(HistoryMessages.ReturnAllCells, cells);
     }
 
-    private renderExtraButtons = () => {
-        if (!this.props.skipDefault) {
-            return <CellButton baseTheme={this.props.baseTheme} onClick={this.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
-        }
-
-        return null;
-    }
-
-    private renderCells = () => {
-        const maxOutputSize = getSettings().maxOutputSize;
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-        return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
-            <ErrorBoundary key={index}>
-                <Cell
-                    history={cellVM.editable ? this.state.history : undefined}
-                    maxTextSize={maxTextSize}
-                    autoFocus={document.hasFocus()}
-                    testMode={this.props.testMode}
-                    cellVM={cellVM}
-                    submitNewCode={this.submitInput}
-                    baseTheme={this.props.baseTheme}
-                    codeTheme={this.props.codeTheme}
-                    showWatermark={!this.state.submittedText}
-                    gotoCode={() => this.gotoCellCode(index)}
-                    delete={() => this.deleteCell(index)}/>
-            </ErrorBoundary>
-        );
+    private saveEditCellRef = (ref: Cell | null) => {
+        this.editCellRef = ref;
     }
 
     private addMarkdown = () => {
@@ -296,15 +549,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cellVM = this.state.cellVMs[index];
 
         // Send a message to the other side to jump to a particular cell
-        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: { file : cellVM.cell.file, line: cellVM.cell.line }});
+        this.sendMessage(HistoryMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
     }
 
     private deleteCell = (index: number) => {
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: { }});
+        this.sendMessage(HistoryMessages.DeleteCell);
+        const cellVM = this.state.cellVMs[index];
+        if (cellVM) {
+            this.sendMessage(HistoryMessages.RemoveCell, {id: cellVM.cell.id});
+        }
 
         // Update our state
         this.setState({
-            cellVMs: this.state.cellVMs.filter((c : ICellViewModel, i: number) => {
+            cellVMs: this.state.cellVMs.filter((_c : ICellViewModel, i: number) => {
                 return i !== index;
             }),
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
@@ -313,27 +570,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private collapseAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
+        this.sendMessage(HistoryMessages.CollapseAll);
         this.collapseAllSilent();
     }
 
     private expandAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
+        this.sendMessage(HistoryMessages.ExpandAll);
         this.expandAllSilent();
     }
 
     private clearAll = () => {
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteAllCells, payload: { }});
+        this.sendMessage(HistoryMessages.DeleteAllCells);
         this.clearAllSilent();
     }
 
     private clearAllSilent = () => {
-        // Make sure the edit cell doesn't go away
-        const editCell = this.getEditCell();
-
         // Update our state
         this.setState({
-            cellVMs: editCell ? [editCell] : [],
+            cellVMs: [],
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
             busy: false // No more progress on delete all
@@ -348,7 +602,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.redoStack[this.state.redoStack.length - 1];
         const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
         const undoStack = this.pushStack(this.state.undoStack, this.state.cellVMs);
-        PostOffice.sendMessage({ type: HistoryMessages.Redo, payload: { }});
+        this.sendMessage(HistoryMessages.Redo);
         this.setState({
             cellVMs: cells,
             undoStack: undoStack,
@@ -365,7 +619,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.undoStack[this.state.undoStack.length - 1];
         const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
         const redoStack = this.pushStack(this.state.redoStack, this.state.cellVMs);
-        PostOffice.sendMessage({ type: HistoryMessages.Undo, payload: { }});
+        this.sendMessage(HistoryMessages.Undo);
         this.setState({
             cellVMs: cells,
             undoStack : undoStack,
@@ -379,36 +633,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private restartKernel = () => {
         // Send a message to the other side to restart the kernel
-        PostOffice.sendMessage({ type: HistoryMessages.RestartKernel, payload: { }});
+        this.sendMessage(HistoryMessages.RestartKernel);
     }
 
     private interruptKernel = () => {
         // Send a message to the other side to restart the kernel
-        PostOffice.sendMessage({ type: HistoryMessages.Interrupt, payload: { }});
+        this.sendMessage(HistoryMessages.Interrupt);
     }
 
     private export = () => {
         // Send a message to the other side to export our current list
-        const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
-        PostOffice.sendMessage({ type: HistoryMessages.Export, payload: { contents: cellContents }});
+        const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
+        this.sendMessage(HistoryMessages.Export, cellContents);
     }
 
-    private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll && !this.props.testMode) {
-            // Delay this until we are about to render. React hasn't setup the size of the bottom element
-            // yet so we need to delay. 10ms looks good from a user point of view
-            setTimeout(() => {
-                if (this.bottom) {
-                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
-                }
-            }, 100);
-        }
-    }
-
-    private updateBottom = (newBottom: HTMLDivElement) => {
-        if (newBottom !== this.bottom) {
-            this.bottom = newBottom;
-        }
+    private updateSelf = (r: HTMLDivElement) => {
+        this.mainPanel = r;
     }
 
     // tslint:disable-next-line:no-any
@@ -425,19 +665,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
-                let newList : ICellViewModel[] = [];
-
-                // Insert before the edit cell if we have one
-                const editCell = this.getEditCell();
-                if (editCell) {
-                    newList = [...this.state.cellVMs.filter(c => !c.editable), cellVM, editCell];
-
-                    // Update execution count on the last cell
-                    editCell.cell.data.execution_count = this.getInputExecutionCount(newList);
-                } else {
-                    newList = [...this.state.cellVMs, cellVM];
-                }
-
+                const newList = [...this.state.cellVMs, cellVM];
                 this.setState({
                     cellVMs: newList,
                     undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
@@ -452,12 +680,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getEditCell() : ICellViewModel | undefined {
-        const editCells = this.state.cellVMs.filter(c => c.editable);
-        if (editCells && editCells.length === 1) {
-            return editCells[0];
-        }
-
-        return undefined;
+        return this.state.editCellVM;
     }
 
     private inputBlockToggled = (id: string) => {
@@ -561,7 +784,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoCount: this.state.undoStack.length,
             redoCount: this.state.redoStack.length
         };
-        PostOffice.sendMessage({type: HistoryNonLiveShareMessages.SendInfo, payload: { info: info }});
+        this.sendMessage(HistoryMessages.SendInfo, info);
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
@@ -599,6 +822,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.updateOrAdd(cell, true);
             }
         }
+
+        // After the cell is finished update our current execution count
+        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
+
+        // When a cell is finished refresh our variables
+        // Use the ref here to maintain var explorer independence
+        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+            this.refreshVariables();
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -621,18 +853,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private getInputExecutionCount(cellVMs: ICellViewModel[]) : number {
+    // Check our list of cell vms to see what our current execution count is
+    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
         const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) + 1 : 1;
+        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
+    }
+
+    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
+        return this.getCurrentExecutionCount(cellVMs) + 1;
     }
 
     private submitInput = (code: string) => {
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
         let editCell = this.getEditCell();
         if (editCell) {
-            // Save a copy of the ones without edits.
-            const withoutEdits = this.state.cellVMs.filter(c => !c.editable);
-
             // Change this editable cell to not editable.
             editCell.cell.state = CellState.executing;
             editCell.cell.data.source = code;
@@ -652,6 +886,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
             editCell = this.alterCellVM(editCell, true, !collapseInputs);
 
+            // Generate a new id (as the edit cell always has the same one)
+            editCell.cell.id = uuid();
+
             // Indicate this is direct input so that we don't hide it if the user has
             // hide all inputs turned on.
             editCell.directInput = true;
@@ -659,7 +896,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
-                cellVMs: [...withoutEdits, editCell, createEditableCellVM(this.getInputExecutionCount(withoutEdits))],
+                cellVMs: [...this.state.cellVMs, editCell],
+                editCellVM: createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs)),
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,
@@ -668,8 +906,141 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             // Send a message to execute this code if necessary.
             if (editCell.cell.state !== CellState.finished) {
-                PostOffice.sendMessage({ type: HistoryMessages.SubmitNewCell, payload: { code: code, id: editCell.cell.id }});
+                this.sendMessage(HistoryMessages.SubmitNewCell, { code, id: editCell.cell.id });
             }
+        }
+    }
+
+    private variableExplorerToggled = (open: boolean) => {
+        this.sendMessage(HistoryMessages.VariableExplorerToggle, open);
+    }
+
+    // When the variable explorer wants to refresh state (say if it was expanded)
+    private refreshVariables = () => {
+        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
+    }
+
+    // Find the display value for one specific variable
+    private refreshVariable = (targetVar: IJupyterVariable) => {
+        this.sendMessage(HistoryMessages.GetVariableValueRequest, targetVar);
+    }
+
+    // When we get a variable value back use the ref to pass to the variable explorer
+    // tslint:disable-next-line:no-any
+    private getVariableValueResponse = (payload?: any) => {
+        if (payload) {
+            const variable = payload as IJupyterVariable;
+
+            // Only send the updated variable data if we are on the same execution count as when we requsted it
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariableData(variable);
+                }
+            }
+        }
+    }
+
+    // When we get our new set of variables back use the ref to pass to the variable explorer
+    // tslint:disable-next-line:no-any
+    private getVariablesResponse = (payload?: any) => {
+        if (payload) {
+            const variablesResponse = payload as IJupyterVariablesResponse;
+
+            // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
+            if (variablesResponse.executionCount === this.currentExecutionCount) {
+                if (this.variableExplorerRef.current) {
+                    this.variableExplorerRef.current.newVariablesData(variablesResponse.variables);
+                }
+
+                // Now put out a request for all of the sub values for the variables
+                variablesResponse.variables.forEach(this.refreshVariable);
+            }
+        }
+    }
+
+    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
+        // If the model id doesn't match, skip sending this edit. This happens
+        // when a cell is reused after deleting another
+        const expectedCellId = this.monacoIdToCellId.get(modelId);
+        if (expectedCellId !== id) {
+            // A cell has been reused. Update our mapping
+            this.monacoIdToCellId.set(modelId, id);
+        } else {
+            // Just a normal edit. Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.EditCell, { changes, id });
+        }
+    }
+
+    private readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
+        const cell = this.state.cellVMs.find(c => c.cell.id === id);
+        if (cell) {
+            // Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.AddCell, {
+                fullText: extractInputText(cell.cell, getSettings()),
+                currentText: cell.inputBlockText,
+                file,
+                id
+            });
+        }
+
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private editableCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private getCellId = (monacoId: string) : string => {
+        const result = this.monacoIdToCellId.get(monacoId);
+        if (result) {
+            return result;
+        }
+
+        // Just assume it's the edit cell if not found.
+        return Identifiers.EditCellId;
+    }
+
+    // tslint:disable-next-line: no-any
+    private tokenizerLoaded = (_e?: any) => {
+        this.setState({ tokenizerLoaded: true });
+    }
+
+    private loadOnigasm = () : Promise<ArrayBuffer> => {
+        if (!this.onigasmPromise) {
+            this.onigasmPromise = createDeferred<ArrayBuffer>();
+            // Send our load onigasm request
+            this.sendMessage(HistoryMessages.LoadOnigasmAssemblyRequest);
+        }
+        return this.onigasmPromise.promise;
+    }
+
+    private loadTmlanguage = () : Promise<string> => {
+        if (!this.tmlangugePromise) {
+            this.tmlangugePromise = createDeferred<string>();
+            // Send our load onigasm request
+            this.sendMessage(HistoryMessages.LoadTmLanguageRequest);
+        }
+        return this.tmlangugePromise.promise;
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleOnigasmResponse(payload: any) {
+        if (payload && this.onigasmPromise) {
+            const typedArray = new Uint8Array(payload.data);
+            this.onigasmPromise.resolve(typedArray.buffer);
+        } else if (this.onigasmPromise) {
+            this.onigasmPromise.resolve(undefined);
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleTmLanguageResponse(payload: any) {
+        if (payload && this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(payload.toString());
+        } else if (this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(undefined);
         }
     }
 }

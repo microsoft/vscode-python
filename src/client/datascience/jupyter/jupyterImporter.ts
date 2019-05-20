@@ -5,10 +5,12 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { CodeSnippits } from '../constants';
 import { IJupyterExecution, INotebookImporter } from '../types';
 
@@ -29,7 +31,7 @@ export class JupyterImporter implements INotebookImporter {
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
 
-    private templatePromise: Promise<string>;
+    private templatePromise: Promise<string | undefined>;
 
     constructor(
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -95,17 +97,22 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private async createTemplateFile(): Promise<string> {
+    private async createTemplateFile(): Promise<string | undefined> {
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.tpl');
 
         // Write our template into it
-        await fs.appendFile(file.filePath, this.nbconvertTemplate);
+        if (file) {
+            try {
+                // Save this file into our disposables so the temp file goes away
+                this.disposableRegistry.push(file);
+                await fs.appendFile(file.filePath, this.nbconvertTemplate);
 
-        // Save this file into our disposables so the temp file goes away
-        this.disposableRegistry.push(file);
-
-        // Now we should have a template that will convert
-        return file.filePath;
+                // Now we should have a template that will convert
+                return file.filePath;
+            } catch {
+                noop();
+            }
+        }
     }
 }

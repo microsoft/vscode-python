@@ -12,7 +12,7 @@ import { CondaService } from '../../client/interpreter/locators/services/condaSe
 import { extractMethod } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { getExtensionSettings } from '../common';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
@@ -40,7 +40,7 @@ suite('Method Extraction', () => {
         refactorTargetFile = path.join(refactorTargetFileDir, `refactor${new Date().getTime()}.py`);
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initializeTest();
-        (commands as any).executeCommand = (cmd) => Promise.resolve();
+        (commands as any).executeCommand = (_cmd: any) => Promise.resolve();
     });
     teardown(async () => {
         commands.executeCommand = oldExecuteCommand;

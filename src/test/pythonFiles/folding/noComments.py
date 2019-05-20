@@ -35,9 +35,12 @@ INFO = to_bytes('INFO')
 ATCH = to_bytes('ATCH')
 REPL = to_bytes('REPL')
 
+PY_ROOT = os.path.normcase(__file__)
+while os.path.basename(PY_ROOT) != 'pythonFiles':
+    PY_ROOT = os.path.dirname(PY_ROOT)
+
 _attach_enabled = False
 _attached = threading.Event()
-vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 
 
 class AttachAlreadyEnabledError(Exception):
@@ -187,6 +190,10 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
 
                 elif response == ATCH:
                     debug_options = vspd.parse_debug_options(read_string(client))
+                    debug_options.setdefault('rules', []).append({
+                        'path': PY_ROOT,
+                        'include': False,
+                        })
                     if redirect_output:
                         debug_options.add('RedirectOutput')
 

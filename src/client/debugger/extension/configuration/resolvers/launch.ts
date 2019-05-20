@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/diagnostics/checks/invalidPythonPathInDebugger';
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
@@ -63,29 +62,31 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
         if (typeof debugConfiguration.envFile !== 'string' && workspaceFolder) {
-            const envFile = path.join(workspaceFolder.fsPath, '.env');
-            debugConfiguration.envFile = envFile;
+            const settings = this.configurationService.getSettings(workspaceFolder);
+            debugConfiguration.envFile = settings.envFile;
         }
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
-        if (typeof debugConfiguration.showReturnValue !== 'boolean') {
-            debugConfiguration.showReturnValue = false;
-        }
+        debugConfiguration.showReturnValue = debugConfiguration.showReturnValue !== false;
         if (!debugConfiguration.console) {
             debugConfiguration.console = 'integratedTerminal';
         }
         // If using a terminal, then never open internal console.
-        if (debugConfiguration.console !== 'none' && !debugConfiguration.internalConsoleOptions) {
+        if (debugConfiguration.console !== 'internalConsole' && !debugConfiguration.internalConsoleOptions) {
             debugConfiguration.internalConsoleOptions = 'neverOpen';
         }
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
+        if (debugConfiguration.justMyCode === undefined) {
+            // Populate justMyCode using debugStdLib
+            debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
+        }
         // Pass workspace folder so we can get this when we get debug events firing.
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
-        if (debugConfiguration.debugStdLib) {
+        if (!debugConfiguration.justMyCode) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.stopOnEntry) {

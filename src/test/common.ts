@@ -4,7 +4,6 @@
 
 // tslint:disable:no-console no-require-imports no-var-requires
 
-import * as arch from 'arch';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -32,6 +31,7 @@ export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
 
+const arch = require('arch');
 export const IS_64_BIT = arch() === 'x64';
 
 export enum OSType {
@@ -46,9 +46,9 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.enabled' | 'linting.pylintEnabled' |
     'linting.flake8Enabled' | 'linting.pep8Enabled' | 'linting.pylamaEnabled' |
     'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' | 'linting.banditEnabled' |
-    'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
+    'testing.nosetestArgs' | 'testing.pyTestArgs' | 'testing.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
-    'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
+    'testing.nosetestsEnabled' | 'testing.pyTestEnabled' | 'testing.unittestEnabled' |
     'envFile' | 'jediEnabled' | 'linting.ignorePatterns' | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {
@@ -60,7 +60,7 @@ async function disposePythonSettings() {
 
 export async function updateSetting(setting: PythonSettingKeys, value: {} | undefined, resource: Uri | undefined, configTarget: ConfigurationTarget) {
     const vscode = require('vscode') as typeof import('vscode');
-    const settings = vscode.workspace.getConfiguration('python', resource);
+    const settings = vscode.workspace.getConfiguration('python', resource || null);
     const currentValue = settings.inspect(setting);
     if (currentValue !== undefined && ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
         (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
@@ -131,7 +131,7 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
     const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
     return pythonSettings.PythonSettings.getInstance(resource, new AutoSelectionService());
 }
-export function retryAsync(wrapped: Function, retryCount: number = 2) {
+export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {
             const reasons: any[] = [];
@@ -160,7 +160,7 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
         return;
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
-    const settings = vscode.workspace.getConfiguration('python', resourceUri);
+    const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
     const value = settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' = config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
@@ -399,7 +399,7 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
             storeEntries: true
         });
         zip.on('ready', async () => {
-            zip.extract('extension', targetFolder, err => {
+            zip.extract('extension', targetFolder, (err: any) => {
                 if (err) {
                     reject(err);
                 } else {

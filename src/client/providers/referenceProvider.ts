@@ -44,7 +44,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             return;
         }
         const columnIndex = range.isEmpty ? position.character : range.end.character;
-        const cmd: proxy.ICommand<proxy.IReferenceResult> = {
+        const cmd: proxy.ICommand = {
             command: proxy.CommandType.Usages,
             fileName: filename,
             columnIndex: columnIndex,

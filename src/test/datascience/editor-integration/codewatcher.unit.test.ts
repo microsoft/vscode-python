@@ -5,7 +5,6 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, CodeLens, Range, Selection, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
@@ -19,6 +18,8 @@ import { ICodeWatcher, IHistory, IHistoryProvider } from '../../../client/datasc
 import { IServiceContainer } from '../../../client/ioc/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { createDocument } from './helpers';
+
+//tslint:disable:no-any
 
 suite('DataScience Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
@@ -43,7 +44,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         logger = TypeMoq.Mock.ofType<ILogger>();
         historyProvider = TypeMoq.Mock.ofType<IHistoryProvider>();
-        activeHistory = TypeMoq.Mock.ofType<IHistory>();
+        activeHistory = createTypeMoq<IHistory>('history');
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
@@ -53,6 +54,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -64,9 +66,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            enableCellCodeLens: true
         };
 
         // Setup the service container to return code watchers
@@ -74,7 +80,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object));
 
         // Setup our active history instance
-        historyProvider.setup(h => h.getOrCreateActive()).returns(() => activeHistory.object);
+        historyProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeHistory.object));
 
         // Setup our active text editor
         documentManager.setup(dm => dm.activeTextEditor).returns(() => textEditor.object);
@@ -87,6 +93,35 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object);
     });
+
+    function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
+        // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
+        // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
+        const result: TypeMoq.IMock<T> = TypeMoq.Mock.ofType<T>();
+        (result as any).tag = tag;
+        result.setup((x: any) => x.then).returns(() => undefined);
+        return result;
+    }
+
+    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range, firstCell: boolean = false) {
+        if (codeLenses[startLensIndex].command) {
+            expect(codeLenses[startLensIndex].command!.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+        }
+        expect(codeLenses[startLensIndex].range).to.be.deep.equal(targetRange, 'Run Cell code lens range incorrect');
+
+        if (!firstCell) {
+            if (codeLenses[startLensIndex + 1].command) {
+                expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run Above code lens command incorrect');
+            }
+            expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run Above code lens range incorrect');
+        }
+
+        const indexAdd = firstCell ? 1 : 2;
+        if (codeLenses[startLensIndex + indexAdd].command) {
+            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Below code lens command incorrect');
+        }
+        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Run Below code lens range incorrect');
+    }
 
     test('Add a file with just a #%% mark to a code watcher', () => {
         const fileName = 'test.py';
@@ -103,14 +138,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
         expect(codeLenses.length).to.be.equal(2, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(0, 0, 0, 3), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(0, 0, 0, 3), 'Run All Cells code lens range incorrect');
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3), true);
 
         // Verify function calls
         document.verifyAll();
@@ -158,23 +186,10 @@ fourth line`;
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(4, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
-        if (codeLenses[2].command) {
-            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 7, 11), 'Run Cell code lens range incorrect');
-        if (codeLenses[3].command) {
-            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 7, 11), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(5, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 7, 11));
 
         // Verify function calls
         document.verifyAll();
@@ -208,28 +223,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
-        if (codeLenses[2].command) {
-            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[3].command) {
-            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run All Cells code lens range incorrect');
-        expect(codeLenses[4].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run Cell code lens range incorrect');
-        if (codeLenses[5].command) {
-            expect(codeLenses[5].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[5].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12));
 
         // Verify function calls
         document.verifyAll();
@@ -263,28 +261,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
-        if (codeLenses[0].command) {
-            expect(codeLenses[0].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[0].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[1].command) {
-            expect(codeLenses[1].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[1].range).to.be.deep.equal(new Range(3, 0, 5, 0), 'Run All Cells code lens range incorrect');
-        if (codeLenses[2].command) {
-            expect(codeLenses[2].command.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
-        }
-        expect(codeLenses[2].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run Cell code lens range incorrect');
-        if (codeLenses[3].command) {
-            expect(codeLenses[3].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[3].range).to.be.deep.equal(new Range(6, 0, 8, 0), 'Run All Cells code lens range incorrect');
-        expect(codeLenses[4].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run Cell code lens range incorrect');
-        if (codeLenses[5].command) {
-            expect(codeLenses[5].command.command).to.be.equal(Commands.RunAllCells, 'Run All Cells code lens command incorrect');
-        }
-        expect(codeLenses[5].range).to.be.deep.equal(new Range(9, 0, 10, 12), 'Run All Cells code lens range incorrect');
+        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12));
 
         // Verify function calls
         document.verifyAll();
@@ -307,13 +288,39 @@ fourth line
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString),
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(0),
-                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
-        await codeWatcher.runCell(testRange, uuid());
+        await codeWatcher.runCell(testRange);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunFileInteractive command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2`; // Command tests override getText, so just need the ranges here
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(inputText),
+                                TypeMoq.It.isValue('test.py'),
+                                TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
+
+        await codeWatcher.runFileInteractive();
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -353,8 +360,7 @@ testing2`; // Command tests override getText, so just need the ranges here
                                 TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
-        // Try our RunCell command
-        await codeWatcher.runAllCells(uuid());
+        await codeWatcher.runAllCells();
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -378,7 +384,6 @@ testing2`;
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(2),
-                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
@@ -386,8 +391,172 @@ testing2`;
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
 
+        await codeWatcher.runCurrentCell();
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunCellAndAllBelow command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+`#%%
+testing2`;
+
+        const targetText2 =
+`#%%
+testing3`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
+
+        await codeWatcher.runCellAndAllBelow(2, 0);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunAllCellsAbove command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+`#%%
+testing1`;
+
+        const targetText2 =
+`#%%
+testing2`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
+        await codeWatcher.runAllCellsAbove(4, 0);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunToLine command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText =
+`#%%
+testing1`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+
+        await codeWatcher.runToLine(2);
+
+        // Verify function calls
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunToLine command with nothing on the lines', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`
+
+print('testing')`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // If adding empty lines nothing should be added and history should not be started
+        historyProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeHistory.object)).verifiable(TypeMoq.Times.never());
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isAnyNumber())).verifiable(TypeMoq.Times.never());
+
+        await codeWatcher.runToLine(2);
+
+        // Verify function calls
+        historyProvider.verifyAll();
+        activeHistory.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunFromLine command', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+`#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText =
+`#%%
+testing2
+#%%
+testing3`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+
         // Try our RunCell command with the first selection point
-        await codeWatcher.runCurrentCell(uuid());
+        await codeWatcher.runFromLine(2);
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -410,7 +579,6 @@ testing2`;
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(3),
-                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
@@ -420,7 +588,7 @@ testing2`;
         textEditor.setup(te => te.selection).returns(() => new Selection(3, 0, 3, 0));
 
         // Try our RunCell command with the first selection point
-        await codeWatcher.runSelectionOrLine(textEditor.object, uuid());
+        await codeWatcher.runSelectionOrLine(textEditor.object);
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -442,14 +610,13 @@ testing2`;
         activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(0, 0, 0, 0));
 
         // Try our RunCell command with the first selection point
-        await codeWatcher.runCurrentCell(uuid());
+        await codeWatcher.runCurrentCell();
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -475,7 +642,6 @@ testing2`; // Command tests override getText, so just need the ranges here
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(testString),
                                 TypeMoq.It.isValue('test.py'),
                                 TypeMoq.It.isValue(0),
-                                TypeMoq.It.isAny(),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
                                 }))).verifiable(TypeMoq.Times.once());
@@ -494,14 +660,14 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // To get around this, override the advanceToRange function called from within runCurrentCellAndAdvance
         // this will tell us if we are calling the correct range
-        codeWatcher['advanceToRange'] = (targetRange: Range) => {
+        (codeWatcher as any).advanceToRange = (targetRange: Range) => {
             expect(targetRange.start.line).is.equal(2, 'Incorrect range in run cell and advance');
             expect(targetRange.start.character).is.equal(0, 'Incorrect range in run cell and advance');
             expect(targetRange.end.line).is.equal(3, 'Incorrect range in run cell and advance');
             expect(targetRange.end.character).is.equal(8, 'Incorrect range in run cell and advance');
         };
 
-        await codeWatcher.runCurrentCellAndAdvance(uuid());
+        await codeWatcher.runCurrentCellAndAdvance();
 
         // Verify function calls
         textEditor.verifyAll();

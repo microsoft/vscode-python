@@ -83,7 +83,7 @@ suite('Module Installer - Invalid Paths', () => {
                             persistValue.setup(pv => pv.value).returns(() => false);
                             persistValue.setup(pv => pv.updateValue(TypeMoq.It.isValue(true)));
                             persistentState.setup(ps =>
-                                ps.createGlobalPersistentState(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
+                                ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
                             ).returns(() => persistValue.object);
                             await installer.promptToInstall(product.value, resource);
                             productPathService.verifyAll();

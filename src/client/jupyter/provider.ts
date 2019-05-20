@@ -33,7 +33,7 @@ export class JupyterProvider {
         }
 
         // ok we're in a block, look for the end of the block untill the last line in the cell (if there are any cells)
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<string>((resolve, _reject) => {
             const activeEditor = window.activeTextEditor;
             if (!activeEditor) {
                 return resolve('');

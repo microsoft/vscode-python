@@ -21,11 +21,11 @@ export class StandardErrorHandler extends BaseErrorHandler {
         this.outputChannel.appendLine(`Linting with ${info.id} failed.`);
         this.outputChannel.appendLine(error.toString());
 
-        this.displayLinterError(info.id, resource)
+        this.displayLinterError(info.id)
             .ignoreErrors();
         return true;
     }
-    private async displayLinterError(linterId: LinterId, resource: Uri) {
+    private async displayLinterError(linterId: LinterId) {
         const message = `There was an error in running the linter '${linterId}'`;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         await appShell.showErrorMessage(message, 'View Errors');

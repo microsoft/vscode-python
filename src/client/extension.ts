@@ -10,6 +10,8 @@ if ((Reflect as any).metadata === undefined) {
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));
+// Initialize the logger first.
+require('./common/logger');
 
 const durations: Record<string, number> = {};
 import { StopWatch } from './common/utils/stopWatch';
@@ -97,13 +99,13 @@ import { ISortImportsEditingProvider } from './providers/types';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
-import { EditorLoadTelemetry } from './telemetry/types';
+import { EditorLoadTelemetry, IImportTracker } from './telemetry/types';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
-import { ITestContextService } from './unittests/common/types';
-import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './unittests/navigation/types';
-import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
+import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
+import { ITestContextService } from './testing/common/types';
+import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
+import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
@@ -162,6 +164,10 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
     dataScience.activate().ignoreErrors();
 
+    // Activate import tracking
+    const importTracker = serviceManager.get<IImportTracker>(IImportTracker);
+    importTracker.activate().ignoreErrors();
+
     context.subscriptions.push(new LinterCommands(serviceManager));
     const linterProvider = new LinterProvider(context, serviceManager);
     context.subscriptions.push(linterProvider);
@@ -191,7 +197,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         ]
     });
 
-    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'none') {
+    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));

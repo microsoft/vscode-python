@@ -22,12 +22,14 @@ exports.nodeModulesToExternalize = [
     'request',
     'request-progress',
     'source-map-support',
-    'file-matcher',
     'diff-match-patch',
     'sudo-prompt',
     'node-stream-zip',
     'xml2js',
-    'vsls/vscode'
+    'vsls/vscode',
+];
+exports.nodeModulesToReplacePaths = [
+    ...exports.nodeModulesToExternalize
 ];
 function getDefaultPlugins(name) {
     const plugins = [];

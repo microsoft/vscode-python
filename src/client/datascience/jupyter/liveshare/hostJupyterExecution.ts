@@ -3,29 +3,29 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as os from 'os';
-import { CancellationToken, Disposable } from 'vscode';
+import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
-import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
+import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
     IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
-    INotebookServer
+    INotebookServer,
+    INotebookServerOptions
 } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
+import { ServerCache } from './serverCache';
 
 // tslint:disable:no-any
 
@@ -33,9 +33,7 @@ import { IRoleBasedObject } from './roleBasedFactory';
 export class HostJupyterExecution
     extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
     implements IRoleBasedObject, IJupyterExecution {
-    private sharedServers: Disposable [] = [];
-    private fowardedPorts: number [] = [];
-    private runningServer: INotebookServer | undefined;
+    private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
         executionFactory: IPythonExecutionFactory,
@@ -45,11 +43,11 @@ export class HostJupyterExecution
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IFileSystem,
+        fileSys: IFileSystem,
         sessionManager: IJupyterSessionManager,
         workspace: IWorkspaceService,
-        configuration: IConfigurationService,
-        commandFactory : IJupyterCommandFactory,
+        configService: IConfigurationService,
+        commandFactory: IJupyterCommandFactory,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
@@ -60,66 +58,41 @@ export class HostJupyterExecution
             logger,
             disposableRegistry,
             asyncRegistry,
-            fileSystem,
+            fileSys,
             sessionManager,
             workspace,
-            configuration,
+            configService,
             commandFactory,
             serviceContainer);
+        this.serverCache = new ServerCache(configService, workspace, fileSys);
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         await super.dispose();
         const api = await this.api;
         await this.onDetach(api);
-        this.fowardedPorts = [];
     }
 
-    public async connectToNotebookServer(uri: string | undefined, usingDarkTheme: boolean, useDefaultConfig: boolean, cancelToken?: CancellationToken, workingDir?: string): Promise<INotebookServer | undefined> {
-        // We only have a single server at a time.
-        if (!this.runningServer) {
-
+    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+        // See if we have this server in our cache already or not
+        let result = await this.serverCache.get(options);
+        if (result) {
+            return result;
+        } else {
             // Create the server
-            let sharedServerDisposable : Disposable | undefined;
-            const result = await super.connectToNotebookServer(uri, usingDarkTheme, useDefaultConfig, cancelToken, workingDir);
+            result = await super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
 
-            // Then using the liveshare api, port forward whatever port is being used by the server
-
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Liveshare can actually change this value on the guest. So on the guest side we need to listen
-            // to an event they are going to add to their api
-            if (!uri && result) {
-                const connectionInfo = result.getConnectionInfo();
-                if (connectionInfo) {
-                    const portMatch = RegExpValues.ExtractPortRegex.exec(connectionInfo.baseUrl);
-                    if (portMatch && portMatch.length > 1) {
-                        sharedServerDisposable = await this.portForwardServer(parseInt(portMatch[1], 10));
-                    }
-                }
-            }
-
+            // Save in our cache
             if (result) {
-                // Save this result, but modify its dispose such that we
-                // can detach from the server when it goes away.
-                this.runningServer = result;
-                const oldDispose = result.dispose.bind(result);
-                result.dispose = () => {
-                    // Dispose of the shared server
-                    if (sharedServerDisposable) {
-                        sharedServerDisposable.dispose();
-                    }
-                    // Mark as not having a running server anymore
-                    this.runningServer = undefined;
-
-                    return oldDispose();
-                };
+                await this.serverCache.set(result, noop, options);
             }
+            return result;
         }
-
-        return this.runningServer;
     }
 
-    public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onAttach(api);
+
         if (api) {
             const service = await this.waitForService();
 
@@ -132,61 +105,47 @@ export class HostJupyterExecution
                 service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                 service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
             }
-
-            // Port forward all of the servers that need it
-            this.fowardedPorts.forEach(p => this.portForwardServer(p).ignoreErrors());
         }
     }
 
-    public async onDetach(api: vsls.LiveShare | null) : Promise<void> {
-        if (api) {
-            await api.unshareService(LiveShare.JupyterExecutionService);
-        }
+    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onDetach(api);
 
-        // Unshare all of our port forwarded servers
-        this.sharedServers.forEach(s => s.dispose());
-        this.sharedServers = [];
+        // clear our cached servers if our role is no longer host or none
+        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ?
+            vsls.Role.Host : vsls.Role.Guest;
+        if (newRole !== vsls.Role.Host) {
+            await this.serverCache.dispose();
+        }
     }
 
-    private async portForwardServer(port: number) : Promise<Disposable | undefined> {
-        // Share this port with all guests if we are actively in a session. Otherwise save for when we are.
-        let result : Disposable | undefined;
-        const api = await this.api;
-        if (api && api.session && api.session.role === vsls.Role.Host) {
-            result = await api.shareServer({port, displayName: localize.DataScience.liveShareHostFormat().format(os.hostname())});
-            this.sharedServers.push(result!);
-        }
-
-        // Save for reattaching if necessary later
-        if (this.fowardedPorts.indexOf(port) === -1) {
-            this.fowardedPorts.push(port);
-        }
-
-        return result;
+    public getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+        // See if we have this server or not.
+        return this.serverCache.get(options);
     }
 
-    private onRemoteIsNotebookSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
     }
 
-    private onRemoteIsImportSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
     }
 
-    private onRemoteIsKernelCreateSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsKernelCreateSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelCreateSupported(cancellation);
     }
-    private onRemoteIsKernelSpecSupported = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteIsKernelSpecSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelSpecSupported(cancellation);
     }
 
     private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {
         // Connect to the local server. THe local server should have started the port forwarding already
-        const localServer = await this.connectToNotebookServer(undefined, args[0], args[1], cancellation, args[2]);
+        const localServer = await this.connectToNotebookServer(args[0] as INotebookServerOptions | undefined, cancellation);
 
         // Extract the URI and token for the other side
         if (localServer) {
@@ -194,12 +153,19 @@ export class HostJupyterExecution
             // on the guest side. However we need to eliminate the dispose method. Methods are not serializable
             const connectionInfo = localServer.getConnectionInfo();
             if (connectionInfo) {
-                return { baseUrl: connectionInfo.baseUrl, token: connectionInfo.token, localLaunch: false, dispose: noop };
+                return {
+                    baseUrl: connectionInfo.baseUrl,
+                    token: connectionInfo.token,
+                    localLaunch: false,
+                    localProcExitCode: undefined,
+                    disconnected: (_l) => { return { dispose: noop }; },
+                    dispose: noop
+                };
             }
         }
     }
 
-    private onRemoteGetUsableJupyterPython = (args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteGetUsableJupyterPython = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.getUsableJupyterPython(cancellation);
     }

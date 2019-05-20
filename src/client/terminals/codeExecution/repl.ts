@@ -8,17 +8,18 @@ import { Disposable } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
-import { IConfigurationService } from '../../common/types';
-import { IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
 @injectable()
 export class ReplProvider extends TerminalCodeExecutionProvider {
-    constructor( @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
+    constructor(
+        @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
-        @inject(IPlatformService) platformService: IPlatformService) {
+        @inject(IPlatformService) platformService: IPlatformService
+    ) {
 
         super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
         this.terminalTitle = 'REPL';

@@ -10,6 +10,7 @@ import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
+import { PoetryInstaller } from './poetryInstaller';
 import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
 import { ProductService } from './productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from './types';
@@ -18,6 +19,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
+    serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller);
     serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
 
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);

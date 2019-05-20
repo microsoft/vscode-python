@@ -67,7 +67,8 @@ suite('Signature Provider unit tests', () => {
         doc.setup(d => d.uri).returns(() => docUri.object);
         lineText.setup(l => l.text).returns(() => source);
         argsResult.setup(c => c.requestId).returns(() => 1);
-        argsResult.setup(c => c.definitions).returns(() => argResultItems[0].definitions);
+        // tslint:disable-next-line:no-any
+        argsResult.setup(c => c.definitions).returns(() => (argResultItems as any)[0].definitions);
         jediHandler.setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
             return Promise.resolve(argResultItems);
         });

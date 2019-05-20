@@ -6,7 +6,6 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { HistoryMessages } from './constants';
 import { IHistoryProvider, IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
@@ -16,7 +15,7 @@ class StatusItem implements Disposable {
     private timeout: NodeJS.Timer | undefined;
     private disposeCallback: () => void;
 
-    constructor(title: string, disposeCallback: () => void, timeout?: number) {
+    constructor(_title: string, disposeCallback: () => void, timeout?: number) {
         this.deferred = createDeferred<void>();
         this.disposeCallback = disposeCallback;
 
@@ -76,7 +75,7 @@ export class StatusProvider implements IStatusProvider {
         // Set our application shell status with a busy icon
         this.applicationShell.withProgress(
             progressOptions,
-            (p, c) =>
+            (_p, c) =>
             {
                 if (c && cancel) {
                     c.onCancellationRequested(() => {
@@ -107,7 +106,7 @@ export class StatusProvider implements IStatusProvider {
         if (this.statusCount === 0) {
             const history = this.historyProvider.getActive();
             if (history && !skipHistory) {
-                history.postMessage(HistoryMessages.StartProgress);
+                history.startProgress();
             }
         }
         this.statusCount += 1;
@@ -118,7 +117,7 @@ export class StatusProvider implements IStatusProvider {
         if (updatedCount === 0) {
             const history = this.historyProvider.getActive();
             if (history && !skipHistory) {
-                history.postMessage(HistoryMessages.StopProgress);
+                history.stopProgress();
             }
         }
         this.statusCount = Math.max(updatedCount, 0);

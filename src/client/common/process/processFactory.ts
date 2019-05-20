@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
+import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc';
 import { IBufferDecoder, IProcessService, IProcessServiceFactory } from './types';
@@ -19,6 +20,9 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
     public async create(resource?: Uri): Promise<IProcessService> {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
         const decoder = this.serviceContainer.get<IBufferDecoder>(IBufferDecoder);
-        return new ProcessService(decoder, customEnvVars);
+        const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        const proc = new ProcessService(decoder, customEnvVars);
+        disposableRegistry.push(proc);
+        return proc;
     }
 }

@@ -21,11 +21,11 @@ suite('Interpreters - Locator Progress', () => {
             return Promise.resolve(true);
         }
         public locatingCallback?: (e: Promise<PythonInterpreter[]>) => any;
-        public onLocating(listener: (e: Promise<PythonInterpreter[]>) => any, thisArgs?: any, disposables?: Disposable[]): Disposable {
+        public onLocating(listener: (e: Promise<PythonInterpreter[]>) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
             this.locatingCallback = listener;
             return { dispose: noop };
         }
-        public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+        public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
             return Promise.resolve([]);
         }
         public dispose() {

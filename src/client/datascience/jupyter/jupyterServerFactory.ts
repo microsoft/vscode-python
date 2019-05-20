@@ -26,6 +26,7 @@ interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 
 }
 
+// tslint:disable:callable-types
 type JupyterServerClassType = {
     new(liveShare: ILiveShareApi,
         dataScience: IDataScience,
@@ -33,8 +34,10 @@ type JupyterServerClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager): IJupyterServerInterface ;
+        sessionManager: IJupyterSessionManager
+    ): IJupyterServerInterface;
 };
+// tslint:enable:callable-types
 
 @injectable()
 export class JupyterServerFactory implements INotebookServer {
@@ -80,9 +83,9 @@ export class JupyterServerFactory implements INotebookServer {
         return server.dispose();
     }
 
-    public async waitForIdle(): Promise<void> {
+    public async waitForIdle(timeoutMs: number): Promise<void> {
         const server = await this.serverFactory.get();
-        return server.waitForIdle();
+        return server.waitForIdle(timeoutMs);
     }
 
     public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
@@ -95,13 +98,22 @@ export class JupyterServerFactory implements INotebookServer {
         return server.setInitialDirectory(directory);
     }
 
+    public async setMatplotLibStyle(useDark: boolean): Promise<void> {
+        const server = await this.serverFactory.get();
+        return server.setMatplotLibStyle(useDark);
+    }
+
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
         // Create a wrapper observable around the actual server (because we have to wait for a promise)
         return new Observable<ICell[]>(subscriber => {
             this.serverFactory.get().then(s => {
                 s.executeObservable(code, file, line, id, silent)
-                    .forEach(n => subscriber.next(n), Promise)
-                    .then(f => subscriber.complete())
+                    .forEach(n => {
+                        subscriber.next(n); // Separate lines so can break on this call.
+                    }, Promise)
+                    .then(_f => {
+                        subscriber.complete();
+                    })
                     .catch(e => subscriber.error(e));
             },
             r => {
@@ -111,9 +123,9 @@ export class JupyterServerFactory implements INotebookServer {
         });
     }
 
-    public async restartKernel(): Promise<void> {
+    public async restartKernel(timeoutMs: number): Promise<void> {
         const server = await this.serverFactory.get();
-        return server.restartKernel();
+        return server.restartKernel(timeoutMs);
     }
 
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
@@ -130,8 +142,9 @@ export class JupyterServerFactory implements INotebookServer {
         return undefined;
     }
 
-    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
-        return this.launchInfo;
+    public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
+        const server = await this.serverFactory.get();
+        return server.waitForConnect();
     }
 
     public async getSysInfo() : Promise<ICell | undefined> {

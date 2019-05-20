@@ -269,7 +269,7 @@ suite('Linting Scenarios', () => {
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
         for (const enabled of [false, true]) {
-            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function() {
+            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function () {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Add coverage for these linters.
                 if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
@@ -315,7 +315,7 @@ suite('Linting Scenarios', () => {
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
-        test(`Check ${getProductName(product)} messages`, async function() {
+        test(`Check ${getProductName(product)} messages`, async function () {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Add coverage for these linters.
             if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
@@ -323,7 +323,7 @@ suite('Linting Scenarios', () => {
                 this.skip();
             }
 
-            const  fixture = new TestFixture();
+            const fixture = new TestFixture();
             await testLinterMessages(fixture, product);
         });
     }
@@ -353,8 +353,10 @@ suite('Linting Scenarios', () => {
 });
 
 const PRODUCTS = Object.keys(Product)
-    .filter(key => !isNaN(Number(Product[key])))
-    .map(key => Product[key]);
+    // tslint:disable-next-line:no-any
+    .filter(key => !isNaN(Number(Product[key as any])))
+    // tslint:disable-next-line:no-any
+    .map(key => Product[key as any]);
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting Products', () => {
@@ -362,11 +364,14 @@ suite('Linting Products', () => {
 
     test('All linting products are represented by linters', async () => {
         for (const product of PRODUCTS) {
-            if (prodService.getProductType(product) !== ProductType.Linter) {
+            // tslint:disable-next-line:no-any
+            if (prodService.getProductType(product as any) !== ProductType.Linter) {
                 continue;
             }
-            const found = LINTERID_BY_PRODUCT.get(product);
-            assert.notEqual(found, undefined, `did find linter ${Product[product]}`);
+            // tslint:disable-next-line:no-any
+            const found = LINTERID_BY_PRODUCT.get(product as any);
+            // tslint:disable-next-line:no-any
+            assert.notEqual(found, undefined, `did find linter ${Product[product as any]}`);
         }
     });
 

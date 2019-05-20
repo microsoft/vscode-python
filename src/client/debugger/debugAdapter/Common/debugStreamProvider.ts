@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { createServer, Socket } from 'net';
+import { createServer, Server, Socket } from 'net';
 import { isTestExecution } from '../../../common/constants';
 import { ICurrentProcess } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
@@ -10,9 +10,15 @@ import { IDebugStreamProvider } from '../types';
 
 @injectable()
 export class DebugStreamProvider implements IDebugStreamProvider {
+    private server?: Server;
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
     public get useDebugSocketStream(): boolean {
         return this.getDebugPort() > 0;
+    }
+    public dispose() {
+        if (this.server) {
+            this.server.close();
+        }
     }
     public async getInputAndOutputStreams(): Promise<{ input: NodeJS.ReadStream | Socket; output: NodeJS.WriteStream | Socket }> {
         const debugPort = this.getDebugPort();
@@ -27,7 +33,7 @@ export class DebugStreamProvider implements IDebugStreamProvider {
                 if (!isTestExecution()) {
                     console.error(`waiting for debug protocol on port ${debugPort}`);
                 }
-                createServer((socket) => {
+                this.server = createServer((socket) => {
                     if (!isTestExecution()) {
                         console.error('>> accepted connection from client');
                     }

@@ -8,7 +8,10 @@ const datascience = require('./webpack.datascience-ui.config.js');
 const extensionDependencies = require('./build/webpack/webpack.extension.dependencies.config.js').default;
 
 module.exports = [
-    merge(datascience, {
+    merge(datascience[0], {
+        devtool: 'eval'
+    }),
+    merge(datascience[1], {
         devtool: 'eval'
     }),
     merge(extensionDependencies, {

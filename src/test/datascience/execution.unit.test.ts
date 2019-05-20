@@ -69,28 +69,32 @@ class MockJupyterServer implements INotebookServer {
     public getCurrentState(): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
-    public executeObservable(code: string, f: string, line: number): Observable<ICell[]> {
+    public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
     }
-    public execute(code: string, f: string, line: number): Promise<ICell[]> {
+    public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
     public restartKernel(): Promise<void> {
         throw new Error('Method not implemented');
     }
-    public translateToNotebook(cells: ICell[]): Promise<JSONObject> {
+    public translateToNotebook(_cells: ICell[]): Promise<JSONObject> {
         throw new Error('Method not implemented');
     }
     public waitForIdle(): Promise<void> {
         throw new Error('Method not implemented');
     }
-    public setInitialDirectory(directory: string): Promise<void> {
+    public setInitialDirectory(_directory: string): Promise<void> {
         throw new Error('Method not implemented');
+    }
+
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        noop();
     }
     public getConnectionInfo(): IConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }
-    public getLaunchInfo(): INotebookServerLaunchInfo | undefined {
+    public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
         throw new Error('Method not implemented');
     }
     public async shutdown() {
@@ -101,7 +105,7 @@ class MockJupyterServer implements INotebookServer {
         return Promise.resolve(undefined);
     }
 
-    public interruptKernel(timeout: number) : Promise<InterruptResult> {
+    public interruptKernel(_timeout: number) : Promise<InterruptResult> {
         throw new Error('Method not implemented');
     }
 
@@ -130,14 +134,14 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
     }
 
     public dispose = async () : Promise<void> => {
-        for (let i = 0; i < this.disposables.length; i += 1) {
-            const disposable = this.disposables[i];
-            if (disposable) {
-                const val = disposable.dispose();
-                if (val instanceof Promise) {
-                    const promise = val as Promise<void>;
-                    await promise;
-                }
+        for (const disposable of this.disposables) {
+            if (!disposable) {
+                continue;
+            }
+            const val = disposable.dispose();
+            if (val instanceof Promise) {
+                const promise = val as Promise<void>;
+                await promise;
             }
         }
         this.disposables = [];
@@ -265,7 +269,7 @@ suite('Jupyter Execution', async () => {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67
         const result: TypeMoq.IMock<T> = TypeMoq.Mock.ofType<T>();
-        (result as any)['tag'] = tag;
+        (result as any).tag = tag;
         result.setup((x: any) => x.then).returns(() => undefined);
         return result;
     }
@@ -414,7 +418,7 @@ suite('Jupyter Execution', async () => {
 
     function setupMissingNotebookPythonService(service: TypeMoq.IMock<IPythonExecutionService>) {
         service.setup(x => x.execModule(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((v) => {
+            .returns((_v) => {
                 return Promise.reject('cant exec');
             });
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(missingNotebookPython));
@@ -517,6 +521,7 @@ suite('Jupyter Execution', async () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -528,7 +533,10 @@ suite('Jupyter Execution', async () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             allowLiveShare: false
@@ -584,24 +592,24 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
-        await assert.isFulfilled(execution.connectToNotebookServer(undefined, false, true), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 
     test('Failing others throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 
     test('Slow notebook startups throws exception', async () => {
         const execution = createExecution(workingPython, ['Failure']);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time\nFailure');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time\nFailure');
     }).timeout(10000);
 
     test('Other than active works', async () => {
@@ -643,7 +651,7 @@ suite('Jupyter Execution', async () => {
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
         const evt = {
-            affectsConfiguration(m: string) : boolean {
+            affectsConfiguration(_m: string) : boolean {
                 return true;
             }
         };
@@ -653,7 +661,7 @@ suite('Jupyter Execution', async () => {
 
     test('Kernelspec is deleted on exit', async () => {
         const execution = createExecution(missingKernelPython);
-        await assert.isFulfilled(execution.connectToNotebookServer(undefined, false, true), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
         await cleanupDisposables();
         const exists = fs.existsSync(workingKernelSpec);
         assert.notOk(exists, 'Temp kernel spec still exists');
@@ -665,7 +673,7 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isFulfilled(execution.connectToNotebookServer(undefined, false, true), 'Should be able to start a server');
+        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
 
     test('Jupyter found on the path skipped', async () => {
@@ -674,6 +682,6 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython, undefined, true);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isRejected(execution.connectToNotebookServer(undefined, false, true), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
     }).timeout(10000);
 });

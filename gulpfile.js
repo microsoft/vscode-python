@@ -46,8 +46,11 @@ const noop = function () { };
 */
 
 const all = [
-    'src/**/*',
-    'src/client/**/*',
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    'src/**/*.d.ts',
+    'src/**/*.js',
+    'src/**/*.jsx'
 ];
 
 const tsFilter = [
@@ -75,13 +78,22 @@ const tslintFilter = [
     '!**/*.d.ts'
 ];
 
+gulp.task('compile', (done) => {
+    let failed = false;
+    const tsProject = ts.createProject("tsconfig.json");
+    tsProject.src()
+        .pipe(tsProject())
+        .on("error", ()=> failed = true)
+        .js
+        .pipe(gulp.dest("out"))
+        .on("finish",  ()=> failed ? done(new Error('TypeScript compilation errors')) : done());
+});
+
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
-gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
-
-gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
+gulp.task('hygiene', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
 gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
 
@@ -110,7 +122,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix', 'c
 
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
-        throw new Error('Native dependencies deteced');
+        done(new Error('Native dependencies deteced'));
     }
     done();
 });
@@ -144,15 +156,6 @@ gulp.task('inlinesource', () => {
 });
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
-
-
-gulp.task("compile", () => {
-    const tsProject = ts.createProject("tsconfig.json");
-    return tsProject.src()
-        .pipe(tsProject())
-        .js.pipe(gulp.dest("out"));
-});
-
 
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 
@@ -206,7 +209,7 @@ async function buildWebPack(webpackConfigName, args) {
         .filter(item => item.startsWith('WARNING in '))
         .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
     const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
-    if (errors){
+    if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
@@ -242,6 +245,16 @@ gulp.task('renameSourceMaps', async () => {
     await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
 });
 
+gulp.task('verifyBundle', async () => {
+    const matches = await glob.sync(path.join(__dirname, '*.vsix'));
+    if (!matches || matches.length == 0) {
+        throw new Error('Bundle does not exist');
+    } else {
+        console.log(`Bundle ${matches[0]} exists.`);
+    }
+
+});
+
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
@@ -266,7 +279,7 @@ gulp.task('installPythonLibs', async () => {
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require("gulp-rename");
-    return gulp.src('python*.vsix')
+    return gulp.src('*python*.vsix')
         .pipe(rename(uploadBlobName))
         .pipe(azure.upload({
             account: process.env.AZURE_STORAGE_ACCOUNT,
@@ -276,7 +289,7 @@ function uploadExtension(uploadBlobName) {
 }
 
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
-gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH}.vsix`));
+gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
@@ -322,36 +335,38 @@ async function checkDatascienceDependencies() {
     if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
         throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
     }
-    json.chunks[0].modules.forEach(m => {
-        const name = m.name;
-        if (!name.startsWith('./node_modules')) {
-            return;
-        }
-        const nameWithoutNodeModules = name.substring('./node_modules'.length);
-        let moduleName1 = nameWithoutNodeModules.split('/')[1];
-        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
-        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
-
-        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
-        switch (matchedModules.length) {
-            case 0:
-                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
-                break;
-            case 1:
-                break;
-            default: {
-                throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+    json.children.forEach(c => {
+        c.chunks[0].modules.forEach(m => {
+            const name = m.name;
+            if (!name.startsWith('./node_modules')) {
+                return;
             }
-        }
+            const nameWithoutNodeModules = name.substring('./node_modules'.length);
+            let moduleName1 = nameWithoutNodeModules.split('/')[1];
+            moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+            const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
 
-        const moduleName = matchedModules[0];
-        if (existingModulesCopy.has(moduleName)) {
-            existingModulesCopy.delete(moduleName);
-        }
-        if (existingModules.has(moduleName) || newModules.has(moduleName)) {
-            return;
-        }
-        newModules.add(moduleName);
+            const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
+            switch (matchedModules.length) {
+                case 0:
+                    throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                    break;
+                case 1:
+                    break;
+                default: {
+                    throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+                }
+            }
+
+            const moduleName = matchedModules[0];
+            if (existingModulesCopy.has(moduleName)) {
+                existingModulesCopy.delete(moduleName);
+            }
+            if (existingModules.has(moduleName) || newModules.has(moduleName)) {
+                return;
+            }
+            newModules.add(moduleName);
+        });
     });
 
     const errorMessages = [];
@@ -416,15 +431,12 @@ function buildDebugAdapterCoverage(done) {
 * @property {boolean=} skipLinter - Skip linter.
 */
 
-const tsProjectMap = {};
 /**
  *
  * @param {hygieneOptions} options
  */
 function getTsProject(options) {
-    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
-    const mode = tsOptions && tsOptions.mode ? tsOptions.mode : '';
-    return tsProjectMap[mode] ? tsProjectMap[mode] : tsProjectMap[mode] = ts.createProject('tsconfig.json', tsOptions);
+    return ts.createProject('tsconfig.json');
 }
 
 let configuration;
@@ -446,6 +458,7 @@ let reRunCompilation = false;
  * @returns {NodeJS.ReadWriteStream}
  */
 const hygiene = (options, done) => {
+    done = done || noop;
     if (compilationInProgress) {
         reRunCompilation = true;
         return done();

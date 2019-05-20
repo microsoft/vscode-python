@@ -6,26 +6,23 @@
 }
 
 .cursor-block {
-    border: .05px solid var(--vscode-editor-foreground);
+    border: .05px solid var(--override-foreground, var(--vscode-editor-foreground));
     min-width: 5px;
     margin-left: -1px;
     margin-right: -1px;
 }
 
 .cursor-line {
-    border-left: 1px solid var(--vscode-editor-foreground);
+    border-left: 1px solid var(--override-foreground, var(--vscode-editor-foreground));
 }
 
 .cursor-underline {
-    border-bottom: 1px solid var(--vscode-editor-foreground);
+    border-bottom: 1px solid var(--override-foreground, var(--vscode-editor-foreground));
     min-width: 5px;
 }
 
 .cursor-measure {
     visibility: hidden;
-}
-
-.cursor-text {
 }
 
 .cursor-line-overlay {
@@ -53,15 +50,15 @@
 
 @keyframes blinkCursorLine {
     0%, 49%    {border-left-color: transparent;}
-    50%, 100% {border-left-color: var(--vscode-editor-foreground);}
+    50%, 100% {border-left-color: var(--override-foreground, var(--vscode-editor-foreground));}
 }
 
 @keyframes blinkCursorUnderline {
     0%, 49%    {border-bottom-color: transparent;}
-    50%, 100% {border-bottom-color: var(--vscode-editor-foreground); }
+    50%, 100% {border-bottom-color: var(--override-foreground, var(--vscode-editor-foreground)); }
 }
 
 @keyframes blinkCursorBlock {
     0%, 49%   {background-color: transparent; color: transparent;}
-    50%, 100%  {background-color: var(--vscode-editor-foreground); color: var(--vscode-editor-background);}
+    50%, 100%  {background-color: var(--override-foreground, var(--vscode-editor-foreground)); color: var(--override-background, var(--vscode-editor-background));}
 }

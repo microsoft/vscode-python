@@ -33,7 +33,7 @@ export class DownloadBetaChannelRule implements IDownloadChannelRule {
             true,
             frequencyForBetalLSDownloadCheck);
 
-        // If we haven't checked it in the last 24 hours, then ensure we don't do it again.
+        // If we have checked it in the last 24 hours, then ensure we don't do it again.
         if (globalState.value) {
             await globalState.updateValue(false);
             return true;

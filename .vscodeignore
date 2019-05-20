@@ -21,6 +21,7 @@ package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+travis*.log
 tsconfig*.json
 tsfmt.json
 tslint.json
@@ -28,7 +29,7 @@ typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-webpack.datascience-ui.config.js
+webpack.datascience-*.config.js
 
 .github/**
 .mocha-reporter/**
@@ -60,6 +61,7 @@ pythonFiles/**/*.pyc
 pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
 pythonFiles/lib/python/bin/**
+pythonFiles/tests/**
 requirements.txt
 scripts/**
 src/**
@@ -67,3 +69,4 @@ test/**
 tmp/**
 tpn/**
 typings/**
+types/**

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { nodeModulesToExternalize } from '../common';
+import { nodeModulesToReplacePaths } from '../common';
 
 function replaceModule(contents: string, moduleName: string, quotes: '"' | '\''): string {
     const stringToSearch = `${quotes}${moduleName}${quotes}`;
@@ -12,7 +12,7 @@ function replaceModule(contents: string, moduleName: string, quotes: '"' | '\'')
 }
 // tslint:disable:no-default-export no-invalid-this
 export default function (source: string) {
-    nodeModulesToExternalize.forEach(moduleName => {
+    nodeModulesToReplacePaths.forEach(moduleName => {
         if (source.indexOf(moduleName) > 0) {
             source = replaceModule(source, moduleName, '"');
             source = replaceModule(source, moduleName, '\'');

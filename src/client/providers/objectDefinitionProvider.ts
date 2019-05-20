@@ -34,10 +34,10 @@ export class PythonObjectDefinitionProvider {
         // tslint:disable-next-line:no-any
         const doc = <vscode.TextDocument><any>{
             fileName: 'test.py',
-            lineAt: (line: number) => {
+            lineAt: (_line: number) => {
                 return { text: source };
             },
-            getWordRangeAtPosition: (position: vscode.Position) => range,
+            getWordRangeAtPosition: (_position: vscode.Position) => range,
             isDirty: true,
             getText: () => source
         };

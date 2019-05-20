@@ -5,6 +5,7 @@
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
+import { ConsoleType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
@@ -30,6 +31,7 @@ export type FormatTelemetry = {
 export type LanguageServerVersionTelemetry = {
     success: boolean;
     lsVersion?: string;
+    usedSSL?: boolean;
 };
 
 export type LanguageServerErrorTelemetry = {
@@ -71,7 +73,7 @@ export type CodeExecutionTelemetry = {
 };
 export type DebuggerTelemetry = {
     trigger: 'launch' | 'attach' | 'test';
-    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
+    console?: ConsoleType;
     hasEnvVars: boolean;
     hasArgs: boolean;
     django: boolean;
@@ -190,3 +192,8 @@ export type InterpreterActivation = {
     pythonVersion?: string;
     interpreterType: InterpreterType;
 };
+
+export const IImportTracker = Symbol('IImportTracker');
+export interface IImportTracker {
+    activate(): Promise<void>;
+}

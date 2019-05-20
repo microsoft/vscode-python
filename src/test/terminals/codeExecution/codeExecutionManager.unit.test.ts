@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-// tslint:disable:no-multiline-string no-trailing-whitespace
-
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
+
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IPythonExtensionBanner } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length no-any
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -22,7 +21,10 @@ suite('Terminal - Code Execution Manager', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let shiftEnterBanner: TypeMoq.IMock<IPythonExtensionBanner>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
     setup(() => {
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystem.setup(f => f.readFile(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         shiftEnterBanner = TypeMoq.Mock.ofType<IPythonExtensionBanner>();
         shiftEnterBanner.setup(b => b.showBanner()).returns(() => {
@@ -36,7 +38,7 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, shiftEnterBanner.object, serviceContainer.object);
+        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, fileSystem.object, shiftEnterBanner.object, serviceContainer.object);
     });
     teardown(() => {
         disposables.forEach(disposable => {
@@ -50,16 +52,14 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure commands are registered', async () => {
         executionManager.registerCommands();
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_In_Terminal), TypeMoq.It.isAny()), TypeMoq.Times.once());
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_Selection_In_Terminal), TypeMoq.It.isAny()), TypeMoq.Times.once());
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_Selection_In_Django_Shell), TypeMoq.It.isAny()), TypeMoq.Times.once());
+        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_In_Terminal) as any, TypeMoq.It.isAny()), TypeMoq.Times.once());
+        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_Selection_In_Terminal) as any, TypeMoq.It.isAny()), TypeMoq.Times.once());
+        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_Selection_In_Django_Shell) as any, TypeMoq.It.isAny()), TypeMoq.Times.once());
     });
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
         let commandHandler: undefined | (() => Promise<void>);
-        // tslint:disable-next-line:no-any
-        commandManager.setup(c => c.registerCommand).returns(() => {
-            // tslint:disable-next-line:no-any
+        commandManager.setup(c => c.registerCommand as any).returns(() => {
             return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                 if (command === Commands.Exec_In_Terminal) {
                     commandHandler = callback;
@@ -80,9 +80,7 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure executeFileInterTerminal will use provided file', async () => {
         let commandHandler: undefined | ((file: Uri) => Promise<void>);
-        // tslint:disable-next-line:no-any
-        commandManager.setup(c => c.registerCommand).returns(() => {
-            // tslint:disable-next-line:no-any
+        commandManager.setup(c => c.registerCommand as any).returns(() => {
             return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                 if (command === Commands.Exec_In_Terminal) {
                     commandHandler = callback;
@@ -108,9 +106,7 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure executeFileInterTerminal will use active file', async () => {
         let commandHandler: undefined | ((file: Uri) => Promise<void>);
-        // tslint:disable-next-line:no-any
-        commandManager.setup(c => c.registerCommand).returns(() => {
-            // tslint:disable-next-line:no-any
+        commandManager.setup(c => c.registerCommand as any).returns(() => {
             return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                 if (command === Commands.Exec_In_Terminal) {
                     commandHandler = callback;
@@ -135,9 +131,7 @@ suite('Terminal - Code Execution Manager', () => {
 
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {
         let commandHandler: undefined | (() => Promise<void>);
-        // tslint:disable-next-line:no-any
-        commandManager.setup(c => c.registerCommand).returns(() => {
-            // tslint:disable-next-line:no-any
+        commandManager.setup(c => c.registerCommand as any).returns(() => {
             return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                 if (command === commandId) {
                     commandHandler = callback;
@@ -169,9 +163,7 @@ suite('Terminal - Code Execution Manager', () => {
 
     async function testExecutionOfSlectionWithoutAnythingSelected(commandId: string, executionServiceId: string) {
         let commandHandler: undefined | (() => Promise<void>);
-        // tslint:disable-next-line:no-any
-        commandManager.setup(c => c.registerCommand).returns(() => {
-            // tslint:disable-next-line:no-any
+        commandManager.setup(c => c.registerCommand as any).returns(() => {
             return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                 if (command === commandId) {
                     commandHandler = callback;
@@ -188,7 +180,6 @@ suite('Terminal - Code Execution Manager', () => {
         helper.setup(h => h.getSelectedTextToExecute).returns(() => () => Promise.resolve(''));
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId))).returns(() => executionService.object);
-        // tslint:disable-next-line:no-any
         documentManager.setup(d => d.activeTextEditor).returns(() => { return {} as any; });
 
         await commandHandler!();
@@ -205,9 +196,7 @@ suite('Terminal - Code Execution Manager', () => {
 
     async function testExecutionOfSelectionIsSentToTerminal(commandId: string, executionServiceId: string) {
         let commandHandler: undefined | (() => Promise<void>);
-        // tslint:disable-next-line:no-any
-        commandManager.setup(c => c.registerCommand).returns(() => {
-            // tslint:disable-next-line:no-any
+        commandManager.setup(c => c.registerCommand as any).returns(() => {
             return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                 if (command === commandId) {
                     commandHandler = callback;

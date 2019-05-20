@@ -147,7 +147,7 @@ export abstract class BaseLinter implements ILinter {
         }
     }
 
-    protected async parseMessages(output: string, document: vscode.TextDocument, token: vscode.CancellationToken, regEx: string) {
+    protected async parseMessages(output: string, _document: vscode.TextDocument, _token: vscode.CancellationToken, regEx: string) {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }

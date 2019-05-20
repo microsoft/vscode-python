@@ -37,7 +37,7 @@ export interface IProtocolLogger extends Disposable {
 }
 
 export const IDebugStreamProvider = Symbol('IDebugStreamProvider');
-export interface IDebugStreamProvider {
+export interface IDebugStreamProvider extends Disposable {
     readonly useDebugSocketStream: boolean;
     getInputAndOutputStreams(): Promise<{ input: NodeJS.ReadStream | Socket; output: NodeJS.WriteStream | Socket }>;
 }

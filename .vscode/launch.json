@@ -3,6 +3,37 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "name": "Extension inside container",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"
+            ],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
+            "name": "Python: Current File with iPython",
+            "type": "python",
+            "request": "launch",
+            "module": "IPython",
+            "console": "integratedTerminal",
+            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
@@ -68,6 +99,9 @@
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+            },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
@@ -128,8 +162,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--timeout=300000",
-                "--grep="
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
@@ -149,8 +183,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--timeout=300000",
-                "--grep="
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

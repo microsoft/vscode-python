@@ -22,7 +22,7 @@ export class PyDocStyle extends BaseLinter {
         return messages;
     }
 
-    protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
+    protected async parseMessages(output: string, document: TextDocument, _token: CancellationToken, _regEx: string) {
         let outputLines = output.split(/\r?\n/g);
         const baseFileName = path.basename(document.uri.fsPath);
 

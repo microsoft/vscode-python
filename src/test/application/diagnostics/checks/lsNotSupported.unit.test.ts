@@ -44,7 +44,7 @@ suite('Application Diagnostics - Checks LS not supported', () => {
                     BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
                 }
             }
-        }(serviceContainer.object, lsCompatibility.object, messageHandler.object);
+        }(serviceContainer.object, lsCompatibility.object, messageHandler.object, []);
         (diagnosticService as any)._clear();
     });
 

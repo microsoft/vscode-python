@@ -12,9 +12,9 @@ export class OnEnterFormatter implements OnTypeFormattingEditProvider {
     public provideOnTypeFormattingEdits(
         document: TextDocument,
         position: Position,
-        ch: string,
-        options: FormattingOptions,
-        cancellationToken: CancellationToken): TextEdit[] {
+        _ch: string,
+        _options: FormattingOptions,
+        _cancellationToken: CancellationToken): TextEdit[] {
         if (position.line === 0) {
             return [];
         }

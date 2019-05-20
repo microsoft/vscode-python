@@ -285,7 +285,8 @@ export class BaseTestFixture {
 
     public async getLinter(product: Product, enabled = true): Promise<ILinter> {
         const info = this.linterManager.getLinterInfo(product);
-        this.lintingSettings[info.enabledSettingName] = enabled;
+        // tslint:disable-next-line:no-any
+        (this.lintingSettings as any)[info.enabledSettingName] = enabled;
 
         await this.linterManager.setActiveLintersAsync([product]);
         await this.linterManager.enableLintingAsync(enabled);
@@ -337,7 +338,8 @@ export class BaseTestFixture {
                 }
                 const prefix = 'linting.';
                 if (setting.startsWith(prefix)) {
-                    this.lintingSettings[setting.substring(prefix.length)] = value;
+                    // tslint:disable-next-line:no-any
+                    (this.lintingSettings as any)[setting.substring(prefix.length)] = value;
                 }
             })
             .returns(() => Promise.resolve(undefined));

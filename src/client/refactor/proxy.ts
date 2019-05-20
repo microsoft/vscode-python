@@ -20,7 +20,7 @@ export class RefactorProxy extends Disposable {
     private _commandResolve?: (value?: any | PromiseLike<any>) => void;
     private _commandReject!: (reason?: any) => void;
     private initialized!: Deferred<void>;
-    constructor(extensionDir: string, private pythonSettings: IPythonSettings, private workspaceRoot: string,
+    constructor(extensionDir: string, _pythonSettings: IPythonSettings, private workspaceRoot: string,
         private serviceContainer: IServiceContainer) {
         super(() => { });
         this._extensionDir = extensionDir;
@@ -96,8 +96,8 @@ export class RefactorProxy extends Disposable {
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
-    private sendCommand<T>(command: string, telemetryEvent?: string): Promise<T> {
-        return this.initialize(this.pythonSettings.pythonPath).then(() => {
+    private sendCommand<T>(command: string): Promise<T> {
+        return this.initialize().then(() => {
             // tslint:disable-next-line:promise-must-complete
             return new Promise<T>((resolve, reject) => {
                 this._commandResolve = resolve;
@@ -106,7 +106,7 @@ export class RefactorProxy extends Disposable {
             });
         });
     }
-    private async initialize(pythonPath: string): Promise<void> {
+    private async initialize(): Promise<void> {
         const pythonProc = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspaceRoot) });
         this.initialized = createDeferred<void>();
         const args = ['refactor.py', this.workspaceRoot];

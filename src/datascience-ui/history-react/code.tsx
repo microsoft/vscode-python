@@ -2,18 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/mode/python/python';
-
-import * as CodeMirror from 'codemirror';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
-import * as RCM from 'react-codemirror';
-
-import './code.css';
 
 import { getLocString } from '../react-common/locReactSide';
-import { Cursor } from './cursor';
+import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
+
+import './code.css';
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -24,9 +20,12 @@ export interface ICodeProps {
     history: InputHistory | undefined;
     cursorType: string;
     showWatermark: boolean;
+    monacoTheme: string | undefined;
+    outermostParentClass: string;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     onSubmit(code: string): void;
-    onChangeLineCount(lineCount: number) : void;
-
+    onCreated(code: string, modelId: string): void;
+    onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
 }
 
 interface ICodeState {
@@ -36,78 +35,71 @@ interface ICodeState {
     cursorBottom: number;
     charUnderCursor: string;
     allowWatermark: boolean;
+    editor: monacoEditor.editor.IStandaloneCodeEditor | undefined;
+    model: monacoEditor.editor.ITextModel | null;
 }
 
 export class Code extends React.Component<ICodeProps, ICodeState> {
-
-    private codeMirror: CodeMirror.Editor | undefined;
-    private codeMirrorOwner: HTMLDivElement | undefined;
-    private baseIndentation : number | undefined;
+    private subscriptions: monacoEditor.IDisposable[] = [];
+    private lastCleanVersionId: number = 0;
 
     constructor(prop: ICodeProps) {
         super(prop);
-        this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: '', allowWatermark: true};
+        this.state = {focused: false, cursorLeft: 0, cursorTop: 0, cursorBottom: 0, charUnderCursor: '', allowWatermark: true, editor: undefined, model: null};
     }
 
-    public componentDidUpdate(prevProps: Readonly<ICodeProps>, prevState: Readonly<ICodeState>, snapshot?: {}) {
-        // Force our new value. the RCM control doesn't do this correctly
-        if (this.codeMirror && this.props.readOnly && this.codeMirror.getValue() !== this.props.code) {
-            this.codeMirror.setValue(this.props.code);
-        }
-        // If we are suddenly changing a readonly to not, somebody is reusing a different control. Update
-        // to be empty
-        if (this.codeMirror && !this.props.readOnly && prevProps.readOnly) {
-            this.codeMirror.setOption('readOnly', false);
-            this.codeMirror.setValue('');
-        }
+    public componentWillUnmount = () => {
+        this.subscriptions.forEach(d => d.dispose());
     }
 
-    public componentWillUnmount() {
-        if (this.codeMirrorOwner) {
-            const activeElement = document.activeElement as HTMLElement;
-            if (activeElement && this.codeMirrorOwner.contains(activeElement)) {
-                activeElement.blur();
-            }
+    public componentDidUpdate = () => {
+        if (this.props.autoFocus && this.state.editor && !this.props.readOnly) {
+            this.state.editor.focus();
         }
     }
 
     public render() {
         const readOnly = this.props.readOnly;
-        const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
         const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
+        const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
+        const options: monacoEditor.editor.IEditorConstructionOptions = {
+            minimap: {
+                enabled: false
+            },
+            glyphMargin: false,
+            wordWrap: 'on',
+            scrollBeyondLastLine: false,
+            scrollbar: {
+                vertical: 'hidden',
+                horizontal: 'hidden'
+            },
+            lineNumbers: 'off',
+            renderLineHighlight: 'none',
+            highlightActiveIndentGuide: false,
+            autoIndent: true,
+            autoClosingBrackets: this.props.testMode ? 'never' : 'languageDefined',
+            autoClosingQuotes: this.props.testMode ? 'never' : 'languageDefined',
+            renderIndentGuides: false,
+            overviewRulerBorder: false,
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
+            folding: false,
+            readOnly: readOnly,
+            lineDecorationsWidth: 0,
+            contextmenu: false,
+            ...this.props.editorOptions
+        };
+
         return (
-            <div className={classes} ref={this.updateRoot}>
-                <Cursor
-                    hidden={readOnly}
-                    codeInFocus={this.state.focused}
-                    cursorType={this.props.cursorType}
-                    text={this.state.charUnderCursor}
-                    left={this.state.cursorLeft}
-                    top={this.state.cursorTop}
-                    bottom={this.state.cursorBottom}/>
-                <RCM
+            <div className={classes}>
+                <MonacoEditor
+                    testMode={this.props.testMode}
                     value={this.props.code}
-                    autoFocus={this.props.autoFocus}
-                    onChange={this.onChange}
-                    options={
-                        {
-                            extraKeys:
-                            {
-                                Down: this.arrowDown,
-                                Enter: this.enter,
-                                'Shift-Enter': this.shiftEnter,
-                                Up: this.arrowUp
-                            },
-                            theme: `${this.props.codeTheme} default`,
-                            mode: 'python',
-                            cursorBlinkRate: -1,
-                            readOnly: readOnly ? true : false,
-                            lineWrapping: true
-                        }
-                    }
-                    ref={this.updateCodeMirror}
-                    onFocusChange={this.onFocusChange}
-                    onCursorActivity={this.onCursorActivity}
+                    outermostParentClass={this.props.outermostParentClass}
+                    theme={this.props.monacoTheme ? this.props.monacoTheme : 'vs'}
+                    language='python'
+                    editorMounted={this.editorDidMount}
+                    options={options}
                 />
                 <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>
@@ -116,182 +108,130 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     public onParentClick(ev: React.MouseEvent<HTMLDivElement>) {
         const readOnly = this.props.testMode || this.props.readOnly;
-        if (this.codeMirror && !readOnly) {
+        if (this.state.editor && !readOnly) {
             ev.stopPropagation();
-            this.codeMirror.focus();
+            this.state.editor.focus();
         }
     }
 
-    private updateRoot = (div: HTMLDivElement) => {
-        this.codeMirrorOwner = div;
+    public giveFocus() {
+        const readOnly = this.props.testMode || this.props.readOnly;
+        if (this.state.editor && !readOnly) {
+            this.state.editor.focus();
+        }
     }
 
     private getWatermarkString = () : string => {
         return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
     }
 
-    private onCursorActivity = (codeMirror: CodeMirror.Editor) => {
-        // Update left/top/char for cursor
-        if (codeMirror) {
-            const doc = codeMirror.getDoc();
-            const selections = doc.listSelections();
-            const cursor = doc.getCursor();
-            const anchor = selections && selections.length > 0 ? selections[selections.length - 1].anchor : {ch: 10000, line: 10000};
-            const wantStart = cursor.line < anchor.line || cursor.line === anchor.line && cursor.ch < anchor.ch;
-            const coords = codeMirror.cursorCoords(wantStart, 'local');
-            const char = this.getCursorChar();
-            this.setState({
-                cursorLeft: coords.left,
-                cursorTop: coords.top,
-                cursorBottom: coords.bottom,
-                charUnderCursor: char
-            });
-        }
+    private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+        // Update our state
+        const model = editor.getModel();
+        this.setState({ editor, model: editor.getModel() });
 
+        // Listen for model changes
+        this.subscriptions.push(editor.onDidChangeModelContent(this.modelChanged));
+
+        // List for key up/down events.
+        this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
+        this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
+
+        // Indicate we're ready
+        this.props.onCreated(this.props.code, model!.id);
     }
 
-    private getCursorChar = () : string => {
-        if (this.codeMirror) {
-            const doc = this.codeMirror.getDoc();
-            const cursorPos = doc.getCursor();
-            const line = doc.getLine(cursorPos.line);
-            if (line.length > cursorPos.ch) {
-                return line.slice(cursorPos.ch, cursorPos.ch + 1);
+    private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
+        if (this.state.model) {
+            this.props.onChange(e.changes, this.state.model.id);
+        }
+        if (!this.props.readOnly) {
+            this.setState({allowWatermark: false});
+        }
+    }
+
+    private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.shiftKey && e.keyCode === monacoEditor.KeyCode.Enter && this.state.model && this.state.editor) {
+            // Shift enter was hit
+            e.stopPropagation();
+            e.preventDefault();
+            window.setTimeout(this.submitContent, 0);
+        } else if (e.keyCode === monacoEditor.KeyCode.UpArrow) {
+            this.arrowUp(e);
+        } else if (e.keyCode === monacoEditor.KeyCode.DownArrow) {
+            this.arrowDown(e);
+        }
+    }
+
+    private onKeyUp = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.shiftKey && e.keyCode === monacoEditor.KeyCode.Enter) {
+            // Shift enter was hit
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }
+
+    private submitContent = () => {
+        let content = this.getContents();
+        if (content) {
+            // Remove empty lines off the end
+            let endPos = content.length - 1;
+            while (endPos >= 0 && content[endPos] === '\n') {
+                endPos -= 1;
             }
-        }
-
-        // We don't need a state update on cursor change because
-        // we only really need this on focus change
-        return '';
-    }
-
-    private onFocusChange = (focused: boolean) => {
-        this.setState({focused});
-    }
-
-    private updateCodeMirror = (rcm: ReactCodeMirror.ReactCodeMirror) => {
-        if (rcm) {
-            this.codeMirror = rcm.getCodeMirror();
-            const coords = this.codeMirror.cursorCoords(false, 'local');
-            const char = this.getCursorChar();
-            this.setState({
-                cursorLeft: coords.left,
-                cursorTop: coords.top,
-                cursorBottom: coords.bottom,
-                charUnderCursor: char
-            });
-        }
-    }
-
-    private getBaseIndentation(instance: CodeMirror.Editor) : number {
-        if (!this.baseIndentation) {
-            const option = instance.getOption('indentUnit');
-            if (option) {
-                this.baseIndentation = parseInt(option.toString(), 10);
-            } else {
-                this.baseIndentation = 2;
-            }
-        }
-        return this.baseIndentation;
-    }
-
-    private expectedIndent(instance: CodeMirror.Editor, line: number) : number {
-        // Expected should be indent on the previous line and one more if line
-        // ends with :
-        const doc = instance.getDoc();
-        const baseIndent = this.getBaseIndentation(instance);
-        const lineStr = doc.getLine(line).trimRight();
-        const lastChar = lineStr.length === 0 ? null : lineStr.charAt(lineStr.length - 1);
-        const frontIndent = lineStr.length - lineStr.trimLeft().length;
-        return frontIndent + (lastChar === ':' ? baseIndent : 0);
-    }
-
-    private shiftEnter = (instance: CodeMirror.Editor) => {
-        // Shift enter is always submit (for now)
-        const doc = instance.getDoc();
-        // Double check we don't have an entirely empty document
-        if (doc.getValue('').trim().length > 0) {
-            let code = doc.getValue();
-            const isClean = doc.isClean();
-            // We have to clear the history as this CodeMirror doesn't go away.
-            doc.clearHistory();
-            doc.setValue('');
-
-            // Submit without the last extra line if we have one.
-            if (code.endsWith('\n\n')) {
-                code = code.slice(0, code.length - 1);
-            }
+            content = content.slice(0, endPos + 1);
 
             // Send to the input history too if necessary
             if (this.props.history) {
-                this.props.history.add(code, !isClean);
+                this.props.history.add(content, this.state.model!.getVersionId() > this.lastCleanVersionId);
             }
 
-            this.props.onSubmit(code);
-            return;
+            // Clear our current contents since we submitted
+            this.state.model!.setValue('');
+
+            // Send to jupyter
+            this.props.onSubmit(content);
         }
     }
 
-    private enter = (instance: CodeMirror.Editor) => {
-        // See if the cursor is at the end of a single line or if on an indented line. Any indent
-        // or line ends with : or ;\, then don't submit
-        const doc = instance.getDoc();
-        const cursor = doc.getCursor();
-        const lastLine = doc.lastLine();
-        if (cursor.line === lastLine) {
+    private getContents() : string {
+        if (this.state.model) {
+            return this.state.model.getValue().replace(/\r/g, '');
+        }
+        return '';
+    }
 
-            // Check for any text
-            const line = doc.getLine(lastLine);
-            if (line.length === 0) {
-                // Do the same thing as shift+enter
-                this.shiftEnter(instance);
-                return;
+    private arrowUp(e: monacoEditor.IKeyboardEvent) {
+        if (this.state.editor && this.state.model) {
+            const cursor = this.state.editor.getPosition();
+            if (cursor && cursor.lineNumber === 1 && this.props.history) {
+                const currentValue = this.getContents();
+                const newValue = this.props.history.completeUp(currentValue);
+                if (newValue !== currentValue) {
+                    this.state.model.setValue(newValue);
+                    this.lastCleanVersionId = this.state.model.getVersionId();
+                    this.state.editor.setPosition({lineNumber: 1, column: 1});
+                    e.stopPropagation();
+                }
             }
         }
-
-        // Otherwise add a line and indent the appropriate amount
-        const expectedIndents = this.expectedIndent(instance, cursor.line);
-        const indentString = Array(expectedIndents + 1).join(' ');
-        doc.replaceRange(`\n${indentString}`, { line: cursor.line, ch: doc.getLine(cursor.line).length });
-        doc.setCursor({line: cursor.line + 1, ch: indentString.length});
-
-        // Tell our listener we added a new line
-        this.props.onChangeLineCount(doc.lineCount());
     }
 
-    private arrowUp = (instance: CodeMirror.Editor) => {
-        const doc = instance.getDoc();
-        const cursor = doc ? doc.getCursor() : undefined;
-        if (cursor && cursor.line === 0 && this.props.history) {
-            const currentValue = doc.getValue();
-            const newValue = this.props.history.completeUp(currentValue);
-            if (newValue !== currentValue) {
-                doc.setValue(newValue);
-                doc.setCursor(0, doc.getLine(0).length);
-                doc.markClean();
+    private arrowDown(e: monacoEditor.IKeyboardEvent) {
+        if (this.state.editor && this.state.model) {
+            const cursor = this.state.editor.getPosition();
+            if (cursor && cursor.lineNumber === this.state.model.getLineCount() && this.props.history) {
+                const currentValue = this.getContents();
+                const newValue = this.props.history.completeDown(currentValue);
+                if (newValue !== currentValue) {
+                    this.state.model.setValue(newValue);
+                    this.lastCleanVersionId = this.state.model.getVersionId();
+                    const lastLine = this.state.model.getLineCount();
+                    this.state.editor.setPosition({lineNumber: lastLine, column: this.state.model.getLineLength(lastLine) + 1});
+                    e.stopPropagation();
+                }
             }
-            return;
         }
-        return CodeMirror.Pass;
     }
 
-    private arrowDown = (instance: CodeMirror.Editor) => {
-        const doc = instance.getDoc();
-        const cursor = doc ? doc.getCursor() : undefined;
-        if (cursor && cursor.line === doc.lastLine() && this.props.history) {
-            const currentValue = doc.getValue();
-            const newValue = this.props.history.completeDown(currentValue);
-            if (newValue !== currentValue) {
-                doc.setValue(newValue);
-                doc.setCursor(doc.lastLine(), doc.getLine(doc.lastLine()).length);
-                doc.markClean();
-            }
-            return;
-        }
-        return CodeMirror.Pass;
-    }
-
-    private onChange = (newValue: string, change: CodeMirror.EditorChange) => {
-        this.setState({allowWatermark: false});
-    }
 }

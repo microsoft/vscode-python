@@ -3,8 +3,6 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs-extra';
-import { EOL } from 'os';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
@@ -13,7 +11,6 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { IS_WINDOWS, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
@@ -21,11 +18,11 @@ import { EnvironmentVariables } from '../../../client/common/variables/types';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
-import { clearPythonPathInWorkspaceFolder, updateSetting } from '../../common';
+import { clearPythonPathInWorkspaceFolder, isOs, OSType, updateSetting } from '../../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
-import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
+import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
 use(chaiAsPromised);
 
@@ -40,7 +37,7 @@ suite('Multiroot Environment Variables Provider', () => {
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
-            this.skip();
+            return this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -168,7 +165,13 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
-    test('PATH from process variables should be included in in variables returned', async () => {
+    test('PATH from process variables should be included in in variables returned', async function () {
+        // this test is flaky on windows (likely the value of the path property
+        // has incorrect path separator chars). Tracked by GH #4756
+        if (isOs(OSType.Windows)) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
         // tslint:disable-next-line:no-invalid-template-strings
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const processVariables = { ...process.env };
@@ -315,108 +318,5 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(newVars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(newVars).to.have.property('X12345PYEXTUNITTESTVAR', '12345', 'X12345PYEXTUNITTESTVAR value is invalid');
         expect(newVars).to.not.to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
-    });
-
-    test('Custom variables will be refreshed when .env file is created, modified and deleted', async function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(20000);
-        const env3 = path.join(workspace4Path.fsPath, '.env3');
-        const fileExists = await fs.pathExists(env3);
-        if (fileExists) {
-            await fs.remove(env3);
-        }
-        // tslint:disable-next-line:no-invalid-template-strings
-        await updateSetting('envFile', '${workspaceRoot}/.env3', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
-        const processVariables = { ...process.env };
-        if (processVariables.PYTHONPATH) {
-            delete processVariables.PYTHONPATH;
-        }
-        const envProvider = getVariablesProvider(processVariables);
-        const vars = envProvider.getEnvironmentVariables(workspace4PyFile);
-        await expect(vars).to.eventually.not.equal(undefined, 'Variables is is undefiend');
-
-        // Create env3.
-        const contents = fs.readFileSync(path.join(workspace4Path.fsPath, '.env2'));
-        fs.writeFileSync(env3, contents);
-
-        // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        const newVars = await envProvider.getEnvironmentVariables(workspace4PyFile);
-        expect(newVars).to.not.equal(undefined, 'Variables is is undefiend after creating');
-        expect(newVars).to.have.property('X12345PYEXTUNITTESTVAR', '12345', 'X12345PYEXTUNITTESTVAR value is invalid after creating');
-        expect(newVars).to.not.to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid after creating');
-
-        // Modify env3.
-        fs.writeFileSync(env3, `${contents}${EOL}X123456PYEXTUNITTESTVAR=123456`);
-
-        // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        const updatedVars = await envProvider.getEnvironmentVariables(workspace4PyFile);
-        expect(updatedVars).to.not.equal(undefined, 'Variables is is undefiend after modifying');
-        expect(updatedVars).to.have.property('X12345PYEXTUNITTESTVAR', '12345', 'X12345PYEXTUNITTESTVAR value is invalid after modifying');
-        expect(updatedVars).to.not.to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid after modifying');
-        expect(updatedVars).to.have.property('X123456PYEXTUNITTESTVAR', '123456', 'X123456PYEXTUNITTESTVAR value is invalid after modifying');
-
-        // Now remove env3.
-        await fs.remove(env3);
-
-        // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        const varsAfterDeleting = await envProvider.getEnvironmentVariables(workspace4PyFile);
-        expect(varsAfterDeleting).to.not.equal(undefined, 'Variables is undefiend after deleting');
-    });
-
-    test('Change event will be raised when when .env file is created, modified and deleted', async function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(20000);
-        const env3 = path.join(workspace4Path.fsPath, '.env3');
-        const fileExists = await fs.pathExists(env3);
-        if (fileExists) {
-            await fs.remove(env3);
-        }
-        // tslint:disable-next-line:no-invalid-template-strings
-        await updateSetting('envFile', '${workspaceRoot}/.env3', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
-        const processVariables = { ...process.env };
-        if (processVariables.PYTHONPATH) {
-            delete processVariables.PYTHONPATH;
-        }
-        const envProvider = getVariablesProvider(processVariables);
-        let eventRaisedPromise = createDeferred<boolean>();
-        envProvider.onDidEnvironmentVariablesChange(() => eventRaisedPromise.resolve(true));
-        const vars = envProvider.getEnvironmentVariables(workspace4PyFile);
-        await expect(vars).to.eventually.not.equal(undefined, 'Variables is is undefiend');
-
-        // Create env3.
-        const contents = fs.readFileSync(path.join(workspace4Path.fsPath, '.env2'));
-        fs.writeFileSync(env3, contents);
-
-        // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        let eventRaised = await eventRaisedPromise.promise;
-        expect(eventRaised).to.equal(true, 'Create notification not raised');
-
-        // Modify env3.
-        eventRaisedPromise = createDeferred<boolean>();
-        fs.writeFileSync(env3, `${contents}${EOL}X123456PYEXTUNITTESTVAR=123456`);
-
-        // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        eventRaised = await eventRaisedPromise.promise;
-        expect(eventRaised).to.equal(true, 'Change notification not raised');
-
-        // Now remove env3.
-        eventRaisedPromise = createDeferred<boolean>();
-        await fs.remove(env3);
-
-        // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        eventRaised = await eventRaisedPromise.promise;
-        expect(eventRaised).to.equal(true, 'Delete notification not raised');
     });
 });

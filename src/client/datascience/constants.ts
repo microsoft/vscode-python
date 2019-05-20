@@ -1,12 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IS_WINDOWS } from '../common/platform/constants';
 
+export const DefaultTheme = 'Default Light+';
+
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
+    export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
+    export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
+    export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';
+    export const RunToLine = 'python.datascience.runtoline';
+    export const RunFromLine = 'python.datascience.runfromline';
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
@@ -24,6 +32,7 @@ export namespace Commands {
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
+    export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
 }
 
 export namespace EditorContexts {
@@ -41,39 +50,20 @@ export namespace RegExpValues {
     export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
     export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
-    export const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
+    // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
+    // instead.
+    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)' ;
+    export interface IUrlPatternGroupType {
+        LOCAL: string | undefined;
+        PREFIX: string | undefined;
+        REST: string | undefined;
+        IP: string | undefined;
+    }
     export const HttpPattern = /https?:\/\//;
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
     export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
     export const ArgsSplitterRegEx = /([^\s,]+)/g;
-}
-
-export namespace HistoryMessages {
-    export const StartCell = 'start_cell';
-    export const FinishCell = 'finish_cell';
-    export const UpdateCell = 'update_cell';
-    export const GotoCodeCell = 'gotocell_code';
-    export const RestartKernel = 'restart_kernel';
-    export const Export = 'export_to_ipynb';
-    export const GetAllCells = 'get_all_cells';
-    export const ReturnAllCells = 'return_all_cells';
-    export const DeleteCell = 'delete_cell';
-    export const DeleteAllCells = 'delete_all_cells';
-    export const Undo = 'undo';
-    export const Redo = 'redo';
-    export const ExpandAll = 'expand_all';
-    export const CollapseAll = 'collapse_all';
-    export const StartProgress = 'start_progress';
-    export const StopProgress = 'stop_progress';
-    export const Interrupt = 'interrupt';
-    export const SubmitNewCell = 'submit_new_cell';
-    export const UpdateSettings = 'update_settings';
-}
-
-export namespace HistoryNonLiveShareMessages {
-    export const SendInfo = 'send_info';
-    export const Started = 'started';
 }
 
 export enum Telemetry {
@@ -82,7 +72,11 @@ export enum Telemetry {
     RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL',
     RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE',
     RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS',
+    RunAllCellsAbove = 'DATASCIENCE.RUN_ALL_CELLS_ABOVE',
+    RunCellAndAllBelow = 'DATASCIENCE.RUN_CELL_AND_ALL_BELOW',
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
+    RunToLine = 'DATASCIENCE.RUN_TO_LINE',
+    RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
@@ -103,8 +97,20 @@ export enum Telemetry {
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER',
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
-    ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER'
-}
+    ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
+    ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
+    RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
+    ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
+    EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
+    DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
+    ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
+    RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
+    PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
+    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
+    DataScienceSettings = 'DATASCIENCE.SETTINGS',
+    VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
+    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT'
+ }
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
@@ -121,6 +127,9 @@ export namespace CodeSnippits {
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
+    export const HistoryPurpose = 'history';
+    export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
+    export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
 }
 
 export namespace JupyterCommands {
@@ -132,16 +141,16 @@ export namespace JupyterCommands {
 }
 
 export namespace LiveShare {
-    export const None = 'none';
-    export const Host = 'host';
-    export const Guest = 'guest';
     export const JupyterExecutionService = 'jupyterExecutionService';
     export const JupyterServerSharedService = 'jupyterServerSharedService';
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
+    export const HistoryProviderService = 'historyProviderService';
+    export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
     export const ResponseLifetime = 15000;
     export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
+    export const InterruptDefaultTimeout = 10000;
 }
 
 export namespace LiveShareCommands {
@@ -151,8 +160,45 @@ export namespace LiveShareCommands {
     export const isKernelSpecSupported = 'isKernelSpecSupported';
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
+    export const executeObservable = 'executeObservable';
     export const getSysInfo = 'getSysInfo';
     export const serverResponse = 'serverResponse';
     export const catchupRequest = 'catchupRequest';
     export const syncRequest = 'synchRequest';
+    export const restart = 'restart';
+    export const interrupt = 'interrupt';
+    export const historyCreate = 'historyCreate';
+    export const historyCreateSync = 'historyCreateSync';
+    export const disposeServer = 'disposeServer';
+    export const guestCheck = 'guestCheck';
+}
+
+export namespace CssMessages {
+    export const GetCssRequest = 'get_css_request';
+    export const GetCssResponse = 'get_css_response';
+    export const GetMonacoThemeRequest = 'get_monaco_theme_request';
+    export const GetMonacoThemeResponse = 'get_monaco_theme_response';
+}
+
+export namespace SharedMessages {
+    export const UpdateSettings = 'update_settings';
+    export const Started = 'started';
+}
+
+export interface IGetCssRequest {
+    isDark: boolean;
+}
+
+export interface IGetMonacoThemeRequest {
+    isDark: boolean;
+}
+
+export interface IGetCssResponse {
+    css: string;
+    theme: string;
+    knownDark?: boolean;
+}
+
+export interface IGetMonacoThemeResponse {
+    theme: monacoEditor.editor.IStandaloneThemeData;
 }

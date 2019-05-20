@@ -23,13 +23,13 @@ export class PythonRenameProvider implements RenameProvider {
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     @captureTelemetry(EventName.REFACTOR_RENAME)
-    public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(document: TextDocument, position: Position, newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
         return workspace.saveAll(false).then(() => {
-            return this.doRename(document, position, newName, token);
+            return this.doRename(document, position, newName);
         });
     }
 
-    private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    private doRename(document: TextDocument, position: Position, newName: string): ProviderResult<WorkspaceEdit> {
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
         }

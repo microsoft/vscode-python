@@ -3,8 +3,8 @@
 
 'use strict';
 
-import * as TypeMoq from 'typemoq';
 import { expect } from 'chai';
+import * as TypeMoq from 'typemoq';
 import { Terminal } from 'vscode';
 import { BaseTerminalActivator } from '../../../../client/common/terminal/activator/base';
 import { ITerminalActivator, ITerminalHelper } from '../../../../client/common/terminal/types';

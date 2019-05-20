@@ -33,7 +33,7 @@ export class Prospector extends BaseLinter {
         const relativePath = path.relative(cwd, document.uri.fsPath);
         return this.run(['--absolute-paths', '--output-format=json', relativePath], document, cancellation);
     }
-    protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
+    protected async parseMessages(output: string, _document: TextDocument, _token: CancellationToken, _regEx: string) {
         let parsedData: IProspectorResponse;
         try {
             parsedData = JSON.parse(output);
@@ -44,7 +44,7 @@ export class Prospector extends BaseLinter {
             return [];
         }
         return parsedData.messages
-            .filter((value, index) => index <= this.pythonSettings.linting.maxNumberOfProblems)
+            .filter((_value, index) => index <= this.pythonSettings.linting.maxNumberOfProblems)
             .map(msg => {
 
                 const lineNumber = msg.location.line === null || isNaN(msg.location.line) ? 1 : msg.location.line;

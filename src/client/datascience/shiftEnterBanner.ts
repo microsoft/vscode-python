@@ -10,6 +10,8 @@ import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory,
     IPythonExtensionBanner } from '../common/types';
 import * as localize from '../common/utils/localize';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
+import { Telemetry } from './constants';
 import { IJupyterExecution } from './types';
 
 export enum InteractiveShiftEnterStateKeys {
@@ -71,6 +73,7 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
             return;
         }
 
+        sendTelemetryEvent(Telemetry.ShiftEnterBannerShown);
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.Yes]: {
@@ -94,10 +97,12 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         return Promise.resolve(this.enabled && !this.disabledInCurrentSession && !settings.datascience.sendSelectionToInteractiveWindow && settings.datascience.enabled);
     }
 
+    @captureTelemetry(Telemetry.DisableInteractiveShiftEnter)
     public async disable(): Promise<void> {
         await this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, false).updateValue(false);
     }
 
+    @captureTelemetry(Telemetry.EnableInteractiveShiftEnter)
     public async enableInteractiveShiftEnter(): Promise<void> {
         await this.configuration.updateSetting('dataScience.sendSelectionToInteractiveWindow', true, undefined, ConfigurationTarget.Global);
         await this.disable();

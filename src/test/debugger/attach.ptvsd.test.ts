@@ -16,6 +16,7 @@ import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
@@ -100,7 +101,9 @@ suite('Debugging - Attach Debugger', () => {
         const attachResolver = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
         const fs = mock(FileSystem);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(fs));
+        const multistepFactory = mock(MultiStepInputFactory);
+        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory,
+            instance(multistepFactory), instance(fs));
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);

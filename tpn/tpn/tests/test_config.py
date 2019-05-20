@@ -76,6 +76,7 @@ def test_sort_version_stale(example_data):
     assert not relevant
     assert "Arch" in stale
     assert stale["Arch"].version == "1.0.3"
+    assert isinstance(stale["Arch"].error, config.StaleVersion)
     assert "Arch" in npm_data
     assert npm_data["Arch"].version == "2.0.0"
 
@@ -86,6 +87,7 @@ def test_sort_project_stale(example_data):
     assert not relevant
     assert "Arch" in stale
     assert stale["Arch"].version == "1.0.3"
+    assert isinstance(stale["Arch"].error, config.UnneededEntry)
     assert "Arch2" in npm_data
 
 

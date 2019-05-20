@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { inject, injectable } from 'inversify';
+import { ViewColumn } from 'vscode';
+
 import { IServiceContainer } from '../../ioc/types';
-import { IWebPanelMessageListener, IWebPanelProvider } from './types';
+import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from './types';
 import { WebPanel } from './webPanel';
 
 @injectable()
@@ -14,7 +14,7 @@ export class WebPanelProvider implements IWebPanelProvider {
     }
 
     // tslint:disable-next-line:no-any
-    public create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any) {
-        return new WebPanel(this.serviceContainer, listener, title, mainScriptPath, embeddedCss, settings);
+    public create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any) : IWebPanel {
+        return new WebPanel(viewColumn, this.serviceContainer, listener, title, mainScriptPath, embeddedCss, settings);
     }
 }

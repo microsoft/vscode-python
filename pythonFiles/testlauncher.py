@@ -20,8 +20,6 @@ def exclude_current_file_from_debugger():
     # Load the debugger package
     try:
         import ptvsd
-        import ptvsd.debugger as vspd
-        vspd.DONT_DEBUG.append(os.path.normcase(__file__))
     except:
         traceback.print_exc()
         print('''

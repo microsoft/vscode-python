@@ -129,6 +129,10 @@ suite('Shebang detection', () => {
     test('No code lens when there\'s no shebang', async () => {
         const [document] = createDocument('');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
+        processService.setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: 'python' }))
+            .verifiable(typemoq.Times.once());
+
         provider.detectShebang = () => Promise.resolve('');
 
         const codeLenses = await provider.provideCodeLenses(document.object);
@@ -138,6 +142,10 @@ suite('Shebang detection', () => {
     test('No code lens when shebang is an empty string', async () => {
         const [document] = createDocument('#!');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
+        processService.setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: 'python' }))
+            .verifiable(typemoq.Times.once());
+
         provider.detectShebang = () => Promise.resolve('');
 
         const codeLenses = await provider.provideCodeLenses(document.object);
@@ -147,6 +155,10 @@ suite('Shebang detection', () => {
     test('No code lens when python path in settings is the same as that in shebang', async () => {
         const [document] = createDocument('#!python');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
+        processService.setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: 'python' }))
+            .verifiable(typemoq.Times.once());
+
         provider.detectShebang = () => Promise.resolve('python');
 
         const codeLenses = await provider.provideCodeLenses(document.object);
@@ -156,6 +168,10 @@ suite('Shebang detection', () => {
     test('Code lens returned when python path in settings is different to one in shebang', async () => {
         const [document] = createDocument('#!python');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'different');
+        processService.setup(p => p.exec(typemoq.It.isValue('different'), typemoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: 'different' }))
+            .verifiable(typemoq.Times.once());
+
         provider.detectShebang = () => Promise.resolve('python');
 
         const codeLenses = await provider.provideCodeLenses(document.object);

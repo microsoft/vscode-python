@@ -27,7 +27,7 @@ suite('Configuration Settings', () => {
                 settingValue = systemVariables.resolve(settingValue);
             }
             // tslint:disable-next-line:no-any
-            const pythonSettingValue = (pythonSettings[key] as string);
+            const pythonSettingValue = ((pythonSettings as any)[key] as string);
             if (key.endsWith('Path') && IS_WINDOWS) {
                 assert.equal(settingValue.toUpperCase(), pythonSettingValue.toUpperCase(), `Setting ${key} not the same`);
             } else if (key === 'workspaceSymbols' && IS_WINDOWS) {

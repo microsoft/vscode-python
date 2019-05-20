@@ -5,23 +5,23 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument } from 'vscode';
-import { LanguageClientOptions, ProvideCompletionItemsSignature } from 'vscode-languageclient';
+import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument, WorkspaceFolder } from 'vscode';
+import { DocumentFilter, DocumentSelector, LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
-import { debounce } from '../../common/utils/decorators';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
+import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { IInterpreterDataService, ILanguageServerAnalysisOptions, ILanguageServerFolderService, InterpreterData } from '../types';
+import { ILanguageServerAnalysisOptions, ILanguageServerFolderService } from '../types';
 
 @injectable()
 export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOptions {
+    private envPythonPath: string = '';
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private disposables: Disposable[] = [];
-    private interpreterHash: string = '';
     private languageServerFolder: string = '';
     private resource: Resource;
     private readonly didChange = new EventEmitter<void>();
@@ -29,9 +29,8 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_PROPOSE_LS) private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInterpreterDataService) private readonly interpreterDataService: IInterpreterDataService,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: OutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) {
@@ -39,12 +38,15 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     public async initialize(resource: Resource) {
         this.resource = resource;
-        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
+        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
 
         let disposable = this.workspace.onDidChangeConfiguration(this.onSettingsChangedHandler, this);
         this.disposables.push(disposable);
 
-        disposable = this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChangedHandler(), this);
+        disposable = this.interpreterService.onDidChangeInterpreter(() => this.didChange.fire(), this);
+        this.disposables.push(disposable);
+
+        disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
         this.disposables.push(disposable);
     }
     public get onDidChange(): Event<void> {
@@ -57,28 +59,27 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     @traceDecorators.error('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const properties: Record<string, {}> = {};
-        let interpreterData: InterpreterData | undefined;
-        let pythonPath = '';
 
-        try {
-            interpreterData = await this.interpreterDataService.getInterpreterData(this.resource);
-        } catch (ex) {
-            traceError('Unable to determine path to the Python interpreter. IntelliSense will be limited.', ex);
-        }
-
-        this.interpreterHash = interpreterData ? interpreterData.hash : '';
-        if (interpreterData) {
-            pythonPath = path.dirname(interpreterData.path);
-            // tslint:disable-next-line:no-string-literal
-            properties['InterpreterPath'] = interpreterData.path;
-            // tslint:disable-next-line:no-string-literal
-            properties['Version'] = interpreterData.version;
+        const interpreterInfo = await this.interpreterService.getActiveInterpreter(this.resource);
+        if (!interpreterInfo) {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: How do we handle this?  It is pretty unlikely...
+            throw Error('did not find an active interpreter');
         }
 
         // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
+        properties['InterpreterPath'] = interpreterInfo.path;
 
-        let searchPaths = interpreterData ? interpreterData.searchPaths.split(path.delimiter) : [];
+        const version = interpreterInfo.version;
+        if (version) {
+            // tslint:disable-next-line:no-string-literal
+            properties['Version'] = `${version.major}.${version.minor}.${version.patch}`;
+        } else {
+            traceError('Unable to determine Python version. Analysis may be limited.');
+        }
+
+        let searchPaths = [];
+
         const settings = this.configuration.getSettings(this.resource);
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
@@ -86,37 +87,33 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 searchPaths.push(...extraPaths);
             }
         }
+
+        // tslint:disable-next-line:no-string-literal
+        properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
+
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        if (vars.PYTHONPATH && vars.PYTHONPATH.length > 0) {
-            const paths = vars.PYTHONPATH.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
+        this.envPythonPath = vars.PYTHONPATH || '';
+        if (this.envPythonPath !== '') {
+            const paths = this.envPythonPath.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
             searchPaths.push(...paths);
         }
-        // Make sure paths do not contain multiple slashes so file URIs
-        // in VS Code (Node.js) and in the language server (.NET) match.
-        // Note: for the language server paths separator is always ;
-        searchPaths.push(pythonPath);
+
         searchPaths = searchPaths.map(p => path.normalize(p));
 
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
         const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
-        const documentSelector = [
-            { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
-        ];
-        if (workspaceFolder){
-            // tslint:disable-next-line:no-any
-            (documentSelector[0] as any).pattern = `${workspaceFolder.uri.fsPath}/**/*`;
-        }
-        // Options to control the language client
+        const documentSelector = this.getDocumentSelector(workspaceFolder);
+        // Options to control the language client.
         return {
-            // Register the server for Python documents
+            // Register the server for Python documents.
             documentSelector,
             workspaceFolder,
             synchronize: {
                 configurationSection: PYTHON_LANGUAGE
             },
             outputChannel: this.output,
+            revealOutputChannelOn: RevealOutputChannelOn.Never,
             initializationOptions: {
                 interpreter: {
                     properties
@@ -143,6 +140,18 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 }
             }
         };
+    }
+    protected getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
+        const documentSelector: DocumentFilter[] = [
+            { scheme: 'file', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+        // Set the document selector only when in a multi-root workspace scenario.
+        if (workspaceFolder && Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders!.length > 1) {
+            // tslint:disable-next-line:no-any
+            documentSelector[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+        }
+        return documentSelector;
     }
     protected getExcludedFiles(): string[] {
         const list: string[] = ['**/Lib/**', '**/site-packages/**'];
@@ -182,19 +191,12 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         }
         this.onSettingsChanged();
     }
-    @debounce(1000)
+    @debounceSync(1000)
     protected onSettingsChanged(): void {
         this.notifyIfSettingsChanged().ignoreErrors();
     }
     @traceDecorators.verbose('Changes in python settings detected in analysis options')
     protected async notifyIfSettingsChanged(): Promise<void> {
-        const idata = await this.interpreterDataService.getInterpreterData(this.resource);
-        if (!idata || idata.hash !== this.interpreterHash) {
-            this.interpreterHash = idata ? idata.hash : '';
-            this.didChange.fire();
-            return;
-        }
-
         const excludedFiles = this.getExcludedFiles();
         await this.notifyIfValuesHaveChanged(this.excludedFiles, excludedFiles);
 
@@ -213,6 +215,20 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 this.didChange.fire();
                 return;
             }
+        }
+    }
+
+    @debounceSync(1000)
+    protected onEnvVarChange(): void {
+        this.notifyifEnvPythonPathChanged().ignoreErrors();
+    }
+
+    protected async notifyifEnvPythonPathChanged(): Promise<void> {
+        const vars = await this.envVarsProvider.getEnvironmentVariables();
+        const envPythonPath = vars.PYTHONPATH || '';
+
+        if (this.envPythonPath !== envPythonPath) {
+            this.didChange.fire();
         }
     }
 }

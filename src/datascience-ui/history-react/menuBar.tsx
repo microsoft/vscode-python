@@ -8,7 +8,6 @@ import * as React from 'react';
 
 interface IMenuBarProps {
     baseTheme: string;
-    stylePosition? : string;
 }
 
 // Simple 'bar'. Came up with the css by playing around here:
@@ -19,11 +18,8 @@ export class MenuBar extends React.Component<IMenuBarProps> {
     }
 
     public render() {
-        const classNames = this.props.stylePosition ?
-            `menuBar-${this.props.stylePosition} menuBar-${this.props.stylePosition}-${this.props.baseTheme}`
-            : 'menuBar';
         return (
-            <div className={classNames}>
+            <div className='menuBar'>
                 {this.props.children}
             </div>
         );

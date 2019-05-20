@@ -30,7 +30,7 @@ export class ConfigurationService implements IConfigurationService {
             settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService);
         }
 
-        const configSection = workspace.getConfiguration(section, settingsInfo.uri);
+        const configSection = workspace.getConfiguration(section, settingsInfo.uri ? settingsInfo.uri : null);
         const currentValue = configSection.inspect(setting);
 
         if (currentValue !== undefined &&

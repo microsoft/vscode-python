@@ -5,13 +5,16 @@ import {
     Breakpoint,
     BreakpointsChangeEvent,
     CancellationToken,
+    CompletionItemProvider,
     ConfigurationChangeEvent,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DecorationRenderOptions,
     Disposable,
+    DocumentSelector,
     Event,
     FileSystemWatcher,
     GlobPattern,
@@ -31,12 +34,16 @@ import {
     Terminal,
     TerminalOptions,
     TextDocument,
+    TextDocumentChangeEvent,
     TextDocumentShowOptions,
     TextEditor,
+    TextEditorDecorationType,
     TextEditorEdit,
     TextEditorOptionsChangeEvent,
     TextEditorSelectionChangeEvent,
     TextEditorViewColumnChangeEvent,
+    TreeView,
+    TreeViewOptions,
     Uri,
     ViewColumn,
     WorkspaceConfiguration,
@@ -48,6 +55,7 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
+import { ICommandNameArgumentTypeMapping } from './commands';
 
 // tslint:disable:no-any unified-signatures
 
@@ -330,6 +338,14 @@ export interface IApplicationShell {
      * @return The thenable the task-callback returned.
      */
     withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R>;
+
+    /**
+     * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
+     * @param viewId Id of the view contributed using the extension point `views`.
+     * @param options Options for creating the [TreeView](#TreeView)
+     * @returns a [TreeView](#TreeView).
+     */
+    createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -348,7 +364,7 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable;
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, callback: (...args: U) => any, thisArg?: any): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -380,7 +396,7 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined>;
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are
@@ -419,6 +435,13 @@ export interface IDocumentManager {
      * to `undefined`.
      */
     readonly onDidChangeActiveTextEditor: Event<TextEditor | undefined>;
+
+    /**
+     * An event that is emitted when a [text document](#TextDocument) is changed. This usually happens
+     * when the [contents](#TextDocument.getText) changes but also when other things like the
+     * [dirty](#TextDocument.isDirty)-state changes.
+     */
+    readonly onDidChangeTextDocument: Event<TextDocumentChangeEvent>;
 
     /**
      * An [event](#Event) which fires when the array of [visible editors](#window.visibleTextEditors)
@@ -536,6 +559,15 @@ export interface IDocumentManager {
      * @return A thenable that resolves when the edit could be applied.
      */
     applyEdit(edit: WorkspaceEdit): Thenable<boolean>;
+
+    /**
+     * Create a TextEditorDecorationType that can be used to add decorations to text editors.
+     *
+     * @param options Rendering options for the decoration type.
+     * @return A new decoration type instance.
+     */
+    createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType;
+
 }
 
 export const IWorkspaceService = Symbol('IWorkspaceService');
@@ -742,7 +774,7 @@ export interface IDebugService {
      * @param nameOrConfiguration Either the name of a debug or compound configuration or a [DebugConfiguration](#DebugConfiguration) object.
      * @return A thenable that resolves when debugging could be successfully started.
      */
-    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration): Thenable<boolean>;
+    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, parentSession?: DebugSession): Thenable<boolean>;
 
     /**
      * Add breakpoints.
@@ -764,35 +796,35 @@ export interface IApplicationEnvironment {
      *
      * @readonly
      */
-    appName: string;
+    readonly appName: string;
 
     /**
      * The extension name.
      *
      * @readonly
      */
-    extensionName: string;
+    readonly extensionName: string;
 
     /**
      * The application root folder from which the editor is running.
      *
      * @readonly
      */
-    appRoot: string;
+    readonly appRoot: string;
 
     /**
      * Represents the preferred user-language, like `de-CH`, `fr`, or `en-US`.
      *
      * @readonly
      */
-    language: string;
+    readonly language: string;
 
     /**
      * A unique identifier for the computer.
      *
      * @readonly
      */
-    machineId: string;
+    readonly machineId: string;
 
     /**
      * A unique identifier for the current session.
@@ -800,14 +832,21 @@ export interface IApplicationEnvironment {
      *
      * @readonly
      */
-    sessionId: string;
+    readonly sessionId: string;
     /**
      * Contents of `package.json` as a JSON object.
      *
      * @type {any}
      * @memberof IApplicationEnvironment
      */
-    packageJson: any;
+    readonly packageJson: any;
+    /**
+     * Gets the full path to the user settings file. (may or may not exist).
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly userSettingsFile: string | undefined;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -819,6 +858,10 @@ export interface IWebPanelMessageListener extends IAsyncDisposable {
      * @return A IWebPanel that can be used to show html pages.
      */
     onMessage(message: string, payload: any): void;
+    /**
+     * Listens to web panel state changes
+     */
+    onChangeViewState(panel: IWebPanel): void;
 }
 
 export type WebPanelMessage = {
@@ -836,11 +879,12 @@ export type WebPanelMessage = {
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
+    title: string;
     /**
      * Makes the webpanel show up.
      * @return A Promise that can be waited on
      */
-    show(): Promise<void>;
+    show(preserveFocus: boolean): Promise<void>;
 
     /**
      * Indicates if this web panel is visible or not.
@@ -851,6 +895,15 @@ export interface IWebPanel {
      * Sends a message to the hosted html page
      */
     postMessage(message: WebPanelMessage): void;
+
+    /**
+     * Attempts to close the panel if it's visible
+     */
+    close(): void;
+    /**
+     * Indicates if the webview has the focus or not.
+     */
+    isActive(): boolean;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -863,11 +916,40 @@ export interface IWebPanelProvider {
      * @param: mainScriptPath: full path in the output folder to the script
      * @return A IWebPanel that can be used to show html pages.
      */
-    create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
 }
 
 // Wraps the vsls liveshare API
 export const ILiveShareApi = Symbol('ILiveShareApi');
 export interface ILiveShareApi {
     getApi(): Promise<vsls.LiveShare | null>;
+}
+
+// Wraps the liveshare api for testing
+export const ILiveShareTestingApi = Symbol('ILiveShareTestingApi');
+export interface ILiveShareTestingApi extends ILiveShareApi {
+    isSessionStarted: boolean;
+    forceRole(role: vsls.Role): void;
+    startSession(): Promise<void>;
+    stopSession(): Promise<void>;
+    disableGuestChecker(): void;
+}
+
+export const ILanguageService = Symbol('ILanguageService');
+export interface ILanguageService {
+    /**
+     * Register a completion provider.
+     *
+     * Multiple providers can be registered for a language. In that case providers are sorted
+     * by their [score](#languages.match) and groups of equal score are sequentially asked for
+     * completion items. The process stops when one or many providers of a group return a
+     * result. A failing provider (rejected promise or exception) will not fail the whole
+     * operation.
+     *
+     * @param selector A selector that defines the documents this provider is applicable to.
+     * @param provider A completion provider.
+     * @param triggerCharacters Trigger completion when the user types one of the characters, like `.` or `:`.
+     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
+     */
+    registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
 }

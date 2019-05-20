@@ -11,7 +11,7 @@ import { Uri } from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
-import { ITestsHelper } from '../../unittests/common/types';
+import { ITestsHelper } from '../../testing/common/types';
 import { IConfigurationService, IInstaller, ModuleNamePurpose, Product } from '../types';
 import { IProductPathService } from './types';
 
@@ -86,7 +86,7 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
             return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
         }
         const settings = this.configService.getSettings(resource);
-        return settings.unitTest[settingsPropNames.pathName] as string;
+        return settings.testing[settingsPropNames.pathName] as string;
     }
 }
 

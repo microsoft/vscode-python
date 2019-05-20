@@ -39,7 +39,7 @@ suite('Feature Deprecation Manager Tests', () => {
                 TypeMoq.It.isAnyString(),
                 TypeMoq.It.isAnyString()
             ))
-            .returns((val) => new Promise<string>((resolve, reject) => { resolve('Learn More'); }));
+            .returns((_val) => new Promise<string>((resolve, _reject) => { resolve('Learn More'); }));
         const cmdDisposable: TypeMoq.IMock<Disposable> = TypeMoq.Mock.ofType<Disposable>();
         const cmdManager: TypeMoq.IMock<ICommandManager> = TypeMoq.Mock.ofType<ICommandManager>();
         cmdManager.setup(

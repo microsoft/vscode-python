@@ -11,30 +11,32 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { Resource } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterWatcher, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { CacheableLocatorService } from '../../../client/interpreter/locators/services/cacheableLocatorService';
 import { ServiceContainer } from '../../../client/ioc/container';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Interpreters - Cacheable Locator Service', () => {
     suite('Caching', () => {
         class Locator extends CacheableLocatorService {
-            constructor(name, serviceCcontainer, private readonly mockLocator: MockLocator) {
+            constructor(name: string, serviceCcontainer: IServiceContainer, private readonly mockLocator: MockLocator) {
                 super(name, serviceCcontainer);
             }
             public dispose() {
                 noop();
             }
-            protected async getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+            protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
                 return this.mockLocator.getInterpretersImplementation();
             }
-            protected getCachedInterpreters(resource?: Uri): PythonInterpreter[] | undefined {
+            protected getCachedInterpreters(_resource?: Uri): PythonInterpreter[] | undefined {
                 return this.mockLocator.getCachedInterpreters();
             }
-            protected async cacheInterpreters(interpreters: PythonInterpreter[], resource?: Uri) {
+            protected async cacheInterpreters(_interpreters: PythonInterpreter[], _resource?: Uri) {
                 return this.mockLocator.cacheInterpreters();
             }
-            protected getCacheKey(resource?: Uri) {
+            protected getCacheKey(_resource?: Uri) {
                 return this.mockLocator.getCacheKey();
             }
         }
@@ -61,7 +63,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const expectedInterpreters = [1, 2] as any;
             const mockedLocatorForVerification = mock(MockLocator);
             const locator = new class extends Locator {
-                protected async addHandlersForInterpreterWatchers(cacheKey: string, resource: Uri | undefined): Promise<void> {
+                protected async addHandlersForInterpreterWatchers(_cacheKey: string, _resource: Resource): Promise<void> {
                     noop();
                 }
             }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
@@ -83,14 +85,14 @@ suite('Interpreters - Cacheable Locator Service', () => {
         test('Ensure onDidCreate event handler is attached', async () => {
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
-                public onDidCreate(listener: (e: void) => any, thisArgs?: any, disposables?: Disposable[]): Disposable {
+                public onDidCreate(_listener: (e: Resource) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                     return { dispose: noop };
                 }
             }
             const watcher: IInterpreterWatcher = mock(Watcher);
 
             const locator = new class extends Locator {
-                protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
+                protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [instance(watcher)];
                 }
             }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
@@ -104,8 +106,8 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const expectedInterpreters = [1, 2] as any;
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
-                private listner?: (e: void) => any;
-                public onDidCreate(listener: (e: void) => any, thisArgs?: any, disposables?: Disposable[]): Disposable {
+                private listner?: (e: Resource) => any;
+                public onDidCreate(listener: (e: Resource) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                     this.listner = listener;
                     return { dispose: noop };
                 }
@@ -116,7 +118,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const watcher = new Watcher();
 
             const locator = new class extends Locator {
-                protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
+                protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [watcher];
                 }
             }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
@@ -148,7 +150,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
         test('Ensure locating event is raised', async () => {
             const mockedLocatorForVerification = mock(MockLocator);
             const locator = new class extends Locator {
-                protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
+                protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [];
                 }
             }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
@@ -173,13 +175,13 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public getCacheKey(resource?: Uri) {
                 return super.getCacheKey(resource);
             }
-            protected async getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+            protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
                 return [];
             }
-            protected getCachedInterpreters(resource?: Uri): PythonInterpreter[] | undefined {
+            protected getCachedInterpreters(_resource?: Uri): PythonInterpreter[] | undefined {
                 return [];
             }
-            protected async cacheInterpreters(interpreters: PythonInterpreter[], resource?: Uri) {
+            protected async cacheInterpreters(_interpreters: PythonInterpreter[], _resource?: Uri) {
                 noop();
             }
         }

@@ -1,22 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../client/common/extensions';
-import './cell.css';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiToHtml from 'ansi-to-html';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
+import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
+import './cell.css';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
@@ -37,9 +38,14 @@ interface ICellProps {
     maxTextSize?: number;
     history: InputHistory | undefined;
     showWatermark: boolean;
+    errorBackgroundColor: string;
+    monacoTheme: string | undefined;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
+    onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
 }
 
 export interface ICellViewModel {
@@ -66,6 +72,12 @@ export class Cell extends React.Component<ICellProps> {
             return <SysInfo theme={this.props.baseTheme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
         } else {
             return this.renderNormalCell();
+        }
+    }
+
+    public giveFocus() {
+        if (this.code) {
+            this.code.giveFocus();
         }
     }
 
@@ -113,11 +125,12 @@ export class Cell extends React.Component<ICellProps> {
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || (results && results.length > 0);
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
+        const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
 
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className='cell-wrapper' role='row' onClick={this.onMouseClick}>
+                <div className={cellWrapperClass} role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
@@ -200,6 +213,7 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className='cell-input'>
                     <Code
+                        editorOptions={this.props.editorOptions}
                         cursorType={this.getCursorType()}
                         history={this.props.history}
                         autoFocus={this.props.autoFocus}
@@ -209,14 +223,25 @@ export class Cell extends React.Component<ICellProps> {
                         readOnly={!this.props.cellVM.editable}
                         showWatermark={this.props.showWatermark}
                         onSubmit={this.props.submitNewCode}
-                        onChangeLineCount={this.onChangeLineCount}
                         ref={this.updateCodeRef}
+                        onChange={this.onCodeChange}
+                        onCreated={this.onCodeCreated}
+                        outermostParentClass='cell-wrapper'
+                        monacoTheme={this.props.monacoTheme}
                         />
                 </div>
             );
         } else {
             return null;
         }
+    }
+
+    private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], modelId: string) => {
+        this.props.onCodeChange(changes, this.props.cellVM.cell.id, modelId);
+    }
+
+    private onCodeCreated = (code: string, modelId: string) => {
+        this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
     }
 
     private getCursorType = () : string => {
@@ -264,10 +289,10 @@ export class Cell extends React.Component<ICellProps> {
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
-        return [<Transform data={source}/>];
+        return [<Transform key={0} data={source}/>];
     }
 
-    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean) => {
+    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean, forceLightTheme: boolean) => {
 
         // If we found a mimetype, use the transform
         if (mimetype) {
@@ -289,19 +314,24 @@ export class Cell extends React.Component<ICellProps> {
                         renderWithScrollbars = true;
                     }
 
+                    // Create a default set of properties
+                    const style: React.CSSProperties = {
+                    };
+
                     // Create a scrollbar style if necessary
                     if (renderWithScrollbars && this.props.maxTextSize) {
-                        const style: React.CSSProperties = {
-                            maxHeight : `${this.props.maxTextSize}px`,
-                            overflowY : 'auto',
-                            overflowX : 'auto'
-                        };
-
-                        return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
-                    } else {
-                        return <Transform key={index} data={data} />;
+                        style.overflowX = 'auto';
+                        style.overflowY = 'auto';
+                        style.maxHeight = `${this.props.maxTextSize}px`;
                     }
 
+                    // Change the background if necessary
+                    if (forceLightTheme) {
+                        style.backgroundColor = this.props.errorBackgroundColor;
+                        style.color = this.invertColor(this.props.errorBackgroundColor);
+                    }
+
+                    return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -311,6 +341,40 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return <div></div>;
+    }
+
+    private convertToLinearRgb(color: number) : number {
+        let c = color / 255;
+        if (c <= 0.03928) {
+            c = c / 12.92;
+        } else {
+            c = Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+        return c;
+    }
+
+    private invertColor(color: string) {
+        if (color.indexOf('#') === 0) {
+            color = color.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (color.length === 3) {
+            color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+        }
+        if (color.length === 6) {
+            // http://stackoverflow.com/a/3943023/112731
+            const r = this.convertToLinearRgb(parseInt(color.slice(0, 2), 16));
+            const g = this.convertToLinearRgb(parseInt(color.slice(2, 4), 16));
+            const b = this.convertToLinearRgb(parseInt(color.slice(4, 6), 16));
+
+            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+
+            return (L > 0.179)
+                ? '#000000'
+                : '#FFFFFF';
+        } else {
+            return color;
+        }
     }
 
     private renderOutput = (output : nbformat.IOutput, index: number) => {
@@ -331,6 +395,7 @@ export class Cell extends React.Component<ICellProps> {
 
         // Only for text and error ouptut do we add scrollbars
         let addScrollbars = false;
+        let forceLightTheme = false;
 
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
@@ -360,6 +425,7 @@ export class Cell extends React.Component<ICellProps> {
 
         } else if (copy.output_type === 'error') {
             addScrollbars = true;
+            forceLightTheme = true;
             const error = copy as nbformat.IError;
             try {
                 const converter = new ansiToHtml();
@@ -383,7 +449,7 @@ export class Cell extends React.Component<ICellProps> {
 
         // If that worked, use the transform
         if (mimetype) {
-            return this.renderWithTransform(mimetype, copy, index, addScrollbars);
+            return this.renderWithTransform(mimetype, copy, index, addScrollbars, forceLightTheme);
         }
 
         if (copy.data) {
@@ -394,9 +460,5 @@ export class Cell extends React.Component<ICellProps> {
         }
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
-    }
-
-    private onChangeLineCount = (lineCount: number) => {
-        // Ignored for now. Might use this to update the . next to the code lines
     }
 }

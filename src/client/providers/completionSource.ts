@@ -74,7 +74,7 @@ export class CompletionSource {
         const columnIndex = position.character;
 
         const source = document.getText();
-        const cmd: proxy.ICommand<proxy.ICommandResult> = {
+        const cmd: proxy.ICommand = {
             command: type,
             fileName: document.fileName,
             columnIndex: columnIndex,

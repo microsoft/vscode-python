@@ -4,11 +4,12 @@
 
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { CommandsWithoutArgs } from './application/commands';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
-export interface IOutputChannel extends OutputChannel {}
+export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
-export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
+export interface IDocumentSymbolProvider extends DocumentSymbolProvider { }
 export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
@@ -53,9 +54,12 @@ export enum LogLevel {
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
-    logError(message: string, error?: Error): void;
-    logWarning(message: string, error?: Error): void;
-    logInformation(message: string, error?: Error): void;
+    // tslint:disable-next-line: no-any
+    logError(...args: any[]): void;
+    // tslint:disable-next-line: no-any
+    logWarning(...args: any[]): void;
+    // tslint:disable-next-line: no-any
+    logInformation(...args: any[]): void;
 }
 
 export enum InstallerResponse {
@@ -143,6 +147,7 @@ export interface IPythonSettings {
     readonly venvFolders: string[];
     readonly condaPath: string;
     readonly pipenvPath: string;
+    readonly poetryPath: string;
     readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
@@ -150,7 +155,7 @@ export interface IPythonSettings {
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
-    readonly unitTest: IUnitTestSettings;
+    readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
@@ -168,7 +173,7 @@ export interface ISortImportSettings {
     readonly args: string[];
 }
 
-export interface IUnitTestSettings {
+export interface ITestingSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
     readonly nosetestsEnabled: boolean;
@@ -285,6 +290,7 @@ export interface IDataScienceSettings {
     enabled: boolean;
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
+    jupyterLaunchRetries: number;
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;
@@ -297,7 +303,14 @@ export interface IDataScienceSettings {
     sendSelectionToInteractiveWindow: boolean;
     markdownRegularExpression: string;
     codeRegularExpression: string;
-    allowLiveShare? : boolean;
+    allowLiveShare?: boolean;
+    errorBackgroundColor: string;
+    ignoreVscodeTheme?: boolean;
+    showJupyterVariableExplorer?: boolean;
+    variableExplorerExclude?: string;
+    liveShareConnectionTimeout?: number;
+    decorateCells?: boolean;
+    enableCellCodeLens?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -315,7 +328,7 @@ export interface ISocketServer extends Disposable {
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');
-export interface IExtensionContext extends ExtensionContext {}
+export interface IExtensionContext extends ExtensionContext { }
 
 export const IExtensions = Symbol('IExtensions');
 export interface IExtensions {
@@ -367,7 +380,7 @@ export type DeprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: string;
     message: string;
     moreInfoUrl: string;
-    commands?: string[];
+    commands?: CommandsWithoutArgs[];
     setting?: DeprecatedSettingAndValue;
 };
 

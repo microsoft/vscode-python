@@ -4,14 +4,12 @@
 import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable } from '../../../common/types';
-import { ICell, InterruptResult } from '../../types';
+import { ICell } from '../../types';
 
 // tslint:disable:max-classes-per-file
 
 export enum ServerResponseType {
     ExecuteObservable,
-    Interrupt,
-    Restart,
     Exception
 }
 
@@ -27,13 +25,6 @@ export interface IExecuteObservableResponse extends IServerResponse {
     cells: ICell[] | undefined;
 }
 
-export interface IInterruptResponse extends IServerResponse {
-    result: InterruptResult;
-}
-
-export interface IRestartResponse extends IServerResponse {
-}
-
 export interface IExceptionResponse extends IServerResponse {
     message: string;
 }
@@ -41,8 +32,6 @@ export interface IExceptionResponse extends IServerResponse {
 // Map all responses to their properties
 export interface IResponseMapping {
     [ServerResponseType.ExecuteObservable]: IExecuteObservableResponse;
-    [ServerResponseType.Interrupt]: IInterruptResponse;
-    [ServerResponseType.Restart]: IRestartResponse;
     [ServerResponseType.Exception]: IExceptionResponse;
 }
 
@@ -56,4 +45,5 @@ export interface ILiveShareParticipant extends IAsyncDisposable {
     onAttach(api: vsls.LiveShare | null) : Promise<void>;
     onDetach(api: vsls.LiveShare | null) : Promise<void>;
     onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void>;
+    waitForServiceName() : Promise<string>;
 }

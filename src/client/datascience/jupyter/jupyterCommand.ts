@@ -30,7 +30,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         this.requiredArgs = args;
         this.launcherPromise = processServiceFactory.create();
         this.activationHelper = activationHelper;
-        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(e => undefined);
+        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(_e => undefined);
     }
 
     public interpreter() : Promise<PythonInterpreter | undefined> {
@@ -53,7 +53,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         return launcher.exec(this.exe, newArgs, newOptions);
     }
 
-    private fixupEnv(env: NodeJS.ProcessEnv) : Promise<NodeJS.ProcessEnv | undefined> {
+    private fixupEnv(_env: NodeJS.ProcessEnv) : Promise<NodeJS.ProcessEnv | undefined> {
         if (this.activationHelper) {
             return this.activationHelper.getActivatedEnvironmentVariables(undefined);
         }
@@ -71,7 +71,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     constructor(args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter) {
         this.requiredArgs = args;
         this.interpreterPromise = Promise.resolve(interpreter);
-        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter });
+        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
     }
 
     public interpreter() : Promise<PythonInterpreter | undefined> {

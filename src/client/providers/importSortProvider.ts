@@ -114,7 +114,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             const message = typeof error === 'string' ? error : (error.message ? error.message : error);
             const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
             outputChannel.appendLine(error);
-            outputChannel.show();
             const logger = this.serviceContainer.get<ILogger>(ILogger);
             logger.logError(`Failed to format imports for '${uri.fsPath}'.`, error);
             this.shell.showErrorMessage(message).then(noop, noop);

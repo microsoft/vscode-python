@@ -94,7 +94,8 @@ suite('Environment Variables Service', () => {
     test('Ensure path variabnles variables are not merged into target', async () => {
         const pathVariable = pathUtils.getPathVariableName();
         const vars1 = { ONE: '1', TWO: 'TWO', PYTHONPATH: 'PYTHONPATH' };
-        vars1[pathVariable] = 'PATH';
+        // tslint:disable-next-line:no-any
+        (vars1 as any)[pathVariable] = 'PATH';
         const vars2 = { ONE: 'ONE', THREE: '3' };
         variablesService.mergeVariables(vars1, vars2);
         expect(Object.keys(vars1)).lengthOf(4, 'Source variables modified');
@@ -108,7 +109,8 @@ suite('Environment Variables Service', () => {
         const pathVariable = pathUtils.getPathVariableName();
         const vars1 = { ONE: '1', TWO: 'TWO' };
         const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
-        vars2[pathVariable] = 'PATH';
+        // tslint:disable-next-line:no-any
+        (vars2 as any)[pathVariable] = 'PATH';
         variablesService.mergeVariables(vars1, vars2);
         expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
         expect(Object.keys(vars2)).lengthOf(5, 'Variables not merged');
@@ -152,7 +154,8 @@ suite('Environment Variables Service', () => {
     test('Ensure appending PATH has no effect if an empty string is provided and path does not exist in vars object', async () => {
         const pathVariable = pathUtils.getPathVariableName();
         const vars = { ONE: '1' };
-        vars[pathVariable] = 'PATH';
+        // tslint:disable-next-line:no-any
+        (vars as any)[pathVariable] = 'PATH';
         variablesService.appendPath(vars);
         expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
         expect(vars).to.have.property('ONE', '1', 'Incorrect value');
@@ -190,7 +193,8 @@ suite('Environment Variables Service', () => {
     test('Ensure PATH is appeneded', async () => {
         const pathVariable = pathUtils.getPathVariableName();
         const vars = { ONE: '1' };
-        vars[pathVariable] = 'PATH';
+        // tslint:disable-next-line:no-any
+        (vars as any)[pathVariable] = 'PATH';
         const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
         variablesService.appendPath(vars, pathToAppend);
         expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
@@ -324,7 +328,7 @@ FOO = 3456
   BAR=7890
   BAZ = ABCD
 VAR1=EFGH  ...
-VAR2=IJKL  
+VAR2=IJKL
 VAR3='  MNOP  '
             `);
         // tslint:enable:no-trailing-whitespace
@@ -348,9 +352,9 @@ VAR3='  MNOP  '
         const vars = parseEnvFile(`
 
 SPAM=1234
-    
+
 HAM=5678
-	
+
 
             `);
         // tslint:enable:no-trailing-whitespace

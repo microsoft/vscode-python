@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+// tslint:disable:no-require-imports no-var-requires no-any
+// Always place at the top, to ensure other modules are imported first.
+require('./common/exitCIAfterTestReporter');
 
-// tslint:disable-next-line:no-any
 if ((Reflect as any).metadata === undefined) {
-    // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
 
+import * as path from 'path';
 import {
-    IS_CI_SERVER_TEST_DEBUGGER,
-    IS_VSTS, MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
-    MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
+    IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
 import * as testRunner from './testRunner';
@@ -19,10 +19,13 @@ import * as testRunner from './testRunner';
 process.env.VSC_PYTHON_CI_TEST = '1';
 process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST.toString();
 
+// Check for a grep setting. Might be running a subset of the tests
+const defaultGrep = process.env.VSC_PYTHON_CI_TEST_GREP;
+
 // If running on CI server and we're running the debugger tests, then ensure we only run debug tests.
 // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
 // So the solution is to run them separately and first on CI.
-const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : undefined;
+const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
 const testFilesSuffix = process.env.TEST_FILES_SUFFIX;
 
 // You can directly control Mocha options by uncommenting the following lines.
@@ -36,24 +39,21 @@ const options: testRunner.SetupOptions & { retries: number } = {
     grep,
     testFilesSuffix
 };
+(options as any).exit = true;
 
-// VSTS CI doesn't display colours correctly (yet).
-if (IS_VSTS) {
-    options.useColors = false;
-}
-
-// CI can ask for a JUnit reporter if the environment variable
-// 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
-// by other 'MOCHA_CI_...' variables. See constants.ts for info.
+// If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
+// reporting to both the console (spec) and to a JUnit XML file. The xml file
+// written to is `test-report.xml` in the root folder by default, but can be
+// changed by setting env var `MOCHA_FILE` (we do this in our CI).
 if (MOCHA_REPORTER_JUNIT) {
-    options.reporter = MOCHA_CI_REPORTER_ID;
+    options.reporter = 'mocha-multi-reporters';
+    const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
     options.reporterOptions = {
-        mochaFile: MOCHA_CI_REPORTFILE,
-        properties: MOCHA_CI_PROPERTIES
+        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`
     };
 }
 
-process.on('unhandledRejection', (ex: string | Error, a) => {
+process.on('unhandledRejection', (ex: string | Error, _a) => {
     const message = [`${ex}`];
     if (typeof ex !== 'string' && ex && ex.message) {
         message.push(ex.name);

@@ -5,8 +5,26 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+from typing import Optional
 
 from . import data
+
+
+class StaleVersion(Exception):
+
+    """For when the license for a project is a version mismatch."""
+
+    def __init__(self, project_name, expected, given):
+        super().__init__(
+            f"{project_name!r} has a license in the configuration file for {expected} but need {given}"
+        )
+
+
+class UnneededEntry(Exception):
+    def __init__(self, project_name):
+        super().__init__(
+            f"{project_name!r} no longer needs to be specified in the configuration file"
+        )
 
 
 @dataclasses.dataclass
@@ -26,7 +44,9 @@ def get_projects(config, acceptable_purposes):
     """Pull out projects as specified in a configuration file."""
     found_sections = frozenset(config.keys())
     if found_sections != SECTIONS:
-        raise ValueError(f"Configuration file sections incorrect: {found_sections!r} != {SECTIONS!r}")
+        raise ValueError(
+            f"Configuration file sections incorrect: {found_sections!r} != {SECTIONS!r}"
+        )
     projects = {}
     for project_data in config["project"]:
         if not all(key in project_data for key in FIELDS):
@@ -93,6 +113,10 @@ def sort(purpose, config_projects, requested_projects):
                 projects[name] = details
                 del requested_projects[name]
                 match = True
+            else:
+                details.error = StaleVersion(name, config_version, requested_version)
+        else:
+            details.error = UnneededEntry(name)
         if not match:
             stale[name] = details
 

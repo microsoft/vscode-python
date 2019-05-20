@@ -46,7 +46,7 @@ export class LintingEngine implements ILintingEngine {
     private fileSystem: IFileSystem;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.documentHasJupyterCodeCells = (a, b) => Promise.resolve(false);
+        this.documentHasJupyterCodeCells = (_a, _b) => Promise.resolve(false);
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -135,7 +135,7 @@ export class LintingEngine implements ILintingEngine {
                     diagnostics.push(this.createDiagnostics(m, document));
                 }
                 // Limit the number of messages to the max value.
-                diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
+                diagnostics = diagnostics.filter((_value, index) => index <= settings.linting.maxNumberOfProblems);
             }
         }
         // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
@@ -171,7 +171,7 @@ export class LintingEngine implements ILintingEngine {
         return this.documents.textDocuments.some(document => document.uri.fsPath === uri.fsPath);
     }
 
-    private createDiagnostics(message: ILintMessage, document: vscode.TextDocument): vscode.Diagnostic {
+    private createDiagnostics(message: ILintMessage, _document: vscode.TextDocument): vscode.Diagnostic {
         const position = new vscode.Position(message.line - 1, message.column);
         const range = new vscode.Range(position, position);
 

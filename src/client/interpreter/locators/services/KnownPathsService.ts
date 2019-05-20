@@ -37,7 +37,7 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
         return this.suggestionsFromKnownPaths();
     }
 

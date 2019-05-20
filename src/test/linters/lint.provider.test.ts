@@ -8,10 +8,11 @@ import * as vscode from 'vscode';
 import {
     IApplicationShell, IDocumentManager, IWorkspaceService
 } from '../../client/common/application/types';
+import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
-    IConfigurationService, IInstaller, ILintingSettings,
-    IPythonSettings, Product
+    GLOBAL_MEMENTO, IConfigurationService, IInstaller,
+    ILintingSettings, IMemento, IPersistentStateFactory, IPythonSettings, Product, WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
@@ -26,6 +27,7 @@ import {
 import { LinterProvider } from '../../client/providers/linterProvider';
 import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { MockMemento } from '../mocks/mementos';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
@@ -53,7 +55,7 @@ suite('Linting - Provider', () => {
         context = TypeMoq.Mock.ofType<vscode.ExtensionContext>();
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
-        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, reject) => resolve(true)));
+        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, _reject) => resolve(true)));
         fs.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
 
@@ -86,6 +88,9 @@ suite('Linting - Provider', () => {
         serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
+        serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
         lm = new LinterManager(serviceContainer, workspaceService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();
@@ -97,8 +102,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'auto'), TypeMoq.Times.once());
     });
@@ -108,8 +113,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.once());
     });
@@ -119,8 +124,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
@@ -130,8 +135,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
@@ -140,8 +145,8 @@ suite('Linting - Provider', () => {
         const e = new vscode.EventEmitter<void>();
         interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
 
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         e.fire();
         engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
@@ -151,8 +156,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('.pylintrc'));
 
         await lm.setActiveLintersAsync([Product.pylint]);
-        // tslint:disable-next-line:no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
 
         const deferred = createDeferred<void>();
@@ -173,7 +178,8 @@ suite('Linting - Provider', () => {
 
         docManager.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
         // tslint:disable-next-line:prefer-const no-unused-variable
-        const provider = new LinterProvider(context.object, serviceContainer);
+        // tslint:disable-next-line:no-unused-expression
+        new LinterProvider(context.object, serviceContainer);
 
         emitter.fire(document.object);
         const timesExpected = closed ? TypeMoq.Times.once() : TypeMoq.Times.never();
