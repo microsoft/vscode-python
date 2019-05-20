@@ -118,6 +118,7 @@ export namespace HelpLinks {
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
+    export const IntellisenseTimeout = 300;
 }
 
 export namespace CodeSnippits {
