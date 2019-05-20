@@ -123,7 +123,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.program = (await this.configurationProviderUtils.getPyramidStartupScriptFilePath(workspaceFolder))!;
         }
         if (!debugConfiguration.pathMappings) {
-            debugConfiguration.pathMappings = [];
+            debugConfiguration.pathMappings = workspaceFolder ? [{
+                localRoot: workspaceFolder.fsPath,
+                remoteRoot: '.'
+            }] : [];
         }
         // This is for backwards compatibility.
         if (debugConfiguration.localRoot && debugConfiguration.remoteRoot) {

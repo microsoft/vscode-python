@@ -233,7 +233,10 @@ suite('Unit Tests - Debug Launcher', () => {
             expected.debugOptions.push(DebugOptions.FixFilePathCase);
         }
         if (!expected.pathMappings) {
-            expected.pathMappings = [];
+            expected.pathMappings = expected.workspaceFolder ? [{
+                localRoot: expected.workspaceFolder.fsPath,
+                remoteRoot: '.'
+            }] : [];
         }
         // This is for backwards compatibility.
         if (expected.localRoot && expected.remoteRoot) {
