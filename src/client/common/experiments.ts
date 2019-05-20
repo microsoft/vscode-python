@@ -18,10 +18,10 @@ const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
-type AB_Experiments = { name: string; salt: string; min: number; max: number }[];
+type ABExperiments = { name: string; salt: string; min: number; max: number }[];
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
-    private experimentStorage: IPersistentState<AB_Experiments | undefined>;
+    private experimentStorage: IPersistentState<ABExperiments | undefined>;
     private activatedWorkspaces = new Map<string, boolean>();
     private resource: Resource;
     constructor(
@@ -32,7 +32,7 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
-        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<AB_Experiments | undefined>(experimentStorageKey, undefined, EXPIRY_DURATION_MS);
+        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined, EXPIRY_DURATION_MS);
     }
 
     public async activate(resource: Uri): Promise<void> {
@@ -49,7 +49,7 @@ export class ExperimentsManager implements IExperimentsManager {
         if (this.isTelemetryDisabled() || this.experimentStorage.value) {
             return;
         }
-        const downloadedExperiments = await this.httpClient.getJSONC<AB_Experiments>(configUri);
+        const downloadedExperiments = await this.httpClient.getJSONC<ABExperiments>(configUri);
         await this.experimentStorage.updateValue(downloadedExperiments);
     }
 
@@ -68,7 +68,7 @@ export class ExperimentsManager implements IExperimentsManager {
                 return true;
             }
         } catch (ex) {
-            traceError('Failed to check if user is in experiment', ex);
+            traceError(`Failed to check if user is in experiment '${experimentName}'`, ex);
         }
         return false;
     }
