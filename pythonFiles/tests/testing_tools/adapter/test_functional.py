@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import json
 import os

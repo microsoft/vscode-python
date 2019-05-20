@@ -11,7 +11,7 @@ if ((Reflect as any).metadata === undefined) {
 process.env.VSC_PYTHON_CI_TEST = '1';
 process.env.VSC_PYTHON_UNIT_TEST = '1';
 
-import { setUpDomEnvironment } from './datascience/reactHelpers';
+import { setUpDomEnvironment, setupTranspile } from './datascience/reactHelpers';
 import { initialize } from './vscode-mock';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
@@ -37,4 +37,7 @@ const Module = require('module');
 // nteract/transforms-full expects to run in the browser so we have to fake
 // parts of the browser here.
 setUpDomEnvironment();
+
+// Also have to setup babel to get the monaco editor to work.
+setupTranspile();
 initialize();

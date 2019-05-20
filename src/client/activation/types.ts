@@ -103,6 +103,10 @@ export interface ILanguageServerExtension extends IDisposable {
 }
 export const ILanguageServer = Symbol('ILanguageServer');
 export interface ILanguageServer extends IDisposable {
+    /**
+     * LanguageClient in use
+     */
+    languageClient: LanguageClient | undefined;
     start(resource: Resource, options: LanguageClientOptions): Promise<void>;
     /**
      * Sends a request to LS so as to load other extensions.

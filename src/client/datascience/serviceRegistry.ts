@@ -13,6 +13,8 @@ import { Decorator } from './editor-integration/decorator';
 import { History } from './history/history';
 import { HistoryCommandListener } from './history/historycommandlistener';
 import { HistoryProvider } from './history/historyProvider';
+import { DotNetIntellisenseProvider } from './history/intellisense/dotNetIntellisenseProvider';
+import { JediIntellisenseProvider } from './history/intellisense/jediIntellisenseProvider';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
@@ -31,6 +33,7 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IHistory,
+    IHistoryListener,
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
@@ -63,4 +66,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
+    serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
+    serviceManager.add<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
 }

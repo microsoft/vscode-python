@@ -75,6 +75,30 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
+    public requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        return Promise.resolve({
+            content: {
+                matches: ['printly'], // This keeps this in the intellisense when the editor pairs down results
+                cursor_start: 0,
+                cursor_end: 7,
+                status: 'ok',
+                metadata: {}
+            },
+            channel: 'shell',
+            header: {
+                username: 'foo',
+                version: '1',
+                session: '1',
+                msg_id: '1',
+                msg_type: 'complete'
+            },
+            parent_header: {
+            },
+            metadata: {
+            }
+        });
+    }
+
     public dispose(): Promise<void> {
         return sleep(10);
     }

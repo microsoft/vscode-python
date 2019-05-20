@@ -6,7 +6,9 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { ICurrentProcess, IExtensions, ILogger } from '../common/types';
+import { IThemeFinder } from './types';
 
 // tslint:disable:no-any
 
@@ -16,8 +18,9 @@ interface IThemeData {
 }
 
 @injectable()
-export class ThemeFinder {
+export class ThemeFinder implements IThemeFinder {
     private themeCache : { [key: string] : IThemeData | undefined } = {};
+    private languageCache: { [key: string] : string | undefined } = {};
 
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
@@ -33,6 +36,18 @@ export class ThemeFinder {
         if (themeData) {
             return themeData.rootFile;
         }
+    }
+
+    public async findTmLanguage(language: string) : Promise<string | undefined> {
+        // See if already found it or not
+        if (!this.themeCache.hasOwnProperty(language)) {
+            try {
+                this.languageCache[language] = await this.findMatchingLanguage(language);
+            } catch (exc) {
+                this.logger.logError(exc);
+            }
+        }
+        return this.languageCache[language];
     }
 
     public async isThemeDark(themeName: string) : Promise<boolean | undefined> {
@@ -55,6 +70,57 @@ export class ThemeFinder {
             }
         }
         return this.themeCache[themeName];
+    }
+
+    private async findMatchingLanguage(language: string) : Promise<string | undefined> {
+        const currentExe = this.currentProcess.execPath;
+        let currentPath = path.dirname(currentExe);
+
+        // Should be somewhere under currentPath/resources/app/extensions inside of a json file
+        let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
+        if (!(await fs.pathExists(extensionsPath))) {
+            // Might be on mac or linux. try a different path
+            currentPath = path.resolve(currentPath, '../../../..');
+            extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
+        }
+
+        // Search through all of the files in this folder
+        let results = await this.findMatchingLanguages(language, extensionsPath);
+
+        // If that didn't work, see if it's our MagicPython predefined tmLanguage
+        if (!results && language === PYTHON_LANGUAGE) {
+            results = await fs.readFile(path.join(EXTENSION_ROOT_DIR, 'resources', 'MagicPython.tmLanguage.json'), 'utf-8');
+        }
+
+        return results;
+    }
+
+    private async findMatchingLanguages(language: string, rootPath: string) : Promise<string | undefined> {
+        // Environment variable to mimic missing json problem
+        if (process.env.VSC_PYTHON_MIMIC_REMOTE) {
+            return undefined;
+        }
+
+        // Search through all package.json files in the directory and below, looking
+        // for the themeName in them.
+        const foundPackages = await new Promise<string[]>((resolve, reject) => {
+            glob('**/package.json', { cwd: rootPath }, (err, matches) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(matches);
+            });
+        });
+        if (foundPackages.length > 0) {
+            // For each one, open it up and look for the theme name.
+            for (const f of foundPackages) {
+                const fpath = path.join(rootPath, f);
+                const data = await this.findMatchingLanguageFromJson(fpath, language);
+                if (data) {
+                    return data;
+                }
+            }
+        }
     }
 
     private async findMatchingTheme(themeName: string) : Promise<IThemeData | undefined> {
@@ -109,6 +175,28 @@ export class ThemeFinder {
                 const data = await this.findMatchingThemeFromJson(fpath, themeName);
                 if (data) {
                     return data;
+                }
+            }
+        }
+    }
+
+    private async findMatchingLanguageFromJson(packageJson: string, language: string) : Promise<string | undefined> {
+        // Read the contents of the json file
+        const json = await fs.readJSON(packageJson, { encoding: 'utf-8'});
+
+        // Should have a name entry and a contributes entry
+        if (json.hasOwnProperty('name') && json.hasOwnProperty('contributes')) {
+            // See if contributes has a grammars
+            const contributes = json.contributes;
+            if (contributes.hasOwnProperty('grammars')) {
+                const grammars = contributes.grammars as any[];
+                // Go through each theme, seeing if the label matches our theme name
+                for (const t of grammars) {
+                    if (t.hasOwnProperty('language') && t.language === language) {
+                        // Path is relative to the package.json file.
+                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
+                        return fs.readFile(rootFile, 'utf-8');
+                    }
                 }
             }
         }

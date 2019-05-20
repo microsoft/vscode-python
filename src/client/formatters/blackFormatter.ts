@@ -4,8 +4,10 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import { IApplicationShell } from '../common/application/types';
 import { Product } from '../common/installer/productInstaller';
 import { IConfigurationService } from '../common/types';
+import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
@@ -17,20 +19,17 @@ export class BlackFormatter extends BaseFormatter {
         super('black', Product.black, serviceContainer);
     }
 
-    public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {
+    public async formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Promise<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
         const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(document.uri);
         const hasCustomArgs = Array.isArray(settings.formatting.blackArgs) && settings.formatting.blackArgs.length > 0;
         const formatSelection = range ? !range.isEmpty : false;
 
         if (formatSelection) {
-            const errorMessage = async () => {
-                // Black does not support partial formatting on purpose.
-                await vscode.window.showErrorMessage('Black does not support the "Format Selection" command');
-                return [] as vscode.TextEdit[];
-            };
-
-            return errorMessage();
+            const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            // Black does not support partial formatting on purpose.
+            shell.showErrorMessage('Black does not support the "Format Selection" command').then(noop, noop);
+            return [];
         }
 
         const blackArgs = ['--diff', '--quiet'];

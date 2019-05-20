@@ -141,7 +141,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (
                 <div className='background'>
                     <div className='main-panel' ref={this.updateContainer}>
-                        <StyleInjector expectingDark={this.props.baseTheme !== 'vscode-light'} postOffice={this.postOffice} />
+                        <StyleInjector
+                            expectingDark={this.props.baseTheme !== 'vscode-light'}
+                            postOffice={this.postOffice} />
                         {this.container && this.renderGrid()}
                     </div>
                 </div>

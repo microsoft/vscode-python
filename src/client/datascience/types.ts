@@ -5,7 +5,16 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import {
+    CancellationToken,
+    CodeLens,
+    CodeLensProvider,
+    Disposable,
+    Event,
+    Range,
+    TextDocument,
+    TextEditor
+} from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -50,12 +59,22 @@ export interface INotebookServerLaunchInfo
     purpose: string | undefined; // Purpose this server is for
 }
 
+export interface INotebookCompletion {
+    matches: ReadonlyArray<string>;
+    cursor: {
+        start: number;
+        end: number;
+    };
+    metadata: {};
+}
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
+    getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number) : Promise<void>;
     waitForIdle(timeoutInMs: number) : Promise<void>;
     shutdown() : Promise<void>;
@@ -97,6 +116,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     interrupt(timeout: number) : Promise<void>;
     waitForIdle(timeout: number) : Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined;
+    requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager {
@@ -146,6 +166,26 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
+}
+
+export const IHistoryListener = Symbol('IHistoryListener');
+
+/**
+ * Listens to history messages to provide extra functionality
+ */
+export interface IHistoryListener extends IDisposable {
+    /**
+     * Fires this event when posting a response message
+     */
+    // tslint:disable-next-line: no-any
+    postMessage: Event<{message: string; payload: any}>;
+    /**
+     * Handles messages that the history window receives
+     * @param message message type
+     * @param payload message payload
+     */
+    // tslint:disable-next-line: no-any
+    onMessage(message: string, payload?: any): void;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -218,11 +258,13 @@ export interface ISysInfo extends nbformat.IBaseCell {
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
+    generateMonacoTheme(isDark: boolean, theme: string) : Promise<JSONObject>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string) : Promise<string | undefined>;
+    findTmLanguage(language: string) : Promise<string | undefined>;
     isThemeDark(themeName: string) : Promise<boolean | undefined>;
 }
 
@@ -253,6 +295,21 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
         theme: string;
+    };
+    intellisenseOptions: {
+        quickSuggestions: {
+            other: boolean;
+            comments: boolean;
+            strings: boolean;
+        };
+        acceptSuggestionOnEnter: boolean | 'on' | 'smart' | 'off';
+        quickSuggestionsDelay: number;
+        suggestOnTriggerCharacters: boolean;
+        tabCompletion: boolean | 'on' | 'off' | 'onlySnippets';
+        suggestLocalityBonus: boolean;
+        suggestSelection: 'first' | 'recentlyUsed' | 'recentlyUsedByPrefix';
+        wordBasedSuggestions: boolean;
+        parameterHintsEnabled: boolean;
     };
 }
 

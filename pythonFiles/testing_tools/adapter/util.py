@@ -33,3 +33,29 @@ if sys.version_info < (3,):
             StringIO.write(self, msg.decode())
 else:
     StdioStream = StringIO
+
+
+def group_attr_names(attrnames):
+    grouped = {
+            'dunder': [],
+            'private': [],
+            'constants': [],
+            'classes': [],
+            'vars': [],
+            'other': [],
+            }
+    for name in attrnames:
+        if name.startswith('__') and name.endswith('__'):
+            group = 'dunder'
+        elif name.startswith('_'):
+            group = 'private'
+        elif name.isupper():
+            group = 'constants'
+        elif name.islower():
+            group = 'vars'
+        elif name == name.capitalize():
+            group = 'classes'
+        else:
+            group = 'other'
+        grouped[group].append(name)
+    return grouped

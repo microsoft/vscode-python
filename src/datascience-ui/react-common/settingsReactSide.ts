@@ -55,6 +55,21 @@ function load() {
             extraSettings: {
                 terminalCursor: 'block',
                 theme: 'Default Dark+'
+            },
+            intellisenseOptions: {
+                quickSuggestions: {
+                    other: true,
+                    comments: false,
+                    strings: false
+                },
+                acceptSuggestionOnEnter: 'on',
+                quickSuggestionsDelay: 10,
+                suggestOnTriggerCharacters: true,
+                tabCompletion: 'on',
+                suggestLocalityBonus: true,
+                suggestSelection: 'recentlyUsed',
+                wordBasedSuggestions: true,
+                parameterHintsEnabled: true
             }
         };
     }

@@ -1,15 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './mainPanel.css';
-
 import { min } from 'lodash';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import * as uuid from 'uuid/v4';
 
+import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
+import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
+import { ErrorBoundary } from '../react-common/errorBoundary';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -17,8 +21,12 @@ import { Cell, ICellViewModel } from './cell';
 import { ContentPanel, IContentPanelProps } from './contentPanel';
 import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
+import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
+import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 import { VariableExplorer } from './variableExplorer';
+
+import './mainPanel.css';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -37,22 +45,31 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private styleInjectorRef: React.RefObject<StyleInjector>;
     private currentExecutionCount: number = 0;
     private postOffice: PostOffice = new PostOffice();
+    private intellisenseProvider: IntellisenseProvider;
+    private onigasmPromise: Deferred<ArrayBuffer> | undefined;
+    private tmlangugePromise: Deferred<string> | undefined;
+    private monacoIdToCellId: Map<string, string> = new Map<string, string>();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24 };
+        this.state = {
+            cellVMs: [],
+            busy: true,
+            undoStack: [],
+            redoStack : [],
+            submittedText: false,
+            history: new InputHistory(),
+            contentTop: 24,
+            editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
+            editorOptions: this.computeEditorOptions()
+        };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
             this.state = generateTestState(this.inputBlockToggled);
-        }
-
-        // Add a single empty cell if it's supported
-        if (getSettings && getSettings().allowInput) {
-            this.state.cellVMs.push(createEditableCellVM(1));
         }
 
         // Create the ref to hold our variable explorer
@@ -60,6 +77,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Create the ref to hold our style injector
         this.styleInjectorRef = React.createRef<StyleInjector>();
+
+        // Setup the completion provider for monaco. We only need one
+        this.intellisenseProvider = new IntellisenseProvider(this.postOffice, this.getCellId);
+
+        // Setup the tokenizer for monaco if running inside of vscode
+        if (this.props.skipDefault) {
+            if (this.props.testMode) {
+                // Running a test, skip the tokenizer. We want the UI to display synchronously
+                this.state = {tokenizerLoaded: true, ...this.state};
+
+                // However we still need to register python as a language
+                registerMonacoLanguage();
+            } else {
+                initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+            }
+        }
     }
 
     public componentWillMount() {
@@ -81,6 +114,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Remove ourselves as a handler for the post office
         this.postOffice.removeHandler(this);
 
+        // Get rid of our completion provider
+        this.intellisenseProvider.dispose();
+
         // Get rid of our post office
         this.postOffice.dispose();
     }
@@ -94,14 +130,31 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         const baseTheme = this.computeBaseTheme();
 
-        const headerProps = this.getHeaderProps(baseTheme);
-        const contentProps = this.getContentProps(baseTheme);
-
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} postOffice={this.postOffice} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
-                <HeaderPanel {...headerProps} />
-                <ContentPanel {...contentProps} />
+                <StyleInjector
+                    expectingDark={baseTheme !== 'vscode-light'}
+                    postOffice={this.postOffice}
+                    darkChanged={this.darkChanged}
+                    monacoThemeChanged={this.monacoThemeChanged}
+                    ref={this.styleInjectorRef} />
+                <div className='main-panel-header'>
+                    <div className='main-panel-inner'>
+                        {this.renderHeaderPanel(baseTheme)}
+                    </div>
+                </div>
+                <div className='main-panel-content'>
+                    <div className='main-panel-inner'>
+                        <div className='main-panel-scrollable'>
+                            {this.renderContentPanel(baseTheme)}
+                        </div>
+                    </div>
+                </div>
+                <div className='main-panel-footer'>
+                    <div className='main-panel-inner'>
+                        {this.renderFooterPanel(baseTheme)}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -173,6 +226,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.getVariableValueResponse(payload);
                 break;
 
+            case HistoryMessages.LoadOnigasmAssemblyResponse:
+                this.handleOnigasmResponse(payload);
+                break;
+
+            case HistoryMessages.LoadTmLanguageResponse:
+                this.handleTmLanguageResponse(payload);
+                break;
+
             default:
                 break;
         }
@@ -201,6 +262,89 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
+    private renderHeaderPanel(baseTheme: string) {
+        const headerProps = this.getHeaderProps(baseTheme);
+        return <HeaderPanel {...headerProps} />;
+    }
+
+    private renderContentPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded && !this.props.testMode) {
+            return null;
+        }
+
+        // Otherwise render our cells.
+        const contentProps = this.getContentProps(baseTheme);
+        return <ContentPanel {...contentProps} />;
+    }
+
+    private renderFooterPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+            return null;
+        }
+
+        const maxOutputSize = getSettings().maxOutputSize;
+        const errorBackgroundColor = getSettings().errorBackgroundColor;
+        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
+        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+
+        return (
+            <div className='edit-panel'>
+                <ErrorBoundary>
+                    <Cell
+                        editorOptions={this.state.editorOptions}
+                        history={this.state.history}
+                        maxTextSize={maxTextSize}
+                        autoFocus={document.hasFocus()}
+                        testMode={this.props.testMode}
+                        cellVM={this.state.editCellVM}
+                        submitNewCode={this.submitInput}
+                        baseTheme={baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        showWatermark={!this.state.submittedText}
+                        errorBackgroundColor={actualErrorBackgroundColor}
+                        ref={this.saveEditCellRef}
+                        gotoCode={noop}
+                        delete={noop}
+                        onCodeCreated={this.editableCodeCreated}
+                        onCodeChange={this.codeChange}
+                        monacoTheme={this.state.monacoTheme}
+                    />
+                </ErrorBoundary>
+            </div>
+        );
+    }
+
+    private computeEditorOptions() : monacoEditor.editor.IEditorOptions {
+        const intellisenseOptions = getSettings().intellisenseOptions;
+        if (intellisenseOptions) {
+            return {
+                quickSuggestions: {
+                    other: intellisenseOptions.quickSuggestions.other,
+                    comments: intellisenseOptions.quickSuggestions.comments,
+                    strings: intellisenseOptions.quickSuggestions.strings
+                },
+                acceptSuggestionOnEnter: intellisenseOptions.acceptSuggestionOnEnter,
+                quickSuggestionsDelay: intellisenseOptions.quickSuggestionsDelay,
+                suggestOnTriggerCharacters: intellisenseOptions.suggestOnTriggerCharacters,
+                tabCompletion: intellisenseOptions.tabCompletion,
+                suggest: {
+                    localityBonus: intellisenseOptions.suggestLocalityBonus
+                },
+                suggestSelection: intellisenseOptions.suggestSelection,
+                wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
+                parameterHints: {
+                    enabled: intellisenseOptions.parameterHintsEnabled
+                }
+            };
+        }
+
+        return {};
+    }
+
     // Called by the header control when size changes (such as expanding variables)
     private onHeaderHeightChange = (newHeight: number) => {
         this.setState({contentTop: newHeight});
@@ -213,6 +357,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.setState(
                 {
                     forceDark: newDark
+                }
+            );
+        }
+    }
+
+    private monacoThemeChanged = (theme: string) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    monacoTheme: theme
                 }
             );
         }
@@ -235,6 +391,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
+            editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
             contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
@@ -242,11 +399,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
-            saveEditCellRef: this.saveEditCellRef,
             gotoCellCode: this.gotoCellCode,
             deleteCell: this.deleteCell,
-            submitInput: this.submitInput,
-            skipNextScroll: this.state.skipNextScroll ? true : false
+            skipNextScroll: this.state.skipNextScroll ? true : false,
+            monacoTheme: this.state.monacoTheme,
+            onCodeCreated: this.readOnlyCodeCreated,
+            onCodeChange: this.codeChange
         };
     }
     private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
@@ -302,6 +460,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             // If our settings change updated show inputs we need to fix up our cells
             const showInputs = getSettings().showCellInputCode;
+
+            // Also save the editor options. Intellisense options may have changed.
+            this.setState({
+                editorOptions: this.computeEditorOptions()
+            });
 
             if (prevShowInputs !== showInputs) {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
@@ -391,6 +554,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private deleteCell = (index: number) => {
         this.sendMessage(HistoryMessages.DeleteCell);
+        const cellVM = this.state.cellVMs[index];
+        if (cellVM) {
+            this.sendMessage(HistoryMessages.RemoveCell, {id: cellVM.cell.id});
+        }
 
         // Update our state
         this.setState({
@@ -418,12 +585,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private clearAllSilent = () => {
-        // Make sure the edit cell doesn't go away
-        const editCell = this.getEditCell();
-
         // Update our state
         this.setState({
-            cellVMs: editCell ? [editCell] : [],
+            cellVMs: [],
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
             busy: false // No more progress on delete all
@@ -501,19 +665,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
-                let newList : ICellViewModel[] = [];
-
-                // Insert before the edit cell if we have one
-                const editCell = this.getEditCell();
-                if (editCell) {
-                    newList = [...this.state.cellVMs.filter(c => !c.editable), cellVM, editCell];
-
-                    // Update execution count on the last cell
-                    editCell.cell.data.execution_count = this.getInputExecutionCount(newList);
-                } else {
-                    newList = [...this.state.cellVMs, cellVM];
-                }
-
+                const newList = [...this.state.cellVMs, cellVM];
                 this.setState({
                     cellVMs: newList,
                     undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
@@ -528,12 +680,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getEditCell() : ICellViewModel | undefined {
-        const editCells = this.state.cellVMs.filter(c => c.editable);
-        if (editCells && editCells.length === 1) {
-            return editCells[0];
-        }
-
-        return undefined;
+        return this.state.editCellVM;
     }
 
     private inputBlockToggled = (id: string) => {
@@ -720,9 +867,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
         let editCell = this.getEditCell();
         if (editCell) {
-            // Save a copy of the ones without edits.
-            const withoutEdits = this.state.cellVMs.filter(c => !c.editable);
-
             // Change this editable cell to not editable.
             editCell.cell.state = CellState.executing;
             editCell.cell.data.source = code;
@@ -742,6 +886,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
             editCell = this.alterCellVM(editCell, true, !collapseInputs);
 
+            // Generate a new id (as the edit cell always has the same one)
+            editCell.cell.id = uuid();
+
             // Indicate this is direct input so that we don't hide it if the user has
             // hide all inputs turned on.
             editCell.directInput = true;
@@ -749,7 +896,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
-                cellVMs: [...withoutEdits, editCell, createEditableCellVM(this.getInputExecutionCount(withoutEdits))],
+                cellVMs: [...this.state.cellVMs, editCell],
+                editCellVM: createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs)),
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,
@@ -807,6 +955,92 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 // Now put out a request for all of the sub values for the variables
                 variablesResponse.variables.forEach(this.refreshVariable);
             }
+        }
+    }
+
+    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
+        // If the model id doesn't match, skip sending this edit. This happens
+        // when a cell is reused after deleting another
+        const expectedCellId = this.monacoIdToCellId.get(modelId);
+        if (expectedCellId !== id) {
+            // A cell has been reused. Update our mapping
+            this.monacoIdToCellId.set(modelId, id);
+        } else {
+            // Just a normal edit. Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.EditCell, { changes, id });
+        }
+    }
+
+    private readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
+        const cell = this.state.cellVMs.find(c => c.cell.id === id);
+        if (cell) {
+            // Pass this onto the completion provider running in the extension
+            this.sendMessage(HistoryMessages.AddCell, {
+                fullText: extractInputText(cell.cell, getSettings()),
+                currentText: cell.inputBlockText,
+                file,
+                id
+            });
+        }
+
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private editableCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private getCellId = (monacoId: string) : string => {
+        const result = this.monacoIdToCellId.get(monacoId);
+        if (result) {
+            return result;
+        }
+
+        // Just assume it's the edit cell if not found.
+        return Identifiers.EditCellId;
+    }
+
+    // tslint:disable-next-line: no-any
+    private tokenizerLoaded = (_e?: any) => {
+        this.setState({ tokenizerLoaded: true });
+    }
+
+    private loadOnigasm = () : Promise<ArrayBuffer> => {
+        if (!this.onigasmPromise) {
+            this.onigasmPromise = createDeferred<ArrayBuffer>();
+            // Send our load onigasm request
+            this.sendMessage(HistoryMessages.LoadOnigasmAssemblyRequest);
+        }
+        return this.onigasmPromise.promise;
+    }
+
+    private loadTmlanguage = () : Promise<string> => {
+        if (!this.tmlangugePromise) {
+            this.tmlangugePromise = createDeferred<string>();
+            // Send our load onigasm request
+            this.sendMessage(HistoryMessages.LoadTmLanguageRequest);
+        }
+        return this.tmlangugePromise.promise;
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleOnigasmResponse(payload: any) {
+        if (payload && this.onigasmPromise) {
+            const typedArray = new Uint8Array(payload.data);
+            this.onigasmPromise.resolve(typedArray.buffer);
+        } else if (this.onigasmPromise) {
+            this.onigasmPromise.resolve(undefined);
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleTmLanguageResponse(payload: any) {
+        if (payload && this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(payload.toString());
+        } else if (this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(undefined);
         }
     }
 }

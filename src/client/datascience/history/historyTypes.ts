@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
@@ -35,6 +37,22 @@ export namespace HistoryMessages {
     export const GetVariableValueRequest = 'get_variable_value_request';
     export const GetVariableValueResponse = 'get_variable_value_response';
     export const VariableExplorerToggle = 'variable_explorer_toggle';
+    export const ProvideCompletionItemsRequest = 'provide_completion_items_request';
+    export const CancelCompletionItemsRequest = 'cancel_completion_items_request';
+    export const ProvideCompletionItemsResponse = 'provide_completion_items_response';
+    export const ProvideHoverRequest = 'provide_hover_request';
+    export const CancelHoverRequest = 'cancel_hover_request';
+    export const ProvideHoverResponse = 'provide_hover_response';
+    export const ProvideSignatureHelpRequest = 'provide_signature_help_request';
+    export const CancelSignatureHelpRequest = 'cancel_signature_help_request';
+    export const ProvideSignatureHelpResponse = 'provide_signature_help_response';
+    export const AddCell = 'add_cell';
+    export const EditCell = 'edit_cell';
+    export const RemoveCell = 'remove_cell';
+    export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
+    export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
+    export const LoadTmLanguageRequest = 'load_tmlanguage_request';
+    export const LoadTmLanguageResponse = 'load_tmlanguage_response';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -67,6 +85,66 @@ export interface IRemoteAddCode extends IExecuteInfo {
 
 export interface ISubmitNewCell {
     code: string;
+    id: string;
+}
+
+export interface IProvideCompletionItemsRequest {
+    position: monacoEditor.Position;
+    context: monacoEditor.languages.CompletionContext;
+    requestId: string;
+    cellId: string;
+}
+
+export interface IProvideHoverRequest {
+    position: monacoEditor.Position;
+    requestId: string;
+    cellId: string;
+}
+
+export interface IProvideSignatureHelpRequest {
+    position: monacoEditor.Position;
+    context: monacoEditor.languages.SignatureHelpContext;
+    requestId: string;
+    cellId: string;
+}
+
+export interface ICancelIntellisenseRequest {
+    requestId: string;
+}
+
+export interface IProvideCompletionItemsResponse {
+    list: monacoEditor.languages.CompletionList;
+    requestId: string;
+}
+
+export interface IProvideHoverResponse {
+    hover: monacoEditor.languages.Hover;
+    requestId: string;
+}
+
+export interface IProvideSignatureHelpResponse {
+    signatureHelp: monacoEditor.languages.SignatureHelp;
+    requestId: string;
+}
+
+export interface IPosition {
+    line: number;
+    ch: number;
+}
+
+export interface IEditCell {
+    changes: monacoEditor.editor.IModelContentChange[];
+    id: string;
+}
+
+export interface IAddCell {
+    fullText: string;
+    currentText: string;
+    file: string;
+    id: string;
+}
+
+export interface IRemoveCell {
     id: string;
 }
 
@@ -104,4 +182,20 @@ export class IHistoryMapping {
     public [HistoryMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
+    public [HistoryMessages.ProvideCompletionItemsRequest] : IProvideCompletionItemsRequest;
+    public [HistoryMessages.CancelCompletionItemsRequest] : ICancelIntellisenseRequest;
+    public [HistoryMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
+    public [HistoryMessages.ProvideHoverRequest] : IProvideHoverRequest;
+    public [HistoryMessages.CancelHoverRequest] : ICancelIntellisenseRequest;
+    public [HistoryMessages.ProvideHoverResponse] : IProvideHoverResponse;
+    public [HistoryMessages.ProvideSignatureHelpRequest] : IProvideSignatureHelpRequest;
+    public [HistoryMessages.CancelSignatureHelpRequest] : ICancelIntellisenseRequest;
+    public [HistoryMessages.ProvideSignatureHelpResponse] : IProvideSignatureHelpResponse;
+    public [HistoryMessages.AddCell] : IAddCell;
+    public [HistoryMessages.EditCell] : IEditCell;
+    public [HistoryMessages.RemoveCell] : IRemoveCell;
+    public [HistoryMessages.LoadOnigasmAssemblyRequest]: never | undefined;
+    public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;
+    public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
+    public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
 }

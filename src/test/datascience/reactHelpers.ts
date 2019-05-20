@@ -8,12 +8,198 @@ import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
 
-// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length
+// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
+// tslint:disable: no-require-imports
+class MockCanvas implements CanvasRenderingContext2D {
+    public canvas!: HTMLCanvasElement;
+    public restore(): void {
+        throw new Error('Method not implemented.');
+    }
+    public save(): void {
+        throw new Error('Method not implemented.');
+    }
+    public getTransform(): DOMMatrix {
+        throw new Error('Method not implemented.');
+    }
+    public resetTransform(): void {
+        throw new Error('Method not implemented.');
+    }
+    public rotate(_angle: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public scale(_x: number, _y: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void;
+    public setTransform(transform?: DOMMatrix2DInit | undefined): void;
+    public setTransform(_a?: any, _b?: any, _c?: any, _d?: any, _e?: any, _f?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public transform(_a: number, _b: number, _c: number, _d: number, _e: number, _f: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public translate(_x: number, _y: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public globalAlpha!: number;
+    public globalCompositeOperation!: string;
+    public imageSmoothingEnabled!: boolean;
+    public imageSmoothingQuality!: ImageSmoothingQuality;
+    public fillStyle!: string | CanvasGradient | CanvasPattern;
+    public strokeStyle!: string | CanvasGradient | CanvasPattern;
+    public createLinearGradient(_x0: number, _y0: number, _x1: number, _y1: number): CanvasGradient {
+        throw new Error('Method not implemented.');
+    }
+    public createPattern(_image: CanvasImageSource, _repetition: string): CanvasPattern | null {
+        throw new Error('Method not implemented.');
+    }
+    public createRadialGradient(_x0: number, _y0: number, _r0: number, _x1: number, _y1: number, _r1: number): CanvasGradient {
+        throw new Error('Method not implemented.');
+    }
+    public shadowBlur!: number;
+    public shadowColor!: string;
+    public shadowOffsetX!: number;
+    public shadowOffsetY!: number;
+    public filter!: string;
+    public clearRect(_x: number, _y: number, _w: number, _h: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public fillRect(_x: number, _y: number, _w: number, _h: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public strokeRect(_x: number, _y: number, _w: number, _h: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public beginPath(): void {
+        throw new Error('Method not implemented.');
+    }
+    public clip(fillRule?: 'nonzero' | 'evenodd' | undefined): void;
+    public clip(path: Path2D, fillRule?: 'nonzero' | 'evenodd' | undefined): void;
+    public clip(_path?: any, _fillRule?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public fill(fillRule?: 'nonzero' | 'evenodd' | undefined): void;
+    public fill(path: Path2D, fillRule?: 'nonzero' | 'evenodd' | undefined): void;
+    public fill(_path?: any, _fillRule?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public isPointInPath(x: number, y: number, fillRule?: 'nonzero' | 'evenodd' | undefined): boolean;
+    public isPointInPath(path: Path2D, x: number, y: number, fillRule?: 'nonzero' | 'evenodd' | undefined): boolean;
+    public isPointInPath(_path: any, _x: any, _y?: any, _fillRule?: any): boolean {
+        throw new Error('Method not implemented.');
+    }
+    public isPointInStroke(x: number, y: number): boolean;
+    public isPointInStroke(path: Path2D, x: number, y: number): boolean;
+    public isPointInStroke(_path: any, _x: any, _y?: any): boolean {
+        throw new Error('Method not implemented.');
+    }
+    public stroke(): void;
+    // tslint:disable-next-line: unified-signatures
+    public stroke(path: Path2D): void;
+    public stroke(_path?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public drawFocusIfNeeded(element: Element): void;
+    public drawFocusIfNeeded(path: Path2D, element: Element): void;
+    public drawFocusIfNeeded(_path: any, _element?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public scrollPathIntoView(): void;
+    // tslint:disable-next-line: unified-signatures
+    public scrollPathIntoView(path: Path2D): void;
+    public scrollPathIntoView(_path?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public fillText(_text: string, _x: number, _y: number, _maxWidth?: number | undefined): void {
+        throw new Error('Method not implemented.');
+    }
+    public measureText(_text: string): TextMetrics {
+        throw new Error('Method not implemented.');
+    }
+    public strokeText(_text: string, _x: number, _y: number, _maxWidth?: number | undefined): void {
+        throw new Error('Method not implemented.');
+    }
+    public drawImage(image: CanvasImageSource, dx: number, dy: number): void;
+    public drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
+    public drawImage(image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
+    public drawImage(_image: any, _sx: any, _sy: any, _sw?: any, _sh?: any, _dx?: any, _dy?: any, _dw?: any, _dh?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public createImageData(sw: number, sh: number): ImageData;
+    public createImageData(imagedata: ImageData): ImageData;
+    public createImageData(_sw: any, _sh?: any): ImageData {
+        throw new Error('Method not implemented.');
+    }
+    public getImageData(_sx: number, _sy: number, _sw: number, _sh: number): ImageData {
+        throw new Error('Method not implemented.');
+    }
+    public putImageData(imagedata: ImageData, dx: number, dy: number): void;
+    public putImageData(imagedata: ImageData, dx: number, dy: number, dirtyX: number, dirtyY: number, dirtyWidth: number, dirtyHeight: number): void;
+    public putImageData(_imagedata: any, _dx: any, _dy: any, _dirtyX?: any, _dirtyY?: any, _dirtyWidth?: any, _dirtyHeight?: any) {
+        throw new Error('Method not implemented.');
+    }
+    public lineCap!: CanvasLineCap;
+    public lineDashOffset!: number;
+    public lineJoin!: CanvasLineJoin;
+    public lineWidth!: number;
+    public miterLimit!: number;
+    public getLineDash(): number[] {
+        throw new Error('Method not implemented.');
+    }
+    public setLineDash(_segments: number[]): void {
+        throw new Error('Method not implemented.');
+    }
+    public direction!: CanvasDirection;
+    public font!: string;
+    public textAlign!: CanvasTextAlign;
+    public textBaseline!: CanvasTextBaseline;
+    public arc(_x: number, _y: number, _radius: number, _startAngle: number, _endAngle: number, _anticlockwise?: boolean | undefined): void {
+        throw new Error('Method not implemented.');
+    }
+    public arcTo(_x1: number, _y1: number, _x2: number, _y2: number, _radius: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public bezierCurveTo(_cp1x: number, _cp1y: number, _cp2x: number, _cp2y: number, _x: number, _y: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public closePath(): void {
+        throw new Error('Method not implemented.');
+    }
+    public ellipse(_x: number, _y: number, _radiusX: number, _radiusY: number, _rotation: number, _startAngle: number, _endAngle: number, _anticlockwise?: boolean | undefined): void {
+        throw new Error('Method not implemented.');
+    }
+    public lineTo(_x: number, _y: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public moveTo(_x: number, _y: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public quadraticCurveTo(_cpx: number, _cpy: number, _x: number, _y: number): void {
+        throw new Error('Method not implemented.');
+    }
+    public rect(_x: number, _y: number, _w: number, _h: number): void {
+        throw new Error('Method not implemented.');
+    }
+}
+
+const mockCanvas = new MockCanvas();
 
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost'});
     const { window } = dom;
+
+    // tslint:disable: no-function-expression no-empty
+    window.HTMLCanvasElement.prototype.getContext = (contextId: string, _contextAttributes?: {}): any => {
+        if (contextId === '2d') {
+            return mockCanvas;
+        }
+        return null;
+    };
+
+    window.HTMLCanvasElement.prototype.toDataURL = function () {
+        return '';
+    };
 
     // tslist:disable-next-line:no-string-literal no-any
     (global as any)['Element'] = window.Element;
@@ -31,6 +217,9 @@ export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['self'] = window;
     copyProps(window, global);
+
+    // Special case. Monaco needs queryCommandSupported
+    (global as any)['document'].queryCommandSupported = () => (false);
 
     // Special case. Transform needs createRange
     (global as any)['document'].createRange = () => ({
@@ -113,6 +302,32 @@ export function setUpDomEnvironment() {
     };
 
     configure({ adapter: new Adapter() });
+
+    // Special case for the node_modules\monaco-editor\esm\vs\editor\browser\config\configuration.js. It doesn't
+    // export the function we need to dispose of the timer it's set. So force it to.
+    const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
+    const _oldLoader = require.extensions['.js'];
+    // tslint:disable-next-line:no-function-expression
+    require.extensions['.js'] = function (mod: any, filename) {
+        if (configurationRegex.test(filename)) {
+            let content = require('fs').readFileSync(filename, 'utf8');
+            content += 'export function getCSSBasedConfiguration() { return CSSBasedConfiguration.INSTANCE; };\n';
+            mod._compile(content, filename);
+        } else {
+            _oldLoader(mod, filename);
+        }
+    };
+}
+
+export function setupTranspile() {
+    // Some special work for getting the monaco editor to work.
+    // We need to babel transpile some modules. Monaco-editor is not in commonJS format so imports
+    // can't be loaded.
+    require('@babel/register')({ plugins: ['@babel/transform-modules-commonjs'], only: [ /monaco-editor/ ] });
+
+    // Special case for editor api. Webpack bundles editor.all.js as well. Tests don't.
+    require('monaco-editor/esm/vs/editor/editor.api');
+    require('monaco-editor/esm/vs/editor/editor.all');
 }
 
 function copyProps(src: any, target: any) {
