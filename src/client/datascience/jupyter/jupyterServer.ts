@@ -14,7 +14,7 @@ import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
-import { CancellationError } from '../../common/cancellation';
+import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
@@ -30,6 +30,7 @@ import {
     IDataScience,
     IJupyterSession,
     IJupyterSessionManager,
+    INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -395,6 +396,28 @@ export class JupyterServerBase implements INotebookServer {
             ...this.launchInfo.connectionInfo,
             dispose: noop
         };
+    }
+
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        if (this.session) {
+            const result = await Cancellation.race(() => this.session!.requestComplete({
+                code: cellCode,
+                cursor_pos: offsetInCode
+            }), cancelToken);
+            if (result && result.content) {
+                return {
+                    matches: result.content.matches,
+                    cursor: {
+                        start: result.content.cursor_start,
+                        end: result.content.cursor_end
+                    },
+                    metadata: result.content.metadata
+                };
+            }
+        }
+
+        // Default is just say session was disposed
+        throw new Error(localize.DataScience.sessionDisposed());
     }
 
     private finishUncompletedCells() {

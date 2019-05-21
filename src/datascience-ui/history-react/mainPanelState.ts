@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
@@ -16,6 +16,7 @@ import { InputHistory } from './inputHistory';
 
 export interface IMainPanelState {
     cellVMs: ICellViewModel[];
+    editCellVM?: ICellViewModel;
     busy: boolean;
     skipNextScroll? : boolean;
     undoStack : ICellViewModel[][];
@@ -26,6 +27,9 @@ export interface IMainPanelState {
     rootStyle?: string;
     theme?: string;
     forceDark?: boolean;
+    monacoTheme?: string;
+    tokenizerLoaded?: boolean;
+    editorOptions: monacoEditor.editor.IEditorOptions;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -39,33 +43,13 @@ const darkStyle = `
             --code-font-family: Consolas, 'Courier New', monospace;
             --code-font-size: 14px;
         }
-
-        .cm-header, .cm-strong {font-weight: bold;}
-        .cm-em {font-style: italic;}
-        .cm-link {text-decoration: underline;}
-        .cm-strikethrough {text-decoration: line-through;}
-
-        .cm-s-ipython-theme span.cm-keyword {color: #C586C0; font-style: normal; }
-        .cm-s-ipython-theme span.cm-number {color: #b5cea8; font-style: normal; }
-        .cm-s-ipython-theme span.cm-def {color: var(--vscode-editor-foreground); }
-        .cm-s-ipython-theme span.cm-variable {color: #9CDCFE; font-style: normal; }
-        .cm-s-ipython-theme span.cm-punctuation {color: var(--override-foreground, var(--vscode-editor-foreground)); font-style: normal; }
-        .cm-s-ipython-theme span.cm-property,
-        .cm-s-ipython-theme span.cm-operator {color: #d4d4d4; font-style: normal; }
-        .cm-s-ipython-theme span.cm-variable-2 {color: #9CDCFE; font-style: normal; }
-        .cm-s-ipython-theme span.cm-variable-3, .cm-s-Default Dark+ .cm-type {color: #9CDCFE; font-style: normal; }
-        .cm-s-ipython-theme span.cm-comment {color: #6A9955; font-style: normal; }
-        .cm-s-ipython-theme span.cm-string {color: #ce9178; font-style: normal; }
-        .cm-s-ipython-theme span.cm-string-2 {color: #ce9178; font-style: normal; }
-        .cm-s-ipython-theme span.cm-builtin {color: #DCDCAA; font-style: normal; }
-        .cm-s-ipython-theme div.CodeMirror-cursor { border: 1px solid var(--vscode-editor-foreground); background: var(--vscode-editor-foreground); width: 5px; z-index: 100; }
-        .cm-s-ipython-theme div.CodeMirror-selected {background: var(--vscode-editor-selectionBackground) !important;}
 `;
 
 // This function generates test state when running under a browser instead of inside of
 export function generateTestState(inputBlockToggled : (id: string) => void, filePath: string = '') : IMainPanelState {
     return {
         cellVMs : generateVMs(inputBlockToggled, filePath),
+        editCellVM: createEditableCellVM(1),
         busy: true,
         skipNextScroll : false,
         undoStack : [],
@@ -73,7 +57,9 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         submittedText: false,
         history: new InputHistory(),
         contentTop: 24,
-        rootStyle: darkStyle
+        rootStyle: darkStyle,
+        tokenizerLoaded: true,
+        editorOptions: {}
     };
 }
 
@@ -89,7 +75,7 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
                 outputs: [],
                 source: ''
             },
-            id: uuid(),
+            id: Identifiers.EditCellId,
             file: Identifiers.EmptyFileName,
             line: 0,
             state: CellState.editing
@@ -170,7 +156,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
             source: [],
             metadata: {},
             message: 'You have this python data:',
-            connection: 'https:\\localhost'
+            connection: 'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
         },
         {
             cell_type: 'code',
@@ -183,21 +169,199 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
             outputs: [
                 {
                     data: {
-                        'text/plain': [
-                            '   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
-                            '0         6           148            72         35        0  33.6      0.627   \n',
-                            '1         1            85            66         29        0  26.6      0.351   \n',
-                            '2         8           183            64          0        0  23.3      0.672   \n',
-                            '3         1            89            66         23       94  28.1      0.167   \n',
-                            '4         0           137            40         35      168  43.1      2.288   \n',
-                            '\n',
-                            '   age    skin  diabetes  \n',
-                            '0   50  1.3790      True  \n',
-                            '1   31  1.1426     False  \n',
-                            '2   32  0.0000      True  \n',
-                            '3   21  0.9062     False  \n',
-                            '4   33  1.3790      True  super long line that should wrap around but it isnt because we didnt put in the correct css super long line that should wrap around but it isnt because we didnt put in the correct css super long line that should wrap around but it isnt because we didnt put in the correct css'
-                        ]
+// tslint:disable-next-line: no-multiline-string
+                        'text/html': [`
+                            <div style="
+                            overflow: auto;
+                        ">
+                        <style scoped="">
+                            .dataframe tbody tr th:only-of-type {
+                                vertical-align: middle;
+                            }
+                            .dataframe tbody tr th {
+                                vertical-align: top;
+                            }
+                            .dataframe thead th {
+                                text-align: right;
+                            }
+                        </style>
+                        <table border="1" class="dataframe">
+                          <thead>
+                            <tr style="text-align: right;">
+                              <th></th>
+                              <th>0</th>
+                              <th>1</th>
+                              <th>2</th>
+                              <th>3</th>
+                              <th>4</th>
+                              <th>5</th>
+                              <th>6</th>
+                              <th>7</th>
+                              <th>8</th>
+                              <th>9</th>
+                              <th>...</th>
+                              <th>2990</th>
+                              <th>2991</th>
+                              <th>2992</th>
+                              <th>2993</th>
+                              <th>2994</th>
+                              <th>2995</th>
+                              <th>2996</th>
+                              <th>2997</th>
+                              <th>2998</th>
+                              <th>2999</th>
+                            </tr>
+                            <tr>
+                              <th>idx</th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <th>2007-01-31</th>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>...</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                              <td>37.060604</td>
+                            </tr>
+                            <tr>
+                              <th>2007-02-28</th>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>...</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                              <td>20.603407</td>
+                            </tr>
+                            <tr>
+                              <th>2007-03-31</th>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>...</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                              <td>6.142031</td>
+                            </tr>
+                            <tr>
+                              <th>2007-04-30</th>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>...</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                              <td>6.931635</td>
+                            </tr>
+                            <tr>
+                              <th>2007-05-31</th>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>...</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                              <td>52.642243</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <p>5 rows × 3000 columns</p>
+                        </div>`
+                    ]
                     },
                     execution_count: 4,
                     metadata: {},

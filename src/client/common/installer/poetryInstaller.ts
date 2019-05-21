@@ -61,7 +61,7 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const execPath = this.configurationService.getSettings(resource).poetryPath;
         return {
-            args: ['add', moduleName],
+            args: ['add', '--dev', moduleName],
             execPath
         };
     }

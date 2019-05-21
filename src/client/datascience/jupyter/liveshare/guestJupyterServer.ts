@@ -17,6 +17,7 @@ import {
     IConnection,
     IDataScience,
     IJupyterSessionManager,
+    INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -158,6 +159,17 @@ export class GuestJupyterServer
             const result = await service.request(LiveShareCommands.getSysInfo, []);
             return (result as ICell);
         }
+    }
+
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        return Promise.resolve({
+            matches: [],
+            cursor: {
+                start: 0,
+                end: 0
+            },
+            metadata: {}
+        });
     }
 
     public async onAttach(api: vsls.LiveShare | null) : Promise<void> {

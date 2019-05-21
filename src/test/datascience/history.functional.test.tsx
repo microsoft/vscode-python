@@ -16,6 +16,7 @@ import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+//import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
@@ -64,8 +65,9 @@ suite('DataScience History output tests', () => {
         await ioc.dispose();
     });
 
+    // Uncomment this to debug hangs on exit
     // suiteTeardown(() => {
-    //     asyncDump();
+    //      asyncDump();
     // });
 
     async function getOrCreateHistory(): Promise<IHistory> {

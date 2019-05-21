@@ -16,7 +16,7 @@ import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { blurWindow, createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -39,15 +39,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountWebView(ioc, <MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
-            try {
-                await testFunc(wrapper);
-            } finally {
-                // Blur window focus so we don't have editors polling
-                blurWindow();
-
-                // Make sure to unmount the wrapper or it will interfere with other tests
-                wrapper.unmount();
-            }
+            await testFunc(wrapper);
         } else {
             // tslint:disable-next-line:no-console
             console.log(`${name} skipped, no Jupyter installed.`);
@@ -224,8 +216,15 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
             event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown });
             domNode.dispatchEvent(event);
 
-            // Dispatch an input event so we update the textarea
+            // Update our value. This will reset selection to zero.
             domNode.value = domNode.value + key;
+
+            // Tell the dom node its selection start has changed. Monaco
+            // reads this to determine where the character went.
+            domNode.selectionEnd = domNode.value.length;
+            domNode.selectionStart = domNode.value.length;
+
+            // Dispatch an input event so we update the textarea
             domNode.dispatchEvent(createInputEvent());
         }
     }
@@ -248,27 +247,38 @@ function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, te
     simulateKey(textArea, key);
 }
 
-export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-
-    // First we have to type the code into the input box
-
-    // Find the last cell. It should have a CodeMirror object. We need to search
-    // through its DOM to find the actual codemirror textarea to send input to
-    // (we can't actually find it with the enzyme wrappers because they only search
-    //  React accessible nodes and the codemirror html is not react)
+export function getEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : ReactWrapper<any, Readonly<{}>, React.Component> {
+    // Find the last cell. It should have a monacoEditor object
     const cells = wrapper.find('Cell');
     const lastCell = cells.last();
-    const rcm = lastCell.find('div.ReactCodeMirror');
-    const rcmDom = rcm.getDOMNode();
-    assert.ok(rcmDom, 'rcm DOM object not found');
-    const textArea = rcmDom!.querySelector('.CodeMirror')!.querySelector('textarea');
-    assert.ok(textArea!, 'Cannot find the textarea inside the code mirror');
+    return lastCell.find('MonacoEditor');
+}
+
+export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string) : HTMLTextAreaElement | null {
+
+    // Find the last cell. It should have a monacoEditor object. We need to search
+    // through its DOM to find the actual textarea to send input to
+    // (we can't actually find it with the enzyme wrappers because they only search
+    //  React accessible nodes and the monaco html is not react)
+    const editorControl = getEditor(wrapper);
+    const ecDom = editorControl.getDOMNode();
+    assert.ok(ecDom, 'ec DOM object not found');
+    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
+    assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
     // Now simulate entering all of the keys
     for (let i = 0; i < code.length; i += 1) {
         enterKey(wrapper, textArea!, code.charAt(i));
     }
+
+    return textArea;
+}
+
+export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+
+    // First we have to type the code into the input box
+    const textArea = typeCode(wrapper, code);
 
     // Now simulate a shift enter. This should cause a new cell to be added
     await submitInput(wrapper, textArea!);

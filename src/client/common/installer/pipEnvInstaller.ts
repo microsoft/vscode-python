@@ -34,7 +34,7 @@ export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller
         const args = ['install', moduleName, '--dev'];
         if (moduleName === 'black') {
             args.push('--pre');
-        };
+        }
         return {
             args: args,
             execPath: pipenvName

@@ -84,7 +84,7 @@ export class JupyterSession implements IJupyterSession {
                 this.session.kernel.status !== 'idle' &&
                 (Date.now() - startTime < timeout)) {
                 traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
-                await sleep(10);
+                await sleep(100);
             }
 
             // If we didn't make it out in ten seconds, indicate an error
@@ -108,6 +108,10 @@ export class JupyterSession implements IJupyterSession {
 
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined {
         return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
+    }
+
+    public requestComplete(content: KernelMessage.ICompleteRequest) : Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
     public async connect(cancelToken?: CancellationToken) : Promise<void> {

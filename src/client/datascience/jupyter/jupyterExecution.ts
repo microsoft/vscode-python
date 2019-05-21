@@ -590,13 +590,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const spec = specs[i];
             let score = 0;
 
-            if (spec && spec.path && spec.path.length > 0 && info && spec.path === info.path) {
-                // Path match
-                score += 10;
-            }
+            // First match on language. No point if not python.
             if (spec && spec.language && spec.language.toLocaleLowerCase() === 'python') {
                 // Language match
                 score += 1;
+
+                // See if the path matches. Don't bother if the language doesn't.
+                if (spec && spec.path && spec.path.length > 0 && info && spec.path === info.path) {
+                    // Path match
+                    score += 10;
+                }
 
                 // See if the version is the same
                 if (info && info.version && specDetails[i]) {

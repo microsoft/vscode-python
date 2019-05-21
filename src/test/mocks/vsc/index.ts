@@ -41,7 +41,7 @@ export namespace vscMock {
                 decodeURIComponent(match[7] || this._empty),
                 decodeURIComponent(match[9] || this._empty),
                 decodeURIComponent(match[5] || this._empty));
-            }
+        }
         public with(_change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): vscode.Uri {
             throw new Error('Not implemented');
         }
@@ -172,4 +172,39 @@ export namespace vscMock {
         Operator = 24,
         TypeParameter = 25
     }
+
+    export class CodeActionKind {
+        public static readonly Empty: CodeActionKind = new CodeActionKind('empty');
+        public static readonly QuickFix: CodeActionKind = new CodeActionKind('quick.fix');
+
+        public static readonly Refactor: CodeActionKind = new CodeActionKind('refactor');
+
+        public static readonly RefactorExtract: CodeActionKind = new CodeActionKind('refactor.extract');
+
+        public static readonly RefactorInline: CodeActionKind = new CodeActionKind('refactor.inline');
+
+        public static readonly RefactorRewrite: CodeActionKind = new CodeActionKind('refactor.rewrite');
+        public static readonly Source: CodeActionKind = new CodeActionKind('source');
+        public static readonly SourceOrganizeImports: CodeActionKind = new CodeActionKind('source.organize.imports');
+        public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
+
+        private constructor(private _value: string) {
+        }
+
+        public append(parts: string): CodeActionKind {
+            return new CodeActionKind(`${this._value}.${parts}`);
+        }
+        public intersects(other: CodeActionKind): boolean {
+            return this._value.includes(other._value) || other._value.includes(this._value);
+        }
+
+        public contains(other: CodeActionKind): boolean {
+            return this._value.startsWith(other._value);
+        }
+
+        public get value(): string {
+            return this._value;
+        }
+    }
+
 }

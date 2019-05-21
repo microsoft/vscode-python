@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { JSONArray, JSONObject, JSONValue } from '@phosphor/coreutils';
+import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IConfigurationService, ILogger } from '../common/types';
-import { DefaultTheme, Identifiers } from './constants';
+import { DefaultTheme } from './constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
 // tslint:disable:no-any
@@ -71,6 +72,15 @@ const DefaultColors: { [key: string] : string } = {
     'dark.punctuation'      : '#1e1e1e'
 };
 
+interface IApplyThemeArgs {
+    tokenColors?: JSONArray | null;
+    baseColors?: JSONObject | null;
+    fontFamily: string;
+    fontSize: number;
+    isDark: boolean;
+    defaultStyle: string | undefined;
+}
+
 // This class generates css using the current theme in order to colorize code.
 //
 // NOTE: This is all a big hack. It's relying on the theme json files to have a certain format
@@ -86,31 +96,39 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(ILogger) private logger: ILogger) {
     }
 
-    public async generateThemeCss(isDark: boolean, theme: string): Promise<string> {
-        let css : string = '';
+    public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
+        return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
+    }
+
+    public generateMonacoTheme(isDark: boolean, theme: string) : Promise<JSONObject> {
+        return this.applyThemeData(isDark, theme, {}, this.generateMonacoThemeObject.bind(this));
+    }
+
+    private async applyThemeData<T>(isDark: boolean, theme: string, defaultT: T, applier: (args: IApplyThemeArgs) => T) : Promise<T> {
+        let result = defaultT;
         try {
             // First compute our current theme.
-            const workbench = this.workspaceService.getConfiguration('workbench');
             const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
             theme = ignoreTheme ? DefaultTheme : theme;
-            const terminalCursor = workbench ? workbench.get<string>('terminal.integrated.cursorStyle', 'block') : 'block';
             const editor = this.workspaceService.getConfiguration('editor', undefined);
-            const font = editor ? editor.get<string>('fontFamily', 'Consolas, \'Courier New\', monospace') : 'Consolas, \'Courier New\', monospace';
+            const fontFamily = editor ? editor.get<string>('fontFamily', 'Consolas, \'Courier New\', monospace') : 'Consolas, \'Courier New\', monospace';
             const fontSize = editor ? editor.get<number>('fontSize', 14) : 14;
+            const isDarkUpdated = ignoreTheme ? false : isDark;
 
             // Then we have to find where the theme resources are loaded from
             if (theme) {
                 this.logger.logInformation('Searching for token colors ...');
                 const tokenColors = await this.findTokenColors(theme);
+                const baseColors = await this.findBaseColors(theme);
 
                 // The tokens object then contains the necessary data to generate our css
-                if (tokenColors && font && fontSize) {
+                if (tokenColors && fontFamily && fontSize) {
                     this.logger.logInformation('Using colors to generate CSS ...');
-                    css = this.generateCss(theme, tokenColors, font, fontSize, terminalCursor, ignoreTheme ? LightTheme : undefined);
-                } else if (tokenColors === null && font && fontSize) {
+                    result = applier({ tokenColors, baseColors, fontFamily, fontSize, isDark: isDarkUpdated, defaultStyle: ignoreTheme ? LightTheme : undefined });
+                } else if (tokenColors === null && fontFamily && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
                     const style = isDark ? DarkTheme : LightTheme ;
-                    css = this.generateCss(theme, null, font, fontSize, terminalCursor, style);
+                    result = applier({ fontFamily, fontSize, isDark: isDarkUpdated, defaultStyle: style});
                 }
             }
         } catch (err) {
@@ -118,26 +136,27 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             this.logger.logError(err);
         }
 
-        return css;
+        return result;
+    }
+
+    private getScopes(entry: any) : JSONArray {
+        if (entry && entry.scope) {
+            return Array.isArray(entry.scope) ? entry.scope as JSONArray : entry.scope.toString().split(',');
+        }
+        return [];
     }
 
     private matchTokenColor(tokenColors: JSONArray, scope: string) : number {
         return tokenColors.findIndex((entry: any) => {
-            if (entry) {
-                const scopes = entry.scope as JSONValue;
-                if (scopes) {
-                    const scopeArray = Array.isArray(scope) ? scopes as JSONArray : scopes.toString().split(',');
-                    if (scopeArray.find(v => v !== null && v !== undefined && v.toString().trim() === scope)) {
-                        return true;
-                    }
-                }
+            const scopeArray = this.getScopes(entry);
+            if (scopeArray.find(v => v !== null && v !== undefined && v.toString().trim() === scope)) {
+                return true;
             }
-
             return false;
         });
     }
 
-    private getScopeStyle = (tokenColors: JSONArray | null, scope: string, secondary: string, defaultStyle: string | undefined): { color: string; fontStyle: string } => {
+    private getScopeStyle = (tokenColors: JSONArray | null | undefined, scope: string, secondary: string, defaultStyle: string | undefined): { color: string; fontStyle: string } => {
         // Search through the scopes on the json object
         if (tokenColors) {
             let match = this.matchTokenColor(tokenColors, scope);
@@ -165,28 +184,14 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private generateCss(theme: string, tokenColors: JSONArray | null, fontFamily: string, fontSize: number, cursorType: string, defaultStyle: string | undefined): string {
-        const escapedThemeName = Identifiers.GeneratedThemeName;
+    private generateCss(args: IApplyThemeArgs): string {
 
         // There's a set of values that need to be found
-        const commentStyle = this.getScopeStyle(tokenColors, 'comment', 'comment', defaultStyle);
-        const numericStyle = this.getScopeStyle(tokenColors, 'constant.numeric', 'constant', defaultStyle);
-        const stringStyle = this.getScopeStyle(tokenColors, 'string', 'string', defaultStyle);
-        const keywordStyle = this.getScopeStyle(tokenColors, 'keyword.control', 'keyword', defaultStyle);
-        const operatorStyle = this.getScopeStyle(tokenColors, 'keyword.operator', 'keyword', defaultStyle);
-        const variableStyle = this.getScopeStyle(tokenColors, 'variable', 'variable', defaultStyle);
-        const entityTypeStyle = this.getScopeStyle(tokenColors, 'entity.name.type', 'entity.name.type', defaultStyle);
-        // const atomic = this.getScopeColor(tokenColors, 'atomic');
-        const builtinStyle = this.getScopeStyle(tokenColors, 'support.function', 'support.function', defaultStyle);
-        const punctuationStyle = this.getScopeStyle(tokenColors, 'punctuation', 'punctuation', defaultStyle);
-
-        const def = 'var(--vscode-editor-foreground)';
-
-        // Define our cursor style based on the cursor type
-        const cursorStyle = cursorType === 'block' ?
-            `{ border: 1px solid ${def}; background: ${def}; width: 5px; z-index=100; }` : cursorType === 'underline' ?
-            `{ border-bottom: 1px solid ${def}; z-index=100; width: 5px; }` :
-            `{ border-left: 1px solid ${def}; border-right: none; z-index=100; }`;
+        const commentStyle = this.getScopeStyle(args.tokenColors, 'comment', 'comment', args.defaultStyle);
+        const numericStyle = this.getScopeStyle(args.tokenColors, 'constant.numeric', 'constant', args.defaultStyle);
+        const stringStyle = this.getScopeStyle(args.tokenColors, 'string', 'string', args.defaultStyle);
+        const variableStyle = this.getScopeStyle(args.tokenColors, 'variable', 'variable', args.defaultStyle);
+        const entityTypeStyle = this.getScopeStyle(args.tokenColors, 'entity.name.type', 'entity.name.type', args.defaultStyle);
 
         // Use these values to fill in our format string
         return `
@@ -196,38 +201,105 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             --code-string-color: ${stringStyle.color};
             --code-variable-color: ${variableStyle.color};
             --code-type-color: ${entityTypeStyle.color};
-            --code-font-family: ${fontFamily};
-            --code-font-size: ${fontSize}px;
+            --code-font-family: ${args.fontFamily};
+            --code-font-size: ${args.fontSize}px;
         }
 
-        ${defaultStyle ? DefaultCssVars[defaultStyle] : undefined }
-
-        .cm-header, .cm-strong {font-weight: bold;}
-        .cm-em {font-style: italic;}
-        .cm-link {text-decoration: underline;}
-        .cm-strikethrough {text-decoration: line-through;}
-
-        .cm-s-${escapedThemeName} span.cm-keyword {color: ${keywordStyle.color}; font-style: ${keywordStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-number {color: ${numericStyle.color}; font-style: ${numericStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-def {color: ${def}; }
-        .cm-s-${escapedThemeName} span.cm-variable {color: ${variableStyle.color}; font-style: ${variableStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-punctuation {color: ${punctuationStyle.color}; font-style: ${punctuationStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-property,
-        .cm-s-${escapedThemeName} span.cm-operator {color: ${operatorStyle.color}; font-style: ${operatorStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-variable-2 {color: ${variableStyle.color}; font-style: ${variableStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-variable-3, .cm-s-${theme} .cm-type {color: ${variableStyle.color}; font-style: ${variableStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-comment {color: ${commentStyle.color}; font-style: ${commentStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-string {color: ${stringStyle.color}; font-style: ${stringStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-string-2 {color: ${stringStyle.color}; font-style: ${stringStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} span.cm-builtin {color: ${builtinStyle.color}; font-style: ${builtinStyle.fontStyle}; }
-        .cm-s-${escapedThemeName} div.CodeMirror-cursor ${cursorStyle}
-        .cm-s-${escapedThemeName} div.CodeMirror-selected {background: var(--vscode-editor-selectionBackground) !important;}
+        ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : undefined }
 `;
+    }
 
+    // Based on this data here:
+    // https://github.com/Microsoft/vscode/blob/master/src/vs/editor/standalone/common/themes.ts#L13
+    private generateMonacoThemeObject(args: IApplyThemeArgs) : monacoEditor.editor.IStandaloneThemeData {
+        const result: monacoEditor.editor.IStandaloneThemeData = {
+            base: args.isDark ? 'vs-dark' : 'vs',
+            inherit: false,
+            rules: [],
+            colors: {}
+        };
+        // If we have token colors enumerate them and add them into the rules
+        if (args.tokenColors && args.tokenColors.length) {
+            const tokenSet = new Set<string>();
+            args.tokenColors.forEach((t: any) => {
+                const scopes = this.getScopes(t);
+                const settings = t && t.settings ? t.settings : undefined;
+                if (scopes && settings) {
+                    scopes.forEach(s => {
+                        const token = s ? s.toString() : '';
+                        if (!tokenSet.has(token)) {
+                            tokenSet.add(token);
+                            result.rules.push({
+                                token,
+                                foreground: settings.foreground,
+                                background: settings.background,
+                                fontStyle: settings.fontStyle
+                            });
+
+                            // Special case some items. punctuation.definition.comment doesn't seem to
+                            // be listed anywhere. Add it manually when we find a 'comment'
+                            // tslint:disable-next-line: possible-timing-attack
+                            if (token === 'comment') {
+                                result.rules.push({
+                                    token: 'punctuation.definition.comment',
+                                    foreground: settings.foreground,
+                                    background: settings.background,
+                                    fontStyle: settings.fontStyle
+                                });
+                            }
+
+                            // Same for string
+                            // tslint:disable-next-line: possible-timing-attack
+                            if (token === 'string') {
+                                result.rules.push({
+                                    token: 'punctuation.definition.string',
+                                    foreground: settings.foreground,
+                                    background: settings.background,
+                                    fontStyle: settings.fontStyle
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            result.rules = result.rules.sort((a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
+                return a.token.localeCompare(b.token);
+            });
+        } else {
+            // Otherwise use our default values.
+            result.base = args.defaultStyle === DarkTheme ? 'vs-dark' :  'vs';
+            result.inherit = true;
+
+            if (args.defaultStyle) {
+                // Special case. We need rules for the comment beginning and the string beginning
+                result.rules.push({
+                    token: 'punctuation.definition.comment',
+                    foreground: DefaultColors[`${args.defaultStyle}.comment`]
+                });
+                result.rules.push({
+                    token: 'punctuation.definition.string',
+                    foreground: DefaultColors[`${args.defaultStyle}.string`]
+                });
+            }
+        }
+        // If we have base colors enumerate them and add them to the colors
+        if (args.baseColors) {
+            const keys = Object.keys(args.baseColors);
+            keys.forEach(k => {
+                const color = args.baseColors && args.baseColors[k] ? args.baseColors[k] : '#000000';
+                result.colors[k] = color ? color.toString() : '#000000';
+            });
+        } // The else case here should end up inheriting.
+        return result;
     }
 
     private mergeColors = (colors1: JSONArray, colors2: JSONArray): JSONArray => {
         return [...colors1, ...colors2];
+    }
+
+    private mergeBaseColors = (colors1: JSONObject, colors2: JSONObject) : JSONObject => {
+        return {...colors1, ...colors2};
     }
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
@@ -237,7 +309,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         if (tokenColors && tokenColors.length > 0) {
             // This theme may include others. If so we need to combine the two together
             const include = theme ? theme.include : undefined;
-            if (include && include !== null) {
+            if (include) {
                 const includePath = path.join(path.dirname(themeFile), include.toString());
                 const includedColors = await this.readTokenColors(includePath);
                 return this.mergeColors(tokenColors, includedColors);
@@ -254,6 +326,23 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         }
 
         return [];
+    }
+
+    private readBaseColors = async (themeFile: string): Promise<JSONObject> => {
+        const tokenContent = await fs.readFile(themeFile, 'utf8');
+        const theme = JSON.parse(stripJsonComments(tokenContent)) as JSONObject;
+        const colors = theme.colors as JSONObject;
+
+        // This theme may include others. If so we need to combine the two together
+        const include = theme ? theme.include : undefined;
+        if (include) {
+            const includePath = path.join(path.dirname(themeFile), include.toString());
+            const includedColors = await this.readBaseColors(includePath);
+            return this.mergeBaseColors(colors, includedColors);
+        }
+
+        // Theme is a root, don't need to include others
+        return colors;
     }
 
     private findTokenColors = async (theme: string): Promise<JSONArray | null> => {
@@ -297,6 +386,56 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     const themeFile = path.join(path.dirname(themeRoot), found.path);
                     this.logger.logInformation(`Reading colors from ${themeFile}`);
                     return await this.readTokenColors(themeFile);
+                }
+            } else {
+                this.logger.logWarning(`Color theme ${theme} not found. Using default colors.`);
+            }
+        } catch (err) {
+            // Swallow any exceptions with searching or parsing
+            this.logger.logError(err);
+        }
+
+        // Force the colors to the defaults
+        return null;
+    }
+
+    private findBaseColors = async (theme: string): Promise<JSONObject | null> => {
+        try {
+            this.logger.logInformation('Attempting search for colors ...');
+            const themeRoot = await this.themeFinder.findThemeRootJson(theme);
+
+            // Use the first result if we have one
+            if (themeRoot) {
+                this.logger.logInformation(`Loading base colors from ${themeRoot} ...`);
+
+                // This should be the path to the file. Load it as a json object
+                const contents = await fs.readFile(themeRoot, 'utf8');
+                const json = JSON.parse(stripJsonComments(contents)) as JSONObject;
+
+                // There should be a theme colors section
+                const contributes = json.contributes as JSONObject;
+
+                // If no contributes section, see if we have a tokenColors section. This means
+                // this is a direct token colors file
+                if (!contributes) {
+                    return await this.readBaseColors(themeRoot);
+                }
+
+                // This should have a themes section
+                const themes = contributes.themes as JSONArray;
+
+                // One of these (it's an array), should have our matching theme entry
+                const index = themes.findIndex((e: any) => {
+                    return e !== null && (e.id === theme || e.name === theme);
+                });
+
+                const found = index >= 0 ? themes[index] as any : null;
+                if (found !== null) {
+                    // Then the path entry should contain a relative path to the json file with
+                    // the tokens in it
+                    const themeFile = path.join(path.dirname(themeRoot), found.path);
+                    this.logger.logInformation(`Reading base colors from ${themeFile}`);
+                    return await this.readBaseColors(themeFile);
                 }
             } else {
                 this.logger.logWarning(`Color theme ${theme} not found. Using default colors.`);

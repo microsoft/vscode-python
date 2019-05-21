@@ -525,3 +525,8 @@ steps:
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:
       DISPLAY: :10
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: $(Agent.JobName)

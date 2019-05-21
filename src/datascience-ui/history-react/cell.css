@@ -2,6 +2,9 @@
     margin: 0px;
     padding: 2px;
     display: block;
+}
+
+.cell-wrapper-noneditable {
     border-bottom-color: var(--override-widget-background, var(--vscode-editorGroupHeader-tabsBackground));
     border-bottom-style: solid;
     border-bottom-width: 1px;

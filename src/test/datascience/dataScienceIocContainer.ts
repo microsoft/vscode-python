@@ -21,6 +21,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
+import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -76,7 +77,7 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from '../../client/common/types';
-import { Deferred } from '../../client/common/utils/async';
+import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -89,6 +90,7 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { History } from '../../client/datascience/history/history';
 import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
 import { HistoryProvider } from '../../client/datascience/history/historyProvider';
+import { DotNetIntellisenseProvider } from '../../client/datascience/history/intellisense/dotNetIntellisenseProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -106,6 +108,7 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IHistory,
+    IHistoryListener,
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
@@ -192,6 +195,8 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
+import { MockLanguageServer } from './mockLanguageServer';
+import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLiveShareApi } from './mockLiveShare';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 
@@ -247,6 +252,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.wrapper.unmount();
             this.wrapper = undefined;
         }
+
+        // Bounce this so that our editor has time to shutdown
+        await sleep(10);
+
+        // Clear out the monaco global services. Some of these services are preventing shutdown.
+        // tslint:disable: no-require-imports
+        const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
+        if (services.StaticServices) {
+            const keys = Object.keys(services.StaticServices);
+            keys.forEach(k => {
+                const service = services.StaticServices[k] as any;
+                if (service && service._value && service._value.dispose) {
+                    if (typeof service._value.dispose === 'function') {
+                        service._value.dispose();
+                    }
+                }
+            });
+        }
+
+        // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
+        const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
+        if (config.getCSSBasedConfiguration) {
+            config.getCSSBasedConfiguration().dispose();
+        }
     }
 
     //tslint:disable:max-func-body-length
@@ -288,6 +317,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+        this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
+        this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
+        this.serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -561,6 +593,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public addMessageListener(callback: (m: string, p: any) => void) {
         this.extraListeners.push(callback);
+    }
+
+    public changeJediEnabled(enabled: boolean) {
+        this.pythonSettings.jediEnabled = enabled;
     }
 
     private findPythonPath(): string {

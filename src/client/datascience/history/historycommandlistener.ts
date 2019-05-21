@@ -295,14 +295,14 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private interruptKernel() {
         const history = this.historyProvider.getActive();
         if (history) {
-            history.interruptKernel();
+            history.interruptKernel().ignoreErrors();
         }
     }
 
     private restartKernel() {
         const history = this.historyProvider.getActive();
         if (history) {
-            history.restartKernel();
+            history.restartKernel().ignoreErrors();
         }
     }
 

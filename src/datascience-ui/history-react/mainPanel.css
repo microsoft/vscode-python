@@ -1,6 +1,6 @@
 body, html {
     height: 100%;
-    overflow: hidden;
+    margin: 0;
 }
 
 #root {
@@ -12,7 +12,9 @@ body, html {
     background: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
     height: 100%;
+    width: 100%;
     overflow: hidden;
+    display: table;
 }
 
 .hide {
@@ -20,5 +22,35 @@ body, html {
 }
 
 .invisible {
-    visibility: hidden;
+    visibility: hidden; 
+}
+
+.edit-panel {
+    min-height:50px;
+    padding: 10px 0px 10px 0px;
+    width: 100%;
+    border-top-color: var(--override-widget-background, var(--vscode-editorGroupHeader-tabsBackground));
+    border-top-style: solid;
+    border-top-width: 1px;
+}
+
+.main-panel-header, .main-panel-content, .main-panel-footer {
+    display: table-row;
+}
+
+.main-panel-inner {
+    display: table-cell;
+}
+
+.main-panel-content .main-panel-inner {
+    height: 100%;
+    position: relative;
+}
+
+.main-panel-scrollable {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0; bottom: 0;
+    overflow-y: auto;
+    overflow-x: none;
 }
