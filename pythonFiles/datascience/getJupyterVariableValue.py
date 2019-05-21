@@ -1,54 +1,9 @@
-# # Query Jupyter server for the value of a variable
-# import json as _VSCODE_json
-# _VSCODE_max_len = 200
-# # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
-# # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
-# _VSCODE_targetVariable = _VSCODE_json.loads('_VSCode_JupyterTestValue')
-
-# _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
-
-# # Find shape and count if available
-# if (hasattr(_VSCODE_evalResult, 'shape')):
-    # try:
-        # # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
-        # if isinstance(_VSCODE_evalResult.shape, tuple):
-            # _VSCODE_shapeStr = str(_VSCODE_evalResult.shape)
-            # if len(_VSCODE_shapeStr) >= 3 and _VSCODE_shapeStr[0] == '(' and _VSCODE_shapeStr[-1] == ')' and ',' in _VSCODE_shapeStr:
-                # _VSCODE_targetVariable['shape'] = _VSCODE_shapeStr
-            # del _VSCODE_shapeStr
-    # except TypeError:
-        # pass
-
-# if (hasattr(_VSCODE_evalResult, '__len__')):
-    # try:
-        # _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
-    # except TypeError:
-        # pass
-
-# # Get the string of the eval result, truncate it as it could be far too long
-# _VSCODE_targetValue = str(_VSCODE_evalResult)
-# if len(_VSCODE_targetValue) > _VSCODE_max_len:
-    # _VSCODE_targetVariable['truncated'] = True
-    # _VSCODE_targetVariable['value'] = _VSCODE_targetValue[:_VSCODE_max_len]
-# else:
-    # _VSCODE_targetVariable['value'] = _VSCODE_targetValue
-
-# print(_VSCODE_json.dumps(_VSCODE_targetVariable))
-
-# # Cleanup
-# del _VSCODE_max_len
-# del _VSCODE_json
-# del _VSCODE_targetVariable
-# del _VSCODE_evalResult
-# del _VSCODE_targetValue
-
-
 import sys as VC_sys
 import locale as VC_locale
 
 VC_IS_PY2 = VC_sys.version_info < (3,)
 
-# SafeRepr (with small modifcations) based on the pydevd implementation
+# SafeRepr based on the pydevd implementation
 # https://github.com/microsoft/ptvsd/blob/master/src/ptvsd/_vendored/pydevd/_pydevd_bundle/pydevd_safe_repr.py
 class VC_SafeRepr(object):
     # Py3 compat - alias unicode to str, and xrange to range
@@ -134,9 +89,6 @@ class VC_SafeRepr(object):
                 return 'An exception was raised: %r' % sys.exc_info()[1]
             except Exception:
                 return 'An exception was raised'
-        # IANHU our object is a string that needs to be evaled
-        # target_variable = globals()[obj]
-        # return str(type(target_variable)) 
 
     def _repr(self, obj, level):
         '''Returns an iterable of the parts in the final repr string.'''
@@ -450,17 +402,34 @@ _VSCODE_max_len = 200
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
 _VSCODE_targetVariable = _VSCODE_json.loads('_VSCode_JupyterTestValue')
 
-# _VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
-_VSCODE_evalResult = globals()[_VSCODE_targetVariable['name']]
+_VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
+
+# Find shape and count if available
+if (hasattr(_VSCODE_evalResult, 'shape')):
+    try:
+        # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
+        if isinstance(_VSCODE_evalResult.shape, tuple):
+            _VSCODE_shapeStr = str(_VSCODE_evalResult.shape)
+            if len(_VSCODE_shapeStr) >= 3 and _VSCODE_shapeStr[0] == '(' and _VSCODE_shapeStr[-1] == ')' and ',' in _VSCODE_shapeStr:
+                _VSCODE_targetVariable['shape'] = _VSCODE_shapeStr
+            del _VSCODE_shapeStr
+    except TypeError:
+        pass
+
+if (hasattr(_VSCODE_evalResult, '__len__')):
+    try:
+        _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+    except TypeError:
+        pass
+
+# Use SafeRepr to get our short string value
 VC_sr = VC_SafeRepr()
 _VSCODE_targetVariable['value'] = VC_sr(_VSCODE_evalResult)
 
 print(_VSCODE_json.dumps(_VSCODE_targetVariable))
 
-# test = [1, 2, 3]
-# print(VC_sr(test))
-
-# del VC_IS_PY2
-# del VC_sys
-# del VC_SafeRepr
-# del VC_sr
+del VC_locale
+del VC_IS_PY2
+del VC_sys
+del VC_SafeRepr
+del VC_sr
