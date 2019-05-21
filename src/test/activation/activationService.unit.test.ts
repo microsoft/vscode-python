@@ -39,6 +39,7 @@ suite('Activation - ActivationService', () => {
             let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
             let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
             let experiments: TypeMoq.IMock<IExperimentsManager>;
+            let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -66,6 +67,11 @@ suite('Activation - ActivationService', () => {
                     .returns(() => state.object);
                 state.setup(s => s.value).returns(() => undefined);
                 state.setup(s => s.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+                const setting = {};
+                workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+                workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+                workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                    .returns(() => setting as any);
                 const output = TypeMoq.Mock.ofType<IOutputChannel>();
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
@@ -540,8 +546,7 @@ suite('Activation - ActivationService', () => {
                 suite('Function isJediUsingDefaultConfiguration()', () => {
                     testsForisJediUsingDefaultConfiguration.forEach(testParams => {
                         test(testParams.testName, async () => {
-                            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-                            workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+                            workspaceConfig.reset();
                             workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                                 .returns(() => testParams.settings as any)
                                 .verifiable(TypeMoq.Times.once());
@@ -562,8 +567,6 @@ suite('Activation - ActivationService', () => {
                         .setup(ex => ex.inExperiment('LS - enabled'))
                         .returns(() => true)
                         .verifiable(TypeMoq.Times.atLeastOnce());
-                    const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-                    workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
                     workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                         .returns(() => settings as any)
                         .verifiable(TypeMoq.Times.once());
