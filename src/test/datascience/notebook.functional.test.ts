@@ -669,7 +669,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
+                verifyValue: (d) => assert.ok(d.includes('hello'), `Multiline cell magic incorrect - ${d}`)
             },
             {
                 // Test shell command should work on PC / Mac / Linux

@@ -1,5 +1,148 @@
 # Changelog
 
+
+## 2019.5.0 (28 May 2019)
+
+### Enhancements
+
+1. Changed synchronous file system operation into async
+   ([#4895](https://github.com/Microsoft/vscode-python/issues/4895))
+1. Show a message when no variables are defined
+   ([#5228](https://github.com/Microsoft/vscode-python/issues/5228))
+1. Variable explorer UI fixes via PM / designer
+   ([#5274](https://github.com/Microsoft/vscode-python/issues/5274))
+1. Allow column sorting in variable explorer
+   ([#5281](https://github.com/Microsoft/vscode-python/issues/5281))
+1. Provide basic intellisense in Interactive Windows, using the language server.
+   ([#5342](https://github.com/Microsoft/vscode-python/issues/5342))
+1. Add support for Jupyter autocomplete data in Interactive Window.
+   ([#5346](https://github.com/Microsoft/vscode-python/issues/5346))
+1. Swap getsizeof size value for something more sensible in the variable explorer
+   ([#5368](https://github.com/Microsoft/vscode-python/issues/5368))
+1. Pass parent debug session to child debug sessions using new DA API
+   ([#5464](https://github.com/Microsoft/vscode-python/issues/5464))
+
+### Fixes
+
+1. Use the correct activation script for conda environments
+   ([#4402](https://github.com/Microsoft/vscode-python/issues/4402))
+1. Improve pipenv error messages (thanks [David Lechner](https://github.com/dlech))
+   ([#4866](https://github.com/Microsoft/vscode-python/issues/4866))
+1. Quote paths returned by debugger API
+   ([#4966](https://github.com/Microsoft/vscode-python/issues/4966))
+1. Reliably end test tasks in Azure Pipelines.
+   ([#5129](https://github.com/Microsoft/vscode-python/issues/5129))
+1. Append `--pre` to black installation command so pipenv can properly resolve it.
+   (thanks [Erin O'Connell](https://github.com/erinxocon))
+   ([#5171](https://github.com/Microsoft/vscode-python/issues/5171))
+1. Make background cell color useable in all themes.
+   ([#5236](https://github.com/Microsoft/vscode-python/issues/5236))
+1. Filtered rows shows 'fetching' instead of No rows.
+   ([#5278](https://github.com/Microsoft/vscode-python/issues/5278))
+1. Always show pytest's output when it fails.
+   ([#5313](https://github.com/Microsoft/vscode-python/issues/5313))
+1. Value 'None' sometimes shows up in the Count column of the variable explorer
+   ([#5387](https://github.com/Microsoft/vscode-python/issues/5387))
+1. Multi-dimensional arrays don't open in the data viewer.
+   ([#5395](https://github.com/Microsoft/vscode-python/issues/5395))
+1. Fix sorting of lists with numbers and missing entries.
+   ([#5414](https://github.com/Microsoft/vscode-python/issues/5414))
+1. Fix error with bad len() values in variable explorer
+   ([#5420](https://github.com/Microsoft/vscode-python/issues/5420))
+1. Remove trailing commas from JSON files.
+   (thanks [Romain](https://github.com/quarthex))
+   ([#5437](https://github.com/Microsoft/vscode-python/issues/5437))
+1. Handle missing index columns and non trivial data types for columns.
+   ([#5452](https://github.com/Microsoft/vscode-python/issues/5452))
+1. Fix ignoreVscodeTheme to play along with dynamic theme updates. Also support setting in the variable explorer.
+   ([#5480](https://github.com/Microsoft/vscode-python/issues/5480))
+1. Fix matplotlib updating for dark theme after restarting
+   ([#5486](https://github.com/Microsoft/vscode-python/issues/5486))
+1. Add dev flag to poetry installer.
+   (thanks [Yan Pashkovsky](https://github.com/Yanpas))
+   ([#5496](https://github.com/Microsoft/vscode-python/issues/5496))
+1. Default `PYTHONPATH` to an empty string if the environment variable is not defined.
+   ([#5579](https://github.com/Microsoft/vscode-python/issues/5579))
+1. Fix problems if other language kernels are installed that are using python under the covers (bash is one such example).
+   ([#5586](https://github.com/Microsoft/vscode-python/issues/5586))
+1. Allow collapsed code to affect intellisense.
+   ([#5631](https://github.com/Microsoft/vscode-python/issues/5631))
+1. Eliminate search support in the mini-editors in the Python Interactive window.
+   ([#5637](https://github.com/Microsoft/vscode-python/issues/5637))
+1. Fix perf problem with intellisense in the Interactive Window.
+   ([#5697](https://github.com/Microsoft/vscode-python/issues/5697))
+
+### Code Health
+
+1. Deprecate [travis](https://travis-ci.org/) in favor of [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
+   ([#4024](https://github.com/Microsoft/vscode-python/issues/4024))
+1. Smoke Tests must be run on nightly and CI on Azdo
+   ([#5090](https://github.com/Microsoft/vscode-python/issues/5090))
+1. Increase timeout and retries in Jupyter wait for idle
+   ([#5430](https://github.com/Microsoft/vscode-python/issues/5430))
+1. Update manual test plan for Variable Explorer and Data Viewer
+   ([#5476](https://github.com/Microsoft/vscode-python/issues/5476))
+1. Auto-update version number in `CHANGELOG.md` in the CI pipeline.
+   ([#5523](https://github.com/Microsoft/vscode-python/issues/5523))
+1. Fix security issues.
+   ([#5538](https://github.com/Microsoft/vscode-python/issues/5538))
+1. Send logging output into a text file on CI server.
+   ([#5651](https://github.com/Microsoft/vscode-python/issues/5651))
+1. Fix python 2.7 and 3.5 variable explorer nightly tests
+   ([#5433](https://github.com/Microsoft/vscode-python/issues/5433))
+
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.17](https://pypi.org/project/isort/4.3.17/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2019.4.1 (24 April 2019)
 
 ### Fixes
