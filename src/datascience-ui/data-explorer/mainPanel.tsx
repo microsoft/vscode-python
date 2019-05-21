@@ -4,8 +4,6 @@
 
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
-import * as AdazzleReactDataGrid from 'react-data-grid';
-import { Data, Toolbar } from 'react-data-grid-addons';
 
 import {
     DataViewerMessages,
@@ -20,24 +18,11 @@ import {
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
-import { CellFormatter, ICellFormatterMetaData } from './cellFormatter';
-import { EmptyRows } from './emptyRowsView';
-import { ProgressBar } from './progressBar';
+import { ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
-
-import 'bootstrap/dist/css/bootstrap.css';
 
 // Our css has to come after in order to override body styles
 import './mainPanel.css';
-
-const selectors = Data.Selectors;
-
-const defaultColumnProperties = {
-    filterable: true,
-    sortable: true,
-    resizable: true,
-    width: 120
-};
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -47,7 +32,7 @@ export interface IMainPanelProps {
 
 //tslint:disable:no-any
 interface IMainPanelState {
-    gridColumns: AdazzleReactDataGrid.Column<any>[];
+    gridColumns: Slick.Column<Slick.SlickData>[];
     currentGridRows: any[];
     actualGridRows: any[];
     fetchedRowCount: number;
@@ -61,8 +46,6 @@ interface IMainPanelState {
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: HTMLDivElement | null = null;
-    private emptyRows: (() => JSX.Element) | undefined;
-    private getEmptyRows: ((props: any) => JSX.Element) | undefined;
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
 
@@ -72,18 +55,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
-            const rows = this.padRows(data.rows, data.rows.length + 100);
             this.state = {
-                gridColumns: data.columns.map(c => { return { ...c, ...defaultColumnProperties, formatter: CellFormatter, getRowMetaData: this.getRowMetaData.bind(this) }; }),
-                currentGridRows: rows,
-                actualGridRows: rows,
-                actualRowCount: data.rows.length + 100,
+                gridColumns: data.columns,
+                currentGridRows: data.rows,
+                actualGridRows: data.rows,
+                actualRowCount: data.rows.length,
                 fetchedRowCount: data.rows.length,
                 filters: {},
                 gridHeight:  100,
                 sortColumn: 'index',
                 sortDirection: 'NONE',
-                indexColumn: 'index'
+                indexColumn: data.primaryKeys[0]
             };
         } else {
             this.state = {
@@ -120,16 +102,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.dispose();
     }
 
-    public componentDidUpdate() {
-        // Rebind our empty rows view to our new state.
-        this.emptyRows = this.state.fetchedRowCount === this.state.actualRowCount ?
-            EmptyRows.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount}) :
-            ProgressBar.bind(this, {current: this.state.fetchedRowCount, total: this.state.actualRowCount});
-
-        this.getEmptyRows = (_props: any) => {
-            return this.emptyRows ? this.emptyRows() : <div/>;
-        };
-    }
     public render = () => {
         // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
         // can guarantee our render will run before somebody checks our rendered output.
@@ -139,14 +111,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return (
-                <div className='background'>
-                    <div className='main-panel' ref={this.updateContainer}>
-                        <StyleInjector
-                            expectingDark={this.props.baseTheme !== 'vscode-light'}
-                            postOffice={this.postOffice} />
-                        {this.container && this.renderGrid()}
-                    </div>
-                </div>
+            <div className='main-panel' ref={this.updateContainer}>
+                <StyleInjector
+                    expectingDark={this.props.baseTheme !== 'vscode-light'}
+                    postOffice={this.postOffice} />
+                {this.container && this.renderGrid()}
+            </div>
         );
     }
 
@@ -173,18 +143,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private renderGrid() {
-        const rowCount = this.getRowCount();
         return (
-            <AdazzleReactDataGrid
+            <ReactSlickGrid
+                rows={this.state.currentGridRows}
                 columns={this.state.gridColumns}
-                rowGetter={this.getRow}
-                rowsCount={rowCount}
-                minHeight={this.state.gridHeight}
-                toolbar={<Toolbar enableFilter={true} />}
-                onAddFilter={this.handleFilterChange}
-                onClearFilters={this.clearFilters}
-                emptyRowsView={this.getEmptyRows}
-                onGridSort={this.sortRows}
+                idProperty={this.state.indexColumn}
             />
         );
     }
@@ -293,37 +256,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return initialRows;
     }
 
-    private generateColumns(variable: IJupyterVariable): AdazzleReactDataGrid.Column<object>[]  {
+    private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[]  {
         if (variable.columns) {
             return variable.columns.map((c: {key: string; type: string}, i: number) => {
                 return {
                     type: c.type,
                     key: c.key.toString(),
-                    index: i,
+                    id: `${i}`,
                     name: c.key.toString(),
-                    ...defaultColumnProperties,
-                    formatter: CellFormatter,
-                    getRowMetaData: this.getRowMetaData.bind(this)
+                    sortable: true
                 };
             });
         }
         return [];
-    }
-
-    private getRowMetaData(row: any, column?: AdazzleReactDataGrid.Column<object>): ICellFormatterMetaData {
-        let columnValue = '';
-        let columnType = 'string';
-        if (column) {
-            const obj = column as any;
-            if (obj.type) {
-                columnType = obj.type.toString();
-                columnValue = row[obj.name];
-            }
-        }
-        return {
-            columnType,
-            columnValue
-        };
     }
 
     private updateDimensions = () => {
@@ -337,19 +282,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.container = el;
     }
 
-    private getRowCount = () => {
-        // Current grid rows always specifies what we show.
-        return this.state.currentGridRows.length;
-    }
-
-    private getRow = (index: number) => {
-        return this.state.currentGridRows[index];
-    }
-
-    private haveAllRows(): boolean {
-        return (this.state.fetchedRowCount === this.state.actualRowCount);
-    }
-
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
     }
@@ -361,9 +293,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private getSortedAndFilteredRows(rows: JSONArray, sortDirection: string, sortColumn: string | number, filters: {}) : any[] {
+    private getSortedAndFilteredRows(_rows: JSONArray, sortDirection: string, sortColumn: string | number, _filters: {}) : any[] {
         // Apply any filter first. This should eliminate a bunch of comparisons
-        const filtered = selectors.getRows({rows, filters});
+        const filtered: string[] = [];
 
         // Default to the index column
         if (sortDirection === 'NONE') {
@@ -396,62 +328,4 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Then apply our sorting.
         return filtered.sort(comparer);
     }
-
-    // tslint:disable:no-any
-    private handleFilterChange = (filter: any) => {
-        // Generate new filters.
-        const newFilters: { [key: string]: any } = { ...this.state.filters };
-        if (filter.column.key) {
-            if (filter.filterTerm) {
-                newFilters[filter.column.key] = filter;
-            } else {
-                delete newFilters[filter.column.key];
-            }
-        }
-
-        // Make sure we have all rows. If not, clear our current list
-        if (!this.haveAllRows()) {
-            // Just save the filters.
-            this.setState({ filters: newFilters, currentGridRows: [] });
-        } else {
-            // We have all rows, filter them.
-            this.setState({
-                filters: newFilters,
-                currentGridRows: this.getSortedAndFilteredRows(
-                    this.state.actualGridRows, this.state.sortDirection, this.state.sortColumn, newFilters)
-            });
-        }
-    }
-
-    private clearFilters = () => {
-        // Make sure we have all rows. If not, clear our current list
-        if (!this.haveAllRows()) {
-            // Just save the filters.
-            this.setState({ filters: {}, currentGridRows: [] });
-        } else {
-            // We have all rows, filter them.
-            this.setState({
-                filters: {},
-                currentGridRows: this.getSortedAndFilteredRows(
-                    this.state.actualGridRows, this.state.sortDirection, this.state.sortColumn, {})
-            });
-        }
-    }
-
-    private sortRows = (sortColumn: string | number, sortDirection: string) => {
-        // Make sure we have all rows. If not, clear our current list
-        if (!this.haveAllRows()) {
-            // Just save the sort direction/column
-            this.setState({ sortColumn, sortDirection, currentGridRows: [] });
-        } else {
-            // We have all rows, sort them.
-            this.setState({
-                sortColumn,
-                sortDirection,
-                currentGridRows: this.getSortedAndFilteredRows(
-                    this.state.actualGridRows, sortDirection, sortColumn, this.state.filters)
-            });
-        }
-    }
-
 }
