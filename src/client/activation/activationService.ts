@@ -121,8 +121,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public useJedi(): boolean {
-        if (this.abExperiments.inExperiment('LS - enabled') && this.isJediUsingDefaultConfiguration()) {
-            return false;
+        if (this.isJediUsingDefaultConfiguration()) {
+            if (this.abExperiments.inExperiment('LS - enabled')) {
+                return false;
+            }
+            this.abExperiments.inExperiment('LS - control');
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const enabled = configurationService.getSettings(this.resource).jediEnabled;

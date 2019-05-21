@@ -133,7 +133,7 @@ suite('Activation - ActivationService', () => {
                     experiments
                         .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
                         .returns(() => false)
-                        .verifiable(TypeMoq.Times.once());
+                        .verifiable(TypeMoq.Times.atLeastOnce());
 
                     await activationService.activate(undefined);
 
@@ -556,12 +556,12 @@ suite('Activation - ActivationService', () => {
                     });
                 });
 
-                test('If experiment is enabled and default value of jedi is being used, then LS is enabled', async () => {
+                test('If LS-enabled experiment is enabled and default value of jedi is being used, then LS is enabled', async () => {
                     const settings = {};
                     experiments
-                        .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
+                        .setup(ex => ex.inExperiment('LS - enabled'))
                         .returns(() => true)
-                        .verifiable(TypeMoq.Times.once());
+                        .verifiable(TypeMoq.Times.atLeastOnce());
                     const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                     workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
                     workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
