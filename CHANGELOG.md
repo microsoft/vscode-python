@@ -49,8 +49,6 @@
    ([#5414](https://github.com/Microsoft/vscode-python/issues/5414))
 1. Fix error with bad len() values in variable explorer
    ([#5420](https://github.com/Microsoft/vscode-python/issues/5420))
-1. Fix python 2.7 and 3.5 variable explorer nightly tests
-   ([#5433](https://github.com/Microsoft/vscode-python/issues/5433))
 1. Remove trailing commas from JSON files.
    (thanks [Romain](https://github.com/quarthex))
    ([#5437](https://github.com/Microsoft/vscode-python/issues/5437))
@@ -90,6 +88,8 @@
    ([#5538](https://github.com/Microsoft/vscode-python/issues/5538))
 1. Send logging output into a text file on CI server.
    ([#5651](https://github.com/Microsoft/vscode-python/issues/5651))
+1. Fix python 2.7 and 3.5 variable explorer nightly tests
+   ([#5433](https://github.com/Microsoft/vscode-python/issues/5433))
 
 
 ### Thanks
