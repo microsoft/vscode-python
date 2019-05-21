@@ -234,7 +234,7 @@ suite('Unit Tests - Debug Launcher', () => {
         }
         if (!expected.pathMappings) {
             expected.pathMappings = expected.workspaceFolder ? [{
-                localRoot: expected.workspaceFolder.fsPath,
+                localRoot: expected.workspaceFolder,
                 remoteRoot: '.'
             }] : [];
         }
