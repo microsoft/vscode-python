@@ -889,36 +889,6 @@
                                 "description": "Debug port (default is 0, resulting in the use of a dynamic port).",
                                 "default": 0
                             },
-                            "pathMappings": {
-                                "type": "array",
-                                "label": "Path mappings.",
-                                "items": {
-                                    "type": "object",
-                                    "label": "Path mapping",
-                                    "required": [
-                                        "localRoot",
-                                        "remoteRoot"
-                                    ],
-                                    "properties": {
-                                        "localRoot": {
-                                            "type": "string",
-                                            "label": "Local source root.",
-                                            "default": "${workspaceFolder}"
-                                        },
-                                        "remoteRoot": {
-                                            "type": "string",
-                                            "label": "Remote source root.",
-                                            "default": "."
-                                        }
-                                    }
-                                },
-                                "default": [
-                                    {
-                                        "localRoot": "${workspaceFolder}",
-                                        "remoteRoot": "."
-                                    }
-                                ]
-                            },
                             "host": {
                                 "type": "string",
                                 "description": "IP address of the of the local debug server (default is localhost).",
