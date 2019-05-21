@@ -5,7 +5,7 @@
 
 ### Enhancements
 
-1. Turned series of synchronous FS Operations into async
+1. Changed synchronous file system operation into async
    ([#4895](https://github.com/Microsoft/vscode-python/issues/4895))
 1. Show a message when no variables are defined
    ([#5228](https://github.com/Microsoft/vscode-python/issues/5228))
@@ -13,9 +13,9 @@
    ([#5274](https://github.com/Microsoft/vscode-python/issues/5274))
 1. Allow column sorting in variable explorer
    ([#5281](https://github.com/Microsoft/vscode-python/issues/5281))
-1. Provide basic intellisense using the language server.
+1. Provide basic intellisense in Interactive Windows, using the language server.
    ([#5342](https://github.com/Microsoft/vscode-python/issues/5342))
-1. Add support for Jupyter autocomplete data.
+1. Add support for Jupyter autocomplete data in Interactive Window.
    ([#5346](https://github.com/Microsoft/vscode-python/issues/5346))
 1. Swap getsizeof size value for something more sensible in the variable explorer
    ([#5368](https://github.com/Microsoft/vscode-python/issues/5368))
@@ -28,7 +28,7 @@
    ([#4402](https://github.com/Microsoft/vscode-python/issues/4402))
 1. Improve pipenv error messages (thanks [David Lechner](https://github.com/dlech))
    ([#4866](https://github.com/Microsoft/vscode-python/issues/4866))
-1. getRemoteLauncherCommand should wrap path to ptvsd_launcher.py in quotes
+1. Quote paths returned by debugger API
    ([#4966](https://github.com/Microsoft/vscode-python/issues/4966))
 1. Reliably end test tasks in Azure Pipelines.
    ([#5129](https://github.com/Microsoft/vscode-python/issues/5129))
@@ -63,7 +63,7 @@
 1. Add dev flag to poetry installer.
    (thanks [Yan Pashkovsky](https://github.com/Yanpas))
    ([#5496](https://github.com/Microsoft/vscode-python/issues/5496))
-1. Corrected analysisOptions.ts bug
+1. Default `PYTHONPATH` to an empty string if the environment variable is not defined.
    ([#5579](https://github.com/Microsoft/vscode-python/issues/5579))
 1. Fix problems if other language kernels are installed that are using python under the covers (bash is one such example).
    ([#5586](https://github.com/Microsoft/vscode-python/issues/5586))
@@ -71,7 +71,7 @@
    ([#5631](https://github.com/Microsoft/vscode-python/issues/5631))
 1. Eliminate search support in the mini-editors in the Python Interactive window.
    ([#5637](https://github.com/Microsoft/vscode-python/issues/5637))
-1. Fix perf problem with intellisense.
+1. Fix perf problem with intellisense in the Interactive Window.
    ([#5697](https://github.com/Microsoft/vscode-python/issues/5697))
 
 ### Code Health
