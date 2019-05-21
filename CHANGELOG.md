@@ -71,6 +71,10 @@
    ([#5637](https://github.com/Microsoft/vscode-python/issues/5637))
 1. Fix perf problem with intellisense in the Interactive Window.
    ([#5697](https://github.com/Microsoft/vscode-python/issues/5697))
+1. Using "request": "launch" item in launch.json for debugging sends pathMappings
+   ([#3568](https://github.com/Microsoft/vscode-python/issues/3568))
+1. Fix perf issues with long collections and variable explorer
+   ([#5511](https://github.com/Microsoft/vscode-python/issues/5511))
 
 ### Code Health
 
@@ -90,13 +94,16 @@
    ([#5651](https://github.com/Microsoft/vscode-python/issues/5651))
 1. Fix python 2.7 and 3.5 variable explorer nightly tests
    ([#5433](https://github.com/Microsoft/vscode-python/issues/5433))
+1. Update isort to version 4.3.20.
+   (Thanks [Andrew Blakey](https://github.com/ablakey))
+   ([#5642](https://github.com/Microsoft/vscode-python/issues/5642))
 
 
 ### Thanks
 
 Thanks to the following projects which we fully rely on to provide some of
 our features:
-- [isort 4.3.17](https://pypi.org/project/isort/4.3.17/)
+- [isort 4.3.20](https://pypi.org/project/isort/4.3.20/)
 - [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
   and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
 - [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
