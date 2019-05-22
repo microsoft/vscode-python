@@ -4,6 +4,6 @@
 }
 
 .slickgrid-container {
-    height:98%;
+    height:94%; /* Slick grid has a bug where there's no space left for the bottom scroll bar */
 }
 

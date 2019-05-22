@@ -50,6 +50,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private containerRef: React.RefObject<HTMLDivElement>;
     private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
     private columnFilters: Map<string, ISlickGridColumnFilter> = new Map<string, ISlickGridColumnFilter>();
+    private resizeTimer?: number;
 
     constructor(props: ISlickGridProps) {
         super(props);
@@ -59,6 +60,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public componentDidMount = () => {
+        window.addEventListener('resize', this.windowResized);
+
         if (this.containerRef.current) {
             // Setup options for the grid
             const options : Slick.GridOptions<Slick.SlickData> = {
@@ -115,9 +118,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Save in our state
             this.setState({ grid });
         }
+
+        // Act like a resize happened to refresh the layout.
+        this.windowResized();
     }
 
     public componentWillUnmount = () => {
+        if (this.resizeTimer) {
+            window.clearTimeout(this.resizeTimer);
+        }
+        window.removeEventListener('resize', this.windowResized);
         if (this.state.grid) {
             this.state.grid.destroy();
         }
@@ -139,6 +149,19 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 </div>
             </div>
         );
+    }
+
+    private windowResized = () => {
+        if (this.resizeTimer) {
+            clearTimeout(this.resizeTimer);
+        }
+        this.resizeTimer = window.setTimeout(this.updateGridSize, 10);
+    }
+
+    private updateGridSize = () => {
+        if (this.state.grid) {
+            this.state.grid.resizeCanvas();
+        }
     }
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {

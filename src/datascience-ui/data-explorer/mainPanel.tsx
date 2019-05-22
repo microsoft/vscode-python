@@ -94,13 +94,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<IDataViewerMapping, 'started'>(DataViewerMessages.Started);
     }
 
-    public componentDidMount() {
-        window.addEventListener('resize', this.updateDimensions);
-        this.updateDimensions();
-    }
-
     public componentWillUnmount() {
-        window.removeEventListener('resize', this.updateDimensions);
         this.postOffice.removeHandler(this);
         this.postOffice.dispose();
     }
@@ -267,13 +261,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
             return r;
         });
-    }
-
-    private updateDimensions = () => {
-        if (this.container) {
-            const height = this.container.offsetHeight;
-            this.setState({ gridHeight: this.props.forceHeight ? this.props.forceHeight : height - 100 });
-        }
     }
 
     private updateContainer = (el: HTMLDivElement) => {
