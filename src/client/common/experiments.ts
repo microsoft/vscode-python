@@ -11,17 +11,21 @@ import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
 import { STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
-import { ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, Resource } from './types';
+import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, Resource } from './types';
+import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
-const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
+const isStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
+export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
+export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
-type ABExperiments = { name: string; salt: string; min: number; max: number }[];
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
-    private experimentStorage: IPersistentState<ABExperiments | undefined>;
+    public experimentStorage: IPersistentState<ABExperiments | undefined>;
+    public downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
+    private isStorageValid: IPersistentState<boolean>;
     private activatedWorkspaces = new Map<string, boolean>();
     private resource: Resource;
     constructor(
@@ -32,25 +36,30 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
-        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined, EXPIRY_DURATION_MS);
+        this.isStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isStorageValidKey, false, EXPIRY_DURATION_MS);
+        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
+        this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
     }
 
+    @swallowExceptions('Failed to activate experiments')
     public async activate(resource: Uri): Promise<void> {
         if (this.activatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
             return;
         }
         this.activatedWorkspaces.set(this.getWorkspacePathKey(resource), true);
         this.resource = resource;
+        this.logExperimentGroups();
         this.initializeInBackground().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to initialize experiments')
     public async initializeInBackground() {
-        if (this.isTelemetryDisabled() || this.experimentStorage.value) {
+        if (this.isTelemetryDisabled() || this.isStorageValid.value) {
             return;
         }
         const downloadedExperiments = await this.httpClient.getJSONC<ABExperiments>(configUri);
-        await this.experimentStorage.updateValue(downloadedExperiments);
+        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        await this.isStorageValid.updateValue(true);
     }
 
     public inExperiment(experimentName: string): boolean {
@@ -63,8 +72,6 @@ export class ExperimentsManager implements IExperimentsManager {
             const inExp = this.isUserInRange(experiment.min, experiment.max, experiment.salt);
             if (inExp) {
                 sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
-                // tslint:disable-next-line:messages-must-be-localized
-                this.output.appendLine(Experiments.inGroup().format(experimentName));
                 return true;
             }
         } catch (ex) {
@@ -87,5 +94,16 @@ export class ExperimentsManager implements IExperimentsManager {
 
     private getWorkspacePathKey(resource: Resource): string {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
+    }
+
+    @swallowExceptions('Failed to log experiment groups')
+    private logExperimentGroups(): void {
+        if (this.experimentStorage.value) {
+            for (const exp of this.experimentStorage.value) {
+                if (this.inExperiment(exp.name)) {
+                    this.output.appendLine(Experiments.inGroup().format(exp.name));
+                }
+            }
+        }
     }
 }
