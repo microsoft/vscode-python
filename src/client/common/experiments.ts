@@ -96,7 +96,7 @@ export class ExperimentsManager implements IExperimentsManager {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
     }
 
-    @swallowExceptions('Failed to log experiment groups')
+    @traceDecorators.error('Failed to log experiment groups')
     private logExperimentGroups(): void {
         if (this.experimentStorage.value) {
             for (const exp of this.experimentStorage.value) {
