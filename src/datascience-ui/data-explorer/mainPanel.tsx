@@ -4,13 +4,12 @@
 
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
+import * as uuid from 'uuid/v4';
 
 import {
     DataViewerMessages,
-    DataViewerRowStates,
     IDataViewerMapping,
     IGetRowsResponse,
-    MaxStringCompare,
     RowFetchAllLimit,
     RowFetchSizeFirst,
     RowFetchSizeSubsequent
@@ -18,7 +17,8 @@ import {
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
-import { ReactSlickGrid } from './reactSlickGrid';
+import { cellFormatterFunc } from './cellFormatter';
+import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
 
 // Our css has to come after in order to override body styles
@@ -33,10 +33,9 @@ export interface IMainPanelProps {
 //tslint:disable:no-any
 interface IMainPanelState {
     gridColumns: Slick.Column<Slick.SlickData>[];
-    currentGridRows: any[];
-    actualGridRows: any[];
+    gridRows: ISlickRow[];
     fetchedRowCount: number;
-    actualRowCount: number;
+    totalRowCount: number;
     filters: {};
     gridHeight: number;
     sortDirection: string;
@@ -48,6 +47,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private container: HTMLDivElement | null = null;
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
+    private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -56,23 +56,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
             this.state = {
-                gridColumns: data.columns,
-                currentGridRows: data.rows,
-                actualGridRows: data.rows,
-                actualRowCount: data.rows.length,
-                fetchedRowCount: data.rows.length,
+                gridColumns: data.columns.map(c => { return {...c, formatter: cellFormatterFunc }; }),
+                gridRows: [],
+                totalRowCount: data.rows.length,
+                fetchedRowCount: 0,
                 filters: {},
                 gridHeight:  100,
                 sortColumn: 'index',
                 sortDirection: 'NONE',
                 indexColumn: data.primaryKeys[0]
             };
+
+            // Fire off a timer to mimic dynamic loading
+            setTimeout(() => {
+                this.handleGetAllRowsResponse({data: data.rows});
+            }, 1000);
         } else {
             this.state = {
                 gridColumns: [],
-                currentGridRows: [],
-                actualGridRows: [],
-                actualRowCount: 0,
+                gridRows: [],
+                totalRowCount: 0,
                 fetchedRowCount: 0,
                 filters: {},
                 gridHeight: 100,
@@ -105,7 +108,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     public render = () => {
         // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
         // can guarantee our render will run before somebody checks our rendered output.
-        if (this.state.actualRowCount && this.state.actualRowCount === this.state.fetchedRowCount && !this.sentDone) {
+        if (this.state.totalRowCount && this.state.totalRowCount === this.state.fetchedRowCount && !this.sentDone) {
             this.sentDone = true;
             this.sendMessage(DataViewerMessages.CompletedData);
         }
@@ -115,7 +118,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
-                {this.container && this.renderGrid()}
+                {this.container && this.state.totalRowCount > 0 && this.renderGrid()}
             </div>
         );
     }
@@ -145,9 +148,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderGrid() {
         return (
             <ReactSlickGrid
-                rows={this.state.currentGridRows}
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
+                rowsAdded={this.gridAddEvent}
             />
         );
     }
@@ -160,16 +163,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
-                const initialRows: JSONArray = [];
-                const paddedRows = this.padRows(initialRows, totalRowCount);
+                const initialRows: ISlickRow[] = [];
                 const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
 
                 this.setState(
                     {
                         gridColumns: columns,
-                        actualGridRows: paddedRows,
-                        currentGridRows: paddedRows,
-                        actualRowCount: totalRowCount,
+                        gridRows: initialRows,
+                        totalRowCount,
                         fetchedRowCount: initialRows.length,
                         indexColumn: indexColumn
                     }
@@ -205,55 +206,38 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetAllRowsResponse(response: JSONObject) {
         const rows = response.data ? response.data as JSONArray : [];
+        const normalized = this.normalizeRows(rows);
 
         // Update our fetched count and actual rows
         this.setState(
             {
-                actualGridRows: rows,
-                currentGridRows: this.getSortedAndFilteredRows(rows, this.state.sortDirection, this.state.sortColumn, this.state.filters),
-                fetchedRowCount: this.state.actualRowCount
+                gridRows: this.state.gridRows.concat(normalized),
+                fetchedRowCount: this.state.totalRowCount
             });
+
+        // Add all of these rows to the grid
+        this.gridAddEvent.notify({newRows: normalized});
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
         const rows = response.rows.data ? response.rows.data as JSONArray : [];
+        const normalized = this.normalizeRows(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
-        // Actual should have our entire list. We need to replace our part with our new results
-        const before = this.state.actualGridRows.slice(0, response.start);
-        const after = response.end < this.state.actualGridRows.length ? this.state.actualGridRows.slice(response.end) : [];
-        const newActual = before.concat(rows.concat(after));
+        // gridRows should have our entire list. We need to replace our part with our new results
+        const before = this.state.gridRows.slice(0, response.start);
+        const after = response.end < this.state.gridRows.length ? this.state.gridRows.slice(response.end) : [];
+        const newActual = before.concat(normalized.concat(after));
 
-        // If we're done, sort and filter
-        if (newFetched === this.state.actualRowCount) {
-            this.setState({
-                fetchedRowCount: newFetched,
-                currentGridRows: this.getSortedAndFilteredRows(newActual, this.state.sortDirection, this.state.sortColumn, this.state.filters),
-                actualGridRows: newActual
-            });
-        } else if (this.state.currentGridRows.length > 0) {
-            // If we're not sorting or filtering, then we can just set to the default
-            this.setState({
-                fetchedRowCount: newFetched,
-                currentGridRows: newActual,
-                actualGridRows: newActual
-            });
-        } else {
-            // Just update our actual
-            this.setState({
-                fetchedRowCount: newFetched,
-                actualGridRows: newActual
-            });
-        }
-    }
+        // Apply this to our state
+        this.setState({
+            fetchedRowCount: newFetched,
+            gridRows: newActual
+        });
 
-    private padRows(initialRows: any[], wantedCount: number) : any[] {
-        if (wantedCount > initialRows.length) {
-            const fetching : string[] = Array<string>(wantedCount - initialRows.length).fill(DataViewerRowStates.Fetching);
-            return [...initialRows, ...fetching];
-        }
-        return initialRows;
+        // Tell our grid about the new ros
+        this.gridAddEvent.notify({newRows: normalized});
     }
 
     private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[]  {
@@ -261,14 +245,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return variable.columns.map((c: {key: string; type: string}, i: number) => {
                 return {
                     type: c.type,
-                    key: c.key.toString(),
+                    field: c.key.toString(),
                     id: `${i}`,
                     name: c.key.toString(),
-                    sortable: true
+                    sortable: true,
+                    formatter: cellFormatterFunc
                 };
             });
         }
         return [];
+    }
+
+    private normalizeRows(rows: JSONArray): ISlickRow[] {
+        // Make sure we have an index field and all rows have an item
+        return rows.map((r: any | undefined) => {
+            if (!r) {
+                r = {};
+            }
+            if (!r.hasOwnProperty(this.state.indexColumn)) {
+                r[this.state.indexColumn] = uuid();
+            }
+            return r;
+        });
     }
 
     private updateDimensions = () => {
@@ -286,46 +284,4 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
-    private getColumnType(name: string | number) : string | undefined {
-        const column = this.state.gridColumns.find(c => c.name === name) as any;
-        if (column && column.type) {
-            return column.type;
-        }
-    }
-
-    private getSortedAndFilteredRows(_rows: JSONArray, sortDirection: string, sortColumn: string | number, _filters: {}) : any[] {
-        // Apply any filter first. This should eliminate a bunch of comparisons
-        const filtered: string[] = [];
-
-        // Default to the index column
-        if (sortDirection === 'NONE') {
-            sortColumn = this.state.indexColumn;
-            sortDirection = 'ASC';
-        }
-
-        const columnType = this.getColumnType(sortColumn);
-        const isStringColumn = columnType === 'string' || columnType === 'object';
-        const invert = sortDirection !== 'DESC';
-
-        // Use a special comparer for string columns as we can't compare too much of a string
-        // or it will take too long
-        const comparer = isStringColumn ?
-            (a: any, b: any): number => {
-                const aVal = a[sortColumn] ? a[sortColumn].toString() : '';
-                const bVal = b[sortColumn] ? b[sortColumn].toString() : '';
-                const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
-                const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
-                const result = aStr > bStr ? -1 : 1;
-                return invert ? -1 * result : result;
-            } :
-            (a: any, b: any): number => {
-                const aVal = a[sortColumn];
-                const bVal = b[sortColumn];
-                const result = aVal > bVal ? -1 : 1;
-                return invert ? -1 * result : result;
-            };
-
-        // Then apply our sorting.
-        return filtered.sort(comparer);
-    }
 }

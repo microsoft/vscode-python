@@ -21,15 +21,23 @@ import 'slickgrid/slick.grid';
 import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 
+export interface ISlickRow extends Slick.SlickData {
+    id: string;
+}
+
+export interface ISlickGridAdd {
+    newRows: ISlickRow[];
+}
+
 // tslint:disable:no-any
 export interface ISlickGridProps {
-    rows: Slick.SlickData[];
     idProperty: string;
-    columns: Slick.Column<Slick.SlickData>[];
+    columns: Slick.Column<ISlickRow>[];
+    rowsAdded: Slick.Event<ISlickGridAdd>;
 }
 
 interface ISlickGridState {
-    grid?: Slick.Grid<Slick.SlickData>;
+    grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
 }
 
@@ -40,13 +48,14 @@ interface ISlickGridColumnFilter {
 
 export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridState> {
     private containerRef: React.RefObject<HTMLDivElement>;
-    private dataView: Slick.Data.DataView<Slick.SlickData> = new Slick.Data.DataView();
+    private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
     private columnFilters: Map<string, ISlickGridColumnFilter> = new Map<string, ISlickGridColumnFilter>();
 
     constructor(props: ISlickGridProps) {
         super(props);
         this.state = { };
         this.containerRef = React.createRef<HTMLDivElement>();
+        this.props.rowsAdded.subscribe(this.addedRows);
     }
 
     public componentDidMount = () => {
@@ -68,7 +77,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             });
 
             // Create the grid
-            const grid = new Slick.Grid<Slick.SlickData>(
+            const grid = new Slick.Grid<ISlickRow>(
                 this.containerRef.current,
                 this.dataView,
                 columns,
@@ -78,7 +87,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Setup our dataview
             this.dataView.beginUpdate();
             this.dataView.setFilter(this.filter.bind(this));
-            this.dataView.setItems(this.props.rows, this.props.idProperty);
+            this.dataView.setItems([], this.props.idProperty);
             this.dataView.endUpdate();
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
@@ -132,6 +141,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         );
     }
 
+    private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
+        this.dataView.beginUpdate();
+        for (const row of data.newRows) {
+            this.dataView.addItem(row);
+        }
+        this.dataView.endUpdate();
+
+        // This should cause a rowsChanged event in the dataview that will
+        // refresh the grid.
+    }
+
     // tslint:disable-next-line: no-any
     private filter(item: any, _args: any): boolean {
         const ids = Array.from(this.columnFilters.keys());
@@ -166,6 +186,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
+        // Note: dataView.fastSort is an IE workaround. Not necessary.
         this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
         args.grid.invalidateAllRows();
         args.grid.render();

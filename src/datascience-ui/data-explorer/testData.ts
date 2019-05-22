@@ -6,6 +6,7 @@ export interface ITestData {
     columns: {id: string; name: string; type: string }[];
     primaryKeys: string[];
     rows: {}[];
+    loadingRows: {}[];
 }
 
 // tslint:disable
@@ -33,6 +34,7 @@ export function generateTestData(_numberOfRows: number) : ITestData {
         columns,
         primaryKeys: keys,
         rows,
+        loadingRows: titanicData.map(_t => { return {};})
     };
 }
 
