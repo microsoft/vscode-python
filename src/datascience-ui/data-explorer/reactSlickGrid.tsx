@@ -5,7 +5,8 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {ReactSlickGridFilterBox} from './reactSlickGridFilterBox';
+import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 
 // Slickgrid requires jquery to be defined. Globally. So we do some hacks here.
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -20,7 +21,7 @@ import 'slickgrid/slick.grid';
 import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 
-
+// tslint:disable:no-any
 export interface ISlickGridProps {
     rows: Slick.SlickData[];
     idProperty: string;
@@ -60,11 +61,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 explicitInitialization: true
             };
 
+            // Transform columns so they are sortable
+            const columns = this.props.columns.map(c => {
+                c.sortable = true;
+                return c;
+            });
+
             // Create the grid
             const grid = new Slick.Grid<Slick.SlickData>(
                 this.containerRef.current,
                 this.dataView,
-                this.props.columns,
+                columns,
                 options
             );
 
@@ -159,8 +166,39 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
-        this.dataView.sort(this.dataSort, args.sortCol, args.sortAsc);
+        this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
         args.grid.invalidateAllRows();
         args.grid.render();
+    }
+
+    private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>) : number {
+        if (col) {
+            const sortColumn = col.field;
+            if (sortColumn && col.hasOwnProperty('type')) {
+                const columnType = (col as any).type;
+                const isStringColumn = columnType === 'string' || columnType === 'object';
+                if (isStringColumn) {
+                    const aVal = a[sortColumn] ? a[sortColumn].toString() : '';
+                    const bVal = b[sortColumn] ? b[sortColumn].toString() : '';
+                    const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
+                    const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
+                    return aStr.localeCompare(bStr);
+                } else {
+                    const aVal = a[sortColumn];
+                    const bVal = b[sortColumn];
+                    return aVal === bVal ? 0 : aVal > bVal ? 1 : -1;
+                }
+            }
+        }
+
+        // No sort column, try index column
+        if (a.hasOwnProperty(this.props.idProperty) && b.hasOwnProperty(this.props.idProperty)) {
+            const sortColumn = this.props.idProperty;
+            const aVal = a[sortColumn];
+            const bVal = b[sortColumn];
+            return aVal === bVal ? 0 : aVal > bVal ? 1 : -1;
+        }
+
+        return -1;
     }
 }
