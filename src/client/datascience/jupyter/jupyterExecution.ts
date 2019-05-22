@@ -317,6 +317,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         };
     }
 
+    // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
@@ -351,6 +352,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
             if (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) {
                 extraArgs.push('--debug');
             }
+
+            // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
+            extraArgs.push('--NotebookApp.iopub_data_rate_limit=10000000000');
 
             // Check for a docker situation.
             try {

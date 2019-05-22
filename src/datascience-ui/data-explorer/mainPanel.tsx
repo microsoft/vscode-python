@@ -7,12 +7,12 @@ import * as React from 'react';
 import * as uuid from 'uuid/v4';
 
 import {
+    CellFetchAllLimit,
+    CellFetchSizeFirst,
+    CellFetchSizeSubsequent,
     DataViewerMessages,
     IDataViewerMapping,
-    IGetRowsResponse,
-    RowFetchAllLimit,
-    RowFetchSizeFirst,
-    RowFetchSizeSubsequent
+    IGetRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -48,6 +48,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
+    private rowFetchSizeFirst: number = 0;
+    private rowFetchSizeSubsequent: number = 0;
+    private rowFetchSizeAll: number = 0;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -170,10 +173,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     }
                 );
 
+                // Compute our row fetch sizes based on the number of columns
+                this.rowFetchSizeAll = Math.round(CellFetchAllLimit / columns.length);
+                this.rowFetchSizeFirst = Math.round(Math.max(2, CellFetchSizeFirst / columns.length));
+                this.rowFetchSizeSubsequent = Math.round(Math.max(2, CellFetchSizeSubsequent / columns.length));
+
                 // Request the rest of the data if necessary
                 if (initialRows.length !== totalRowCount) {
                     // Get all at once if less than 1000
-                    if (totalRowCount < RowFetchAllLimit) {
+                    if (totalRowCount < this.rowFetchSizeAll) {
                         this.getAllRows();
                     } else {
                         this.getRowsInChunks(initialRows.length, totalRowCount);
@@ -188,14 +196,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getRowsInChunks(startIndex: number, endIndex: number) {
-        // Ask for all of our rows one chunk at a time
-        let chunkEnd = startIndex + Math.min(RowFetchSizeFirst, endIndex);
-        let chunkStart = startIndex;
-        while (chunkStart < endIndex) {
-            this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
-            chunkStart = chunkEnd;
-            chunkEnd = Math.min(chunkEnd + RowFetchSizeSubsequent, endIndex);
-        }
+        // Ask for our first chunk. Don't spam jupyter though with all requests at once
+        // Instead, do them one at a time.
+        const chunkEnd = startIndex + Math.min(this.rowFetchSizeFirst, endIndex);
+        const chunkStart = startIndex;
+        this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
     }
 
     private handleGetAllRowsResponse(response: JSONObject) {
@@ -232,6 +237,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Tell our grid about the new ros
         this.gridAddEvent.notify({newRows: normalized});
+
+        // Get the next chunk
+        if (newFetched < this.state.totalRowCount) {
+            const chunkStart = response.end;
+            const chunkEnd = Math.min(chunkStart + this.rowFetchSizeSubsequent, this.state.totalRowCount);
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+        }
     }
 
     private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[]  {

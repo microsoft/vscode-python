@@ -177,12 +177,12 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     // tslint:disable-next-line: no-any
     private filter(item: any, _args: any): boolean {
-        const ids = Array.from(this.columnFilters.keys());
-        for (const id of ids) {
-            if (id) {
-                const filter = this.columnFilters.get(id);
+        const fields = Array.from(this.columnFilters.keys());
+        for (const field of fields) {
+            if (field) {
+                const filter = this.columnFilters.get(field);
                 if (filter) {
-                    const actualText = item[id].toString();
+                    const actualText = item[field].toString();
                     if (actualText && !actualText.includes(filter.text)) {
                         return false;
                     }
@@ -202,8 +202,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private filterChanged = (text: string, column: Slick.Column<Slick.SlickData>) => {
-        if (column && column.id) {
-            this.columnFilters.set(column.id, { text, column });
+        if (column && column.field) {
+            this.columnFilters.set(column.field, { text, column });
             this.dataView.refresh();
         }
     }

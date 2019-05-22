@@ -71,6 +71,11 @@ export class HostJupyterExecution
         await super.dispose();
         const api = await this.api;
         await this.onDetach(api);
+
+        // Cleanup on dispose. We are going away permanently
+        if (this.serverCache) {
+            await this.serverCache.dispose();
+        }
     }
 
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
