@@ -166,6 +166,11 @@ export namespace DataScience {
     export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');
     export const valuesColumn = localize('DataScience.valuesColumn', 'values');
     export const liveShareInvalid = localize('DataScience.liveShareInvalid', 'One or more guests in the session do not have the Python Extension installed. Live share session cannot continue.');
+    export const tooManyColumnsMessage = localize('DataScience.tooManyColumnsMessage', 'The number of columns in this data may take a long time to display. Are you sure you wish to continue?');
+    export const tooManyColumnsYes = localize('DataScience.tooManyColumnsYes', 'Yes');
+    export const tooManyColumnsNo = localize('DataScience.tooManyColumnsNo', 'No');
+    export const tooManyColumnsDontAskAgain = localize('DataScience.tooManyColumnsNo', 'Don\'t Ask Again');
+
 }
 
 export namespace DebugConfigStrings {

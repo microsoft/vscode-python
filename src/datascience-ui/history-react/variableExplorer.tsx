@@ -6,6 +6,7 @@ import './variableExplorer.css';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
+import { RegExpValues } from '../../client/datascience/constants';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -22,7 +23,7 @@ interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
     onHeightChange(): void;
-    showDataExplorer(targetVariable: string): void;
+    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     variableExplorerToggled(open: boolean): void;
 }
 
@@ -138,11 +139,17 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
         const newGridRows = newVariables.map(newVar => {
-            return { buttons: {name: newVar.name, supportsDataExplorer: newVar.supportsDataExplorer},
-             name: newVar.name,
-             type: newVar.type,
-             size: '',
-             value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
+            return {
+                buttons: {
+                    name: newVar.name,
+                    supportsDataExplorer: newVar.supportsDataExplorer,
+                    numberOfColumns: this.getColumnCountFromShape(newVar.shape)
+                },
+                name: newVar.name,
+                type: newVar.type,
+                size: '',
+                value: getLocString('DataScience.variableLoadingValue', 'Loading...')
+            };
         });
 
         this.setState({ gridRows: newGridRows});
@@ -165,7 +172,15 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     newSize = newVariable.count.toString();
                 }
 
+                // Also use the shape to compute the number of columns. Necessary
+                // when showing a data viewer
+                const numberOfColumns = this.getColumnCountFromShape(newVariable.shape);
+
                 const newGridRow = {...newGridRows[i],
+                    button: {
+                        ...newGridRows[i].button,
+                        numberOfColumns
+                    },
                     value: newVariable.value,
                     size: newSize};
 
@@ -220,6 +235,17 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         } else if (column && column.type) {
             return column.type;
         }
+    }
+
+    private getColumnCountFromShape(shape: string | undefined) : number {
+        if (shape) {
+            // Try to match on the second value if there is one
+            const matches = RegExpValues.ShapeSplitterRegEx.exec(shape);
+            if (matches && matches.length > 1) {
+                return parseInt(matches[1], 10);
+            }
+        }
+        return 0;
     }
 
     private internalSortRows = (gridRows: IGridRow[], sortColumn: string | number, sortDirection: string): IGridRow[] => {
@@ -287,7 +313,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         // On row double click, see if data explorer is supported and open it if it is
         if (row.buttons && row.buttons.supportsDataExplorer !== undefined
             && row.buttons.name && row.buttons.supportsDataExplorer) {
-            this.props.showDataExplorer(row.buttons.name);
+            this.props.showDataExplorer(row.buttons.name, row.buttons.numberOfColumns);
         }
     }
 

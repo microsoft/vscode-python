@@ -1131,6 +1131,12 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
+                "python.dataScience.askForLargeDataFrames": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Warn the user before trying to open really large data frames.",
+                    "scope": "resource"
+                },
                 "python.dataScience.enabled": {
                     "type": "boolean",
                     "default": true,

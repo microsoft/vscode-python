@@ -11,12 +11,13 @@ import * as React from 'react';
 interface IButtonCellValue {
     supportsDataExplorer: boolean;
     name: string;
+    numberOfColumns: number;
 }
 
 interface IVariableExplorerButtonCellFormatterProps {
     baseTheme: string;
     value?: IButtonCellValue;
-    showDataExplorer(targetVariable: string): void;
+    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
 }
 
 export class VariableExplorerButtonCellFormatter extends React.Component<IVariableExplorerButtonCellFormatterProps> {
@@ -44,7 +45,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
 
     private onDataExplorerClick = () => {
         if (this.props.value !== null && this.props.value !== undefined) {
-            this.props.showDataExplorer(this.props.value.name);
+            this.props.showDataExplorer(this.props.value.name, this.props.value.numberOfColumns);
         }
     }
 }

@@ -34,7 +34,7 @@ export interface IHeaderPanelProps {
     undo(): void;
     redo(): void;
     clearAll(): void;
-    showDataExplorer(targetVariable: string): void;
+    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     refreshVariables(): void;
     variableExplorerToggled(open: boolean): void;
     onHeightChange(newHeight: number): void;
