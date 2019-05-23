@@ -125,6 +125,12 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Hide the header row after we fill it in.
             grid.setHeaderRowVisibility(false);
 
+            // Set the initial sort column to our index column
+            const indexColumn = columns.find(c => c.field === this.props.idProperty);
+            if (indexColumn && indexColumn.id) {
+                grid.setSortColumn(indexColumn.id, true);
+            }
+
             // Save in our state
             this.setState({ grid, fontSize });
         }
@@ -207,7 +213,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             if (field) {
                 const filter = this.columnFilters.get(field);
                 if (filter) {
-                    const actualText = item[field].toString();
+                    const itemField = item[field];
+                    const actualText = itemField !== null && itemField !== undefined ? itemField.toString() : '';
                     if (actualText && !actualText.includes(filter.text)) {
                         return false;
                     }
